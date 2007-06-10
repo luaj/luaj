@@ -44,5 +44,36 @@ public class LDouble extends LNumber {
 	public int luaAsInt() {
 		return (int) m_value;
 	}
+
+	// binary compares on integers, first dispatch
+	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
+		return lhs.luaBinCmpDouble( opcode, this.m_value );
+	}
+	
+	// binary compares on mixtures of doubles and integers
+	public boolean luaBinCmpInteger(int opcode, int rhs) {
+		return luaBinCmpDoubleDouble( opcode, m_value, (double) rhs );
+	}
+	
+	// binary compares on doubles
+	public boolean luaBinCmpDouble(int opcode, double rhs) {
+		return luaBinCmpDoubleDouble( opcode, m_value, rhs );
+	}
+	
+	// compare two doubles
+	public static boolean luaBinCmpDoubleDouble( int opcode, double lhs, double rhs ) {
+		switch ( opcode ) {
+		case Lua.OP_EQ: return lhs == rhs;
+		case Lua.OP_LT: return lhs < rhs;
+		case Lua.OP_LE: return lhs <= rhs;
+		}
+		luaUnsupportedOperation();
+		return false;
+	}
+
+	/** Arithmetic negative */
+	public LValue luaUnaryMinus() {
+		return new LDouble( -m_value );
+	}
 	
 }

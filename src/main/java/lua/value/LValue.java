@@ -34,6 +34,24 @@ public class LValue {
 		return luaUnsupportedOperation();
 	}
 
+	// unsupported except for numbers
+	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
+		luaUnsupportedOperation();
+		return false;
+	}
+	
+	// unsupported except for numbers
+	public boolean luaBinCmpInteger(int opcode, int rhs) {
+		luaUnsupportedOperation();
+		return false;
+	}
+	
+	// unsupported except for numbers
+	public boolean luaBinCmpDouble(int opcode, double rhs) {
+		luaUnsupportedOperation();
+		return false;
+	}
+	
 	/** set a value in a table
 	 */
 	public void luaSetTable(LValue key, LValue value) {
@@ -61,5 +79,17 @@ public class LValue {
 		luaUnsupportedOperation();
 		return 0;
 	}
+
+	/** Arithmetic negative */
+	public LValue luaUnaryMinus() {
+		return luaUnsupportedOperation();
+	}
+
+	/** Built-in opcode LEN, for Strings and Tables */
+	public LValue luaLength() {
+		// TODO: call meta-method TM_LEN here
+		return luaUnsupportedOperation();
+	}
+
 	
 }

@@ -26,4 +26,9 @@ public class LTable extends LValue {
 	public String luaAsString() {
 		return m_hash.toString();
 	}
+	
+	/** Built-in opcode LEN, for Strings and Tables */
+	public LValue luaLength() {
+		return new LInteger( m_array.size() );
+	}
 }

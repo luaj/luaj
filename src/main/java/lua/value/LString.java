@@ -18,4 +18,10 @@ public class LString extends LValue {
 	public String luaAsString() {
 		return m_string;
 	}
+
+	/** Built-in opcode LEN, for Strings and Tables */
+	public LValue luaLength() {
+		return new LInteger( m_string.length() );
+	}
+
 }
