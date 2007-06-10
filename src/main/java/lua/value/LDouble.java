@@ -10,6 +10,14 @@ public class LDouble extends LNumber {
 		this.m_value = value;
 	}
 
+	public boolean equals(Object o) {
+		return o != null && o instanceof LDouble && m_value == ((LDouble)o).m_value;
+	}
+
+	public int hashCode() {
+		return (int) m_value;
+	}
+
 	public String luaAsString() {
 		return String.valueOf(m_value);
 	}

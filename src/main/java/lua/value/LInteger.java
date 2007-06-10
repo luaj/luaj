@@ -10,6 +10,14 @@ public class LInteger extends LNumber {
 		this.m_value = value;
 	}
 
+	public boolean equals(Object o) {
+		return o != null && o instanceof LInteger && m_value == ((LInteger)o).m_value;
+	}
+
+	public int hashCode() {
+		return m_value;
+	}
+
 	public int luaAsInt() {
 		return m_value;
 	}

@@ -15,7 +15,7 @@ public class LValue {
 	}
 
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int nresults) {
+	public void luaStackCall(StackState state, int base, int nargs) {
 		luaUnsupportedOperation();
 	}
 
@@ -88,6 +88,11 @@ public class LValue {
 	/** Built-in opcode LEN, for Strings and Tables */
 	public LValue luaLength() {
 		// TODO: call meta-method TM_LEN here
+		return luaUnsupportedOperation();
+	}
+
+	/** Valid for tables */
+	public LValue luaPairs() {
 		return luaUnsupportedOperation();
 	}
 

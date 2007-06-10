@@ -10,6 +10,14 @@ public class LString extends LValue {
 		this.m_string = string;
 	}
 
+	public boolean equals(Object o) {
+		return o != null && o instanceof LString && m_string.equals(((LString)o).m_string);
+	}
+
+	public int hashCode() {
+		return m_string.hashCode();
+	}
+
 	// TODO: what to do with LuaState? 
 	public LString(StackState l, String string) {
 		this(string);
