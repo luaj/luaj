@@ -15,9 +15,8 @@ public class LValue {
 	}
 
 	// perform a lua call, return number of results actually produced
-	public int luaStackCall(StackState state, int base, int nargs) {
+	public void luaStackCall(StackState state, int base) {
 		luaUnsupportedOperation();
-		return 0;
 	}
 
 	// unsupported except for numbers

@@ -1,3 +1,4 @@
+
 function f0() print( "f0:" ) end
 function f1(a) print( "f1:", a ) end
 function f2(a,b) print( "f2:", a, b ) end
@@ -24,7 +25,7 @@ z = g4("c4.1/4", "c4.2/4", "c4.3/4", "c4.4/4")
 print( "z4:", z )
 
 a,b,c,d = g0( "c0.1/4", "c0.2/4", "c0.3/4", "c0.4/4" )
-print( "g0:", a, b, c, d, "(eol" )
+print( "g0:", a, b, c, d, "(eol)" )
 a,b,c,d = g2( "b2.1/4", "b2.2/4", "b2.3/4", "b2.4/4" )
 print( "g2:", a, b, c, d, "(eol)" )
 a,b,c,d = g4( "b4.1/4", "b4.2/4", "b4.3/4", "b4.4/4" )

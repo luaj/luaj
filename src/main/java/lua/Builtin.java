@@ -31,23 +31,23 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public int luaStackCall(StackState state, int base, int nargs) {
+	public void luaStackCall(StackState state, int base) {
 		switch ( id ) {
 		case PRINT:
-			for ( int i=0; i<nargs; i++ ) {
-				if ( i > 0 )
-					System.out.print( "\t" );
-				System.out.print( String.valueOf(state.stack[base+1+i]) );
+			for ( int i=base+1, n=state.top; i<n; i++ ) {
+				System.out.print( String.valueOf(state.stack[i]) );
+				System.out.print( "\t" );
 			}
 			System.out.println();
-			return 0;
+			return;
 		case PAIRS:
+			state.adjustTop(base+2);
 			LValue value = state.stack[base+1].luaPairs();
 			state.stack[base] = value;
-			return 1;
+			state.adjustTop(base+1);
+			return;
 		default:
 			luaUnsupportedOperation();
-			return 0;
 		}
 	}
 
