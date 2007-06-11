@@ -50,15 +50,14 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(StackState state, int base, int nresults) {
+		public int luaStackCall(StackState state, int base, int nargs) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
 				state.stack[base] = key;
 				state.stack[base+1] = t.luaGetTable(key);
-			} else {
-				state.stack[base] = LNil.NIL;
+				return 2;
 			}
-			
+			return 0;			
 		}
 	}
 

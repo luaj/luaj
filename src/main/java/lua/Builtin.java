@@ -4,6 +4,7 @@
 package lua;
 
 import lua.value.LFunction;
+import lua.value.LNil;
 import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LValue;
@@ -30,7 +31,7 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int nargs) {
+	public int luaStackCall(StackState state, int base, int nargs) {
 		switch ( id ) {
 		case PRINT:
 			for ( int i=0; i<nargs; i++ ) {
@@ -39,13 +40,14 @@ final class Builtin extends LFunction {
 				System.out.print( String.valueOf(state.stack[base+1+i]) );
 			}
 			System.out.println();
-			return;
+			return 0;
 		case PAIRS:
 			LValue value = state.stack[base+1].luaPairs();
 			state.stack[base] = value;
-			return;
+			return 1;
 		default:
 			luaUnsupportedOperation();
+			return 0;
 		}
 	}
 

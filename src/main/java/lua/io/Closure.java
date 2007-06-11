@@ -17,7 +17,8 @@ public class Closure extends LValue {
 
 
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int nresults) {
-		state.vmExecute( this, base+1 );
+	public int luaStackCall(StackState state, int base, int nargs) {
+		state.clear( base+1+nargs, p.numparams-nargs );
+		return state.vmExecute( this, base+1 );
 	}
 }
