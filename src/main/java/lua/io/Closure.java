@@ -18,7 +18,8 @@ public class Closure extends LValue {
 
 	// perform a lua call
 	public void luaStackCall(StackState state, int base) {
-		state.adjustTop( base+1+p.numparams );
+		if ( (! p.is_vararg) || (state.top < base+1+p.numparams) )
+			state.adjustTop( base+1+p.numparams );
 		state.vmExecute( this, base+1 );
 	}
 }
