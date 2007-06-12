@@ -42,14 +42,12 @@ print( func(func(32,33,34), func(45,46,47), func(58,59,50)) )
 --[[
 function p(a,...)
 	print("a",a)
-	print("a,...",a,...)
 	print("...",...)
 	print("...,a",...,a)
+	print("a,...",a,...)
 end
-local aa,bb,cc,dd
 p()
 p("q")
 p("q","r")
 p("q","r","s")
-print(aa,bb,cc,dd)
 --]]
