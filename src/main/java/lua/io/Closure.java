@@ -14,7 +14,7 @@ public class Closure extends LValue {
 		this.p = p;
 		upVals = new UpVal[p.nups];
 		for ( int i=0; i<p.nups; i++ )
-			upVals[i] = new UpVal();
+			upVals[i] = new UpVal( p.upvalues[i] );
 	}
 
 
