@@ -1,4 +1,3 @@
-
 function sum(a,b,c,d)          -- "sum" method
 	local d = d or 0
 	return a+b+c+d   -- return sum
@@ -27,3 +26,55 @@ end
 print( myfunc(0.1) )
 print( myfunc(0.1) )
 
+--[[
+
+i = 1
+table = { "west", "south", "east", "north" }
+function next()
+	i = (i % 4) + 1
+	return table[i]
+end
+
+print( next() )
+print( next() )
+print( next() )
+print( next() )
+print( next() )
+
+function room1 ()
+  local move = next()
+  print( "room1 moving", move )
+  if move == "south" then return room3()
+  elseif move == "east" then return room2()
+  else print("invalid move")
+       return room1()   -- stay in the same room
+  end
+end
+
+function room2 ()
+  local move = next()
+  print( "room2 moving", move )
+  if move == "south" then return room4()
+  elseif move == "west" then return room1()
+  else print("invalid move")
+       return room2()
+  end
+end
+
+function room3 ()
+  local move = next()
+  print( "room3 moving", move )
+  if move == "north" then return room1()
+  elseif move == "east" then return room4()
+  else print("invalid move")
+       return room3()
+  end
+end
+
+function room4 ()
+  print("congratulations!")
+end
+
+room1()
+--]]
+	

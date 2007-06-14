@@ -1,5 +1,6 @@
 package lua.value;
 
+import lua.Lua;
 import lua.StackState;
 
 public class LString extends LValue {
@@ -23,6 +24,20 @@ public class LString extends LValue {
 		this(string);
 	}
 
+	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
+		return lhs.luaBinCmpString(opcode, m_string);
+	}
+
+	public boolean luaBinCmpString(int opcode, String rhs) {
+		switch ( opcode ) {
+		case Lua.OP_EQ: return m_string.equals(rhs);
+		case Lua.OP_LT: return m_string.compareTo(rhs) < 0;
+		case Lua.OP_LE: return m_string.compareTo(rhs) <= 0;
+		}
+		luaUnsupportedOperation();
+		return false;
+	}
+	
 	public String luaAsString() {
 		return m_string;
 	}

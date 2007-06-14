@@ -1,5 +1,6 @@
 package lua.value;
 
+import lua.Lua;
 import lua.StackState;
 
 abstract
@@ -34,20 +35,34 @@ public class LValue {
 		return luaUnsupportedOperation();
 	}
 
-	// unsupported except for numbers
+	// unsupported except for numbers, strings, and == with various combinations of Nil, Boolean, etc. 
 	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
+		if ( opcode == Lua.OP_EQ )
+			return lhs == this;
+		luaUnsupportedOperation();
+		return false;
+	}
+	
+	// unsupported except for strings
+	public boolean luaBinCmpString(int opcode, String rhs) {
+		if ( opcode == Lua.OP_EQ )
+			return false;
 		luaUnsupportedOperation();
 		return false;
 	}
 	
 	// unsupported except for numbers
 	public boolean luaBinCmpInteger(int opcode, int rhs) {
+		if ( opcode == Lua.OP_EQ )
+			return false;
 		luaUnsupportedOperation();
 		return false;
 	}
 	
 	// unsupported except for numbers
 	public boolean luaBinCmpDouble(int opcode, double rhs) {
+		if ( opcode == Lua.OP_EQ )
+			return false;
 		luaUnsupportedOperation();
 		return false;
 	}
