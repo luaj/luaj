@@ -50,7 +50,7 @@ final class Builtin extends LFunction {
 		default:
 			luaUnsupportedOperation();
 		}
-		state.adjustTop(base-1+returnValues);
+		state.adjustTop(base+returnValues);
 	}
 
 }
