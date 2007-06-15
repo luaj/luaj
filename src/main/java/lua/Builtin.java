@@ -27,15 +27,15 @@ final class Builtin extends LFunction {
 	}
 
 	public String toString() {
-		return "Builtin('"+NAMES[id]+"')";
+		return "builtin."+NAMES[id];
 	}
 	
 	// perform a lua call
-	public void luaStackCall(StackState state, int base) {
+	public void luaStackCall(StackState state, int base, int top) {
 		int returnValues = 0;
 		switch ( id ) {
 		case PRINT:
-			for ( int i=base+1, n=state.top; i<n; i++ ) {
+			for ( int i=base+1; i<top; i++ ) {
 				System.out.print( String.valueOf(state.stack[i]) );
 				System.out.print( "\t" );
 			}

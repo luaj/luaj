@@ -50,7 +50,7 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(StackState state, int base) {
+		public void luaStackCall(StackState state, int base, int top) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
 				state.adjustTop(base+2);

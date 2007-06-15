@@ -36,4 +36,9 @@ public class Proto extends LValue {
 	public int numparams;
 	public boolean is_vararg;
 	public int maxstacksize;
+
+
+	public String toString() {
+		return "proto: "+hashCode();
+	}
 }

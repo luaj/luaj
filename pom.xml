@@ -8,6 +8,6 @@
     <name>LuaJ Interpreter</name>
 
     <build>
-        <finalName>LuaJ</finalName>
+        <finalName>luaj</finalName>
     </build>
 </project>
