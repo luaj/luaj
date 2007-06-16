@@ -21,7 +21,8 @@ public class LTable extends LValue {
 	}
 
 	public LValue luaGetTable(LValue key) {
-		return (LValue) m_hash.get( key );
+		Object o = m_hash.get(key);
+		return (o!=null? (LValue)o: LNil.NIL);
 	}
 	
 	public String luaAsString() {
