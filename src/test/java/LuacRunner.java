@@ -38,7 +38,7 @@ public class LuacRunner {
 		state.push( c );
 		for ( int i=0; i<args.length; i++ )
 			state.push( new LString(args[i]) );
-		state.docall(args.length, false);
+		state.docall(args.length, 0);
 
 		// print result? 
 		System.out.println("stack:");

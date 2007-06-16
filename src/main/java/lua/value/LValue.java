@@ -16,7 +16,7 @@ public class LValue {
 	}
 
 	// perform a lua call, return number of results actually produced
-	public void luaStackCall(StackState state, int base, int top) {
+	public void luaStackCall(StackState state, int base, int top, int nresults) {
 		luaUnsupportedOperation();
 	}
 
@@ -109,6 +109,16 @@ public class LValue {
 	/** Valid for tables */
 	public LValue luaPairs() {
 		return luaUnsupportedOperation();
+	}
+
+	/** Valid for tables */
+	public LValue luaGetMetatable() {
+		return luaUnsupportedOperation();
+	}
+
+	/** Valid for tables */
+	public void luaSetMetatable(LValue metatable) {
+		luaUnsupportedOperation();
 	}
 
 	

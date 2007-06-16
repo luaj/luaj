@@ -18,8 +18,10 @@ final class Builtin extends LFunction {
 
 	private static final int PRINT = 0;
 	private static final int PAIRS = 1;
+	private static final int GETMETATABLE = 2;
+	private static final int SETMETATABLE = 3;
 	
-	private static final String[] NAMES = { "print", "pairs" };
+	private static final String[] NAMES = { "print", "pairs", "getmetatable", "setmetatable" };
 	
 	private int id;
 	private Builtin( int id ) {			
@@ -31,7 +33,7 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int top) {
+	public void luaStackCall(StackState state, int base, int top, int nresults) {
 		switch ( id ) {
 		case PRINT:
 			for ( int i=base+1; i<top; i++ ) {
@@ -39,16 +41,26 @@ final class Builtin extends LFunction {
 				System.out.print( "\t" );
 			}
 			System.out.println();
-			state.adjustTop(base);
-			return;
+			state.top = base;
+			break;
 		case PAIRS:
 			LValue value = state.stack[base+1].luaPairs();
-			state.top = base+1;
 			state.stack[base] = value;
-			return;
+			state.top = base+1;
+			break;
+		case GETMETATABLE:
+			state.stack[base] = state.stack[base+1].luaGetMetatable();
+			state.top = base+1;
+			break;
+		case SETMETATABLE:
+			state.stack[base+1].luaSetMetatable(state.stack[base+2]);
+			state.top = base;
+			break;
 		default:
 			luaUnsupportedOperation();
 		}
+		if (nresults >= 0)
+			state.adjustTop(base + nresults);
 	}
 
 }

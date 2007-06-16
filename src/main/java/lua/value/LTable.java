@@ -2,13 +2,13 @@ package lua.value;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
 
 import lua.StackState;
 
 public class LTable extends LValue {
 	
 	private Hashtable m_hash = new Hashtable();
+	private LValue m_metatable;
 	
 	public LTable() {
 	}
@@ -35,6 +35,16 @@ public class LTable extends LValue {
 	}
 	
 	/** Valid for tables */
+	public LValue luaGetMetatable() {
+		return this.m_metatable;
+	}
+
+	/** Valid for tables */
+	public void luaSetMetatable(LValue metatable) {
+		this.m_metatable = metatable;
+	}
+	
+	/** Valid for tables */
 	public LValue luaPairs() {
 		Enumeration e = m_hash.keys();
 		return new LTableIterator(this,e);
@@ -51,15 +61,18 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(StackState state, int base, int top) {
+		public void luaStackCall(StackState state, int base, int top, int nresults) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
-				state.adjustTop(base+2);
 				state.stack[base] = key;
 				state.stack[base+1] = t.luaGetTable(key);
+				state.top = base+2;
 			} else {
-				state.adjustTop(base);
+				state.stack[base] = LNil.NIL;
+				state.top = base+1;
 			}
+			if ( nresults >= 0 )
+				state.adjustTop(base + nresults);
 		}
 	}
 
