@@ -32,7 +32,6 @@ final class Builtin extends LFunction {
 	
 	// perform a lua call
 	public void luaStackCall(StackState state, int base, int top) {
-		int returnValues = 0;
 		switch ( id ) {
 		case PRINT:
 			for ( int i=base+1; i<top; i++ ) {
@@ -40,17 +39,16 @@ final class Builtin extends LFunction {
 				System.out.print( "\t" );
 			}
 			System.out.println();
-			break;
+			state.adjustTop(base);
+			return;
 		case PAIRS:
-			state.adjustTop(base+2);
 			LValue value = state.stack[base+1].luaPairs();
+			state.top = base+1;
 			state.stack[base] = value;
-			returnValues = 1;
-			break;
+			return;
 		default:
 			luaUnsupportedOperation();
 		}
-		state.adjustTop(base+returnValues);
 	}
 
 }

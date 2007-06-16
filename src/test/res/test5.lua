@@ -1,3 +1,4 @@
+
 i = 777
 while i<780 do
    print(i)
@@ -13,4 +14,7 @@ end
 
 for count = 336,330,-2 do print(count) end  -- numerical iteration
 
-for key,value in pairs({a=10, 3.14159265358, c="banana" }) do print(key, value) end 
+for key,value in pairs({a=10, 3.14159265358, c="banana" }) 
+do 
+	print(key, value) 
+end 
