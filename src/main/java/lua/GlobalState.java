@@ -2,6 +2,7 @@ package lua;
 
 import java.util.Hashtable;
 
+import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LValue;
 
@@ -44,6 +45,7 @@ public class GlobalState {
 	public static LValue getGlobalsTable() {
 		LTable table = new LTable();
 		Builtin.addBuiltins( table );
+		table.m_hash.put(new LString("_G"), table);
 		return table;
 	}
 }

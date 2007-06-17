@@ -4,7 +4,6 @@
 package lua;
 
 import lua.value.LFunction;
-import lua.value.LNil;
 import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LValue;
@@ -13,7 +12,7 @@ final class Builtin extends LFunction {
 
 	static void addBuiltins(LTable table) {
 		for ( int i=0; i<NAMES.length; i++ )
-			table.luaSetTable( new LString( NAMES[i] ), new Builtin(i) );
+			table.m_hash.put( new LString( NAMES[i] ), new Builtin(i) );
 	}
 
 	private static final int PRINT = 0;

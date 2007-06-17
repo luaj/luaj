@@ -68,14 +68,21 @@ public class LValue {
 	}
 	
 	/** set a value in a table
+	 * @param state the stack state
+	 * @param base the base of the stack, in case a function is put on the stack
+	 * @param table the table to operate on
+	 * @param the key to set
+	 * @param the value to set
 	 */
-	public void luaSetTable(LValue key, LValue value) {
+	public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
 		luaUnsupportedOperation();
 	}
 
-	/** Get a value from a table */
-	public LValue luaGetTable(LValue value) {
-		return luaUnsupportedOperation();
+	/** Get a value from a table 
+	 * @param base TODO
+	 * @param table TODO*/
+	public void luaGetTable(StackState state, int base, LValue table, LValue key) {
+		luaUnsupportedOperation();
 	}
 	
 	/** Get the value as a String
@@ -121,5 +128,4 @@ public class LValue {
 		luaUnsupportedOperation();
 	}
 
-	
 }

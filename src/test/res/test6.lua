@@ -1,5 +1,5 @@
 t = { 11, 22, 33, you='one', me='two' }
---[[
+
 for a,b in pairs(t) do
 	print( a, b )
 end
@@ -12,7 +12,6 @@ print( "me", me )
 print( "fred", fred )
 print( "t[me]", t[me] )
 print( "t[fred]", t[fred] )
---]]
 
 -- basic metatable setting 
 t = { 11, 22, 33, you='one', me='two' }

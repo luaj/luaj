@@ -6,9 +6,15 @@ import java.util.Hashtable;
 import lua.StackState;
 
 public class LTable extends LValue {
+
+	/** Metatable tag for intercepting table gets */
+	private static final LString TM_INDEX    = new LString("__index");
 	
-	private Hashtable m_hash = new Hashtable();
-	private LValue m_metatable;
+	/** Metatable tag for intercepting table sets */
+	private static final LString TM_NEWINDEX = new LString("__newindex");
+
+	public Hashtable m_hash = new Hashtable();
+	private LTable m_metatable;
 	
 	public LTable() {
 	}
@@ -16,13 +22,32 @@ public class LTable extends LValue {
 	public LTable(int narray, int nhash) {
 	}
 
-	public void luaSetTable(LValue key, LValue val) {
+	public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
+		if ( m_metatable != null ) {
+			if ( ! m_hash.containsKey(key) ) {
+				LValue event = (LValue) m_metatable.m_hash.get( TM_NEWINDEX );
+				if ( event != null && event != LNil.NIL ) {
+					event.luaSetTable( state, base, table, key, val );
+					return;
+				}
+			}
+		}
 		m_hash.put( key, val );
 	}
 
-	public LValue luaGetTable(LValue key) {
-		Object o = m_hash.get(key);
-		return (o!=null? (LValue)o: LNil.NIL);
+	public void luaGetTable(StackState state, int base, LValue table, LValue key) {
+		LValue val = (LValue) m_hash.get(key);
+		if ( val == null || val == LNil.NIL ) {
+			if ( m_metatable != null ) {
+				LValue event = (LValue) m_metatable.m_hash.get( TM_INDEX );
+				if ( event != null && event != LNil.NIL ) {
+					event.luaGetTable( state, base, table, key );
+					return;
+				}
+			}
+			val = LNil.NIL;
+		}
+		state.stack[base] = val;
 	}
 	
 	public String luaAsString() {
@@ -41,7 +66,7 @@ public class LTable extends LValue {
 
 	/** Valid for tables */
 	public void luaSetMetatable(LValue metatable) {
-		this.m_metatable = metatable;
+		this.m_metatable = (LTable) metatable;
 	}
 	
 	/** Valid for tables */
@@ -64,8 +89,9 @@ public class LTable extends LValue {
 		public void luaStackCall(StackState state, int base, int top, int nresults) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
+				LValue val = (LValue) t.m_hash.get(key);
 				state.stack[base] = key;
-				state.stack[base+1] = t.luaGetTable(key);
+				state.stack[base+1] = val;
 				state.top = base+2;
 			} else {
 				state.stack[base] = LNil.NIL;
