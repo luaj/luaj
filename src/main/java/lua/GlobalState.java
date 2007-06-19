@@ -45,6 +45,7 @@ public class GlobalState {
 	public static LValue getGlobalsTable() {
 		LTable table = new LTable();
 		Builtin.addBuiltins( table );
+		LuaJava.addBuiltins( table );
 		table.m_hash.put(new LString("_G"), table);
 		return table;
 	}

@@ -1,7 +1,7 @@
 #!/bin/bash
 LUA_HOME=/cygdrive/c/programs/lua5.1
 TESTS="test1 test2 test3 test4 test5"
-TESTS="test6"
+TESTS="test7"
 for x in $TESTS
 do
     echo compiling $x
