@@ -14,7 +14,7 @@ public class UpVal {
 	}
 		
 	public String toString() {
-		return "up("+name+")";
+		return "up."+name;
 	}
 
 }

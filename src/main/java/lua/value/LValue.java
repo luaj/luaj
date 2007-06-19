@@ -9,6 +9,10 @@ public class LValue {
 	protected static LValue luaUnsupportedOperation() {
 		throw new java.lang.UnsupportedOperationException();
 	}
+
+	public String id() {
+		return Integer.toHexString(hashCode());
+	}
 	
 	// test if value is true
 	public boolean luaAsBoolean() {

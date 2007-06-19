@@ -4,7 +4,7 @@ import lua.StackState;
 
 public class LFunction extends LValue {
 
-	public String toString() {
+	public String luaAsString() {
 		return "function: "+hashCode();
 	}
 

@@ -36,7 +36,7 @@ final class Builtin extends LFunction {
 		switch ( id ) {
 		case PRINT:
 			for ( int i=base+1; i<top; i++ ) {
-				System.out.print( String.valueOf(state.stack[i]) );
+				System.out.print( state.stack[i].luaAsString() );
 				System.out.print( "\t" );
 			}
 			System.out.println();
@@ -53,7 +53,8 @@ final class Builtin extends LFunction {
 			break;
 		case SETMETATABLE:
 			state.stack[base+1].luaSetMetatable(state.stack[base+2]);
-			state.top = base;
+			state.stack[base] = state.stack[base+1];
+			state.top = base+1;
 			break;
 		default:
 			luaUnsupportedOperation();

@@ -1,9 +1,10 @@
 package lua.io;
 
 import lua.StackState;
+import lua.value.LFunction;
 import lua.value.LValue;
 
-public class Closure extends LValue {
+public class Closure extends LFunction {
 	public LValue env;
 	public Proto p;
 	public UpVal[] upVals;
@@ -18,9 +19,5 @@ public class Closure extends LValue {
 	// perform a lua call
 	public void luaStackCall(StackState state, int base, int top, int nresults) {
 		state.setupCall( this, base, top );
-	}
-
-	public String toString() {
-		return "closure: "+hashCode();
 	}
 }

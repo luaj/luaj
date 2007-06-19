@@ -50,8 +50,12 @@ public class LTable extends LValue {
 		state.stack[base] = val;
 	}
 	
-	public String luaAsString() {
+	public String toString() {
 		return m_hash.toString();
+	}
+	
+	public String luaAsString() {
+		return "table: "+id();
 	}
 	
 	/** Built-in opcode LEN, for Strings and Tables */

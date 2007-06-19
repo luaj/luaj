@@ -38,7 +38,7 @@ public class Proto extends LValue {
 	public int maxstacksize;
 
 
-	public String toString() {
-		return "proto: "+hashCode();
+	public String luaAsString() {
+		return "proto: "+id();
 	}
 }
