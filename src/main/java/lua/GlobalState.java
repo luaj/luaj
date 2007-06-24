@@ -4,7 +4,6 @@ import java.util.Hashtable;
 
 import lua.value.LString;
 import lua.value.LTable;
-import lua.value.LValue;
 
 /**
 ** `global state', shared by all threads of this state
@@ -42,11 +41,15 @@ public class GlobalState {
 //	  TString *tmname[TM_N];  /* array with tag-method names */
 //	} global_State;
 //
-	public static LValue getGlobalsTable() {
-		LTable table = new LTable();
-		Builtin.addBuiltins( table );
-		LuaJava.addBuiltins( table );
-		table.m_hash.put(new LString("_G"), table);
-		return table;
+	private static LTable _G;
+	
+	static {
+		_G = new LTable();
+		Builtin.addBuiltins( _G  );
+		_G .m_hash.put(new LString("_G"), _G );
+	}
+	
+	public static LTable getGlobalsTable() {
+		return _G;
 	}
 }

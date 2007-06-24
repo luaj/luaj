@@ -7,7 +7,7 @@ abstract
 public class LValue {
 
 	protected static LValue luaUnsupportedOperation() {
-		throw new java.lang.UnsupportedOperationException();
+		throw new java.lang.RuntimeException( "not supported" );
 	}
 
 	public String id() {
@@ -104,6 +104,11 @@ public class LValue {
 	public int luaAsInt() {
 		luaUnsupportedOperation();
 		return 0;
+	}
+
+	/** Return value as a double */
+	public double luaAsDouble() {
+		return luaAsInt();
 	}
 
 	/** Arithmetic negative */

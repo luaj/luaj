@@ -40,13 +40,17 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
 		case Lua.OP_MOD: return new LDouble( lhs % rhs );
-		case Lua.OP_POW: return new LDouble( Math.pow(lhs, rhs) );
+//		case Lua.OP_POW: return new LDouble( Math.pow(lhs, rhs) );
 		}
 		return luaUnsupportedOperation();
 	}
 	
 	public int luaAsInt() {
 		return (int) m_value;
+	}
+
+	public double luaAsDouble() {
+		return m_value;
 	}
 
 	// binary compares on integers, first dispatch

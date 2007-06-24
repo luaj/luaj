@@ -2,23 +2,29 @@
 import java.io.IOException;
 import java.io.InputStream;
 
+import lua.GlobalState;
 import lua.StackState;
+import lua.addon.luajava.LuaJava;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
 import lua.value.LString;
 
 /**
- * Program to run a compiled lua chunk for test purposes
+ * Program to run a compiled lua chunk for test purposes, 
+ * but with the LuaJava add-ons added in
  * 
  * @author jim_roseborough
  */
-public class LuacRunner {
+public class LuaJavaAppRunner {
 
 	public static void main( String[] args ) throws IOException {
 
+		// add LuaJava bindings
+		LuaJava.install();
+		
 		// get script name
-		String script = (args.length>0? args[0]: "/test1.luac");
+		String script = (args.length>0? args[0]: "/swingapp.luac");
 		System.out.println("loading '"+script+"'");
 		
 		// new lua state 
@@ -29,7 +35,7 @@ public class LuacRunner {
 			state.push(new LString(args[i]));
 		
 		// load the file
-		InputStream is = LuacRunner.class.getResourceAsStream( script );
+		InputStream is = LuaJavaAppRunner.class.getResourceAsStream( script );
 		Proto p = LoadState.undump(state, is, script);
 		
 		// create closure to execute
@@ -38,11 +44,6 @@ public class LuacRunner {
 		for ( int i=0; i<args.length; i++ )
 			state.push( new LString(args[i]) );
 		state.docall(args.length, 0);
-
-		// print result? 
-		System.out.println("stack:");
-		for ( int i=0; i<state.top; i++ ) 
-			System.out.println(" ["+i+"]="+state.stack[i] );
 		
 	}
 }
