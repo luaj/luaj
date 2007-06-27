@@ -19,8 +19,8 @@ public class CallFrame {
 	public final LValue[] stack;
 	public int base;
 	public int top;
-	private final Closure cl;
-	private final Proto p;
+	public final Closure cl;
+	public final Proto p;
 	private final LValue[] k;
 	private final int nresults;
 	private int pc = 0;
@@ -73,7 +73,6 @@ public class CallFrame {
 
 		// reload the current calling context
 		int[] code = p.code;
-		state.avail = base + p.maxstacksize;
 		while (true) {
 
 			if (DEBUG)
@@ -310,8 +309,10 @@ public class CallFrame {
 
 				// pop the call stack
 				done = true;
-				if ( --state.cc >= 0 )
-					state.calls[state.cc].top = top;
+				if ( --state.cc >= 0 ) {
+					CallFrame call = state.calls[state.cc];
+					call.top = top;
+				}
 
 				// force a reload of the calling context
 				return;
