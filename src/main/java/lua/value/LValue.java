@@ -1,7 +1,7 @@
 package lua.value;
 
+import lua.CallFrame;
 import lua.Lua;
-import lua.StackState;
 
 abstract
 public class LValue {
@@ -20,7 +20,7 @@ public class LValue {
 	}
 
 	// perform a lua call, return number of results actually produced
-	public void luaStackCall(StackState state, int base, int top, int nresults) {
+	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 		luaUnsupportedOperation();
 	}
 
@@ -72,20 +72,20 @@ public class LValue {
 	}
 	
 	/** set a value in a table
-	 * @param state the stack state
+	 * @param call the stack state
 	 * @param base the base of the stack, in case a function is put on the stack
 	 * @param table the table to operate on
 	 * @param the key to set
 	 * @param the value to set
 	 */
-	public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
+	public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
 		luaUnsupportedOperation();
 	}
 
 	/** Get a value from a table 
 	 * @param base TODO
 	 * @param table TODO*/
-	public void luaGetTable(StackState state, int base, LValue table, LValue key) {
+	public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
 		luaUnsupportedOperation();
 	}
 	

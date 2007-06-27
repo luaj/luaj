@@ -1,4 +1,5 @@
-for cycle = 1,100 do 
+
+for cycle = 1,10 do 
 
 a = 123 + 456
 print( a )
@@ -68,17 +69,18 @@ print( func(11, 12, 13) )
 print( func(23, 22, 21) )
 print( func(func(32,33,34), func(45,46,47), func(58,59,50)) )
 
+--[[
 function p(a,...)
 	print("a",a)
---	print("...",...)
---	print("...,a",...,a)
---	print("a,...",a,...)
+	print("...",...)
+	print("...,a",...,a)
+	print("a,...",a,...)
 end
 p()
 p("q")
 p("q","r")
 p("q","r","s")
-
+--]]
 
 
 end

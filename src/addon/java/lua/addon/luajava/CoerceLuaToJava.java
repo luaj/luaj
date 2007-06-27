@@ -3,7 +3,7 @@ package lua.addon.luajava;
 import java.util.HashMap;
 import java.util.Map;
 
-import lua.StackState;
+import lua.CallFrame;
 import lua.addon.luajava.LuaJava.LInstance;
 import lua.value.LBoolean;
 import lua.value.LDouble;
@@ -105,11 +105,11 @@ public class CoerceLuaToJava {
 		return v;
 	}
 
-	static Object[] coerceArgs(StackState state, int base, int nargs, Class[] parameterTypes) {
+	static Object[] coerceArgs(CallFrame call, int base, int nargs, Class[] parameterTypes) {
 		int n = parameterTypes.length;
 		Object[] args = new Object[n];
 		for ( int i=0; i<n && i<nargs; i++ )
-			args[i] = coerceArg( state.stack[base+i], parameterTypes[i] );
+			args[i] = coerceArg( call.stack[base+i], parameterTypes[i] );
 		return args;
 	}
 

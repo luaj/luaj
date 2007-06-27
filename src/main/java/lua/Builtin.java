@@ -12,7 +12,7 @@ final class Builtin extends LFunction {
 
 	static void addBuiltins(LTable table) {
 		for ( int i=0; i<NAMES.length; i++ )
-			table.m_hash.put( new LString( NAMES[i] ), new Builtin(i) );
+			table.put( NAMES[i], new Builtin(i) );
 	}
 
 	private static final int PRINT = 0;
@@ -32,35 +32,35 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int top, int nresults) {
+	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 		switch ( id ) {
 		case PRINT:
 			for ( int i=base+1; i<top; i++ ) {
-				System.out.print( state.stack[i].luaAsString() );
+				System.out.print( call.stack[i].luaAsString() );
 				System.out.print( "\t" );
 			}
 			System.out.println();
-			state.top = base;
+			call.top = base;
 			break;
 		case PAIRS:
-			LValue value = state.stack[base+1].luaPairs();
-			state.stack[base] = value;
-			state.top = base+1;
+			LValue value = call.stack[base+1].luaPairs();
+			call.stack[base] = value;
+			call.top = base+1;
 			break;
 		case GETMETATABLE:
-			state.stack[base] = state.stack[base+1].luaGetMetatable();
-			state.top = base+1;
+			call.stack[base] = call.stack[base+1].luaGetMetatable();
+			call.top = base+1;
 			break;
 		case SETMETATABLE:
-			state.stack[base+1].luaSetMetatable(state.stack[base+2]);
-			state.stack[base] = state.stack[base+1];
-			state.top = base+1;
+			call.stack[base+1].luaSetMetatable(call.stack[base+2]);
+			call.stack[base] = call.stack[base+1];
+			call.top = base+1;
 			break;
 		default:
 			luaUnsupportedOperation();
 		}
 		if (nresults >= 0)
-			state.adjustTop(base + nresults);
+			call.adjustTop(base + nresults);
 	}
 
 }

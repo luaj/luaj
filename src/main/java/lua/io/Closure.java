@@ -1,5 +1,6 @@
 package lua.io;
 
+import lua.CallFrame;
 import lua.StackState;
 import lua.value.LFunction;
 import lua.value.LValue;
@@ -9,7 +10,7 @@ public class Closure extends LFunction {
 	public Proto p;
 	public UpVal[] upVals;
 	public Closure(StackState state, Proto p) {
-		this.env = state.gt();
+		this.env = state._G;
 		this.p = p;
 		upVals = new UpVal[p.nups];
 		for ( int i=0; i<p.nups; i++ )
@@ -17,7 +18,7 @@ public class Closure extends LFunction {
 	}
 
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int top, int nresults) {
-		state.setupCall( this, base, top );
+	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
+		call.state.stackCall( this, base, top, nresults );
 	}
 }

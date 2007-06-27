@@ -5,7 +5,7 @@ obj = luajava.newInstance("SampleClass")
 print( obj )
 obj.s = "Hello"
 print( obj.s )
-print( obj.getS() )
+print( obj:getS() )
 
-obj.setS( "World" )
+obj:setS( "World" )
 print( obj.s )

@@ -9,8 +9,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import lua.CallFrame;
 import lua.GlobalState;
-import lua.StackState;
 import lua.value.LFunction;
 import lua.value.LString;
 import lua.value.LTable;
@@ -21,8 +21,8 @@ public final class LuaJava extends LFunction {
 	public static void install() {
 		LTable luajava = new LTable();
 		for ( int i=0; i<NAMES.length; i++ )
-			luajava.m_hash.put( new LString( NAMES[i] ), new LuaJava(i) );
-		GlobalState.getGlobalsTable().m_hash.put( new LString( "luajava" ), luajava );
+			luajava.put( NAMES[i], new LuaJava(i) );
+		GlobalState.getGlobalsTable().put( "luajava", luajava );
 	}
 
 	private static final int NEWINSTANCE  = 0;
@@ -48,21 +48,21 @@ public final class LuaJava extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(StackState state, int base, int top, int nresults) {
+	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 		String className;
 		switch ( id ) {
 		case BINDCLASS:
-			className = state.stack[base+1].luaAsString();
+			className = call.stack[base+1].luaAsString();
 			try {
 				Class clazz = Class.forName(className);
-				state.stack[base] = new LInstance( clazz, clazz );
-				state.top = base+1;
+				call.stack[base] = new LInstance( clazz, clazz );
+				call.top = base+1;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 			break;
 		case NEWINSTANCE:
-			className = state.stack[base+1].luaAsString();
+			className = call.stack[base+1].luaAsString();
 			try {
 				Class clazz = Class.forName(className);
 				Constructor[] cons = clazz.getConstructors();
@@ -70,21 +70,21 @@ public final class LuaJava extends LFunction {
 				Class[] paramTypes = con.getParameterTypes();
 				int paramsBase = base + 2;
 				int nargs = top - paramsBase;
-				int score = CoerceLuaToJava.scoreParamTypes( state.stack, paramsBase, nargs, paramTypes );
+				int score = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, paramTypes );
 				for ( int i=1; i<cons.length; i++ ) {
 					Constructor c = cons[i];
 					Class[] p = c.getParameterTypes();
-					int s = CoerceLuaToJava.scoreParamTypes( state.stack, paramsBase, nargs, p );
+					int s = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, p );
 					if ( s < score ) {
 						con = c;
 						paramTypes = p;
 						score = s;
 					}
 				}
-				Object[] args = CoerceLuaToJava.coerceArgs( state, paramsBase, nargs, paramTypes );
+				Object[] args = CoerceLuaToJava.coerceArgs( call, paramsBase, nargs, paramTypes );
 				Object o = con.newInstance( args );
-				state.stack[base] = new LInstance( o, clazz );
-				state.top = base+1;
+				call.stack[base] = new LInstance( o, clazz );
+				call.top = base+1;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -93,10 +93,10 @@ public final class LuaJava extends LFunction {
 			luaUnsupportedOperation();
 		}
 		if (nresults >= 0)
-			state.adjustTop(base + nresults);
+			call.adjustTop(base + nresults);
 	}
 	
-	static class LInstance extends LValue {
+	public static class LInstance extends LValue {
 		Object instance;
 		private Class clazz;
 		public LInstance(Object o, Class clazz) {
@@ -106,29 +106,29 @@ public final class LuaJava extends LFunction {
 		public String luaAsString() {
 			return instance.toString();
 		}
-		public void luaGetTable(StackState state, int base, LValue table, LValue key) {
+		public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
 			final String s = key.luaAsString();
 			try {
 				Field f = clazz.getField(s);
 				Object o = f.get(instance);
 				LValue v = CoerceJavaToLua.coerce( o );
-				state.stack[base] = v;
-				state.top = base + 1;
+				call.stack[base] = v;
+				call.top = base + 1;
 			} catch (NoSuchFieldException nsfe) {
-				state.stack[base] = new LMethod(instance,clazz,s);
-				state.top = base + 1;
+				call.stack[base] = new LMethod(instance,clazz,s);
+				call.top = base + 1;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
-		public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
+		public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
 			Class c = instance.getClass();
 			String s = key.luaAsString();
 			try {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
 				f.set(instance,v);
-				state.top = base;
+				call.top = base;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -148,7 +148,7 @@ public final class LuaJava extends LFunction {
 		public String toString() {
 			return clazz.getName()+"."+s+"()";
 		}
-		public void luaStackCall(StackState state, int base, int top, int nresults) {
+		public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 			try {
 				Method[] meths = clazz.getMethods();
 				Method meth = null;
@@ -161,7 +161,7 @@ public final class LuaJava extends LFunction {
 					String name = m.getName();
 					if ( s.equals(name) ) {
 						Class[] p = m.getParameterTypes();
-						int s = CoerceLuaToJava.scoreParamTypes( state.stack, paramsBase, nargs, p );
+						int s = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, p );
 						if ( s < score ) {
 							meth = m;
 							paramTypes = p;
@@ -169,11 +169,11 @@ public final class LuaJava extends LFunction {
 						}
 					}
 				}
-				Object[] args = CoerceLuaToJava.coerceArgs( state, paramsBase, nargs, paramTypes );
+				Object[] args = CoerceLuaToJava.coerceArgs( call, paramsBase, nargs, paramTypes );
 				Object result = meth.invoke( instance, args );
-				state.stack[base] = CoerceJavaToLua.coerce(result);
-				state.top = base + 1;
-				state.adjustTop(base+nresults);
+				call.stack[base] = CoerceJavaToLua.coerce(result);
+				call.top = base + 1;
+				call.adjustTop(base+nresults);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

@@ -26,12 +26,13 @@ end
 print( myfunc(0.1) )
 print( myfunc(0.1) )
 
---[[
-
 i = 1
 table = { "west", "south", "east", "north" }
 function next()
-	i = (i % 4) + 1
+	if ( i >= 4 ) then
+		i = 0
+	end
+	i = i + 1
 	return table[i]
 end
 
@@ -76,5 +77,4 @@ function room4 ()
 end
 
 room1()
---]]
 	

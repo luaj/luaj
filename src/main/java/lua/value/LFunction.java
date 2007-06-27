@@ -1,6 +1,7 @@
 package lua.value;
 
-import lua.StackState;
+import lua.CallFrame;
+
 
 public class LFunction extends LValue {
 
@@ -8,21 +9,21 @@ public class LFunction extends LValue {
 		return "function: "+hashCode();
 	}
 
-	public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
-		state.top = base;
-		state.push( this );
-		state.push( table );
-		state.push( key );
-		state.push( val );
-		this.luaStackCall(state, base, state.top, 1);
+	public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
+		call.top = base;
+		call.push( this );
+		call.push( table );
+		call.push( key );
+		call.push( val );
+		this.luaStackCall(call, base, call.top, 1);
 	}
 
-	public void luaGetTable(StackState state, int base, LValue table, LValue key) {
-		state.top = base;
-		state.push( this );
-		state.push( table );
-		state.push( key );
-		this.luaStackCall(state, base, state.top, 1);
+	public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
+		call.top = base;
+		call.push( this );
+		call.push( table );
+		call.push( key );
+		this.luaStackCall(call, base, call.top, 1);
 	}
 	
 }

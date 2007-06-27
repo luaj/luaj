@@ -3,7 +3,7 @@ package lua.value;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import lua.StackState;
+import lua.CallFrame;
 
 public class LTable extends LValue {
 
@@ -13,7 +13,7 @@ public class LTable extends LValue {
 	/** Metatable tag for intercepting table sets */
 	private static final LString TM_NEWINDEX = new LString("__newindex");
 
-	public Hashtable m_hash = new Hashtable();
+	private Hashtable m_hash = new Hashtable();
 	private LTable m_metatable;
 	
 	public LTable() {
@@ -22,12 +22,17 @@ public class LTable extends LValue {
 	public LTable(int narray, int nhash) {
 	}
 
-	public void luaSetTable(StackState state, int base, LValue table, LValue key, LValue val) {
+	/** Utility method for putting a value directly, typically for initializing a table */
+	public void put(String key, LValue value) {
+		m_hash.put( new LString(key), value );
+	}
+
+	public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
 		if ( m_metatable != null ) {
 			if ( ! m_hash.containsKey(key) ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_NEWINDEX );
 				if ( event != null && event != LNil.NIL ) {
-					event.luaSetTable( state, base, table, key, val );
+					event.luaSetTable( call, base, table, key, val );
 					return;
 				}
 			}
@@ -35,19 +40,19 @@ public class LTable extends LValue {
 		m_hash.put( key, val );
 	}
 
-	public void luaGetTable(StackState state, int base, LValue table, LValue key) {
+	public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
 		LValue val = (LValue) m_hash.get(key);
 		if ( val == null || val == LNil.NIL ) {
 			if ( m_metatable != null ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_INDEX );
 				if ( event != null && event != LNil.NIL ) {
-					event.luaGetTable( state, base, table, key );
+					event.luaGetTable( call, base, table, key );
 					return;
 				}
 			}
 			val = LNil.NIL;
 		}
-		state.stack[base] = val;
+		call.stack[base] = val;
 	}
 	
 	public String toString() {
@@ -90,19 +95,19 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(StackState state, int base, int top, int nresults) {
+		public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
 				LValue val = (LValue) t.m_hash.get(key);
-				state.stack[base] = key;
-				state.stack[base+1] = val;
-				state.top = base+2;
+				call.stack[base] = key;
+				call.stack[base+1] = val;
+				call.top = base+2;
 			} else {
-				state.stack[base] = LNil.NIL;
-				state.top = base+1;
+				call.stack[base] = LNil.NIL;
+				call.top = base+1;
 			}
 			if ( nresults >= 0 )
-				state.adjustTop(base + nresults);
+				call.adjustTop(base + nresults);
 		}
 	}
 

@@ -1,6 +1,5 @@
 package lua.io;
 
-import lua.value.LNil;
 import lua.value.LString;
 import lua.value.LValue;
 
