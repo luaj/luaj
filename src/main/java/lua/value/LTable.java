@@ -13,7 +13,7 @@ public class LTable extends LValue {
 	/** Metatable tag for intercepting table sets */
 	private static final LString TM_NEWINDEX = new LString("__newindex");
 
-	private Hashtable m_hash = new Hashtable();
+	public Hashtable m_hash = new Hashtable();
 	private LTable m_metatable;
 	
 	public LTable() {
@@ -27,6 +27,16 @@ public class LTable extends LValue {
 		m_hash.put( new LString(key), value );
 	}
 
+	/** Utility method for putting something in a numbered slot */
+	public void put(int i, LValue value) {
+		m_hash.put( new Integer(i), value );
+	}
+
+	/** Utility method to directly get the value in a table, without metatable calls */
+	public LValue get(String key) {
+		return (LValue) m_hash.get( new LString(key) );
+	}
+	
 	public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
 		if ( m_metatable != null ) {
 			if ( ! m_hash.containsKey(key) ) {
