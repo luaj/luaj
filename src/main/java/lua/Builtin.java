@@ -3,8 +3,10 @@
  */
 package lua;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+
 import lua.value.LFunction;
-import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LValue;
 
@@ -22,6 +24,8 @@ final class Builtin extends LFunction {
 	
 	private static final String[] NAMES = { "print", "pairs", "getmetatable", "setmetatable" };
 	
+	private static PrintStream stdout = System.out;
+	
 	private int id;
 	private Builtin( int id ) {			
 		this.id = id;
@@ -35,11 +39,13 @@ final class Builtin extends LFunction {
 	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
 		switch ( id ) {
 		case PRINT:
-			for ( int i=base+1; i<top; i++ ) {
-				System.out.print( call.stack[i].luaAsString() );
-				System.out.print( "\t" );
+			if ( base+1<top )
+				stdout.print( call.stack[base+1].luaAsString() );
+			for ( int i=base+2; i<top; i++ ) {
+				stdout.print( "\t" );
+				stdout.print( call.stack[i].luaAsString() );
 			}
-			System.out.println();
+			stdout.println();
 			call.top = base;
 			break;
 		case PAIRS:
@@ -61,6 +67,14 @@ final class Builtin extends LFunction {
 		}
 		if (nresults >= 0)
 			call.adjustTop(base + nresults);
+	}
+	
+	static void redirectOutput( OutputStream newStdOut ) {
+		stdout = new PrintStream( newStdOut );
+	}
+	
+	static void restoreStandardOutput() {
+		stdout = System.out;
 	}
 
 }
