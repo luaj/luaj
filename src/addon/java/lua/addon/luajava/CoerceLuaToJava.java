@@ -50,6 +50,20 @@ public class CoerceLuaToJava {
 				return 4;
 			}
 		};
+		Coercion doubleCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return Double.valueOf( value.luaAsDouble() );
+			}
+			public int score(LValue value) {
+				if ( value instanceof LDouble )
+					return 0;
+				if ( value instanceof LNumber )
+					return 1;
+				if ( value instanceof LBoolean || value == LNil.NIL )
+					return 2;
+				return 4;
+			}
+		};
 		Coercion stringCoercion = new Coercion() {
 			public Object coerce(LValue value) {
 				return value.luaAsString();
@@ -92,6 +106,8 @@ public class CoerceLuaToJava {
 		COERCIONS.put( Integer.class, intCoercion );
 		COERCIONS.put( Long.TYPE, intCoercion );
 		COERCIONS.put( Long.class, intCoercion );
+		COERCIONS.put( Double.TYPE, doubleCoercion );
+		COERCIONS.put( Double.class, doubleCoercion );
 		COERCIONS.put( String.class, stringCoercion );
 		COERCIONS.put( Object.class, objectCoercion );
 	}

@@ -9,3 +9,6 @@ print( obj:getS() )
 
 obj:setS( "World" )
 print( obj.s )
+
+math = luajava.bindClass("java.lang.Math")
+print("Square root of 9 is", math:sqrt(9.0))

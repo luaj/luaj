@@ -173,7 +173,6 @@ public final class LuaJava extends LFunction {
 				Object result = meth.invoke( instance, args );
 				call.stack[base] = CoerceJavaToLua.coerce(result);
 				call.top = base + 1;
-				call.adjustTop(base+nresults);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
