@@ -11,7 +11,7 @@ function myfunc(x)
 	return x*x;
 end
 
-print( myfunc(0.1) )
+print( myfunc(0.25) )
 
 do
   local oldMyfunc = myfunc
