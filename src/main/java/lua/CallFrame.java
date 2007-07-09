@@ -5,6 +5,7 @@ package lua;
 
 import lua.io.Closure;
 import lua.io.Proto;
+import lua.io.UpVal;
 import lua.value.LBoolean;
 import lua.value.LInteger;
 import lua.value.LNil;
@@ -121,7 +122,7 @@ public class CallFrame {
 			}
 			case StackState.OP_GETUPVAL: {
 				b = StackState.GETARG_B(i);
-				this.stack[base + a] = cl.upVals[b].value;
+				this.stack[base + a] = cl.upVals[b].getValue();
 				continue;
 			}
 			case StackState.OP_GETGLOBAL: {
@@ -148,7 +149,7 @@ public class CallFrame {
 			}
 			case StackState.OP_SETUPVAL: {
 				b = StackState.GETARG_B(i);
-				cl.upVals[b].value = this.stack[base + a];
+				cl.upVals[b].setValue( this.stack[base + a] );
 				continue;
 			}
 			case StackState.OP_SETTABLE: {
@@ -272,6 +273,8 @@ public class CallFrame {
 				if (b != 0) // else use previous instruction set top
 					top = base + a + b;
 
+				close( base ); // Close open upvals
+
 				// make or set up the call
 				this.stack[base + a].luaStackCall(this, base + a, top, c - 1);
 
@@ -298,6 +301,7 @@ public class CallFrame {
 				b = StackState.GETARG_B(i); // number of return vals
 				if (b != 0) // else use previous top
 					top = base + a + b - 1;
+				close( base ); // close open upvals
 				n = top - (base + a); // number to copy down
 				System.arraycopy(this.stack, base + a, this.stack,
 						base - 1, n);
@@ -379,7 +383,7 @@ public class CallFrame {
 				continue;
 			}
 			case StackState.OP_CLOSE: {
-				// for java, no need to do anything!
+				close( a ); // close upvals higher in the stack than position a
 				continue;
 			}
 			case StackState.OP_CLOSURE: {
@@ -391,12 +395,9 @@ public class CallFrame {
 					o = StackState.GET_OPCODE(i);
 					b = StackState.GETARG_B(i);
 					if (o == StackState.OP_GETUPVAL) {
-						newClosure.upVals[j] = cl.upVals[b]; // TODO
+						newClosure.upVals[j] = cl.upVals[b];
 					} else if (o == StackState.OP_MOVE) {
-						newClosure.upVals[j].value = this.stack[base + b]; // TODO:
-						// what
-						// to do
-						// here?
+						newClosure.upVals[j] = findUpVal( proto.upvalues[j], base + b );
 					} else {
 						throw new java.lang.IllegalArgumentException(
 								"bad opcode: " + o);
@@ -425,7 +426,30 @@ public class CallFrame {
 			}
 		}
 	}
-
+	
+	private UpVal findUpVal( LString upValName, int target ) {
+		UpVal up;
+		int i;
+		for ( i = this.state.upvals.size() - 1; i >= 0; --i ) {
+			up = (UpVal) this.state.upvals.elementAt( i );
+			if ( up.stack == this.stack && up.position == target ) {
+				return up;
+			} else if ( up.position < target ) {
+				break;
+			}
+		}
+		
+		up = new UpVal( upValName, this.stack, target );
+		this.state.upvals.insertElementAt( up, i + 1 );
+		return up;
+	}
+	
+	private void close( int limit ) {
+		while ( !state.upvals.empty() && ( (UpVal) this.state.upvals.lastElement() ).close( limit ) ) {
+			this.state.upvals.pop();
+		}
+	}
+	
 	public void push(LValue value) {
 		stack[top++] = value;
 	}

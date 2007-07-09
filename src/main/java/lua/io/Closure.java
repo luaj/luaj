@@ -13,8 +13,6 @@ public class Closure extends LFunction {
 		this.env = state._G;
 		this.p = p;
 		upVals = new UpVal[p.nups];
-		for ( int i=0; i<p.nups; i++ )
-			upVals[i] = new UpVal( p.upvalues[i] );
 	}
 
 	// perform a lua call
