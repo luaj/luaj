@@ -367,15 +367,16 @@ public class CallFrame {
 			case StackState.OP_SETLIST: {
 				b = StackState.GETARG_B(i);
 				c = StackState.GETARG_C(i);
+				int listBase = base + a;
 				if (b == 0) {
-					b = top - 1;
+					b = top - listBase - 1;
 				}
 				if (c == 0) {
 					c = code[pc++];
 				}
 				table = this.stack[base + a];
 				for (int index = 1; index <= b; index++) {
-					val = this.stack[base + a + index];
+					val = this.stack[listBase + index];
 					table.luaSetTable(this, this.state.avail, table,
 							new LInteger(index), val);
 				}

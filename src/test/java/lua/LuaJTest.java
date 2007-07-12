@@ -51,6 +51,10 @@ public class LuaJTest extends TestCase {
 		runTest( "upvalues2" );
 	}
 	
+	public void testSetlist() throws IOException, InterruptedException {
+		runTest( "setlist" );
+	}
+	
 	private void runTest( String testName ) throws IOException, InterruptedException {
 		// add LuaJava bindings
 		LuaJava.install();
