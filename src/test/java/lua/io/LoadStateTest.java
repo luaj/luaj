@@ -30,7 +30,7 @@ public class LoadStateTest extends TestCase {
 			Double.NEGATIVE_INFINITY,
 			Double.POSITIVE_INFINITY,
 			Double.MAX_VALUE,
-			Double.MIN_NORMAL
+			Double.MAX_VALUE
 	};
 	
 	public void testLongBitsToLuaNumber() {

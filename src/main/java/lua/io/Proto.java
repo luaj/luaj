@@ -8,10 +8,11 @@ import lua.value.LString;
 ** Function Prototypes
 */
 public class Proto extends LValue {
-	// TODO: what to do with state? 
 	public Proto(StackState l) {
 	}
-	
+	public Proto() {
+	}
+
 	public LValue[] k; /* constants used by the function */
 //	  TValue *k;  /* constants used by the function */
 //	  Instruction *code;
