@@ -223,7 +223,7 @@ public class CallFrame {
 				rkb = GETARG_RKB(i);
 				rkc = GETARG_RKC(i);
 				boolean test = rkc.luaBinCmpUnknown(o, rkb);
-				if (test)
+				if (test == (a == 0))
 					pc++;
 				continue;
 			}
