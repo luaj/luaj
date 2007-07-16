@@ -7,7 +7,7 @@ import lua.value.LString;
 /*
 ** Function Prototypes
 */
-public class Proto extends LValue {
+public class Proto {
 	public Proto(StackState l) {
 	}
 	public Proto() {
@@ -38,8 +38,4 @@ public class Proto extends LValue {
 	public boolean is_vararg;
 	public int maxstacksize;
 
-
-	public String luaAsString() {
-		return "proto: "+id();
-	}
 }

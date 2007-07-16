@@ -5,6 +5,8 @@ import lua.StackState;
 
 public class LString extends LValue {
 
+	public static final LString TYPE_NAME = new LString("string");
+	
 	final String m_string;
 	final int m_hash;
 	
@@ -51,6 +53,10 @@ public class LString extends LValue {
 	/** Built-in opcode LEN, for Strings and Tables */
 	public LValue luaLength() {
 		return new LInteger( m_string.length() );
+	}
+
+	public LString luaGetType() {
+		return TYPE_NAME;
 	}
 
 }

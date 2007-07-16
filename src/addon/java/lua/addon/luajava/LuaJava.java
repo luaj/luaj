@@ -133,6 +133,9 @@ public final class LuaJava extends LFunction {
 				throw new RuntimeException(e);
 			}
 		}
+		public LString luaGetType() {
+			return new LString("userdata");
+		}
 		
 	}
 

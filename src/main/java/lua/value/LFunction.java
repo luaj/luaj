@@ -5,6 +5,8 @@ import lua.CallFrame;
 
 public class LFunction extends LValue {
 
+	public static final LString TYPE_NAME = new LString("function");
+	
 	public String luaAsString() {
 		return "function: "+hashCode();
 	}
@@ -24,6 +26,10 @@ public class LFunction extends LValue {
 		call.push( table );
 		call.push( key );
 		this.luaStackCall(call, base, call.top, 1);
+	}
+	
+	public LString luaGetType() {
+		return TYPE_NAME;
 	}
 	
 }

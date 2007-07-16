@@ -21,8 +21,9 @@ final class Builtin extends LFunction {
 	private static final int PAIRS = 1;
 	private static final int GETMETATABLE = 2;
 	private static final int SETMETATABLE = 3;
+	private static final int TYPE = 4;
 	
-	private static final String[] NAMES = { "print", "pairs", "getmetatable", "setmetatable" };
+	private static final String[] NAMES = { "print", "pairs", "getmetatable", "setmetatable", "type" };
 	
 	private static PrintStream stdout = System.out;
 	
@@ -60,6 +61,10 @@ final class Builtin extends LFunction {
 		case SETMETATABLE:
 			call.stack[base+1].luaSetMetatable(call.stack[base+2]);
 			call.stack[base] = call.stack[base+1];
+			call.top = base+1;
+			break;
+		case TYPE:
+			call.stack[base] = call.stack[base+1].luaGetType();
 			call.top = base+1;
 			break;
 		default:

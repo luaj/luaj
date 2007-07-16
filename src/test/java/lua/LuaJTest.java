@@ -47,16 +47,20 @@ public class LuaJTest extends TestCase {
 		runTest( "compare" );
 	}
 	
+	public void testSetlist() throws IOException, InterruptedException {
+		runTest( "setlist" );
+	}
+	
+	public void testType() throws IOException, InterruptedException {
+		runTest( "type" );
+	}
+	
 	public void testUpvalues() throws IOException, InterruptedException {
 		runTest( "upvalues" );
 	}
 	
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
-	}
-	
-	public void testSetlist() throws IOException, InterruptedException {
-		runTest( "setlist" );
 	}
 	
 	private void runTest( String testName ) throws IOException, InterruptedException {

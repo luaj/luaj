@@ -137,4 +137,6 @@ public class LValue {
 		luaUnsupportedOperation();
 	}
 
+	/** Valid for all types: return the type of this value as an LString */
+	public abstract LString luaGetType();
 }

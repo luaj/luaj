@@ -6,6 +6,8 @@ public final class LBoolean extends LValue {
 	
 	public static final LBoolean FALSE = new LBoolean("false",false);
 	
+	public static final LString TYPE_NAME = new LString("boolean");
+	
 	private final String m_name;
 	private final boolean m_value;
 	
@@ -24,5 +26,9 @@ public final class LBoolean extends LValue {
 	
 	public final static LBoolean valueOf(boolean value) {
 		return value? TRUE: FALSE;
+	}
+	
+	public LString luaGetType() {
+		return TYPE_NAME;
 	}
 }

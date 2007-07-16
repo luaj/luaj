@@ -7,6 +7,8 @@ import lua.CallFrame;
 
 public class LTable extends LValue {
 
+	public static final LString TYPE_NAME = new LString("table");
+	
 	/** Metatable tag for intercepting table gets */
 	private static final LString TM_INDEX    = new LString("__index");
 	
@@ -95,7 +97,7 @@ public class LTable extends LValue {
 	}
 	
 	/** Iterator for tables */
-	private static final class LTableIterator extends LValue {
+	private static final class LTableIterator extends LFunction {
 		private final LTable t;
 		private final Enumeration e;
 
@@ -119,6 +121,10 @@ public class LTable extends LValue {
 			if ( nresults >= 0 )
 				call.adjustTop(base + nresults);
 		}
+	}
+
+	public LString luaGetType() {
+		return TYPE_NAME;
 	}
 
 }
