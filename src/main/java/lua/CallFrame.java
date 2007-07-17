@@ -24,7 +24,7 @@ public class CallFrame {
 	public final Proto p;
 	private final LValue[] k;
 	private final int nresults;
-	private int pc = 0;
+	int pc = 0;
 	boolean done = false;
 
 	CallFrame(StackState state, Closure c, int base, int nargs, int nresults) {
