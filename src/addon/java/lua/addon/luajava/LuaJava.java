@@ -14,6 +14,7 @@ import lua.GlobalState;
 import lua.value.LFunction;
 import lua.value.LString;
 import lua.value.LTable;
+import lua.value.LUserData;
 import lua.value.LValue;
 
 public final class LuaJava extends LFunction {
@@ -96,45 +97,38 @@ public final class LuaJava extends LFunction {
 			call.adjustTop(base + nresults);
 	}
 	
-	public static class LInstance extends LValue {
-		Object instance;
+	public static class LInstance extends LUserData {
 		private Class clazz;
 		public LInstance(Object o, Class clazz) {
-			this.instance = o;
+			super(o);
 			this.clazz = clazz;
-		}
-		public String luaAsString() {
-			return instance.toString();
 		}
 		public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
 			final String s = key.luaAsString();
 			try {
 				Field f = clazz.getField(s);
-				Object o = f.get(instance);
+				Object o = f.get(m_instance);
 				LValue v = CoerceJavaToLua.coerce( o );
 				call.stack[base] = v;
 				call.top = base + 1;
 			} catch (NoSuchFieldException nsfe) {
-				call.stack[base] = new LMethod(instance,clazz,s);
+				call.stack[base] = new LMethod(m_instance,clazz,s);
 				call.top = base + 1;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
 		public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
-			Class c = instance.getClass();
+			Class c = m_instance.getClass();
 			String s = key.luaAsString();
 			try {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
-				f.set(instance,v);
+				f.set(m_instance,v);
 				call.top = base;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-		}
-		public LString luaGetType() {
-			return new LString("userdata");
 		}
 		
 	}

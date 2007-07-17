@@ -11,6 +11,7 @@ import lua.value.LInteger;
 import lua.value.LNil;
 import lua.value.LNumber;
 import lua.value.LString;
+import lua.value.LUserData;
 import lua.value.LValue;
 
 public class CoerceLuaToJava {
@@ -69,15 +70,15 @@ public class CoerceLuaToJava {
 				return value.luaAsString();
 			} 
 			public int score(LValue value) {
-				if ( value instanceof LInstance )
+				if ( value instanceof LUserData )
 					return 0;
 				return 1;
 			}
 		};
 		Coercion objectCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				if ( value instanceof LInstance )
-					return ((LInstance)value).instance;
+				if ( value instanceof LUserData )
+					return ((LUserData)value).m_instance;
 				if ( value instanceof LString )
 					return value.luaAsString();
 				if ( value instanceof LInteger )
@@ -116,8 +117,8 @@ public class CoerceLuaToJava {
 		Coercion co = COERCIONS.get( type );
 		if ( co != null )
 			return co.coerce( v );
-		if ( v instanceof LInstance )
-			return ((LInstance) v).instance;
+		if ( v instanceof LUserData )
+			return ((LUserData) v).m_instance;
 		return v;
 	}
 
@@ -146,8 +147,8 @@ public class CoerceLuaToJava {
 			Coercion co = COERCIONS.get( c );
 			if ( co != null ) {
 				score += co.score( v );
-			} else if ( v instanceof LInstance ) {
-				Object o = ((LInstance) v).instance;
+			} else if ( v instanceof LUserData ) {
+				Object o = ((LUserData) v).m_instance;
 				if ( ! c.isAssignableFrom(o.getClass()) )
 						score += 0x10000;
 			} else {
