@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -23,8 +24,8 @@ public class StandardTest extends TestCase {
 	public static Test suite() throws IOException {
 		ZipEntry file;
 		
-		final HashMap<String, Proto> tests = new HashMap<String, Proto>();
-		final HashMap<String, String> results = new HashMap<String, String>();
+		final HashMap tests = new HashMap();
+		final HashMap results = new HashMap();
 		
 		InputStream zipStream = StandardTest.class.getResourceAsStream( "/standard-tests.zip" );
 		ZipInputStream testSuiteArchive = new ZipInputStream( zipStream );
@@ -44,9 +45,10 @@ public class StandardTest extends TestCase {
 		
 		TestSuite suite = new TestSuite();
 		
-		for ( final String test : tests.keySet() ) {
-			final Proto code = tests.get( test );
-			final String expectedResult = results.get( test );
+		for ( Iterator keys = tests.keySet().iterator(); keys.hasNext(); ) {
+			String test = (String)keys.next();
+			final Proto code = (Proto)tests.get( test );
+			final String expectedResult = (String)results.get( test );
 			
 			if ( code != null && expectedResult != null ) {
 				suite.addTest( new StandardTest( test, code, expectedResult ) );
