@@ -26,6 +26,10 @@ public class GlobalState {
 	private static LTable _G;
 	
 	static {
+		resetGlobals();
+	}
+	
+	static void resetGlobals() {
 		_G = new LTable();
 		_G .put( "_G", _G );
 		Builtin.addBuiltins( _G  );

@@ -43,6 +43,10 @@ public class LuaJTest extends TestCase {
 		runTest( "test7" );
 	}
 	
+	public void testAutoload() throws IOException, InterruptedException {
+		runTest( "autoload" );
+	}
+
 	public void testBoolean() throws IOException, InterruptedException {
 		runTest( "boolean" );
 	}
@@ -68,6 +72,10 @@ public class LuaJTest extends TestCase {
 	}
 	
 	private void runTest( String testName ) throws IOException, InterruptedException {
+		
+		// Reset the _G table just in case some test mucks with it
+		GlobalState.resetGlobals();
+		
 		// add LuaJava bindings
 		LuaJava.install();
 		
