@@ -194,7 +194,7 @@ public class CallFrame {
 			}
 			case StackState.OP_NOT: {
 				rkb = GETARG_RKB(i);
-				this.stack[base + a] = (rkb.luaAsBoolean() ? LBoolean.TRUE
+				this.stack[base + a] = (!rkb.luaAsBoolean() ? LBoolean.TRUE
 						: LBoolean.FALSE);
 				continue;
 			}
