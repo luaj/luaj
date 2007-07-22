@@ -18,6 +18,9 @@ public class Lua {
 	/** minimum size for string buffer */
 	public static final int LUA_MINBUFFER = 32;
 
+	/** use return values from previous op */
+	public static final int LUA_MULTRET = -1;
+
 	
 	// from lopcodes.h
 
@@ -376,8 +379,4 @@ public class Lua {
 		  null,
 	};
 
-
-	/** number of list items to accumulate before a SETLIST instruction */
-	public static final int LFIELDS_PER_FLUSH	= 50;
-	
 }
