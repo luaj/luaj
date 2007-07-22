@@ -14,6 +14,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import lua.Builtin;
 import lua.StackState;
+import lua.addon.luacompat.LuaCompat;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -68,6 +69,8 @@ public class StandardTest extends TestCase {
 	}
 	
 	public void runTest() {
+		GlobalState.resetGlobals();
+		LuaCompat.install();
 		StackState state = new StackState();
 		Closure c = new Closure( state, code );
 		
