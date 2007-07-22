@@ -109,19 +109,7 @@ public class LuaCompat extends LFunction {
 				if ( first+1 < top ) {
 					base = stack[first+1].luaAsInt();
 				}
-				if ( base >= 2 && base <= 36 ) {
-					String str = input.luaAsString().trim();
-					try {
-						result = new LInteger( Integer.parseInt( str, base ) );
-					} catch ( NumberFormatException nfe ) {
-						if ( base == 10 ) {
-							try {
-								result = new LDouble( Double.parseDouble( str ) );
-							} catch ( NumberFormatException nfe2 ) {
-							}
-						}
-					}
-				}
+				return ( (LString) input ).luaToNumber( base );
 			}
 		}
 		return result;

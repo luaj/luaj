@@ -46,6 +46,44 @@ public class LString extends LValue {
 		return false;
 	}
 	
+	public LValue luaBinOpDouble( int opcode, double m_value ) {
+		return luaToNumber().luaBinOpDouble( opcode, m_value );
+	}
+	
+	public LValue luaBinOpInteger( int opcode, int m_value ) {
+		return luaToNumber().luaBinOpInteger( opcode, m_value );
+	}
+	
+	public LValue luaBinOpUnknown( int opcode, LValue lhs ) {
+		return luaToNumber().luaBinOpUnknown( opcode, lhs );
+	}
+	
+	public LValue luaUnaryMinus() {
+		return luaToNumber().luaUnaryMinus();
+	}
+	
+	public LValue luaToNumber() {
+		return luaToNumber( 10 );
+	}
+	
+	public LValue luaToNumber( int base ) {
+		if ( base >= 2 && base <= 36 ) {
+			String str = m_string.trim();
+			try {
+				return new LInteger( Integer.parseInt( str, base ) );
+			} catch ( NumberFormatException nfe ) {
+				if ( base == 10 ) {
+					try {
+						return new LDouble( Double.parseDouble( str ) );
+					} catch ( NumberFormatException nfe2 ) {
+					}
+				}
+			}
+		}
+		
+		return LNil.NIL;
+	}
+	
 	public String luaAsString() {
 		return m_string;
 	}
