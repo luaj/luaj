@@ -3,7 +3,7 @@ package lua.value;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import lua.CallFrame;
+import lua.VM;
 
 public class LTable extends LValue {
 
@@ -39,12 +39,12 @@ public class LTable extends LValue {
 		return (LValue) m_hash.get( new LString(key) );
 	}
 	
-	public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
+	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 		if ( m_metatable != null ) {
 			if ( ! m_hash.containsKey(key) ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_NEWINDEX );
 				if ( event != null && event != LNil.NIL ) {
-					event.luaSetTable( call, base, table, key, val );
+					event.luaSetTable( vm, table, key, val );
 					return;
 				}
 			}
@@ -52,19 +52,21 @@ public class LTable extends LValue {
 		m_hash.put( key, val );
 	}
 
-	public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
+	public void luaGetTable(VM vm, LValue table, LValue key) {
 		LValue val = (LValue) m_hash.get(key);
 		if ( val == null || val == LNil.NIL ) {
 			if ( m_metatable != null ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_INDEX );
 				if ( event != null && event != LNil.NIL ) {
-					event.luaGetTable( call, base, table, key );
+					event.luaGetTable( vm, table, key );
 					return;
 				}
 			}
 			val = LNil.NIL;
 		}
-		call.stack[base] = val;
+		
+		// stack.stack[base] = val;
+		vm.push(val);
 	}
 	
 	public String toString() {
@@ -107,19 +109,14 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(CallFrame call, int base, int top, int nresults) {
+		public void luaStackCall(VM vm) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
 				LValue val = (LValue) t.m_hash.get(key);
-				call.stack[base] = key;
-				call.stack[base+1] = val;
-				call.top = base+2;
-			} else {
-				call.stack[base] = LNil.NIL;
-				call.top = base+1;
+				vm.setResult();
+				vm.push( key );
+				vm.push( val );
 			}
-			if ( nresults >= 0 )
-				call.adjustTop(base + nresults);
 		}
 	}
 

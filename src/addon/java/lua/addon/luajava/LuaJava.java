@@ -8,11 +8,15 @@ package lua.addon.luajava;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import lua.CallFrame;
 import lua.GlobalState;
+import lua.VM;
 import lua.value.LFunction;
-import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LUserData;
 import lua.value.LValue;
@@ -49,43 +53,33 @@ public final class LuaJava extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
+	public void luaStackCall(VM vm) {
 		String className;
 		switch ( id ) {
 		case BINDCLASS:
-			className = call.stack[base+1].luaAsString();
+			className = vm.getArgAsString(0);
 			try {
 				Class clazz = Class.forName(className);
-				call.stack[base] = new LInstance( clazz, clazz );
-				call.top = base+1;
+				vm.setResult( new LInstance( clazz, clazz ) );
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 			break;
 		case NEWINSTANCE:
-			className = call.stack[base+1].luaAsString();
+			className = vm.getArgAsString(0);
 			try {
+				// get constructor
 				Class clazz = Class.forName(className);
-				Constructor[] cons = clazz.getConstructors();
-				Constructor con = cons[0];
-				Class[] paramTypes = con.getParameterTypes();
-				int paramsBase = base + 2;
-				int nargs = top - paramsBase;
-				int score = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, paramTypes );
-				for ( int i=1; i<cons.length; i++ ) {
-					Constructor c = cons[i];
-					Class[] p = c.getParameterTypes();
-					int s = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, p );
-					if ( s < score ) {
-						con = c;
-						paramTypes = p;
-						score = s;
-					}
-				}
-				Object[] args = CoerceLuaToJava.coerceArgs( call, paramsBase, nargs, paramTypes );
+				ParamsList params = new ParamsList( vm );
+				Constructor con = resolveConstructor( clazz, params );
+
+				// coerce args 
+				Object[] args = CoerceLuaToJava.coerceArgs( params.values, con.getParameterTypes() );
 				Object o = con.newInstance( args );
-				call.stack[base] = new LInstance( o, clazz );
-				call.top = base+1;
+				
+				// set the result
+				vm.setResult( new LInstance( o, clazz ) );
+				
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -93,8 +87,30 @@ public final class LuaJava extends LFunction {
 		default:
 			luaUnsupportedOperation();
 		}
-		if (nresults >= 0)
-			call.adjustTop(base + nresults);
+	}
+
+	public static class ParamsList {
+		public final LValue[] values;
+		public final Class[] classes;
+		public int hash;
+		ParamsList( VM vm ) {
+			int n = vm.getArgCount()-1;
+			values = new LValue[n];
+			classes = new Class[n];
+			for ( int i=0; i<n; i++ ) {
+				values[i] = vm.getArg(i+1);
+				classes[i] = values[i].getClass();
+				hash += classes[i].hashCode();
+			}
+		}
+		public int hashCode() {
+			return hash;
+		}
+		public boolean equals( Object o ) {
+			return ( o instanceof ParamsList )? 
+				Arrays.equals( classes, ((ParamsList) o).classes ):
+				false;
+		}
 	}
 	
 	public static class LInstance extends LUserData {
@@ -103,29 +119,27 @@ public final class LuaJava extends LFunction {
 			super(o);
 			this.clazz = clazz;
 		}
-		public void luaGetTable(CallFrame call, int base, LValue table, LValue key) {
+		public void luaGetTable(VM vm, LValue table, LValue key) {
 			final String s = key.luaAsString();
 			try {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
 				LValue v = CoerceJavaToLua.coerce( o );
-				call.stack[base] = v;
-				call.top = base + 1;
+				vm.setResult( v );
 			} catch (NoSuchFieldException nsfe) {
-				call.stack[base] = new LMethod(m_instance,clazz,s);
-				call.top = base + 1;
+				vm.setResult( new LMethod(m_instance,clazz,s) );
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
-		public void luaSetTable(CallFrame call, int base, LValue table, LValue key, LValue val) {
+		public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 			Class c = m_instance.getClass();
 			String s = key.luaAsString();
 			try {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
 				f.set(m_instance,v);
-				call.top = base;
+				vm.setResult();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -145,34 +159,146 @@ public final class LuaJava extends LFunction {
 		public String toString() {
 			return clazz.getName()+"."+s+"()";
 		}
-		public void luaStackCall(CallFrame call, int base, int top, int nresults) {
+		public void luaStackCall(VM vm) {
 			try {
-				Method[] meths = clazz.getMethods();
-				Method meth = null;
-				Class[] paramTypes = null;
-				int score = Integer.MAX_VALUE;
-				int paramsBase = base + 2;
-				int nargs = top - paramsBase;
-				for ( int i=0; i<meths.length; i++ ) {
-					Method m = meths[i];
-					String name = m.getName();
-					if ( s.equals(name) ) {
-						Class[] p = m.getParameterTypes();
-						int s = CoerceLuaToJava.scoreParamTypes( call.stack, paramsBase, nargs, p );
-						if ( s < score ) {
-							meth = m;
-							paramTypes = p;
-							score = s;
-						}
-					}
-				}
-				Object[] args = CoerceLuaToJava.coerceArgs( call, paramsBase, nargs, paramTypes );
+				// find the method 
+				ParamsList params = new ParamsList( vm );
+				Method meth = resolveMethod( clazz, s, params );
+
+				// coerce the arguments
+				Object[] args = CoerceLuaToJava.coerceArgs( params.values, meth.getParameterTypes() );
 				Object result = meth.invoke( instance, args );
-				call.stack[base] = CoerceJavaToLua.coerce(result);
-				call.top = base + 1;
+				
+				// coerce the result
+				vm.setResult( CoerceJavaToLua.coerce(result) );
+
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
 	}
+
+	private static Map<Class,Map<ParamsList,Constructor>> consCache =
+		new HashMap<Class,Map<ParamsList,Constructor>>();
+	
+	private static Map<Class,Map<Integer,List<Constructor>>> consIndex =
+		new HashMap<Class,Map<Integer,List<Constructor>>>();
+	
+	private static Constructor resolveConstructor(Class clazz, ParamsList params ) {
+
+		// get the cache
+		Map<ParamsList,Constructor> cache = consCache.get( clazz );
+		if ( cache == null )
+			consCache.put( clazz, cache = new HashMap<ParamsList,Constructor>() );
+		
+		// look up in the cache
+		Constructor c = cache.get( params );
+		if ( c != null )
+			return c;
+
+		// get index
+		Map<Integer,List<Constructor>> index = consIndex.get( clazz );
+		if ( index == null ) {
+			consIndex.put( clazz, index = new HashMap<Integer,List<Constructor>>() );
+			Constructor[] cons = clazz.getConstructors();
+			for ( Constructor con : cons ) {
+				int n = con.getParameterTypes().length;
+				List<Constructor> list = index.get(n);
+				if ( list == null )
+					index.put( n, list = new ArrayList<Constructor>() );
+				list.add( con );
+			}
+		}
+		
+		// figure out best list of arguments == supplied args
+		int n = params.classes.length;
+		List<Constructor> list = index.get(n);
+		if ( list == null )
+			throw new IllegalArgumentException("no constructor with "+n+" args");
+
+		// find constructor with best score
+		int bests = Integer.MAX_VALUE;
+		int besti = 0;
+		for ( int i=0, size=list.size(); i<size; i++ ) {
+			Constructor con = list.get(i);
+			int s = CoerceLuaToJava.scoreParamTypes(params.values, con.getParameterTypes());
+			if ( s < bests ) {
+				 bests = s;
+				 besti = i;
+			}
+		}
+		
+		// put into cache
+		c = list.get(besti);
+		cache.put( params, c );
+		return c;
+	}
+
+	
+	private static Map<Class,Map<String,Map<ParamsList,Method>>> methCache = 
+		new HashMap<Class,Map<String,Map<ParamsList,Method>>>();
+	
+	private static Map<Class,Map<String,Map<Integer,List<Method>>>> methIndex = 
+		new HashMap<Class,Map<String,Map<Integer,List<Method>>>>();
+
+	private static Method resolveMethod(Class clazz, String methodName, ParamsList params ) {
+
+		// get the cache
+		Map<String,Map<ParamsList,Method>> nameCache = methCache.get( clazz );
+		if ( nameCache == null )
+			methCache.put( clazz, nameCache = new HashMap<String,Map<ParamsList,Method>>() );
+		Map<ParamsList,Method> cache = nameCache.get( methodName );
+		if ( cache == null )
+			nameCache.put( methodName, cache = new HashMap<ParamsList,Method>() );
+		
+		// look up in the cache
+		Method m = cache.get( params );
+		if ( m != null )
+			return m;
+
+		// get index
+		Map<String,Map<Integer,List<Method>>> index = methIndex.get( clazz );
+		if ( index == null ) {
+			methIndex.put( clazz, index = new HashMap<String,Map<Integer,List<Method>>>() );
+			Method[] meths = clazz.getMethods();
+			for ( Method meth : meths ) {
+				String s = meth.getName();
+				int n = meth.getParameterTypes().length;
+				Map<Integer,List<Method>> map = index.get(s);
+				if ( map == null )
+					index.put( s, map = new HashMap<Integer,List<Method>>() );
+				List<Method> list = map.get(n);
+				if ( list == null )
+					map.put( n, list = new ArrayList<Method>() );
+				list.add( meth );
+			}
+		}
+		
+		// figure out best list of arguments == supplied args
+		Map<Integer,List<Method>> map = index.get(methodName);
+		if ( map == null )
+			throw new IllegalArgumentException("no method named '"+methodName+"'");
+		int n = params.classes.length;
+		List<Method> list = map.get(n);
+		if ( list == null )
+			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
+
+		// find constructor with best score
+		int bests = Integer.MAX_VALUE;
+		int besti = 0;
+		for ( int i=0, size=list.size(); i<size; i++ ) {
+			Method meth = list.get(i);
+			int s = CoerceLuaToJava.scoreParamTypes(params.values, meth.getParameterTypes());
+			if ( s < bests ) {
+				 bests = s;
+				 besti = i;
+			}
+		}
+		
+		// put into cache
+		m = list.get(besti);
+		cache.put( params, m );
+		return m;
+	}
+	
 }

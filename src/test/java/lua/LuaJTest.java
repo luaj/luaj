@@ -95,7 +95,7 @@ public class LuaJTest extends TestCase {
 		try {
 			// create closure and execute
 			Closure c = new Closure( state, p );
-			state.doCall(c, new LValue[0], 0);
+			state.doCall(c, new LValue[0]);
 			
 			final String actualOutput = new String( outputStream.toByteArray() );
 			final String expectedOutput = getExpectedOutput( testName );

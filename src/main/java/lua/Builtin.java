@@ -37,41 +37,35 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(CallFrame call, int base, int top, int nresults) {
+	public void luaStackCall(VM vm) {
 		switch ( id ) {
 		case PRINT:
-			if ( base+1<top )
-				stdout.print( call.stack[base+1].luaAsString() );
-			for ( int i=base+2; i<top; i++ ) {
-				stdout.print( "\t" );
-				stdout.print( call.stack[i].luaAsString() );
+			int n = vm.getArgCount();
+			for ( int i=0; i<n; i++ ) {
+				if ( i > 0 )
+					stdout.print( "\t" );
+				stdout.print( vm.getArg(i).luaAsString() );
 			}
 			stdout.println();
-			call.top = base;
+			vm.setResult();
 			break;
 		case PAIRS:
-			LValue value = call.stack[base+1].luaPairs();
-			call.stack[base] = value;
-			call.top = base+1;
+			vm.setResult( vm.getArg(0).luaPairs() );
 			break;
 		case GETMETATABLE:
-			call.stack[base] = call.stack[base+1].luaGetMetatable();
-			call.top = base+1;
+			vm.setResult( vm.getArg(0).luaGetMetatable() );
 			break;
 		case SETMETATABLE:
-			call.stack[base+1].luaSetMetatable(call.stack[base+2]);
-			call.stack[base] = call.stack[base+1];
-			call.top = base+1;
+			LValue t = vm.getArg(0);
+			t.luaSetMetatable(vm.getArg(1));
+			vm.setResult( t );
 			break;
 		case TYPE:
-			call.stack[base] = call.stack[base+1].luaGetType();
-			call.top = base+1;
+			vm.setResult( vm.getArg(0).luaGetType() );
 			break;
 		default:
 			luaUnsupportedOperation();
 		}
-		if (nresults >= 0)
-			call.adjustTop(base + nresults);
 	}
 	
 	static void redirectOutput( OutputStream newStdOut ) {

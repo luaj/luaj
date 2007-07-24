@@ -27,11 +27,6 @@ public class LString extends LValue {
 		return m_hash;
 	}
 
-	// TODO: what to do with LuaState? 
-	public LString(StackState l, String string) {
-		this(string);
-	}
-
 	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
 		return lhs.luaBinCmpString(opcode, m_string);
 	}

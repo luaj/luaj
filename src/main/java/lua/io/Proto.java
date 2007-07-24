@@ -8,9 +8,7 @@ import lua.value.LString;
 ** Function Prototypes
 */
 public class Proto {
-	public Proto(StackState l) {
-	}
-	public Proto() {
+ 	public Proto() {
 	}
 
 	public LValue[] k; /* constants used by the function */

@@ -78,14 +78,14 @@ public class StandardTest extends TestCase {
 		Builtin.redirectOutput( output );
 		try {
 			try {
-				state.doCall( c, new LValue[0], 0 );
+				state.doCall( c, new LValue[0] );
 			} catch ( RuntimeException exn ) {
 				StackTraceElement[] stackTrace = new StackTraceElement[state.cc+1];
 				for ( int i = 0; i <= state.cc; ++i ) {
-					CallFrame call = state.calls[i];
-					Proto p = call.p;
+					CallInfo call = state.calls[i];
+					Proto p = call.closure.p;
 					int line = p.lineinfo[call.pc];
-					String func = call.cl.luaAsString();
+					String func = call.closure.luaAsString();
 					stackTrace[state.cc - i] = new StackTraceElement(getName(), func, getName()+".lua", line );
 				}
 				

@@ -3,8 +3,6 @@ package lua.addon.luajava;
 import java.util.HashMap;
 import java.util.Map;
 
-import lua.CallFrame;
-import lua.addon.luajava.LuaJava.LInstance;
 import lua.value.LBoolean;
 import lua.value.LDouble;
 import lua.value.LInteger;
@@ -122,11 +120,12 @@ public class CoerceLuaToJava {
 		return v;
 	}
 
-	static Object[] coerceArgs(CallFrame call, int base, int nargs, Class[] parameterTypes) {
+	static Object[] coerceArgs(LValue[] suppliedArgs, Class[] parameterTypes) {
+		int nargs = suppliedArgs.length;
 		int n = parameterTypes.length;
 		Object[] args = new Object[n];
 		for ( int i=0; i<n && i<nargs; i++ )
-			args[i] = coerceArg( call.stack[base+i], parameterTypes[i] );
+			args[i] = coerceArg( suppliedArgs[i], parameterTypes[i] );
 		return args;
 	}
 
@@ -138,17 +137,18 @@ public class CoerceLuaToJava {
 	 * 3) java has less args
 	 * 4) types coerce well
 	 */
-	static int scoreParamTypes(LValue[] stack, int base, int nargs, Class[] paramTypes) {
+	static int scoreParamTypes(LValue[] suppliedArgs, Class[] paramTypes) {
+		int nargs = suppliedArgs.length;
 		int njava = paramTypes.length;
 		int score = (njava == nargs? 0: njava > nargs? 0x4000: 0x8000);
 		for ( int i=0; i<nargs && i<njava; i++ ) {
-			LValue v = stack[base+i];
+			LValue a = suppliedArgs[i];
 			Class c = paramTypes[i];
 			Coercion co = COERCIONS.get( c );
 			if ( co != null ) {
-				score += co.score( v );
-			} else if ( v instanceof LUserData ) {
-				Object o = ((LUserData) v).m_instance;
+				score += co.score( a );
+			} else if ( a instanceof LUserData ) {
+				Object o = ((LUserData) a).m_instance;
 				if ( ! c.isAssignableFrom(o.getClass()) )
 						score += 0x10000;
 			} else {

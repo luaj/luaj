@@ -30,18 +30,13 @@ public class LuaJavaAppRunner {
 		// new lua state 
 		StackState state = new StackState();
 
-		// convert args to lua
-		LValue[] vargs = new LValue[args.length];
-		for ( int i=1; i<args.length; i++ ) 
-			vargs[i] = new LString(args[i]);
-		
 		// load the file
 		InputStream is = LuaJavaAppRunner.class.getResourceAsStream( script );
 		Proto p = LoadState.undump(state, is, script);
 		
 		// create closure and execute
 		Closure c = new Closure( state, p );
-		state.doCall(c, vargs, 0);
+		state.doCall(c, new LValue[0]);
 		
 	}
 }

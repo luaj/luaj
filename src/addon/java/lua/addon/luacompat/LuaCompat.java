@@ -3,15 +3,14 @@ package lua.addon.luacompat;
 import java.io.IOException;
 import java.io.InputStream;
 
-import lua.CallFrame;
+import lua.CallInfo;
 import lua.GlobalState;
 import lua.StackState;
+import lua.VM;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
-import lua.value.LDouble;
 import lua.value.LFunction;
-import lua.value.LInteger;
 import lua.value.LNil;
 import lua.value.LNumber;
 import lua.value.LString;
@@ -48,36 +47,33 @@ public class LuaCompat extends LFunction {
 		this.id = id;
 	}
 	
-	public void luaStackCall( CallFrame call, int base, int top, int nresults ) {
+	public void luaStackCall( VM vm ) {
 		switch ( id ) {
 		case ASSERT: {
-			LValue v = call.stack[base+1];
-			if ( !v.luaAsBoolean() ) {
+			if ( !vm.getArgAsBoolean(0) ) {
 				String message;
-				if ( top > base+2 ) {
-					message = call.stack[base+2].luaAsString();
+				if ( vm.getArgCount() > 1 ) {
+					message = vm.getArgAsString(1);
 				} else {
 					message = "assertion failed!";
 				}
 				throw new RuntimeException(message);
 			}
-			call.top = base;
+			vm.setResult();
 		}	break;
 		case COLLECTGARBAGE:
 			System.gc();
-			call.top = base;
+			vm.setResult();
 			break;
 		case LOADFILE:
-			call.stack[base] = loadfile(call, ( top > base ) ? call.stack[base+1] : null);
-			call.top = base+1;
+			vm.setResult( loadfile(vm, vm.getArg(0)) );
 			break;
 		case TONUMBER:
-			call.stack[base] = toNumber( call.stack, base+1, top );
-			call.top = base+1;
+			vm.setResult( toNumber( vm ) );
 			break;
 		case RAWGET: {
-			LValue t = call.stack[base+1];
-			LValue k = call.stack[base+2];
+			LValue t = vm.getArg(0);;
+			LValue k = vm.getArg(1);
 			LValue result = LNil.NIL;
 			if ( t instanceof LTable ) {
 				LValue v = (LValue) ( (LTable) t ).m_hash.get( k );
@@ -85,39 +81,33 @@ public class LuaCompat extends LFunction {
 					result = v;
 				}
 			}
-			call.stack[base] = result;
-			call.top = base+1;
+			vm.setResult( result );
 		}	break;
 		case SETFENV:
-			call.top = base + setfenv( call.stack, base, base+1, top, call.state );
+			setfenv( (StackState) vm );
 			break;
 		default:
 			luaUnsupportedOperation();
 		}
-		if (nresults >= 0)
-			call.adjustTop(base + nresults);
 	}
 	
-	private LValue toNumber( LValue[] stack, int first, int top ) {
-		LValue result = LNil.NIL;
-		if ( first < top ) {
-			LValue input = stack[first];
-			if ( input instanceof LNumber ) {
-				result = input;
-			} else if ( input instanceof LString ) {
-				int base = 10;
-				if ( first+1 < top ) {
-					base = stack[first+1].luaAsInt();
-				}
-				return ( (LString) input ).luaToNumber( base );
+	private LValue toNumber( VM vm ) {
+		LValue input = vm.getArg(0);
+		if ( input instanceof LNumber ) {
+			return input;
+		} else if ( input instanceof LString ) {
+			int base = 10;
+			if ( vm.getArgCount()>1 ) {
+				base = vm.getArgAsInt(1);
 			}
+			return ( (LString) input ).luaToNumber( base );
 		}
-		return result;
+		return LNil.NIL;
 	}
 	
-	private int setfenv( LValue[] stack, int result, int argbase, int arglimit, StackState state ) {
-		LValue f = stack[argbase];
-		LValue newenv = stack[argbase+1];
+	private void setfenv( StackState state ) {
+		LValue f = state.getArg(0);
+		LValue newenv = state.getArg(1);
 
 		Closure c = null;
 		
@@ -129,9 +119,9 @@ public class LuaCompat extends LFunction {
 		} else {
 			int callStackDepth = f.luaAsInt();
 			if ( callStackDepth > 0 ) {
-				CallFrame frame = state.getStackFrame( callStackDepth );
+				CallInfo frame = state.getStackFrame( callStackDepth );
 				if ( frame != null ) {
-					c = frame.cl;
+					c = frame.closure;
 				}
 			} else {
 				// This is supposed to set the environment of the current
@@ -144,14 +134,15 @@ public class LuaCompat extends LFunction {
 			if ( newenv instanceof LTable ) {
 				c.env = (LTable) newenv;
 			}
-			stack[ result ] = c;
-			return 1;
+			state.setResult( c );
+			return;
 		}
 		
-		return 0;
+		state.setResult();
+		return;
 	}
 	
-	private LValue loadfile( CallFrame call, LValue fileName ) {
+	private LValue loadfile( VM vm, LValue fileName ) {
 		InputStream is;
 		
 		String script;
@@ -165,8 +156,8 @@ public class LuaCompat extends LFunction {
 		
 		if ( is != null ) {
 			try {
-				Proto p = LoadState.undump(call.state, is, script);
-				return new Closure(call.state, p);
+				Proto p = LoadState.undump(vm, is, script);
+				return new Closure( (StackState) vm, p);
 			} catch (IOException e) {
 			} finally {
 				if ( is != System.in ) {
