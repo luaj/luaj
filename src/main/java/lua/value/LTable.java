@@ -2,6 +2,7 @@ package lua.value;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import lua.VM;
 
@@ -10,12 +11,25 @@ public class LTable extends LValue {
 	public static final LString TYPE_NAME = new LString("table");
 	
 	/** Metatable tag for intercepting table gets */
-	private static final LString TM_INDEX    = new LString("__index");
+	// TODO: see note below
+	// private static final LString TM_INDEX    = new LString("__index");
 	
 	/** Metatable tag for intercepting table sets */
-	private static final LString TM_NEWINDEX = new LString("__newindex");
+	// TODO: see note below
+	// private static final LString TM_NEWINDEX = new LString("__newindex");
 
-	public Hashtable m_hash = new Hashtable();
+	private Hashtable m_hash = new Hashtable();
+	
+	private Vector m_vector;  // if non-null then size() > 0
+	
+	// stride and offset are needed only for the
+	// implementation where m_vector stores keys
+	// {offset, stride + offset, ..., (size-1)*stride + offset}
+	// where size = m_vector.size()
+	//
+	// private int stride = 1;  // always non-0; if m_vector.size() == 1 then stride == 1
+	// private int offset;  // if m_vector.size() == 1 then offset is the single integer key
+	
 	private LTable m_metatable;
 	
 	public LTable() {
@@ -24,22 +38,71 @@ public class LTable extends LValue {
 	public LTable(int narray, int nhash) {
 	}
 
-	/** Utility method for putting a value directly, typically for initializing a table */
+	/** Utility method for putting a string-keyed value directly, typically for initializing a table */
 	public void put(String key, LValue value) {
 		m_hash.put( new LString(key), value );
 	}
-
-	/** Utility method for putting something in a numbered slot */
-	public void put(int i, LValue value) {
-		m_hash.put( new Integer(i), value );
-	}
-
-	/** Utility method to directly get the value in a table, without metatable calls */
-	public LValue get(String key) {
-		return (LValue) m_hash.get( new LString(key) );
-	}
 	
-	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
+	public void rawSet(LValue key, LValue val) {
+		
+		if (key instanceof LInteger) {
+			int iKey = ((LInteger) key).luaAsInt();
+			
+			// implementation where m_vector stores keys
+			// {0, ..., size-1}
+			// where size = m_vector.size()
+			//
+			if (m_vector == null) {
+				if (iKey == 0) {
+					m_vector = new Vector();
+					m_vector.add(val);
+					return;
+				}
+			} else if (iKey >= 0) {
+				int size = m_vector.size();
+				if (iKey < size) {
+					m_vector.set(iKey, val);
+					return;
+				} else if (iKey == size) {
+					m_vector.add(iKey, val);
+					return;
+				}
+			}
+			
+			/*
+			// implementation where m_vector stores keys
+			// {offset, stride + offset, ..., (size-1)*stride + offset}
+			// where size = m_vector.size()
+			//
+			if (m_vector == null) {
+				offset = iKey;
+				m_vector = new Vector();
+				m_vector.add(val);
+				return;
+			} else {
+				int size = m_vector.size();
+				int multiple = iKey - offset;
+				if (multiple >= 0) {
+					int i = multiple / stride;
+					if ((i < size) && (i * stride == multiple)) {
+						m_vector.set(i, val);
+						return;
+					}
+				} else if (size == 1) {
+					stride = iKey - offset;
+					m_vector.add(val);
+					return;
+				} else if (iKey == stride * size + offset) {
+					m_vector.add(val);
+					return;
+				}
+			}
+			*/
+		}
+		
+		m_hash.put( key, val );
+
+		/* TODO: this is old incorrect code, kept here until metatables are fixed
 		if ( m_metatable != null ) {
 			if ( ! m_hash.containsKey(key) ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_NEWINDEX );
@@ -49,11 +112,45 @@ public class LTable extends LValue {
 				}
 			}
 		}
-		m_hash.put( key, val );
+		*/
 	}
 
-	public void luaGetTable(VM vm, LValue table, LValue key) {
-		LValue val = (LValue) m_hash.get(key);
+	/** Utility method to directly get the value in a table, without metatable calls */
+	public LValue rawGet(LValue key) {
+		
+		if (m_vector != null) {
+			if (key instanceof LInteger) {
+				int iKey = ((LInteger) key).luaAsInt();
+				
+				// implementation where m_vector stores keys
+				// {0, ..., size-1}
+				// where size = m_vector.size()
+				//
+				if ((iKey >= 0) && (iKey < m_vector.size())) {
+					return (LValue) m_vector.get(iKey);
+				}
+				
+				/*
+				// implementation where m_vector stores keys
+				// {offset, stride + offset, ..., (size-1)*stride + offset}
+				// where size = m_vector.size()
+				//
+				int multiple = iKey - offset;
+				if (multiple >= 0) {
+					int i = multiple / stride;
+					if ((i < m_vector.size()) && (i * stride == multiple)) {
+						vm.push((LValue) m_vector.get(i));
+						return;
+					}
+				}
+				*/
+			}
+		}
+		
+		return (LValue) m_hash.get(key);
+		
+		/* TODO: this is old incorrect code, kept here until metatables are fixed
+		LValue val;
 		if ( val == null || val == LNil.NIL ) {
 			if ( m_metatable != null ) {
 				LValue event = (LValue) m_metatable.m_hash.get( TM_INDEX );
@@ -64,14 +161,26 @@ public class LTable extends LValue {
 			}
 			val = LNil.NIL;
 		}
-		
-		// stack.stack[base] = val;
-		vm.push(val);
+		return val;
+		*/
 	}
 	
+	public void luaGetTable(VM vm, LValue table, LValue key) {
+		// TODO: table is unused -- is this correct?
+		// stack.stack[base] = val;
+		vm.push(rawGet(key));
+	}
+	
+	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
+		// TODO: table is unused -- is this correct?
+		rawSet(key, val);
+	}
+	
+	/* TODO: why was this overridden in the first place?
 	public String toString() {
 		return m_hash.toString();
 	}
+	*/
 	
 	public String luaAsString() {
 		return "table: "+id();
@@ -79,7 +188,9 @@ public class LTable extends LValue {
 	
 	/** Built-in opcode LEN, for Strings and Tables */
 	public LValue luaLength() {
-		return new LInteger( m_hash.size() );
+		int hashSize = m_hash.size();
+		return new LInteger(
+				m_vector == null ? hashSize : hashSize + m_vector.size()); 
 	}
 	
 	/** Valid for tables */
@@ -94,28 +205,33 @@ public class LTable extends LValue {
 	
 	/** Valid for tables */
 	public LValue luaPairs() {
-		Enumeration e = m_hash.keys();
-		return new LTableIterator(this,e);
+		return new LTableIterator(this);
 	}
 	
 	/** Iterator for tables */
 	private static final class LTableIterator extends LFunction {
 		private final LTable t;
 		private final Enumeration e;
+		private int i;
 
-		private LTableIterator(LTable t, Enumeration e) {
+		private LTableIterator(LTable t) {
 			this.t = t;
-			this.e = e;
+			this.e = t.m_hash.keys();
+			this.i = (t.m_vector == null) ? -1 : 0;
 		}
 
 		// perform a lua call
 		public void luaStackCall(VM vm) {
 			if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();
-				LValue val = (LValue) t.m_hash.get(key);
 				vm.setResult();
 				vm.push( key );
-				vm.push( val );
+				vm.push((LValue) t.m_hash.get(key));
+			} else if ((i >= 0) && (i < t.m_vector.size())) {
+				vm.setResult();
+				vm.push(new LInteger(i));
+				vm.push((LValue) t.m_vector.get(i));
+				++i;
 			}
 		}
 	}
