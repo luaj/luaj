@@ -90,50 +90,25 @@ public class Lua {
 	public static int GET_OPCODE(int i) {
 		return (i >> POS_OP) & MAX_OP;
 	}
-	public static int SET_OPCODE(int i,int o) {
-		return (i & (MASK_NOT_OP)) | ((o & MAX_OP) << POS_OP);
-	}
 
 	public static int GETARG_A(int i) {
 		return (i >> POS_A) & MAXARG_A;
-	}
-	public static int SETARG_A(int i,int u) {
-		return (i & (MASK_NOT_A)) | ((u & MAXARG_A) << POS_A);
 	}
 
 	public static int GETARG_B(int i) {
 		return (i >> POS_B) & MAXARG_B;
 	}
-	public static int SETARG_B(int i,int u) {
-		return (i & (MASK_NOT_B)) | ((u & MAXARG_B) << POS_B);
-	}
 
 	public static int GETARG_C(int i) {
 		return (i >> POS_C) & MAXARG_C;
-	}
-	public static int SETARG_C(int i,int u) {
-		return (i & (MASK_NOT_C)) | ((u & MAXARG_C) << POS_C);
 	}
 
 	public static int GETARG_Bx(int i) {
 		return (i >> POS_Bx) & MAXARG_Bx;
 	}
-	public static int SETARG_Bx(int i,int u) {
-		return (i & (MASK_NOT_Bx)) | ((u & MAXARG_Bx) << POS_Bx);
-	}
 
 	public static int GETARG_sBx(int i) {
 		return ((i >> POS_Bx) & MAXARG_Bx) - MAXARG_sBx;
-	}
-	public static int SETARG_sBx(int i,int u) {
-		return (i & (MASK_NOT_Bx)) | ((u + MAXARG_sBx) << POS_Bx);
-	}
-
-	public static int CREATE_ABC(int o, int a, int b, int c) {
-		return (o<<POS_OP) | (a<<POS_A) | (b<<POS_B) | (c<<POS_C);
-	}
-	public static int CREATE_ABx(int o, int a, int bc) {
-		return (o<<POS_OP) | (a<<POS_A) | (bc<<POS_Bx);
 	}
 
 
