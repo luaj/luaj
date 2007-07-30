@@ -168,7 +168,8 @@ public class LTable extends LValue {
 	public void luaGetTable(VM vm, LValue table, LValue key) {
 		// TODO: table is unused -- is this correct?
 		// stack.stack[base] = val;
-		vm.push(rawGet(key));
+		LValue val = rawGet(key);
+		vm.push(val!=null? val: LNil.NIL);
 	}
 	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
