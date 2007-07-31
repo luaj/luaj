@@ -11,27 +11,21 @@ public class Proto {
  	public Proto() {
 	}
 
-	public LValue[] k; /* constants used by the function */
-//	  TValue *k;  /* constants used by the function */
-//	  Instruction *code;
+	/* constants used by the function */
+	public LValue[] k; 
 	public int[] code;
-//	  struct Proto **p;  /* functions defined inside the function */
+	/* functions defined inside the function */
 	public Proto[] p;
-//	  int *lineinfo;  /* map from opcodes to source lines */
+	/* map from opcodes to source lines */
 	public int[] lineinfo;
-//	  struct LocVar *locvars;  /* information about local variables */
+	/* information about local variables */
 	public LocVars[] locvars;
-//	  TString **upvalues;  /* upvalue names */
+	/* upvalue names */
 	public LString[] upvalues;
 	public LString  source;
 	public int nups;
-	public int sizeupvalues;
-	public int sizek;  /* size of `k' */
-	public int sizecode;
-	public int sizep;  /* size of `p' */
 	public int linedefined;
 	public int lastlinedefined;
-//	  GCObject *gclist;
 	public int numparams;
 	public boolean is_vararg;
 	public int maxstacksize;
