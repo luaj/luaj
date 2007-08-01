@@ -105,6 +105,7 @@ public class LValue {
 
 	/** Return value as an integer */
 	public int luaAsInt() {
+		luaUnsupportedOperation();
 		return 0;
 	}
 

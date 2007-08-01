@@ -15,4 +15,9 @@ public final class LNil extends LValue {
 	public LString luaGetType() {
 		return TYPE_NAME;
 	}
+
+	public int luaAsInt() {
+		return 0;
+	}
+
 }
