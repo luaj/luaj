@@ -20,7 +20,8 @@ public class Closure extends LFunction {
 	// called by vm when there is an OP_CALL
 	// in this case, we are on the stack, 
 	// and simply need to cue the VM to treat it as a stack call
-	public void luaStackCall(VM vm) {
-		vm.stackCall();
+	public boolean luaStackCall(VM vm) {
+		vm.prepStackCall();
+		return true;
 	}
 }

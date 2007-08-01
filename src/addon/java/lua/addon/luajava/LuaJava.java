@@ -53,7 +53,7 @@ public final class LuaJava extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(VM vm) {
+	public boolean luaStackCall(VM vm) {
 		String className;
 		switch ( id ) {
 		case BINDCLASS:
@@ -87,6 +87,7 @@ public final class LuaJava extends LFunction {
 		default:
 			luaUnsupportedOperation();
 		}
+		return false;
 	}
 
 	public static class ParamsList {
@@ -159,7 +160,7 @@ public final class LuaJava extends LFunction {
 		public String toString() {
 			return clazz.getName()+"."+s+"()";
 		}
-		public void luaStackCall(VM vm) {
+		public boolean luaStackCall(VM vm) {
 			try {
 				// find the method 
 				ParamsList params = new ParamsList( vm );
@@ -171,7 +172,7 @@ public final class LuaJava extends LFunction {
 				
 				// coerce the result
 				vm.setResult( CoerceJavaToLua.coerce(result) );
-
+				return false;
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

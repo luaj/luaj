@@ -1,7 +1,6 @@
 package lua;
 
 import lua.io.Closure;
-import lua.value.LTable;
 import lua.value.LValue;
 
 public interface VM {
@@ -29,17 +28,17 @@ public interface VM {
 	public void push( String value );
 
 	/**
-	 * Perform a call that has been set up on the stack.  
-	 * The first value on the stack must be a Closure, 
+	 * Create a call frame for a call that has been set up on
+	 * the stack. The first value on the stack must be a Closure,
 	 * and subsequent values are arguments to the closure.
 	 */ 
-	public void stackCall();
+	public void prepStackCall();
 	
 	/**
 	 * Execute bytecodes until the current call completes
 	 * or the vm yields.
 	 */
-	public void exec();
+	public void execute();
 
 	/**
 	 * Put the closure on the stack with arguments, 
@@ -50,7 +49,25 @@ public interface VM {
 	 * @param values
 	 */
 	public void doCall(Closure c, LValue[] values);	
-
+	
+	/**
+	 * Set the number of results that are expected from the function being called.
+	 * (This should be called before prepStackCall)
+	 */
+	public void setExpectedResultCount( int nresults );
+	
+	/**
+	 * Returns the number of results that are expected by the calling function,
+	 * or -1 if the calling function can accept a variable number of results.
+	 */
+	public int getExpectedResultCount();
+	
+	/**
+	 * Adjust the stack to contain the expected number of results by adjusting
+	 * the top.
+	 */
+	public void adjustResults();
+	
 	// ================ interfaces for getting arguments when called
 	
 	/**

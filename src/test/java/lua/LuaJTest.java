@@ -6,6 +6,7 @@ import java.io.OutputStream;
 
 import junit.framework.TestCase;
 import lua.StackState;
+import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
 import lua.io.Closure;
 import lua.io.LoadState;
@@ -58,7 +59,11 @@ public class LuaJTest extends TestCase {
 	public void testCompare() throws IOException, InterruptedException {
 		runTest( "compare" );
 	}
-	
+
+	public void testSelect() throws IOException, InterruptedException {
+		runTest( "select" );
+	}
+
 	public void testSetlist() throws IOException, InterruptedException {
 		runTest( "setlist" );
 	}
@@ -82,6 +87,9 @@ public class LuaJTest extends TestCase {
 		
 		// add LuaJava bindings
 		LuaJava.install();
+
+		// add LuaCompat bindings
+		LuaCompat.install();
 		
 		// new lua state 
 		StackState state = new StackState();

@@ -19,9 +19,11 @@ public class LValue {
 		return true;
 	}
 
-	// perform a lua call, return number of results actually produced
-	public void luaStackCall(VM vm) {
+	// perform a lua call, return true if the call is to a lua function, false
+	// if it ran to completion.
+	public boolean luaStackCall(VM vm) {
 		luaUnsupportedOperation();
+		return false;
 	}
 
 	// unsupported except for numbers

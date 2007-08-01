@@ -16,14 +16,22 @@ public class LFunction extends LValue {
 		vm.push( table );
 		vm.push( key );
 		vm.push( val );
-		this.luaStackCall(vm);
+		vm.setExpectedResultCount( 0 );
+		if ( this.luaStackCall( vm ) )
+			vm.execute();
+		else
+			vm.adjustResults();
 	}
 
 	public void luaGetTable(VM vm, LValue table, LValue key) {
 		vm.push( this );
 		vm.push( table );
 		vm.push( key );
-		this.luaStackCall(vm);
+		vm.setExpectedResultCount( 1 );
+		if ( this.luaStackCall( vm ) )
+			vm.execute();
+		else
+			vm.adjustResults();
 	}
 	
 	public LString luaGetType() {

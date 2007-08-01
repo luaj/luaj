@@ -4,10 +4,10 @@ import java.io.InputStream;
 
 import lua.StackState;
 import lua.VM;
+import lua.addon.luacompat.LuaCompat;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
-import lua.value.LString;
 import lua.value.LValue;
 
 /**
@@ -22,6 +22,9 @@ public class LuacRunner {
 		// get script name
 		String script = (args.length>0? args[0]: "/test2.luac");
 		System.out.println("loading '"+script+"'");
+		
+		// add LuaCompat bindings
+		LuaCompat.install();
 		
 		// new lua state 
 		StackState state = new StackState();

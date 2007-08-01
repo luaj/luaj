@@ -37,7 +37,7 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public void luaStackCall(VM vm) {
+	public boolean luaStackCall(VM vm) {
 		switch ( id ) {
 		case PRINT:
 			int n = vm.getArgCount();
@@ -66,6 +66,7 @@ final class Builtin extends LFunction {
 		default:
 			luaUnsupportedOperation();
 		}
+		return false;
 	}
 	
 	static void redirectOutput( OutputStream newStdOut ) {

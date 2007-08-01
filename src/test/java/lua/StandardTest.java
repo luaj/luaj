@@ -18,6 +18,8 @@ import lua.addon.luacompat.LuaCompat;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
+import lua.value.LNil;
+import lua.value.LString;
 import lua.value.LValue;
 
 public class StandardTest extends TestCase {
@@ -71,6 +73,12 @@ public class StandardTest extends TestCase {
 	public void runTest() {
 		GlobalState.resetGlobals();
 		LuaCompat.install();
+		// hack: it's unpleasant when the test cases fail to terminate;
+		// unfortunately, there is a test in the standard suite that
+		// relies on weak tables having their elements removed by
+		// the garbage collector. Until we implement that, remove the
+		// built-in collectgarbage function.
+		GlobalState.getGlobalsTable().rawSet( new LString("collectgarbage"), LNil.NIL );
 		StackState state = new StackState();
 		Closure c = new Closure( state, code );
 		

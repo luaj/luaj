@@ -11,12 +11,10 @@ public class LTable extends LValue {
 	public static final LString TYPE_NAME = new LString("table");
 	
 	/** Metatable tag for intercepting table gets */
-	// TODO: see note below
-	// private static final LString TM_INDEX    = new LString("__index");
+	private static final LString TM_INDEX    = new LString("__index");
 	
 	/** Metatable tag for intercepting table sets */
-	// TODO: see note below
-	// private static final LString TM_NEWINDEX = new LString("__newindex");
+	private static final LString TM_NEWINDEX = new LString("__newindex");
 
 	private Hashtable m_hash = new Hashtable();
 	
@@ -46,10 +44,10 @@ public class LTable extends LValue {
 	public void rawSet(LValue key, LValue val) {
 		
 		if (key instanceof LInteger) {
-			int iKey = ((LInteger) key).luaAsInt();
+			int iKey = ((LInteger) key).luaAsInt() - 1;
 			
 			// implementation where m_vector stores keys
-			// {0, ..., size-1}
+			// {1, ..., size}
 			// where size = m_vector.size()
 			//
 			if (m_vector == null) {
@@ -114,13 +112,25 @@ public class LTable extends LValue {
 		}
 		*/
 	}
-
+	
+	public boolean containsKey(LValue key) {
+		if (m_vector != null) {
+			if (key instanceof LInteger) {
+				int iKey = ((LInteger) key).luaAsInt();
+				if ((iKey >= 1) && (iKey <= m_vector.size())) {
+					return m_vector.elementAt(iKey-1) != LNil.NIL;
+				}
+			}
+		}
+		return m_hash.containsKey( key );
+	}
+	
 	/** Utility method to directly get the value in a table, without metatable calls */
 	public LValue rawGet(LValue key) {
 		
 		if (m_vector != null) {
 			if (key instanceof LInteger) {
-				int iKey = ((LInteger) key).luaAsInt();
+				int iKey = ((LInteger) key).luaAsInt() - 1;
 				
 				// implementation where m_vector stores keys
 				// {0, ..., size-1}
@@ -147,33 +157,32 @@ public class LTable extends LValue {
 			}
 		}
 		
-		return (LValue) m_hash.get(key);
-		
-		/* TODO: this is old incorrect code, kept here until metatables are fixed
-		LValue val;
-		if ( val == null || val == LNil.NIL ) {
-			if ( m_metatable != null ) {
-				LValue event = (LValue) m_metatable.m_hash.get( TM_INDEX );
-				if ( event != null && event != LNil.NIL ) {
-					event.luaGetTable( vm, table, key );
-					return;
-				}
-			}
-			val = LNil.NIL;
-		}
-		return val;
-		*/
+		LValue v = (LValue) m_hash.get(key);
+		return ( v != null ) ? v : LNil.NIL;
 	}
 	
 	public void luaGetTable(VM vm, LValue table, LValue key) {
+		LValue v = rawGet(key);
+		if ( v == LNil.NIL && m_metatable != null ) {
+			LValue event = m_metatable.rawGet( TM_INDEX );
+			if ( event != null && event != LNil.NIL ) {
+				event.luaGetTable( vm, table, key );
+				return;
+			}
+		}
 		// TODO: table is unused -- is this correct?
 		// stack.stack[base] = val;
-		LValue val = rawGet(key);
-		vm.push(val!=null? val: LNil.NIL);
+		vm.push(v!=null? v: LNil.NIL);
 	}
 	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
-		// TODO: table is unused -- is this correct?
+		if ( !containsKey( key ) && m_metatable != null ) {
+			LValue event = m_metatable.rawGet( TM_NEWINDEX );
+			if ( event != null && event != LNil.NIL ) {
+				event.luaSetTable( vm, table, key, val );
+				return;
+			}
+		}
 		rawSet(key, val);
 	}
 	
@@ -222,18 +231,18 @@ public class LTable extends LValue {
 		}
 
 		// perform a lua call
-		public void luaStackCall(VM vm) {
-			if ( e.hasMoreElements() ) {
-				LValue key = (LValue) e.nextElement();
-				vm.setResult();
-				vm.push( key );
-				vm.push((LValue) t.m_hash.get(key));
-			} else if ((i >= 0) && (i < t.m_vector.size())) {
-				vm.setResult();
-				vm.push(new LInteger(i));
+		public boolean luaStackCall(VM vm) {
+			vm.setResult();
+			if ((i >= 0) && (i < t.m_vector.size())) {
+				vm.push(new LInteger(i+1));
 				vm.push((LValue) t.m_vector.get(i));
 				++i;
+			} else if ( e.hasMoreElements() ) {
+				LValue key = (LValue) e.nextElement();
+				vm.push( key );
+				vm.push((LValue) t.m_hash.get(key));
 			}
+			return false;
 		}
 	}
 
