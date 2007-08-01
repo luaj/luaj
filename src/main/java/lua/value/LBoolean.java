@@ -24,6 +24,10 @@ public final class LBoolean extends LValue {
 		return m_value;
 	}
 	
+	public final int luaAsInt() {
+		return m_value? 1: 0;
+	}
+	
 	public final static LBoolean valueOf(boolean value) {
 		return value? TRUE: FALSE;
 	}
