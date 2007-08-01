@@ -34,7 +34,7 @@ public class LInteger extends LNumber {
 		case Lua.OP_SUB: return new LInteger( m_value - rhs );
 		case Lua.OP_MUL: return new LInteger( m_value * rhs );
 		case Lua.OP_DIV: return new LInteger( m_value / rhs );
-		case Lua.OP_MOD: return new LInteger( m_value % rhs );
+		case Lua.OP_MOD: return new LInteger( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
 //		case Lua.OP_POW: return new LInteger( (int) Math.pow(m_value, rhs) );
 		}
 		return luaUnsupportedOperation();

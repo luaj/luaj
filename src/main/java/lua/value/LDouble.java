@@ -39,7 +39,8 @@ public class LDouble extends LNumber {
 		case Lua.OP_SUB: return new LDouble( lhs - rhs );
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
-		case Lua.OP_MOD: return new LDouble( lhs % rhs );
+		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
+		
 //		case Lua.OP_POW: return new LDouble( Math.pow(lhs, rhs) );
 		}
 		return luaUnsupportedOperation();
