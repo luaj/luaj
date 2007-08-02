@@ -16,7 +16,7 @@ public class LTable extends LValue {
 	/** Metatable tag for intercepting table sets */
 	private static final LString TM_NEWINDEX = new LString("__newindex");
 
-	private Hashtable m_hash = new Hashtable();
+	public Hashtable m_hash = new Hashtable();
 	
 	private Vector m_vector;  // if non-null then size() > 0
 	
@@ -53,16 +53,16 @@ public class LTable extends LValue {
 			if (m_vector == null) {
 				if (iKey == 0) {
 					m_vector = new Vector();
-					m_vector.add(val);
+					m_vector.addElement(val);
 					return;
 				}
 			} else if (iKey >= 0) {
 				int size = m_vector.size();
 				if (iKey < size) {
-					m_vector.set(iKey, val);
+					m_vector.setElementAt(val, iKey);
 					return;
 				} else if (iKey == size) {
-					m_vector.add(iKey, val);
+					m_vector.addElement(val);
 					return;
 				}
 			}
@@ -137,7 +137,7 @@ public class LTable extends LValue {
 				// where size = m_vector.size()
 				//
 				if ((iKey >= 0) && (iKey < m_vector.size())) {
-					return (LValue) m_vector.get(iKey);
+					return (LValue) m_vector.elementAt(iKey);
 				}
 				
 				/*
@@ -235,7 +235,7 @@ public class LTable extends LValue {
 			vm.setResult();
 			if ((i >= 0) && (i < t.m_vector.size())) {
 				vm.push(new LInteger(i+1));
-				vm.push((LValue) t.m_vector.get(i));
+				vm.push((LValue) t.m_vector.elementAt(i));
 				++i;
 			} else if ( e.hasMoreElements() ) {
 				LValue key = (LValue) e.nextElement();

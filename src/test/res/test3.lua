@@ -39,7 +39,6 @@ print( func(11, 12, 13) )
 print( func(23, 22, 21) )
 print( func(func(32,33,34), func(45,46,47), func(58,59,50)) )
 
---[[
 function p(a,...)
 	print("a",a)
 	print("...",...)
@@ -50,4 +49,3 @@ p()
 p("q")
 p("q","r")
 p("q","r","s")
---]]
