@@ -126,7 +126,7 @@ public final class LuaJava extends LFunction {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
 				LValue v = CoerceJavaToLua.coerce( o );
-				vm.setResult( v );
+				vm.push( v );
 			} catch (NoSuchFieldException nsfe) {
 				vm.setResult( new LMethod(m_instance,clazz,s) );
 			} catch (Exception e) {
@@ -144,6 +144,11 @@ public final class LuaJava extends LFunction {
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
+		}
+		@Override
+		public boolean luaStackCall(VM vm) {
+			// TODO Auto-generated method stub
+			return super.luaStackCall(vm);
 		}
 		
 	}
