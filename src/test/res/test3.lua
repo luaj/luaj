@@ -49,3 +49,14 @@ p()
 p("q")
 p("q","r")
 p("q","r","s")
+
+function first(...) 
+	return 'abc'
+end
+
+function second( a, b, c )
+    return first( a, b, c )
+end
+
+print( 'second', second() )
+
