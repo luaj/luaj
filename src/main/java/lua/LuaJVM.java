@@ -25,10 +25,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.StringTokenizer;
 
 import lua.addon.luajava.LuaJava;
 import lua.debug.DebugRequestListener;
 import lua.debug.DebugServer;
+import lua.debug.DebugStackState;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -57,6 +59,7 @@ public class LuaJVM implements DebugRequestListener {
     protected int eventPort;
     protected String script;
     protected String[] scriptArgs;
+    protected DebugStackState state;
     
     @SuppressWarnings("static-access")
     public LuaJVM() {
@@ -150,7 +153,7 @@ public class LuaJVM implements DebugRequestListener {
         LuaJava.install();        
 
         // new lua state 
-        StackState state = new StackState();
+        state = new DebugStackState();
 
         // convert args to lua
         int numOfScriptArgs = getScriptArgs().length;
@@ -179,21 +182,7 @@ public class LuaJVM implements DebugRequestListener {
      * @see lua.debug.DebugRequestListener#handleRequest(java.lang.String)
      */
     public String handleRequest(String request) {
-        //TODO: handle the following requests:
-        // suspend   -- suspend the execution and listen for debug requests
-        // resume    -- resume the execution
-        // exit      -- exit the VM
-        // set N     -- set breakpoint at line N
-        // clear N   -- clear breakpoint at line N
-        // callgraph -- return the current call graph (i.e. stack frames from 
-        //              old to new, include information about file, method, etc.)
-        // stack     -- return the content of the current stack frame, 
-        //              listing the (variable, value) pairs
-        // step      -- single step forward (go to next statement)
-        // variable N M   
-        //           -- return the value of variable M from the stack frame N 
-        //              (stack frames are indexed from 0)   
-        return null;
+    	return state.handleRequest( request );
     }
     
     public void stop() {
