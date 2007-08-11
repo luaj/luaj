@@ -24,6 +24,7 @@ public class DebugStackStateTest extends TestCase {
 
 		// suspend the vm right away
 		state.suspend();
+		state.set( 14 );
 		
 		// start the call processing in its own thread
 		new Thread() {
@@ -36,16 +37,21 @@ public class DebugStackStateTest extends TestCase {
 			}
 		}.start();
 		
-		// step for 25 steps
-		for ( int i=0; i<10; i++ ) {
+		// step for 5 steps
+		for ( int i=0; i<5; i++ ) {
 			state.step();
-			Thread.sleep(1000);
+			Thread.sleep(500);
 			System.out.println("--- callgraph="+state.callgraph() );
 			System.out.println("--- stack="+state.stack() );
 			System.out.println("--- variable(1,0)="+state.variable(1,0) );
 		}
 
 		// resume the vm
-		state.resume();		
+		state.resume();
+		Thread.sleep(500);
+		System.out.println("--- callgraph="+state.callgraph() );
+		state.resume();
+		Thread.sleep(500);
+		System.out.println("--- callgraph="+state.callgraph() );
 	}
 }

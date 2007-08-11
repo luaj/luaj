@@ -25,23 +25,28 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	public void debugHooks( int pc ) {
 		if ( exiting )
 			throw new java.lang.RuntimeException("exiting");
-		if ( ! suspended )
-			return;
+
 		synchronized ( this ) {
-			// vm is in suspended state, although it might also 
-			// be stepping to the next instruction at the same time.
-			// in either case we need the current line number
+			
+			// anytime the line doesn't change we keep going
 			int[] li = calls[cc].closure.p.lineinfo;
 			int line = (li!=null && li.length>pc? li[pc]: -1);
-			if ( stepping ) {
-				if ( lastline == line )
-					return;
-				stepping = false;
-			}
+			if ( lastline == line )
+				return;
 
 			// save line in case next op is a step
 			lastline = line;
+			if ( stepping )
+				stepping = false;
 
+			// check for a break point if we aren't suspended already
+			if ( ! suspended ) {
+				if ( breakpoints.containsKey(line) )
+					suspended = true;
+				else
+					return;
+			}
+			
 			// wait for a state change
 			while ( suspended && (!exiting) && (!stepping) ) {
 				try {
@@ -146,12 +151,12 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	public String callgraph() {
 		int n = cc;
 		if ( n < 0 || n >= calls.length )
-			return "<empty>";
+			return "";
 		StringBuffer sb = new StringBuffer();
-		for ( int i=0; i<n; i++ ) {
+		for ( int i=0; i<=n; i++ ) {
 			CallInfo ci = calls[i];
 			// TODO: fill this out with proper format, names, etc.
-			sb.append( String.valueOf(ci) );
+			sb.append( String.valueOf(ci.closure.p) );
 			sb.append( "\n" );
 		}
 		return sb.toString();
