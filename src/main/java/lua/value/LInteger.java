@@ -9,17 +9,25 @@ public class LInteger extends LNumber {
 	public LInteger(int value) {
 		this.m_value = value;
 	}
-
-	public int hashCode() {
-		return m_value;
+	
+	public final int hashCode() {
+		return hashCodeOf( m_value );
 	}
-
+	
+	public static int hashCodeOf( int v ) {
+		return v;
+	}
+	
 	public int luaAsInt() {
 		return m_value;
 	}
 	
 	public String luaAsString() {
 		return String.valueOf(m_value);
+	}
+	
+	public boolean isInteger() {
+		return true;
 	}
 	
 	// binary operations on integers, first dispatch

@@ -103,10 +103,7 @@ public class LuaCompat extends LFunction {
 			LValue k = vm.getArg(1);
 			LValue result = LNil.NIL;
 			if ( t instanceof LTable ) {
-				LValue v = (LValue) ( (LTable) t ).rawGet( k );
-				if ( v != null ) {
-					result = v;
-				}
+				result = ( (LTable) t ).get( k );
 			}
 			vm.setResult( result );
 		}	break;

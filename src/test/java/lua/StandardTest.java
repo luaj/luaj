@@ -78,7 +78,7 @@ public class StandardTest extends TestCase {
 		// relies on weak tables having their elements removed by
 		// the garbage collector. Until we implement that, remove the
 		// built-in collectgarbage function.
-		GlobalState.getGlobalsTable().rawSet( new LString("collectgarbage"), LNil.NIL );
+		GlobalState.getGlobalsTable().put( "collectgarbage", LNil.NIL );
 		StackState state = new StackState();
 		Closure c = new Closure( state, code );
 		

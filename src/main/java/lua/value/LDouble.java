@@ -18,6 +18,12 @@ public class LDouble extends LNumber {
 		return String.valueOf(m_value);
 	}
 	
+	public boolean isInteger() {
+		// Cast to int and then back to double and see if the value
+		// survives the round trip.
+		return ( (double) ( (int) m_value ) ) == m_value;
+	}
+	
 	// binary operations on integers, first dispatch
 	public LValue luaBinOpUnknown(int opcode, LValue lhs) {
 		return lhs.luaBinOpDouble( opcode, this.m_value );

@@ -18,7 +18,12 @@ public class LValue {
 	public boolean luaAsBoolean() {
 		return true;
 	}
-
+	
+	/** Return true if this value can be represented as an "int" */
+	public boolean isInteger() {
+		return false;
+	}
+	
 	// perform a lua call, return true if the call is to a lua function, false
 	// if it ran to completion.
 	public boolean luaStackCall(VM vm) {

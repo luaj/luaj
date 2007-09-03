@@ -19,4 +19,9 @@ public class LNumber extends LValue {
 		return TYPE_NAME;
 	}
 
+	/**
+	 * Returns false by default for non-LNumbers, but subclasses of LNumber must
+	 * override.
+	 */
+	public abstract boolean isInteger();
 }
