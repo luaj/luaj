@@ -12,6 +12,7 @@ public class LFunction extends LValue {
 	}
 
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
+		vm.newCall();
 		vm.push( this );
 		vm.push( table );
 		vm.push( key );
@@ -24,6 +25,7 @@ public class LFunction extends LValue {
 	}
 
 	public void luaGetTable(VM vm, LValue table, LValue key) {
+		vm.newCall();
 		vm.push( this );
 		vm.push( table );
 		vm.push( key );

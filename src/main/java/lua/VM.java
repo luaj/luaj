@@ -7,6 +7,10 @@ public interface VM {
 
 	// ================ interfaces for performing calls
 	
+	/** Prepare the VM stack for a new call with arguments to be pushed
+	 */
+	public void newCall();
+	
 	/** Push an argument or return value onto the stack 
 	 */
 	public void push( LValue value );
