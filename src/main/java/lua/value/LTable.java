@@ -5,7 +5,7 @@ import lua.VM;
 
 /**
  * Simple implementation of table structure for Lua VM. Maintains both an array
- * part and a hash part. Does not attempt to acheive the same performance as the
+ * part and a hash part. Does not attempt to achieve the same performance as the
  * C version.
  * 
  * Java code can put values in the table or get values out (bypassing the
@@ -15,6 +15,9 @@ import lua.VM;
  * 
  * remove() methods are private: setting a key's value to nil is the correct way
  * to remove an entry from the table.
+ * 
+ * TODO: Support for weak tables has to be shoehorned in here somehow.
+ * 
  */
 public class LTable extends LValue {
 
