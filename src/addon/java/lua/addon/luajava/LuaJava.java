@@ -128,7 +128,7 @@ public final class LuaJava extends LFunction {
 				LValue v = CoerceJavaToLua.coerce( o );
 				vm.push( v );
 			} catch (NoSuchFieldException nsfe) {
-				vm.setResult( new LMethod(m_instance,clazz,s) );
+				vm.push( new LMethod(m_instance,clazz,s) );
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

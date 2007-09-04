@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import lua.StackState;
+import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
 import lua.io.Closure;
 import lua.io.LoadState;
@@ -20,6 +21,9 @@ public class LuaJavaAppRunner {
 
 	public static void main( String[] args ) throws IOException {
 
+		// add LuaCompat bindings
+		LuaCompat.install();
+		
 		// add LuaJava bindings
 		LuaJava.install();
 		
