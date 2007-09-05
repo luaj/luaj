@@ -4,15 +4,15 @@ local function f(x)
 end
 
 local function factorial(i)
-	local function helper(sum, n)
+	local function helper(product, n)
 		if n <= 0 then
-			return sum
+			return product
 		else
 			-- tail call to a nested Lua function
-			return helper(n + sum, n - 1)
+			return helper(n * product, n - 1)
 		end
 	end
-	return helper(0, i)
+	return helper(1, i)
 end
 
 local result1 = factorial(5)
