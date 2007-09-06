@@ -38,6 +38,12 @@ public class LuaCompat extends LFunction {
 		math.put( "pi", new LDouble( Math.PI ) );
 		
 		globals.put( "math", math );
+		
+		LTable string = new LTable();
+		for ( int i = 0; i < STRING_NAMES.length; ++i ) {
+			string.put( STRING_NAMES[i], new LuaCompat( STRING_BASE + i ) );
+		}
+		globals.put( "string", string );
 	}
 	
 	public static final String[] GLOBAL_NAMES = {
@@ -58,6 +64,11 @@ public class LuaCompat extends LFunction {
 		"sin"
 	};
 	
+	public static final String[] STRING_NAMES = {
+		"rep",
+		"sub",
+	};
+	
 	private static final int ASSERT = 0;
 	private static final int LOADFILE = 1;
 	private static final int TONUMBER = 2;
@@ -72,6 +83,10 @@ public class LuaCompat extends LFunction {
 	private static final int MIN = MATH_BASE + 2;
 	private static final int MODF = MATH_BASE + 3;
 	private static final int SIN = MATH_BASE + 4;
+	
+	private static final int STRING_BASE = 20;
+	private static final int REP = STRING_BASE + 0;
+	private static final int SUB = STRING_BASE + 1;
 	
 	private final int id;
 	private LuaCompat( int id ) {
@@ -134,6 +149,45 @@ public class LuaCompat extends LFunction {
 		case SIN:
 			vm.setResult( new LDouble( Math.sin( vm.getArgAsDouble( 0 ) ) ) );
 			break;
+		
+		// String functions
+		case REP: {
+			String s = vm.getArgAsString( 0 );
+			int n = vm.getArgAsInt( 1 );
+			if ( n >= 0 ) {
+				StringBuffer sb = new StringBuffer( s.length() * n );
+				for ( int i = 0; i < n; ++i ) {
+					sb.append( s );
+				}
+				vm.setResult( new LString( sb.toString() ) );
+			} else {
+				vm.setResult( LNil.NIL );
+			}
+		}	break;
+		case SUB: {
+			String s = vm.getArgAsString( 0 );
+			final int len = s.length();
+			
+			int i = vm.getArgAsInt( 1 );
+			if ( i < 0 ) {
+				// start at -i characters from the end
+				i = Math.max( len + i, 0 );
+			} else if ( i > 0 ) {
+				// start at character i - 1
+				i = i - 1;
+			}
+			
+			int j = ( vm.getArgCount() > 2 ) ? vm.getArgAsInt( 2 ): -1;
+			if ( j < 0 ) {
+				j = Math.max( i, len + j + 1 );
+			} else {
+				j = Math.min( Math.max( i, j ), len );
+			}
+			
+			String result = s.substring( i, j );
+			vm.setResult( new LString( result ) );
+		}	break;
+		
 		default:
 			luaUnsupportedOperation();
 		}
