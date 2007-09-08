@@ -4,6 +4,7 @@ public class LUserData extends LValue {
 	public static final LString TYPE_NAME = new LString("userdata");
 	
 	public final Object m_instance;
+	public LTable m_metatable;
 	
 	public LUserData(Object obj) {
 		m_instance = obj;
@@ -24,5 +25,9 @@ public class LUserData extends LValue {
 
 	public LString luaGetType() {
 		return TYPE_NAME;
+	}
+	
+	public LTable luaGetMetatable() {
+		return m_metatable; 
 	}
 }

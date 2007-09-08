@@ -23,12 +23,6 @@ public class LTable extends LValue {
 
 	public static final LString TYPE_NAME = new LString("table");
 	
-	/** Metatable tag for intercepting table gets */
-	private static final LString TM_INDEX    = new LString("__index");
-	
-	/** Metatable tag for intercepting table sets */
-	private static final LString TM_NEWINDEX = new LString("__newindex");
-	
 	/**
 	 * Zero-length array to use instead of null, so that we don't need to
 	 * check for null everywhere.
@@ -229,28 +223,22 @@ public class LTable extends LValue {
 		final int slot = findSlot( key );
 		return m_hashKeys[ slot ] != null;
 	}
-	
+
 	public void luaGetTable(VM vm, LValue table, LValue key) {
 		LValue v = get(key);
 		if ( v == LNil.NIL && m_metatable != null ) {
-			LValue event = m_metatable.get( TM_INDEX );
-			if ( event != null && event != LNil.NIL ) {
-				event.luaGetTable( vm, table, key );
-				return;
-			}
+			super.luaGetTable( vm, table, key );
+		} else {
+			vm.push(v);
 		}
-		vm.push(v);
 	}
 	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 		if ( !containsKey( key ) && m_metatable != null ) {
-			LValue event = m_metatable.get( TM_NEWINDEX );
-			if ( event != null && event != LNil.NIL ) {
-				event.luaSetTable( vm, table, key, val );
-				return;
-			}
+			super.luaSetTable( vm, table, key, val );
+		} else {
+			put(key, val);
 		}
-		put(key, val);
 	}
 	
 	/**
@@ -269,13 +257,14 @@ public class LTable extends LValue {
 	}
 	
 	/** Valid for tables */
-	public LValue luaGetMetatable() {
+	public LTable luaGetMetatable() {
 		return this.m_metatable;
 	}
 
 	/** Valid for tables */
 	public void luaSetMetatable(LValue metatable) {
-		this.m_metatable = (LTable) metatable;
+		this.m_metatable = ( metatable != null && metatable != LNil.NIL ) ?
+					(LTable) metatable : null;
 	}
 
 	public String luaAsString() {

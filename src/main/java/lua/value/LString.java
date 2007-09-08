@@ -1,7 +1,6 @@
 package lua.value;
 
 import lua.Lua;
-import lua.StackState;
 
 public class LString extends LValue {
 
@@ -9,6 +8,8 @@ public class LString extends LValue {
 	
 	final String m_string;
 	final int m_hash;
+	
+	private static LTable s_stringMT;
 	
 	public LString(String string) {
 		this.m_string = string;
@@ -91,5 +92,24 @@ public class LString extends LValue {
 	public LString luaGetType() {
 		return TYPE_NAME;
 	}
-
+	
+	public LTable luaGetMetatable() {
+		synchronized ( LString.class ) {
+			return s_stringMT;
+		}
+	}
+	
+	/**
+	 * Get the metatable for all string values. Creates the table if it does not
+	 * exist yet, and sets its __index entry to point to itself.
+	 * 
+	 * @return metatable that will be used for all strings
+	 */
+	public static synchronized LTable getMetatable() {
+		if ( s_stringMT == null ) {
+			s_stringMT = new LTable();
+			s_stringMT.put( TM_INDEX, s_stringMT );
+		}
+		return s_stringMT;
+	}
 }

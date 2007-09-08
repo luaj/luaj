@@ -39,7 +39,7 @@ public class LuaCompat extends LFunction {
 		
 		globals.put( "math", math );
 		
-		LTable string = new LTable();
+		LTable string = LString.getMetatable();
 		for ( int i = 0; i < STRING_NAMES.length; ++i ) {
 			string.put( STRING_NAMES[i], new LuaCompat( STRING_BASE + i ) );
 		}

@@ -64,6 +64,10 @@ public class LuaJTest extends TestCase {
 		runTest( "compare" );
 	}
 
+	public void testMetatables() throws IOException, InterruptedException {
+		runTest( "metatables" );
+	}
+
 	public void testSelect() throws IOException, InterruptedException {
 		runTest( "select" );
 	}
