@@ -19,7 +19,7 @@ public class LTableTest extends TestCase {
 		
 		// Ensure all keys are still there.
 		for ( int i = 1; i <= 32; ++i ) {
-			assertEquals( "Test Value! " + i, t.get( i ).luaAsString() );
+			assertEquals( "Test Value! " + i, t.get( i ).luaAsString().toJavaString() );
 		}
 	}
 	
@@ -73,7 +73,7 @@ public class LTableTest extends TestCase {
 				intKeys |= mask;
 			} else if ( k instanceof LString ) {
 				final int ik = Integer.parseInt( k.luaAsString().toJavaString() );
-				assertEquals( String.valueOf( ik ), k.luaAsString() );
+				assertEquals( String.valueOf( ik ), k.luaAsString().toJavaString() );
 				assertTrue( ik >= 0 && ik < 10 );
 				final int mask = 1 << ik;
 				assertTrue( "Key \""+ik+"\" found more than once", ( stringKeys & mask ) == 0 );
