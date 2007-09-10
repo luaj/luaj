@@ -128,16 +128,7 @@ public class LTable extends LValue {
 	 * initializing a table. Bypasses the metatable, if any.
 	 */
 	public void put( String key, LValue value ) {
-		if (value == null || value == LNil.NIL) {
-			remove( key );
-			return;
-		}
-		if (checkLoadFactor())
-			rehash();
-		int slot = findSlot( key );
-		if (fillHashSlot( slot, value ))
-			return;
-		m_hashKeys[slot] = new LString( key );
+		put( new LString( key ), value );
 	}
 	
 	/**
@@ -267,8 +258,8 @@ public class LTable extends LValue {
 					(LTable) metatable : null;
 	}
 
-	public String luaAsString() {
-		return "table: "+id();
+	public LString luaAsString() {
+		return new LString("table: "+id());
 	}
 
 	public LString luaGetType() {
@@ -334,13 +325,6 @@ public class LTable extends LValue {
 		}
 	}
 	
-	private void remove( String key ) {
-		if ( m_hashKeys != null ) {
-			int slot = findSlot( key );
-			clearSlot( slot );
-		}
-	}
-	
 	private void remove( LValue key ) {
 		if ( m_hashKeys != null ) {
 			int slot = findSlot( key );
@@ -381,20 +365,6 @@ public class LTable extends LValue {
 		LValue k;
 		while ( ( k = m_hashKeys[i] ) != null &&
 				!key.luaBinCmpUnknown( Lua.OP_EQ, k ) ) {
-			i = ( i + 1 ) % m_hashKeys.length;
-		}
-		return i;
-	}
-
-	private int findSlot( String key ) {
-		// NOTE: currently LString uses the String's hashCode.
-		int i = hashToIndex( key.hashCode() );
-		
-		// This loop is guaranteed to terminate as long as we never allow the
-		// table to get 100% full.
-		LValue k;
-		while ( ( k = m_hashKeys[i] ) != null &&
-				  !k.luaBinCmpString( Lua.OP_EQ, key ) ) {
 			i = ( i + 1 ) % m_hashKeys.length;
 		}
 		return i;

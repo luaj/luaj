@@ -7,8 +7,8 @@ public class LFunction extends LValue {
 
 	public static final LString TYPE_NAME = new LString("function");
 	
-	public String luaAsString() {
-		return "function: "+hashCode();
+	public LString luaAsString() {
+		return new LString( "function: "+hashCode() );
 	}
 
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {

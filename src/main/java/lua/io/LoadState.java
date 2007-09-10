@@ -99,8 +99,7 @@ public class LoadState {
 			return null;
 		byte[] bytes = new byte[size];
 		is.readFully( bytes );
-		String s = new String( bytes, 0, size-1 );
-		return new LString( s );
+		return new LString( bytes, 0, bytes.length - 1 );
 	}
 	
 	static LNumber longBitsToLuaNumber( long bits ) {

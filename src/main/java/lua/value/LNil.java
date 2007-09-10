@@ -4,8 +4,8 @@ public final class LNil extends LValue {
 	public static final LNil NIL = new LNil();
 	public static final LString TYPE_NAME = new LString("nil");
 	
-	public final String luaAsString() {
-		return "nil";
+	public final LString luaAsString() {
+		return TYPE_NAME;
 	}
 
 	public boolean luaAsBoolean() {

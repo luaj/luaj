@@ -8,15 +8,15 @@ public final class LBoolean extends LValue {
 	
 	public static final LString TYPE_NAME = new LString("boolean");
 	
-	private final String m_name;
+	private final LString m_name;
 	private final boolean m_value;
 	
 	private LBoolean( String name, boolean value ) {
-		this.m_name = name;
+		this.m_name = new LString( name );
 		this.m_value = value;
 	}
 	
-	public final String luaAsString() {
+	public final LString luaAsString() {
 		return m_name;
 	}
 	

@@ -17,6 +17,7 @@ import java.util.Map;
 import lua.GlobalState;
 import lua.VM;
 import lua.value.LFunction;
+import lua.value.LString;
 import lua.value.LTable;
 import lua.value.LUserData;
 import lua.value.LValue;
@@ -121,7 +122,7 @@ public final class LuaJava extends LFunction {
 			this.clazz = clazz;
 		}
 		public void luaGetTable(VM vm, LValue table, LValue key) {
-			final String s = key.luaAsString();
+			final String s = key.luaAsString().toJavaString();
 			try {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
@@ -135,7 +136,7 @@ public final class LuaJava extends LFunction {
 		}
 		public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 			Class c = m_instance.getClass();
-			String s = key.luaAsString();
+			String s = key.luaAsString().toJavaString();
 			try {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());

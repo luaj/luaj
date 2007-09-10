@@ -22,8 +22,8 @@ public class LInteger extends LNumber {
 		return m_value;
 	}
 	
-	public String luaAsString() {
-		return String.valueOf(m_value);
+	public LString luaAsString() {
+		return LString.valueOf(m_value);
 	}
 	
 	public boolean isInteger() {

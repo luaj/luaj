@@ -65,7 +65,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion stringCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.luaAsString();
+				return value.luaAsString().toJavaString();
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LUserData )
@@ -78,7 +78,7 @@ public class CoerceLuaToJava {
 				if ( value instanceof LUserData )
 					return ((LUserData)value).m_instance;
 				if ( value instanceof LString )
-					return value.luaAsString();
+					return value.luaAsString().toJavaString();
 				if ( value instanceof LInteger )
 					return Integer.valueOf(value.luaAsInt());
 				if ( value instanceof LDouble )

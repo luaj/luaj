@@ -152,20 +152,22 @@ public class LuaCompat extends LFunction {
 		
 		// String functions
 		case REP: {
-			String s = vm.getArgAsString( 0 );
+			LString s = vm.getArgAsLuaString( 0 );
 			int n = vm.getArgAsInt( 1 );
 			if ( n >= 0 ) {
-				StringBuffer sb = new StringBuffer( s.length() * n );
-				for ( int i = 0; i < n; ++i ) {
-					sb.append( s );
+				final byte[] bytes = new byte[ s.length() * n ];
+				int len = s.length();
+				for ( int offset = 0; offset < bytes.length; offset += len ) {
+					s.copyInto( 0, bytes, offset, len );
 				}
-				vm.setResult( new LString( sb.toString() ) );
+				
+				vm.setResult( new LString( bytes ) );
 			} else {
 				vm.setResult( LNil.NIL );
 			}
 		}	break;
 		case SUB: {
-			String s = vm.getArgAsString( 0 );
+			final LString s = vm.getArgAsLuaString( 0 );
 			final int len = s.length();
 			
 			int i = vm.getArgAsInt( 1 );
@@ -184,8 +186,8 @@ public class LuaCompat extends LFunction {
 				j = Math.min( Math.max( i, j ), len );
 			}
 			
-			String result = s.substring( i, j );
-			vm.setResult( new LString( result ) );
+			LString result = s.substring( i, j );
+			vm.setResult( result );
 		}	break;
 		
 		default:
@@ -298,7 +300,7 @@ public class LuaCompat extends LFunction {
 		
 		String script;
 		if ( fileName != null ) {
-			script = fileName.luaAsString();
+			script = fileName.luaAsString().toJavaString();
 			is = getClass().getResourceAsStream( "/"+script );
 		} else {
 			is = System.in;

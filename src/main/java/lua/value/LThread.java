@@ -7,4 +7,7 @@ public class LThread extends LValue {
 		return TYPE_NAME;
 	}
 
+	public LString luaAsString() {
+		return new LString("thread: "+hashCode());
+	}
 }

@@ -10,8 +10,8 @@ public class LUserData extends LValue {
 		m_instance = obj;
 	}
 	
-	public String luaAsString() {
-		return m_instance.toString();
+	public LString luaAsString() {
+		return new LString(m_instance.toString());
 	}
 	
 	public boolean equals(Object obj) {

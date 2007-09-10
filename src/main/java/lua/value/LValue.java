@@ -61,7 +61,7 @@ public class LValue {
 	}
 	
 	// unsupported except for strings
-	public boolean luaBinCmpString(int opcode, String rhs) {
+	public boolean luaBinCmpString(int opcode, LString rhs) {
 		if ( opcode == Lua.OP_EQ )
 			return false;
 		luaUnsupportedOperation();
@@ -122,13 +122,11 @@ public class LValue {
 	
 	/** Get the value as a String
 	 */
-	public String luaAsString() {
-		return super.toString();
-	}
+	public abstract LString luaAsString();
 	
 	/** Override standard toString with lua String conversion by default */
 	public String toString() {
-		return luaAsString();
+		return luaAsString().toJavaString();
 	}
 
 	/** Return value as an integer */

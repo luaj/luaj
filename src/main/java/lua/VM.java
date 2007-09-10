@@ -1,6 +1,7 @@
 package lua;
 
 import lua.io.Closure;
+import lua.value.LString;
 import lua.value.LValue;
 
 public interface VM {
@@ -113,6 +114,13 @@ public interface VM {
 	 * @return
 	 */
 	public String getArgAsString( int index );
+
+	/**
+	 * Get the index-th argument as an LString value, or "" if fewer than index arguments were supplied.
+	 * @param index
+	 * @return
+	 */
+	public LString getArgAsLuaString( int index );
 
 	/** Set top to base in preparation for pushing return values.
 	 * Can be used when returning no values.

@@ -72,7 +72,7 @@ public class LTableTest extends TestCase {
 				assertTrue( ( intKeys & mask ) == 0 );
 				intKeys |= mask;
 			} else if ( k instanceof LString ) {
-				final int ik = Integer.parseInt( k.luaAsString() );
+				final int ik = Integer.parseInt( k.luaAsString().toJavaString() );
 				assertEquals( String.valueOf( ik ), k.luaAsString() );
 				assertTrue( ik >= 0 && ik < 10 );
 				final int mask = 1 << ik;
