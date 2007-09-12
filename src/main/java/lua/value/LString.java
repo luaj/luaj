@@ -1,5 +1,6 @@
 package lua.value;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -159,6 +160,26 @@ public class LString extends LValue {
 	 */
 	public void copyInto( int strOffset, byte[] bytes, int arrayOffset, int len ) {
 		System.arraycopy( m_bytes, m_offset+strOffset, bytes, arrayOffset, len );
+	}
+	
+	/**
+	 * Produce an InputStream instance from which the bytes of this LString can be read.
+	 * Underlying byte array is not copied.
+	 */
+	public ByteArrayInputStream toInputStream() {
+		// Well, this is really something.
+		// Javadoc for java versions 1.3 and earlier states that if reset() is
+		// called on a ByteArrayInputStream constructed with the 3-argument
+		// constructor, then bytes 0 .. offset will be returned by the next
+		// calls to read(). In JDK 1.4, the behavior improved, so that the
+		// initial mark is set to the initial offset. We still need to
+		// override ByteArrayInputStream here just in case we run on a
+		// JVM with the older behavior.
+		return new ByteArrayInputStream( m_bytes, m_offset, m_length ) {
+			public synchronized void reset() {
+				pos = Math.max( m_offset, mark );
+			}
+		};
 	}
 	
 	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {

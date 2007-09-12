@@ -268,17 +268,15 @@ public class LTable extends LValue {
 	
 	/** Valid for tables */
 	public LValue luaPairs() {
-		return new LTableIterator(this);
+		return new LTableIterator();
 	}
 	
 	/** Iterator for tables */
-	static final class LTableIterator extends LFunction {
-		private final LTable t;
+	private final class LTableIterator extends LFunction {
 		private int arrayIndex;
 		private int hashIndex;
 		
-		private LTableIterator(LTable t) {
-			this.t = t;
+		private LTableIterator() {
 			this.arrayIndex = 0;
 			this.hashIndex = 0;
 		}
@@ -287,18 +285,18 @@ public class LTable extends LValue {
 		public boolean luaStackCall(VM vm) {
 			vm.setResult();
 			int i;
-			while ( ( i = arrayIndex++ ) < t.m_vector.length ) {
-				if ( t.m_vector[i] != LNil.NIL ) {
+			while ( ( i = arrayIndex++ ) < m_vector.length ) {
+				if ( m_vector[i] != LNil.NIL ) {
 					vm.push( new LInteger( arrayIndex ) );
-					vm.push( t.m_vector[ i ] );
+					vm.push( m_vector[ i ] );
 					return false;
 				}
 			}
-			if ( t.m_hashKeys != null ) {
-				while ( ( i = hashIndex++ ) < t.m_hashKeys.length ) {
-					if ( t.m_hashKeys[i] != null ) {
-						vm.push( t.m_hashKeys[i] );
-						vm.push( t.m_hashValues[i] );
+			if ( m_hashKeys != null ) {
+				while ( ( i = hashIndex++ ) < m_hashKeys.length ) {
+					if ( m_hashKeys[i] != null ) {
+						vm.push( m_hashKeys[i] );
+						vm.push( m_hashValues[i] );
 						return false;
 					}
 				}
@@ -307,6 +305,32 @@ public class LTable extends LValue {
 		}
 	}
 
+	/**
+	 * Helper method to get all the keys in this table in an array. Meant to be
+	 * used instead of keys() (which returns an enumeration) when an array is
+	 * more convenient. Note that for a very large table, getting an Enumeration
+	 * instead would be more space efficient.
+	 */
+	public LValue[] getKeys() {
+		LValue[] keys = new LValue[ m_arrayEntries + m_hashEntries ];
+		int out = 0;
+		
+		for ( int i = 0; i < m_vector.length; ++i ) {
+			if ( m_vector[ i ] != LNil.NIL ) {
+				keys[ out++ ] = new LInteger( i + 1 );
+			}
+		}
+		
+		if ( m_hashKeys != null ) {
+			for ( int i = 0; i < m_hashKeys.length; ++i ) {
+				if ( m_hashKeys[ i ] != null )
+					keys[ out++ ] = m_hashKeys[i];
+			}
+		}
+		
+		return keys;
+	}
+	
 	/** Remove the value in the table with the given integer key. */
 	private void remove( int key ) {
 		if ( key > 0 ) {
@@ -490,23 +514,4 @@ public class LTable extends LValue {
 		return m_vector.length;
 	}
 	
-	LValue[] getKeys() {
-		LValue[] keys = new LValue[ m_arrayEntries + m_hashEntries ];
-		int out = 0;
-		
-		for ( int i = 0; i < m_vector.length; ++i ) {
-			if ( m_vector[ i ] != LNil.NIL ) {
-				keys[ out++ ] = new LInteger( i + 1 );
-			}
-		}
-		
-		if ( m_hashKeys != null ) {
-			for ( int i = 0; i < m_hashKeys.length; ++i ) {
-				if ( m_hashKeys[ i ] != null )
-					keys[ out++ ] = m_hashKeys[i];
-			}
-		}
-		
-		return keys;
-	}
 }
