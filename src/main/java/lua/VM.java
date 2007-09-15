@@ -140,4 +140,10 @@ public interface VM {
 	 */
 	public void setResult(LValue val);
 
+	
+	/**
+	 * Generates a Lua error.   The error message(which can actually be a Lua value of any type)
+	 * must be on the top of the stack.
+	 */
+	public void lua_error();
 }

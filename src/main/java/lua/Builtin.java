@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import lua.value.LFunction;
+import lua.value.LNil;
 import lua.value.LTable;
 import lua.value.LValue;
 
@@ -17,13 +18,19 @@ final class Builtin extends LFunction {
 			table.put( NAMES[i], new Builtin(i) );
 	}
 
+	private static final String[] NAMES = { 
+		"print", 
+		"pairs", 
+		"getmetatable", 
+		"setmetatable", 
+		"type", 
+		"pcall" };
 	private static final int PRINT = 0;
 	private static final int PAIRS = 1;
 	private static final int GETMETATABLE = 2;
 	private static final int SETMETATABLE = 3;
 	private static final int TYPE = 4;
-	
-	private static final String[] NAMES = { "print", "pairs", "getmetatable", "setmetatable", "type" };
+	private static final int PCALL = 5;
 	
 	private static PrintStream stdout = System.out;
 	
@@ -62,6 +69,10 @@ final class Builtin extends LFunction {
 			break;
 		case TYPE:
 			vm.setResult( vm.getArg(0).luaGetType() );
+			break;
+		case PCALL:
+			// TODO: implement pcall
+			vm.setResult( LNil.NIL );
 			break;
 		default:
 			luaUnsupportedOperation();

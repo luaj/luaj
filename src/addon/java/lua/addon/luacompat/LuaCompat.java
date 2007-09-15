@@ -1,7 +1,11 @@
 package lua.addon.luacompat;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 import lua.CallInfo;
 import lua.GlobalState;
@@ -22,6 +26,9 @@ import lua.value.LValue;
 
 public class LuaCompat extends LFunction {
 
+	public static InputStream STDIN = null;
+	public static PrintStream STDOUT = System.out;
+	
 	public static void install() {
 		LTable globals = GlobalState.getGlobalsTable();
 		for ( int i = 0; i < GLOBAL_NAMES.length; ++i ) {
@@ -54,6 +61,12 @@ public class LuaCompat extends LFunction {
 		"setfenv",
 		"select",
 		"collectgarbage",
+		"dofile",
+		"loadstring",
+		"load",
+		"tostring",
+		"unpack",
+		"next",
 	};
 	
 	public static final String[] MATH_NAMES = {
@@ -76,15 +89,22 @@ public class LuaCompat extends LFunction {
 	private static final int SETFENV = 4;
 	private static final int SELECT = 5;
 	private static final int COLLECTGARBAGE = 6;
+	private static final int DOFILE = 7;
+	private static final int LOADSTRING = 8;
+	private static final int LOAD = 9;
+	private static final int TOSTRING = 10;
+	private static final int UNPACK= 11;
+	private static final int NEXT= 12;
 	
-	private static final int MATH_BASE = 10;
+	
+	private static final int MATH_BASE = 20;
 	private static final int ABS = MATH_BASE + 0;
 	private static final int MAX = MATH_BASE + 1;
 	private static final int MIN = MATH_BASE + 2;
 	private static final int MODF = MATH_BASE + 3;
 	private static final int SIN = MATH_BASE + 4;
 	
-	private static final int STRING_BASE = 20;
+	private static final int STRING_BASE = 30;
 	private static final int REP = STRING_BASE + 0;
 	private static final int SUB = STRING_BASE + 1;
 	
@@ -131,6 +151,25 @@ public class LuaCompat extends LFunction {
 		case COLLECTGARBAGE:
 			System.gc();
 			vm.setResult();
+			break;
+		case DOFILE:
+			dofile(vm, vm.getArg(0));
+			break;
+		case LOADSTRING:
+			vm.setResult( loadstring(vm, vm.getArg(0), vm.getArgAsString(1)) );
+			break;
+		case LOAD:
+			vm.setResult( load(vm, vm.getArg(0), vm.getArgAsString(1)) );
+			break;
+		case TOSTRING:
+			vm.setResult( tostring(vm, vm.getArg(0)) );
+			break;
+		case UNPACK:
+			vm.setResult();
+			unpack(vm, vm.getArg(0), vm.getArgAsInt(1), vm.getArgAsInt(2));
+			break;
+		case NEXT:
+			vm.setResult( next(vm, vm.getArg(0), vm.getArgAsInt(1)) );
 			break;
 		
 		// Math functions
@@ -195,7 +234,6 @@ public class LuaCompat extends LFunction {
 		}
 		return false;
 	}
-	
 	private void select( VM vm ) {
 		LValue arg = vm.getArg( 0 );
 		if ( arg instanceof LNumber ) {
@@ -294,7 +332,41 @@ public class LuaCompat extends LFunction {
 		state.setResult();
 		return;
 	}
+
+	// closes the input stream, provided its not null or System.in
+	private static void closeSafely(InputStream is) {
+		try {
+			if ( is != null && is != STDIN )
+				is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
+	// closes the output stream, provided its not null or STDOUT 
+	private static void closeSafely(OutputStream os) {
+		try {
+			if ( os != null && os != STDOUT )
+				os.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	// closes the input stream
+	private static LValue inputStreamToClosureThenClose(VM vm, InputStream is, String chunkname ) {
+		try {
+			Proto p = LoadState.undump(vm, is, chunkname);
+			return new Closure( (StackState) vm, p);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			closeSafely( is );
+		}
+		return LNil.NIL;
+	}
+	
+
 	private LValue loadfile( VM vm, LValue fileName ) {
 		InputStream is;
 		
@@ -303,25 +375,92 @@ public class LuaCompat extends LFunction {
 			script = fileName.luaAsString().toJavaString();
 			is = getClass().getResourceAsStream( "/"+script );
 		} else {
-			is = System.in;
+			is = STDIN;
 			script = "-";
 		}
 		
-		if ( is != null ) {
-			try {
-				Proto p = LoadState.undump(vm, is, script);
-				return new Closure( (StackState) vm, p);
-			} catch (IOException e) {
-			} finally {
-				if ( is != System.in ) {
-					try {
-						is.close();
-					} catch (IOException e) {
-					}
-				}
-			}
-		}
-		
+		if ( is != null )
+			return inputStreamToClosureThenClose( vm, is, script );
 		return LNil.NIL;
 	}
+	
+	private LValue dofile( VM vm, LValue fileName ) {
+		LValue chunk = loadfile( vm, fileName );
+		if ( chunk != LNil.NIL ) {
+			vm.doCall((Closure) chunk, null); 
+		} else {
+			vm.setResult();
+			vm.push("file not found: "+fileName);
+			vm.lua_error();
+		}
+		return null;
+	}
+
+	private LValue loadstring(VM vm,  LValue string, String chunkname) {
+		InputStream is = string.luaAsString().toInputStream();
+		return inputStreamToClosureThenClose( vm, is, chunkname );
+	}
+
+	// TODO: convert this to stream? 
+	private LValue load(VM vm, LValue chunkPartLoader, String chunkname) {
+		if ( ! (chunkPartLoader instanceof Closure) ) {
+			vm.setResult();
+			vm.push("not a function: "+chunkPartLoader);
+			vm.lua_error();
+		}
+		
+		// load all the parts
+		Closure c = (Closure) chunkPartLoader;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			while ( true ) {
+				vm.doCall( c, null );
+				LValue r = vm.getArg(0);
+				if ( ! (r instanceof LString) )
+					break;
+				LString s = (LString) r;
+				s.write(baos, 0, s.length());
+			}
+		} catch ( Exception e ) {
+			e.printStackTrace();
+		} finally {
+			closeSafely( baos );
+		}
+
+		// load from the byte array
+		InputStream is = new ByteArrayInputStream( baos.toByteArray() );
+		return inputStreamToClosureThenClose( vm, is, chunkname );
+	}
+
+	private LValue tostring(VM vm, LValue arg) {
+		return arg.luaAsString();
+	}
+
+	private static LTable toTable(VM vm, LValue list) {
+		if ( ! (list instanceof LTable) ) {
+			vm.setResult();
+			vm.push("not a list: "+list);
+			vm.lua_error();
+			return null;
+		}
+		return (LTable) list;
+	}
+	
+	private void unpack(VM vm, LValue list, int i, int j) {
+		LTable t = toTable(vm, list);
+		if ( t == null )
+			return; 
+		if ( i == 0 )
+			i = 1;
+		if ( j == 0 )
+			j = t.size();
+		LValue[] keys = t.getKeys();
+		for ( int k=i; k<=j; k++ )
+			vm.push( t.get(keys[k-1]) );
+	}
+
+	private LValue next(VM vm, LValue table, int index) {
+		throw new java.lang.RuntimeException("next() not supported yet");
+	}
+
 }
