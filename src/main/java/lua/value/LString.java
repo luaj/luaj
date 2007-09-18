@@ -121,7 +121,32 @@ public class LString extends LValue {
 	public int charAt( int index ) {
 		if ( index < 0 || index >= m_length )
 			throw new IndexOutOfBoundsException();
-		return (int)m_bytes[ index ] & 0x0FF;
+		return luaByte( index );
+	}
+	
+	/** Java version of strpbrk, which is a terribly named C function. */
+	public int indexOfAny( LString accept ) {
+		final int ilimit = m_offset + m_length;
+		final int jlimit = accept.m_offset + accept.m_length;
+		for ( int i = m_offset; i < ilimit; ++i ) {
+			for ( int j = accept.m_offset; j < jlimit; ++j ) {
+				if ( m_bytes[i] == accept.m_bytes[j] ) {
+					return i - m_offset;
+				}
+			}
+		}
+		return -1;
+	}
+	
+	public int indexOf( LString s, int start ) {
+		final int slen = s.length();
+		final int limit = m_offset + m_length - slen;
+		for ( int i = m_offset + start; i <= limit; ++i ) {
+			if ( equals( m_bytes, i, s.m_bytes, s.m_offset, slen ) ) {
+				return i;
+			}
+		}
+		return -1;
 	}
 	
 	public static LString valueOf( double d ) {
@@ -356,6 +381,6 @@ public class LString extends LValue {
 	}
 
 	public int luaByte(int index) {
-		return m_bytes[m_offset + index];
+		return m_bytes[m_offset + index] & 0x0FF;
 	}
 }

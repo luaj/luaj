@@ -18,9 +18,9 @@ public class StrLib {
 	 * @param vm the calling vm
 	 */
 	static void byte_( VM vm ) {
-		LString ls = vm.getArgAsLuaString(1);
-		int i = vm.getArgAsInt(2);
-		int j = vm.getArgAsInt(3);
+		LString ls = vm.getArgAsLuaString(0);
+		int i = vm.getArgAsInt(1);
+		int j = vm.getArgAsInt(2);
 		int n = ls.length();
 		i = Math.max(1, i);
 		j = Math.min(n, (j==0? i: j));
@@ -43,8 +43,8 @@ public class StrLib {
 	public static void char_( VM vm) {
 		int nargs = vm.getArgCount();
 		byte[] bytes = new byte[nargs];
-		for ( int i=1; i<=nargs; i++ )
-			vm.getArgAsInt(i);
+		for ( int i=0; i<nargs; i++ )
+			bytes[i] = (byte)( vm.getArgAsInt(i) & 0x0FF );
 		vm.setResult( new LString( bytes ) );
 	}
 		
@@ -79,7 +79,7 @@ public class StrLib {
 	 * are also returned, after the two indices.
 	 */
 	static void find( VM vm ) {
-		LString pattern = vm.getArgAsLuaString(1);
+		str_find_aux( vm, true );
 	}
 
 	/** 
@@ -190,7 +190,7 @@ public class StrLib {
 	 * Embedded zeros are counted, so "a\000bc\000" has length 5. 
 	 */
 	static void len( VM vm ) {		
-		vm.setResult( new LInteger( vm.getArgAsLuaString(1).length()) );
+		vm.setResult( new LInteger( vm.getArgAsLuaString(0).length()) );
 	}
 
 	/** 
@@ -214,40 +214,9 @@ public class StrLib {
 	 * search; its default value is 1 and may be negative.
 	 */
 	static void match( VM vm ) {
-		LString s = vm.getArgAsLuaString( 0 );
-		LString pat = vm.getArgAsLuaString( 1 );
-		int init = vm.getArgCount() > 2 ? vm.getArgAsInt( 2 ) : 1;
-		
-		if ( init > 0 ) {
-			init = Math.min( init - 1, s.length() );
-		} else if ( init < 0 ) {
-			init = Math.max( 0, s.length() + init );
-		}
-		
-		MatchState ms = new MatchState( vm, s, pat );
-		
-		// TODO: check if pattern contains special characters,
-		// if not do a simpler search.
-		boolean anchor = false;
-		int poff = 0;
-		if ( pat.charAt( 0 ) == '^' ) {
-			anchor = true;
-			poff = 1;
-		}
-		
-		int soff = init;
-		do {
-			int res;
-			ms.reset();
-			if ( ( res = ms.match( soff, poff ) ) != -1 ) {
-				ms.push_captures( true, soff, res );
-				return;
-			}
-		} while ( soff++ < s.length() && !anchor );
-		
-		vm.setResult( LNil.NIL );
+		str_find_aux( vm, false );
 	}
-
+	
 	/**
 	 * string.rep (s, n)
 	 * 
@@ -328,11 +297,65 @@ public class StrLib {
 	static void upper( VM vm ) {
 		vm.setResult( new LString( vm.getArgAsString(1).toUpperCase() ) );
 	}
-
-
+	
+	/**
+	 * This utility method implements both string.find and string.match.
+	 */
+	static void str_find_aux( VM vm, boolean find ) {
+		LString s = vm.getArgAsLuaString( 0 );
+		LString pat = vm.getArgAsLuaString( 1 );
+		int init = vm.getArgCount() > 2 ? vm.getArgAsInt( 2 ) : 1;
+		
+		if ( init > 0 ) {
+			init = Math.min( init - 1, s.length() );
+		} else if ( init < 0 ) {
+			init = Math.max( 0, s.length() + init );
+		}
+		
+		boolean fastMatch = find && ( vm.getArgAsBoolean( 3 ) || pat.indexOfAny( SPECIALS ) == -1 );
+		vm.setResult();
+		
+		if ( fastMatch ) {
+			int result = s.indexOf( pat, init );
+			if ( result != -1 ) {
+				vm.push( result + 1 );
+				vm.push( result + pat.length() );
+				return;
+			}
+		} else {
+			MatchState ms = new MatchState( vm, s, pat );
+			
+			boolean anchor = false;
+			int poff = 0;
+			if ( pat.luaByte( 0 ) == '^' ) {
+				anchor = true;
+				poff = 1;
+			}
+			
+			int soff = init;
+			do {
+				int res;
+				ms.reset();
+				if ( ( res = ms.match( soff, poff ) ) != -1 ) {
+					if ( find ) {
+						vm.push( soff + 1 );
+						vm.push( res );
+						ms.push_captures( false, soff, res );
+					} else {
+						ms.push_captures( true, soff, res );
+					}
+					return;
+				}
+			} while ( soff++ < s.length() && !anchor );
+		}
+		
+		vm.setResult( LNil.NIL );
+	}
+	
 	// Pattern matching implementation
 	
 	private static final int L_ESC = '%';
+	private static final LString SPECIALS = new LString("^$*+?.([%-");
 	private static final int MAX_CAPTURES = 32;
 	
 	private static final int CAP_UNFINISHED = -1;
@@ -360,7 +383,6 @@ public class StrLib {
 		}
 		
 		void push_captures( boolean wholeMatch, int soff, int end ) {
-			vm.setResult();
 			int nlevels = ( this.level == 0 && wholeMatch ) ? 1 : this.level;
 			for ( int i = 0; i < nlevels; ++i ) {
 				push_onecapture( i, soff, end );
@@ -405,7 +427,7 @@ public class StrLib {
 		}
 		
 		int classend( int poffset ) {
-			switch ( p.charAt( poffset++ ) ) {
+			switch ( p.luaByte( poffset++ ) ) {
 			case L_ESC:
 				if ( poffset == p.length() ) {
 					vm.push( "malformed pattern (ends with %)" );
@@ -414,15 +436,15 @@ public class StrLib {
 				return poffset + 1;
 				
 			case '[':
-				if ( p.charAt( poffset ) == '^' ) poffset++;
+				if ( p.luaByte( poffset ) == '^' ) poffset++;
 				do {
 					if ( poffset == p.length() ) {
 						vm.push( "malformed pattern (missing ])" );
 						vm.lua_error();
 					}
-					if ( p.charAt( poffset++ ) == L_ESC && poffset != p.length() )
+					if ( p.luaByte( poffset++ ) == L_ESC && poffset != p.length() )
 						poffset++;
-				} while ( p.charAt( poffset ) != ']' );
+				} while ( p.luaByte( poffset ) != ']' );
 				return poffset + 1;
 			default:
 				return poffset;
@@ -454,32 +476,32 @@ public class StrLib {
 		
 		boolean matchbracketclass( int c, int poff, int ec ) {
 			boolean sig = true;
-			if ( p.charAt( poff + 1 ) == '^' ) {
+			if ( p.luaByte( poff + 1 ) == '^' ) {
 				sig = false;
 				poff++;
 			}
 			while ( ++poff < ec ) {
-				if ( p.charAt( poff ) == L_ESC ) {
+				if ( p.luaByte( poff ) == L_ESC ) {
 					poff++;
-					if ( match_class( c, p.charAt( poff ) ) )
+					if ( match_class( c, p.luaByte( poff ) ) )
 						return sig;
 				}
-				else if ( ( p.charAt( poff + 1 ) == '-' ) && ( poff + 2 < ec ) ) {
+				else if ( ( p.luaByte( poff + 1 ) == '-' ) && ( poff + 2 < ec ) ) {
 					poff += 2;
-					if ( p.charAt( poff - 2 ) <= c && c <= p.charAt( poff ) )
+					if ( p.luaByte( poff - 2 ) <= c && c <= p.luaByte( poff ) )
 						return sig;
 				}
-				else if ( p.charAt( poff ) == c ) return sig;
+				else if ( p.luaByte( poff ) == c ) return sig;
 			}
 			return !sig;
 		}
 		
 		boolean singlematch( int c, int poff, int ep ) {
-			switch ( p.charAt( poff ) ) {
+			switch ( p.luaByte( poff ) ) {
 			case '.': return true;
-			case L_ESC: return match_class( c, p.charAt( poff + 1 ) );
+			case L_ESC: return match_class( c, p.luaByte( poff + 1 ) );
 			case '[': return matchbracketclass( c, poff, ep - 1 );
-			default: return p.charAt( poff ) == c;
+			default: return p.luaByte( poff ) == c;
 			}
 		}
 		
@@ -488,96 +510,86 @@ public class StrLib {
 		 * where match ends, otherwise returns -1.
 		 */
 		int match( int soffset, int poffset ) {
-			// Java doesn't have goto -- we could wrap this in a while (true)
-			// and use labeled breaks instead, potentially. For now just use
-			// recursion - of course, this won't work very well, because java doesn't
-			// do tail recursion optimization - see:
-			// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4726340
-			// 
-// init: 
-			// Check if we are at the end of the pattern - 
-			// equivalent to the '\0' case in the C version, but our pattern
-			// string is not NUL-terminated.
-			if ( poffset == p.length() )
-				return soffset;
-			switch ( p.charAt( poffset ) ) {
-			case '(':
-				if ( p.charAt( poffset + 1 ) == ')' )
-					return start_capture( soffset, poffset + 2, CAP_POSITION );
-				else
-					return start_capture( soffset, poffset + 1, CAP_UNFINISHED );
-			case ')':
-				return end_capture( soffset, poffset + 1 );
-			case L_ESC:
-				switch ( p.charAt( poffset+1 ) ) {
-				case 'b':
-					soffset = matchbalance( soffset, poffset + 2 );
-					if ( soffset == -1 ) return -1;
-					// poffset += 4; goto init;
-					return match( soffset, poffset + 4 );
-				case 'f': {
-					poffset += 2;
-					if ( p.charAt( poffset ) != '[' ) {
-						vm.push("Missing [ after %f in pattern");
-						vm.lua_error();
-					}
-					int ep = classend( poffset );
-					int previous = ( soffset == 0 ) ? -1 : s.charAt( soffset - 1 );
-					if ( matchbracketclass( previous, poffset, ep - 1 ) ||
-						 matchbracketclass( s.charAt( soffset ), poffset, ep - 1 ) )
-						return -1;
-					// poffset = ep; goto init
-					return match( soffset, ep );
-				}
-				default: {
-					int c = p.charAt( poffset + 1 );
-					if ( Character.isDigit( (char) c ) ) {
-						soffset = match_capture( soffset, c );
-						if ( soffset == -1 )
+			while ( true ) {
+				// Check if we are at the end of the pattern - 
+				// equivalent to the '\0' case in the C version, but our pattern
+				// string is not NUL-terminated.
+				if ( poffset == p.length() )
+					return soffset;
+				switch ( p.luaByte( poffset ) ) {
+				case '(':
+					if ( p.luaByte( poffset + 1 ) == ')' )
+						return start_capture( soffset, poffset + 2, CAP_POSITION );
+					else
+						return start_capture( soffset, poffset + 1, CAP_UNFINISHED );
+				case ')':
+					return end_capture( soffset, poffset + 1 );
+				case L_ESC:
+					switch ( p.luaByte( poffset+1 ) ) {
+					case 'b':
+						soffset = matchbalance( soffset, poffset + 2 );
+						if ( soffset == -1 ) return -1;
+						poffset += 4;
+						continue;
+					case 'f': {
+						poffset += 2;
+						if ( p.luaByte( poffset ) != '[' ) {
+							vm.push("Missing [ after %f in pattern");
+							vm.lua_error();
+						}
+						int ep = classend( poffset );
+						int previous = ( soffset == 0 ) ? -1 : s.luaByte( soffset - 1 );
+						if ( matchbracketclass( previous, poffset, ep - 1 ) ||
+							 matchbracketclass( s.luaByte( soffset ), poffset, ep - 1 ) )
 							return -1;
-						// poffset += 2; goto init;
-						return match( soffset, poffset + 2 );
+						poffset = ep;
+						continue;
 					}
-					return match2( soffset, poffset ); // XXX: better name
+					default: {
+						int c = p.luaByte( poffset + 1 );
+						if ( Character.isDigit( (char) c ) ) {
+							soffset = match_capture( soffset, c );
+							if ( soffset == -1 )
+								return -1;
+							return match( soffset, poffset + 2 );
+						}
+					}
+					}
+				case '$':
+					if ( poffset + 1 == p.length() )
+						return ( soffset == s.length() ) ? soffset : -1;
 				}
+				int ep = classend( poffset );
+				boolean m = soffset < s.length() && singlematch( s.luaByte( soffset ), poffset, ep );
+				int pc = ( ep < p.length() ) ? p.luaByte( ep ) : '\0';
+				
+				switch ( pc ) {
+				case '?':
+					int res;
+					if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
+						return res;
+					poffset = ep + 1;
+					continue;
+				case '*':
+					return max_expand( soffset, poffset, ep );
+				case '+':
+					return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
+				case '-':
+					return min_expand( soffset, poffset, ep );
+				default:
+					if ( !m )
+						return -1;
+					soffset++;
+					poffset = ep;
+					continue;
 				}
-			case '$':
-				if ( poffset + 1 == p.length() )
-					return ( soffset == s.length() ) ? soffset : -1;
-				return match2( soffset, poffset );
-			}
-			return match2( soffset, poffset );
-		}
-		
-		int match2( int soffset, int poffset ) {
-			int ep = classend( poffset );
-			boolean m = soffset < s.length() && singlematch( s.charAt( soffset ), poffset, ep );
-			int pc = ( ep < p.length() ) ? p.charAt( ep ) : '\0';
-			
-			switch ( pc ) {
-			case '?':
-				int res;
-				if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
-					return res;
-				// p = ep + 1; goto init;
-				return match( soffset, ep + 1 );
-			case '*':
-				return max_expand( soffset, poffset, ep );
-			case '+':
-				return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
-			case '-':
-				return min_expand( soffset, poffset, ep );
-			default:
-				if ( !m ) return -1;
-				// s++; p = ep; goto init;
-				return match( soffset+1, ep );
 			}
 		}
 		
 		int max_expand( int soff, int poff, int ep ) {
 			int i = 0;
 			while ( soff + i < s.length() &&
-					singlematch( s.charAt( soff + i ), poff, ep ) )
+					singlematch( s.luaByte( soff + i ), poff, ep ) )
 				i++;
 			while ( i >= 0 ) {
 				int res = match( soff + i, ep + 1 );
@@ -593,7 +605,7 @@ public class StrLib {
 				int res = match( soff, ep + 1 );
 				if ( res != -1 )
 					return res;
-				else if ( soff < s.length() && singlematch( s.charAt( soff ), poff, ep ) )
+				else if ( soff < s.length() && singlematch( s.luaByte( soff ), poff, ep ) )
 					soff++;
 				else return -1;
 			}
@@ -639,17 +651,17 @@ public class StrLib {
 				vm.push( "unbalanced pattern" );
 				vm.lua_error();
 			}
-			if ( s.charAt( soff ) != p.charAt( poff ) )
+			if ( s.luaByte( soff ) != p.luaByte( poff ) )
 				return -1;
 			else {
-				int b = p.charAt( poff );
-				int e = p.charAt( poff + 1 );
+				int b = p.luaByte( poff );
+				int e = p.luaByte( poff + 1 );
 				int cont = 1;
 				while ( ++soff < s.length() ) {
-					if ( s.charAt( soff ) == e ) {
+					if ( s.luaByte( soff ) == e ) {
 						if ( --cont == 0 ) return soff + 1;
 					}
-					else if ( s.charAt( soff ) == b ) cont++;
+					else if ( s.luaByte( soff ) == b ) cont++;
 				}
 			}
 			return -1;
