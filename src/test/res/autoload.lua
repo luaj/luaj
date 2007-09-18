@@ -3,7 +3,9 @@ math = nil
 
 local function autoload(table, key)
 	local chunk = loadfile(key..".luac")
-	table[key] = chunk()
+	local pkg = chunk()
+	table[key] = pkg
+	return pkg
 end
 
 setmetatable(_G, { __index = autoload } )
