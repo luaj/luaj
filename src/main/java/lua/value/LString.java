@@ -342,4 +342,8 @@ public class LString extends LValue {
 		System.arraycopy( a, 0, newbytes, 0, Math.min( newSize, a.length ) );
 		return newbytes;
 	}
+
+	public int luaByte(int index) {
+		return m_bytes[m_offset + index];
+	}
 }

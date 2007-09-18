@@ -7,7 +7,6 @@ import java.util.StringTokenizer;
 import lua.CallInfo;
 import lua.StackState;
 import lua.io.LocVars;
-import lua.value.LValue;
 
 public class DebugStackState extends StackState implements DebugRequestListener {
 	
@@ -18,7 +17,6 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	private int lastline = -1;
 	
 	public DebugStackState() {
-		StackState.debugHooksEnabled = true;
 	}
 	
 	// debug hooks

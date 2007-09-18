@@ -146,4 +146,11 @@ public interface VM {
 	 * must be on the top of the stack.
 	 */
 	public void lua_error();
+
+	/**
+	 * Raises an error.   The message is pushed onto the stack and used as the error message.  
+	 * It also adds at the beginning of the message the file name and the line number where 
+	 * the error occurred, if this information is available. 
+	 */
+	public void luaL_error(String message);
 }

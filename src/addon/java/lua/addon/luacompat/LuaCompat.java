@@ -78,8 +78,20 @@ public class LuaCompat extends LFunction {
 	};
 	
 	public static final String[] STRING_NAMES = {
+		"byte",
+		"char",
+		"dump",
+		"find",
+		"format",
+		"gmatch",
+		"gsub",
+		"len",
+		"lower",
+		"match",
 		"rep",
+		"reverse",
 		"sub",
+		"upper",
 	};
 	
 	private static final int ASSERT = 0;
@@ -105,8 +117,21 @@ public class LuaCompat extends LFunction {
 	private static final int SIN = MATH_BASE + 4;
 	
 	private static final int STRING_BASE = 30;
-	private static final int REP = STRING_BASE + 0;
-	private static final int SUB = STRING_BASE + 1;
+	private static final int BYTE    = STRING_BASE + 0;
+	private static final int CHAR    = STRING_BASE + 1;
+	private static final int DUMP    = STRING_BASE + 2;
+	private static final int FIND    = STRING_BASE + 3;
+	private static final int FORMAT  = STRING_BASE + 4;
+	private static final int GMATCH  = STRING_BASE + 5;
+	private static final int GSUB    = STRING_BASE + 6;
+	private static final int LEN     = STRING_BASE + 7;
+	private static final int LOWER   = STRING_BASE + 8;
+	private static final int MATCH   = STRING_BASE + 9;
+	private static final int REP     = STRING_BASE + 20;
+	private static final int REVERSE = STRING_BASE + 11;
+	private static final int SUB     = STRING_BASE + 12;
+	private static final int UPPER   = STRING_BASE + 13;
+
 	
 	private final int id;
 	private LuaCompat( int id ) {
@@ -190,45 +215,50 @@ public class LuaCompat extends LFunction {
 			break;
 		
 		// String functions
-		case REP: {
-			LString s = vm.getArgAsLuaString( 0 );
-			int n = vm.getArgAsInt( 1 );
-			if ( n >= 0 ) {
-				final byte[] bytes = new byte[ s.length() * n ];
-				int len = s.length();
-				for ( int offset = 0; offset < bytes.length; offset += len ) {
-					s.copyInto( 0, bytes, offset, len );
-				}
-				
-				vm.setResult( new LString( bytes ) );
-			} else {
-				vm.setResult( LNil.NIL );
-			}
-		}	break;
-		case SUB: {
-			final LString s = vm.getArgAsLuaString( 0 );
-			final int len = s.length();
+		case BYTE:
+			StrLib.byte_( vm );
+			break;
+		case CHAR:
+			StrLib.char_( vm );
+			break;
+		case DUMP:
+			StrLib.dump( vm );
+			break;
+		case FIND:
+			StrLib.find( vm );
+			break;
+		case FORMAT:
+			StrLib.format( vm );
+			break;
+		case GMATCH:
+			StrLib.gmatch( vm );
+			break;
+		case GSUB:
+			StrLib.gsub( vm );
+			break;
+		case LEN:
+			StrLib.len( vm );
+			break;
+		case LOWER:
+			StrLib.lower( vm );
+			break;
+		case MATCH:
+			StrLib.match( vm );
+			break;
+		case REP:
+			StrLib.rep( vm );
+			break;
+		case REVERSE:
+			StrLib.reverse( vm );
+			break;
+		case SUB:
+			StrLib.sub( vm );
+			break;
+		case UPPER:
+			StrLib.upper( vm );
+			break;
 			
-			int i = vm.getArgAsInt( 1 );
-			if ( i < 0 ) {
-				// start at -i characters from the end
-				i = Math.max( len + i, 0 );
-			} else if ( i > 0 ) {
-				// start at character i - 1
-				i = i - 1;
-			}
 			
-			int j = ( vm.getArgCount() > 2 ) ? vm.getArgAsInt( 2 ): -1;
-			if ( j < 0 ) {
-				j = Math.max( i, len + j + 1 );
-			} else {
-				j = Math.min( Math.max( i, j ), len );
-			}
-			
-			LString result = s.substring( i, j );
-			vm.setResult( result );
-		}	break;
-		
 		default:
 			luaUnsupportedOperation();
 		}

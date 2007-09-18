@@ -92,7 +92,7 @@ public class StandardTest extends TestCase {
 				for ( int i = 0; i <= state.cc; ++i ) {
 					CallInfo call = state.calls[i];
 					Proto p = call.closure.p;
-					int line = p.lineinfo[call.pc];
+					int line = p.lineinfo[call.pc-1];
 					String func = call.closure.luaAsString().toJavaString();
 					stackTrace[state.cc - i] = new StackTraceElement(getName(), func, getName()+".lua", line );
 				}
