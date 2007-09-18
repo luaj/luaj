@@ -118,6 +118,12 @@ public class LString extends LValue {
 		return new LString( m_bytes, m_offset + beginIndex, endIndex - beginIndex );
 	}
 	
+	public int charAt( int index ) {
+		if ( index < 0 || index >= m_length )
+			throw new IndexOutOfBoundsException();
+		return (int)m_bytes[ index ] & 0x0FF;
+	}
+	
 	public static LString valueOf( double d ) {
 		return new LString( String.valueOf( d ) );
 	}
@@ -275,7 +281,13 @@ public class LString extends LValue {
 		return s_stringMT;
 	}
 	
+	public static boolean equals( LString a, int i, LString b, int j, int n ) {
+		return equals( a.m_bytes, a.m_offset + i, b.m_bytes, b.m_offset + j, n );
+	}
+	
 	public static boolean equals( byte[] a, int i, byte[] b, int j, int n ) {
+		if ( a.length < i + n || b.length < j + n )
+			return false;
 		final int imax = i + n;
 		final int jmax = j + n;
 		while ( i < imax && j < jmax ) {

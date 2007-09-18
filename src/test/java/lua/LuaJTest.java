@@ -76,6 +76,10 @@ public class LuaJTest extends TestCase {
 		runTest( "setlist" );
 	}
 	
+	public void testStrLib() throws IOException, InterruptedException {
+		runTest( "strlib" );
+	}
+	
 	public void testType() throws IOException, InterruptedException {
 		runTest( "type" );
 	}

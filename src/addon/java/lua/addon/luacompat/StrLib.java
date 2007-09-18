@@ -10,7 +10,7 @@ public class StrLib {
 	 * string.byte (s [, i [, j]]) 
 	 * 
 	 * Returns the internal numerical codes of the
-	 * characters s[i], s[i+1], ···, s[j]. The default value for i is 1; the
+	 * characters s[i], s[i+1], ..., s[j]. The default value for i is 1; the
 	 * default value for j is i.
 	 * 
 	 * Note that numerical codes are not necessarily portable across platforms.
@@ -30,7 +30,7 @@ public class StrLib {
 	}
 
 	/** 
-	 * string.char (···)
+	 * string.char (...)
 	 * 
 	 * Receives zero or more integers. Returns a string with length equal 
 	 * to the number of arguments, in which each character has the internal 
@@ -83,7 +83,7 @@ public class StrLib {
 	}
 
 	/** 
-	 * string.format (formatstring, ···)
+	 * string.format (formatstring, ...)
 	 * 
 	 * Returns a formatted version of its variable number of arguments following 
 	 * the description given in its first argument (which must be a string). 
@@ -207,9 +207,45 @@ public class StrLib {
 	/**
 	 * string.match (s, pattern [, init])
 	 * 
-	 * Looks for the first match of pattern in the string s. If it finds one, then match returns the captures from the pattern; otherwise it returns nil. If pattern specifies no captures, then the whole match is returned. A third, optional numerical argument init specifies where to start the search; its default value is 1 and may be negative.
+	 * Looks for the first match of pattern in the string s. If it finds one,
+	 * then match returns the captures from the pattern; otherwise it returns
+	 * nil. If pattern specifies no captures, then the whole match is returned.
+	 * A third, optional numerical argument init specifies where to start the
+	 * search; its default value is 1 and may be negative.
 	 */
-	static void match( VM vm ) {		
+	static void match( VM vm ) {
+		LString s = vm.getArgAsLuaString( 0 );
+		LString pat = vm.getArgAsLuaString( 1 );
+		int init = vm.getArgCount() > 2 ? vm.getArgAsInt( 2 ) : 1;
+		
+		if ( init > 0 ) {
+			init = Math.min( init - 1, s.length() );
+		} else if ( init < 0 ) {
+			init = Math.max( 0, s.length() + init );
+		}
+		
+		MatchState ms = new MatchState( vm, s, pat );
+		
+		// TODO: check if pattern contains special characters,
+		// if not do a simpler search.
+		boolean anchor = false;
+		int poff = 0;
+		if ( pat.charAt( 0 ) == '^' ) {
+			anchor = true;
+			poff = 1;
+		}
+		
+		int soff = init;
+		do {
+			int res;
+			ms.reset();
+			if ( ( res = ms.match( soff, poff ) ) != -1 ) {
+				ms.push_captures( true, soff, res );
+				return;
+			}
+		} while ( soff++ < s.length() && !anchor );
+		
+		vm.setResult( LNil.NIL );
 	}
 
 	/**
@@ -294,5 +330,329 @@ public class StrLib {
 	}
 
 
-
+	// Pattern matching implementation
+	
+	private static final int L_ESC = '%';
+	private static final int MAX_CAPTURES = 32;
+	
+	private static final int CAP_UNFINISHED = -1;
+	private static final int CAP_POSITION = -2;
+	
+	private static class MatchState {
+		final LString s;
+		final LString p;
+		final VM vm;
+		int level;
+		int[] cinit;
+		int[] clen;
+		
+		MatchState( VM vm, LString s, LString pattern ) {
+			this.s = s;
+			this.p = pattern;
+			this.vm = vm;
+			this.level = 0;
+			this.cinit = new int[ MAX_CAPTURES ];
+			this.clen = new int[ MAX_CAPTURES ];
+		}
+		
+		void reset() {
+			level = 0;
+		}
+		
+		void push_captures( boolean wholeMatch, int soff, int end ) {
+			vm.setResult();
+			int nlevels = ( this.level == 0 && wholeMatch ) ? 1 : this.level;
+			for ( int i = 0; i < nlevels; ++i ) {
+				push_onecapture( i, soff, end );
+			}
+		}
+		
+		private void push_onecapture( int i, int soff, int end ) {
+			if ( i >= this.level ) {
+				if ( i == 0 ) {
+					vm.push( s.substring( soff, end ) );
+				}
+			} else {
+				int l = clen[i];
+				if ( l == CAP_UNFINISHED ) {
+					vm.luaL_error( "unfinished capture" );
+				}
+				if ( l == CAP_POSITION ) {
+					vm.push( new LInteger( cinit[i] + 1 ) );
+				} else {
+					int begin = cinit[i];
+					vm.push( s.substring( begin, begin + l ) );
+				}
+			}
+		}
+		
+		private int check_capture( int l ) {
+			l -= '1';
+			if ( l < 0 || l >= level || this.clen[l] == CAP_UNFINISHED ) {
+				vm.luaL_error("invalid capture index");
+			}
+			return l;
+		}
+		
+		private int capture_to_close() {
+			int level = this.level;
+			for ( level--; level >= 0; level-- )
+				if ( clen[level] == CAP_UNFINISHED )
+					return level;
+			vm.push("invalid pattern capture");
+			vm.lua_error();
+			return 0;
+		}
+		
+		int classend( int poffset ) {
+			switch ( p.charAt( poffset++ ) ) {
+			case L_ESC:
+				if ( poffset == p.length() ) {
+					vm.push( "malformed pattern (ends with %)" );
+					vm.lua_error();
+				}
+				return poffset + 1;
+				
+			case '[':
+				if ( p.charAt( poffset ) == '^' ) poffset++;
+				do {
+					if ( poffset == p.length() ) {
+						vm.push( "malformed pattern (missing ])" );
+						vm.lua_error();
+					}
+					if ( p.charAt( poffset++ ) == L_ESC && poffset != p.length() )
+						poffset++;
+				} while ( p.charAt( poffset ) != ']' );
+				return poffset + 1;
+			default:
+				return poffset;
+			}
+		}
+		
+		static boolean isalpha( int c ) {
+			return ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' );
+		}
+		
+		static boolean match_class( int c, int cl ) {
+			boolean res;
+			switch ( Character.toLowerCase( c ) ) {
+			case 'a': res = isalpha( c ); break;
+			case 'd': res = Character.isDigit( (char) c ); break;
+			case 'l': res = Character.isLowerCase( (char) c ); break;
+			case 'u': res = Character.isUpperCase( (char) c ); break;
+			case 'z': res = ( c == 0 ); break;
+			case 'c':
+			case 'p':
+			case 's':
+			case 'w':
+			case 'x':
+				throw new RuntimeException("match: unimplemented: %" + (char)cl );
+			default: return cl == c;
+			}
+			return ( Character.isLowerCase( (char) cl ) ? res : !res );
+		}
+		
+		boolean matchbracketclass( int c, int poff, int ec ) {
+			boolean sig = true;
+			if ( p.charAt( poff + 1 ) == '^' ) {
+				sig = false;
+				poff++;
+			}
+			while ( ++poff < ec ) {
+				if ( p.charAt( poff ) == L_ESC ) {
+					poff++;
+					if ( match_class( c, p.charAt( poff ) ) )
+						return sig;
+				}
+				else if ( ( p.charAt( poff + 1 ) == '-' ) && ( poff + 2 < ec ) ) {
+					poff += 2;
+					if ( p.charAt( poff - 2 ) <= c && c <= p.charAt( poff ) )
+						return sig;
+				}
+				else if ( p.charAt( poff ) == c ) return sig;
+			}
+			return !sig;
+		}
+		
+		boolean singlematch( int c, int poff, int ep ) {
+			switch ( p.charAt( poff ) ) {
+			case '.': return true;
+			case L_ESC: return match_class( c, p.charAt( poff + 1 ) );
+			case '[': return matchbracketclass( c, poff, ep - 1 );
+			default: return p.charAt( poff ) == c;
+			}
+		}
+		
+		/**
+		 * Perform pattern matching. If there is a match, returns offset into s
+		 * where match ends, otherwise returns -1.
+		 */
+		int match( int soffset, int poffset ) {
+			// Java doesn't have goto -- we could wrap this in a while (true)
+			// and use labeled breaks instead, potentially. For now just use
+			// recursion - of course, this won't work very well, because java doesn't
+			// do tail recursion optimization - see:
+			// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4726340
+			// 
+// init: 
+			// Check if we are at the end of the pattern - 
+			// equivalent to the '\0' case in the C version, but our pattern
+			// string is not NUL-terminated.
+			if ( poffset == p.length() )
+				return soffset;
+			switch ( p.charAt( poffset ) ) {
+			case '(':
+				if ( p.charAt( poffset + 1 ) == ')' )
+					return start_capture( soffset, poffset + 2, CAP_POSITION );
+				else
+					return start_capture( soffset, poffset + 1, CAP_UNFINISHED );
+			case ')':
+				return end_capture( soffset, poffset + 1 );
+			case L_ESC:
+				switch ( p.charAt( poffset+1 ) ) {
+				case 'b':
+					soffset = matchbalance( soffset, poffset + 2 );
+					if ( soffset == -1 ) return -1;
+					// poffset += 4; goto init;
+					return match( soffset, poffset + 4 );
+				case 'f': {
+					poffset += 2;
+					if ( p.charAt( poffset ) != '[' ) {
+						vm.push("Missing [ after %f in pattern");
+						vm.lua_error();
+					}
+					int ep = classend( poffset );
+					int previous = ( soffset == 0 ) ? -1 : s.charAt( soffset - 1 );
+					if ( matchbracketclass( previous, poffset, ep - 1 ) ||
+						 matchbracketclass( s.charAt( soffset ), poffset, ep - 1 ) )
+						return -1;
+					// poffset = ep; goto init
+					return match( soffset, ep );
+				}
+				default: {
+					int c = p.charAt( poffset + 1 );
+					if ( Character.isDigit( (char) c ) ) {
+						soffset = match_capture( soffset, c );
+						if ( soffset == -1 )
+							return -1;
+						// poffset += 2; goto init;
+						return match( soffset, poffset + 2 );
+					}
+					return match2( soffset, poffset ); // XXX: better name
+				}
+				}
+			case '$':
+				if ( poffset + 1 == p.length() )
+					return ( soffset == s.length() ) ? soffset : -1;
+				return match2( soffset, poffset );
+			}
+			return match2( soffset, poffset );
+		}
+		
+		int match2( int soffset, int poffset ) {
+			int ep = classend( poffset );
+			boolean m = soffset < s.length() && singlematch( s.charAt( soffset ), poffset, ep );
+			int pc = ( ep < p.length() ) ? p.charAt( ep ) : '\0';
+			
+			switch ( pc ) {
+			case '?':
+				int res;
+				if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
+					return res;
+				// p = ep + 1; goto init;
+				return match( soffset, ep + 1 );
+			case '*':
+				return max_expand( soffset, poffset, ep );
+			case '+':
+				return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
+			case '-':
+				return min_expand( soffset, poffset, ep );
+			default:
+				if ( !m ) return -1;
+				// s++; p = ep; goto init;
+				return match( soffset+1, ep );
+			}
+		}
+		
+		int max_expand( int soff, int poff, int ep ) {
+			int i = 0;
+			while ( soff + i < s.length() &&
+					singlematch( s.charAt( soff + i ), poff, ep ) )
+				i++;
+			while ( i >= 0 ) {
+				int res = match( soff + i, ep + 1 );
+				if ( res != -1 )
+					return res;
+				i--;
+			}
+			return -1;
+		}
+		
+		int min_expand( int soff, int poff, int ep ) {
+			for ( ;; ) {
+				int res = match( soff, ep + 1 );
+				if ( res != -1 )
+					return res;
+				else if ( soff < s.length() && singlematch( s.charAt( soff ), poff, ep ) )
+					soff++;
+				else return -1;
+			}
+		}
+		
+		int start_capture( int soff, int poff, int what ) {
+			int res;
+			int level = this.level;
+			if ( level >= MAX_CAPTURES ) {
+				vm.push( "too many captures" );
+				vm.lua_error();
+			}
+			cinit[ level ] = soff;
+			clen[ level ] = what;
+			this.level = level + 1;
+			if ( ( res = match( soff, poff ) ) == -1 )
+				this.level--;
+			return res;
+		}
+		
+		int end_capture( int soff, int poff ) {
+			int l = capture_to_close();
+			int res;
+			clen[l] = soff - cinit[l];
+			if ( ( res = match( soff, poff ) ) == -1 )
+				clen[l] = CAP_UNFINISHED;
+			return res;
+		}
+		
+		int match_capture( int soff, int l ) {
+			l = check_capture( l );
+			int len = clen[ l ];
+			if ( ( s.length() - soff ) >= len &&
+				 LString.equals( s, cinit[l], s, soff, len ) )
+				return soff + len;
+			else
+				return -1;
+		}
+		
+		int matchbalance( int soff, int poff ) {
+			final int plen = p.length();
+			if ( poff == plen || poff + 1 == plen ) {
+				vm.push( "unbalanced pattern" );
+				vm.lua_error();
+			}
+			if ( s.charAt( soff ) != p.charAt( poff ) )
+				return -1;
+			else {
+				int b = p.charAt( poff );
+				int e = p.charAt( poff + 1 );
+				int cont = 1;
+				while ( ++soff < s.length() ) {
+					if ( s.charAt( soff ) == e ) {
+						if ( --cont == 0 ) return soff + 1;
+					}
+					else if ( s.charAt( soff ) == b ) cont++;
+				}
+			}
+			return -1;
+		}
+	}
 }
