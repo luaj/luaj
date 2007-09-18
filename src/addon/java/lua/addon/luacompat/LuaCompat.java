@@ -153,7 +153,7 @@ public class LuaCompat extends LFunction {
 			vm.setResult();
 		}	break;
 		case LOADFILE:
-			vm.setResult( loadfile(vm, vm.getArg(0)) );
+			loadfile(vm, vm.getArgAsString(0));
 			break;
 		case TONUMBER:
 			vm.setResult( toNumber( vm ) );
@@ -178,13 +178,12 @@ public class LuaCompat extends LFunction {
 			vm.setResult();
 			break;
 		case DOFILE:
-			dofile(vm, vm.getArg(0));
-			break;
+			return dofile(vm, vm.getArgAsString(0));
 		case LOADSTRING:
-			vm.setResult( loadstring(vm, vm.getArg(0), vm.getArgAsString(1)) );
+			loadstring(vm, vm.getArg(0), vm.getArgAsString(1));
 			break;
 		case LOAD:
-			vm.setResult( load(vm, vm.getArg(0), vm.getArgAsString(1)) );
+			load(vm, vm.getArg(0), vm.getArgAsString(1));
 			break;
 		case TOSTRING:
 			vm.setResult( tostring(vm, vm.getArg(0)) );
@@ -383,60 +382,63 @@ public class LuaCompat extends LFunction {
 		}
 	}
 
-	// closes the input stream
-	private static LValue inputStreamToClosureThenClose(VM vm, InputStream is, String chunkname ) {
+	// return true if laoded, false if error put onto the stack
+	private static boolean loadis(VM vm, InputStream is, String chunkname ) {
 		try {
-			Proto p = LoadState.undump(vm, is, chunkname);
-			return new Closure( (StackState) vm, p);
-		} catch (IOException e) {
-			e.printStackTrace();
+			if ( 0 != vm.lua_load(is, chunkname) ) {
+				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.getArgAsString(0) );
+				return false;
+			} else {
+				return true;
+			}
 		} finally {
 			closeSafely( is );
 		}
-		return LNil.NIL;
 	}
 	
 
-	private LValue loadfile( VM vm, LValue fileName ) {
+	// return true if loaded, false if error put onto stack
+	public static boolean loadfile( VM vm, String fileName ) {
 		InputStream is;
 		
 		String script;
-		if ( fileName != null ) {
-			script = fileName.luaAsString().toJavaString();
-			is = getClass().getResourceAsStream( "/"+script );
+		if ( ! "".equals(fileName) ) {
+			script = fileName;
+			is = vm.getClass().getResourceAsStream( "/"+script );
+			if ( is == null ) {
+				vm.setErrorResult( LNil.NIL, "cannot open "+fileName+": No such file or directory" );
+				return false;
+			}
 		} else {
 			is = STDIN;
 			script = "-";
 		}
 		
-		if ( is != null )
-			return inputStreamToClosureThenClose( vm, is, script );
-		return LNil.NIL;
+		// use vm to load the script
+		return loadis( vm, is, script );
 	}
 	
-	private LValue dofile( VM vm, LValue fileName ) {
-		LValue chunk = loadfile( vm, fileName );
-		if ( chunk != LNil.NIL ) {
-			vm.doCall((Closure) chunk, null); 
+	// return true if call placed on the stack & ready to execute, false otherwise
+	private boolean dofile( VM vm, String fileName ) {
+		if ( loadfile( vm, fileName ) ) {
+			vm.prepStackCall(); // TODO: is this necessary? 
+			return true;
 		} else {
-			vm.setResult();
-			vm.push("file not found: "+fileName);
-			vm.lua_error();
+			return false;
 		}
-		return null;
 	}
 
-	private LValue loadstring(VM vm,  LValue string, String chunkname) {
-		InputStream is = string.luaAsString().toInputStream();
-		return inputStreamToClosureThenClose( vm, is, chunkname );
+	// return true if loaded, false if error put onto stack
+	private boolean loadstring(VM vm,  LValue string, String chunkname) {
+		return loadis( vm, 
+				string.luaAsString().toInputStream(), 
+				("".equals(chunkname)? "(string)": chunkname) );
 	}
 
-	// TODO: convert this to stream? 
-	private LValue load(VM vm, LValue chunkPartLoader, String chunkname) {
+	// return true if loaded, false if error put onto stack
+	private boolean load(VM vm, LValue chunkPartLoader, String chunkname) {
 		if ( ! (chunkPartLoader instanceof Closure) ) {
-			vm.setResult();
-			vm.push("not a function: "+chunkPartLoader);
-			vm.lua_error();
+			vm.lua_error("not a closure: "+chunkPartLoader);
 		}
 		
 		// load all the parts
@@ -444,22 +446,29 @@ public class LuaCompat extends LFunction {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			while ( true ) {
-				vm.doCall( c, null );
-				LValue r = vm.getArg(0);
-				if ( ! (r instanceof LString) )
+				vm.setResult(c);
+				if ( 0 != vm.lua_pcall(0, 1) ) {
+					vm.setErrorResult(LNil.NIL, vm.getArgAsString(0));
+					return false;
+				}
+				LValue v = vm.getArg(0);
+				if ( v == LNil.NIL )
 					break;
-				LString s = (LString) r;
+				LString s = v.luaAsString();
 				s.write(baos, 0, s.length());
 			}
-		} catch ( Exception e ) {
-			e.printStackTrace();
+
+			// load the chunk
+			return loadis( vm, 
+					new ByteArrayInputStream( baos.toByteArray() ), 
+					("".equals(chunkname)? "=(load)": chunkname) );
+			
+		} catch (IOException ioe) {
+			vm.setErrorResult(LNil.NIL, ioe.getMessage());
+			return false;
 		} finally {
 			closeSafely( baos );
 		}
-
-		// load from the byte array
-		InputStream is = new ByteArrayInputStream( baos.toByteArray() );
-		return inputStreamToClosureThenClose( vm, is, chunkname );
 	}
 
 	private LValue tostring(VM vm, LValue arg) {
@@ -468,9 +477,7 @@ public class LuaCompat extends LFunction {
 
 	private static LTable toTable(VM vm, LValue list) {
 		if ( ! (list instanceof LTable) ) {
-			vm.setResult();
-			vm.push("not a list: "+list);
-			vm.lua_error();
+			vm.lua_error("not a list: "+list);
 			return null;
 		}
 		return (LTable) list;

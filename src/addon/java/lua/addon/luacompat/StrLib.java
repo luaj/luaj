@@ -58,8 +58,7 @@ public class StrLib {
 	 * TODO: port dumping code as optional add-on
 	 */
 	static void dump( VM vm ) {
-		vm.setResult( new LString("not supported") );
-		vm.lua_error();
+		vm.lua_error("dump() not supported");
 	}
 
 	/** 
@@ -397,7 +396,7 @@ public class StrLib {
 			} else {
 				int l = clen[i];
 				if ( l == CAP_UNFINISHED ) {
-					vm.luaL_error( "unfinished capture" );
+					vm.lua_error( "unfinished capture" );
 				}
 				if ( l == CAP_POSITION ) {
 					vm.push( new LInteger( cinit[i] + 1 ) );
@@ -411,7 +410,7 @@ public class StrLib {
 		private int check_capture( int l ) {
 			l -= '1';
 			if ( l < 0 || l >= level || this.clen[l] == CAP_UNFINISHED ) {
-				vm.luaL_error("invalid capture index");
+				vm.lua_error("invalid capture index");
 			}
 			return l;
 		}
@@ -421,8 +420,7 @@ public class StrLib {
 			for ( level--; level >= 0; level-- )
 				if ( clen[level] == CAP_UNFINISHED )
 					return level;
-			vm.push("invalid pattern capture");
-			vm.lua_error();
+			vm.lua_error("invalid pattern capture");
 			return 0;
 		}
 		
@@ -430,8 +428,7 @@ public class StrLib {
 			switch ( p.luaByte( poffset++ ) ) {
 			case L_ESC:
 				if ( poffset == p.length() ) {
-					vm.push( "malformed pattern (ends with %)" );
-					vm.lua_error();
+					vm.lua_error( "malformed pattern (ends with %)" );
 				}
 				return poffset + 1;
 				
@@ -439,8 +436,7 @@ public class StrLib {
 				if ( p.luaByte( poffset ) == '^' ) poffset++;
 				do {
 					if ( poffset == p.length() ) {
-						vm.push( "malformed pattern (missing ])" );
-						vm.lua_error();
+						vm.lua_error( "malformed pattern (missing ])" );
 					}
 					if ( p.luaByte( poffset++ ) == L_ESC && poffset != p.length() )
 						poffset++;
@@ -534,8 +530,7 @@ public class StrLib {
 					case 'f': {
 						poffset += 2;
 						if ( p.luaByte( poffset ) != '[' ) {
-							vm.push("Missing [ after %f in pattern");
-							vm.lua_error();
+							vm.lua_error("Missing [ after %f in pattern");
 						}
 						int ep = classend( poffset );
 						int previous = ( soffset == 0 ) ? -1 : s.luaByte( soffset - 1 );
@@ -615,8 +610,7 @@ public class StrLib {
 			int res;
 			int level = this.level;
 			if ( level >= MAX_CAPTURES ) {
-				vm.push( "too many captures" );
-				vm.lua_error();
+				vm.lua_error( "too many captures" );
 			}
 			cinit[ level ] = soff;
 			clen[ level ] = what;
@@ -648,8 +642,7 @@ public class StrLib {
 		int matchbalance( int soff, int poff ) {
 			final int plen = p.length();
 			if ( poff == plen || poff + 1 == plen ) {
-				vm.push( "unbalanced pattern" );
-				vm.lua_error();
+				vm.lua_error( "unbalanced pattern" );
 			}
 			if ( s.luaByte( soff ) != p.luaByte( poff ) )
 				return -1;

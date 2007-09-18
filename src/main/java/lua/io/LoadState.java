@@ -196,6 +196,8 @@ public class LoadState {
 		Proto f = new Proto();
 //		this.L.push(f);
 		f.source = loadString();
+		if ( f.source == null )
+			f.source = p;
 		f.linedefined = loadInt();
 		f.lastlinedefined = loadInt();
 		f.nups = loadByte();

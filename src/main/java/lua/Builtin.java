@@ -6,6 +6,7 @@ package lua;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import lua.value.LBoolean;
 import lua.value.LFunction;
 import lua.value.LNil;
 import lua.value.LTable;
@@ -71,8 +72,13 @@ final class Builtin extends LFunction {
 			vm.setResult( vm.getArg(0).luaGetType() );
 			break;
 		case PCALL:
-			// TODO: implement pcall
-			vm.setResult( LNil.NIL );
+			if ( 0 != vm.lua_pcall( vm.getArgCount()-1, Lua.LUA_MULTRET ) ) {
+				LValue v = vm.getArg(0);
+				vm.setResult( LBoolean.FALSE );
+				vm.push( v );
+			} else {
+				vm.setResult( LBoolean.TRUE );
+			}
 			break;
 		default:
 			luaUnsupportedOperation();

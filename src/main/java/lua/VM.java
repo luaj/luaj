@@ -1,6 +1,9 @@
 package lua;
 
+import java.io.InputStream;
+
 import lua.io.Closure;
+import lua.value.LNil;
 import lua.value.LString;
 import lua.value.LValue;
 
@@ -140,17 +143,40 @@ public interface VM {
 	 */
 	public void setResult(LValue val);
 
-	
-	/**
-	 * Generates a Lua error.   The error message(which can actually be a Lua value of any type)
-	 * must be on the top of the stack.
-	 */
-	public void lua_error();
 
+	/**
+	 * Set up an error result on the stack.
+	 * @param value the LValue to return as the first return value
+	 * @param message the String error message to supply
+	 */
+	public void setErrorResult(LValue value, String message);
+	
+	// ====================== lua Java API =======================
+	
 	/**
 	 * Raises an error.   The message is pushed onto the stack and used as the error message.  
 	 * It also adds at the beginning of the message the file name and the line number where 
-	 * the error occurred, if this information is available. 
+	 * the error occurred, if this information is available.
+	 * 
+	 * In the java implementation this throws a RuntimeException, possibly filling 
+	 * line number information first.
 	 */
-	public void luaL_error(String message);
+	public void lua_error(String message);
+
+	/** 
+	 * Run the method on the stack in protected mode. 
+	 * @param nArgs number of arguments on the stack
+	 * @param nResults number of results on the stack
+	 * @return 0 if successful, LUA_ERRMEM if no memory, LUA_ERRRUN for any other error
+	 */
+	public int lua_pcall(int nArgs, int nResults);
+
+	
+	/**
+	 * 
+	 * @param is InputStream providing the data to be loaded
+	 * @param chunkname Name of the chunk to be used in debugging
+	 * @return 0 if successful, LUA_ERRMEM if no memory, LUA_ERRSYNTAX for i/o or any other errors
+	 */
+	public int lua_load( InputStream is, String chunkname );
 }
