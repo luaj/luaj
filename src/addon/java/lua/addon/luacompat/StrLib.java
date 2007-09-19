@@ -19,14 +19,20 @@ public class StrLib {
 	 */
 	static void byte_( VM vm ) {
 		LString ls = vm.getArgAsLuaString(0);
-		int i = vm.getArgAsInt(1);
-		int j = vm.getArgAsInt(2);
-		int n = ls.length();
-		i = Math.max(1, i);
-		j = Math.min(n, (j==0? i: j));
+		int l = ls.length();
+		final int nargs = vm.getArgCount();
+		int i = posrelat( ( nargs > 1 ) ? vm.getArgAsInt(1) : 1, l );
+		int j = posrelat( ( nargs > 2 ) ? vm.getArgAsInt(2) : i, l );
 		vm.setResult();
-		for ( int k=i; k<=j; k++ ) 
-			vm.push( new LInteger( ls.luaByte(k-1) ) );
+		if ( i <= 0 )
+			i = 1;
+		if ( j > l )
+			j = l;
+		if ( i > j )
+			return;
+		int n = j - i + 1;
+		for ( int k=0; k < n; k++ )
+			vm.push( new LInteger( ls.luaByte(k+i-1) ) );
 	}
 
 	/** 
@@ -200,7 +206,7 @@ public class StrLib {
 	 * The definition of what an uppercase letter is depends on the current locale.
 	 */
 	static void lower( VM vm ) {		
-		vm.setResult( new LString( vm.getArgAsString(1).toLowerCase() ) );
+		vm.setResult( new LString( vm.getArgAsString(0).toLowerCase() ) );
 	}
 
 	/**
@@ -243,10 +249,10 @@ public class StrLib {
 	 * Returns a string that is the string s reversed. 
 	 */
 	static void reverse( VM vm ) {		
-		LString s = vm.getArgAsLuaString(1);
+		LString s = vm.getArgAsLuaString(0);
 		int n = s.length();
 		byte[] b = new byte[n];
-		for ( int i=0, j=n; i<n; i++, j-- ) 
+		for ( int i=0, j=n-1; i<n; i++, j-- )
 			b[j] = (byte) s.luaByte(i);
 		vm.setResult( new LString(b) );
 	}
@@ -262,28 +268,25 @@ public class StrLib {
 	 *   string.sub(s, -i) 
 	 * returns a suffix of s with length i.
 	 */
-	static void sub( VM vm ) {		
+	static void sub( VM vm ) {
+		final int nargs = vm.getArgCount();
 		final LString s = vm.getArgAsLuaString( 0 );
 		final int len = s.length();
 		
-		int i = vm.getArgAsInt( 1 );
-		if ( i < 0 ) {
-			// start at -i characters from the end
-			i = Math.max( len + i, 0 );
-		} else if ( i > 0 ) {
-			// start at character i - 1
-			i = i - 1;
-		}
+		int i = posrelat( nargs > 1 ? vm.getArgAsInt( 1 ) : 1, len );
+		int j = posrelat( nargs > 2 ? vm.getArgAsInt( 2 ) : -1, len );
 		
-		int j = ( vm.getArgCount() > 2 ) ? vm.getArgAsInt( 2 ): -1;
-		if ( j < 0 ) {
-			j = Math.max( i, len + j + 1 );
+		if ( i < 1 )
+			i = 1;
+		if ( j > len )
+			j = len;
+		
+		if ( i <= j ) {
+			LString result = s.substring( i - 1 , j );
+			vm.setResult( result );
 		} else {
-			j = Math.min( Math.max( i, j ), len );
+			vm.setResult( new LString( "" ) );
 		}
-		
-		LString result = s.substring( i, j );
-		vm.setResult( result );
 	}
 	
 	/** 
@@ -294,7 +297,7 @@ public class StrLib {
 	 * The definition of what a lowercase letter is depends on the current locale.	
 	 */
 	static void upper( VM vm ) {
-		vm.setResult( new LString( vm.getArgAsString(1).toUpperCase() ) );
+		vm.setResult( new LString( vm.getArgAsString(0).toUpperCase() ) );
 	}
 	
 	/**
@@ -349,6 +352,10 @@ public class StrLib {
 		}
 		
 		vm.setResult( LNil.NIL );
+	}
+	
+	private static int posrelat( int pos, int len ) {
+		return ( pos >= 0 ) ? pos : len + pos + 1;
 	}
 	
 	// Pattern matching implementation

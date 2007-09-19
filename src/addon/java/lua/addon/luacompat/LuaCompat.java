@@ -127,7 +127,7 @@ public class LuaCompat extends LFunction {
 	private static final int LEN     = STRING_BASE + 7;
 	private static final int LOWER   = STRING_BASE + 8;
 	private static final int MATCH   = STRING_BASE + 9;
-	private static final int REP     = STRING_BASE + 20;
+	private static final int REP     = STRING_BASE + 10;
 	private static final int REVERSE = STRING_BASE + 11;
 	private static final int SUB     = STRING_BASE + 12;
 	private static final int UPPER   = STRING_BASE + 13;

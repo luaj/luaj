@@ -15,7 +15,13 @@ public class LDouble extends LNumber {
 	}
 
 	public LString luaAsString() {
-		return LString.valueOf( m_value );
+		long l = (long) m_value;
+		if ( m_value == (double) l ) {
+			// TODO: is this a good idea?
+			return new LString( Long.toString( l ) );
+		} else {
+			return LString.valueOf( m_value );
+		}
 	}
 	
 	public boolean isInteger() {
