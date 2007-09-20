@@ -15,6 +15,7 @@ import lua.VM;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
+import lua.value.LBoolean;
 import lua.value.LDouble;
 import lua.value.LFunction;
 import lua.value.LInteger;
@@ -28,31 +29,36 @@ public class LuaCompat extends LFunction {
 
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
+	public static LTable      LOADED = new LTable();
 	
 	public static void install() {
 		LTable globals = GlobalState.getGlobalsTable();
-		for ( int i = 0; i < GLOBAL_NAMES.length; ++i ) {
-			globals.put( GLOBAL_NAMES[i], new LuaCompat( i ) );
-		}
-		
+		installNames( globals, GLOBAL_NAMES,  GLOBALS_BASE  );
+
+		// math lib
 		LTable math = new LTable();
-		for ( int i = 0; i < MATH_NAMES.length; ++i ) {
-			math.put( MATH_NAMES[i], new LuaCompat( MATH_BASE + i ) );
-		}
-		
-		// Some handy constants
+		installNames( math, MATH_NAMES,  MATH_BASE  );
 		math.put( "huge", new LDouble( Double.MAX_VALUE ) );
-		math.put( "pi", new LDouble( Math.PI ) );
-		
+		math.put( "pi", new LDouble( Math.PI ) );		
 		globals.put( "math", math );
 		
+		// string lib
 		LTable string = LString.getMetatable();
-		for ( int i = 0; i < STRING_NAMES.length; ++i ) {
-			string.put( STRING_NAMES[i], new LuaCompat( STRING_BASE + i ) );
-		}
+		installNames( string, STRING_NAMES,  STRING_BASE  );
 		globals.put( "string", string );
+
+		// packages lib
+		LTable pckg = new LTable();
+		installNames( pckg,  PACKAGE_NAMES, PACKAGES_BASE );
+		globals.put( "package", pckg );
+		pckg.put( "loaded", LOADED );	
 	}
-	
+
+	private static void installNames( LTable table, String[] names, int indexBase ) {
+		for ( int i=0; i<names.length; i++ )
+			table.put( names[i], new LuaCompat(indexBase+i) );
+	}
+
 	public static final String[] GLOBAL_NAMES = {
 		"assert",
 		"loadfile",
@@ -67,6 +73,8 @@ public class LuaCompat extends LFunction {
 		"tostring",
 		"unpack",
 		"next",
+		"module",
+		"require",
 	};
 	
 	public static final String[] MATH_NAMES = {
@@ -93,28 +101,36 @@ public class LuaCompat extends LFunction {
 		"sub",
 		"upper",
 	};
+
+	public static final String[] PACKAGE_NAMES = {
+		"loalib",
+		"seeall",
+	};
 	
-	private static final int ASSERT = 0;
-	private static final int LOADFILE = 1;
-	private static final int TONUMBER = 2;
-	private static final int RAWGET = 3;
-	private static final int SETFENV = 4;
-	private static final int SELECT = 5;
-	private static final int COLLECTGARBAGE = 6;
-	private static final int DOFILE = 7;
-	private static final int LOADSTRING = 8;
-	private static final int LOAD = 9;
-	private static final int TOSTRING = 10;
-	private static final int UNPACK= 11;
-	private static final int NEXT= 12;
+	private static final int GLOBALS_BASE = 0;
+	private static final int ASSERT         = GLOBALS_BASE + 0;
+	private static final int LOADFILE       = GLOBALS_BASE + 1;
+	private static final int TONUMBER       = GLOBALS_BASE + 2;
+	private static final int RAWGET         = GLOBALS_BASE + 3;
+	private static final int SETFENV        = GLOBALS_BASE + 4;
+	private static final int SELECT         = GLOBALS_BASE + 5;
+	private static final int COLLECTGARBAGE = GLOBALS_BASE + 6;
+	private static final int DOFILE         = GLOBALS_BASE + 7;
+	private static final int LOADSTRING     = GLOBALS_BASE + 8;
+	private static final int LOAD           = GLOBALS_BASE + 9;
+	private static final int TOSTRING       = GLOBALS_BASE + 10;
+	private static final int UNPACK         = GLOBALS_BASE + 11;
+	private static final int NEXT           = GLOBALS_BASE + 12;
+	private static final int MODULE         = GLOBALS_BASE + 13;
+	private static final int REQUIRE        = GLOBALS_BASE + 14;
 	
 	
 	private static final int MATH_BASE = 20;
-	private static final int ABS = MATH_BASE + 0;
-	private static final int MAX = MATH_BASE + 1;
-	private static final int MIN = MATH_BASE + 2;
-	private static final int MODF = MATH_BASE + 3;
-	private static final int SIN = MATH_BASE + 4;
+	private static final int ABS     = MATH_BASE + 0;
+	private static final int MAX     = MATH_BASE + 1;
+	private static final int MIN     = MATH_BASE + 2;
+	private static final int MODF    = MATH_BASE + 3;
+	private static final int SIN     = MATH_BASE + 4;
 	
 	private static final int STRING_BASE = 30;
 	private static final int BYTE    = STRING_BASE + 0;
@@ -132,8 +148,12 @@ public class LuaCompat extends LFunction {
 	private static final int SUB     = STRING_BASE + 12;
 	private static final int UPPER   = STRING_BASE + 13;
 
+	private static final int PACKAGES_BASE = 50;
+	private static final int LOADLIB = PACKAGES_BASE + 0;
+	private static final int SEEALL  = PACKAGES_BASE + 1;	
 	
 	private final int id;
+
 	private LuaCompat( int id ) {
 		this.id = id;
 	}
@@ -194,6 +214,12 @@ public class LuaCompat extends LFunction {
 			break;
 		case NEXT:
 			vm.setResult( next(vm, vm.getArg(0), vm.getArgAsInt(1)) );
+			break;
+		case MODULE: 
+			module(vm);
+			break;
+		case REQUIRE: 
+			require(vm);
 			break;
 		
 		// Math functions
@@ -256,7 +282,14 @@ public class LuaCompat extends LFunction {
 		case UPPER:
 			StrLib.upper( vm );
 			break;
-			
+
+		// package functions
+		case LOADLIB: 
+			loadlib(vm);
+			break;
+		case SEEALL: 
+			seeall(vm);
+			break;
 			
 		default:
 			luaUnsupportedOperation();
@@ -500,4 +533,66 @@ public class LuaCompat extends LFunction {
 		throw new java.lang.RuntimeException("next() not supported yet");
 	}
 
+	
+	// ======================== Module, Package loading =============================
+	
+	public static void module( VM vm ) {		
+		vm.lua_error( "module not implemented" );
+	}
+
+	/** 
+	 * require (modname)
+	 * 
+	 * Loads the given module. The function starts by looking into the package.loaded table to 
+	 * determine whether modname is already loaded. If it is, then require returns the value 
+	 * stored at package.loaded[modname]. Otherwise, it tries to find a loader for the module.
+	 * 
+	 * To find a loader, require is guided by the package.loaders array. By changing this array, 
+	 * we can change how require looks for a module. The following explanation is based on the 
+	 * default configuration for package.loaders.
+	 *  
+	 * First require queries package.preload[modname]. If it has a value, this value 
+	 * (which should be a function) is the loader. Otherwise require searches for a Lua loader 
+	 * using the path stored in package.path. If that also fails, it searches for a C loader 
+	 * using the path stored in package.cpath. If that also fails, it tries an all-in-one loader 
+	 * (see package.loaders).
+	 * 
+	 * Once a loader is found, require calls the loader with a single argument, modname. 
+	 * If the loader returns any value, require assigns the returned value to package.loaded[modname]. 
+	 * If the loader returns no value and has not assigned any value to package.loaded[modname], 
+	 * then require assigns true to this entry. In any case, require returns the final value of 
+	 * package.loaded[modname]. 
+	 * 
+	 * If there is any error loading or running the module, or if it cannot find any loader for 
+	 * the module, then require signals an error.
+	 */	
+	public static void require( VM vm ) {
+		LString modname = vm.getArgAsLuaString(0);
+		if ( LOADED.containsKey(modname) )
+			vm.setResult( LOADED.get(modname) );
+		else {
+			String s = modname.toJavaString();
+			if ( ! loadfile(vm, s+".luac") && ! loadfile(vm, s+".lua") )
+				vm.lua_error( "not found: "+s );
+			else if ( 0 == vm.lua_pcall(0, 1) ) {
+				LValue result = vm.getArg(0); 
+				if ( result != LNil.NIL )
+					LOADED.put(modname, result);
+				else if ( ! LOADED.containsKey(modname) ) {
+					LOADED.put(modname, LBoolean.TRUE);
+					vm.setResult( LBoolean.TRUE );
+				}
+			}
+		}
+	}
+
+	public static void loadlib( VM vm ) {
+		vm.lua_error( "loadlib not implemented" );
+	}
+	
+	public static void seeall( VM vm ) {
+		vm.lua_error( "seeall not implemented" );
+	}
+	
+	
 }

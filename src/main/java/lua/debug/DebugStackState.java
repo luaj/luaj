@@ -12,8 +12,6 @@ import lua.io.Proto;
 
 public class DebugStackState extends StackState implements DebugRequestListener {
 
-	private static final boolean DEBUG = false;
-
 	public Map<Integer,Boolean> breakpoints = new HashMap<Integer,Boolean>();
 	private boolean exiting = false;
 	private boolean suspended = false;
@@ -32,34 +30,30 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			Proto p = call.closure.p;
 			if ( p != null && p.source != null )
 				source = p.source.toJavaString();
-			if ( p.lineinfo != null && p.lineinfo.length > call.pc )
-				line = String.valueOf( p.lineinfo[call.pc] );
+			if ( p.lineinfo != null && p.lineinfo.length > call.pc-1 )
+				line = String.valueOf( p.lineinfo[call.pc-1] );
 			// TODO: reverse lookup on function name ????
 			func = call.closure.luaAsString().toJavaString();
 		}
 		return source+":"+line+"("+func+")";
 	}
 	
-	
-	// override and fill in line number info 
-	public void lua_error(String message) {
-		super.lua_error( getFileLine(cc)+": "+message );
-	}
-	
-	private void printLuaTrace() {
-		System.out.println( "Lua location: "+getFileLine(cc) );
+	private void printLuaTrace(String message) {
+		System.out.println( "Lua error: "+message );
 		for ( int cindex=cc-1; cindex>=0; cindex-- )
-			System.out.println( "\tin "+getFileLine( cindex ) );
+			System.out.println( "\tcalled by "+getFileLine( cindex ) );
 	}
 	
 	// intercept exceptions and fill in line numbers
 	public void exec() {
 		try {
 			super.exec();
-		} catch ( Exception t ) {
-			t.printStackTrace();
-			printLuaTrace();
+		} catch ( RuntimeException t ) {
+			String message = getFileLine(cc)+": "+t.getMessage();
+			t.printStackTrace();			
+			printLuaTrace(message);
 			System.out.flush();
+			throw new RuntimeException( message, t );
 		}
 	}
 	
