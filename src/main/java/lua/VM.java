@@ -179,4 +179,11 @@ public interface VM {
 	 * @return 0 if successful, LUA_ERRMEM if no memory, LUA_ERRSYNTAX for i/o or any other errors
 	 */
 	public int lua_load( InputStream is, String chunkname );
+
+	/**
+	 * Get a value on the stack, relative to the top or bottom
+	 * @param i index from bottom if 0 or greater, index from top if less than 0
+	 * @return
+	 */
+	public LValue lua_tolvalue(int i);
 }

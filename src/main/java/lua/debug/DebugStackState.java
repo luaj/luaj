@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import lua.CallInfo;
-import lua.Print;
 import lua.StackState;
 import lua.io.LocVars;
 import lua.io.Proto;
@@ -38,10 +37,23 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		return source+":"+line+"("+func+")";
 	}
 	
+	private String addLineInfo( String message ) {
+		return getFileLine(cc)+": "+message;
+	}
+	
 	private void printLuaTrace(String message) {
-		System.out.println( "Lua error: "+message );
+		System.out.println( "Lua error: "+addLineInfo( message ) );
 		for ( int cindex=cc-1; cindex>=0; cindex-- )
 			System.out.println( "\tcalled by "+getFileLine( cindex ) );
+	}
+	
+	protected void debugPcallError(Throwable t) {		
+		System.out.println(addLineInfo("(caught in pcall) "+t.getMessage()));
+		System.out.flush();
+	}
+
+	public void lua_error(String message) {
+		throw new RuntimeException( message );
 	}
 	
 	// intercept exceptions and fill in line numbers
@@ -49,11 +61,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		try {
 			super.exec();
 		} catch ( RuntimeException t ) {
-			String message = getFileLine(cc)+": "+t.getMessage();
 			t.printStackTrace();			
-			printLuaTrace(message);
+			printLuaTrace(t.getMessage());
 			System.out.flush();
-			throw new RuntimeException( message, t );
+			throw t;
 		}
 	}
 	
@@ -63,6 +74,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		if ( exiting )
 			throw new java.lang.RuntimeException("exiting");
 
+		// make sure line numbers are current in any stack traces
+		calls[cc].pc = pc;
+		
 		synchronized ( this ) {
 			
 			// anytime the line doesn't change we keep going

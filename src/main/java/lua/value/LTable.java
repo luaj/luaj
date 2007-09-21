@@ -267,18 +267,20 @@ public class LTable extends LValue {
 	}
 	
 	/** Valid for tables */
-	public LValue luaPairs() {
-		return new LTableIterator();
+	public LValue luaPairs(boolean isPairs) {
+		return new LTableIterator(isPairs);
 	}
 	
 	/** Iterator for tables */
 	private final class LTableIterator extends LFunction {
 		private int arrayIndex;
 		private int hashIndex;
+		private final boolean isPairs;
 		
-		private LTableIterator() {
+		private LTableIterator(boolean isPairs) {
 			this.arrayIndex = 0;
 			this.hashIndex = 0;
+			this.isPairs = isPairs;
 		}
 		
 		// perform a lua call
@@ -292,7 +294,7 @@ public class LTable extends LValue {
 					return false;
 				}
 			}
-			if ( m_hashKeys != null ) {
+			if ( isPairs && (m_hashKeys != null) ) {
 				while ( ( i = hashIndex++ ) < m_hashKeys.length ) {
 					if ( m_hashKeys[i] != null ) {
 						vm.push( m_hashKeys[i] );
@@ -513,5 +515,26 @@ public class LTable extends LValue {
 	int getArrayCapacity() {
 		return m_vector.length;
 	}
-	
+
+	/*
+	 * @pos index to insert at, or 0 to insert at end.
+	 */
+	public void luaInsertPos(int pos, LValue value) {
+		if ( pos != 0 )
+			throw new RuntimeException("luaInsertPos() not implemented");
+		put( m_arrayEntries + m_hashEntries + 1, value );
+	}
+
+	public void luaSort() {
+		throw new RuntimeException("luaSort() not implemented");
+	}
+
+	public void luaRemovePos(int pos) {
+		throw new RuntimeException("luaRemovePos() not implemented");
+	}
+
+	public int luaMaxN() {
+		throw new RuntimeException("luaMaxN() not implemented");
+	}
+
 }

@@ -13,8 +13,6 @@ import lua.Lua;
 import lua.StackState;
 import lua.VM;
 import lua.io.Closure;
-import lua.io.LoadState;
-import lua.io.Proto;
 import lua.value.LBoolean;
 import lua.value.LDouble;
 import lua.value.LFunction;
@@ -52,6 +50,11 @@ public class LuaCompat extends LFunction {
 		installNames( pckg,  PACKAGE_NAMES, PACKAGES_BASE );
 		globals.put( "package", pckg );
 		pckg.put( "loaded", LOADED );	
+
+		// table lib
+		LTable table = new LTable();
+		installNames( pckg,  TABLE_NAMES, TABLES_BASE );
+		globals.put( "table", pckg );
 	}
 
 	private static void installNames( LTable table, String[] names, int indexBase ) {
@@ -107,6 +110,14 @@ public class LuaCompat extends LFunction {
 		"seeall",
 	};
 	
+	public static final String[] TABLE_NAMES = {
+		"concat",
+		"insert",
+		"maxn",
+		"remove",
+		"sort",
+	};
+	
 	private static final int GLOBALS_BASE = 0;
 	private static final int ASSERT         = GLOBALS_BASE + 0;
 	private static final int LOADFILE       = GLOBALS_BASE + 1;
@@ -151,6 +162,13 @@ public class LuaCompat extends LFunction {
 	private static final int PACKAGES_BASE = 50;
 	private static final int LOADLIB = PACKAGES_BASE + 0;
 	private static final int SEEALL  = PACKAGES_BASE + 1;	
+	
+	private static final int TABLES_BASE = 60;
+	private static final int CONCAT  = TABLES_BASE + 0;
+	private static final int INSERT  = TABLES_BASE + 1;
+	private static final int MAXN    = TABLES_BASE + 2;
+	private static final int REMOVE  = TABLES_BASE + 3;
+	private static final int SORT    = TABLES_BASE + 4;
 	
 	private final int id;
 
@@ -198,7 +216,8 @@ public class LuaCompat extends LFunction {
 			vm.setResult();
 			break;
 		case DOFILE:
-			return dofile(vm, vm.getArgAsString(0));
+			dofile(vm);
+			break;
 		case LOADSTRING:
 			loadstring(vm, vm.getArg(0), vm.getArgAsString(1));
 			break;
@@ -209,8 +228,7 @@ public class LuaCompat extends LFunction {
 			vm.setResult( tostring(vm, vm.getArg(0)) );
 			break;
 		case UNPACK:
-			vm.setResult();
-			unpack(vm, vm.getArg(0), vm.getArgAsInt(1), vm.getArgAsInt(2));
+			unpack(vm);
 			break;
 		case NEXT:
 			vm.setResult( next(vm, vm.getArg(0), vm.getArgAsInt(1)) );
@@ -290,12 +308,30 @@ public class LuaCompat extends LFunction {
 		case SEEALL: 
 			seeall(vm);
 			break;
+
+		// table library
+		case CONCAT: 
+			concat(vm);
+			break;
+		case INSERT: 
+			insert(vm);
+			break;
+		case MAXN: 
+			maxn(vm);
+			break;
+		case REMOVE: 
+			remove(vm);
+			break;
+		case SORT: 
+			sort(vm);
+			break;
 			
 		default:
 			luaUnsupportedOperation();
 		}
 		return false;
 	}
+
 	private void select( VM vm ) {
 		LValue arg = vm.getArg( 0 );
 		if ( arg instanceof LNumber ) {
@@ -451,13 +487,14 @@ public class LuaCompat extends LFunction {
 		return loadis( vm, is, script );
 	}
 	
-	// return true if call placed on the stack & ready to execute, false otherwise
-	private boolean dofile( VM vm, String fileName ) {
-		if ( loadfile( vm, fileName ) ) {
-			vm.prepStackCall(); // TODO: is this necessary? 
-			return true;
+	// if load succeeds, return 0 for success, 1 for error (as per lua spec)
+	private void dofile( VM vm ) {
+		String filename = vm.getArgAsString(0);
+		if ( loadfile( vm, filename ) ) {
+			int s = vm.lua_pcall(1, 0);
+			vm.setResult( new LInteger( s!=0? 1: 0 ) );
 		} else {
-			return false;
+			vm.lua_error("cannot open "+filename);
 		}
 	}
 
@@ -508,25 +545,26 @@ public class LuaCompat extends LFunction {
 		return arg.luaAsString();
 	}
 
-	private static LTable toTable(VM vm, LValue list) {
-		if ( ! (list instanceof LTable) ) {
-			vm.lua_error("not a list: "+list);
-			return null;
-		}
-		return (LTable) list;
-	}
-	
-	private void unpack(VM vm, LValue list, int i, int j) {
-		LTable t = toTable(vm, list);
-		if ( t == null )
-			return; 
+	/** unpack (list [, i [, j]])
+	 * 
+	 * Returns the elements from the given table. This function is equivalent to
+	 *      return list[i], list[i+1], ···, list[j]
+	 *      
+	 * except that the above code can be written only for a fixed number of elements. 
+	 * By default, i is 1 and j is the length of the list, as defined by the length operator (see §2.5.5).
+	 */
+	private void unpack(VM vm) {
+		LValue v = vm.getArg(0);
+		int i = vm.getArgAsInt(1);
+		int j = vm.getArgAsInt(2);
+		LTable list = (LTable) v;
 		if ( i == 0 )
 			i = 1;
 		if ( j == 0 )
-			j = t.size();
-		LValue[] keys = t.getKeys();
-		for ( int k=i; k<=j; k++ )
-			vm.push( t.get(keys[k-1]) );
+			j = list.luaLength().luaAsInt();
+		vm.setResult();
+		for ( int k=i; k<=j; k++ ) 
+			vm.push( list.get(k) );
 	}
 
 	private LValue next(VM vm, LValue table, int index) {
@@ -575,13 +613,12 @@ public class LuaCompat extends LFunction {
 			if ( ! loadfile(vm, s+".luac") && ! loadfile(vm, s+".lua") )
 				vm.lua_error( "not found: "+s );
 			else if ( 0 == vm.lua_pcall(0, 1) ) {
-				LValue result = vm.getArg(0); 
+				LValue result = vm.lua_tolvalue( -1 ); 
 				if ( result != LNil.NIL )
 					LOADED.put(modname, result);
-				else if ( ! LOADED.containsKey(modname) ) {
-					LOADED.put(modname, LBoolean.TRUE);
-					vm.setResult( LBoolean.TRUE );
-				}
+				else if ( ! LOADED.containsKey(modname) )
+					LOADED.put(modname, result = LBoolean.TRUE);
+				vm.setResult( result );
 			}
 		}
 	}
@@ -594,5 +631,88 @@ public class LuaCompat extends LFunction {
 		vm.lua_error( "seeall not implemented" );
 	}
 	
-	
+
+	// ============= tables support =============
+	/** table.concat (table [, sep [, i [, j]]])
+	 * 
+	 * Given an array where all elements are strings or numbers, returns table[i]..sep..table[i+1] ··· sep..table[j]. 
+	 * The default value for sep is the empty string, the default for i is 1, and the default for j is the length of the table. 
+	 * If i is greater than j, returns the empty string.
+	 */
+	private void concat(VM vm) {
+		LTable table = (LTable) vm.getArg(0);
+		LString sep = vm.getArgAsLuaString(1);
+		int i = vm.getArgAsInt(2);
+		int j = vm.getArgAsInt(3);
+		LValue[] keys = table.getKeys();
+		if ( i == 0 ) 
+			i = 1;
+		if ( j == 0 ) 
+			j = keys.length;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			for ( int k=i; k<=j; k++ ) {
+				LValue v = table.get(keys[k-1]);
+					v.luaAsString().write(baos);
+					if ( k<j )
+						sep.write( baos );
+			}
+			vm.setResult( new LString( baos.toByteArray() ) );
+		} catch (IOException e) {
+			vm.lua_error(e.getMessage());
+		}
+	}
+
+	/** table.insert (table, [pos,] value)
+	 * 
+	 * Inserts element value at position pos in table, shifting up other elements to open space, if necessary. 
+	 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
+	 * table.insert(t,x) inserts x at the end of table t.
+	 */ 
+	private void insert(VM vm) {
+		int n = vm.getArgCount();
+		LTable table = (LTable) vm.getArg(0);
+		int pos = (n>2? vm.getArgAsInt(1): 0);
+		LValue value = vm.getArg(n-1);
+		table.luaInsertPos( pos, value );
+	}
+
+
+	/** table.maxn (table)
+	 * 
+	 * Returns the largest positive numerical index of the given table, or zero if the table has no positive numerical 
+	 * indices. (To do its job this function does a linear traversal of the whole table.)
+	 */ 
+	private void maxn(VM vm) {
+		LTable table = (LTable) vm.getArg(0);
+		vm.setResult( new LInteger( table.luaMaxN() ) );
+	}
+
+
+	/** table.remove (table [, pos])
+	 * 
+	 * Removes from table the element at position pos, shifting down other elements to close the space, if necessary. 
+	 * Returns the value of the removed element. The default value for pos is n, where n is the length of the table, 
+	 * so that a call table.remove(t) removes the last element of table t.
+	 */ 
+	private void remove(VM vm) {
+		int n = vm.getArgCount();
+		LTable table = (LTable) vm.getArg(0);
+		int pos = (n>1? vm.getArgAsInt(1): 0);
+		table.luaRemovePos( pos );
+	}
+
+	/** table.sort (table [, comp])
+	 * 
+	 * Sorts table elements in a given order, in-place, from table[1] to table[n], where n is the length of the table. 
+	 * If comp is given, then it must be a function that receives two table elements, and returns true when the first 
+	 * is less than the second (so that not comp(a[i+1],a[i]) will be true after the sort). If comp is not given, 
+	 * then the standard Lua operator &lt; is used instead.
+	 *
+	 * The sort algorithm is not stable; that is, elements considered equal by the given order may have their relative positions changed by the sort.
+	 */ 
+	private void sort(VM vm) {
+		LTable table = (LTable) vm.getArg(0);
+		table.luaSort();
+	}
 }

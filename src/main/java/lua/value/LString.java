@@ -1,6 +1,7 @@
 package lua.value;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -184,6 +185,10 @@ public class LString extends LValue {
 			throw new IndexOutOfBoundsException();
 
 		os.write( m_bytes, m_offset+offset, len );
+	}
+
+	public void write(OutputStream os) throws IOException {
+		write(os, 0, m_length);
 	}
 	
 	/**

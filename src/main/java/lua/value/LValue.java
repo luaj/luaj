@@ -151,8 +151,9 @@ public class LValue {
 		return luaUnsupportedOperation();
 	}
 
-	/** Valid for tables */
-	public LValue luaPairs() {
+	/** Valid for tables 
+	 * @param isPairs true to iterate over non-integers as well */
+	public LValue luaPairs(boolean isPairs) {
 		return luaUnsupportedOperation();
 	}
 

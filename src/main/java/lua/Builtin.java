@@ -25,13 +25,16 @@ final class Builtin extends LFunction {
 		"getmetatable", 
 		"setmetatable", 
 		"type", 
-		"pcall" };
+		"pcall", 
+		"ipairs", 
+		};
 	private static final int PRINT = 0;
 	private static final int PAIRS = 1;
 	private static final int GETMETATABLE = 2;
 	private static final int SETMETATABLE = 3;
 	private static final int TYPE = 4;
 	private static final int PCALL = 5;
+	private static final int IPAIRS = 6;
 	
 	private static PrintStream stdout = System.out;
 	
@@ -47,18 +50,20 @@ final class Builtin extends LFunction {
 	// perform a lua call
 	public boolean luaStackCall(VM vm) {
 		switch ( id ) {
-		case PRINT:
-			int n = vm.getArgCount();
-			for ( int i=0; i<n; i++ ) {
-				if ( i > 0 )
-					stdout.print( "\t" );
-				stdout.print( vm.getArg(i).luaAsString() );
+		case PRINT: {
+				int n = vm.getArgCount();
+				for ( int i=0; i<n; i++ ) {
+					if ( i > 0 )
+						stdout.print( "\t" );
+					stdout.print( vm.getArg(i).luaAsString() );
+				}
+				stdout.println();
+				vm.setResult();
 			}
-			stdout.println();
-			vm.setResult();
 			break;
 		case PAIRS:
-			vm.setResult( vm.getArg(0).luaPairs() );
+		case IPAIRS:
+			vm.setResult( vm.getArg(0).luaPairs(id==PAIRS) );
 			break;
 		case GETMETATABLE:
 			vm.setResult( vm.getArg(0).luaGetMetatable() );
@@ -71,13 +76,16 @@ final class Builtin extends LFunction {
 		case TYPE:
 			vm.setResult( vm.getArg(0).luaGetType() );
 			break;
-		case PCALL:
-			if ( 0 != vm.lua_pcall( vm.getArgCount()-1, Lua.LUA_MULTRET ) ) {
-				LValue v = vm.getArg(0);
-				vm.setResult( LBoolean.FALSE );
-				vm.push( v );
-			} else {
-				vm.setResult( LBoolean.TRUE );
+		case PCALL: {
+				int n = vm.getArgCount();
+				int s = vm.lua_pcall( n-1, Lua.LUA_MULTRET );
+				if ( s != 0 ) {
+					LValue v = vm.lua_tolvalue(-1);
+					vm.setResult( LBoolean.FALSE );
+					vm.push( v );
+				} else {
+					vm.setResult( LBoolean.TRUE );
+				}
 			}
 			break;
 		default:
