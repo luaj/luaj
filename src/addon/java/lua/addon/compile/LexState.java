@@ -252,7 +252,7 @@ public class LexState extends LuaC {
 			syntaxerror("chunk has too many lines");
 	}
 
-	void setinput( Compiler L, Reader z, LString source ) {
+	void setinput( Compiler L, int firstByte, Reader z, LString source ) {
 		this.decpoint = '.';
 		this.L = L;
 		this.lookahead.token = TK_EOS; /* no look-ahead token */
@@ -262,7 +262,7 @@ public class LexState extends LuaC {
 		this.lastline = 1;
 		this.source = source;
 		this.nbuff = 0;   /* initialize buffer */
-		this.nextChar(); /* read first char */
+		this.current = firstByte; /* read first char */
 		this.skipShebang();
 	}
 	

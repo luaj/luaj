@@ -239,16 +239,12 @@ public class LoadState {
 	public static Proto undump( VM L, InputStream stream, String name ) throws IOException {
 		
 		// is this a source file? 
-		stream.mark(1);
-		if ( stream.read() != LUAC_HEADER_SIGNATURE[0] ) {
-			stream.reset();
-			// TODO: handle UTF-8 here!
-			return lua.addon.compile.Compiler.compile( 
-					new InputStreamReader(stream), 
-					name );
-		}
+		Proto p = lua.addon.compile.Compiler.compile(stream, name);
+		if ( p != null )
+			return p;
 
-		// check signature
+		// check rest of signature
+		// (one byte was consumed by compiler check)
 		for ( int i=1; i<4; i++ ) {
 			if ( stream.read() != LUAC_HEADER_SIGNATURE[i] )
 				throw new IllegalArgumentException("bad signature");

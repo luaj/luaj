@@ -468,7 +468,7 @@ public class LuaCompat extends LFunction {
 	
 
 	// return true if loaded, false if error put onto stack
-	private static boolean loadfile( VM vm, String fileName ) {
+	public static boolean loadfile( VM vm, String fileName ) {
 		InputStream is;
 		
 		String script;

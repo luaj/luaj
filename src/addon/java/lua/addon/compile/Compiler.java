@@ -1,5 +1,8 @@
 package lua.addon.compile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Hashtable;
 
@@ -8,19 +11,41 @@ import lua.value.LString;
 
 public class Compiler {
 
-	public int nCcalls;
-	
-	public static Proto compile( Reader reader, String name ) {
+	private static final byte LUAC_BINARY_SIG = '\033';
+		
+	/** Try to compile into prototype.  
+	 * If the supplied stream is a binary file (i.e. lua chunk)
+	 * then consume one byte from the input stream, and return null.
+	 * 
+	 * Otherwise, try to compile the file, and return the Prototype
+	 * on success, or throw RuntimeException on syntax error or I/O Exception
+	 * 
+	 * @param stream  InputStream to read from. 
+	 * @param name Name of the chunk
+	 * @return null if the first byte indicates it is a binary chunk, 
+	 *   a Proto instance if it can be compiled, 
+	 *   or an exception is thrown if there is an error.
+	 * @throws IOException if an I/O exception occurs
+	 * @throws RuntimeException if there is a syntax error.
+	 */
+	public static Proto compile(InputStream stream, String name) throws IOException {
+		
+		int c = stream.read();
+		if ( c == LUAC_BINARY_SIG )
+			return null;
+		// TODO: handle UTF-8 here!
+		InputStreamReader isr = new InputStreamReader(stream);
 		Compiler compiler = new Compiler();
-		return compiler.luaY_parser(reader, name);
+		return compiler.luaY_parser(c, isr, name);
 	}
 
+	public int nCcalls;
 			
-	Proto luaY_parser(Reader z, String name) {
+	Proto luaY_parser(int firstByte, Reader z, String name) {
 		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
-		lexstate.setinput( this, z, new LString(name) );
+		lexstate.setinput( this, firstByte, z, new LString(name) );
 		lexstate.open_func(funcstate);
 		/* main func. is always vararg */
 		funcstate.varargflags = LuaC.VARARG_ISVARARG;
@@ -63,4 +88,5 @@ public class Compiler {
 	public LString newlstr(char[] chars, int offset, int len) {
 		return newTString( new String(chars,offset,len) );
 	}
+
 }

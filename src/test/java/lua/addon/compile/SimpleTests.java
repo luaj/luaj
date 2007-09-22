@@ -1,12 +1,12 @@
 package lua.addon.compile;
 
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import junit.framework.TestCase;
 import lua.Print;
 import lua.StackState;
-import lua.addon.compile.Compiler;
 import lua.io.Closure;
 import lua.io.Proto;
 import lua.value.LValue;
@@ -14,16 +14,19 @@ import lua.value.LValue;
 public class SimpleTests extends TestCase {
 
     private void doTest( String script ) {
-		Reader r = new StringReader( script );
-		Proto p = Compiler.compile( r, "script" );
-		assertNotNull( p );
-		Print.printCode( p );
-		
-		// try running the code!
-		StackState state = new StackState();
-		Closure c = new Closure( state, p );
-		state.doCall( c, new LValue[0] );
-	
+    	try {
+        	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
+			Proto p = Compiler.compile( is, "script" );
+			assertNotNull( p );
+			Print.printCode( p );
+			
+			// try running the code!
+			StackState state = new StackState();
+			Closure c = new Closure( state, p );
+			state.doCall( c, new LValue[0] );
+    	} catch ( Exception e ) {
+    		fail("i/o exception: "+e );
+    	}
     }
 
     public void testTrivial() {
