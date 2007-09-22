@@ -460,7 +460,7 @@ public class StrLib {
 		
 		static boolean match_class( int c, int cl ) {
 			boolean res;
-			switch ( Character.toLowerCase( c ) ) {
+			switch ( Character.toLowerCase( (char) c ) ) {
 			case 'a': res = isalpha( c ); break;
 			case 'd': res = Character.isDigit( (char) c ); break;
 			case 'l': res = Character.isLowerCase( (char) c ); break;

@@ -455,7 +455,7 @@ public class LuaCompat extends LFunction {
 	private static boolean loadis(VM vm, InputStream is, String chunkname ) {
 		try {
 			if ( 0 != vm.lua_load(is, chunkname) ) {
-				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.getArgAsString(0) );
+				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.lua_tolvalue(-1) );
 				return false;
 			} else {
 				return true;

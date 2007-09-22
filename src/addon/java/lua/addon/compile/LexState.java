@@ -2,8 +2,6 @@ package lua.addon.compile;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.Hashtable;
 
 import lua.Lua;
@@ -131,19 +129,24 @@ public class LexState extends LuaC {
 	}
 
 	private boolean isalnum(int c) {
-		return Character.isLetterOrDigit(c);
+		return (c >= '0' && c <= '9') 
+			|| (c >= 'a' && c <= 'z')
+			|| (c >= 'A' && c <= 'Z')
+			|| (c == '_');
+		// return Character.isLetterOrDigit(c);
 	}
 	
 	private boolean isalpha(int c) {
-		return Character.isLetter(c);
+		return (c >= 'a' && c <= 'z')
+			|| (c >= 'A' && c <= 'Z');
 	}
 	
 	private boolean isdigit(int c) {
-		return Character.isDigit(c);
+		return (c >= '0' && c <= '9'); 
 	}
 	
 	private boolean isspace(int c) {
-		return Character.isWhitespace(c);
+		return (c <= ' ');
 	}
 	
 	
@@ -294,14 +297,15 @@ public class LexState extends LuaC {
 	}
 
 	boolean str2d(String str, SemInfo seminfo) {
-		try {
-			double d = Double.parseDouble(str);
-			seminfo.r = new LDouble(d);
-			return true;
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-			return false;
+		double d;
+		str = str.trim(); // TODO: get rid of this
+		if ( str.startsWith("0x") ) {
+			d = Long.parseLong(str.substring(2), 16);
 		}
+		else
+			d = Double.parseDouble(str);
+		seminfo.r = new LDouble(d);
+		return true;
 	}
 
 	//
@@ -320,6 +324,7 @@ public class LexState extends LuaC {
 	//	  }
 	//	}
 	//
+	/*
 	void trydecpoint(String str, SemInfo seminfo) {
 		NumberFormat nf = NumberFormat.getInstance();
 		try {
@@ -330,6 +335,7 @@ public class LexState extends LuaC {
 			lexerror("malformed number", TK_NUMBER);
 		}
 	}
+	*/
 
 	void read_numeral(SemInfo seminfo) {
 		_assert (isdigit(current));
@@ -343,8 +349,9 @@ public class LexState extends LuaC {
 		save('\0');
 		buffreplace('.', decpoint); /* follow locale for decimal point */
 		String str = new String(buff, 0, nbuff);
-		if (!str2d(str, seminfo)) /* format error? */
-			trydecpoint(str, seminfo); /* try to update decimal point separator */
+//		if (!str2d(str, seminfo)) /* format error? */
+//			trydecpoint(str, seminfo); /* try to update decimal point separator */
+		str2d(str, seminfo);
 	}
 
 	int skip_sep() {

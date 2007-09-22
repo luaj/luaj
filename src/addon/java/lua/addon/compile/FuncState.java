@@ -818,9 +818,11 @@ public class FuncState extends LuaC {
 		case OP_MOD:
 			r = (LNumber) v2.luaBinOpUnknown(op, v1);
 			break;
+			//* TODO: replace this with something reasonable.
 		case OP_POW:
 			r = new LDouble( Math.pow(v1.luaAsDouble(), v2.luaAsDouble() ) );
 			break;
+			//*/
 		case OP_UNM:
 			r = (LNumber) v1.luaUnaryMinus();
 			break;

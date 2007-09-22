@@ -3,6 +3,7 @@ package lua.io;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import lua.VM;
 import lua.value.LBoolean;
@@ -32,7 +33,7 @@ public class LoadState {
 	public static final int LUAC_HEADERSIZE		= 12;
 
 	/** expected lua header bytes */
-	private static final int LUAC_HEADER_SIGNATURE = ('\033'<<24) | ('L'<<16) | ('u'<<8) | ('a');
+	private static final byte[] LUAC_HEADER_SIGNATURE = { '\033', 'L', 'u', 'a' };
 
 	// values read from the header
 	private int     luacVersion;
@@ -225,7 +226,6 @@ public class LoadState {
 //	 IF (memcmp(h,s,LUAC_HEADERSIZE)!=0, "bad header");
 //	}
 	public void loadHeader() throws IOException {
-		int sig = is.readInt();
 		luacVersion = is.readByte();
 		luacFormat = is.readByte();
 		luacLittleEndian = (0 != is.readByte());
@@ -234,11 +234,27 @@ public class LoadState {
 		luacSizeofInstruction = is.readByte();
 		luacSizeofLuaNumber = is.readByte();
 		luacIsNumberIntegral = (0 != is.readByte());
-		if ( sig != LUAC_HEADER_SIGNATURE )
-			throw new IllegalArgumentException("bad signature");
 	}
 	
 	public static Proto undump( VM L, InputStream stream, String name ) throws IOException {
+		
+		// is this a source file? 
+		stream.mark(1);
+		if ( stream.read() != LUAC_HEADER_SIGNATURE[0] ) {
+			stream.reset();
+			// TODO: handle UTF-8 here!
+			return lua.addon.compile.Compiler.compile( 
+					new InputStreamReader(stream), 
+					name );
+		}
+
+		// check signature
+		for ( int i=1; i<4; i++ ) {
+			if ( stream.read() != LUAC_HEADER_SIGNATURE[i] )
+				throw new IllegalArgumentException("bad signature");
+		}
+		
+		// load file
 		String sname = name;
 		if ( name.startsWith("@") || name.startsWith("=") )
 			sname = name.substring(1);
