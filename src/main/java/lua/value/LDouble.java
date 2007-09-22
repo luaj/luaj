@@ -52,12 +52,31 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
 		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
-		
-//		case Lua.OP_POW: return new LDouble( Math.pow(lhs, rhs) );
+		// case Lua.OP_POW: return new LDouble( dpow(lhs, rhs) );
 		}
 		return luaUnsupportedOperation();
 	}
-	
+
+	/*
+	public static double dpow(double a, double b) {
+		if ( b < 0 )
+			return 1 / dpow( a, -b );
+		int p = 1;
+		int whole = (int) b;
+		for ( double v=a; whole > 0; whole>>=1, v=v*v )
+			if ( (whole & 1) != 0 )
+				p *= v;
+		int frac = (int) (0x10000 * b);
+		for ( ; (frac&0xffff)!=0; frac<<=1 ) {
+			a = Math.sqrt(a);
+			if ( (frac & 0x8000) != 0 )
+				p *= a;
+		}
+		return p;
+	}
+	*/
+
+
 	public int luaAsInt() {
 		return (int) m_value;
 	}

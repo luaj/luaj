@@ -43,11 +43,19 @@ public class LInteger extends LNumber {
 		case Lua.OP_MUL: return new LInteger( m_value * rhs );
 		case Lua.OP_DIV: return new LInteger( m_value / rhs );
 		case Lua.OP_MOD: return new LInteger( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
-//		case Lua.OP_POW: return new LInteger( (int) Math.pow(m_value, rhs) );
+		case Lua.OP_POW: return new LInteger( ipow(m_value, rhs) );
 		}
 		return luaUnsupportedOperation();
 	}
 	
+	private static int ipow(int v, int rhs) {
+		int p = 1;
+		for ( ; rhs > 0; rhs>>=1, v=v*v )
+			if ( (rhs & 1) != 0 )
+				p *= v;
+		return p;
+	}
+
 	// binary operations on mixed integer, double
 	public LValue luaBinOpDouble(int opcode, double rhs) {
 		return LDouble.luaBinOpDoubleDouble(opcode, (double) m_value, rhs );
