@@ -454,6 +454,7 @@ public class LuaCompat extends LFunction {
 	// return true if laoded, false if error put onto the stack
 	private static boolean loadis(VM vm, InputStream is, String chunkname ) {
 		try {
+			vm.setResult();
 			if ( 0 != vm.lua_load(is, chunkname) ) {
 				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.lua_tolvalue(-1) );
 				return false;
@@ -467,7 +468,7 @@ public class LuaCompat extends LFunction {
 	
 
 	// return true if loaded, false if error put onto stack
-	public static boolean loadfile( VM vm, String fileName ) {
+	private static boolean loadfile( VM vm, String fileName ) {
 		InputStream is;
 		
 		String script;

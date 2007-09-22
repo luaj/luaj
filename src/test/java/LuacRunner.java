@@ -5,6 +5,8 @@ import java.io.InputStream;
 import lua.StackState;
 import lua.VM;
 import lua.addon.luacompat.LuaCompat;
+import lua.addon.luajava.LuaJava;
+import lua.debug.DebugStackState;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -25,9 +27,10 @@ public class LuacRunner {
 		
 		// add LuaCompat bindings
 		LuaCompat.install();
+		LuaJava.install();
 		
 		// new lua state 
-		StackState state = new StackState();
+		StackState state = new DebugStackState();
 		VM vm = state;
 
 		// load the file

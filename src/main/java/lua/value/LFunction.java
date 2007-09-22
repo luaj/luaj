@@ -32,8 +32,7 @@ public class LFunction extends LValue {
 		vm.setExpectedResultCount( 1 );
 		if ( this.luaStackCall( vm ) )
 			vm.execute();
-		else
-			vm.adjustResults();
+		vm.adjustResults();
 	}
 	
 	public LString luaGetType() {
