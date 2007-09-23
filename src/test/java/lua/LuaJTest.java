@@ -64,6 +64,10 @@ public class LuaJTest extends TestCase {
 		runTest( "compare" );
 	}
 
+	public void testMathLib() throws IOException, InterruptedException {
+		runTest( "mathlib" );
+	}
+
 	public void testMetatables() throws IOException, InterruptedException {
 		runTest( "metatables" );
 	}
@@ -107,7 +111,7 @@ public class LuaJTest extends TestCase {
 		StackState state = new StackState();
 		
 		// load the file
-		Proto p = loadScriptResource( state, testName, "/" + testName + ".luac" );
+		Proto p = loadScriptResource( state, testName );
 		
 		// Replace System.out with a ByteArrayOutputStream
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -127,12 +131,19 @@ public class LuaJTest extends TestCase {
 		}
 	}
 	
-	private Proto loadScriptResource( StackState state, String name, String path ) throws IOException {
-		InputStream compiledScript = getClass().getResourceAsStream( path );
+	private Proto loadScriptResource( StackState state, String name ) throws IOException {
+		InputStream script = getClass().getResourceAsStream( "/"+name+".luac" );
+		if ( script == null ) {
+			script = getClass().getResourceAsStream( "/"+name+".lua" );
+			if ( script == null ) {
+				fail( "Could not load script for test case: "+name );
+			}
+		}
+		
 		try {
-			return LoadState.undump(state, compiledScript, name);
+			return LoadState.undump(state, script, name);
 		} finally {
-			compiledScript.close();
+			script.close();
 		}
 	}
 	
@@ -147,6 +158,12 @@ public class LuaJTest extends TestCase {
 			}
 		} else {
 			InputStream script = getClass().getResourceAsStream( "/" + testName + ".luac" );
+			if ( script == null ) {
+				script = getClass().getResourceAsStream( "/" + testName + ".lua" );
+				if ( script == null ) {
+					fail( "Could not find script for test case: "+testName );
+				}
+			}
 			try {
 				return collectProcessOutput( new String[] { "lua", "-" }, script );
 			} finally {
