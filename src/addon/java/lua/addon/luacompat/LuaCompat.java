@@ -82,10 +82,12 @@ public class LuaCompat extends LFunction {
 	
 	public static final String[] MATH_NAMES = {
 		"abs",
+		"cos",
 		"max",
 		"min",
 		"modf",
-		"sin"
+		"sin",
+		"sqrt"
 	};
 	
 	public static final String[] STRING_NAMES = {
@@ -138,10 +140,12 @@ public class LuaCompat extends LFunction {
 	
 	private static final int MATH_BASE = 20;
 	private static final int ABS     = MATH_BASE + 0;
-	private static final int MAX     = MATH_BASE + 1;
-	private static final int MIN     = MATH_BASE + 2;
-	private static final int MODF    = MATH_BASE + 3;
-	private static final int SIN     = MATH_BASE + 4;
+	private static final int COS     = MATH_BASE + 1;
+	private static final int MAX     = MATH_BASE + 2;
+	private static final int MIN     = MATH_BASE + 3;
+	private static final int MODF    = MATH_BASE + 4;
+	private static final int SIN     = MATH_BASE + 5;
+	private static final int SQRT    = MATH_BASE + 6;
 	
 	private static final int STRING_BASE = 30;
 	private static final int BYTE    = STRING_BASE + 0;
@@ -244,6 +248,9 @@ public class LuaCompat extends LFunction {
 		case ABS:
 			vm.setResult( abs( vm.getArg( 0 ) ) );
 			break;
+		case COS:
+			vm.setResult( new LDouble( Math.cos ( vm.getArgAsDouble( 0 ) ) ) );
+			break;
 		case MAX:
 			vm.setResult( max( vm.getArg( 0 ), vm.getArg( 1 ) ) );
 			break;
@@ -256,7 +263,10 @@ public class LuaCompat extends LFunction {
 		case SIN:
 			vm.setResult( new LDouble( Math.sin( vm.getArgAsDouble( 0 ) ) ) );
 			break;
-		
+		case SQRT:
+			vm.setResult( new LDouble( Math.sqrt( vm.getArgAsDouble( 0 ) ) ) );
+			break;
+			
 		// String functions
 		case BYTE:
 			StrLib.byte_( vm );
@@ -549,10 +559,10 @@ public class LuaCompat extends LFunction {
 	/** unpack (list [, i [, j]])
 	 * 
 	 * Returns the elements from the given table. This function is equivalent to
-	 *      return list[i], list[i+1], ···, list[j]
+	 *      return list[i], list[i+1], Â·Â·Â·, list[j]
 	 *      
 	 * except that the above code can be written only for a fixed number of elements. 
-	 * By default, i is 1 and j is the length of the list, as defined by the length operator (see §2.5.5).
+	 * By default, i is 1 and j is the length of the list, as defined by the length operator (see Â§2.5.5).
 	 */
 	private void unpack(VM vm) {
 		LValue v = vm.getArg(0);
@@ -636,7 +646,7 @@ public class LuaCompat extends LFunction {
 	// ============= tables support =============
 	/** table.concat (table [, sep [, i [, j]]])
 	 * 
-	 * Given an array where all elements are strings or numbers, returns table[i]..sep..table[i+1] ··· sep..table[j]. 
+	 * Given an array where all elements are strings or numbers, returns table[i]..sep..table[i+1] Â·Â·Â· sep..table[j]. 
 	 * The default value for sep is the empty string, the default for i is 1, and the default for j is the length of the table. 
 	 * If i is greater than j, returns the empty string.
 	 */
@@ -667,7 +677,7 @@ public class LuaCompat extends LFunction {
 	/** table.insert (table, [pos,] value)
 	 * 
 	 * Inserts element value at position pos in table, shifting up other elements to open space, if necessary. 
-	 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
+	 * The default value for pos is n+1, where n is the length of the table (see Â§2.5.5), so that a call 
 	 * table.insert(t,x) inserts x at the end of table t.
 	 */ 
 	private void insert(VM vm) {
