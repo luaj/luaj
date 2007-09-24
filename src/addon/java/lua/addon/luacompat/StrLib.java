@@ -1,9 +1,13 @@
 package lua.addon.luacompat;
 
 import lua.VM;
+import lua.value.LFunction;
 import lua.value.LInteger;
 import lua.value.LNil;
+import lua.value.LNumber;
 import lua.value.LString;
+import lua.value.LTable;
+import lua.value.LValue;
 
 public class StrLib {
 	/**
@@ -185,9 +189,41 @@ public class StrLib {
 	 *	     x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)
 	 *	     --> x="lua-5.1.tar.gz"
 	 */
-	static void gsub( VM vm ) {		
+	static void gsub( VM vm ) {
+		LString src = vm.getArgAsLuaString( 0 );
+		final int srclen = src.length();
+		LString p = vm.getArgAsLuaString( 1 );
+		LValue repl = vm.getArg( 2 );
+		int max_s = ( vm.getArgCount() > 3 ? vm.getArgAsInt( 3 ) : srclen + 1 );
+		final boolean anchor = p.length() > 0 && p.charAt( 0 ) == '^';
+		
+		LBuffer lbuf = new LBuffer( srclen );
+		MatchState ms = new MatchState( vm, src, p );
+		
+		int soffset = 0;
+		int n = 0;
+		while ( n < max_s ) {
+			ms.reset();
+			int res = ms.match( soffset, anchor ? 1 : 0 );
+			if ( res != -1 ) {
+				n++;
+				ms.add_value( lbuf, soffset, res, repl );
+			}
+			if ( res != -1 && res > soffset )
+				soffset = res;
+			else if ( soffset < srclen )
+				lbuf.append( (byte) src.luaByte( soffset++ ) );
+			else
+				break;
+			if ( anchor )
+				break;
+		}
+		lbuf.append( src.substring( soffset, srclen ) );
+		vm.setResult();
+		vm.push( lbuf.toLuaString() );
+		vm.push( new LInteger( n ) );
 	}
-
+	
 	/** 
 	 * string.len (s)
 	 * 
@@ -367,6 +403,45 @@ public class StrLib {
 	private static final int CAP_UNFINISHED = -1;
 	private static final int CAP_POSITION = -2;
 	
+	private static final byte MASK_ALPHA		= 0x01;
+	private static final byte MASK_LOWERCASE	= 0x02;
+	private static final byte MASK_UPPERCASE	= 0x04;
+	private static final byte MASK_DIGIT		= 0x08;
+	private static final byte MASK_PUNCT		= 0x10;
+	private static final byte MASK_SPACE		= 0x20;
+	private static final byte MASK_CONTROL		= 0x40;
+	private static final byte MASK_HEXDIGIT		= (byte)0x80;
+	
+	private static final byte[] CHAR_TABLE;
+	
+	static {
+		CHAR_TABLE = new byte[256];
+		
+		for ( int i = 0; i < 256; ++i ) {
+			final char c = (char) i;
+			CHAR_TABLE[i] = (byte)( ( Character.isDigit( c ) ? MASK_DIGIT : 0 ) |
+							( Character.isLowerCase( c ) ? MASK_LOWERCASE : 0 ) |
+							( Character.isUpperCase( c ) ? MASK_UPPERCASE : 0 ) |
+							( ( c < ' ' || c == 0x7F ) ? MASK_CONTROL : 0 ) );
+			if ( ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) || ( c >= '0' && c <= '9' ) ) {
+				CHAR_TABLE[i] |= MASK_HEXDIGIT;
+			}
+			if ( ( c >= '!' && c <= '/' ) || ( c >= ':' && c <= '@' ) ) {
+				CHAR_TABLE[i] |= MASK_PUNCT;
+			}
+			if ( ( CHAR_TABLE[i] & ( MASK_LOWERCASE | MASK_UPPERCASE ) ) != 0 ) {
+				CHAR_TABLE[i] |= MASK_ALPHA;
+			}
+		}
+		
+		CHAR_TABLE[' '] = MASK_SPACE;
+		CHAR_TABLE['\r'] |= MASK_SPACE;
+		CHAR_TABLE['\n'] |= MASK_SPACE;
+		CHAR_TABLE['\t'] |= MASK_SPACE;
+		CHAR_TABLE[0x0C /* '\v' */ ] |= MASK_SPACE;
+		CHAR_TABLE['\f'] |= MASK_SPACE;
+	};
+	
 	private static class MatchState {
 		final LString s;
 		final LString p;
@@ -388,17 +463,71 @@ public class StrLib {
 			level = 0;
 		}
 		
-		void push_captures( boolean wholeMatch, int soff, int end ) {
+		private void add_s( LBuffer lbuf, LString news, int soff, int e ) {
+			int l = news.length();
+			for ( int i = 0; i < l; ++i ) {
+				byte b = (byte) news.luaByte( i );
+				if ( b != L_ESC ) {
+					lbuf.append( (byte) b );
+				} else {
+					++i; // skip ESC
+					b = (byte) news.luaByte( i );
+					if ( !Character.isDigit( (char) b ) ) {
+						lbuf.append( b );
+					} else if ( b == '0' ) {
+						lbuf.append( s.substring( soff, e ) );
+					} else {
+						push_onecapture( b - '1', soff, e );
+						lbuf.append( vm.lua_tolvalue( -1 ).luaAsString() );
+						vm.lua_pop( 1 );
+					}
+				}
+			}
+		}
+		
+		public void add_value( LBuffer lbuf, int soffset, int end, LValue repl ) {
+			if ( repl instanceof LString || repl instanceof LNumber ) {
+				add_s( lbuf, repl.luaAsString(), soffset, end );
+				return;
+			} else if ( repl instanceof LFunction ) {
+				vm.push( repl );
+				int n = push_captures( true, soffset, end );
+				vm.lua_call( n, 1 );
+			} else if ( repl instanceof LTable ) {
+				// Need to call push_onecapture here for the error checking
+				push_onecapture( 0, soffset, end );
+				LValue k = vm.lua_tolvalue( -1 );
+				vm.lua_pop( 1 );
+				((LTable) repl).luaGetTable( vm, repl, k );
+			} else {
+				vm.lua_error( "string/function/table expected" );
+				return;
+			}
+			
+			repl = vm.lua_tolvalue( -1 );
+			if ( !repl.luaAsBoolean() ) {
+				repl = s.substring( soffset, end );
+			} else if ( ! ( repl instanceof LString || repl instanceof LNumber ) ) {
+				vm.lua_error( "invalid replacement value (a "+repl.luaGetType()+")" );
+			}
+			vm.lua_pop( 1 );
+			lbuf.append( repl.luaAsString() );
+		}
+		
+		int push_captures( boolean wholeMatch, int soff, int end ) {
 			int nlevels = ( this.level == 0 && wholeMatch ) ? 1 : this.level;
 			for ( int i = 0; i < nlevels; ++i ) {
 				push_onecapture( i, soff, end );
 			}
+			return nlevels;
 		}
 		
 		private void push_onecapture( int i, int soff, int end ) {
 			if ( i >= this.level ) {
 				if ( i == 0 ) {
 					vm.push( s.substring( soff, end ) );
+				} else {
+					vm.lua_error( "invalid capture index" );
 				}
 			} else {
 				int l = clen[i];
@@ -454,27 +583,25 @@ public class StrLib {
 			}
 		}
 		
-		static boolean isalpha( int c ) {
-			return ( c >= 'a' && c <= 'z' ) || ( c >= 'A' && c <= 'Z' );
-		}
-		
 		static boolean match_class( int c, int cl ) {
+			final char lcl = Character.toLowerCase( (char) cl );
+			int cdata = CHAR_TABLE[c];
+			
 			boolean res;
-			switch ( Character.toLowerCase( (char) c ) ) {
-			case 'a': res = isalpha( c ); break;
-			case 'd': res = Character.isDigit( (char) c ); break;
-			case 'l': res = Character.isLowerCase( (char) c ); break;
-			case 'u': res = Character.isUpperCase( (char) c ); break;
+			switch ( lcl ) {
+			case 'a': res = ( cdata & MASK_ALPHA ) != 0; break;
+			case 'd': res = ( cdata & MASK_DIGIT ) != 0; break;
+			case 'l': res = ( cdata & MASK_LOWERCASE ) != 0; break;
+			case 'u': res = ( cdata & MASK_UPPERCASE ) != 0; break;
+			case 'c': res = ( cdata & MASK_CONTROL ) != 0; break;
+			case 'p': res = ( cdata & MASK_PUNCT ) != 0; break;
+			case 's': res = ( cdata & MASK_SPACE ) != 0; break;
+			case 'w': res = ( cdata & ( MASK_ALPHA | MASK_DIGIT ) ) != 0; break;
+			case 'x': res = ( cdata & MASK_HEXDIGIT ) != 0; break;
 			case 'z': res = ( c == 0 ); break;
-			case 'c':
-			case 'p':
-			case 's':
-			case 'w':
-			case 'x':
-				throw new RuntimeException("match: unimplemented: %" + (char)cl );
 			default: return cl == c;
 			}
-			return ( Character.isLowerCase( (char) cl ) ? res : !res );
+			return ( lcl == cl ) ? res : !res;
 		}
 		
 		boolean matchbracketclass( int c, int poff, int ec ) {
@@ -521,10 +648,10 @@ public class StrLib {
 					return soffset;
 				switch ( p.luaByte( poffset ) ) {
 				case '(':
-					if ( p.luaByte( poffset + 1 ) == ')' )
-						return start_capture( soffset, poffset + 2, CAP_POSITION );
+					if ( ++poffset < p.length() && p.luaByte( poffset ) == ')' )
+						return start_capture( soffset, poffset + 1, CAP_POSITION );
 					else
-						return start_capture( soffset, poffset + 1, CAP_UNFINISHED );
+						return start_capture( soffset, poffset, CAP_UNFINISHED );
 				case ')':
 					return end_capture( soffset, poffset + 1 );
 				case L_ESC:

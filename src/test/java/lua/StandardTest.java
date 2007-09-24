@@ -15,6 +15,7 @@ import junit.framework.TestSuite;
 import lua.Builtin;
 import lua.StackState;
 import lua.addon.luacompat.LuaCompat;
+import lua.debug.DebugStackState;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -79,7 +80,7 @@ public class StandardTest extends TestCase {
 		// the garbage collector. Until we implement that, remove the
 		// built-in collectgarbage function.
 		GlobalState.getGlobalsTable().put( "collectgarbage", LNil.NIL );
-		StackState state = new StackState();
+		StackState state = new DebugStackState();
 		Closure c = new Closure( state, code );
 		
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -88,13 +89,15 @@ public class StandardTest extends TestCase {
 			try {
 				state.doCall( c, new LValue[0] );
 			} catch ( RuntimeException exn ) {
-				StackTraceElement[] stackTrace = new StackTraceElement[state.cc+1];
-				for ( int i = 0; i <= state.cc; ++i ) {
+				final int ncalls = Math.min( state.calls.length, state.cc+1 );
+				StackTraceElement[] stackTrace = new StackTraceElement[ncalls];
+				
+				for ( int i = 0; i < ncalls; ++i ) {
 					CallInfo call = state.calls[i];
 					Proto p = call.closure.p;
 					int line = p.lineinfo[call.pc-1];
 					String func = call.closure.luaAsString().toJavaString();
-					stackTrace[state.cc - i] = new StackTraceElement(getName(), func, getName()+".lua", line );
+					stackTrace[ncalls - i - 1] = new StackTraceElement(getName(), func, getName()+".lua", line );
 				}
 				
 				RuntimeException newExn = new RuntimeException( exn );

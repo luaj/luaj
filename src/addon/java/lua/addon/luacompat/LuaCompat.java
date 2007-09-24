@@ -67,6 +67,7 @@ public class LuaCompat extends LFunction {
 		"loadfile",
 		"tonumber",
 		"rawget",
+		"rawset",
 		"setfenv",
 		"select",
 		"collectgarbage",
@@ -125,17 +126,18 @@ public class LuaCompat extends LFunction {
 	private static final int LOADFILE       = GLOBALS_BASE + 1;
 	private static final int TONUMBER       = GLOBALS_BASE + 2;
 	private static final int RAWGET         = GLOBALS_BASE + 3;
-	private static final int SETFENV        = GLOBALS_BASE + 4;
-	private static final int SELECT         = GLOBALS_BASE + 5;
-	private static final int COLLECTGARBAGE = GLOBALS_BASE + 6;
-	private static final int DOFILE         = GLOBALS_BASE + 7;
-	private static final int LOADSTRING     = GLOBALS_BASE + 8;
-	private static final int LOAD           = GLOBALS_BASE + 9;
-	private static final int TOSTRING       = GLOBALS_BASE + 10;
-	private static final int UNPACK         = GLOBALS_BASE + 11;
-	private static final int NEXT           = GLOBALS_BASE + 12;
-	private static final int MODULE         = GLOBALS_BASE + 13;
-	private static final int REQUIRE        = GLOBALS_BASE + 14;
+	private static final int RAWSET         = GLOBALS_BASE + 4;
+	private static final int SETFENV        = GLOBALS_BASE + 5;
+	private static final int SELECT         = GLOBALS_BASE + 6;
+	private static final int COLLECTGARBAGE = GLOBALS_BASE + 7;
+	private static final int DOFILE         = GLOBALS_BASE + 8;
+	private static final int LOADSTRING     = GLOBALS_BASE + 9;
+	private static final int LOAD           = GLOBALS_BASE + 10;
+	private static final int TOSTRING       = GLOBALS_BASE + 11;
+	private static final int UNPACK         = GLOBALS_BASE + 12;
+	private static final int NEXT           = GLOBALS_BASE + 13;
+	private static final int MODULE         = GLOBALS_BASE + 14;
+	private static final int REQUIRE        = GLOBALS_BASE + 15;
 	
 	
 	private static final int MATH_BASE = 20;
@@ -201,13 +203,24 @@ public class LuaCompat extends LFunction {
 			vm.setResult( toNumber( vm ) );
 			break;
 		case RAWGET: {
-			LValue t = vm.getArg(0);;
+			LValue t = vm.getArg(0);
 			LValue k = vm.getArg(1);
 			LValue result = LNil.NIL;
 			if ( t instanceof LTable ) {
 				result = ( (LTable) t ).get( k );
 			}
 			vm.setResult( result );
+		}	break;
+		case RAWSET: {
+			LValue t = vm.getArg(0);
+			LValue k = vm.getArg(1);
+			LValue v = vm.getArg(2);
+			vm.setResult();
+			if ( t instanceof LTable ) {
+				( (LTable) t ).put( k, v );
+			} else {
+				vm.lua_error( "expected table" );
+			}
 		}	break;
 		case SETFENV:
 			setfenv( (StackState) vm );

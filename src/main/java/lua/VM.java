@@ -11,10 +11,6 @@ public interface VM {
 
 	// ================ interfaces for performing calls
 	
-	/** Prepare the VM stack for a new call with arguments to be pushed
-	 */
-	public void newCall();
-	
 	/** Push an argument or return value onto the stack 
 	 */
 	public void push( LValue value );
@@ -164,6 +160,13 @@ public interface VM {
 	public void lua_error(String message);
 
 	/** 
+	 * Run the method on the stack, propagating any error that occurs.
+	 * @param nArgs number of arguments on the stack
+	 * @param nResults number of results on the stack
+	 */
+	public void lua_call(int nArgs, int nResults);
+
+	/** 
 	 * Run the method on the stack in protected mode. 
 	 * @param nArgs number of arguments on the stack
 	 * @param nResults number of results on the stack
@@ -186,4 +189,9 @@ public interface VM {
 	 * @return
 	 */
 	public LValue lua_tolvalue(int i);
+	
+	/**
+	 * Pop some number of items off the stack.
+	 */
+	public void lua_pop(int n);
 }
