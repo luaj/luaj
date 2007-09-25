@@ -2,10 +2,10 @@ package lua.addon.compile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Hashtable;
 
+import lua.addon.luacompat.Platform;
 import lua.io.Proto;
 import lua.value.LString;
 
@@ -33,10 +33,9 @@ public class Compiler {
 		int c = stream.read();
 		if ( c == LUAC_BINARY_SIG )
 			return null;
-		// TODO: handle UTF-8 here!
-		InputStreamReader isr = new InputStreamReader(stream);
+		Reader r = Platform.getInstance().createReader( stream );
 		Compiler compiler = new Compiler();
-		return compiler.luaY_parser(c, isr, name);
+		return compiler.luaY_parser(c, r, name);
 	}
 
 	public int nCcalls;

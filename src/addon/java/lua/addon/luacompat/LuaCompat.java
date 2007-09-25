@@ -497,7 +497,7 @@ public class LuaCompat extends LFunction {
 		String script;
 		if ( ! "".equals(fileName) ) {
 			script = fileName;
-			is = vm.getClass().getResourceAsStream( "/"+script );
+			is = Platform.getInstance().openFile(fileName);
 			if ( is == null ) {
 				vm.setErrorResult( LNil.NIL, "cannot open "+fileName+": No such file or directory" );
 				return false;
