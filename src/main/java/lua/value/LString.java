@@ -27,10 +27,10 @@ public class LString extends LValue {
 
 	public static final LString TYPE_NAME = new LString("string");
 	
-	final byte[] m_bytes;
-	final int m_offset;
-	final int m_length;
-	final int m_hash;
+	public final byte[] m_bytes;
+	public final int m_offset;
+	public final int m_length;
+	public final int m_hash;
 	
 	private static LTable s_stringMT;
 	
@@ -388,4 +388,5 @@ public class LString extends LValue {
 	public int luaByte(int index) {
 		return m_bytes[m_offset + index] & 0x0FF;
 	}
+
 }

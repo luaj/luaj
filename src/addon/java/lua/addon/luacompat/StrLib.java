@@ -115,6 +115,7 @@ public class StrLib {
 	 * except as arguments to the q option. 
 	 */
 	static void format( VM vm ) {		
+		vm.setResult( new LString("") );
 	}
 
 	/** 
@@ -141,7 +142,10 @@ public class StrLib {
 	 * For this function, a '^' at the start of a pattern does not work as an anchor, 
 	 * as this would prevent the iteration.
 	 */
-	static void gmatch( VM vm ) {		
+	static void gmatch( VM vm ) {
+		LString s = vm.getArgAsLuaString(0);
+		LString pattern = vm.getArgAsLuaString(1);
+		vm.setResult();
 	}
 
 	/** 
