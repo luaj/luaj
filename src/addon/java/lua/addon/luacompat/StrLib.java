@@ -143,11 +143,38 @@ public class StrLib {
 	 * as this would prevent the iteration.
 	 */
 	static void gmatch( VM vm ) {
-		LString s = vm.getArgAsLuaString(0);
-		LString pattern = vm.getArgAsLuaString(1);
-		vm.setResult();
+		vm.setResult( new GMatchAux(vm) );
 	}
 
+	static class GMatchAux extends LFunction {
+		private final LString src,pat;
+		private final int srclen;
+		private final MatchState ms;
+		private int soffset;
+		public GMatchAux(VM vm) {
+			this.src = vm.getArgAsLuaString(0);
+			this.pat = vm.getArgAsLuaString(1);
+			this.srclen = src.length();
+			this.ms = new MatchState(vm, src, pat);
+			this.soffset = 0;
+		}
+		public boolean luaStackCall(VM vm) {
+			vm.setResult();
+			for ( ; soffset<srclen; soffset++ ) {
+				int res = ms.match(soffset, 0);
+				if ( res >=0 ) {
+					int soff = soffset;
+					soffset = res;
+					ms.push_captures( true, soff, res );
+					return false;
+				}
+			}
+			vm.push( LNil.NIL );
+			return false;
+		}
+	}
+
+	
 	/** 
 	 * string.gsub (s, pattern, repl [, n])
 	 * Returns a copy of s in which all (or the first n, if given) occurrences of the 
