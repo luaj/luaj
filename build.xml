@@ -1,0 +1,22 @@
+<project default="all">
+	<property name="version" value="1.0"/>
+	
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+	
+	<target name="compile">
+		<mkdir dir="build/classes"/>
+		<javac destdir="build/classes" encoding="utf-8">
+			<src path="src/main/java"/>
+			<src path="src/addon/java"/>
+			<classpath path="lib/commons-cli-1.1.jar"/>
+		</javac>
+	</target>
+	
+	<target name="jar" depends="compile">
+		<jar destfile="luaj-vm-${version}.jar" basedir="build/classes"/>
+	</target>
+	
+	<target name="all" depends="clean,jar"/>
+</project>
