@@ -25,12 +25,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.StringTokenizer;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
+import lua.debug.DebugEvent;
+import lua.debug.DebugEventType;
+import lua.debug.DebugRequest;
 import lua.debug.DebugRequestListener;
-import lua.debug.DebugServer;
+import lua.debug.DebugResponse;
 import lua.debug.DebugStackState;
+import lua.debug.DebugSupport;
+import lua.debug.DebugUtils;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -54,12 +63,14 @@ import org.apache.commons.cli.ParseException;
 public class LuaJVM implements DebugRequestListener {        
     protected Options options = new Options();
     protected boolean isDebugMode = false;
-    protected DebugServer debugServer;
+    protected DebugSupport debugSupport;
     protected int requestPort;
     protected int eventPort;
     protected String script;
     protected String[] scriptArgs;
-    protected DebugStackState state;
+    protected StackState state;
+    protected boolean isReady = false;
+    protected boolean isTerminated = false;
     
     @SuppressWarnings("static-access")
     public LuaJVM() {
@@ -107,15 +118,18 @@ public class LuaJVM implements DebugRequestListener {
 
             if (line.hasOption("file")) {
                 String[] fileArgs = line.getOptionValues("file");
-                this.script = fileArgs[0];
+                this.script = URLDecoder.decode(fileArgs[0], "UTF-8");
+                DebugUtils.println("Lua script to run: " + this.script);
                 this.scriptArgs = new String[fileArgs.length - 1];
                 for (int i = 1; i < fileArgs.length; i++) {
-                    this.scriptArgs[i-1] = fileArgs[i];
+                    this.scriptArgs[i-1] = URLDecoder.decode(fileArgs[i], "UTF-8");
                 }
             }
         } catch(NumberFormatException e) {
             throw new ParseException("Invalid port number: " + e.getMessage());
-        }        
+        } catch (UnsupportedEncodingException e) {
+            throw new ParseException("Malformed program argument strings: " + e.getMessage());
+        }
     }
     
     protected boolean isDebug() {
@@ -144,16 +158,28 @@ public class LuaJVM implements DebugRequestListener {
 
     public void run() throws IOException {
         if (isDebug()) {
-            setupDebugHooks(getRequestPort(), getEventPort());
+            doDebug();
+        } else {
+            doRun();
         }
-
-        // TODO: VM hook for debugging
+    }
+    
+    protected void init() {
+        // reset global states
+        GlobalState.resetGlobals();
         
         // add LuaJava bindings
         LuaJava.install();        
 
+        // add LuaCompat bindings
+        LuaCompat.install();        
+    }
+    
+    public void doRun() throws IOException {
+        init();
+        
         // new lua state 
-        state = new DebugStackState();
+        state = new StackState();
 
         // convert args to lua
         int numOfScriptArgs = getScriptArgs().length;
@@ -163,33 +189,99 @@ public class LuaJVM implements DebugRequestListener {
         }
         
         // load the Lua file
-        System.out.println("loading Lua script '" + getScript() + "'");
+        DebugUtils.println("loading Lua script '" + getScript() + "'");
         InputStream is = new FileInputStream(new File(getScript()));
         Proto p = LoadState.undump(state, is, getScript());
         
         // create closure and execute
         Closure c = new Closure(state, p);
-        state.doCall(c, vargs);
+        state.doCall(c, vargs);        
     }
     
-    protected void setupDebugHooks(int requestPort, int eventPort) 
-    throws IOException {
-        this.debugServer = new DebugServer(this, requestPort, eventPort);
-        this.debugServer.start();
+    private void doDebug() throws IOException {
+        DebugUtils.println("start debugging...");
+        this.debugSupport = new DebugSupport(this, getRequestPort(), getEventPort());
+        DebugUtils.println("created client request socket connection...");
+        debugSupport.start();
+        
+        DebugUtils.println("setting up LuaJava and debug stack state...");
+        
+        init();
+        
+        // new lua state 
+        state = new DebugStackState();
+        getDebugState().addDebugEventListener(debugSupport);
+        
+        // load the Lua file
+        DebugUtils.println("loading Lua script '" + getScript() + "'");
+        InputStream is = new FileInputStream(new File(getScript()));
+        Proto p = LoadState.undump(state, is, getScript());
+        
+        // create closure and execute
+        final Closure c = new Closure(state, p);
+        getDebugState().suspend();
+        
+        new Thread(new Runnable() {
+            public void run() {                
+                int numOfScriptArgs = getScriptArgs().length;
+                LValue[] vargs = new LValue[numOfScriptArgs];
+                for (int i = 0; i < numOfScriptArgs; i++) { 
+                    vargs[i] = new LString(getScriptArgs()[i]);
+                }
+                
+                getDebugState().doCall(c, vargs);
+                stop();
+            }
+        }).start();
+        
+        debugSupport.fireEvent(new DebugEvent(DebugEventType.started));
+    }   
+    
+    private DebugStackState getDebugState() {
+        return (DebugStackState)state;
     }
     
     /* (non-Javadoc)
      * @see lua.debug.DebugRequestListener#handleRequest(java.lang.String)
      */
-    public String handleRequest(String request) {
-    	return state.handleRequest( request );
+    public DebugResponse handleRequest(DebugRequest request) {
+        if (!isDebug()) {
+            throw new UnsupportedOperationException("Must be in debug mode to handle the debug requests");
+        }
+        
+        DebugUtils.println("handling request: " + request.toString());
+        switch (request.getType()) {
+            case suspend:
+                DebugResponse status = getDebugState().handleRequest(request);                
+                DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
+                debugSupport.fireEvent(event);                
+                return status;
+            case resume:
+                status = getDebugState().handleRequest(request);                
+                event = new DebugEvent(DebugEventType.resumedByClient);
+                debugSupport.fireEvent(event);                
+                return status;
+            case exit:
+                stop();
+            default:
+                return getDebugState().handleRequest(request);
+        }
     }
     
-    public void stop() {
-        if (this.debugServer != null) {
-            this.debugServer.stop();
-            this.debugServer = null;
+    protected void stop() {
+        DebugUtils.println("exit LuaJ VM...");
+        if (this.debugSupport != null) {
+            DebugEvent event = new DebugEvent(DebugEventType.terminated);
+            debugSupport.fireEvent(event);
+            Timer timer = new Timer("DebugServerDeathThread");
+            timer.schedule(new TimerTask() {
+                public void run() {
+                    debugSupport.stop();
+                    debugSupport = null;                    
+                }
+            }, 500);
         }
+        getDebugState().exit();
     }
 
     /**
@@ -198,18 +290,22 @@ public class LuaJVM implements DebugRequestListener {
      *  [-debug requestPort eventPort] -file luaProgram args
      * @throws IOException
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         LuaJVM vm = new LuaJVM();
 
         try {
             vm.parse(args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
-            System.out.println();
+            DebugUtils.println(e.getMessage());
             vm.printUsage(); 
             return;
         }
 
-        vm.run();
+        try {
+            vm.run();
+        } catch (IOException e) {
+            //TODO: handle the error
+            e.printStackTrace();
+        }
     }
 }

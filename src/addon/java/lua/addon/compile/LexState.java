@@ -2,6 +2,7 @@ package lua.addon.compile;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Hashtable;
 
 import lua.Lua;
@@ -15,7 +16,25 @@ import lua.value.LString;
 
 public class LexState extends LuaC {
 	
-	private static final int EOZ    = (-1);
+	protected static final String RESERVED_LOCAL_VAR_FOR_CONTROL = "(for control)";
+    protected static final String RESERVED_LOCAL_VAR_FOR_STATE = "(for state)";
+    protected static final String RESERVED_LOCAL_VAR_FOR_GENERATOR = "(for generator)";
+    protected static final String RESERVED_LOCAL_VAR_FOR_STEP = "(for step)";
+    protected static final String RESERVED_LOCAL_VAR_FOR_LIMIT = "(for limit)";
+    protected static final String RESERVED_LOCAL_VAR_FOR_INDEX = "(for index)";
+    
+    // sorted keywords array
+    // must keep it sorted, or binary search will fail
+    protected static final String[] RESERVED_LOCAL_VAR_KEYWORDS = new String[] {
+        RESERVED_LOCAL_VAR_FOR_CONTROL,
+        RESERVED_LOCAL_VAR_FOR_GENERATOR,
+        RESERVED_LOCAL_VAR_FOR_INDEX,
+        RESERVED_LOCAL_VAR_FOR_LIMIT,
+        RESERVED_LOCAL_VAR_FOR_STATE,
+        RESERVED_LOCAL_VAR_FOR_STEP
+    };
+                               
+    private static final int EOZ    = (-1);
 	private static final int MAXSRC = 80;
 	private static final int MAX_INT = Integer.MAX_VALUE-2;
 	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX? 
@@ -26,10 +45,13 @@ public class LexState extends LuaC {
 	
 	
 	private static final int     LUA_COMPAT_LSTR   =    1; // 1 for compatibility, 2 for old behavior
-	private static final boolean LUA_COMPAT_VARARG = true;
-	
-
-	
+	private static final boolean LUA_COMPAT_VARARG = true;	
+    
+    public static boolean isReservedKeyword(String varName) {
+        int index = Arrays.binarySearch(RESERVED_LOCAL_VAR_KEYWORDS, varName);
+        return index >= 0;
+    }
+    
 	/*
 	** Marks the end of a patch list. It is an invalid value both as an absolute
 	** address, and as a list link (would link an element to itself).
@@ -1588,9 +1610,9 @@ public class LexState extends LuaC {
 		/* fornum -> NAME = exp1,exp1[,exp1] forbody */
 		FuncState fs = this.fs;
 		int base = fs.freereg;
-		this.new_localvarliteral("(for index)", 0);
-		this.new_localvarliteral("(for limit)", 1);
-		this.new_localvarliteral("(for step)", 2);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_INDEX, 0);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_LIMIT, 1);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_STEP, 2);
 		this.new_localvar(varname, 3);
 		this.checknext('=');
 		this.exp1(); /* initial value */
@@ -1614,9 +1636,9 @@ public class LexState extends LuaC {
 		int line;
 		int base = fs.freereg;
 		/* create control variables */
-		this.new_localvarliteral("(for generator)", nvars++);
-		this.new_localvarliteral("(for state)", nvars++);
-		this.new_localvarliteral("(for control)", nvars++);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_GENERATOR, nvars++);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_STATE, nvars++);
+		this.new_localvarliteral(RESERVED_LOCAL_VAR_FOR_CONTROL, nvars++);
 		/* create declared variables */
 		this.new_localvar(indexname, nvars++);
 		while (this.testnext(','))

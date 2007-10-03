@@ -3,7 +3,6 @@ package lua.io;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import lua.VM;
 import lua.value.LBoolean;
@@ -19,7 +18,10 @@ import lua.value.LValue;
 */
 public class LoadState {
 
-	/** mark for precompiled code (`<esc>Lua') */
+	public static final String SOURCE_BINARY_STRING = "binary string";
+
+
+    /** mark for precompiled code (`<esc>Lua') */
 	public static final String LUA_SIGNATURE	= "\033Lua";
 
 
@@ -251,16 +253,21 @@ public class LoadState {
 		}
 		
 		// load file
-		String sname = name;
-		if ( name.startsWith("@") || name.startsWith("=") )
-			sname = name.substring(1);
-		else if ( name.startsWith("\033") )
-			sname = "binary string";
+		String sname = getSourceName(name);
 		LoadState s = new LoadState( L, stream, sname );
 		s.loadHeader();
 		LString literal = new LString("=?");
 		return s.loadFunction( literal );
 	}
+
+    public static String getSourceName(String name) {
+        String sname = name;
+        if ( name.startsWith("@") || name.startsWith("=") )
+			sname = name.substring(1);
+		else if ( name.startsWith("\033") )
+			sname = SOURCE_BINARY_STRING;
+        return sname;
+    }
 
 	/** Private constructor for create a load state */
 	private LoadState( VM L, InputStream stream, String name ) {

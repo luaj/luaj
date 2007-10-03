@@ -21,20 +21,33 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+public class DebugRequestLineBreakpointToggle extends DebugRequest {
+    private static final long serialVersionUID = -3954500569399285372L;
+    protected String source;
+    protected int lineNumber;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public DebugRequestLineBreakpointToggle(DebugRequestType type, String source, int lineNumber) {
+        super(type);
+        if (lineNumber < 0) {
+            throw new IllegalArgumentException("lineNumber must be equal to greater than zero");
+        }
+        this.source = source;
+        this.lineNumber = lineNumber;
+    }
+    
+    public int getLineNumber() {
+        return this.lineNumber;
+    }
+
+    public String getSource() {
+        return this.source;
+    }
+    
+    /* (non-Javadoc)
+     * @see lua.debug.DebugRequest#toString()
+     */
+    @Override
+    public String toString() {
+        return super.toString() + " Source:" + getSource() + " lineNumber:" + getLineNumber();
+    }
 }

@@ -21,20 +21,31 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+public class DebugResponseCallgraph extends DebugResponseSimple {
+    private static final long serialVersionUID = -7761865402188853413L;
+    protected StackFrame[] stackFrames;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public DebugResponseCallgraph(StackFrame[] callgraph) {
+        super(true);
+        this.stackFrames = callgraph;
+    }
+    
+    public StackFrame[] getCallgraph() {
+        return this.stackFrames;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuilder buffer = new StringBuilder();
+        if (this.stackFrames != null) {
+            for (StackFrame frame : stackFrames) {
+                buffer.append(frame.toString());
+                buffer.append("\n");
+            }
+        }
+        return buffer.toString();
+    }
 }

@@ -21,20 +21,34 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+import java.io.File;
+
+import lua.io.LoadState;
+import lua.value.LString;
+
+public class DebugUtils {
+    public static final boolean IS_DEBUG = false;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public static void println(String message) {
+        if (IS_DEBUG) {
+            System.out.println(message);
+        }
+    }
+    
+    public static void print(String message) {
+        if (IS_DEBUG) {
+            System.out.print(message);
+        }
+    }
+
+    public static String getSourceFileName(LString source) {
+        String sourceStr = source.toJavaString();
+        sourceStr = LoadState.getSourceName(sourceStr);
+        if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
+            File sourceFile = new File(sourceStr);            
+            return sourceFile.getName();
+        } else {
+            return sourceStr;
+        }
+    }
 }

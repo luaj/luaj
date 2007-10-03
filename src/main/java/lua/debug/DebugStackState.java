@@ -1,25 +1,75 @@
+/*******************************************************************************
+* Copyright (c) 2007 LuaJ. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+******************************************************************************/
 package lua.debug;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.Set;
 
 import lua.CallInfo;
 import lua.StackState;
+import lua.addon.compile.LexState;
 import lua.io.LocVars;
 import lua.io.Proto;
+import lua.value.LTable;
+import lua.value.LValue;
+import lua.value.Type;
 
 public class DebugStackState extends StackState implements DebugRequestListener {
 
-	public Map<Integer,Boolean> breakpoints = new HashMap<Integer,Boolean>();
-	private boolean exiting = false;
-	private boolean suspended = false;
-	private boolean stepping = false;
-	private int lastline = -1;
+	private static final boolean DEBUG = false;
+    
+	protected Map<String,Boolean> breakpoints = new HashMap<String,Boolean>();
+    protected boolean exiting = false;
+    protected boolean suspended = false;
+    protected boolean stepping = false;
+    protected int lastline = -1;
+    protected List<DebugEventListener> debugEventListeners 
+        = new ArrayList<DebugEventListener>();
 	
 	public DebugStackState() {
 	}
 	
+    public void addDebugEventListener(DebugEventListener listener) {
+        if (!debugEventListeners.contains(listener)) {
+            debugEventListeners.add(listener);
+        }
+    }
+    
+    public void removeDebugEventListener(DebugEventListener listener) {
+        if (debugEventListeners.contains(listener)) {
+            debugEventListeners.remove(listener);
+        }
+    }
+    
+    protected void notifyDebugEventListeners(DebugEvent event) {
+        for (DebugEventListener listener : debugEventListeners) {
+            listener.notifyDebugEvent(event);
+        }
+    }
+    
 	private String getFileLine(int cindex) {
 		String func = "?";
 		String line = "?";
@@ -29,119 +79,136 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			Proto p = call.closure.p;
 			if ( p != null && p.source != null )
 				source = p.source.toJavaString();
-			if ( p.lineinfo != null && p.lineinfo.length > call.pc-1 )
-				line = String.valueOf( p.lineinfo[call.pc-1] );
+			if ( p.lineinfo != null && p.lineinfo.length > call.pc )
+				line = String.valueOf( p.lineinfo[call.pc] );
 			// TODO: reverse lookup on function name ????
 			func = call.closure.luaAsString().toJavaString();
 		}
 		return source+":"+line+"("+func+")";
 	}
 	
-	private String addLineInfo( String message ) {
-		return getFileLine(cc)+": "+message;
-	}
 	
-	private void printLuaTrace(String message) {
-		System.out.println( "Lua error: "+addLineInfo( message ) );
-		for ( int cindex=cc-1; cindex>=0; cindex-- )
-			System.out.println( "\tcalled by "+getFileLine( cindex ) );
-	}
-	
-	protected void debugPcallError(Throwable t) {		
-		System.out.println(addLineInfo("(caught in pcall) "+t.getMessage()));
-		System.out.flush();
-	}
-
+	// override and fill in line number info 
 	public void lua_error(String message) {
-		throw new RuntimeException( message );
+		super.lua_error( getFileLine(cc)+": "+message );
+	}
+	
+	private void printLuaTrace() {
+		System.out.println( "Lua location: "+getFileLine(cc) );
+		for ( int cindex=cc-1; cindex>=0; cindex-- )
+			System.out.println( "\tin "+getFileLine( cindex ) );
 	}
 	
 	// intercept exceptions and fill in line numbers
 	public void exec() {
 		try {
 			super.exec();
-		} catch ( RuntimeException t ) {
-			t.printStackTrace();			
-			printLuaTrace(t.getMessage());
+		} catch (AbortException e) {
+            // ignored. Client aborts the debugging session.
+        } catch ( Exception t ) {        
+			t.printStackTrace();
+			printLuaTrace();
 			System.out.flush();
-			throw t;
 		}
 	}
 	
 	
 	// debug hooks
 	public void debugHooks( int pc ) {
+        DebugUtils.println("entered debugHook...");
+        
 		if ( exiting )
-			throw new java.lang.RuntimeException("exiting");
+			throw new AbortException("exiting");
 
-		// make sure line numbers are current in any stack traces
-		calls[cc].pc = pc;
-		
 		synchronized ( this ) {
-			
+            
 			// anytime the line doesn't change we keep going
-			int[] li = calls[cc].closure.p.lineinfo;
-			int line = (li!=null && li.length>pc? li[pc]: -1);
-			if ( lastline == line )
+			int line = getLineNumber(calls[cc]);
+            DebugUtils.println("debugHook - executing line: " + line);
+			if ( !stepping && lastline == line ) {
 				return;
+            }
 
 			// save line in case next op is a step
 			lastline = line;
-			if ( stepping )
-				stepping = false;
-
-			// check for a break point if we aren't suspended already
-			if ( ! suspended ) {
-				if ( breakpoints.containsKey(line) )
-					suspended = true;
-				else
-					return;
+            
+            if ( stepping ) {
+                DebugUtils.println("suspended by stepping at pc=" + pc);
+                notifyDebugEventListeners(new DebugEventStepping());
+                suspended = true;
+            } else if ( !suspended ) {
+                // check for a break point if we aren't suspended already
+                Proto p = calls[cc].closure.p;
+                String source = DebugUtils.getSourceFileName(p.source);                
+                if ( breakpoints.containsKey(constructBreakpointKey(source, line))){
+                    DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
+                    notifyDebugEventListeners(
+                            new DebugEventBreakpoint(source, line));
+                    suspended = true;
+                } else {
+                    return;
+                }                    
 			}
 			
 			// wait for a state change
-			while ( suspended && (!exiting) && (!stepping) ) {
+			while (suspended && !exiting ) {
 				try {
 					this.wait();
+                    DebugUtils.println("resuming execution...");
 				} catch ( InterruptedException ie ) {
 					ie.printStackTrace();
 				}
 			}
 		}
 	}
-	
-	// ------------------ commands coming from the debugger -------------------
-    
-    public enum RequestType {
-        suspend,
-        resume,
-        exit, 
-        set, 
-        clear, 
-        callgraph, 
-        stack,
-        step,
-        variable,
+
+    /**
+     * Get the current line number
+     * @param pc program counter
+     * @return the line number corresponding to the pc
+     */
+    private int getLineNumber(CallInfo ci) {
+        int[] lineNumbers = ci.closure.p.lineinfo;
+        int pc = ci.pc;
+        int line = (lineNumbers != null && lineNumbers.length > pc ? lineNumbers[pc] : -1);
+        return line;
     }
+	
+	// ------------------ commands coming from the debugger -------------------   
     
-	public String handleRequest(String request) {
-    	StringTokenizer st = new StringTokenizer( request );
-    	String req = st.nextToken();
-    	RequestType rt = RequestType.valueOf(req);
-    	switch ( rt ) {
-    	case suspend: suspend(); return "true";
-    	case resume: resume(); return "true";
-    	case exit: exit(); return "true";
-    	case set: set( Integer.parseInt(st.nextToken()) ); return "true";
-    	case clear: clear( Integer.parseInt(st.nextToken()) ); return "true";
-    	case callgraph: return callgraph();
-    	case stack: return stack();
-    	case step: step(); return "true";
-    	case variable: 
-    		String N = st.nextToken();
-    		String M = st.nextToken();
-    		return variable( Integer.parseInt(N), Integer.parseInt(M) );
-    	}
-    	throw new java.lang.IllegalArgumentException( "unkown request type: "+req );
+	public DebugResponse handleRequest(DebugRequest request) {
+        DebugUtils.println("DebugStackState is handling request: " + request.toString());
+    	switch (request.getType()) {
+    	case suspend: 
+            suspend(); 
+            return DebugResponseSimple.SUCCESS;
+    	case resume: 
+            resume(); 
+            return DebugResponseSimple.SUCCESS;
+    	case exit: 
+            exit(); 
+            return DebugResponseSimple.SUCCESS;
+    	case lineBreakpointSet:
+            DebugRequestLineBreakpointToggle setBreakpointRequest 
+                = (DebugRequestLineBreakpointToggle)request;
+            setBreakpoint(setBreakpointRequest.getSource(), setBreakpointRequest.getLineNumber()); 
+            return DebugResponseSimple.SUCCESS;
+    	case lineBreakpointClear:
+            DebugRequestLineBreakpointToggle clearBreakpointRequest 
+                = (DebugRequestLineBreakpointToggle)request;
+            clearBreakpoint(clearBreakpointRequest.getSource(), clearBreakpointRequest.getLineNumber()); 
+            return DebugResponseSimple.SUCCESS;
+    	case callgraph: 
+            return new DebugResponseCallgraph(getCallgraph());
+    	case stack: 
+            DebugRequestStack stackRequest = (DebugRequestStack) request;
+            int index = stackRequest.getIndex();
+            return new DebugResponseStack(getStack(index));
+    	case step: 
+            step(); 
+            return DebugResponseSimple.SUCCESS;
+        }
+    	throw new java.lang.IllegalArgumentException( "unkown request type: "+request.getType() );
 	}
 
     /**
@@ -155,13 +222,14 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			this.notify();
 		}
 	}
-
+    
 	/** 
 	 * resume the execution
 	 */
 	public void resume() {
 		synchronized ( this ) {
 			suspended = false;
+            stepping = false;
 			this.notify();
 		}
 	}
@@ -180,18 +248,24 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      * set breakpoint at line N
      * @param N the line to set the breakpoint at
      */
-	public void set( int N ) {
+	public void setBreakpoint(String source, int lineNumber) {
+        DebugUtils.println("adding breakpoint " + constructBreakpointKey(source, lineNumber));
 		synchronized ( this ) {
-			breakpoints.put( N, Boolean.TRUE );
+			breakpoints.put(constructBreakpointKey(source, lineNumber), Boolean.TRUE );
 		}
 	}
 	
+    protected String constructBreakpointKey(String source, int lineNumber) {
+        return source + ":" + lineNumber;
+    }
+
     /**
-     * clear breakpoint at line N
+     * clear breakpoint at line lineNumber of source source
      */
-	public void clear( int N ) {
+	public void clearBreakpoint(String source, int lineNumber) {
+        DebugUtils.println("removing breakpoint " + constructBreakpointKey(source, lineNumber));
 		synchronized ( this ) {
-			breakpoints.remove( N );
+			breakpoints.remove(constructBreakpointKey(source, lineNumber));
 		}
 	}
 	
@@ -199,36 +273,71 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      * return the current call graph (i.e. stack frames from
      * old to new, include information about file, method, etc.)
      */
-	public String callgraph() {
+	public StackFrame[] getCallgraph() {
 		int n = cc;
+        
 		if ( n < 0 || n >= calls.length )
-			return "";
-		StringBuffer sb = new StringBuffer();
-		for ( int i=0; i<=n; i++ ) {
+			return new StackFrame[0];
+        
+		StackFrame[] frames = new StackFrame[n+1];        
+		for ( int i = 0; i <= n; i++ ) {
 			CallInfo ci = calls[i];
-			// TODO: fill this out with proper format, names, etc.
-			sb.append( String.valueOf(ci.closure.p) );
-			sb.append( "\n" );
+            frames[i] = new StackFrame(ci, getLineNumber(ci));
 		}
-		return sb.toString();
+		return frames;
 	}
 
-	/**
-	 *  return the content of the current stack frame,
-     *  listing the (variable, value) pairs
-     */
-	public String stack() {
-		CallInfo ci;
-		if ( cc < 0 || cc >= calls.length || (ci=calls[cc]) == null )
-			return "<out of scope>";
-		LocVars[] lv = ci.closure.p.locvars;
-		int n = (lv != null? lv.length: 0);
-		StringBuffer sb = new StringBuffer();
-		for ( int i=0; i<n; i++ ) {
-			// TODO: figure out format 
-			sb.append( "(" + lv[i].varname + "," + super.stack[ci.base+i] + ")\n" );
-		}
-		return sb.toString();
+	public Variable[] getStack(int index) {
+        if (index < 0 || index >= calls.length) {
+            //TODO: this is an error, handle it differently
+            return new Variable[0];
+        }
+        
+        CallInfo callInfo = calls[index];
+        DebugUtils.println("Stack Frame: " + index + "[" + callInfo.base + "," + callInfo.top + "]");
+        int top = callInfo.top < callInfo.base ? callInfo.base : callInfo.top;
+        Proto prototype = callInfo.closure.p;
+        LocVars[] localVariables = prototype.locvars;
+        List<Variable> variables = new ArrayList<Variable>();
+        int localVariableCount = 0;
+        Set<String> variablesSeen = new HashSet<String>();
+        for (int i = 0; localVariables != null && i < localVariables.length && i <= top; i++) {
+            String varName = localVariables[i].varname.toString();
+            DebugUtils.print("\tVariable: " + varName); 
+            DebugUtils.print("\tValue: " + stack[callInfo.base + i]);
+            if (!variablesSeen.contains(varName) &&
+                !LexState.isReservedKeyword(varName)) {
+                variablesSeen.add(varName);
+                LValue value = stack[callInfo.base + i];                
+                if (value != null) {
+                    Type type = Type.valueOf(value.luaGetType().toJavaString());
+                    DebugUtils.print("\tType: " + type);
+                    if (type == Type.table) {
+                        DebugUtils.println(" (selected)");
+                        variables.add(
+                                new TableVariable(localVariableCount++, 
+                                             varName, 
+                                             type, 
+                                             (LTable) value));                        
+                    } else if (type != Type.function &&
+                               type != Type.thread) {
+                        DebugUtils.println(" (selected)");
+                        variables.add(
+                                new Variable(localVariableCount++, 
+                                             varName, 
+                                             type, 
+                                             value.toString()));
+                    } else {
+                        DebugUtils.println("");
+                    }
+                } else {
+                    DebugUtils.println("");
+                }
+            } else {
+                DebugUtils.println("");
+            }
+        }            
+        return (Variable[])variables.toArray(new Variable[0]);
 	}
 	
 	
@@ -237,19 +346,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      */
 	public void step() {
 		synchronized ( this ) {
+            suspended = false;
 			stepping = true;
 			this.notify();
 		}
-	}
-	
-    /**
-     * return the value of variable M from the stack frame N
-	 *  (stack frames are indexed from 0)
-	 */
-	public String variable( int N, int M ) {
-		CallInfo ci;
-		if ( M < 0 || M >= calls.length || (ci=calls[M]) == null )
-			return "<out of scope>";
-		return String.valueOf( super.stack[ci.base] );
 	}
 }

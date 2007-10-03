@@ -21,20 +21,29 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+import java.io.Serializable;
+
+public class DebugResponseSimple implements DebugResponse, Serializable {
+    private static final long serialVersionUID = 7042417813840650230L;
+
+    protected boolean isSuccessful;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public static final DebugResponseSimple SUCCESS = new DebugResponseSimple(true);
+    public static final DebugResponseSimple FAILURE = new DebugResponseSimple(false);
+    
+    public DebugResponseSimple(boolean isSuccessful) {
+        this.isSuccessful = isSuccessful;
+    }
+    
+    public boolean isSuccessful() {
+        return this.isSuccessful;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return String.valueOf(isSuccessful);
+    }
 }

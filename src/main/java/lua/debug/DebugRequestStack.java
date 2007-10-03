@@ -21,20 +21,24 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+public class DebugRequestStack extends DebugRequest {
+    private static final long serialVersionUID = 6270383432060791307L;
+    protected int index;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public DebugRequestStack(int index) {
+        super(DebugRequestType.stack);
+        this.index = index;
+    }
+    
+    public int getIndex() {
+        return this.index;
+    }
+
+    /* (non-Javadoc)
+     * @see lua.debug.DebugRequest#toString()
+     */
+    @Override
+    public String toString() {
+        return super.toString() + " stack frame:" + getIndex();
+    }
 }

@@ -21,20 +21,24 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+public class DebugEventError extends DebugEvent {
+    private static final long serialVersionUID = -7911842790951966147L;
+    protected String detail;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    public DebugEventError(String detail) {
+        super(DebugEventType.error);
+        this.detail = detail;
+    }
+    
+    public String getDetail() {
+        return this.detail;
+    }
+
+    /* (non-Javadoc)
+     * @see lua.debug.DebugEvent#toString()
+     */
+    @Override
+    public String toString() {
+        return super.toString() + " detail: " + getDetail();
+    }
 }

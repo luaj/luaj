@@ -21,20 +21,46 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugRequestListener {
+import java.io.Serializable;
+
+import lua.value.Type;
+
+public class Variable implements Serializable {
+    private static final long serialVersionUID = 8194091816623233934L;
     
-    /**
-     * Debugging client can send the following requests to the server:
-     * suspend   -- suspend the execution and listen for debug requests
-     * resume    -- resume the execution
-     * exit      -- terminate the execution
-     * set N     -- set breakpoint at line N
-     * clear N   -- clear breakpoint at line N
-     * callgraph -- return the current call graph (i.e. stack frames from 
-     *              old to new, include information about file, method, etc.)
-     * stack     -- return the content of the current stack frame, 
-     *              listing the (variable, value) pairs
-     * step      -- single step forward (go to next statement)                         
-     */ 
-    public DebugResponse handleRequest(DebugRequest request);
+    protected int    index;
+    protected String name;
+    protected String value;
+    protected Type type;
+    
+    public Variable(int index, String name, Type type, String value) {
+        this.index = index;
+        this.name = name;
+        this.type = type;
+        this.value = value;
+    }
+    
+    public String getName() {
+        return this.name;
+    }
+
+    public Type getType() {
+        return this.type;
+    }
+    
+    public String getValue() {
+        return this.value;
+    }
+    
+    public int getIndex() {
+        return this.index;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "index: " + getIndex() + " name:" + getName() + " type: " + getType() + " value:" + getValue();
+    }
 }

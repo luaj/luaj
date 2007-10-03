@@ -21,21 +21,14 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
- * <code>DebugServer</code> manages the communications between LuaJ VM and 
- * the debugging client.
- * 
- * @author:  Shu Lei
- * @version: <version>
- */
-public class DebugServer {
+public class DebugSupport implements DebugEventListener {
     public enum State {
         UNKNOWN,
         RUNNING,
@@ -50,14 +43,14 @@ public class DebugServer {
     
     protected ServerSocket requestSocket;
     protected Socket clientRequestSocket;
-    protected BufferedReader requestReader;
-    protected PrintWriter requestWriter;
+    protected ObjectInputStream requestReader;
+    protected ObjectOutputStream requestWriter;
     
     protected ServerSocket eventSocket;
     protected Socket clientEventSocket;
-    protected PrintWriter eventWriter;
+    protected ObjectOutputStream eventWriter;
         
-    public DebugServer(DebugRequestListener listener, 
+    public DebugSupport(DebugRequestListener listener, 
                        int requestPort, 
                        int eventPort) {
         this.listener = listener;
@@ -65,7 +58,8 @@ public class DebugServer {
         this.eventPort = eventPort;
     }
         
-    protected void destroy() {
+    protected void releaseServer() {
+        DebugUtils.println("shutting down the debug server...");
         if (requestReader != null) {
             try {
                 requestReader.close();
@@ -73,7 +67,11 @@ public class DebugServer {
         }
         
         if (requestWriter != null) {
-            requestWriter.close();
+            try {
+                requestWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         
         if (clientRequestSocket != null) {
@@ -89,7 +87,11 @@ public class DebugServer {
         }
         
         if (eventWriter != null) {
-            eventWriter.close();
+            try {
+                eventWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         
         if (clientEventSocket != null) {
@@ -108,20 +110,22 @@ public class DebugServer {
     public synchronized void start() throws IOException {
         this.requestSocket = new ServerSocket(requestPort);
         this.clientRequestSocket = requestSocket.accept();
-        this.requestReader = new BufferedReader(
-                new InputStreamReader(clientRequestSocket.getInputStream()));
-        this.requestWriter = new PrintWriter(clientRequestSocket.getOutputStream());
+        this.requestReader 
+            = new ObjectInputStream(clientRequestSocket.getInputStream());
+        this.requestWriter 
+            = new ObjectOutputStream(clientRequestSocket.getOutputStream());
         
         this.eventSocket = new ServerSocket(eventPort);
         this.clientEventSocket = eventSocket.accept();
-        this.eventWriter = new PrintWriter(clientEventSocket.getOutputStream());                 
+        this.eventWriter 
+            = new ObjectOutputStream(clientEventSocket.getOutputStream());                 
 
         this.requestWatcherThread = new Thread(new Runnable() {
             public void run() {
                 if (getState() != State.STOPPED) {
                     handleRequest();
                 } else {
-                    destroy();
+                    releaseServer();
                 }
             }
         });
@@ -139,23 +143,37 @@ public class DebugServer {
     
     public void handleRequest() {        
         synchronized (clientRequestSocket) {
-            String request = null;
             try {
-                while (getState() != State.STOPPED &&
-                       (request = requestReader.readLine()) != null) {
-                    System.out.println("SERVER receives request: " + request);
-                    String response = listener.handleRequest(request);
-                    requestWriter.write(response);
+                while (getState() != State.STOPPED) {
+                    DebugRequest request 
+                        = (DebugRequest) requestReader.readObject();
+                    DebugUtils.println("SERVER receives request: " + request.toString());
+                    DebugResponse response = listener.handleRequest(request);
+                    requestWriter.writeObject(response);
                     requestWriter.flush();
+                    DebugUtils.println("SERVER sends response: " + response);
                 }
                 
                 if (getState() == State.STOPPED) {
-                    destroy();
+                    cleanup();
                 }
+            } catch (EOFException e) {
+                cleanup();
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     *
+     */
+    private void cleanup() {
+        DebugUtils.println("SERVER terminated...");
+        releaseServer();
+        System.exit(0);
     }
 
     /**
@@ -175,10 +193,22 @@ public class DebugServer {
      *              
      * @param event
      */
-    public void fireEvent(String event) {
+    public void fireEvent(DebugEvent event) {
+        DebugUtils.println("SERVER sending event: " + event.toString());
         synchronized (eventSocket) {
-            eventWriter.println(event);
-            eventWriter.flush();            
+            try {
+                eventWriter.writeObject(event);
+                eventWriter.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }         
         }
+    }
+
+    /* (non-Javadoc)
+     * @see lua.debug.DebugEventListener#notifyDebugEvent(lua.debug.DebugEvent)
+     */
+    public void notifyDebugEvent(DebugEvent event) {
+        fireEvent(event);        
     }    
 }
