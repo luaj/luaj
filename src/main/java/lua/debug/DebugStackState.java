@@ -89,8 +89,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	
 	
 	// override and fill in line number info 
-	public void lua_error(String message) {
-		super.lua_error( getFileLine(cc)+": "+message );
+	public void error(String message) {
+		super.error( getFileLine(cc)+": "+message );
 	}
 	
 	private void printLuaTrace() {

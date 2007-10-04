@@ -78,9 +78,9 @@ final class Builtin extends LFunction {
 			break;
 		case PCALL: {
 				int n = vm.getArgCount();
-				int s = vm.lua_pcall( n-1, Lua.LUA_MULTRET );
+				int s = vm.pcall( n-1, Lua.LUA_MULTRET, 0 );
 				if ( s != 0 ) {
-					LValue v = vm.lua_tolvalue(-1);
+					LValue v = vm.topointer(-1);
 					vm.setResult( LBoolean.FALSE );
 					vm.push( v );
 				} else {

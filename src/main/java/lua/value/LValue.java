@@ -33,7 +33,7 @@ public class LValue {
 	// perform a lua call, return true if the call is to a lua function, false
 	// if it ran to completion.
 	public boolean luaStackCall(VM vm) {
-		vm.lua_error("attempt to call "+this);
+		vm.error("attempt to call "+this);
 		return false;
 	}
 

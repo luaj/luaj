@@ -15,14 +15,14 @@ public class LFunction extends LValue {
 		vm.push( table );
 		vm.push( key );
 		vm.push( val );
-		vm.lua_call( 3, 0 );
+		vm.call( 3, 0 );
 	}
 
 	public void luaGetTable(VM vm, LValue table, LValue key) {
 		vm.push( this );
 		vm.push( table );
 		vm.push( key );
-		vm.lua_call( 2, 1 );
+		vm.call( 2, 1 );
 	}
 	
 	public int luaGetType() {

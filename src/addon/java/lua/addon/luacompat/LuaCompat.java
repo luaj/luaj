@@ -219,7 +219,7 @@ public class LuaCompat extends LFunction {
 			if ( t instanceof LTable ) {
 				( (LTable) t ).put( k, v );
 			} else {
-				vm.lua_error( "expected table" );
+				vm.error( "expected table" );
 			}
 		}	break;
 		case SETFENV:
@@ -478,8 +478,8 @@ public class LuaCompat extends LFunction {
 	private static boolean loadis(VM vm, InputStream is, String chunkname ) {
 		try {
 			vm.setResult();
-			if ( 0 != vm.lua_load(is, chunkname) ) {
-				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.lua_tolvalue(-1) );
+			if ( 0 != vm.load(is, chunkname) ) {
+				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.topointer(-1) );
 				return false;
 			} else {
 				return true;
@@ -515,10 +515,10 @@ public class LuaCompat extends LFunction {
 	private void dofile( VM vm ) {
 		String filename = vm.getArgAsString(0);
 		if ( loadfile( vm, filename ) ) {
-			int s = vm.lua_pcall(1, 0);
+			int s = vm.pcall(1, 0, 0);
 			vm.setResult( LInteger.valueOf( s!=0? 1: 0 ) );
 		} else {
-			vm.lua_error("cannot open "+filename);
+			vm.error("cannot open "+filename);
 		}
 	}
 
@@ -532,7 +532,7 @@ public class LuaCompat extends LFunction {
 	// return true if loaded, false if error put onto stack
 	private boolean load(VM vm, LValue chunkPartLoader, String chunkname) {
 		if ( ! (chunkPartLoader instanceof Closure) ) {
-			vm.lua_error("not a closure: "+chunkPartLoader);
+			vm.error("not a closure: "+chunkPartLoader);
 		}
 		
 		// load all the parts
@@ -541,7 +541,7 @@ public class LuaCompat extends LFunction {
 		try {
 			while ( true ) {
 				vm.setResult(c);
-				if ( 0 != vm.lua_pcall(0, 1) ) {
+				if ( 0 != vm.pcall(0, 1, 0) ) {
 					vm.setErrorResult(LNil.NIL, vm.getArgAsString(0));
 					return false;
 				}
@@ -599,7 +599,7 @@ public class LuaCompat extends LFunction {
 	// ======================== Module, Package loading =============================
 	
 	public static void module( VM vm ) {		
-		vm.lua_error( "module not implemented" );
+		vm.error( "module not implemented" );
 	}
 
 	/** 
@@ -635,9 +635,9 @@ public class LuaCompat extends LFunction {
 		else {
 			String s = modname.toJavaString();
 			if ( ! loadfile(vm, s+".luac") && ! loadfile(vm, s+".lua") )
-				vm.lua_error( "not found: "+s );
-			else if ( 0 == vm.lua_pcall(0, 1) ) {
-				LValue result = vm.lua_tolvalue( -1 ); 
+				vm.error( "not found: "+s );
+			else if ( 0 == vm.pcall(0, 1, 0) ) {
+				LValue result = vm.topointer( -1 ); 
 				if ( result != LNil.NIL )
 					LOADED.put(modname, result);
 				else if ( ! LOADED.containsKey(modname) )
@@ -648,11 +648,11 @@ public class LuaCompat extends LFunction {
 	}
 
 	public static void loadlib( VM vm ) {
-		vm.lua_error( "loadlib not implemented" );
+		vm.error( "loadlib not implemented" );
 	}
 	
 	public static void seeall( VM vm ) {
-		vm.lua_error( "seeall not implemented" );
+		vm.error( "seeall not implemented" );
 	}
 	
 
@@ -683,7 +683,7 @@ public class LuaCompat extends LFunction {
 			}
 			vm.setResult( new LString( baos.toByteArray() ) );
 		} catch (IOException e) {
-			vm.lua_error(e.getMessage());
+			vm.error(e.getMessage());
 		}
 	}
 
