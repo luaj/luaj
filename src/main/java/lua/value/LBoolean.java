@@ -33,6 +33,6 @@ public final class LBoolean extends LValue {
 	}
 	
 	public int luaGetType() {
-		return Lua.LUA_TFUNCTION;
+		return Lua.LUA_TBOOLEAN;
 	}
 }
