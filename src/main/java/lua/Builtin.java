@@ -74,7 +74,7 @@ final class Builtin extends LFunction {
 			vm.setResult( t );
 			break;
 		case TYPE:
-			vm.setResult( vm.getArg(0).luaGetType() );
+			vm.setResult( vm.getArg(0).luaGetTypeName() );
 			break;
 		case PCALL: {
 				int n = vm.getArgCount();

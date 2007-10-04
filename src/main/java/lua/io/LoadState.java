@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import lua.Lua;
 import lua.VM;
 import lua.value.LBoolean;
 import lua.value.LDouble;
@@ -56,18 +57,6 @@ public class LoadState {
 	/** The VM doing the loading */
 	VM L;
 	
-	private static final int LUA_TNONE		= (-1);
-
-	private static final int LUA_TNIL		= 0;
-	private static final int LUA_TBOOLEAN		= 1;
-	private static final int LUA_TLIGHTUSERDATA	= 2;
-	private static final int LUA_TNUMBER		= 3;
-	private static final int LUA_TSTRING		= 4;
-	private static final int LUA_TTABLE		= 5;
-	private static final int LUA_TFUNCTION		= 6;
-	private static final int LUA_TUSERDATA		= 7;
-	private static final int LUA_TTHREAD		= 8;
-
 	int loadByte() throws IOException {
 		return is.readUnsignedByte();
 	}
@@ -148,16 +137,16 @@ public class LoadState {
 		LValue[] values = new LValue[n];
 		for ( int i=0; i<n; i++ ) {
 			switch ( loadByte() ) {
-			case LUA_TNIL:
+			case Lua.LUA_TNIL:
 				values[i] = LNil.NIL;
 				break;
-			case LUA_TBOOLEAN:
+			case Lua.LUA_TBOOLEAN:
 				values[i] = (0 != loadByte()? LBoolean.TRUE: LBoolean.FALSE);
 				break;
-			case LUA_TNUMBER:
+			case Lua.LUA_TNUMBER:
 				values[i] = loadNumber();
 				break;
-			case LUA_TSTRING:
+			case Lua.LUA_TSTRING:
 				values[i] = loadString();
 				break;
 			default:

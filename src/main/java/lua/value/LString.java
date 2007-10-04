@@ -24,8 +24,6 @@ import lua.Lua;
  * efficiency, new LStrings and substrings never create copies.
  */
 public class LString extends LValue {
-
-	public static final LString TYPE_NAME = new LString(Type.string.toString());
 	
 	public final byte[] m_bytes;
 	public final int m_offset;
@@ -287,8 +285,8 @@ public class LString extends LValue {
 		return LInteger.valueOf( length() );
 	}
 
-	public LString luaGetType() {
-		return TYPE_NAME;
+	public int luaGetType() {
+		return Lua.LUA_TSTRING;
 	}
 	
 	public LTable luaGetMetatable() {

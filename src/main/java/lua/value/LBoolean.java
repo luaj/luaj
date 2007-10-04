@@ -1,12 +1,12 @@
 package lua.value;
 
+import lua.Lua;
+
 public final class LBoolean extends LValue {
 
 	public static final LBoolean TRUE = new LBoolean("true",true);
 	
 	public static final LBoolean FALSE = new LBoolean("false",false);
-	
-	public static final LString TYPE_NAME = new LString(Type.bool.toString());
 	
 	private final LString m_name;
 	private final boolean m_value;
@@ -32,7 +32,7 @@ public final class LBoolean extends LValue {
 		return value? TRUE: FALSE;
 	}
 	
-	public LString luaGetType() {
-		return TYPE_NAME;
+	public int luaGetType() {
+		return Lua.LUA_TFUNCTION;
 	}
 }

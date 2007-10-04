@@ -20,8 +20,6 @@ import lua.VM;
  * 
  */
 public class LTable extends LValue {
-
-	public static final LString TYPE_NAME = new LString(Type.table.toString());
 	
 	/**
 	 * Zero-length array to use instead of null, so that we don't need to
@@ -262,8 +260,8 @@ public class LTable extends LValue {
 		return new LString("table: "+id());
 	}
 
-	public LString luaGetType() {
-		return TYPE_NAME;
+	public int luaGetType() {
+		return Lua.LUA_TTABLE;
 	}
 	
 	/** Valid for tables */

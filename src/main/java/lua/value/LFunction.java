@@ -1,12 +1,11 @@
 package lua.value;
 
+import lua.Lua;
 import lua.VM;
 
 
 public class LFunction extends LValue {
 
-	public static final LString TYPE_NAME = new LString(Type.function.toString());
-	
 	public LString luaAsString() {
 		return new LString( "function: "+hashCode() );
 	}
@@ -26,8 +25,8 @@ public class LFunction extends LValue {
 		vm.lua_call( 2, 1 );
 	}
 	
-	public LString luaGetType() {
-		return TYPE_NAME;
+	public int luaGetType() {
+		return Lua.LUA_TFUNCTION;
 	}
 	
 }

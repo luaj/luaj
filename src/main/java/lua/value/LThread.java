@@ -1,12 +1,13 @@
 package lua.value;
 
-public class LThread extends LValue {
-	public static final LString TYPE_NAME = new LString(Type.thread.toString());
-	
-	public LString luaGetType() {
-		return TYPE_NAME;
-	}
+import lua.Lua;
 
+public class LThread extends LValue {
+	
+	public int luaGetType() {
+		return Lua.LUA_TTHREAD;
+	}
+	
 	public LString luaAsString() {
 		return new LString("thread: "+hashCode());
 	}

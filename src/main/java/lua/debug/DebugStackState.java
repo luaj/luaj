@@ -310,7 +310,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                 variablesSeen.add(varName);
                 LValue value = stack[callInfo.base + i];                
                 if (value != null) {
-                    Type type = Type.valueOf(value.luaGetType().toJavaString());
+                    Type type = Type.valueOf(value.luaGetTypeName().toJavaString());
                     DebugUtils.print("\tType: " + type);
                     if (type == Type.table) {
                         DebugUtils.println(" (selected)");

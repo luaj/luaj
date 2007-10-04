@@ -539,7 +539,7 @@ public class StrLib {
 			if ( !repl.luaAsBoolean() ) {
 				repl = s.substring( soffset, end );
 			} else if ( ! ( repl instanceof LString || repl instanceof LNumber ) ) {
-				vm.lua_error( "invalid replacement value (a "+repl.luaGetType()+")" );
+				vm.lua_error( "invalid replacement value (a "+repl.luaGetTypeName()+")" );
 			}
 			vm.lua_pop( 1 );
 			lbuf.append( repl.luaAsString() );

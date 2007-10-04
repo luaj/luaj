@@ -1,7 +1,8 @@
 package lua.value;
 
+import lua.Lua;
+
 public class LUserData extends LValue {
-	public static final LString TYPE_NAME = new LString(Type.userdata.toString());
 	
 	public final Object m_instance;
 	public LTable m_metatable;
@@ -23,8 +24,8 @@ public class LUserData extends LValue {
 		return System.identityHashCode( m_instance );
 	}
 
-	public LString luaGetType() {
-		return TYPE_NAME;
+	public int luaGetType() {
+		return Lua.LUA_TUSERDATA;
 	}
 	
 	public LTable luaGetMetatable() {

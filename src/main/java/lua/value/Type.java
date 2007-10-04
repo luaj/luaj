@@ -47,16 +47,17 @@ public class Type implements Serializable, Comparable {
     protected static int ORDINAL = 0;
     
     private String name;
+    private LString lname;
     private int ordinal;
     Type(String name) {
         this.name = name;
+        this.lname = new LString(name);
         this.ordinal = ORDINAL++;
     }
     
     /* (non-Javadoc)
      * @see java.lang.Enum#toString()
      */
-    @Override
     public String toString() {
         return name;
     }
@@ -78,4 +79,8 @@ public class Type implements Serializable, Comparable {
     public int compareTo(Object o) {
         return this.ordinal - ((Type)o).ordinal;
     }
+
+	public LString toLString() {
+		return lname;
+	}
 }

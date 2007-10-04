@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import lua.Lua;
 import lua.io.Proto;
 import lua.value.LBoolean;
 import lua.value.LNil;
@@ -35,17 +36,6 @@ public class DumpState {
 	private static final int SIZEOF_INSTRUCTION = 4;
 	private static final int SIZEOF_LUA_NUMBER = 8;
 	private static final int IS_NUMBER_INTEGRAL = 0;
-
-	// types of lua constants
-	private static final int LUA_TNIL		= 0;
-	private static final int LUA_TBOOLEAN		= 1;
-	private static final int LUA_TLIGHTUSERDATA	= 2;
-	private static final int LUA_TNUMBER		= 3;
-	private static final int LUA_TSTRING		= 4;
-	private static final int LUA_TTABLE		= 5;
-	private static final int LUA_TFUNCTION		= 6;
-	private static final int LUA_TUSERDATA		= 7;
-	private static final int LUA_TTHREAD		= 8;
 
 	DataOutputStream writer;
 	boolean strip;
@@ -94,16 +84,16 @@ public class DumpState {
 		for (i = 0; i < n; i++) {
 			final LValue o = f.k[i];
 			if (o == LNil.NIL) {
-				writer.write(LUA_TNIL);
+				writer.write(Lua.LUA_TNIL);
 				// do nothing more
 			} else if (o instanceof LBoolean) {
-				writer.write(LUA_TBOOLEAN);
+				writer.write(Lua.LUA_TBOOLEAN);
 				dumpChar(o.luaAsBoolean() ? 1 : 0);
 			} else if (o instanceof LNumber) {
-				writer.write(LUA_TNUMBER);
+				writer.write(Lua.LUA_TNUMBER);
 				dumpNumber(o.luaAsDouble());
 			} else if (o instanceof LString) {
-				writer.write(LUA_TSTRING);
+				writer.write(Lua.LUA_TSTRING);
 				dumpString((LString) o);
 			} else {
 				throw new IllegalArgumentException("bad type for " + o);
