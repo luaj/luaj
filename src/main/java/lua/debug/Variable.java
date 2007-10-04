@@ -23,7 +23,7 @@ package lua.debug;
 
 import java.io.Serializable;
 
-import lua.value.Type;
+import lua.Lua;
 
 public class Variable implements Serializable {
     private static final long serialVersionUID = 8194091816623233934L;
@@ -31,9 +31,9 @@ public class Variable implements Serializable {
     protected int    index;
     protected String name;
     protected String value;
-    protected Type type;
+    protected int type;
     
-    public Variable(int index, String name, Type type, String value) {
+    public Variable(int index, String name, int type, String value) {
         this.index = index;
         this.name = name;
         this.type = type;
@@ -44,7 +44,7 @@ public class Variable implements Serializable {
         return this.name;
     }
 
-    public Type getType() {
+    public int getType() {
         return this.type;
     }
     
@@ -61,6 +61,6 @@ public class Variable implements Serializable {
      */
     @Override
     public String toString() {
-        return "index: " + getIndex() + " name:" + getName() + " type: " + getType() + " value:" + getValue();
+        return "index: " + getIndex() + " name:" + getName() + " type: " + Lua.TYPE_NAMES[getType()] + " value:" + getValue();
     }
 }

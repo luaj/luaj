@@ -21,9 +21,9 @@
 ******************************************************************************/
 package lua.debug;
 
+import lua.Lua;
 import lua.value.LTable;
 import lua.value.LValue;
-import lua.value.Type;
 
 public class TableVariable extends Variable {
     
@@ -31,7 +31,7 @@ public class TableVariable extends Variable {
     protected String[] keys;
     protected Object[] values;
     
-    public TableVariable(int index, String name, Type type, LTable table) {
+    public TableVariable(int index, String name, int type, LTable table) {
         super(index, name, type, null);
         
         int size = table.size();
@@ -43,7 +43,7 @@ public class TableVariable extends Variable {
             this.keys[i] = keyValues[i].toString();            
             LValue value = table.get(keyValues[i]);
             if (value instanceof LTable) {
-                this.values[i] = new TableVariable(i, "<table>", Type.table, (LTable)value);
+                this.values[i] = new TableVariable(i, "<table>", Lua.LUA_TTABLE, (LTable)value);
             } else {
                 this.values[i] = value.toString();
             }

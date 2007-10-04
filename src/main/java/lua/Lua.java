@@ -1,6 +1,5 @@
 package lua;
 
-import lua.value.Type;
 
 /**
  * Constants for lua limits and opcodes

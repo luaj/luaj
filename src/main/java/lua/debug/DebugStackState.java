@@ -29,13 +29,13 @@ import java.util.Map;
 import java.util.Set;
 
 import lua.CallInfo;
+import lua.Lua;
 import lua.StackState;
 import lua.addon.compile.LexState;
 import lua.io.LocVars;
 import lua.io.Proto;
 import lua.value.LTable;
 import lua.value.LValue;
-import lua.value.Type;
 
 public class DebugStackState extends StackState implements DebugRequestListener {
 
@@ -310,17 +310,17 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                 variablesSeen.add(varName);
                 LValue value = stack[callInfo.base + i];                
                 if (value != null) {
-                    Type type = Type.valueOf(value.luaGetTypeName().toJavaString());
+                    int type = value.luaGetType();
                     DebugUtils.print("\tType: " + type);
-                    if (type == Type.table) {
+                    if (type == Lua.LUA_TTABLE) {
                         DebugUtils.println(" (selected)");
                         variables.add(
                                 new TableVariable(localVariableCount++, 
                                              varName, 
                                              type, 
                                              (LTable) value));                        
-                    } else if (type != Type.function &&
-                               type != Type.thread) {
+                    } else if (type != Lua.LUA_TFUNCTION &&
+                               type != LUA_TTHREAD) {
                         DebugUtils.println(" (selected)");
                         variables.add(
                                 new Variable(localVariableCount++, 
