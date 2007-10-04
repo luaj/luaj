@@ -1,4 +1,7 @@
 package lua;
+
+import lua.value.Type;
+
 /**
  * Constants for lua limits and opcodes
  * 
@@ -367,5 +370,16 @@ public class Lua {
 	public static final int LUA_TUSERDATA		= 7;
 	public static final int LUA_TTHREAD			= 8;
 
+	public static final String[] TYPE_NAMES = {
+		"nil", 
+		"boolean",
+		"lightuserdata",
+		"number",
+		"string",
+		"table",
+		"function",
+		"userdata",
+		"thread",
+	};
 
 }

@@ -64,7 +64,8 @@ public class Type implements Serializable, Comparable {
     
     public static Type valueOf(String strValue) {
         Type[] values = Type.VALUES;
-        for (Type value : values) {
+        for ( int i=0; i<values.length; i++ ) {
+        	Type value = values[i];
             if (value.toString().equals(strValue)) {
                 return value;
             }

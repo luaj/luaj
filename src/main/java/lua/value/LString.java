@@ -32,6 +32,15 @@ public class LString extends LValue {
 	
 	private static LTable s_stringMT;
 	
+	public static final LString[] LTYPENAMES;
+	
+	static {
+		int n = Lua.TYPE_NAMES.length;
+		LTYPENAMES = new LString[n];
+		for ( int i=0; i<n; i++ )
+			LTYPENAMES[i] = new LString(Lua.TYPE_NAMES[i]);
+	}
+	
 	/**
 	 * Construct a Lua string from the given Java string. Characters are encoded
 	 * using UTF-8.
