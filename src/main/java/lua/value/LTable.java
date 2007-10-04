@@ -235,14 +235,14 @@ public class LTable extends LValue {
 	 * as the C version in all cases, but that's ok because the length operation
 	 * on a table where the integer keys are sparse is vaguely defined.
 	 */
-	public LValue luaLength() {
+	public int luaLength() {
 		for ( int i = Math.max( 0, m_arrayEntries-1 ); i < m_vector.length; ++i ) {
 			if ( m_vector[i] != LNil.NIL &&
 					( i+1 == m_vector.length || m_vector[i+1] == LNil.NIL ) ) {
-				return LInteger.valueOf( i+1 );
+				return i+1;
 			}
 		}
-		return LInteger.valueOf( 0 );
+		return 0;
 	}
 	
 	/** Valid for tables */

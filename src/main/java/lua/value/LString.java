@@ -290,8 +290,8 @@ public class LString extends LValue {
 	}
 	
 	/** Built-in opcode LEN, for Strings and Tables */
-	public LValue luaLength() {
-		return LInteger.valueOf( length() );
+	public int luaLength() {
+		return m_length;
 	}
 
 	public int luaGetType() {

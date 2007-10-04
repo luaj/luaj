@@ -146,9 +146,10 @@ public class LValue {
 	}
 
 	/** Built-in opcode LEN, for Strings and Tables */
-	public LValue luaLength() {
+	public int luaLength() {
 		// TODO: call meta-method TM_LEN here
-		return luaUnsupportedOperation();
+		luaUnsupportedOperation();
+		return 0;
 	}
 
 	/** Valid for tables 

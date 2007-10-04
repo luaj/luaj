@@ -585,7 +585,7 @@ public class LuaCompat extends LFunction {
 		if ( i == 0 )
 			i = 1;
 		if ( j == 0 )
-			j = list.luaLength().luaAsInt();
+			j = list.luaLength();
 		vm.setResult();
 		for ( int k=i; k<=j; k++ ) 
 			vm.push( list.get(k) );
