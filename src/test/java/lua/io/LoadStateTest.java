@@ -55,7 +55,7 @@ public class LoadStateTest extends TestCase {
 		int valueAsInt = (int) value;
 		
 		if ( value == (double) valueAsInt ) {
-			return new LInteger( valueAsInt );
+			return LInteger.valueOf( valueAsInt );
 		} else {
 			return new LDouble( value );
 		}

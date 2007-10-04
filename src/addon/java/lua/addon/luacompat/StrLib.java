@@ -36,7 +36,7 @@ public class StrLib {
 			return;
 		int n = j - i + 1;
 		for ( int k=0; k < n; k++ )
-			vm.push( new LInteger( ls.luaByte(k+i-1) ) );
+			vm.push( LInteger.valueOf( ls.luaByte(k+i-1) ) );
 	}
 
 	/** 
@@ -252,7 +252,7 @@ public class StrLib {
 		lbuf.append( src.substring( soffset, srclen ) );
 		vm.setResult();
 		vm.push( lbuf.toLuaString() );
-		vm.push( new LInteger( n ) );
+		vm.push( LInteger.valueOf( n ) );
 	}
 	
 	/** 
@@ -262,7 +262,7 @@ public class StrLib {
 	 * Embedded zeros are counted, so "a\000bc\000" has length 5. 
 	 */
 	static void len( VM vm ) {		
-		vm.setResult( new LInteger( vm.getArgAsLuaString(0).length()) );
+		vm.setResult( LInteger.valueOf( vm.getArgAsLuaString(0).length()) );
 	}
 
 	/** 
@@ -566,7 +566,7 @@ public class StrLib {
 					vm.lua_error( "unfinished capture" );
 				}
 				if ( l == CAP_POSITION ) {
-					vm.push( new LInteger( cinit[i] + 1 ) );
+					vm.push( LInteger.valueOf( cinit[i] + 1 ) );
 				} else {
 					int begin = cinit[i];
 					vm.push( s.substring( begin, begin + l ) );

@@ -48,7 +48,7 @@ public class LTableTest extends TestCase {
 		for ( int i = 0; i < 10; ++i ) {
 			LString str = new LString( String.valueOf( i ) );
 			t.put( i, str );
-			t.put( str, new LInteger( i ) );
+			t.put( str, LInteger.valueOf( i ) );
 		}
 		
 		assertTrue( t.getArrayCapacity() >= 9 ); // 1, 2, ..., 9
@@ -105,7 +105,7 @@ public class LTableTest extends TestCase {
 		t.put( "test", LNil.NIL );
 		assertEquals( 0, t.size() );
 		
-		t.put( 10, new LInteger( 5 ) );
+		t.put( 10, LInteger.valueOf( 5 ) );
 		t.put( 10, LNil.NIL );
 		assertEquals( 0, t.size() );
 	}
@@ -114,7 +114,7 @@ public class LTableTest extends TestCase {
 		LTable t = new LTable(0, 1);
 		
 		t.put( "test", new LString("foo") );
-		t.put( "string", new LInteger( 10 ) );
+		t.put( "string", LInteger.valueOf( 10 ) );
 		assertEquals( 2, t.size() );
 		
 		t.put( "string", LNil.NIL );
@@ -124,7 +124,7 @@ public class LTableTest extends TestCase {
 		t.put( "test", LNil.NIL );
 		assertEquals( 1, t.size() );
 		
-		t.put( 10, new LInteger( 5 ) );
+		t.put( 10, LInteger.valueOf( 5 ) );
 		assertEquals( 2, t.size() );
 		
 		t.put( 10, LNil.NIL );

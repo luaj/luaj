@@ -256,7 +256,7 @@ public class LString extends LValue {
 		if ( base >= 2 && base <= 36 ) {
 			String str = toJavaString().trim();
 			try {
-				return new LInteger( Integer.parseInt( str, base ) );
+				return LInteger.valueOf( Integer.parseInt( str, base ) );
 			} catch ( NumberFormatException nfe ) {
 				if ( base == 10 ) {
 					try {
@@ -284,7 +284,7 @@ public class LString extends LValue {
 	
 	/** Built-in opcode LEN, for Strings and Tables */
 	public LValue luaLength() {
-		return new LInteger( length() );
+		return LInteger.valueOf( length() );
 	}
 
 	public LString luaGetType() {

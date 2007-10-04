@@ -5,7 +5,24 @@ import lua.Lua;
 public class LInteger extends LNumber {
 	private final int m_value;
 	
-	public LInteger(int value) {
+	/* local cache of commonly used LInteger values */
+	private static final int INTS_MIN =  -16;
+	private static final int INTS_MAX  =  32;
+	private static final LInteger s_ints[] = new LInteger[1+INTS_MAX-INTS_MIN];
+	static {
+		for ( int i=INTS_MIN; i<=INTS_MAX; i++ )
+			s_ints[i-INTS_MIN] = new LInteger(i);
+	}
+	
+	/** Get an LInteger corresponding to a particular int value */
+	public static LInteger valueOf(int n) {
+		if ( n >= INTS_MIN && n <= INTS_MAX )
+			return s_ints[n-INTS_MIN];
+		return new LInteger(n);
+	}
+
+	/** use LInteger.valueOf() instead */
+	private LInteger(int value) {
 		this.m_value = value;
 	}
 	
@@ -37,12 +54,12 @@ public class LInteger extends LNumber {
 	// binary operations on integers
 	public LValue luaBinOpInteger(int opcode, int rhs) {
 		switch ( opcode ) {
-		case Lua.OP_ADD: return new LInteger( m_value + rhs );
-		case Lua.OP_SUB: return new LInteger( m_value - rhs );
-		case Lua.OP_MUL: return new LInteger( m_value * rhs );
-		case Lua.OP_DIV: return new LInteger( m_value / rhs );
-		case Lua.OP_MOD: return new LInteger( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
-		case Lua.OP_POW: return new LInteger( ipow(m_value, rhs) );
+		case Lua.OP_ADD: return LInteger.valueOf( m_value + rhs );
+		case Lua.OP_SUB: return LInteger.valueOf( m_value - rhs );
+		case Lua.OP_MUL: return LInteger.valueOf( m_value * rhs );
+		case Lua.OP_DIV: return LInteger.valueOf( m_value / rhs );
+		case Lua.OP_MOD: return LInteger.valueOf( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
+		case Lua.OP_POW: return LInteger.valueOf( ipow(m_value, rhs) );
 		}
 		return luaUnsupportedOperation();
 	}
@@ -83,8 +100,7 @@ public class LInteger extends LNumber {
 
 	/** Arithmetic negative */
 	public LValue luaUnaryMinus() {
-		return new LInteger( -m_value );
+		return LInteger.valueOf( -m_value );
 	}
-
 
 }

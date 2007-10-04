@@ -375,7 +375,7 @@ public class LuaCompat extends LFunction {
 				return;
 			}
 		} else if ( arg.luaAsString().equals( "#" ) ) {
-			vm.setResult( new LInteger( vm.getArgCount() - 1 ) );
+			vm.setResult( LInteger.valueOf( vm.getArgCount() - 1 ) );
 		}
 		vm.setResult();
 	}
@@ -516,7 +516,7 @@ public class LuaCompat extends LFunction {
 		String filename = vm.getArgAsString(0);
 		if ( loadfile( vm, filename ) ) {
 			int s = vm.lua_pcall(1, 0);
-			vm.setResult( new LInteger( s!=0? 1: 0 ) );
+			vm.setResult( LInteger.valueOf( s!=0? 1: 0 ) );
 		} else {
 			vm.lua_error("cannot open "+filename);
 		}
@@ -709,7 +709,7 @@ public class LuaCompat extends LFunction {
 	 */ 
 	private void maxn(VM vm) {
 		LTable table = (LTable) vm.getArg(0);
-		vm.setResult( new LInteger( table.luaMaxN() ) );
+		vm.setResult( LInteger.valueOf( table.luaMaxN() ) );
 	}
 
 

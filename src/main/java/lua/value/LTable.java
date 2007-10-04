@@ -163,7 +163,7 @@ public class LTable extends LValue {
 		int slot = findSlot( key );
 		if ( fillHashSlot( slot, value ) )
 			return;
-		m_hashKeys[ slot ] = new LInteger( key );
+		m_hashKeys[ slot ] = LInteger.valueOf( key );
 	}
 	
 	
@@ -241,10 +241,10 @@ public class LTable extends LValue {
 		for ( int i = Math.max( 0, m_arrayEntries-1 ); i < m_vector.length; ++i ) {
 			if ( m_vector[i] != LNil.NIL &&
 					( i+1 == m_vector.length || m_vector[i+1] == LNil.NIL ) ) {
-				return new LInteger( i+1 );
+				return LInteger.valueOf( i+1 );
 			}
 		}
-		return new LInteger( 0 );
+		return LInteger.valueOf( 0 );
 	}
 	
 	/** Valid for tables */
@@ -289,7 +289,7 @@ public class LTable extends LValue {
 			int i;
 			while ( ( i = arrayIndex++ ) < m_vector.length ) {
 				if ( m_vector[i] != LNil.NIL ) {
-					vm.push( new LInteger( arrayIndex ) );
+					vm.push( LInteger.valueOf( arrayIndex ) );
 					vm.push( m_vector[ i ] );
 					return false;
 				}
@@ -319,7 +319,7 @@ public class LTable extends LValue {
 		
 		for ( int i = 0; i < m_vector.length; ++i ) {
 			if ( m_vector[ i ] != LNil.NIL ) {
-				keys[ out++ ] = new LInteger( i + 1 );
+				keys[ out++ ] = LInteger.valueOf( i + 1 );
 			}
 		}
 		
@@ -496,7 +496,7 @@ public class LTable extends LValue {
 					if (checkLoadFactor())
 						rehash();
 					final int slot = findSlot( i+1 );
-					m_hashKeys[ slot ] = new LInteger( i+1 );
+					m_hashKeys[ slot ] = LInteger.valueOf( i+1 );
 					m_hashValues[ slot ] = v;
 					++m_hashEntries;
 				}

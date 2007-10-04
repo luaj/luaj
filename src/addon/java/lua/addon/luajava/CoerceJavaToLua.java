@@ -29,7 +29,7 @@ public class CoerceJavaToLua {
 		Coercion intCoercion = new Coercion() {
 			public LValue coerce( Object javaValue ) {
 				Number n = (Number) javaValue;
-				return new LInteger( n.intValue() );
+				return LInteger.valueOf( n.intValue() );
 			} 
 		} ;
 		Coercion doubleCoercion = new Coercion() {

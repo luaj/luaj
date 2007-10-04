@@ -677,7 +677,7 @@ public class LexState extends LuaC {
 				_nval = r;
 			}
 			public LNumber nval() {
-				return (_nval == null? new LInteger(s.info): _nval);
+				return (_nval == null? LInteger.valueOf(s.info): _nval);
 			}
 		};
 		final U u = new U();
@@ -1621,7 +1621,7 @@ public class LexState extends LuaC {
 		if (this.testnext(','))
 			this.exp1(); /* optional step */
 		else { /* default step = 1 */
-			fs.codeABx(Lua.OP_LOADK, fs.freereg, fs.numberK(new LInteger(1)));
+			fs.codeABx(Lua.OP_LOADK, fs.freereg, fs.numberK(LInteger.valueOf(1)));
 			fs.reserveregs(1);
 		}
 		this.forbody(base, line, 1, true);

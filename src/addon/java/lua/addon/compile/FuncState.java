@@ -435,7 +435,7 @@ public class FuncState extends LuaC {
 			double d = r.luaAsDouble();
 			int i = (int) d;
 			if ( d == (double) i ) 
-				r = new LInteger(i);
+				r = LInteger.valueOf(i);
 		}
 		return this.addk(r);
 	}

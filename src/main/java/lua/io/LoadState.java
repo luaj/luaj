@@ -107,7 +107,7 @@ public class LoadState {
 	
 	static LNumber longBitsToLuaNumber( long bits ) {
 		if ( ( bits & ( ( 1L << 63 ) - 1 ) ) == 0L ) {
-			return new LInteger( 0 );
+			return LInteger.valueOf( 0 );
 		}
 		
 		int e = (int)((bits >> 52) & 0x7ffL) - 1023;
@@ -118,7 +118,7 @@ public class LoadState {
 			long intPrecMask = ( 1L << shift ) - 1;
 			if ( ( f & intPrecMask ) == 0 ) {
 				int intValue = (int)( f >> shift ) | ( 1 << e );
-				return new LInteger( ( ( bits >> 63 ) != 0 ) ? -intValue : intValue );
+				return LInteger.valueOf( ( ( bits >> 63 ) != 0 ) ? -intValue : intValue );
 			}
 		}
 		
@@ -129,7 +129,7 @@ public class LoadState {
 	LNumber loadNumber() throws IOException {
 		if ( this.luacIsNumberIntegral ) {
 			int value = loadInt();
-			return new LInteger( value );
+			return LInteger.valueOf( value );
 		} else {
 			return longBitsToLuaNumber( loadInt64() );
 		}
