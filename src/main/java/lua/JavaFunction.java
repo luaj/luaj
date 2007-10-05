@@ -69,6 +69,6 @@ abstract public class JavaFunction extends LFunction {
 	 */
 	public boolean luaStackCall(VM vm) {
 		vm.invokeJavaFunction( this );
-		return true;
+		return false;
 	}
 }

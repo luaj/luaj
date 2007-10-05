@@ -457,7 +457,7 @@ public interface VM {
 	 * index. If the index is not valid, or if the value does not have a
 	 * metatable, the function returns&nbsp;0 and pushes nothing on the stack.
 	 */
-	public void getmetatable(int index);
+	public int getmetatable(int index);
 
 	/**
 	 * Dereference a table's list element. <span class="apii">[-1, +1,
@@ -930,6 +930,18 @@ public interface VM {
 	 */
 	public void pushlstring(byte[] bytes, int offset, int length);
 
+	/** 
+	 * Push an LValue onto the stack. <span class="apii">[-0, +1,
+	 * <em>m</em>]</span>
+	 */
+	public void pushlvalue(LValue v);
+
+	/** 
+	 * Push an LString onto the stack. <span class="apii">[-0, +1,
+	 * <em>m</em>]</span>
+	 */
+	public void pushlstring(LString luaGetTypeName);
+	
 	/**
 	 * Pushes a nil value onto the stack. <span class="apii">[-0, +1, <em>-</em>]</span>
 	 * 
