@@ -6,13 +6,10 @@ package lua;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import lua.value.LBoolean;
-import lua.value.LFunction;
-import lua.value.LNil;
 import lua.value.LTable;
 import lua.value.LValue;
 
-final class Builtin extends LFunction {
+final class Builtin extends JavaFunction {
 
 	static void addBuiltins(LTable table) {
 		for ( int i=0; i<NAMES.length; i++ )
@@ -48,50 +45,55 @@ final class Builtin extends LFunction {
 	}
 	
 	// perform a lua call
-	public boolean luaStackCall(VM vm) {
+	/**
+	 * Invoke a builtin
+	 */
+	public int invoke(VM vm) {
 		switch ( id ) {
 		case PRINT: {
-				int n = vm.getArgCount();
-				for ( int i=0; i<n; i++ ) {
-					if ( i > 0 )
-						stdout.print( "\t" );
-					stdout.print( vm.getArg(i).luaAsString() );
-				}
-				stdout.println();
-				vm.setResult();
+			int n = vm.gettop();
+			for ( int i=1; i<=n; i++ ) {
+				if ( i > 1 )
+					stdout.print( "\t" );
+				stdout.print( vm.topointer(i).luaAsString() );
 			}
-			break;
+			stdout.println();
+			return 0;
+		}
 		case PAIRS:
-		case IPAIRS:
-			vm.setResult( vm.getArg(0).luaPairs(id==PAIRS) );
-			break;
+		case IPAIRS: {
+			LValue v = vm.topointer(1);
+			LValue r = v.luaPairs(id==PAIRS);
+			vm.pushlvalue( r );
+			return 1;
+		}
 		case GETMETATABLE:
-			vm.setResult( vm.getArg(0).luaGetMetatable() );
-			break;
+			return vm.getmetatable(1);
 		case SETMETATABLE:
-			LValue t = vm.getArg(0);
-			t.luaSetMetatable(vm.getArg(1));
-			vm.setResult( t );
-			break;
-		case TYPE:
-			vm.setResult( vm.getArg(0).luaGetTypeName() );
-			break;
+			vm.setmetatable(1);
+			return 1;
+		case TYPE: {
+			LValue v = vm.topointer(1);
+			vm.pushlstring( v.luaGetTypeName() );
+			return 1;
+		}
 		case PCALL: {
-				int n = vm.getArgCount();
-				int s = vm.pcall( n-1, Lua.LUA_MULTRET, 0 );
-				if ( s != 0 ) {
-					LValue v = vm.topointer(-1);
-					vm.setResult( LBoolean.FALSE );
-					vm.push( v );
-				} else {
-					vm.setResult( LBoolean.TRUE );
-				}
+			int n = vm.gettop();
+			int s = vm.pcall( n-1, Lua.LUA_MULTRET, 0 );
+			if ( s == 0 ) { // success
+				vm.pushboolean( true );
+				vm.insert( 1 );
+				return vm.gettop();
+			} else { // error, error message is on the stack
+				vm.pushboolean( false );
+				vm.insert( -2 );
+				return 2;
 			}
-			break;
+		}
 		default:
 			luaUnsupportedOperation();
+			return 0;
 		}
-		return false;
 	}
 	
 	static void redirectOutput( OutputStream newStdOut ) {
