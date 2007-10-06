@@ -52,6 +52,11 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	public DebugStackState() {
 	}
 	
+    protected void debugAssert(boolean b) {
+    	if ( ! b ) 
+    		error( "assert failure" );
+    }
+
     public void addDebugEventListener(DebugEventListener listener) {
         if (!debugEventListeners.contains(listener)) {
             debugEventListeners.add(listener);

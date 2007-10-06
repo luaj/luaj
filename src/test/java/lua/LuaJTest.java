@@ -5,9 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import junit.framework.TestCase;
-import lua.StackState;
 import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
+import lua.debug.DebugStackState;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -16,11 +16,6 @@ import lua.value.LValue;
 
 public class LuaJTest extends TestCase {
 
-	/*
-	public void testTest6() throws IOException, InterruptedException {
-		runTest( "test6" );
-	}
-/*/
 	public void testTest1() throws IOException, InterruptedException {
 		runTest( "test1" );
 	}
@@ -100,7 +95,7 @@ public class LuaJTest extends TestCase {
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
 	}
-	//*/
+
 	private void runTest( String testName ) throws IOException, InterruptedException {
 		
 		// Reset the _G table just in case some test mucks with it
@@ -113,7 +108,7 @@ public class LuaJTest extends TestCase {
 		LuaCompat.install();
 		
 		// new lua state 
-		StackState state = new StackState();
+		StackState state = new DebugStackState();
 		
 		// load the file
 		Proto p = loadScriptResource( state, testName );
@@ -162,13 +157,14 @@ public class LuaJTest extends TestCase {
 				is.close();
 			}
 		} else {
-			InputStream script = getClass().getResourceAsStream( "/" + testName + ".luac" );
-			if ( script == null ) {
+			InputStream script;
+//			script = getClass().getResourceAsStream( "/" + testName + ".luac" );
+//			if ( script == null ) {
 				script = getClass().getResourceAsStream( "/" + testName + ".lua" );
 				if ( script == null ) {
 					fail( "Could not find script for test case: "+testName );
 				}
-			}
+//			}
 			try {
 				return collectProcessOutput( new String[] { "lua", "-" }, script );
 			} finally {
