@@ -21,6 +21,9 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lua.Lua;
 import lua.value.LTable;
 import lua.value.LValue;
@@ -36,19 +39,28 @@ public class TableVariable extends Variable {
         
         int size = table.size();
         DebugUtils.println("table size:" + size);
-        this.keys = new String[size];  
-        this.values = new Object[size];
+        List keyArray = new ArrayList();  
+        List valueArray = new ArrayList();
         LValue[] keyValues = table.getKeys();        
         for (int i = 0; i < size; i++) {
-            this.keys[i] = keyValues[i].toString();            
+        	
             LValue value = table.get(keyValues[i]);
-            if (value instanceof LTable) {
-                this.values[i] = new TableVariable(i, "<table>", Lua.LUA_TTABLE, (LTable)value);
-            } else {
-                this.values[i] = value.toString();
+            if (value == table) {
+            	continue;
             }
-            DebugUtils.println("["+ keys[i] + "," + values[i].toString() + "]");
+            
+            keyArray.add(keyValues[i].toString());
+            if (value instanceof LTable) {
+            	DebugUtils.println("table: value[" + i + "]=" + value.toString());
+            	valueArray.add(new TableVariable(i, "element[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
+            } else {
+                valueArray.add(value.toString());
+            }
+            DebugUtils.println("["+ keyValues[i].toString() + "," + value.toString() + "]");            	
         }
+        
+        this.keys = (String[])keyArray.toArray(new String[0]);
+        this.values = valueArray.toArray();
     }
     
     public String[] getKeys() {
