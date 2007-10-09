@@ -223,11 +223,10 @@ public class LTable extends LValue {
 	}
 	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
-		if ( !containsKey( key ) && m_metatable != null ) {
-			super.luaSetTable( vm, table, key, val );
-		} else {
-			put(key, val);
-		}
+		if ( (!containsKey( key )) && m_metatable != null && m_metatable.containsKey(TM_NEWINDEX) )
+			m_metatable.get(TM_NEWINDEX).luaSetTable( vm, table, key, val );
+		else
+			put(key,val);
 	}
 	
 	/**

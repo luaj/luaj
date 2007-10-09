@@ -80,6 +80,10 @@ public class LuaJTest extends TestCase {
 		runTest( "setlist" );
 	}
 	
+	public void testSimpleMetatables() throws IOException, InterruptedException {
+		runTest( "simplemetatables" );
+	}
+	
 	public void testStrLib() throws IOException, InterruptedException {
 		runTest( "strlib" );
 	}
