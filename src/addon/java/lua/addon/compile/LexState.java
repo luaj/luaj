@@ -2,7 +2,6 @@ package lua.addon.compile;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Hashtable;
 
 import lua.Lua;
@@ -23,8 +22,7 @@ public class LexState extends LuaC {
     protected static final String RESERVED_LOCAL_VAR_FOR_LIMIT = "(for limit)";
     protected static final String RESERVED_LOCAL_VAR_FOR_INDEX = "(for index)";
     
-    // sorted keywords array
-    // must keep it sorted, or binary search will fail
+    // keywords array
     protected static final String[] RESERVED_LOCAL_VAR_KEYWORDS = new String[] {
         RESERVED_LOCAL_VAR_FOR_CONTROL,
         RESERVED_LOCAL_VAR_FOR_GENERATOR,
@@ -33,6 +31,11 @@ public class LexState extends LuaC {
         RESERVED_LOCAL_VAR_FOR_STATE,
         RESERVED_LOCAL_VAR_FOR_STEP
     };
+    private static final Hashtable RESERVED_LOCAL_VAR_KEYWORDS_TABLE = new Hashtable();
+    static {
+    	for ( int i=0; i<RESERVED_LOCAL_VAR_KEYWORDS.length; i++ )
+        	RESERVED_LOCAL_VAR_KEYWORDS_TABLE.put( RESERVED_LOCAL_VAR_KEYWORDS[i], Boolean.TRUE );
+    }
                                
     private static final int EOZ    = (-1);
 	private static final int MAXSRC = 80;
@@ -48,8 +51,7 @@ public class LexState extends LuaC {
 	private static final boolean LUA_COMPAT_VARARG = true;	
     
     public static boolean isReservedKeyword(String varName) {
-        int index = Arrays.binarySearch(RESERVED_LOCAL_VAR_KEYWORDS, varName);
-        return index >= 0;
+    	return RESERVED_LOCAL_VAR_KEYWORDS_TABLE.containsKey(varName);
     }
     
 	/*
