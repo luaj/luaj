@@ -146,7 +146,7 @@ public final class LuaJava extends LFunction {
 				throw new RuntimeException(e);
 			}
 		}
-		@Override
+		
 		public boolean luaStackCall(VM vm) {
 			// TODO Auto-generated method stub
 			return super.luaStackCall(vm);
@@ -185,41 +185,42 @@ public final class LuaJava extends LFunction {
 		}
 	}
 
-	private static Map<Class,Map<ParamsList,Constructor>> consCache =
-		new HashMap<Class,Map<ParamsList,Constructor>>();
+	private static Map consCache =
+		new HashMap();
 	
-	private static Map<Class,Map<Integer,List<Constructor>>> consIndex =
-		new HashMap<Class,Map<Integer,List<Constructor>>>();
+	private static Map consIndex =
+		new HashMap();
 	
 	private static Constructor resolveConstructor(Class clazz, ParamsList params ) {
 
 		// get the cache
-		Map<ParamsList,Constructor> cache = consCache.get( clazz );
+		Map cache = (Map) consCache.get( clazz );
 		if ( cache == null )
-			consCache.put( clazz, cache = new HashMap<ParamsList,Constructor>() );
+			consCache.put( clazz, cache = new HashMap() );
 		
 		// look up in the cache
-		Constructor c = cache.get( params );
+		Constructor c = (Constructor) cache.get( params );
 		if ( c != null )
 			return c;
 
 		// get index
-		Map<Integer,List<Constructor>> index = consIndex.get( clazz );
+		Map index = (Map) consIndex.get( clazz );
 		if ( index == null ) {
-			consIndex.put( clazz, index = new HashMap<Integer,List<Constructor>>() );
+			consIndex.put( clazz, index = new HashMap() );
 			Constructor[] cons = clazz.getConstructors();
-			for ( Constructor con : cons ) {
-				int n = con.getParameterTypes().length;
-				List<Constructor> list = index.get(n);
+			for ( int i=0; i<cons.length; i++ ) {
+				Constructor con = cons[i];
+				Integer n = Integer.valueOf( con.getParameterTypes().length );
+				List list = (List) index.get(n);
 				if ( list == null )
-					index.put( n, list = new ArrayList<Constructor>() );
+					index.put( n, list = new ArrayList() );
 				list.add( con );
 			}
 		}
 		
 		// figure out best list of arguments == supplied args
-		int n = params.classes.length;
-		List<Constructor> list = index.get(n);
+		Integer n = Integer.valueOf( params.classes.length );
+		List list = (List) index.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no constructor with "+n+" args");
 
@@ -227,7 +228,7 @@ public final class LuaJava extends LFunction {
 		int bests = Integer.MAX_VALUE;
 		int besti = 0;
 		for ( int i=0, size=list.size(); i<size; i++ ) {
-			Constructor con = list.get(i);
+			Constructor con = (Constructor) list.get(i);
 			int s = CoerceLuaToJava.scoreParamTypes(params.values, con.getParameterTypes());
 			if ( s < bests ) {
 				 bests = s;
@@ -236,57 +237,58 @@ public final class LuaJava extends LFunction {
 		}
 		
 		// put into cache
-		c = list.get(besti);
+		c = (Constructor) list.get(besti);
 		cache.put( params, c );
 		return c;
 	}
 
 	
-	private static Map<Class,Map<String,Map<ParamsList,Method>>> methCache = 
-		new HashMap<Class,Map<String,Map<ParamsList,Method>>>();
+	private static Map methCache = 
+		new HashMap();
 	
-	private static Map<Class,Map<String,Map<Integer,List<Method>>>> methIndex = 
-		new HashMap<Class,Map<String,Map<Integer,List<Method>>>>();
+	private static Map methIndex = 
+		new HashMap();
 
 	private static Method resolveMethod(Class clazz, String methodName, ParamsList params ) {
 
 		// get the cache
-		Map<String,Map<ParamsList,Method>> nameCache = methCache.get( clazz );
+		Map nameCache = (Map) methCache.get( clazz );
 		if ( nameCache == null )
-			methCache.put( clazz, nameCache = new HashMap<String,Map<ParamsList,Method>>() );
-		Map<ParamsList,Method> cache = nameCache.get( methodName );
+			methCache.put( clazz, nameCache = new HashMap() );
+		Map cache = (Map) nameCache.get( methodName );
 		if ( cache == null )
-			nameCache.put( methodName, cache = new HashMap<ParamsList,Method>() );
+			nameCache.put( methodName, cache = new HashMap() );
 		
 		// look up in the cache
-		Method m = cache.get( params );
+		Method m = (Method) cache.get( params );
 		if ( m != null )
 			return m;
 
 		// get index
-		Map<String,Map<Integer,List<Method>>> index = methIndex.get( clazz );
+		Map index = (Map) methIndex.get( clazz );
 		if ( index == null ) {
-			methIndex.put( clazz, index = new HashMap<String,Map<Integer,List<Method>>>() );
+			methIndex.put( clazz, index = new HashMap() );
 			Method[] meths = clazz.getMethods();
-			for ( Method meth : meths ) {
+			for ( int i=0; i<meths.length; i++ ) {
+				Method meth = meths[i];
 				String s = meth.getName();
-				int n = meth.getParameterTypes().length;
-				Map<Integer,List<Method>> map = index.get(s);
+				Integer n = Integer.valueOf(meth.getParameterTypes().length);
+				Map map = (Map) index.get(s);
 				if ( map == null )
-					index.put( s, map = new HashMap<Integer,List<Method>>() );
-				List<Method> list = map.get(n);
+					index.put( s, map = new HashMap() );
+				List list = (List) map.get(n);
 				if ( list == null )
-					map.put( n, list = new ArrayList<Method>() );
+					map.put( n, list = new ArrayList() );
 				list.add( meth );
 			}
 		}
 		
 		// figure out best list of arguments == supplied args
-		Map<Integer,List<Method>> map = index.get(methodName);
+		Map map = (Map) index.get(methodName);
 		if ( map == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"'");
-		int n = params.classes.length;
-		List<Method> list = map.get(n);
+		Integer n = Integer.valueOf( params.classes.length );
+		List list = (List) map.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
 
@@ -294,7 +296,7 @@ public final class LuaJava extends LFunction {
 		int bests = Integer.MAX_VALUE;
 		int besti = 0;
 		for ( int i=0, size=list.size(); i<size; i++ ) {
-			Method meth = list.get(i);
+			Method meth = (Method) list.get(i);
 			int s = CoerceLuaToJava.scoreParamTypes(params.values, meth.getParameterTypes());
 			if ( s < bests ) {
 				 bests = s;
@@ -303,7 +305,7 @@ public final class LuaJava extends LFunction {
 		}
 		
 		// put into cache
-		m = list.get(besti);
+		m = (Method) list.get(besti);
 		cache.put( params, m );
 		return m;
 	}

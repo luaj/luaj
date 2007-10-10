@@ -17,7 +17,7 @@ public class CoerceJavaToLua {
 		public LValue coerce( Object javaValue );
 	};
 	
-	private static Map<Class,Coercion> COERCIONS = new HashMap<Class,Coercion>();
+	private static Map COERCIONS = new HashMap();
 	
 	static {
 		Coercion boolCoercion = new Coercion() {
@@ -56,7 +56,7 @@ public class CoerceJavaToLua {
 		if ( o == null )
 			return LNil.NIL;
 		Class clazz = o.getClass();
-		Coercion c = COERCIONS.get( clazz );
+		Coercion c = (Coercion) COERCIONS.get( clazz );
 		if ( c != null )
 			return c.coerce( o );
 		return new LInstance( o, o.getClass() );

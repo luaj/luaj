@@ -39,7 +39,7 @@ public class LoadStateTest extends TestCase {
 			long bits = Double.doubleToLongBits( v );
 			LNumber luaNumber = LoadState.longBitsToLuaNumber( bits );
 			
-			assertEquals( v, luaNumber.luaAsDouble() );
+			assertEquals( v, luaNumber.luaAsDouble(), 0 );
 			
 			if ( v != Integer.MIN_VALUE ) {
 				// Special case of MIN_VALUE is probably not worth dealing with.

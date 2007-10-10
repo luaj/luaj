@@ -19,7 +19,7 @@ public class CoerceLuaToJava {
 		public int score( LValue value );
 	};
 	
-	private static Map<Class,Coercion> COERCIONS = new HashMap<Class,Coercion>();
+	private static Map COERCIONS = new HashMap();
 	private static Coercion OBJECT_COERCION;
 	
 	static {
@@ -112,7 +112,7 @@ public class CoerceLuaToJava {
 	}
 	
 	static Object coerceArg(LValue v, Class type) {
-		Coercion co = COERCIONS.get( type );
+		Coercion co = (Coercion) COERCIONS.get( type );
 		if ( co != null )
 			return co.coerce( v );
 		if ( v instanceof LUserData )
@@ -144,7 +144,7 @@ public class CoerceLuaToJava {
 		for ( int i=0; i<nargs && i<njava; i++ ) {
 			LValue a = suppliedArgs[i];
 			Class c = paramTypes[i];
-			Coercion co = COERCIONS.get( c );
+			Coercion co = (Coercion) COERCIONS.get( c );
 			if ( co != null ) {
 				score += co.score( a );
 			} else if ( a instanceof LUserData ) {
