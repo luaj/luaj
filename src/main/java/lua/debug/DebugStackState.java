@@ -120,7 +120,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	
 	// debug hooks
 	public void debugHooks( int pc ) {
-        DebugUtils.println("entered debugHook...");
+        if(DebugUtils.IS_DEBUG)
+        	DebugUtils.println("entered debugHook...");
         
 		if ( exiting )
 			throw new AbortException("exiting");
@@ -129,7 +130,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             
 			// anytime the line doesn't change we keep going
 			int line = getLineNumber(calls[cc]);
-            DebugUtils.println("debugHook - executing line: " + line);
+	        if(DebugUtils.IS_DEBUG)
+	        	DebugUtils.println("debugHook - executing line: " + line);
 			if ( !stepping && lastline == line ) {
 				return;
             }
