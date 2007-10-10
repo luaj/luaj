@@ -21,15 +21,21 @@
 ******************************************************************************/
 package lua.debug;
 
-public enum DebugRequestType {
-    suspend,
-    resume,
-    exit, 
-    lineBreakpointSet, 
-    lineBreakpointClear,
-    watchpointSet,
-    watchpointClear,
-    callgraph, 
-    stack,
-    step
+public class DebugRequestType extends EnumType {
+	private static final long serialVersionUID = 2829883820534540402L;
+	
+	public static final DebugRequestType suspend = new DebugRequestType("suspend", 0);
+    public static final DebugRequestType resume = new DebugRequestType("resume", 1);
+    public static final DebugRequestType exit = new DebugRequestType("exit", 2); 
+    public static final DebugRequestType lineBreakpointSet = new DebugRequestType("lineBreakpointSet", 3); 
+    public static final DebugRequestType lineBreakpointClear = new DebugRequestType("lineBreakpointClear", 4);
+    public static final DebugRequestType watchpointSet = new DebugRequestType("watchpointSet", 5);
+    public static final DebugRequestType watchpointClear = new DebugRequestType("watchpointClear", 6);
+    public static final DebugRequestType callgraph = new DebugRequestType("callgraph", 7);
+    public static final DebugRequestType stack = new DebugRequestType("stack", 8);
+    public static final DebugRequestType step = new DebugRequestType("step", 9);
+    
+    public DebugRequestType(String name, int ordinal) {
+    	super(name, ordinal);
+    }
 }

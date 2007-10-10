@@ -29,10 +29,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class DebugSupport implements DebugEventListener {
-    public enum State {
-        UNKNOWN,
-        RUNNING,
-        STOPPED
+    public static class State extends EnumType {
+		private static final long serialVersionUID = 3657364516937093612L;
+		
+		public static final State UNKNOWN = new State("UNKNOWN", 0);
+        public static final State RUNNING = new State("RUNNING", 1);
+        public static final State STOPPED = new State("STOPPED", 2);
+        
+        public State(String name, int ordinal) {
+        	super(name, ordinal);
+        }
     }
     
     protected DebugRequestListener listener;

@@ -70,7 +70,6 @@ public class StackFrame implements Serializable {
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         return getSource() + ":" + getLineNumber();
     }

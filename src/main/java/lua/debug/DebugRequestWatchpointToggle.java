@@ -24,11 +24,17 @@ package lua.debug;
 public class DebugRequestWatchpointToggle extends DebugRequest {    
     private static final long serialVersionUID = -2978341358052851046L;
 
-    public enum AccessType {
-        Ignore,
-        Read,
-        Modify,
-        ReadAndModify
+    public static class AccessType extends EnumType {
+		private static final long serialVersionUID = 3523086189648091587L;
+		
+		public static final AccessType Ignore = new AccessType("Ignore", 0);
+        public static final AccessType Read = new AccessType("Read", 1);
+        public static final AccessType Modify = new AccessType("Modify", 2);
+        public static final AccessType ReadAndModify = new AccessType("ReadAndModify", 3);
+        
+        protected AccessType(String name, int ordinal) {
+        	super(name, ordinal);
+        }
     };
     
     protected String functionName;
@@ -37,7 +43,9 @@ public class DebugRequestWatchpointToggle extends DebugRequest {
     public DebugRequestWatchpointToggle(String functionName, 
                                         String variableName, 
                                         AccessType accessType) {        
-        super(accessType == AccessType.Ignore ? DebugRequestType.watchpointClear : DebugRequestType.watchpointSet);
+        super(accessType == AccessType.Ignore ? 
+              DebugRequestType.watchpointClear : 
+              DebugRequestType.watchpointSet);
         this.functionName = functionName;
         this.variableName = variableName;
     }
@@ -53,7 +61,6 @@ public class DebugRequestWatchpointToggle extends DebugRequest {
     /* (non-Javadoc)
      * @see lua.debug.DebugRequest#toString()
      */
-    @Override
     public String toString() {        
         return super.toString() + " functionName:" + getFunctionName() + " variableName:" + getVariableName();
     }

@@ -29,7 +29,7 @@ public class GlobalState {
 		resetGlobals();
 	}
 	
-	static void resetGlobals() {
+	static public void resetGlobals() {
 		_G = new LTable();
 		_G .put( "_G", _G );
 		Builtin.addBuiltins( _G  );

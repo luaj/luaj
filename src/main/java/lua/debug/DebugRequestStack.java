@@ -37,7 +37,6 @@ public class DebugRequestStack extends DebugRequest {
     /* (non-Javadoc)
      * @see lua.debug.DebugRequest#toString()
      */
-    @Override
     public String toString() {
         return super.toString() + " stack frame:" + getIndex();
     }

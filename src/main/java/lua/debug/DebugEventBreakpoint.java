@@ -43,7 +43,6 @@ public class DebugEventBreakpoint extends DebugEvent {
     /* (non-Javadoc)
      * @see lua.debug.DebugEvent#toString()
      */
-    @Override
     public String toString() {
         return super.toString() + " source:" + getSource() + " line:" + getLineNumber();
     }

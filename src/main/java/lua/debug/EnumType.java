@@ -21,28 +21,43 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DebugResponseSimple implements DebugResponse, Serializable {
-    private static final long serialVersionUID = 7042417813840650230L;
-
-    protected boolean isSuccessful;
-    
-    public static final DebugResponseSimple SUCCESS = new DebugResponseSimple(true);
-    public static final DebugResponseSimple FAILURE = new DebugResponseSimple(false);
-    
-    public DebugResponseSimple(boolean isSuccessful) {
-        this.isSuccessful = isSuccessful;
-    }
-    
-    public boolean isSuccessful() {
-        return this.isSuccessful;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
+public class EnumType implements Serializable {
+	private static final long serialVersionUID = -496099911938395074L;
+	
+	protected String name;
+	protected int ordinal;
+	protected static Map lookup = new HashMap();
+	
+	public EnumType(String name, int ordinal) {
+		this.name = name;
+		this.ordinal = ordinal;
+		lookup.put(name, this);
+	}
+	
     public String toString() {
-        return String.valueOf(isSuccessful);
+    	return this.name;
+    }
+    
+    public final boolean equals(Object other) { 
+        return (this == other);
+    }
+    
+    public final int hashCode() {
+        return System.identityHashCode(this);
+    }
+    
+    public final String name() {
+    	return this.name;
+    }
+    
+    public final int ordinal() {
+    	return this.ordinal;
     }
 }

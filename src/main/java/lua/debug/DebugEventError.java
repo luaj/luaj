@@ -37,7 +37,6 @@ public class DebugEventError extends DebugEvent {
     /* (non-Javadoc)
      * @see lua.debug.DebugEvent#toString()
      */
-    @Override
     public String toString() {
         return super.toString() + " detail: " + getDetail();
     }

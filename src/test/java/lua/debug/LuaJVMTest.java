@@ -24,10 +24,9 @@ package lua.debug;
 import java.net.URL;
 
 import junit.framework.TestCase;
-import lua.LuaJVM;
 
 /**
- * Sanity test for LuaJVM.
+ * Sanity test for StandardLuaJVM.
  */
 public class LuaJVMTest extends TestCase {
     protected void doTestRun(String testName) {
@@ -37,7 +36,7 @@ public class LuaJVMTest extends TestCase {
         if (filePath != null) {
             args[1] = filePath.getPath(); 
             try {
-                LuaJVM.main(args);
+                StandardLuaJVM.main(args);
             } catch (Exception e) {
                 e.printStackTrace();
                 fail("Test " + testName + " failed due to " + e.getMessage());
@@ -70,7 +69,8 @@ public class LuaJVMTest extends TestCase {
                 //"strlib"
         };
         
-        for (String test : tests) {
+        for (int i = 0; i < tests.length; i++) {
+        	String test = tests[i];
             System.out.println("==> running test: " + test + ".lua");
             doTestRun(test + ".lua");            
             System.out.println("==> running test: " + test + ".luac");

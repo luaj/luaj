@@ -34,17 +34,12 @@ public class DebugResponseCallgraph extends DebugResponseSimple {
         return this.stackFrames;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        if (this.stackFrames != null) {
-            for (StackFrame frame : stackFrames) {
-                buffer.append(frame.toString());
-                buffer.append("\n");
-            }
+        for (int i = 0; stackFrames != null && i < stackFrames.length; i++) {
+           StackFrame frame = stackFrames[i];
+           buffer.append(frame.toString());
+           buffer.append("\n");
         }
         return buffer.toString();
     }

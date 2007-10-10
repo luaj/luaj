@@ -41,13 +41,12 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
 	private static final boolean DEBUG = false;
     
-	protected Map<String,Boolean> breakpoints = new HashMap<String,Boolean>();
+	protected Map breakpoints = new HashMap();
     protected boolean exiting = false;
     protected boolean suspended = false;
     protected boolean stepping = false;
     protected int lastline = -1;
-    protected List<DebugEventListener> debugEventListeners 
-        = new ArrayList<DebugEventListener>();
+    protected List debugEventListeners = new ArrayList();
 	
 	public DebugStackState() {
 	}
@@ -70,9 +69,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     }
     
     protected void notifyDebugEventListeners(DebugEvent event) {
-        for (DebugEventListener listener : debugEventListeners) {
+    	for (int i = 0; debugEventListeners != null && i < debugEventListeners.size(); i++) {
+    		DebugEventListener listener = (DebugEventListener)debugEventListeners.get(i);
             listener.notifyDebugEvent(event);
-        }
+    	}
     }
     
 	private String getFileLine(int cindex) {
@@ -183,37 +183,38 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     
 	public DebugResponse handleRequest(DebugRequest request) {
         DebugUtils.println("DebugStackState is handling request: " + request.toString());
-    	switch (request.getType()) {
-    	case suspend: 
-            suspend(); 
+        DebugRequestType requestType = request.getType();    	
+    	if (DebugRequestType.suspend == requestType) { 
+            suspend();             
             return DebugResponseSimple.SUCCESS;
-    	case resume: 
+    	} else if (DebugRequestType.resume == requestType) { 
             resume(); 
             return DebugResponseSimple.SUCCESS;
-    	case exit: 
+    	} else if (DebugRequestType.exit == requestType) { 
             exit(); 
             return DebugResponseSimple.SUCCESS;
-    	case lineBreakpointSet:
+    	} else if (DebugRequestType.lineBreakpointSet == requestType) {
             DebugRequestLineBreakpointToggle setBreakpointRequest 
                 = (DebugRequestLineBreakpointToggle)request;
             setBreakpoint(setBreakpointRequest.getSource(), setBreakpointRequest.getLineNumber()); 
             return DebugResponseSimple.SUCCESS;
-    	case lineBreakpointClear:
+    	} else if (DebugRequestType.lineBreakpointClear == requestType) {
             DebugRequestLineBreakpointToggle clearBreakpointRequest 
                 = (DebugRequestLineBreakpointToggle)request;
             clearBreakpoint(clearBreakpointRequest.getSource(), clearBreakpointRequest.getLineNumber()); 
             return DebugResponseSimple.SUCCESS;
-    	case callgraph: 
+    	} else if (DebugRequestType.callgraph == requestType) { 
             return new DebugResponseCallgraph(getCallgraph());
-    	case stack: 
+    	} else if (DebugRequestType.stack == requestType) { 
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
             return new DebugResponseStack(getStack(index));
-    	case step: 
+    	} else if (DebugRequestType.step == requestType) { 
             step(); 
             return DebugResponseSimple.SUCCESS;
         }
-    	throw new java.lang.IllegalArgumentException( "unkown request type: "+request.getType() );
+    	
+    	throw new java.lang.IllegalArgumentException( "unkown request type: "+ request.getType());
 	}
 
     /**
@@ -303,9 +304,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         int top = callInfo.top < callInfo.base ? callInfo.base : callInfo.top;
         Proto prototype = callInfo.closure.p;
         LocVars[] localVariables = prototype.locvars;
-        List<Variable> variables = new ArrayList<Variable>();
+        List variables = new ArrayList();
         int localVariableCount = 0;
-        Set<String> variablesSeen = new HashSet<String>();
+        Set variablesSeen = new HashSet();
         for (int i = 0; localVariables != null && i < localVariables.length && i <= top; i++) {
             String varName = localVariables[i].varname.toString();
             DebugUtils.print("\tVariable: " + varName); 

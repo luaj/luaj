@@ -37,7 +37,6 @@ public class DebugResponseStack extends DebugResponseSimple {
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; variables != null && i < variables.length; i++) {
