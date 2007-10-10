@@ -18,5 +18,40 @@
 		<jar destfile="luaj-vm-${version}.jar" basedir="build/classes"/>
 	</target>
 	
+	<taskdef resource="antenna.properties" />
+
+	<target name="j2me" depends="clean">
+
+		<!-- link to wireless toolkit -->
+		<property environment="env"/>
+		<property name="env.WTK_HOME" value="c:\WTK-2.2" />
+		<property name="wtk.home" value="${env.WTK_HOME}" />
+		<echo level="info">wtk.home: ${wtk.home}</echo>
+
+		<!-- set version of midp, cldc -->
+		<property name="wtk.cldc.version" value="1.1" />
+		<property name="wtk.midp.version" value="2.0" />
+		<property name="wtk.mmapi.enabled" value="true" />
+
+		<!-- copy relevant sources -->
+		<mkdir dir="build/src-j2me" />
+		<copy todir="build/src-j2me">
+			<fileset dir="../luaj-vm/src/main/java">
+				<exclude name="lua/debug/**" />
+			</fileset>
+			<fileset dir="../luaj-vm/src/addon/java">
+				<exclude name="lua/addon/luajava/**" />
+			</fileset>
+		</copy>
+
+		<!-- Compile everything, but don't preverify (yet). -->
+		<mkdir dir="build/classes-j2me" />
+		<wtkbuild destdir="build/classes-j2me" preverify="false" srcdir="build/src-j2me" />
+
+		<!-- create the jar -->
+		<jar destfile="luaj-vm-j2me-${version}.jar" basedir="build/classes-j2me" />
+		
+	</target>
+
 	<target name="all" depends="clean,jar"/>
 </project>
