@@ -88,7 +88,9 @@ public class LuaCompat extends LFunction {
 		"min",
 		"modf",
 		"sin",
-		"sqrt"
+		"sqrt",
+		"ceil",
+		"floor",
 	};
 	
 	public static final String[] STRING_NAMES = {
@@ -148,6 +150,8 @@ public class LuaCompat extends LFunction {
 	private static final int MODF    = MATH_BASE + 4;
 	private static final int SIN     = MATH_BASE + 5;
 	private static final int SQRT    = MATH_BASE + 6;
+	private static final int CEIL    = MATH_BASE + 7;
+	private static final int FLOOR   = MATH_BASE + 8;
 	
 	private static final int STRING_BASE = 30;
 	private static final int BYTE    = STRING_BASE + 0;
@@ -278,6 +282,12 @@ public class LuaCompat extends LFunction {
 			break;
 		case SQRT:
 			vm.setResult( new LDouble( Math.sqrt( vm.getArgAsDouble( 0 ) ) ) );
+			break;
+		case CEIL:
+			vm.setResult( LInteger.valueOf( (int) Math.ceil( vm.getArgAsDouble( 0 ) ) ) );
+			break;
+		case FLOOR:
+			vm.setResult( LInteger.valueOf( (int) Math.floor( vm.getArgAsDouble( 0 ) ) ) );
 			break;
 			
 		// String functions
