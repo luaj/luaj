@@ -28,6 +28,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import lua.debug.event.DebugEvent;
+import lua.debug.event.DebugEventListener;
+import lua.debug.request.DebugRequest;
+import lua.debug.request.DebugRequestListener;
+import lua.debug.response.DebugResponse;
+
 public class DebugSupport implements DebugEventListener {
     public static class State extends EnumType {
 		public static final State UNKNOWN = new State("UNKNOWN", 0);

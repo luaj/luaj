@@ -1,6 +1,8 @@
 package lua.debug;
 
 import junit.framework.TestCase;
+import lua.debug.event.DebugEventType;
+import lua.debug.request.DebugRequestType;
 
 public class EnumTypeTest extends TestCase {
 	public void testDebugSupportStateSerialization() {

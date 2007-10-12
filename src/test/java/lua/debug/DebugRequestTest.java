@@ -3,6 +3,10 @@ package lua.debug;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+import lua.debug.request.DebugRequest;
+import lua.debug.request.DebugRequestLineBreakpointToggle;
+import lua.debug.request.DebugRequestStack;
+import lua.debug.request.DebugRequestType;
 
 public class DebugRequestTest extends TestCase {
 	public void testDebugRequestSerialization() {

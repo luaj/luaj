@@ -19,42 +19,41 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.request;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugEvent implements Serializable {    
-    
-    protected DebugEventType type;
+import lua.debug.Serializable;
 
-    public DebugEvent(DebugEventType type) {
-        this.type = type;
+public class DebugRequestStack extends DebugRequest implements Serializable {
+    protected int index;
+    
+    public DebugRequestStack(int index) {
+        super(DebugRequestType.stack);
+        this.index = index;
     }
     
-    public DebugEventType getType() {
-        return type;
-    }
-
-    public void setType(DebugEventType type) {
-        this.type = type;
+    public int getIndex() {
+        return this.index;
     }
 
     /* (non-Javadoc)
-     * @see java.lang.Object#toString()
+     * @see lua.debug.DebugRequest#toString()
      */
     public String toString() {
-        return type.toString();
+        return super.toString() + " stack frame:" + getIndex();
     }
     
-    public static void serialize(DataOutputStream out, DebugEvent object)
-    throws IOException {
-    	SerializationHelper.serialize(object.getType(), out);
+	public static void serialize(DataOutputStream out, DebugRequestStack request) 
+	throws IOException {
+		out.writeInt(request.getIndex());
 	}
-
-	public static DebugEvent deserialize(DataInputStream in) throws IOException {
-		DebugEventType type = (DebugEventType) SerializationHelper.deserialize(in);
-		return new DebugEvent(type);
+	
+	public static DebugRequest deserialize(DataInputStream in) throws IOException {
+		int index = in.readInt();
+		
+		return new DebugRequestStack(index);
 	}
 }

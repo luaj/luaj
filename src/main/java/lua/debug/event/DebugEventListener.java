@@ -19,39 +19,8 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.event;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-public class DebugRequestStack extends DebugRequest implements Serializable {
-    protected int index;
-    
-    public DebugRequestStack(int index) {
-        super(DebugRequestType.stack);
-        this.index = index;
-    }
-    
-    public int getIndex() {
-        return this.index;
-    }
-
-    /* (non-Javadoc)
-     * @see lua.debug.DebugRequest#toString()
-     */
-    public String toString() {
-        return super.toString() + " stack frame:" + getIndex();
-    }
-    
-	public static void serialize(DataOutputStream out, DebugRequestStack request) 
-	throws IOException {
-		out.writeInt(request.getIndex());
-	}
-	
-	public static DebugRequest deserialize(DataInputStream in) throws IOException {
-		int index = in.readInt();
-		
-		return new DebugRequestStack(index);
-	}
+public interface DebugEventListener {
+    public void notifyDebugEvent(DebugEvent event);
 }

@@ -19,8 +19,41 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.response;
 
-public interface DebugEventListener {
-    public void notifyDebugEvent(DebugEvent event);
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+public class DebugResponseSimple implements DebugResponse {
+    protected boolean isSuccessful;
+    
+    public static final DebugResponseSimple SUCCESS = new DebugResponseSimple(true);
+    public static final DebugResponseSimple FAILURE = new DebugResponseSimple(false);
+    
+    public DebugResponseSimple(boolean isSuccessful) {
+        this.isSuccessful = isSuccessful;
+    }
+    
+    public boolean isSuccessful() {
+        return this.isSuccessful;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+        return String.valueOf(isSuccessful);
+    }
+
+    public static void serialize(DataOutputStream out, DebugResponseSimple response) 
+    throws IOException {
+		out.writeBoolean(response.isSuccessful());		
+	}
+    
+    public static DebugResponseSimple deserialize(DataInputStream in) 
+    throws IOException {
+		boolean value = in.readBoolean();
+		return value ? SUCCESS : FAILURE;
+	}
 }

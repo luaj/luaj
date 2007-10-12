@@ -4,6 +4,9 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 import lua.Lua;
+import lua.debug.response.DebugResponseCallgraph;
+import lua.debug.response.DebugResponseSimple;
+import lua.debug.response.DebugResponseStack;
 
 public class DebugResponseTest extends TestCase {
 	public void testDebugResponseSimpleSerialization() {

@@ -19,6 +19,39 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.event;
 
-public interface DebugResponse extends Serializable {}
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+public class DebugEventError extends DebugEvent {
+    protected String detail;
+    
+    public DebugEventError(String detail) {
+        super(DebugEventType.error);
+        this.detail = detail;
+    }
+    
+    public String getDetail() {
+        return this.detail;
+    }
+
+    /* (non-Javadoc)
+     * @see lua.debug.DebugEvent#toString()
+     */
+    public String toString() {
+        return super.toString() + " detail: " + getDetail();
+    }
+    
+    public static void serialize(DataOutputStream out, DebugEventError object)
+			throws IOException {
+		//TODO implement
+	}
+
+	public static DebugEvent deserialize(DataInputStream in)
+			throws IOException {
+		//TODO implement
+		return null;
+	}
+}

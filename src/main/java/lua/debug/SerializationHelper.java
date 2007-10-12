@@ -6,6 +6,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import lua.debug.event.DebugEvent;
+import lua.debug.event.DebugEventBreakpoint;
+import lua.debug.event.DebugEventType;
+import lua.debug.request.DebugRequest;
+import lua.debug.request.DebugRequestLineBreakpointToggle;
+import lua.debug.request.DebugRequestStack;
+import lua.debug.request.DebugRequestType;
+import lua.debug.response.DebugResponseCallgraph;
+import lua.debug.response.DebugResponseSimple;
+import lua.debug.response.DebugResponseStack;
+
 public class SerializationHelper {
 
 	public static byte[] serialize(Serializable object) throws IOException {

@@ -19,7 +19,9 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.request;
+
+import lua.debug.EnumType;
 
 public class DebugRequestWatchpointToggle extends DebugRequest {    
     public static class AccessType extends EnumType {

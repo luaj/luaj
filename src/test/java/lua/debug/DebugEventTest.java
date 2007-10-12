@@ -3,6 +3,9 @@ package lua.debug;
 import java.io.IOException;
 
 import junit.framework.TestCase;
+import lua.debug.event.DebugEvent;
+import lua.debug.event.DebugEventBreakpoint;
+import lua.debug.event.DebugEventType;
 
 public class DebugEventTest extends TestCase {
 	public void testDebugEventSerialization() {

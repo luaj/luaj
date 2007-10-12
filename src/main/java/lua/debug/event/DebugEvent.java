@@ -19,39 +19,45 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.event;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugEventError extends DebugEvent {
-    protected String detail;
+import lua.debug.Serializable;
+import lua.debug.SerializationHelper;
+
+public class DebugEvent implements Serializable {    
     
-    public DebugEventError(String detail) {
-        super(DebugEventType.error);
-        this.detail = detail;
+    protected DebugEventType type;
+
+    public DebugEvent(DebugEventType type) {
+        this.type = type;
     }
     
-    public String getDetail() {
-        return this.detail;
+    public DebugEventType getType() {
+        return type;
+    }
+
+    public void setType(DebugEventType type) {
+        this.type = type;
     }
 
     /* (non-Javadoc)
-     * @see lua.debug.DebugEvent#toString()
+     * @see java.lang.Object#toString()
      */
     public String toString() {
-        return super.toString() + " detail: " + getDetail();
+        return type.toString();
     }
     
-    public static void serialize(DataOutputStream out, DebugEventError object)
-			throws IOException {
-		//TODO implement
+    public static void serialize(DataOutputStream out, DebugEvent object)
+    throws IOException {
+    	SerializationHelper.serialize(object.getType(), out);
 	}
 
-	public static DebugEvent deserialize(DataInputStream in)
-			throws IOException {
-		//TODO implement
-		return null;
+	public static DebugEvent deserialize(DataInputStream in) throws IOException {
+		DebugEventType type = (DebugEventType) SerializationHelper.deserialize(in);
+		return new DebugEvent(type);
 	}
 }

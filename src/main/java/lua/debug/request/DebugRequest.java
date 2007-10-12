@@ -19,11 +19,14 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.request;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+
+import lua.debug.Serializable;
+import lua.debug.SerializationHelper;
 
 public class DebugRequest implements Serializable {
     protected DebugRequestType type;

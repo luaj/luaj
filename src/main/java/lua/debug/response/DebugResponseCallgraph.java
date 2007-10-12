@@ -19,53 +19,55 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.response;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugResponseStack implements DebugResponse {
-    protected Variable[] variables;
+import lua.debug.StackFrame;
+
+public class DebugResponseCallgraph implements DebugResponse {
+    protected StackFrame[] stackFrames;
     
-    public DebugResponseStack(Variable[] variables) {
-    	if (variables == null) {
-    		this.variables = new Variable[0];
+    public DebugResponseCallgraph(StackFrame[] callgraph) {
+    	if (callgraph == null) {
+    		this.stackFrames = new StackFrame[0];
     	} else {
-            this.variables = variables;    		
+    		this.stackFrames = callgraph;
     	}
     }
     
-    public Variable[] getVariables() {
-        return this.variables;
+    public StackFrame[] getCallgraph() {
+        return this.stackFrames;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
     public String toString() {
         StringBuilder buffer = new StringBuilder();
-        for (int i = 0; variables != null && i < variables.length; i++) {
-            buffer.append("\t" + variables[i].getName() + ":" + variables[i].getIndex() + "\n");
+        for (int i = 0; i < stackFrames.length; i++) {
+           StackFrame frame = stackFrames[i];
+           buffer.append(frame.toString());
+           buffer.append("\n");
         }
         return buffer.toString();
     }
-    
-	public static void serialize(DataOutputStream out, DebugResponseStack response) 
+
+    public static void serialize(DataOutputStream out, DebugResponseCallgraph response) 
     throws IOException {
-		Variable[] variables = response.getVariables();
-		out.writeInt(variables == null ? 0 : variables.length);
-		for (int i = 0; i < variables.length; i++) {
-			SerializationHelper.serialize(variables[i], out);
+    	StackFrame[] stackFrames = response.getCallgraph();
+		out.writeInt(stackFrames == null ? 0 : stackFrames.length);
+		for (int i = 0; stackFrames != null && i < stackFrames.length; i++) {
+			StackFrame.serialize(out, stackFrames[i]);
 		}
-	}
+	} 
 	
-    public static DebugResponseStack deserialize(DataInputStream in) throws IOException {
+    public static DebugResponseCallgraph deserialize(DataInputStream in) throws IOException {
 		int count = in.readInt();
-		Variable[] variables = new Variable[count];
+		StackFrame[] stackFrames = new StackFrame[count];
 		for (int i = 0; i < count; i++) {
-			variables[i] = (Variable) SerializationHelper.deserialize(in);
+			stackFrames[i] = StackFrame.deserialize(in); 
 		}
-		return new DebugResponseStack(variables);
+		
+		return new DebugResponseCallgraph(stackFrames);
 	}
 }
