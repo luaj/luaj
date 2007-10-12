@@ -36,12 +36,12 @@ import lua.debug.request.DebugRequest;
 import lua.debug.request.DebugRequestListener;
 import lua.debug.response.DebugResponse;
 
-public class DebugSupport implements DebugEventListener {
+public class DebugSupport implements DebugRequestListener, DebugEventListener {
 	protected static final int UNKNOWN = 0;
 	protected static final int RUNNING = 1;
 	protected static final int STOPPED = 2;
 	
-    protected DebugRequestListener listener;
+    protected DebugRequestListener vm;
     protected int requestPort;
     protected int eventPort;
     protected Thread requestWatcherThread;
@@ -56,10 +56,10 @@ public class DebugSupport implements DebugEventListener {
     protected Socket clientEventSocket;
     protected DataOutputStream eventWriter;
         
-    public DebugSupport(DebugRequestListener listener, 
-                       int requestPort, 
-                       int eventPort) {
-        this.listener = listener;
+    public DebugSupport(DebugRequestListener vm, 
+                        int requestPort, 
+                        int eventPort) {
+        this.vm = vm;
         this.requestPort = requestPort;
         this.eventPort = eventPort;
     }
@@ -139,7 +139,7 @@ public class DebugSupport implements DebugEventListener {
         this.state = RUNNING;
     }
     
-    public synchronized int getState() {
+    protected synchronized int getState() {
         return this.state;
     }
     
@@ -147,7 +147,7 @@ public class DebugSupport implements DebugEventListener {
         this.state = STOPPED;
     }
     
-    public void handleRequest() {        
+    protected void handleRequest() {        
         synchronized (clientRequestSocket) {
             try {
                 while (getState() != STOPPED) {
@@ -158,7 +158,7 @@ public class DebugSupport implements DebugEventListener {
                         = (DebugRequest) SerializationHelper.deserialize(data);
                     DebugUtils.println("SERVER receives request: " + request.toString());
                     
-                    DebugResponse response = listener.handleRequest(request);
+                    DebugResponse response = handleRequest(request);
                     data = SerializationHelper.serialize(response);
                     requestWriter.writeInt(data.length);
                     requestWriter.write(data);
@@ -203,7 +203,7 @@ public class DebugSupport implements DebugEventListener {
      *              
      * @param event
      */
-    public void fireEvent(DebugEvent event) {
+    protected void sendEvent(DebugEvent event) {
         DebugUtils.println("SERVER sending event: " + event.toString());
         synchronized (eventSocket) {
             try {
@@ -221,6 +221,18 @@ public class DebugSupport implements DebugEventListener {
      * @see lua.debug.DebugEventListener#notifyDebugEvent(lua.debug.DebugEvent)
      */
     public void notifyDebugEvent(DebugEvent event) {
-        fireEvent(event);        
-    }    
+        sendEvent(event);        
+    }
+
+    /* (non-Javadoc)
+     * @see lua.debug.DebugRequestListener#handleRequest(java.lang.String)
+     */
+    public DebugResponse handleRequest(DebugRequest request) {  
+    	if (DebugUtils.IS_DEBUG) {
+    		DebugUtils.println("handling request: " + request.toString());
+    	}
+    	
+        DebugResponse response = vm.handleRequest(request);
+        return response;
+    }
 }

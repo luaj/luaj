@@ -245,7 +245,7 @@ public class StandardLuaJVM implements DebugRequestListener {
             }
         }).start();
         
-        debugSupport.fireEvent(new DebugEvent(DebugEventType.started));
+        debugSupport.notifyDebugEvent(new DebugEvent(DebugEventType.started));
     }   
     
     private DebugStackState getDebugState() {
@@ -260,17 +260,16 @@ public class StandardLuaJVM implements DebugRequestListener {
             throw new UnsupportedOperationException("Must be in debug mode to handle the debug requests");
         }
         
-        DebugUtils.println("handling request: " + request.toString());
         DebugRequestType requestType = request.getType();
         if (DebugRequestType.suspend == requestType) {
         	DebugResponse status = getDebugState().handleRequest(request);                
             DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
-            debugSupport.fireEvent(event);                
+            debugSupport.notifyDebugEvent(event);                
             return status;
         } else if (DebugRequestType.resume == requestType) {
         	DebugResponse status = getDebugState().handleRequest(request);                
         	DebugEvent event = new DebugEvent(DebugEventType.resumedByClient);
-            debugSupport.fireEvent(event);                
+            debugSupport.notifyDebugEvent(event);                
             return status;
         } else if (DebugRequestType.exit == requestType) {
             stop();
@@ -281,17 +280,16 @@ public class StandardLuaJVM implements DebugRequestListener {
     }
     
     protected void stop() {
-        DebugUtils.println("exit LuaJ VM...");
         if (this.debugSupport != null) {
             DebugEvent event = new DebugEvent(DebugEventType.terminated);
-            debugSupport.fireEvent(event);
+            debugSupport.notifyDebugEvent(event);
             Timer timer = new Timer("DebugServerDeathThread");
             timer.schedule(new TimerTask() {
                 public void run() {
                     debugSupport.stop();
                     debugSupport = null;                    
                 }
-            }, 500);
+            }, 300);
         }
         getDebugState().exit();
     }

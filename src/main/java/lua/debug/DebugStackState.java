@@ -128,12 +128,13 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	
 	// debug hooks
 	public void debugHooks( int pc ) {
-        if(DebugUtils.IS_DEBUG)
+		if ( exiting ) {
+			throw new AbortException("aborted by debug client");
+		}
+		
+		if(DebugUtils.IS_DEBUG)
         	DebugUtils.println("entered debugHook...");
         
-		if ( exiting )
-			throw new AbortException("exiting");
-
 		synchronized ( this ) {
             
 			// anytime the line doesn't change we keep going
