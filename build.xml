@@ -1,8 +1,13 @@
 <project default="all">
 	<property name="version" value="1.0"/>
-	
+
 	<target name="clean">
 		<delete dir="build"/>
+	</target>
+	
+	<target name="real-clean" depends="clean">
+		<delete file="luaj-vm-${version}.jar"/>
+		<delete file="luaj-vm-j2me-${version}.jar"/>
 	</target>
 	
 	<target name="compile">
@@ -36,7 +41,7 @@
 		<mkdir dir="build/src-j2me" />
 		<copy todir="build/src-j2me">
 			<fileset dir="../luaj-vm/src/main/java">
-				<exclude name="lua/debug/**" />
+				<exclude name="lua/debug/j2se/**" />
 			</fileset>
 			<fileset dir="../luaj-vm/src/addon/java">
 				<exclude name="lua/addon/luajava/**" />

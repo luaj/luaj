@@ -66,19 +66,19 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
     public void addDebugEventListener(DebugEventListener listener) {
         if (!debugEventListeners.contains(listener)) {
-            debugEventListeners.add(listener);
+            debugEventListeners.addElement(listener);
         }
     }
     
     public void removeDebugEventListener(DebugEventListener listener) {
         if (debugEventListeners.contains(listener)) {
-            debugEventListeners.remove(listener);
+            debugEventListeners.removeElement(listener);
         }
     }
     
     protected void notifyDebugEventListeners(DebugEvent event) {
     	for (int i = 0; debugEventListeners != null && i < debugEventListeners.size(); i++) {
-    		DebugEventListener listener = (DebugEventListener)debugEventListeners.get(i);
+    		DebugEventListener listener = (DebugEventListener)debugEventListeners.elementAt(i);
             listener.notifyDebugEvent(event);
     	}
     }
@@ -336,7 +336,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                     DebugUtils.print("\tType: " + Lua.TYPE_NAMES[type]);
                     if (type == Lua.LUA_TTABLE) {
                         DebugUtils.println(" (selected)");
-                        variables.add(
+                        variables.addElement(
                                 new TableVariable(localVariableCount++, 
                                              varName, 
                                              type, 
@@ -344,7 +344,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                     } else if (type != Lua.LUA_TFUNCTION &&
                                type != LUA_TTHREAD) {
                         DebugUtils.println(" (selected)");
-                        variables.add(
+                        variables.addElement(
                                 new Variable(localVariableCount++, 
                                              varName, 
                                              type, 
@@ -358,8 +358,13 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             } else {
                 DebugUtils.println("");
             }
-        }            
-        return (Variable[])variables.toArray(new Variable[0]);
+        }
+        
+        Variable[] result = new Variable[variables.size()];
+        for (int i = 0; i < variables.size(); i++) {
+        	result[i] = (Variable) variables.elementAt(i);
+        }
+        return result;
 	}
 	
 	

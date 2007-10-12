@@ -47,7 +47,7 @@ public class DebugResponseStack implements DebugResponse {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
+        StringBuffer buffer = new StringBuffer();
         for (int i = 0; variables != null && i < variables.length; i++) {
             buffer.append("\t" + variables[i].getName() + ":" + variables[i].getIndex() + "\n");
         }

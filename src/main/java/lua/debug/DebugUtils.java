@@ -21,13 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.File;
-
 import lua.io.LoadState;
 import lua.value.LString;
 
 public class DebugUtils {
-    public static final boolean IS_DEBUG = true;
+    public static final boolean IS_DEBUG = false;
     
     public static void println(String message) {
         if (IS_DEBUG) {
@@ -41,14 +39,15 @@ public class DebugUtils {
         }
     }
 
-    public static String getSourceFileName(LString source) {
-        String sourceStr = source.toJavaString();
-        sourceStr = LoadState.getSourceName(sourceStr);
-        if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
-            File sourceFile = new File(sourceStr);            
-            return sourceFile.getName();
-        } else {
-            return sourceStr;
-        }
-    }
+    public static String getSourceFileName(LString source) {   
+    	String sourceStr = LoadState.getSourceName(source.toJavaString());    	
+    	if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
+    		sourceStr = sourceStr.replace('\\', '/');    		  	
+    		int index = sourceStr.lastIndexOf('/');
+    		if (index != -1) {
+    			sourceStr = sourceStr.substring(index + 1);
+    		}    		
+    	}
+    	return sourceStr;
+	}
 }

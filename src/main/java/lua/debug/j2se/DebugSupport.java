@@ -19,7 +19,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.j2se;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import lua.debug.DebugUtils;
+import lua.debug.SerializationHelper;
 import lua.debug.event.DebugEvent;
 import lua.debug.event.DebugEventListener;
 import lua.debug.request.DebugRequest;
@@ -35,35 +37,15 @@ import lua.debug.request.DebugRequestListener;
 import lua.debug.response.DebugResponse;
 
 public class DebugSupport implements DebugEventListener {
-    public static class State extends EnumType {
-		public static final State UNKNOWN = new State("UNKNOWN", 0);
-        public static final State RUNNING = new State("RUNNING", 1);
-        public static final State STOPPED = new State("STOPPED", 2);
-        
-        protected static final State[] ENUMS = new State[] {
-        	UNKNOWN,
-        	RUNNING,
-        	STOPPED
-        };
-        
-        public State(String name, int ordinal) {
-        	super(name, ordinal);
-        }
-
-        public static State deserialize(DataInputStream in) throws IOException {
-			int ordinal = in.readInt();
-			if (ordinal < 0 || ordinal >= ENUMS.length) {
-				throw new RuntimeException("ordinal is out of the range.");
-			}
-			return ENUMS[ordinal];
-		}
-    }
-    
+	protected static final int UNKNOWN = 0;
+	protected static final int RUNNING = 1;
+	protected static final int STOPPED = 2;
+	
     protected DebugRequestListener listener;
     protected int requestPort;
     protected int eventPort;
     protected Thread requestWatcherThread;
-    protected State state = State.UNKNOWN;
+    protected int state = UNKNOWN;
     
     protected ServerSocket requestSocket;
     protected Socket clientRequestSocket;
@@ -146,7 +128,7 @@ public class DebugSupport implements DebugEventListener {
 
         this.requestWatcherThread = new Thread(new Runnable() {
             public void run() {
-                if (getState() != State.STOPPED) {
+                if (getState() != STOPPED) {
                     handleRequest();
                 } else {
                     releaseServer();
@@ -154,21 +136,21 @@ public class DebugSupport implements DebugEventListener {
             }
         });
         this.requestWatcherThread.start();
-        this.state = State.RUNNING;
+        this.state = RUNNING;
     }
     
-    public synchronized State getState() {
+    public synchronized int getState() {
         return this.state;
     }
     
     public synchronized void stop() {
-        this.state = State.STOPPED;
+        this.state = STOPPED;
     }
     
     public void handleRequest() {        
         synchronized (clientRequestSocket) {
             try {
-                while (getState() != State.STOPPED) {
+                while (getState() != STOPPED) {
                 	int size = requestReader.readInt();
                 	byte[] data = new byte[size];
                 	requestReader.readFully(data);                	
@@ -184,7 +166,7 @@ public class DebugSupport implements DebugEventListener {
                     DebugUtils.println("SERVER sends response: " + response);
                 }
                 
-                if (getState() == State.STOPPED) {
+                if (getState() == STOPPED) {
                     cleanup();
                 }
             } catch (EOFException e) {

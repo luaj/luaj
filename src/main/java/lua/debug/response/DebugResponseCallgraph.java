@@ -43,7 +43,7 @@ public class DebugResponseCallgraph implements DebugResponse {
     }
 
     public String toString() {
-        StringBuilder buffer = new StringBuilder();
+        StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < stackFrames.length; i++) {
            StackFrame frame = stackFrames[i];
            buffer.append(frame.toString());

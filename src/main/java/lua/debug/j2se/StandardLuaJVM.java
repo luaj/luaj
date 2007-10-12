@@ -19,7 +19,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.j2se;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +34,8 @@ import lua.GlobalState;
 import lua.StackState;
 import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
+import lua.debug.DebugStackState;
+import lua.debug.DebugUtils;
 import lua.debug.event.DebugEvent;
 import lua.debug.event.DebugEventType;
 import lua.debug.request.DebugRequest;
@@ -118,7 +120,7 @@ public class StandardLuaJVM implements DebugRequestListener {
     }
 
 	private void parseScriptArgs(String[] args)
-			throws lua.debug.StandardLuaJVM.ParseException {
+			throws lua.debug.j2se.StandardLuaJVM.ParseException {
 		if (args == null || args.length < 1) {
 			throw new ParseException("script is missing.");
 		}

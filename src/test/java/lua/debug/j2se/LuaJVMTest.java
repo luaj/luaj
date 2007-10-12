@@ -19,13 +19,14 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package lua.debug;
+package lua.debug.j2se;
 
 import java.io.IOException;
 import java.net.URL;
 
 import junit.framework.TestCase;
-import lua.debug.StandardLuaJVM.ParseException;
+import lua.debug.j2se.StandardLuaJVM;
+import lua.debug.j2se.StandardLuaJVM.ParseException;
 
 /**
  * Sanity test for StandardLuaJVM.

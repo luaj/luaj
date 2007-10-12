@@ -5,18 +5,6 @@ import lua.debug.event.DebugEventType;
 import lua.debug.request.DebugRequestType;
 
 public class EnumTypeTest extends TestCase {
-	public void testDebugSupportStateSerialization() {
-		try {
-			DebugSupport.State stateIn = DebugSupport.State.RUNNING;
-			byte[] data = SerializationHelper.serialize(stateIn);
-			DebugSupport.State stateOut 
-				= (DebugSupport.State) SerializationHelper.deserialize(data);
-			assertEquals(stateIn, stateOut);
-		} catch (Exception e) {
-			fail(e.getMessage());
-		}
-	}
-	
 	public void testDebugRequestTypeSerialization() {
 		try {
 			DebugRequestType type = DebugRequestType.lineBreakpointClear;

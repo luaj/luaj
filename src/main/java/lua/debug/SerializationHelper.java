@@ -52,15 +52,14 @@ public class SerializationHelper {
     static final int SERIAL_TYPE_DebugResponseCallgraph = 3;
 	static final int SERIAL_TYPE_DebugResponseStack = 4;
 	static final int SERIAL_TYPE_DebugResponseSimple = 5;
-	static final int SERIAL_TYPE_DebugSupportState = 6;
-	static final int SERIAL_TYPE_StackFrame = 7;
-	static final int SERIAL_TYPE_DebugRequestType = 8;
-	static final int SERIAL_TYPE_DebugRequest = 9;
-	static final int SERIAL_TYPE_DebugRequestStack = 10;
-	static final int SERIAL_TYPE_DebugRequestLineBreakpointToggle = 11;
-	static final int SERIAL_TYPE_DebugEventType = 12;
-	static final int SERIAL_TYPE_DebugEvent = 13;
-	static final int SERIAL_TYPE_DebugEventBreakpoint = 14;
+	static final int SERIAL_TYPE_StackFrame = 6;
+	static final int SERIAL_TYPE_DebugRequestType = 7;
+	static final int SERIAL_TYPE_DebugRequest = 8;
+	static final int SERIAL_TYPE_DebugRequestStack = 9;
+	static final int SERIAL_TYPE_DebugRequestLineBreakpointToggle = 10;
+	static final int SERIAL_TYPE_DebugEventType = 11;
+	static final int SERIAL_TYPE_DebugEvent = 12;
+	static final int SERIAL_TYPE_DebugEventBreakpoint = 13;
 	
 	public static void serialize(Serializable object, DataOutputStream dout)
 	throws IOException {
@@ -85,9 +84,6 @@ public class SerializationHelper {
 		} else if (object instanceof DebugResponseCallgraph) {
 			dout.writeInt(SERIAL_TYPE_DebugResponseCallgraph);
 			DebugResponseCallgraph.serialize(dout, (DebugResponseCallgraph)object);
-		} else if (object instanceof DebugSupport.State) {
-			dout.writeInt(SERIAL_TYPE_DebugSupportState);
-			DebugSupport.State.serialize(dout, (DebugSupport.State)object);
 		} else if (object instanceof DebugRequestType) {
 			dout.writeInt(SERIAL_TYPE_DebugRequestType);
 			DebugRequestType.serialize(dout, (DebugRequestType)object);
@@ -140,9 +136,6 @@ public class SerializationHelper {
     		break;
     	case SERIAL_TYPE_DebugResponseStack:
     		object = DebugResponseStack.deserialize(din);
-    		break;
-    	case SERIAL_TYPE_DebugSupportState:
-    		object = DebugSupport.State.deserialize(din);
     		break;
     	case SERIAL_TYPE_DebugRequestType:
     		object = DebugRequestType.deserialize(din);

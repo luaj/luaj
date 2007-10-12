@@ -39,8 +39,8 @@ public class TableVariable extends Variable {
         
         int size = table.size();
         DebugUtils.println("table size:" + size);
-        Vector keyArray = new Vector();  
-        Vector valueArray = new Vector();
+        Vector keyList = new Vector();  
+        Vector valueList = new Vector();
         LValue[] keyValues = table.getKeys();        
         for (int i = 0; i < size; i++) {
         	
@@ -49,18 +49,26 @@ public class TableVariable extends Variable {
             	continue;
             }
             
-            keyArray.add(keyValues[i].toString());
+            keyList.addElement(keyValues[i].toString());
             if (value instanceof LTable) {
             	DebugUtils.println("table: value[" + i + "]=" + value.toString());
-            	valueArray.add(new TableVariable(i, "element[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
+            	valueList.addElement(new TableVariable(i, "element[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
             } else {
-                valueArray.add(value.toString());
+                valueList.addElement(value.toString());
             }
             DebugUtils.println("["+ keyValues[i].toString() + "," + value.toString() + "]");            	
         }
         
-        this.keys = (String[])keyArray.toArray(new String[0]);
-        this.values = (Object[]) valueArray.toArray(new Object[0]);
+        this.keys = new String[keyList.size()];
+        for (int i = 0; i < keyList.size(); i++) {
+        	this.keys[i] = (String)keyList.elementAt(i);
+        }
+
+        this.values = new Object[valueList.size()];
+        for (int i = 0; i < valueList.size(); i++) {
+        	this.values[i] = valueList.elementAt(i);
+        }
+
         if (this.keys.length != this.values.length) {
         	throw new RuntimeException("Internal Error: key.length must equal to values.length");
         }
