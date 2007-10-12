@@ -22,8 +22,6 @@
 package lua.debug;
 
 public class DebugRequestWatchpointToggle extends DebugRequest {    
-    private static final long serialVersionUID = -2978341358052851046L;
-
     public static class AccessType extends EnumType {
 		private static final long serialVersionUID = 3523086189648091587L;
 		
@@ -64,4 +62,6 @@ public class DebugRequestWatchpointToggle extends DebugRequest {
     public String toString() {        
         return super.toString() + " functionName:" + getFunctionName() + " variableName:" + getVariableName();
     }
+    
+    // TODO: add the serialization stuff
 }

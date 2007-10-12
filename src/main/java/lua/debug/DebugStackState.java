@@ -21,12 +21,8 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import lua.CallInfo;
 import lua.Lua;
@@ -41,12 +37,12 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
 	private static final boolean DEBUG = false;
     
-	protected Map breakpoints = new HashMap();
+	protected Hashtable breakpoints = new Hashtable();
     protected boolean exiting = false;
     protected boolean suspended = false;
     protected boolean stepping = false;
     protected int lastline = -1;
-    protected List debugEventListeners = new ArrayList();
+    protected Vector debugEventListeners = new Vector();
 	
 	public DebugStackState() {
 	}
@@ -130,25 +126,26 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             
 			// anytime the line doesn't change we keep going
 			int line = getLineNumber(calls[cc]);
-	        if(DebugUtils.IS_DEBUG)
-	        	DebugUtils.println("debugHook - executing line: " + line);
 			if ( !stepping && lastline == line ) {
 				return;
             }
+	        if(DebugUtils.IS_DEBUG)
+	        	DebugUtils.println("debugHook - executing line: " + line);
 
 			// save line in case next op is a step
 			lastline = line;
             
             if ( stepping ) {
                 DebugUtils.println("suspended by stepping at pc=" + pc);
-                notifyDebugEventListeners(new DebugEventStepping());
+                //TODO: notifyDebugEventListeners(new DebugEventStepping());
                 suspended = true;
             } else if ( !suspended ) {
                 // check for a break point if we aren't suspended already
                 Proto p = calls[cc].closure.p;
                 String source = DebugUtils.getSourceFileName(p.source);                
                 if ( breakpoints.containsKey(constructBreakpointKey(source, line))){
-                    DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
+                	if(DebugUtils.IS_DEBUG)
+                		DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
                     notifyDebugEventListeners(
                             new DebugEventBreakpoint(source, line));
                     suspended = true;
@@ -161,7 +158,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			while (suspended && !exiting ) {
 				try {
 					this.wait();
-                    DebugUtils.println("resuming execution...");
+					if(DebugUtils.IS_DEBUG)
+						DebugUtils.println("resuming execution...");
 				} catch ( InterruptedException ie ) {
 					ie.printStackTrace();
 				}
@@ -271,7 +269,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      * clear breakpoint at line lineNumber of source source
      */
 	public void clearBreakpoint(String source, int lineNumber) {
-        DebugUtils.println("removing breakpoint " + constructBreakpointKey(source, lineNumber));
+		if(DebugUtils.IS_DEBUG)
+			DebugUtils.println("removing breakpoint " + constructBreakpointKey(source, lineNumber));
 		synchronized ( this ) {
 			breakpoints.remove(constructBreakpointKey(source, lineNumber));
 		}
@@ -302,24 +301,27 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         }
         
         CallInfo callInfo = calls[index];
-        DebugUtils.println("Stack Frame: " + index + "[" + callInfo.base + "," + callInfo.top + "]");
+        if(DebugUtils.IS_DEBUG)
+        	DebugUtils.println("Stack Frame: " + index + "[" + callInfo.base + "," + callInfo.top + "]");
         int top = callInfo.top < callInfo.base ? callInfo.base : callInfo.top;
         Proto prototype = callInfo.closure.p;
         LocVars[] localVariables = prototype.locvars;
-        List variables = new ArrayList();
+        Vector variables = new Vector();
         int localVariableCount = 0;
-        Set variablesSeen = new HashSet();
+        Hashtable variablesSeen = new Hashtable();
         for (int i = 0; localVariables != null && i < localVariables.length && i <= top; i++) {
             String varName = localVariables[i].varname.toString();
-            DebugUtils.print("\tVariable: " + varName); 
-            DebugUtils.print("\tValue: " + stack[callInfo.base + i]);
+            if(DebugUtils.IS_DEBUG) {
+            	DebugUtils.print("\tVariable: " + varName); 
+            	DebugUtils.print("\tValue: " + stack[callInfo.base + i]);
+            }
             if (!variablesSeen.contains(varName) &&
                 !LexState.isReservedKeyword(varName)) {
-                variablesSeen.add(varName);
+                variablesSeen.put(varName, varName);
                 LValue value = stack[callInfo.base + i];                
                 if (value != null) {
                     int type = value.luaGetType();
-                    DebugUtils.print("\tType: " + type);
+                    DebugUtils.print("\tType: " + Lua.TYPE_NAMES[type]);
                     if (type == Lua.LUA_TTABLE) {
                         DebugUtils.println(" (selected)");
                         variables.add(

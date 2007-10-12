@@ -21,13 +21,24 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 public class DebugEventBreakpoint extends DebugEvent {
-    private static final long serialVersionUID = -7573362646669094458L;
     protected String source;
     protected int lineNumber;
 
     public DebugEventBreakpoint(String source, int lineNumber) {
         super(DebugEventType.suspendedOnBreakpoint);
+        if (source == null) {
+        	throw new IllegalArgumentException("argument source cannot be null");
+        }
+        
+        if (lineNumber <= 0) {
+        	throw new IllegalArgumentException("argument lineNumber must be positive integer");
+        }
+        
         this.source = source;
         this.lineNumber = lineNumber;
     }
@@ -46,4 +57,17 @@ public class DebugEventBreakpoint extends DebugEvent {
     public String toString() {
         return super.toString() + " source:" + getSource() + " line:" + getLineNumber();
     }
+    
+    public static void serialize(DataOutputStream out, DebugEventBreakpoint object) 
+    throws IOException {
+    	out.writeUTF(object.getSource());
+    	out.writeInt(object.getLineNumber());
+	}
+
+	public static DebugEvent deserialize(DataInputStream in) throws IOException {
+		String source = in.readUTF();
+		int lineNo = in.readInt();
+		
+		return new DebugEventBreakpoint(source, lineNo);
+	}
 }

@@ -40,22 +40,13 @@ import lua.io.Proto;
 import lua.value.LString;
 import lua.value.LValue;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 /**
  * StandardLuaJVM executes a lua program in normal run mode or debug mode. 
  * 
  * @author:  Shu Lei
  * @version: 1.0
  */
-public class StandardLuaJVM implements DebugRequestListener {        
-    protected Options options = new Options();
+public class StandardLuaJVM implements DebugRequestListener {
     protected boolean isDebugMode = false;
     protected DebugSupport debugSupport;
     protected int requestPort;
@@ -64,88 +55,104 @@ public class StandardLuaJVM implements DebugRequestListener {
     protected String[] scriptArgs;
     protected StackState state;
     protected boolean isReady = false;
-    protected boolean isTerminated = false;
-    
-    public StandardLuaJVM() {
-        options.addOption(OptionBuilder.withArgName("requestPort eventPort").
-                                        hasArgs(2).
-                                        isRequired(false).                                            
-                                        withValueSeparator(' ').
-                                        withDescription("run LuaJ VM in debug mode").
-                                        create("debug"));
-        options.addOption(OptionBuilder.withArgName("LuaJProgram").
-                                        withDescription("lua program to be executed").                    
-                                        isRequired().                    
-                                        hasArgs().
-                                        withValueSeparator(' ').                                            
-                                        create("file"));            
+    protected boolean isTerminated = false;   
+        
+    // command line parsing utilities
+    class ParseException extends Exception {
+		private static final long serialVersionUID = -3134938136698856577L;
+
+		public ParseException(String message) {
+    		super(message);
+    	}
     }
     
     protected void printUsage() {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("java StandardLuaJVM", options);            
+        System.out.println("Usage:");
+        System.out.println("\t java StandardLuaJVM [-debug <requestPort> <eventPort>] <script> [<script arguments>]");
+        System.out.println("where [] denotes an optional argument and <> denotes a placeholder.");
     }
     
-    protected void parse(String[] args) throws ParseException {
-        CommandLineParser parser = new GnuParser();
-        try {
-            CommandLine line = parser.parse(options, args);
-            if (line.hasOption("debug")) {
-                this.isDebugMode = true;
-                String[] ports = line.getOptionValues("debug");
-                
-                this.requestPort = Integer.parseInt(ports[0]);
-                if (this.requestPort <= 0) {
-                    throw new ParseException("Invalid request port: it must be greater than zero.");
-                }
-                
-                this.eventPort = Integer.parseInt(ports[1]);
-                if (this.eventPort <= 0) {
-                    throw new ParseException("Invalid event port: it must be greater than zero.");
-                }
-                
-                if (this.requestPort == this.eventPort) {
-                    throw new ParseException("Invalid ports: request port and event port must be different");
-                }
-            }
+    void parse(String[] args) throws ParseException {
+    	if (args == null || args.length < 1) {
+    		throw new ParseException("Invalid command line arguments.");
+    	}
 
-            if (line.hasOption("file")) {
-                String[] fileArgs = line.getOptionValues("file");
-                this.script = URLDecoder.decode(fileArgs[0], "UTF-8");
-                DebugUtils.println("Lua script to run: " + this.script);
-                this.scriptArgs = new String[fileArgs.length - 1];
-                for (int i = 1; i < fileArgs.length; i++) {
-                    this.scriptArgs[i-1] = URLDecoder.decode(fileArgs[i], "UTF-8");
-                }
+    	if ("-debug".equals(args[0])) {
+    		if (args.length < 4) {
+    			throw new ParseException("Invalid command line arguments.");
+    		}
+    		
+    		this.isDebugMode = true;
+    		try {
+	    		this.requestPort = Integer.parseInt(args[1]);
+	            if (this.requestPort <= 0) {
+	                throw new ParseException("Invalid request port: it must be greater than zero.");
+	            }
+	
+	            this.eventPort = Integer.parseInt(args[2]);
+	            if (this.eventPort <= 0) {
+	                throw new ParseException("Invalid event port: it must be greater than zero.");
+	            }
+	    	} catch(NumberFormatException e) {
+	            throw new ParseException("Invalid port number: " + e.getMessage());
+	        } 
+	    	
+            if (this.requestPort == this.eventPort) {
+                throw new ParseException("Invalid ports: request port and event port must be different");
             }
-        } catch(NumberFormatException e) {
-            throw new ParseException("Invalid port number: " + e.getMessage());
-        } catch (UnsupportedEncodingException e) {
-            throw new ParseException("Malformed program argument strings: " + e.getMessage());
-        }
+            
+            int tempArgsCount = args.length - 3;
+            String[] tempArgs = new String[tempArgsCount];
+            System.arraycopy(args, 3, tempArgs, 0, tempArgsCount);	            
+            parseScriptArgs(tempArgs);
+    	} else {
+    		parseScriptArgs(args);
+    	}
     }
-    
-    protected boolean isDebug() {
+
+	private void parseScriptArgs(String[] args)
+			throws lua.debug.StandardLuaJVM.ParseException {
+		if (args == null || args.length < 1) {
+			throw new ParseException("script is missing.");
+		}
+		
+		try {
+		    this.script = URLDecoder.decode(args[0], "UTF-8");
+		    DebugUtils.println("Lua script to run: " + this.script);
+		    int scriptArgsLength = args.length - 1;
+		    if (scriptArgsLength > 0) {
+		        this.scriptArgs = new String[scriptArgsLength];
+		        for (int i = 1; i < args.length; i++) {
+		            this.scriptArgs[i - 1] = URLDecoder.decode(args[i], "UTF-8");
+		        }            	
+		    }
+		} catch (UnsupportedEncodingException e) {
+		    throw new ParseException("Malformed program argument strings: " + e.getMessage());
+		}
+	}
+    // end of command line parsing utilities
+	
+    boolean isDebug() {
         return this.isDebugMode;
     }
     
-    protected int getRequestPort() {
+    int getRequestPort() {
         return this.requestPort;
     }
     
-    protected int getEventPort() {
+    int getEventPort() {
         return this.eventPort;
     }
     
-    protected String getScript() {
+    String getScript() {
         return this.script;
     }
     
-    protected boolean hasScriptArgs() {
+    boolean hasScriptArgs() {
         return (this.scriptArgs != null && this.scriptArgs.length > 0);
     }
     
-    protected String[] getScriptArgs() {
+    String[] getScriptArgs() {
         return this.scriptArgs;
     }
 
@@ -175,7 +182,8 @@ public class StandardLuaJVM implements DebugRequestListener {
         state = new StackState();
 
         // convert args to lua
-        int numOfScriptArgs = getScriptArgs().length;
+        String[] scriptArgs = getScriptArgs();
+        int numOfScriptArgs = (scriptArgs == null) ? 0 : scriptArgs.length;
         LValue[] vargs = new LValue[numOfScriptArgs];
         for (int i = 0; i < numOfScriptArgs; i++) { 
             vargs[i] = new LString(getScriptArgs()[i]);
@@ -191,35 +199,36 @@ public class StandardLuaJVM implements DebugRequestListener {
         state.doCall(c, vargs);        
     }
     
-    private void doDebug() throws IOException {
-        DebugUtils.println("start debugging...");
-        this.debugSupport = new DebugSupport(this, getRequestPort(), getEventPort());
-        DebugUtils.println("created client request socket connection...");
-        debugSupport.start();
-        
-        DebugUtils.println("setting up LuaJava and debug stack state...");
-        
+    private void doDebug() throws IOException {        
+        DebugUtils.println("setting up LuaJava and debug stack state...");        
         init();
-        
-        // new lua state 
-        state = new DebugStackState();
-        getDebugState().addDebugEventListener(debugSupport);
-        
+
         // load the Lua file
         DebugUtils.println("loading Lua script '" + getScript() + "'");
         InputStream is = new FileInputStream(new File(getScript()));
         Proto p = LoadState.undump(state, is, getScript());
+
+        // set up debug support if the file is successfully loaded
+        DebugUtils.println("start debugging...");
+        this.debugSupport = new DebugSupport(this, getRequestPort(), getEventPort());
+        DebugUtils.println("created client request socket connection...");
+        debugSupport.start();
+
+        // new lua debug state 
+        state = new DebugStackState();
+        getDebugState().addDebugEventListener(debugSupport);
+        getDebugState().suspend();
         
         // create closure and execute
         final Closure c = new Closure(state, p);
-        getDebugState().suspend();
         
         new Thread(new Runnable() {
-            public void run() {                
-                int numOfScriptArgs = getScriptArgs().length;
+            public void run() {        
+            	String[] args = getScriptArgs();
+                int numOfScriptArgs = (args != null ? args.length : 0);
                 LValue[] vargs = new LValue[numOfScriptArgs];
                 for (int i = 0; i < numOfScriptArgs; i++) { 
-                    vargs[i] = new LString(getScriptArgs()[i]);
+                    vargs[i] = new LString(args[i]);
                 }
                 
                 getDebugState().doCall(c, vargs);
@@ -281,25 +290,21 @@ public class StandardLuaJVM implements DebugRequestListener {
     /**
      * Parses the command line arguments and executes/debugs the lua program.
      * @param args -- command line arguments: 
-     *  [-debug requestPort eventPort] -file luaProgram args
-     * @throws IOException
+     *  [-debug <requestPort> <eventPort>] <script> <script arguments separated by a whitespace>
      */
     public static void main(String[] args) {
         StandardLuaJVM vm = new StandardLuaJVM();
 
         try {
             vm.parse(args);
+            vm.run();
         } catch (ParseException e) {
-            DebugUtils.println(e.getMessage());
+            System.out.println("Error: " + e.getMessage());
             vm.printUsage(); 
             return;
-        }
-
-        try {
-            vm.run();
         } catch (IOException e) {
-            //TODO: handle the error
-            e.printStackTrace();
+        	System.out.println("Error: " + e.getMessage());
+        	e.printStackTrace();
         }
     }
 }

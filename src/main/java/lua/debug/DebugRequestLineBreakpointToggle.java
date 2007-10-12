@@ -21,8 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 public class DebugRequestLineBreakpointToggle extends DebugRequest {
-    private static final long serialVersionUID = -3954500569399285372L;
     protected String source;
     protected int lineNumber;
     
@@ -49,4 +52,19 @@ public class DebugRequestLineBreakpointToggle extends DebugRequest {
     public String toString() {
         return super.toString() + " Source:" + getSource() + " lineNumber:" + getLineNumber();
     }
+        
+	public static void serialize(DataOutputStream out, DebugRequestLineBreakpointToggle request) 
+	throws IOException {
+		SerializationHelper.serialize(request.getType(), out);
+		out.writeUTF(request.getSource());
+		out.writeInt(request.getLineNumber());
+	}
+	
+	public static DebugRequest deserialize(DataInputStream in) throws IOException {
+		DebugRequestType type = (DebugRequestType)SerializationHelper.deserialize(in);
+		String source = in.readUTF();
+		int lineNo = in.readInt();
+		
+		return new DebugRequestLineBreakpointToggle(type, source, lineNo);
+	}
 }

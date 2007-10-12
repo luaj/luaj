@@ -21,4 +21,4 @@
 ******************************************************************************/
 package lua.debug;
 
-public interface DebugResponse {}
+public interface DebugResponse extends Serializable {}

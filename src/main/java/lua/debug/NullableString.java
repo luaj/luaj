@@ -25,47 +25,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugResponseCallgraph implements DebugResponse {
-    protected StackFrame[] stackFrames;
-    
-    public DebugResponseCallgraph(StackFrame[] callgraph) {
-    	if (callgraph == null) {
-    		this.stackFrames = new StackFrame[0];
-    	} else {
-    		this.stackFrames = callgraph;
-    	}
-    }
-    
-    public StackFrame[] getCallgraph() {
-        return this.stackFrames;
-    }
-
-    public String toString() {
-        StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < stackFrames.length; i++) {
-           StackFrame frame = stackFrames[i];
-           buffer.append(frame.toString());
-           buffer.append("\n");
-        }
-        return buffer.toString();
-    }
-
-    public static void serialize(DataOutputStream out, DebugResponseCallgraph response) 
-    throws IOException {
-    	StackFrame[] stackFrames = response.getCallgraph();
-		out.writeInt(stackFrames == null ? 0 : stackFrames.length);
-		for (int i = 0; stackFrames != null && i < stackFrames.length; i++) {
-			StackFrame.serialize(out, stackFrames[i]);
-		}
-	} 
+public class NullableString implements Serializable {
+	protected String string;
 	
-    public static DebugResponseCallgraph deserialize(DataInputStream in) throws IOException {
-		int count = in.readInt();
-		StackFrame[] stackFrames = new StackFrame[count];
-		for (int i = 0; i < count; i++) {
-			stackFrames[i] = StackFrame.deserialize(in); 
-		}
-		
-		return new DebugResponseCallgraph(stackFrames);
+	public NullableString(String someString) {
+		this.string = someString;
 	}
+    
+	public String getNullableString() {
+		return (this.string == null) ? "[NULL]" : this.string;
+	}
+	
+	public String getRawString() {
+		return (this.string.equals("[NULL]")) ? null : this.string;
+	}
+	
+    public static void serialize(DataOutputStream out, NullableString string) 
+    throws IOException {
+    	out.writeUTF(string.getNullableString());
+    }
+    
+    public static NullableString deserialize(DataInputStream in) 
+    throws IOException {
+    	String string = in.readUTF();
+    	return new NullableString(string);
+    }
 }

@@ -21,10 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.Serializable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class DebugRequest implements Serializable {
-    private static final long serialVersionUID = 2741129244733000595L;
     protected DebugRequestType type;
     
     public DebugRequest(DebugRequestType type) {
@@ -41,4 +42,15 @@ public class DebugRequest implements Serializable {
     public String toString() {
         return type.toString();
     }
+    
+	public static void serialize(DataOutputStream out, DebugRequest request) 
+	throws IOException {
+		DebugRequestType type = request.getType();
+		SerializationHelper.serialize(type, out);
+	}
+	
+	public static DebugRequest deserialize(DataInputStream in) throws IOException {
+		DebugRequestType type = (DebugRequestType) SerializationHelper.deserialize(in);
+		return new DebugRequest(type);
+	}
 }

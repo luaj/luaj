@@ -21,10 +21,6 @@
 ******************************************************************************/
 package lua.debug;
 
-public class DebugEventStepping extends DebugEvent {
-    private static final long serialVersionUID = 3902898567880012107L;
 
-    public DebugEventStepping() {
-        super(DebugEventType.suspendedOnStepping);
-    }
-}
+
+public interface Serializable {	}

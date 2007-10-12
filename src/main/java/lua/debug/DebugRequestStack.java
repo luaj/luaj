@@ -21,8 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
-public class DebugRequestStack extends DebugRequest {
-    private static final long serialVersionUID = 6270383432060791307L;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+public class DebugRequestStack extends DebugRequest implements Serializable {
     protected int index;
     
     public DebugRequestStack(int index) {
@@ -40,4 +43,15 @@ public class DebugRequestStack extends DebugRequest {
     public String toString() {
         return super.toString() + " stack frame:" + getIndex();
     }
+    
+	public static void serialize(DataOutputStream out, DebugRequestStack request) 
+	throws IOException {
+		out.writeInt(request.getIndex());
+	}
+	
+	public static DebugRequest deserialize(DataInputStream in) throws IOException {
+		int index = in.readInt();
+		
+		return new DebugRequestStack(index);
+	}
 }

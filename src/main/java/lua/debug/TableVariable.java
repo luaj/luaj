@@ -21,16 +21,16 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.Vector;
 
 import lua.Lua;
 import lua.value.LTable;
 import lua.value.LValue;
 
-public class TableVariable extends Variable {
-    
-    private static final long serialVersionUID = 1194778378382802700L;
+public class TableVariable extends Variable {   
     protected String[] keys;
     protected Object[] values;
     
@@ -39,8 +39,8 @@ public class TableVariable extends Variable {
         
         int size = table.size();
         DebugUtils.println("table size:" + size);
-        List keyArray = new ArrayList();  
-        List valueArray = new ArrayList();
+        Vector keyArray = new Vector();  
+        Vector valueArray = new Vector();
         LValue[] keyValues = table.getKeys();        
         for (int i = 0; i < size; i++) {
         	
@@ -60,14 +60,73 @@ public class TableVariable extends Variable {
         }
         
         this.keys = (String[])keyArray.toArray(new String[0]);
-        this.values = valueArray.toArray();
+        this.values = (Object[]) valueArray.toArray(new Object[0]);
+        if (this.keys.length != this.values.length) {
+        	throw new RuntimeException("Internal Error: key.length must equal to values.length");
+        }
+    }
+    
+    public TableVariable(int index, String name, int type, String[] keys, Object[] values) {
+    	super(index, name, type, null);
+    	this.keys = keys;
+    	this.values = values;
     }
     
     public String[] getKeys() {
-        return this.keys;
+        return this.keys == null ? new String[0] : this.keys;
     }
     
     public Object[] getValues() {
-        return this.values;
+        return this.values == null ? new Object[0] : this.values;
     }
+    
+    public static void serialize(DataOutputStream out, TableVariable variable) throws IOException {
+    	out.writeInt(variable.getIndex());
+    	out.writeUTF(variable.getName());
+    	out.writeInt(variable.getType());
+    	
+    	String[] keys = variable.getKeys();
+    	out.writeInt(keys.length);
+    	for (int i = 0; keys != null && i < keys.length; i++) {
+    		SerializationHelper.serialize(new NullableString(keys[i]), out);
+    	}
+    	
+    	Object[] values = variable.getValues();
+    	for (int i = 0; values != null && i < values.length; i++) {
+    		if (values[i] instanceof String) {
+    			SerializationHelper.serialize(new NullableString((String)values[i]), out);
+    		} else if (values[i] instanceof TableVariable) {
+    			SerializationHelper.serialize((TableVariable)values[i], out);
+    		} else {
+    			throw new RuntimeException("Internal Error: values array should only contain String and TableVariable");
+    		}
+    	}
+    }
+
+    public static Variable deserialize(DataInputStream in) throws IOException {
+    	int index = in.readInt();
+    	String name = in.readUTF();
+    	int type = in.readInt();
+    	
+    	String[] keys = null;
+    	Object[] values = null;
+    	int count = in.readInt();
+    	keys = new String[count];
+    	for (int i = 0; i < count; i++) {
+    		keys[i] = ((NullableString) SerializationHelper.deserialize(in)).getRawString();
+    	}
+    	
+    	values = new Object[count];
+    	for (int i = 0; i < count; i++) {
+    		int serialType = in.readInt();
+    		if (serialType == SerializationHelper.SERIAL_TYPE_NullableString) {
+    			values[i] = NullableString.deserialize(in).getRawString();
+    		} else if (serialType == SerializationHelper.SERIAL_TYPE_TableVariable) {
+    			values[i] = TableVariable.deserialize(in);
+    		}
+    	}
+    	
+    	TableVariable variable = new TableVariable(index, name, type, keys, values);
+    	return variable;
+    }   
 }

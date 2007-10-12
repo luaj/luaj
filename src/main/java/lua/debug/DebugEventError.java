@@ -21,8 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 public class DebugEventError extends DebugEvent {
-    private static final long serialVersionUID = -7911842790951966147L;
     protected String detail;
     
     public DebugEventError(String detail) {
@@ -40,4 +43,15 @@ public class DebugEventError extends DebugEvent {
     public String toString() {
         return super.toString() + " detail: " + getDetail();
     }
+    
+    public static void serialize(DataOutputStream out, DebugEventError object)
+			throws IOException {
+		//TODO implement
+	}
+
+	public static DebugEvent deserialize(DataInputStream in)
+			throws IOException {
+		//TODO implement
+		return null;
+	}
 }

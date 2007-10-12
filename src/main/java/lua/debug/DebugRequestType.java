@@ -21,9 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
+
 public class DebugRequestType extends EnumType {
-	private static final long serialVersionUID = 2829883820534540402L;
-	
 	public static final DebugRequestType suspend = new DebugRequestType("suspend", 0);
     public static final DebugRequestType resume = new DebugRequestType("resume", 1);
     public static final DebugRequestType exit = new DebugRequestType("exit", 2); 
@@ -34,8 +36,29 @@ public class DebugRequestType extends EnumType {
     public static final DebugRequestType callgraph = new DebugRequestType("callgraph", 7);
     public static final DebugRequestType stack = new DebugRequestType("stack", 8);
     public static final DebugRequestType step = new DebugRequestType("step", 9);
+
+    protected static final DebugRequestType[] ENUMS = new DebugRequestType[] {
+    	suspend,
+    	resume,
+    	exit,
+    	lineBreakpointSet,
+    	lineBreakpointClear,
+    	watchpointSet,
+    	watchpointClear,
+    	callgraph,
+    	stack,
+    	step
+    };
     
     public DebugRequestType(String name, int ordinal) {
     	super(name, ordinal);
+    }
+    
+    public static DebugRequestType deserialize(DataInputStream in) throws IOException {
+		int ordinal = in.readInt();
+		if (ordinal < 0 || ordinal >= ENUMS.length) {
+			throw new RuntimeException("ordinal is out of the range.");
+		}
+		return ENUMS[ordinal];
     }
 }

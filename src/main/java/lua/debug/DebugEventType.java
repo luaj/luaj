@@ -21,8 +21,12 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
+
 public class DebugEventType extends EnumType {
-    public static DebugEventType started = new DebugEventType("started", 0);
+	public static DebugEventType started = new DebugEventType("started", 0);
     public static DebugEventType suspendedByClient = new DebugEventType("suspendedByClient", 1);
     public static DebugEventType suspendedOnBreakpoint = new DebugEventType("suspendedOnBreakpoint", 2);
     public static DebugEventType suspendedOnWatchpoint = new DebugEventType("suspendedOnWatchpoint", 3);
@@ -34,7 +38,30 @@ public class DebugEventType extends EnumType {
     public static DebugEventType error = new DebugEventType("error", 9);
     public static DebugEventType terminated = new DebugEventType("terminated", 10);
     
+    protected static DebugEventType[] ENUMS = new DebugEventType[] {
+    	started,
+    	suspendedByClient,
+    	suspendedOnBreakpoint,
+    	suspendedOnWatchpoint,
+    	suspendedOnStepping,
+    	suspendedOnError,
+    	resumedByClient,
+    	resumedOnStepping,
+    	resumedOnError,
+    	error,
+    	terminated
+    };
+	
     protected DebugEventType(String name, int ordinal) {
     	super(name, ordinal);
+    }
+
+    public static DebugEventType deserialize(DataInputStream in) 
+    throws IOException {
+		int ordinal = in.readInt();
+		if (ordinal < 0 || ordinal >= ENUMS.length) {
+			throw new RuntimeException("ordinal is out of the range.");
+		}
+		return ENUMS[ordinal];
     }
 }

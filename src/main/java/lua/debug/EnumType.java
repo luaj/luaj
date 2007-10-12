@@ -21,24 +21,17 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
-public class EnumType implements Serializable {
-	private static final long serialVersionUID = -496099911938395074L;
-	
+
+public abstract class EnumType implements Serializable {
 	protected String name;
 	protected int ordinal;
-	protected static Map lookup = new HashMap();
 	
 	public EnumType(String name, int ordinal) {
 		this.name = name;
 		this.ordinal = ordinal;
-		lookup.put(name, this);
 	}
 	
     public String toString() {
@@ -59,5 +52,9 @@ public class EnumType implements Serializable {
     
     public final int ordinal() {
     	return this.ordinal;
+    }
+
+    public static void serialize(DataOutputStream out, EnumType enumType) throws IOException {
+		out.writeInt(enumType.ordinal());
     }
 }

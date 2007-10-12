@@ -21,29 +21,99 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.IOException;
 import java.net.URL;
 
 import junit.framework.TestCase;
+import lua.debug.StandardLuaJVM.ParseException;
 
 /**
  * Sanity test for StandardLuaJVM.
  */
 public class LuaJVMTest extends TestCase {
-    protected void doTestRun(String testName) {
-        String[] args = new String[2];
-        args[0] = "-file";        
-        URL filePath = getClass().getResource("/"+ testName);
-        if (filePath != null) {
-            args[1] = filePath.getPath(); 
-            try {
-                StandardLuaJVM.main(args);
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail("Test " + testName + " failed due to " + e.getMessage());
-            }            
-        }        
-    }
-    
+	public void testCommandLineParse() {
+		// null arguments
+		String[] args = null;		
+		StandardLuaJVM vm = new StandardLuaJVM();
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+		
+		// empty arguments
+		args = new String[] {};
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+
+		// incomplete arguments
+		args = new String[] { "-debug" };
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+		
+		// incomplete arguments
+		args = new String[] { "-debug", "1046" };
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+		
+		// missing script name
+		args = new String[] { "-debug", "1046", "1047"};
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+
+		// malformed request port
+		args = new String[] { "-debug", "104x", "1046", "dummy.lua"};
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+
+		// malformed event port
+		args = new String[] { "-debug", "1046", "104x", "dummy.lua"};
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+		
+		// event port == request port
+		args = new String[] { "-debug", "1046", "1046", "dummy.lua"};
+		try {
+			vm.parse(args);
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {}
+
+		// lua script cannot be found
+		args = new String[] { "-debug", "1046", "1047", "dummy.lua"};
+		try {
+			vm.parse(args);
+			vm.run();
+			fail("Should never reach this line.");
+		} catch (ParseException e) {
+			fail("Should never reach this line.");
+		} catch (IOException e) { 
+			//expected
+		}
+		
+		// lua script cannot be found
+		args = new String[] {"dummy.lua"};
+		try {
+			vm.parse(args);
+			vm.run();
+			fail("Bad parsing program. Should never reach this line.");
+		} catch (ParseException e) {
+			fail("Should never reach this line.");
+		} catch (IOException e) { 
+			//expected			
+		}
+	}
+	
     public void testRun() {
         String[] tests = new String[] {
                 "autoload",
@@ -78,4 +148,18 @@ public class LuaJVMTest extends TestCase {
             System.out.println();
         }
     }
+    
+    protected void doTestRun(String testName) {
+        String[] args = new String[1];
+        URL filePath = getClass().getResource("/"+ testName);
+        if (filePath != null) {
+            args[0] = filePath.getPath(); 
+            try {
+                StandardLuaJVM.main(args);
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("Test " + testName + " failed due to " + e.getMessage());
+            }            
+        }        
+    }    
 }

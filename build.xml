@@ -7,8 +7,7 @@
 	
 	<target name="compile">
 		<mkdir dir="build/classes"/>
-		<javac destdir="build/classes" encoding="utf-8" source="1.3" target="1.1"
-			classpath="lib/commons-cli-1.1.jar" >
+		<javac destdir="build/classes" encoding="utf-8" source="1.3" target="1.1">
 			<src path="src/main/java"/>
 			<src path="src/addon/java"/>
 		</javac>
@@ -46,7 +45,7 @@
 
 		<!-- Compile everything, but don't preverify (yet). -->
 		<mkdir dir="build/classes-j2me" />
-		<wtkbuild destdir="build/classes-j2me" preverify="false" srcdir="build/src-j2me" />
+		<wtkbuild destdir="build/classes-j2me" preverify="false" srcdir="build/src-j2me" source="1.3" />
 
 		<!-- create the jar -->
 		<jar destfile="luaj-vm-j2me-${version}.jar" basedir="build/classes-j2me" />

@@ -42,23 +42,25 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.Serializable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import lua.CallInfo;
-import lua.io.Proto;
 
 public class StackFrame implements Serializable {
-    private static final long serialVersionUID = 2102834561519501432L;
     protected int lineNumber;
     protected String source;
     
     public StackFrame(CallInfo callInfo, int lineNumber) {
-        Proto prototype = callInfo.closure.p;
-        
-        this.lineNumber = lineNumber;
-        this.source = DebugUtils.getSourceFileName(prototype.source);        
+        this(lineNumber, DebugUtils.getSourceFileName(callInfo.closure.p.source));
     }
 
+    StackFrame(int lineNumber, String source) {
+    	this.lineNumber = lineNumber;
+    	this.source = source;
+    }
+    
     public int getLineNumber() {
         return this.lineNumber;
     }
@@ -72,5 +74,42 @@ public class StackFrame implements Serializable {
      */
     public String toString() {
         return getSource() + ":" + getLineNumber();
+    }
+    
+    public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + lineNumber;
+		result = prime * result + ((source == null) ? 0 : source.hashCode());
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final StackFrame other = (StackFrame) obj;
+		if (lineNumber != other.lineNumber)
+			return false;
+		if (source == null) {
+			if (other.source != null)
+				return false;
+		} else if (!source.equals(other.source))
+			return false;
+		return true;
+	}
+
+	public static void serialize(DataOutputStream out, StackFrame stackFrame) throws IOException {
+    	out.writeInt(stackFrame.getLineNumber());
+    	out.writeUTF(stackFrame.getSource());
+    }
+    
+    public static StackFrame deserialize(DataInputStream in) throws IOException {
+    	int lineNumber = in.readInt();
+    	String source = in.readUTF();
+    	return new StackFrame(lineNumber, source);
     }
 }

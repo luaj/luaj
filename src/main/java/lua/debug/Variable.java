@@ -21,19 +21,27 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.Serializable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import lua.Lua;
 
-public class Variable implements Serializable {
-    private static final long serialVersionUID = 8194091816623233934L;
-    
+public class Variable implements Serializable {    
     protected int    index;
     protected String name;
     protected String value;
-    protected int type;
+    protected int    type;
     
     public Variable(int index, String name, int type, String value) {
+    	if (name == null) {
+    		throw new IllegalArgumentException("argument name is null");
+    	}
+    	
+    	if (type < Lua.LUA_TNIL || type > Lua.LUA_TTHREAD) {
+    		throw new IllegalArgumentException("invalid LValue type: " + type);
+    	}
+    	
         this.index = index;
         this.name = name;
         this.type = type;
@@ -59,4 +67,57 @@ public class Variable implements Serializable {
     public String toString() {
         return "index: " + getIndex() + " name:" + getName() + " type: " + Lua.TYPE_NAMES[getType()] + " value:" + getValue();
     }
+    
+    public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + index;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + type;
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final Variable other = (Variable) obj;
+		if (index != other.index)
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (type != other.type)
+			return false;
+		if (value == null) {
+			if (other.value != null)
+				return false;
+		} else if (!value.equals(other.value))
+			return false;
+		return true;
+	}
+
+	public static void serialize(DataOutputStream out, Variable variable) 
+	throws IOException {
+    	out.writeInt(variable.getIndex());
+    	out.writeUTF(variable.getName());
+    	out.writeInt(variable.getType());
+    	SerializationHelper.serialize(new NullableString(variable.getValue()), out);
+    }
+    
+    public static Variable deserialize(DataInputStream in) throws IOException {
+    	int index = in.readInt();
+    	String name = in.readUTF();
+    	int type = in.readInt();
+    	NullableString value = (NullableString)SerializationHelper.deserialize(in);
+  
+    	Variable variable = new Variable(index, name, type, value.getRawString());
+    	return variable;
+    }   
 }

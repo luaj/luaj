@@ -21,11 +21,11 @@
 ******************************************************************************/
 package lua.debug;
 
-import java.io.Serializable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
-public class DebugResponseSimple implements DebugResponse, Serializable {
-    private static final long serialVersionUID = 7042417813840650230L;
-
+public class DebugResponseSimple implements DebugResponse {
     protected boolean isSuccessful;
     
     public static final DebugResponseSimple SUCCESS = new DebugResponseSimple(true);
@@ -45,4 +45,15 @@ public class DebugResponseSimple implements DebugResponse, Serializable {
     public String toString() {
         return String.valueOf(isSuccessful);
     }
+
+    public static void serialize(DataOutputStream out, DebugResponseSimple response) 
+    throws IOException {
+		out.writeBoolean(response.isSuccessful());		
+	}
+    
+    public static DebugResponseSimple deserialize(DataInputStream in) 
+    throws IOException {
+		boolean value = in.readBoolean();
+		return value ? SUCCESS : FAILURE;
+	}
 }

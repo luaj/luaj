@@ -21,24 +21,36 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class DebugSupport implements DebugEventListener {
     public static class State extends EnumType {
-		private static final long serialVersionUID = 3657364516937093612L;
-		
 		public static final State UNKNOWN = new State("UNKNOWN", 0);
         public static final State RUNNING = new State("RUNNING", 1);
         public static final State STOPPED = new State("STOPPED", 2);
         
+        protected static final State[] ENUMS = new State[] {
+        	UNKNOWN,
+        	RUNNING,
+        	STOPPED
+        };
+        
         public State(String name, int ordinal) {
         	super(name, ordinal);
         }
+
+        public static State deserialize(DataInputStream in) throws IOException {
+			int ordinal = in.readInt();
+			if (ordinal < 0 || ordinal >= ENUMS.length) {
+				throw new RuntimeException("ordinal is out of the range.");
+			}
+			return ENUMS[ordinal];
+		}
     }
     
     protected DebugRequestListener listener;
@@ -49,12 +61,12 @@ public class DebugSupport implements DebugEventListener {
     
     protected ServerSocket requestSocket;
     protected Socket clientRequestSocket;
-    protected ObjectInputStream requestReader;
-    protected ObjectOutputStream requestWriter;
+    protected DataInputStream requestReader;
+    protected DataOutputStream requestWriter;
     
     protected ServerSocket eventSocket;
     protected Socket clientEventSocket;
-    protected ObjectOutputStream eventWriter;
+    protected DataOutputStream eventWriter;
         
     public DebugSupport(DebugRequestListener listener, 
                        int requestPort, 
@@ -117,14 +129,14 @@ public class DebugSupport implements DebugEventListener {
         this.requestSocket = new ServerSocket(requestPort);
         this.clientRequestSocket = requestSocket.accept();
         this.requestReader 
-            = new ObjectInputStream(clientRequestSocket.getInputStream());
+            = new DataInputStream(clientRequestSocket.getInputStream());
         this.requestWriter 
-            = new ObjectOutputStream(clientRequestSocket.getOutputStream());
+            = new DataOutputStream(clientRequestSocket.getOutputStream());
         
         this.eventSocket = new ServerSocket(eventPort);
         this.clientEventSocket = eventSocket.accept();
         this.eventWriter 
-            = new ObjectOutputStream(clientEventSocket.getOutputStream());                 
+            = new DataOutputStream(clientEventSocket.getOutputStream());                 
 
         this.requestWatcherThread = new Thread(new Runnable() {
             public void run() {
@@ -151,11 +163,17 @@ public class DebugSupport implements DebugEventListener {
         synchronized (clientRequestSocket) {
             try {
                 while (getState() != State.STOPPED) {
+                	int size = requestReader.readInt();
+                	byte[] data = new byte[size];
+                	requestReader.readFully(data);                	
                     DebugRequest request 
-                        = (DebugRequest) requestReader.readObject();
+                        = (DebugRequest) SerializationHelper.deserialize(data);
                     DebugUtils.println("SERVER receives request: " + request.toString());
+                    
                     DebugResponse response = listener.handleRequest(request);
-                    requestWriter.writeObject(response);
+                    data = SerializationHelper.serialize(response);
+                    requestWriter.writeInt(data.length);
+                    requestWriter.write(data);
                     requestWriter.flush();
                     DebugUtils.println("SERVER sends response: " + response);
                 }
@@ -166,8 +184,6 @@ public class DebugSupport implements DebugEventListener {
             } catch (EOFException e) {
                 cleanup();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -203,7 +219,9 @@ public class DebugSupport implements DebugEventListener {
         DebugUtils.println("SERVER sending event: " + event.toString());
         synchronized (eventSocket) {
             try {
-                eventWriter.writeObject(event);
+            	byte[] data = SerializationHelper.serialize(event);
+                eventWriter.writeInt(data.length);
+                eventWriter.write(data);
                 eventWriter.flush();
             } catch (IOException e) {
                 e.printStackTrace();
