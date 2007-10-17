@@ -6,6 +6,10 @@ public class LDouble extends LNumber {
     
 	private final double m_value;
 	
+	public static LDouble valueOf(double value) {
+		return new LDouble(value);
+	}
+	
 	public LDouble(double value) {
 		this.m_value = value;
 	}
