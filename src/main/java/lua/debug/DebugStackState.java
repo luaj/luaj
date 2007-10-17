@@ -21,7 +21,10 @@
 ******************************************************************************/
 package lua.debug;
 
+import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import lua.CallInfo;
@@ -30,7 +33,7 @@ import lua.StackState;
 import lua.addon.compile.LexState;
 import lua.debug.event.DebugEvent;
 import lua.debug.event.DebugEventBreakpoint;
-import lua.debug.event.DebugEventListener;
+import lua.debug.event.DebugEventType;
 import lua.debug.request.DebugRequest;
 import lua.debug.request.DebugRequestLineBreakpointToggle;
 import lua.debug.request.DebugRequestListener;
@@ -40,6 +43,7 @@ import lua.debug.response.DebugResponse;
 import lua.debug.response.DebugResponseCallgraph;
 import lua.debug.response.DebugResponseSimple;
 import lua.debug.response.DebugResponseStack;
+import lua.io.Closure;
 import lua.io.LocVars;
 import lua.io.Proto;
 import lua.value.LTable;
@@ -54,33 +58,23 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     protected boolean suspended = false;
     protected boolean stepping = false;
     protected int lastline = -1;
-    protected Vector debugEventListeners = new Vector();
+    protected DebugSupport debugSupport = null;
+
+	public DebugStackState() {}
 	
-	public DebugStackState() {
+	public void setDebugSupport(DebugSupport debugSupport) throws IOException {
+		if (debugSupport == null) {
+			throw new IllegalArgumentException("DebugSupport cannot be null");
+		}
+		
+		this.debugSupport = debugSupport;
+		debugSupport.setDebugStackState(this);
+		debugSupport.start();
 	}
 	
     protected void debugAssert(boolean b) {
     	if ( ! b ) 
     		error( "assert failure" );
-    }
-
-    public void addDebugEventListener(DebugEventListener listener) {
-        if (!debugEventListeners.contains(listener)) {
-            debugEventListeners.addElement(listener);
-        }
-    }
-    
-    public void removeDebugEventListener(DebugEventListener listener) {
-        if (debugEventListeners.contains(listener)) {
-            debugEventListeners.removeElement(listener);
-        }
-    }
-    
-    protected void notifyDebugEventListeners(DebugEvent event) {
-    	for (int i = 0; debugEventListeners != null && i < debugEventListeners.size(); i++) {
-    		DebugEventListener listener = (DebugEventListener)debugEventListeners.elementAt(i);
-            listener.notifyDebugEvent(event);
-    	}
     }
     
 	private String getFileLine(int cindex) {
@@ -157,10 +151,12 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                 Proto p = calls[cc].closure.p;
                 String source = DebugUtils.getSourceFileName(p.source);                
                 if ( breakpoints.containsKey(constructBreakpointKey(source, line))){
-                	if(DebugUtils.IS_DEBUG)
+                	if(DebugUtils.IS_DEBUG) {
                 		DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
-                    notifyDebugEventListeners(
-                            new DebugEventBreakpoint(source, line));
+                	}
+                	if (debugSupport != null) {
+                		debugSupport.notifyDebugEvent(new DebugEventBreakpoint(source, line));
+                	}
                     suspended = true;
                 } else {
                     return;
@@ -195,16 +191,28 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	// ------------------ commands coming from the debugger -------------------   
     
 	public DebugResponse handleRequest(DebugRequest request) {
+		if (this.debugSupport == null) {
+			throw new IllegalStateException("DebugStackState is not equiped with DebugSupport.");
+		}
+		
         DebugUtils.println("DebugStackState is handling request: " + request.toString());
-        DebugRequestType requestType = request.getType();    	
-    	if (DebugRequestType.suspend == requestType) { 
-            suspend();             
+        DebugRequestType requestType = request.getType();   
+        if (DebugRequestType.start == requestType) {
+            DebugEvent event = new DebugEvent(DebugEventType.started);
+            debugSupport.notifyDebugEvent(event);                
+            return DebugResponseSimple.SUCCESS;
+        } else if (DebugRequestType.exit == requestType) {
+            stop();
+            return DebugResponseSimple.SUCCESS;
+        } else if (DebugRequestType.suspend == requestType) { 
+            suspend();          
+            DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
+            debugSupport.notifyDebugEvent(event);                
             return DebugResponseSimple.SUCCESS;
     	} else if (DebugRequestType.resume == requestType) { 
-            resume(); 
-            return DebugResponseSimple.SUCCESS;
-    	} else if (DebugRequestType.exit == requestType) { 
-            exit(); 
+            resume();
+        	DebugEvent event = new DebugEvent(DebugEventType.resumedByClient);
+            debugSupport.notifyDebugEvent(event);
             return DebugResponseSimple.SUCCESS;
     	} else if (DebugRequestType.lineBreakpointSet == requestType) {
             DebugRequestLineBreakpointToggle setBreakpointRequest 
@@ -252,7 +260,25 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			this.notify();
 		}
 	}
-	
+    
+    public void stop() {
+		if (this.debugSupport == null) {
+			throw new IllegalStateException("DebugStackState is not equiped with DebugSupport.");
+		}
+		
+        DebugEvent event = new DebugEvent(DebugEventType.terminated);
+        debugSupport.notifyDebugEvent(event);
+
+        new Timer().schedule(new TimerTask() {
+        	public void run () {
+        		debugSupport.stop();
+        		debugSupport = null;            		
+        	}
+        }, 300);
+
+        exit();
+    }
+    
     /** 
      * terminate the execution
      */

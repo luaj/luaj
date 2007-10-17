@@ -25,24 +25,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import lua.GlobalState;
 import lua.StackState;
 import lua.addon.luacompat.LuaCompat;
 import lua.addon.luajava.LuaJava;
 import lua.debug.DebugStackState;
+import lua.debug.DebugSupport;
 import lua.debug.DebugUtils;
-import lua.debug.event.DebugEvent;
-import lua.debug.event.DebugEventType;
-import lua.debug.request.DebugRequest;
-import lua.debug.request.DebugRequestListener;
-import lua.debug.request.DebugRequestType;
-import lua.debug.response.DebugResponse;
-import lua.debug.response.DebugResponseSimple;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -55,9 +45,8 @@ import lua.value.LValue;
  * @author:  Shu Lei
  * @version: 1.0
  */
-public class StandardLuaJVM implements DebugRequestListener {
+public class StandardLuaJVM {
     protected boolean isDebugMode = false;
-    protected DebugSupport debugSupport;
     protected int requestPort;
     protected int eventPort;
     protected String script;
@@ -125,19 +114,15 @@ public class StandardLuaJVM implements DebugRequestListener {
 			throw new ParseException("script is missing.");
 		}
 		
-		try {
-		    this.script = URLDecoder.decode(args[0], "UTF-8");
-		    DebugUtils.println("Lua script to run: " + this.script);
-		    int scriptArgsLength = args.length - 1;
-		    if (scriptArgsLength > 0) {
-		        this.scriptArgs = new String[scriptArgsLength];
-		        for (int i = 1; i < args.length; i++) {
-		            this.scriptArgs[i - 1] = URLDecoder.decode(args[i], "UTF-8");
-		        }            	
-		    }
-		} catch (UnsupportedEncodingException e) {
-		    throw new ParseException("Malformed program argument strings: " + e.getMessage());
-		}
+	    this.script = args[0];
+	    DebugUtils.println("Lua script to run: " + this.script);
+	    int scriptArgsLength = args.length - 1;
+	    if (scriptArgsLength > 0) {
+	        this.scriptArgs = new String[scriptArgsLength];
+	        for (int i = 1; i < args.length; i++) {
+	            this.scriptArgs[i - 1] = args[i];
+	        }            	
+	    }
 	}
     // end of command line parsing utilities
 	
@@ -184,7 +169,7 @@ public class StandardLuaJVM implements DebugRequestListener {
         LuaCompat.install();        
     }
     
-    public void doRun() throws IOException {
+    protected void doRun() throws IOException {
         init();
         
         // new lua state 
@@ -208,9 +193,12 @@ public class StandardLuaJVM implements DebugRequestListener {
         state.doCall(c, vargs);        
     }
     
-    private void doDebug() throws IOException {        
+    protected void doDebug() throws IOException {        
         DebugUtils.println("setting up LuaJava and debug stack state...");        
         init();
+
+        // new lua debug state 
+        state = new DebugStackState();
 
         // load the Lua file
         DebugUtils.println("loading Lua script '" + getScript() + "'");
@@ -219,79 +207,25 @@ public class StandardLuaJVM implements DebugRequestListener {
 
         // set up debug support if the file is successfully loaded
         DebugUtils.println("start debugging...");
-        this.debugSupport = new DebugSupport(this, getRequestPort(), getEventPort());
-        DebugUtils.println("created client request socket connection...");
-        debugSupport.start();
-
-        // new lua debug state 
-        state = new DebugStackState();
-        getDebugState().addDebugEventListener(debugSupport);
+        DebugSupport debugSupport 
+        	= new DebugSupportImpl(getRequestPort(), getEventPort());
+        getDebugState().setDebugSupport(debugSupport);
         getDebugState().suspend();
         
         // create closure and execute
         final Closure c = new Closure(state, p);
-        
-        new Thread(new Runnable() {
-            public void run() {        
-            	String[] args = getScriptArgs();
-                int numOfScriptArgs = (args != null ? args.length : 0);
-                LValue[] vargs = new LValue[numOfScriptArgs];
-                for (int i = 0; i < numOfScriptArgs; i++) { 
-                    vargs[i] = new LString(args[i]);
-                }
-                
-                getDebugState().doCall(c, vargs);
-                stop();
-            }
-        }).start();
-        
-        debugSupport.notifyDebugEvent(new DebugEvent(DebugEventType.started));
+    	String[] args = getScriptArgs();
+        int numOfScriptArgs = (args != null ? args.length : 0);
+        LValue[] vargs = new LValue[numOfScriptArgs];
+        for (int i = 0; i < numOfScriptArgs; i++) { 
+            vargs[i] = new LString(args[i]);
+        }
+        getDebugState().doCall(c, vargs);
+        getDebugState().stop();
     }   
     
     private DebugStackState getDebugState() {
         return (DebugStackState)state;
-    }
-    
-    /* (non-Javadoc)
-     * @see lua.debug.DebugRequestListener#handleRequest(java.lang.String)
-     */
-    public DebugResponse handleRequest(DebugRequest request) {
-        if (!isDebug()) {
-            throw new UnsupportedOperationException("Must be in debug mode to handle the debug requests");
-        }
-        
-        DebugRequestType requestType = request.getType();
-        if (DebugRequestType.suspend == requestType) {
-        	DebugResponse status = getDebugState().handleRequest(request);                
-            DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
-            debugSupport.notifyDebugEvent(event);                
-            return status;
-        } else if (DebugRequestType.resume == requestType) {
-        	DebugResponse status = getDebugState().handleRequest(request);                
-        	DebugEvent event = new DebugEvent(DebugEventType.resumedByClient);
-            debugSupport.notifyDebugEvent(event);                
-            return status;
-        } else if (DebugRequestType.exit == requestType) {
-            stop();
-            return DebugResponseSimple.SUCCESS;
-        } else {
-            return getDebugState().handleRequest(request);
-        }
-    }
-    
-    protected void stop() {
-        if (this.debugSupport != null) {
-            DebugEvent event = new DebugEvent(DebugEventType.terminated);
-            debugSupport.notifyDebugEvent(event);
-            Timer timer = new Timer("DebugServerDeathThread");
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    debugSupport.stop();
-                    debugSupport = null;                    
-                }
-            }, 300);
-        }
-        getDebugState().exit();
     }
 
     /**

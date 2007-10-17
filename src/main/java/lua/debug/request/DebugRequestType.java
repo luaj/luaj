@@ -38,7 +38,8 @@ public class DebugRequestType extends EnumType {
     public static final DebugRequestType callgraph = new DebugRequestType("callgraph", 7);
     public static final DebugRequestType stack = new DebugRequestType("stack", 8);
     public static final DebugRequestType step = new DebugRequestType("step", 9);
-
+    public static final DebugRequestType start = new DebugRequestType("start", 10);
+    
     protected static final DebugRequestType[] ENUMS = new DebugRequestType[] {
     	suspend,
     	resume,
@@ -49,7 +50,8 @@ public class DebugRequestType extends EnumType {
     	watchpointClear,
     	callgraph,
     	stack,
-    	step
+    	step,
+    	start
     };
     
     public DebugRequestType(String name, int ordinal) {
