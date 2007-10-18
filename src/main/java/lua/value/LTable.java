@@ -105,7 +105,7 @@ public class LTable extends LValue {
 	public void put( LValue key, LValue val ) {
 		if ( key.isInteger() ) {
 			// call the integer-specific put method
-			put( key.luaAsInt(), val );
+			put( key.toJavaInt(), val );
 		} else if ( val == null || val == LNil.NIL ) {
 			// Remove the key if the value is nil. This comes after the check
 			// for an integer key so that values are properly removed from
@@ -171,7 +171,7 @@ public class LTable extends LValue {
 	 */
 	public LValue get( LValue key ) {
 		if ( m_vector.length > 0 && key.isInteger() ) {
-			final int index = key.luaAsInt() - 1;
+			final int index = key.toJavaInt() - 1;
 			if ( index >= 0 && index < m_vector.length ) {
 				return m_vector[index];
 			}
@@ -201,7 +201,7 @@ public class LTable extends LValue {
 	 */
 	public boolean containsKey( LValue key ) {
 		if ( m_vector.length > 0 && key.isInteger() ) {
-			final int index = key.luaAsInt() - 1;
+			final int index = key.toJavaInt() - 1;
 			if ( index >= 0 && index < m_vector.length ) {
 				final LValue v = m_vector[index];
 				return v != LNil.NIL;
@@ -255,8 +255,8 @@ public class LTable extends LValue {
 					(LTable) metatable : null;
 	}
 
-	public LString luaAsString() {
-		return new LString("table: "+id());
+	public String toJavaString() {
+		return "table: "+id();
 	}
 
 	public int luaGetType() {

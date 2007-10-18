@@ -9,7 +9,7 @@ public final class LNil extends LValue {
 		return luaGetTypeName();
 	}
 
-	public boolean luaAsBoolean() {
+	public boolean toJavaBoolean() {
 		return false;
 	}
 
@@ -17,8 +17,39 @@ public final class LNil extends LValue {
 		return Lua.LUA_TNIL;
 	}
 	
-	public int luaAsInt() {
+	public int toJavaInt() {
 		return 0;
 	}
 
+	public String toJavaString() {
+		return "nil";
+	}
+
+	public Byte toJavaBoxedByte() {
+		return null;
+	}
+
+	public Character toJavaBoxedCharacter() {
+		return null;
+	}
+
+	public Double toJavaBoxedDouble() {
+		return null;
+	}
+
+	public Float toJavaBoxedFloat() {
+		return null;
+	}
+
+	public Integer toJavaBoxedInteger() {
+		return null;
+	}
+
+	public Long toJavaBoxedLong() {
+		return null;
+	}
+
+	public Short toJavaBoxedShort() {
+		return null;
+	}	
 }

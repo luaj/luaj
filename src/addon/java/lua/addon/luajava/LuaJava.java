@@ -122,7 +122,7 @@ public final class LuaJava extends LFunction {
 			this.clazz = clazz;
 		}
 		public void luaGetTable(VM vm, LValue table, LValue key) {
-			final String s = key.luaAsString().toJavaString();
+			final String s = key.toJavaString();
 			try {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
@@ -136,7 +136,7 @@ public final class LuaJava extends LFunction {
 		}
 		public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 			Class c = m_instance.getClass();
-			String s = key.luaAsString().toJavaString();
+			String s = key.toJavaString();
 			try {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());

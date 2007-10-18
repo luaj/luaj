@@ -165,6 +165,10 @@ public class LString extends LValue {
 		return new LString( String.valueOf( x ) );
 	}
 	
+	public static LString valueOf(String s) {
+		return new LString( s );
+	}
+	
 	public static LString concat( final LString[] strings ) {
 		int length = 0;
 		for ( int i = 0; i < strings.length; ++i ) {
@@ -395,5 +399,6 @@ public class LString extends LValue {
 	public int luaByte(int index) {
 		return m_bytes[m_offset + index] & 0x0FF;
 	}
+
 
 }

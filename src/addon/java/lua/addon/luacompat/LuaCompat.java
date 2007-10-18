@@ -370,7 +370,7 @@ public class LuaCompat extends LFunction {
 		if ( arg instanceof LNumber ) {
 			final int start;
 			final int numResults;
-			if ( ( start = arg.luaAsInt() ) > 0 &&
+			if ( ( start = arg.toJavaInt() ) > 0 &&
 				 ( numResults = Math.max( vm.getArgCount() - start,
 						 				  vm.getExpectedResultCount() ) ) > 0 ) {
 				// since setResult trashes the arguments, we have to save them somewhere.
@@ -384,7 +384,7 @@ public class LuaCompat extends LFunction {
 				}
 				return;
 			}
-		} else if ( arg.luaAsString().equals( "#" ) ) {
+		} else if ( arg.toJavaString().equals( "#" ) ) {
 			vm.setResult( LInteger.valueOf( vm.getArgCount() - 1 ) );
 		}
 		vm.setResult();
@@ -405,7 +405,7 @@ public class LuaCompat extends LFunction {
 	
 	private void modf( VM vm ) {
 		LValue arg = vm.getArg( 0 );
-		double v = arg.luaAsDouble();
+		double v = arg.toJavaDouble();
 		double intPart = ( v > 0 ) ? Math.floor( v ) : Math.ceil( v );
 		double fracPart = v - intPart;
 		vm.setResult();
@@ -439,7 +439,7 @@ public class LuaCompat extends LFunction {
 		if ( f instanceof Closure ) {
 			c = (Closure) f;
 		} else {
-			int callStackDepth = f.luaAsInt();
+			int callStackDepth = f.toJavaInt();
 			if ( callStackDepth > 0 ) {
 				CallInfo frame = state.getStackFrame( callStackDepth );
 				if ( frame != null ) {

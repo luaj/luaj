@@ -34,12 +34,16 @@ public class LInteger extends LNumber {
 		return v;
 	}
     
-	public int luaAsInt() {
+	public int toJavaInt() {
 		return m_value;
 	}
 	
 	public LString luaAsString() {
 		return LString.valueOf(m_value);
+	}
+
+	public String toJavaString() {
+		return String.valueOf(m_value);
 	}
 	
 	public boolean isInteger() {

@@ -88,10 +88,10 @@ public class DumpState {
 				// do nothing more
 			} else if (o instanceof LBoolean) {
 				writer.write(Lua.LUA_TBOOLEAN);
-				dumpChar(o.luaAsBoolean() ? 1 : 0);
+				dumpChar(o.toJavaBoolean() ? 1 : 0);
 			} else if (o instanceof LNumber) {
 				writer.write(Lua.LUA_TNUMBER);
-				dumpNumber(o.luaAsDouble());
+				dumpNumber(o.toJavaDouble());
 			} else if (o instanceof LString) {
 				writer.write(Lua.LUA_TSTRING);
 				dumpString((LString) o);

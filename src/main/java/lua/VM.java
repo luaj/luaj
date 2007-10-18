@@ -1407,4 +1407,103 @@ public interface VM {
 	 */
 	public void yield(int nresults);
 
+	// ============================= conversion to and from Java boxed types ====================
+	
+	/**
+	 * Push a Java Boolean value, or nil if the value is null. 
+	 * @param b Boolean value to convert, or null to to nil.
+	 */
+	public void pushboolean( Boolean b );
+	
+	/**
+	 * Push a Java Byte value, or nil if the value is null. 
+	 * @param b Byte value to convert, or null to to nil.
+	 */
+	public void pushinteger( Byte b );
+	
+	/**
+	 * Push a Java Character value, or nil if the value is null. 
+	 * @param c Character value to convert, or null to to nil.
+	 */
+	public void pushinteger( Character c );
+	
+	/**
+	 * Push a Java Double as a double, or nil if the value is null. 
+	 * @param d Double value to convert, or null to to nil.
+	 */
+	public void pushnumber( Double d );
+	
+	/**
+	 * Push a Java Float value, or nil if the value is null. 
+	 * @param f Float value to convert, or null to to nil.
+	 */
+	public void pushnumber( Float f );
+	
+	/**
+	 * Push a Java Integer value, or nil if the value is null. 
+	 * @param i Integer value to convert, or null to to nil.
+	 */
+	public void pushinteger( Integer i );
+	
+	/**
+	 * Push a Java Short value, or nil if the value is null. 
+	 * @param s Short value to convert, or null to to nil.
+	 */
+	public void pushinteger( Short s );
+	
+	/**
+	 * Push a Java Long value, or nil if the value is null. 
+	 * @param l Long value to convert, or null to to nil.
+	 */
+	public void pushnumber( Long l );
+	
+	/**
+	 * Push a Java Object as userdata, or nil if the value is null. 
+	 * @param o Object value to push, or null to to nil.
+	 */
+	public void pushuserdata( Object o );
+
+
+	/**
+	 * Convert a value to a Java Boolean value, or null if the value is nil.
+	 * @param index index of the parameter to convert. 
+	 * @return Boolean value at the index, or null if the value was not a boolean.
+	 */
+	public Boolean toboxedboolean(int index);
+	
+	/**
+	 * Convert a value to a Java Byte value, or null if the value is not a number.
+	 * @param index index of the parameter to convert. 
+	 * @return Byte value at the index, or null if the value was not a number.
+	 */
+	public Byte toboxedbyte(int index);
+	
+	/**
+	 * Convert a value to a Java Double value, or null if the value is not a number.
+	 * @param index index of the parameter to convert. 
+	 * @return Double value at the index, or null if the value was not a number.
+	 */
+	public Double toboxeddouble(int index);
+	
+	/**
+	 * Convert a value to a Java Float value, or null if the value is not a number.
+	 * @param index index of the parameter to convert. 
+	 * @return Float value at the index, or null if the value was not a boolean.
+	 */
+	public Float toboxedfloat(int index);
+	
+	/**
+	 * Convert a value to a Java Integer value, or null if the value is not a number.
+	 * @param index index of the parameter to convert. 
+	 * @return Integer value at the index, or null if the value was not a number.
+	 */
+	public Integer toboxedinteger(int index);
+	
+	/**
+	 * Convert a value to a Java Long value, or null if the value is nil.
+	 * @param index index of the parameter to convert. 
+	 * @return Long value at the index, or null if the value was not a number.
+	 */
+	public Long toboxedlong(int index);
+
 }

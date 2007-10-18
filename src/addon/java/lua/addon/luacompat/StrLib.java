@@ -536,7 +536,7 @@ public class StrLib {
 			}
 			
 			repl = vm.topointer( -1 );
-			if ( !repl.luaAsBoolean() ) {
+			if ( !repl.toJavaBoolean() ) {
 				repl = s.substring( soffset, end );
 			} else if ( ! ( repl instanceof LString || repl instanceof LNumber ) ) {
 				vm.error( "invalid replacement value (a "+repl.luaGetTypeName()+")" );

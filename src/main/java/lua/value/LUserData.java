@@ -11,8 +11,8 @@ public class LUserData extends LValue {
 		m_instance = obj;
 	}
 	
-	public LString luaAsString() {
-		return new LString(m_instance.toString());
+	public String toJavaString() {
+		return String.valueOf(m_instance);
 	}
 	
 	public boolean equals(Object obj) {
@@ -30,5 +30,9 @@ public class LUserData extends LValue {
 	
 	public LTable luaGetMetatable() {
 		return m_metatable; 
+	}
+
+	public Object toJavaInstance() {
+		return m_instance;
 	}
 }

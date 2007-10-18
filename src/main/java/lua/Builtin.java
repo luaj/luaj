@@ -55,7 +55,7 @@ final class Builtin extends JavaFunction {
 			for ( int i=1; i<=n; i++ ) {
 				if ( i > 1 )
 					stdout.print( "\t" );
-				stdout.print( vm.topointer(i).luaAsString() );
+				stdout.print( vm.topointer(i).toJavaString() );
 			}
 			stdout.println();
 			return 0;

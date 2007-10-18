@@ -8,7 +8,7 @@ public class LThread extends LValue {
 		return Lua.LUA_TTHREAD;
 	}
 	
-	public LString luaAsString() {
-		return new LString("thread: "+hashCode());
+	public String toJavaString() {
+		return "thread: "+hashCode();
 	}
 }

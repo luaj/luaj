@@ -1,4 +1,4 @@
 bin
 target
 build
-luaj-vm-1.0.jar
+luaj*.jar

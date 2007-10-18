@@ -89,7 +89,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			if ( p.lineinfo != null && p.lineinfo.length > call.pc )
 				line = String.valueOf( p.lineinfo[call.pc] );
 			// TODO: reverse lookup on function name ????
-			func = call.closure.luaAsString().toJavaString();
+			func = call.closure.toJavaString();
 		}
 		return source+":"+line+"("+func+")";
 	}

@@ -16,13 +16,13 @@ public class LValue {
 		throw new java.lang.RuntimeException( "not supported" );
 	}
 
+	protected void luaConversionError(String target) {
+		throw new java.lang.RuntimeException( "bad conversion: "+luaGetTypeName()+" to "+target );
+	}
+
+
 	public String id() {
 		return Integer.toHexString(hashCode());
-	}
-	
-	// test if value is true
-	public boolean luaAsBoolean() {
-		return true;
 	}
 	
 	/** Return true if this value can be represented as an "int" */
@@ -120,26 +120,17 @@ public class LValue {
 		vm.push(LNil.NIL);
 	}
 	
-	/** Get the value as a String
+	/** Get the value as a LString 
 	 */
-	public abstract LString luaAsString();
+	public LString luaAsString() {
+		return new LString(toJavaString());
+	}
 	
 	/** Override standard toString with lua String conversion by default */
 	public String toString() {
-		return luaAsString().toJavaString();
+		return toJavaString();
 	}
-
-	/** Return value as an integer */
-	public int luaAsInt() {
-		luaUnsupportedOperation();
-		return 0;
-	}
-
-	/** Return value as a double */
-	public double luaAsDouble() {
-		return luaAsInt();
-	}
-
+	
 	/** Arithmetic negative */
 	public LValue luaUnaryMinus() {
 		return luaUnsupportedOperation();
@@ -184,6 +175,107 @@ public class LValue {
 	/** Valid for all types: return the type of this value as an LString */
 	public LString luaGetTypeName() {
 		return LString.LTYPENAMES[luaGetType()];
+	}
+
+	
+	/** Convert to a Java String */
+	public String toJavaString() {
+		return null;
+	}
+	
+	/** Return value as a boolean */
+	public boolean toJavaBoolean() {
+		return true;
+	}
+	
+	/** Return value as a byte */
+	public byte toJavaByte() {
+		return (byte) toJavaInt();
+	}
+
+	/** Return value as a char */
+	public char toJavaChar() {
+		return (char) toJavaInt();
+	}
+
+	/** Return value as a double */
+	public double toJavaDouble() {
+		return toJavaInt();
+	}
+
+	/** Return value as a float */
+	public float toJavaFloat() {
+		return (float) toJavaDouble();
+	}
+
+	/** Return value as an integer */
+	public int toJavaInt() {
+		luaConversionError("number");
+		return 0;
+	}
+
+	/** Return value as a long */
+	public long toJavaLong() {
+		return (long) toJavaDouble();
+	}
+
+	/** Return value as a double */
+	public short toJavaShort() {
+		return (short) toJavaInt();
+	}
+
+	/** Convert to a Boolean value */
+	public Boolean toJavaBoxedBoolean() {
+		luaConversionError("Boolean");
+		return null;
+	}
+
+	/** Convert to a Byte value */
+	public Byte toJavaBoxedByte() {
+		luaConversionError("Byte");
+		return null;
+	}
+
+	/** Convert to a boxed Character value */
+	public Character toJavaBoxedCharacter() {
+		luaConversionError("Character");
+		return null;
+	}
+
+	/** Convert to a boxed Double value */
+	public Double toJavaBoxedDouble() {
+		luaConversionError("Double");
+		return null;
+	}
+
+	/** Convert to a boxed Float value */
+	public Float toJavaBoxedFloat() {
+		luaConversionError("Float");
+		return null;
+	}
+
+	/** Convert to a boxed Integer value */
+	public Integer toJavaBoxedInteger() {
+		luaConversionError("Integer");
+		return null;
+	}
+
+	/** Convert to a boxed Long value */
+	public Long toJavaBoxedLong() {
+		luaConversionError("Long");
+		return null;
+	}
+
+	/** Convert to a boxed Short value */
+	public Short toJavaBoxedShort() {
+		luaConversionError("Short");
+		return null;
+	}
+
+	/** Convert to a Java Object iff this is a LUserData value */
+	public Object toJavaInstance() {
+		luaConversionError("instance");
+		return null;
 	}
 
 }

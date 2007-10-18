@@ -18,15 +18,16 @@ public class LDouble extends LNumber {
 		return (int) m_value;
 	}
 
-	public LString luaAsString() {
+	public String toJavaString() {
 		long l = (long) m_value;
 		if ( m_value == (double) l ) {
 			// TODO: is this a good idea?
-			return new LString( Long.toString( l ) );
+			return Long.toString( l );
 		} else {
-			return LString.valueOf( m_value );
+			return Double.toString( m_value );
 		}
 	}
+	
 	
 	public boolean isInteger() {
 		// Cast to int and then back to double and see if the value
@@ -81,11 +82,11 @@ public class LDouble extends LNumber {
 	*/
 
 
-	public int luaAsInt() {
+	public int toJavaInt() {
 		return (int) m_value;
 	}
 
-	public double luaAsDouble() {
+	public double toJavaDouble() {
 		return m_value;
 	}
 

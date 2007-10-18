@@ -25,7 +25,7 @@ public class CoerceLuaToJava {
 	static {
 		Coercion boolCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.luaAsBoolean()? Boolean.TRUE: Boolean.FALSE;
+				return value.toJavaBoolean()? Boolean.TRUE: Boolean.FALSE;
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LBoolean || value == LNil.NIL )
@@ -37,7 +37,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion intCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return Integer.valueOf( value.luaAsInt() );
+				return Integer.valueOf( value.toJavaInt() );
 			}
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
@@ -51,7 +51,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion doubleCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return Double.valueOf( value.luaAsDouble() );
+				return Double.valueOf( value.toJavaDouble() );
 			}
 			public int score(LValue value) {
 				if ( value instanceof LDouble )
@@ -65,7 +65,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion stringCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.luaAsString().toJavaString();
+				return value.toJavaString();
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LUserData )
@@ -78,13 +78,13 @@ public class CoerceLuaToJava {
 				if ( value instanceof LUserData )
 					return ((LUserData)value).m_instance;
 				if ( value instanceof LString )
-					return value.luaAsString().toJavaString();
+					return value.toJavaString();
 				if ( value instanceof LInteger )
-					return Integer.valueOf(value.luaAsInt());
+					return Integer.valueOf(value.toJavaInt());
 				if ( value instanceof LDouble )
-					return Double.valueOf(value.luaAsDouble());
+					return Double.valueOf(value.toJavaDouble());
 				if ( value instanceof LBoolean )
-					return Boolean.valueOf(value.luaAsBoolean());
+					return Boolean.valueOf(value.toJavaBoolean());
 				if ( value == LNil.NIL )
 					return null;
 				return value;

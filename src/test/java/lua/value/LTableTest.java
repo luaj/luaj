@@ -66,7 +66,7 @@ public class LTableTest extends TestCase {
 			LValue k = keys[i];
 			
 			if ( k instanceof LInteger ) {
-				final int ik = k.luaAsInt();
+				final int ik = k.toJavaInt();
 				assertTrue( ik >= 0 && ik < 10 );
 				final int mask = 1 << ik;
 				assertTrue( ( intKeys & mask ) == 0 );

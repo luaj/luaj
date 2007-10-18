@@ -6,10 +6,10 @@ import lua.VM;
 
 public class LFunction extends LValue {
 
-	public LString luaAsString() {
-		return new LString( "function: "+hashCode() );
+	public String toJavaString() {
+		return "function: "+hashCode();
 	}
-
+	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
 		vm.push( this );
 		vm.push( table );

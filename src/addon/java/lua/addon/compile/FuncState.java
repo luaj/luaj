@@ -432,7 +432,7 @@ public class FuncState extends LuaC {
 
 	int numberK(LNumber r) {
 		if ( r instanceof LDouble ) {
-			double d = r.luaAsDouble();
+			double d = r.toJavaDouble();
 			int i = (int) d;
 			if ( d == (double) i ) 
 				r = LInteger.valueOf(i);
@@ -833,7 +833,7 @@ public class FuncState extends LuaC {
 			r = null;
 			break;
 		}
-		if (Double.NaN == r.luaAsDouble())
+		if (Double.NaN == r.toJavaDouble())
 			return false; /* do not attempt to produce NaN */
 		e1.u.setNval( r );
 		return true;
