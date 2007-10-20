@@ -55,6 +55,9 @@ public class LuaCompat extends LFunction {
 		LTable table = new LTable();
 		installNames( pckg,  TABLE_NAMES, TABLES_BASE );
 		globals.put( "table", pckg );
+		
+		// coroutines
+		CoroutinesLib.install();
 	}
 
 	private static void installNames( LTable table, String[] names, int indexBase ) {

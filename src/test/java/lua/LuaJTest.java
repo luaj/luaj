@@ -60,6 +60,10 @@ public class LuaJTest extends TestCase {
 		runTest( "coercions" );
 	}
 	
+	public void testCoroutines() throws IOException, InterruptedException {
+		runTest( "coroutines" );
+	}
+	
 	public void testCompare() throws IOException, InterruptedException {
 		runTest( "compare" );
 	}

@@ -3,17 +3,32 @@ package lua.io;
 import lua.StackState;
 import lua.VM;
 import lua.value.LFunction;
-import lua.value.LValue;
+import lua.value.LTable;
 
 public class Closure extends LFunction {
-	public LValue env;
+	public LTable env;
 	public Proto p;
 	public UpVal[] upVals;
 	
-	// TODO: change arg type to VM? 
+	/**
+	 * @deprecated construct with environment instead 
+	 * @param state
+	 * @param p
+	 */ 
 	public Closure(StackState state, Proto p) {
 		this.env = state._G;
 		this.p = p;
+		upVals = new UpVal[p.nups];
+	}
+
+	/**
+	 * Construct using a prototype and initial environment. 
+	 * @param p
+	 * @param env
+	 */
+	public Closure(Proto p, LTable env) {
+		this.p = p;
+		this.env = env;
 		upVals = new UpVal[p.nups];
 	}
 

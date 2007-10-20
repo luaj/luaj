@@ -1382,7 +1382,7 @@ public interface VM {
 	 * This function pops <code>n</code> values from the stack
 	 * <code>from</code>, and pushes them onto the stack <code>to</code>.
 	 */
-	public void xmove(StackState to, int n);
+	public void xmove(VM to, int n);
 
 	/**
 	 * Yields a coroutine. <span class="apii">[-?, +?, <em>-</em>]</span>
