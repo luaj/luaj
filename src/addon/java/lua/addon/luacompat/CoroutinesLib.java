@@ -21,16 +21,22 @@ public class CoroutinesLib extends LFunction {
 		GlobalState.getGlobalsTable().put("coroutine",lib);
 	}
 	
-	private int id = 0;
-	
-	private static LThread running;
+	private final int id;
+	private final LThread thread;
 	
 	public CoroutinesLib() {
-		this(0);
+		this.id = 0;
+		this.thread = null;
 	}
 	
 	private CoroutinesLib( int id ) {
 		this.id = id;
+		this.thread = null;
+	}
+	
+	private CoroutinesLib( int id, LThread thread ) {
+		this.id = id;
+		this.thread = thread;
 	}
 	
 	public boolean luaStackCall( VM vm ) {
@@ -47,20 +53,13 @@ public class CoroutinesLib extends LFunction {
 			}
 			case 2: {// resume
 				LThread t = (LThread) vm.topointer(2);
-				LThread prior = running;
-				try {
-					// whatever is left on the stack by the resumeFrom() implementation 
-					// becomes return values!
-					running = t;
-					t.resumeFrom( vm, prior );
-					return false;
-				} finally {
-					running = prior;
-				}
+				t.resumeFrom( vm, vm.gettop()-2 );
+				return false;
 			}
 			case 3: { // running
-				if ( running != null ) {
-					vm.pushlvalue( running );
+				LThread r = LThread.getRunning();
+				if ( r != null ) {
+					vm.pushlvalue( r );
 				} else {
 					vm.pushnil();					
 				}
@@ -71,18 +70,22 @@ public class CoroutinesLib extends LFunction {
 				break;
 			}
 			case 5: { // wrap
-				vm.error( "wrap() not supported" );
-				return false;
+				Closure c = (Closure) vm.topointer(2);
+				vm.pushlvalue( new CoroutinesLib(7,new LThread(c)) );
+				break;
 			}
 			case 6: { // yield
-				if ( running == null )
+				LThread r = LThread.getRunning();
+				if ( r == null )
 					vm.error("main thread can't yield");
 				else {
-					return running.yield();
+					return r.yield();
 				}
 			}
 			case 7: { // wrapped resume
-				vm.error( "wrap() not supported" );
+				LThread t = this.thread;
+				t.resumeFrom( vm, vm.gettop()-1 );
+				vm.remove(1);
 				return false;
 			}
 		}

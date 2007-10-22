@@ -16,6 +16,12 @@ import lua.value.LValue;
 
 public class LuaJTest extends TestCase {
 
+	/*
+	public void testCoroutines() throws IOException, InterruptedException {
+		runTest( "coroutines" );
+	}
+	
+	/*/
 	public void testTest1() throws IOException, InterruptedException {
 		runTest( "test1" );
 	}
@@ -103,7 +109,8 @@ public class LuaJTest extends TestCase {
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
 	}
-
+	//*/
+	
 	private void runTest( String testName ) throws IOException, InterruptedException {
 		
 		// Reset the _G table just in case some test mucks with it
