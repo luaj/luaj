@@ -85,7 +85,10 @@ public class CoroutinesLib extends LFunction {
 			case 7: { // wrapped resume
 				LThread t = this.thread;
 				t.resumeFrom( vm, vm.gettop()-1 );
-				vm.remove(1);
+				if ( vm.toboolean(1) )
+					vm.remove(1);
+				else
+					vm.error( vm.tostring(2), 0 );
 				return false;
 			}
 		}
