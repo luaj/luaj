@@ -8,7 +8,7 @@
 	<target name="real-clean" depends="clean">
 		<delete file="luaj-vm-${version}.jar"/>
 		<delete file="luaj-vm-core-${version}.jar"/>
-		<delete file="luaj-vm-extras-${version}.jar"/>
+		<delete file="luaj-vm-extras-j2se-${version}.jar"/>
 		<delete file="luaj-vm-debug-j2me-${version}.jar"/>
 	</target>
 	
