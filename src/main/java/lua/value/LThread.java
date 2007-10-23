@@ -54,10 +54,9 @@ public class LThread extends LValue {
 	public void resumeFrom(VM vm, int nargs) {
 
 		if ( status == STATUS_DEAD ) {
-			vm.error("cannot resume dead coroutine");
-//			vm.settop(0);
-//			vm.pushboolean(false);
-//			vm.pushstring("cannot resume dead coroutine");
+			vm.settop(0);
+			vm.pushboolean(false);
+			vm.pushstring("cannot resume dead coroutine");
 			return;
 		}
 		

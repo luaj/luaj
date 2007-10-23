@@ -24,6 +24,8 @@ final class Builtin extends JavaFunction {
 		"type", 
 		"pcall", 
 		"ipairs", 
+		"error",
+		"assert",
 		};
 	private static final int PRINT = 0;
 	private static final int PAIRS = 1;
@@ -32,6 +34,8 @@ final class Builtin extends JavaFunction {
 	private static final int TYPE = 4;
 	private static final int PCALL = 5;
 	private static final int IPAIRS = 6;
+	private static final int ERROR = 7;
+	private static final int ASSERT = 8;
 	
 	private static PrintStream stdout = System.out;
 	
@@ -88,6 +92,16 @@ final class Builtin extends JavaFunction {
 				vm.pushboolean( false );
 				vm.insert( -2 );
 				return 2;
+			}
+		}
+		case ERROR: {
+			vm.error(vm.tostring(1), vm.gettop()>1? vm.tointeger(2): 1);
+		}
+		case ASSERT: {
+			if ( ! vm.toboolean(1) ) {
+				vm.error( vm.gettop()>1? vm.tostring(2): "assertion failed!", 0 );
+			} else {
+				return vm.gettop();
 			}
 		}
 		default:

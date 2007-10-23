@@ -94,11 +94,16 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		return source+":"+line+"("+func+")";
 	}
 	
-	
 	// override and fill in line number info 
-	public void error(String message) {
-		super.error( getFileLine(cc)+": "+message );
+	public void error(String message, int level) {
+		super.error( level<=0? message: getFileLine(cc+1-level)+": "+message );
 	}
+
+	// use line numbers by default
+	public void error(String message) {
+		error(message, 1);
+	}
+	
 	
 	private void printLuaTrace() {
 		System.out.println( "Lua location: "+getFileLine(cc) );
@@ -112,11 +117,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			super.exec();
 		} catch (AbortException e) {
             // ignored. Client aborts the debugging session.
-        } catch ( Exception t ) {        
-			t.printStackTrace();
-			printLuaTrace();
-			System.out.flush();
 		}
+		// let other exceptions be processed 
+		// the same as the base class to minimize differences
+		// between the debug and non-debug behavior
 	}
 	
 	

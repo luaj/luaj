@@ -1,6 +1,5 @@
 #!/bin/bash
 TESTS=`echo *.lua`
-TESTS="test3.lua"
 for x in $TESTS
 do
     echo compiling $x

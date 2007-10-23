@@ -66,7 +66,6 @@ public class LuaCompat extends LFunction {
 	}
 
 	public static final String[] GLOBAL_NAMES = {
-		"assert",
 		"loadfile",
 		"tonumber",
 		"rawget",
@@ -127,22 +126,21 @@ public class LuaCompat extends LFunction {
 	};
 	
 	private static final int GLOBALS_BASE = 0;
-	private static final int ASSERT         = GLOBALS_BASE + 0;
-	private static final int LOADFILE       = GLOBALS_BASE + 1;
-	private static final int TONUMBER       = GLOBALS_BASE + 2;
-	private static final int RAWGET         = GLOBALS_BASE + 3;
-	private static final int RAWSET         = GLOBALS_BASE + 4;
-	private static final int SETFENV        = GLOBALS_BASE + 5;
-	private static final int SELECT         = GLOBALS_BASE + 6;
-	private static final int COLLECTGARBAGE = GLOBALS_BASE + 7;
-	private static final int DOFILE         = GLOBALS_BASE + 8;
-	private static final int LOADSTRING     = GLOBALS_BASE + 9;
-	private static final int LOAD           = GLOBALS_BASE + 10;
-	private static final int TOSTRING       = GLOBALS_BASE + 11;
-	private static final int UNPACK         = GLOBALS_BASE + 12;
-	private static final int NEXT           = GLOBALS_BASE + 13;
-	private static final int MODULE         = GLOBALS_BASE + 14;
-	private static final int REQUIRE        = GLOBALS_BASE + 15;
+	private static final int LOADFILE       = GLOBALS_BASE + 0;
+	private static final int TONUMBER       = GLOBALS_BASE + 1;
+	private static final int RAWGET         = GLOBALS_BASE + 2;
+	private static final int RAWSET         = GLOBALS_BASE + 3;
+	private static final int SETFENV        = GLOBALS_BASE + 4;
+	private static final int SELECT         = GLOBALS_BASE + 5;
+	private static final int COLLECTGARBAGE = GLOBALS_BASE + 6;
+	private static final int DOFILE         = GLOBALS_BASE + 7;
+	private static final int LOADSTRING     = GLOBALS_BASE + 8;
+	private static final int LOAD           = GLOBALS_BASE + 9;
+	private static final int TOSTRING       = GLOBALS_BASE + 10;
+	private static final int UNPACK         = GLOBALS_BASE + 11;
+	private static final int NEXT           = GLOBALS_BASE + 12;
+	private static final int MODULE         = GLOBALS_BASE + 13;
+	private static final int REQUIRE        = GLOBALS_BASE + 14;
 	
 	
 	private static final int MATH_BASE = 20;
@@ -191,18 +189,6 @@ public class LuaCompat extends LFunction {
 	
 	public boolean luaStackCall( VM vm ) {
 		switch ( id ) {
-		case ASSERT: {
-			if ( !vm.getArgAsBoolean(0) ) {
-				String message;
-				if ( vm.getArgCount() > 1 ) {
-					message = vm.getArgAsString(1);
-				} else {
-					message = "assertion failed!";
-				}
-				throw new RuntimeException(message);
-			}
-			vm.setResult();
-		}	break;
 		case LOADFILE:
 			loadfile(vm, vm.getArgAsString(0));
 			break;

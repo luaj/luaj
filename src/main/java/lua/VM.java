@@ -358,6 +358,14 @@ public interface VM {
 	public void error();
 
 	/**
+	 * Raises an error with the default level.   
+	 * 
+	 * In the java implementation this throws a RuntimeException, possibly filling 
+	 * line number information first.
+	 */
+	public void error(String message);
+	
+	/**
 	 * Raises an error.   The message is pushed onto the stack and used as the error message.  
 	 * It also adds at the beginning of the message the file name and the line number where 
 	 * the error occurred, if this information is available.
@@ -365,7 +373,7 @@ public interface VM {
 	 * In the java implementation this throws a RuntimeException, possibly filling 
 	 * line number information first.
 	 */
-	public void error(String message);
+	public void error(String message, int level);
 	
 	/**
 	 * Controls the garbage collector. <span class="apii">[-0, +0, <em>e</em>]</span>
