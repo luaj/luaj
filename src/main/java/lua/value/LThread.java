@@ -5,7 +5,10 @@ import lua.StackState;
 import lua.VM;
 import lua.io.Closure;
 
-public class LThread extends LValue {
+/** 
+ * Implementation of lua coroutines using Java Threads
+ */
+public class LThread extends LValue implements Runnable {
 
 	private static final int STATUS_SUSPENDED     = 0;
 	private static final int STATUS_RUNNING       = 1;
@@ -20,6 +23,7 @@ public class LThread extends LValue {
 	private int status = STATUS_SUSPENDED;
 	
 	private StackState threadVm;
+	private Thread thread;
 	
 	private static LThread running;
 	
@@ -46,6 +50,34 @@ public class LThread extends LValue {
 		return running;
 	}
 	
+	public void run() {
+		synchronized ( this ) {
+			try {
+				threadVm.execute();
+			} finally {
+				status = STATUS_DEAD;
+				this.notify();
+			}
+		}
+	}
+	
+	public boolean yield() {
+		synchronized ( this ) {
+			if ( status != STATUS_RUNNING )
+				throw new RuntimeException(this+" not running");
+			status = STATUS_SUSPENDED;
+			this.notify();
+			try {
+				this.wait();
+				status = STATUS_RUNNING;
+			} catch ( InterruptedException e ) {
+				status = STATUS_DEAD;
+				throw new RuntimeException(this+" "+e);
+			}
+			return false;
+		}
+	}
+	
 	/** This needs to leave any values returned by yield in the coroutine 
 	 * on the calling vm stack
 	 * @param vm
@@ -53,68 +85,61 @@ public class LThread extends LValue {
 	 */
 	public void resumeFrom(VM vm, int nargs) {
 
-		if ( status == STATUS_DEAD ) {
-			vm.settop(0);
-			vm.pushboolean(false);
-			vm.pushstring("cannot resume dead coroutine");
-			return;
-		}
-		
-		// set prior thread to normal status while t
-		LThread prior = running;
-		try {
-			// set our status to running
-			running = this;
-			if ( prior != null  )
-				prior.status = STATUS_NORMAL;
-			status = STATUS_RUNNING;
-			
-			// copy args in
-			if ( threadVm.cc < 0 ) {
-				vm.xmove(threadVm, nargs);
-				threadVm.prepStackCall();
-			} else {
-				threadVm.settop(0);
-				vm.xmove(threadVm, nargs);
+		synchronized ( this ) {
+ 			if ( status == STATUS_DEAD ) {
+				vm.settop(0);
+				vm.pushboolean(false);
+				vm.pushstring("cannot resume dead coroutine");
+				return;
 			}
-
-			// run this vm until it yields
-			while ( threadVm.cc >= 0 && status == STATUS_RUNNING )
-				threadVm.exec();
 			
-			// copy return values from yielding stack state
-			vm.settop(0);
-			vm.pushboolean(true);
-			if ( threadVm.cc >= 0 ) { 
-				threadVm.xmove(vm, threadVm.gettop() - 1);
-			} else {
-				threadVm.base = 0;
-				threadVm.xmove(vm, threadVm.gettop());
-			}
-
-		} catch ( Throwable t ) {
-			status = STATUS_DEAD;
-			vm.settop(0);
-			vm.pushboolean(false);
-			vm.pushstring("thread: "+t);
-			
-		} finally {
-			// previous thread is now running
-			running = prior;
-			if ( running != null  )
-				running.status = STATUS_RUNNING;
-
-			// check if thread is actually dead
-			if ( threadVm.cc < 0 )
+			// set prior thread to normal status while we are running
+			LThread prior = running;
+			try {
+				// set our status to running
+				if ( prior != null  )
+					prior.status = STATUS_NORMAL;
+				running = this;
+				status = STATUS_RUNNING;
+				
+				// copy args in
+				if ( thread == null ) {
+					vm.xmove(threadVm, nargs);
+					threadVm.prepStackCall();
+					thread = new Thread(this);
+					thread.start();
+				} else {
+					threadVm.settop(0);
+					vm.xmove(threadVm, nargs);
+				}
+	
+				// run this vm until it yields
+				this.notify();
+				this.wait();
+				
+				// copy return values from yielding stack state
+				vm.settop(0);
+				vm.pushboolean(true);
+				if ( threadVm.cc >= 0 ) { 
+					threadVm.xmove(vm, threadVm.gettop() - 1);
+				} else {
+					threadVm.base = 0;
+					threadVm.xmove(vm, threadVm.gettop());
+				}
+	
+			} catch ( Throwable t ) {
 				status = STATUS_DEAD;
-		
+				vm.settop(0);
+				vm.pushboolean(false);
+				vm.pushstring("thread: "+t);
+				this.notify();
+				
+			} finally {
+				// previous thread is now running again
+				running = prior;
+			}
 		}
 		
 	}
 
-	public boolean yield() {
-		if ( status == STATUS_RUNNING )
-			status = STATUS_SUSPENDED;
-		return true;
-	}
 }

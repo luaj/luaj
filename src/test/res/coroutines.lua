@@ -10,7 +10,7 @@ function foo (a)
 	print("foo", a)
     return coroutine.yield(2*a)
 end
-     
+
 co = coroutine.create(function (a,b)
 	print("co-body", a, b)
 	local r = foo(a+1)
@@ -46,7 +46,7 @@ exercise();
 
 co = coroutine.create(function (a,b)
 	print("co-body", a, b)
-	local statis,r = pcall( foo, a+1 )
+	local status,r = pcall( foo, a+1 )
 	print("co-body", status,r)
 	local r, s = coroutine.yield(a+b, a-b)
 	print("co-body", r, s)
@@ -54,6 +54,7 @@ co = coroutine.create(function (a,b)
 end)
 
 exercise();
+
 
 -- wrap test 
 local g = coroutine.wrap(function (a,b)

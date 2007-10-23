@@ -10,14 +10,21 @@ import lua.value.LThread;
 
 public class CoroutinesLib extends LFunction {
 
+	private static final String[] NAMES = {
+		"loadlib",
+		"create",
+		"resume",
+		"running",
+		"status",
+		"wrap",
+		"yield",
+		"wrapped"
+	};
+	
 	public static void install() {
 		LTable lib = new LTable(0,6);
-		lib.put("create", new CoroutinesLib(1));
-		lib.put("resume", new CoroutinesLib(2));
-		lib.put("running", new CoroutinesLib(3));
-		lib.put("status", new CoroutinesLib(4));
-		lib.put("wrap", new CoroutinesLib(5));
-		lib.put("yield", new CoroutinesLib(6));
+		for ( int i=1; i<=6; i++ )
+			lib.put(NAMES[i], new CoroutinesLib(i));
 		GlobalState.getGlobalsTable().put("coroutine",lib);
 	}
 	
@@ -32,6 +39,10 @@ public class CoroutinesLib extends LFunction {
 	private CoroutinesLib( int id ) {
 		this.id = id;
 		this.thread = null;
+	}
+	
+	public String toJavaString() {
+		return "coroutine."+NAMES[id];
 	}
 	
 	private CoroutinesLib( int id, LThread thread ) {
