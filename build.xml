@@ -7,56 +7,103 @@
 	
 	<target name="real-clean" depends="clean">
 		<delete file="luaj-vm-${version}.jar"/>
-		<delete file="luaj-vm-j2me-${version}.jar"/>
+		<delete file="luaj-vm-core-${version}.jar"/>
+		<delete file="luaj-vm-extras-${version}.jar"/>
+		<delete file="luaj-vm-debug-j2me-${version}.jar"/>
 	</target>
 	
 	<target name="compile">
-		<mkdir dir="build/classes"/>
-		<javac destdir="build/classes" encoding="utf-8" source="1.3" target="1.1">
-			<src path="src/main/java" />	
+		<mkdir dir="build/all/classes"/>
+		<javac destdir="build/all/classes" encoding="utf-8" source="1.3" target="1.1">
+			<src path="src/main/java" />
 			<src path="src/addon/java" />
-            <exclude name="lua/debug/j2me/**"/>		
+            <exclude name="lua/debug/j2me/**"/>
 		</javac>
 	</target>
 	
 	<target name="jar" depends="compile">
-		<jar destfile="luaj-vm-${version}.jar" basedir="build/classes"/>
+		<jar destfile="luaj-vm-${version}.jar" basedir="build/all/classes"/>
 	</target>
 	
-	<taskdef resource="antenna.properties" />
-
-	<target name="j2me" depends="clean">
-
-		<!-- link to wireless toolkit -->
-		<property environment="env"/>
-		<property name="env.WTK_HOME" value="c:\WTK-2.2" />
-		<property name="wtk.home" value="${env.WTK_HOME}" />
-		<echo level="info">wtk.home: ${wtk.home}</echo>
-
-		<!-- set version of midp, cldc -->
-		<property name="wtk.cldc.version" value="1.1" />
-		<property name="wtk.midp.version" value="2.0" />
-		<property name="wtk.mmapi.enabled" value="true" />
-
-		<!-- copy relevant sources -->
-		<mkdir dir="build/src-j2me" />
-		<copy todir="build/src-j2me">
-			<fileset dir="../luaj-vm/src/main/java">
-				<exclude name="lua/debug/j2se/**" />
-			</fileset>
-			<fileset dir="../luaj-vm/src/addon/java">
-				<exclude name="lua/addon/luajava/**" />
-			</fileset>
-		</copy>
-
-		<!-- Compile everything, but don't preverify (yet). -->
-		<mkdir dir="build/classes-j2me" />
-		<wtkbuild destdir="build/classes-j2me" preverify="false" srcdir="build/src-j2me" source="1.3" />
-
-		<!-- create the jar -->
-		<jar destfile="luaj-vm-j2me-${version}.jar" basedir="build/classes-j2me" />
-		
+	<target name="module-jars" depends="find-wtk,j2me-jars-maybe,j2me-jars-skipped"/>
+	
+	<target name="j2me-jars-maybe" if="wtk.home">
+		<antcall target="j2me-jars" inheritrefs="true"/>
 	</target>
-
-	<target name="all" depends="clean,jar"/>
+	
+	<target name="j2me-jars-skipped" unless="wtk.home">
+		<echo>Skipping steps that require J2ME WTK.</echo>
+	</target>
+	
+	<target name="j2me-jars" depends="wtk-or-fail,jar-core,jar-j2se-extras,jar-j2me-debug"/>
+	
+	<target name="jar-core" depends="compile-core">
+		<jar destfile="luaj-vm-core-${version}.jar" basedir="build/core/classes"/>
+	</target>
+	
+	<target name="jar-j2se-extras" depends="compile-j2se-extras">
+		<jar destfile="luaj-vm-extras-j2se-${version}.jar" basedir="build/extras-j2se/classes"/>
+	</target>
+	
+	<target name="jar-j2me-debug" depends="compile-j2me-debug">
+		<jar destfile="luaj-vm-debug-j2me-${version}.jar" basedir="build/extras-j2me/classes"/>
+	</target>
+	
+	<target name="compile-core" depends="wtk-or-fail">
+		<mkdir dir="build/core/classes"/>
+		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1"
+			   bootclasspathref="wtk-libs">
+			<src path="src/main/java"/>
+			<src path="src/addon/java"/>
+			<exclude name="lua/debug/j2se/**"/>
+			<exclude name="lua/debug/j2me/**"/>
+			<exclude name="lua/addon/luajava/**"/>
+		</javac>
+	</target>
+	
+	<target name="compile-j2se-extras" depends="wtk-or-fail">
+		<mkdir dir="build/extras-j2se/classes"/>
+		<javac destdir="build/extras-j2se/classes" encoding="utf-8" source="1.3" target="1.1"
+			   classpath="build/core/classes">
+			<src path="src/main/java"/>
+			<src path="src/addon/java"/>
+			<include name="lua/debug/j2se/**"/>
+			<include name="lua/addon/luajava/**"/>
+		</javac>
+	</target>
+	
+	<target name="compile-j2me-debug" depends="wtk-or-fail">
+		<mkdir dir="build/extras-j2me/classes"/>
+		<javac destdir="build/extras-j2me/classes" encoding="utf-8" source="1.3" target="1.1"
+			   bootclasspathref="wtk-libs" classpath="build/core/classes">
+			<src path="src/main/java"/>
+			<src path="src/addon/java"/>
+			<include name="lua/debug/j2me/**"/>
+		</javac>
+	</target>
+	
+	<target name="load-env">
+		<property environment="env"/>
+	</target>
+	
+	<target name="try-default-wtk-path" depends="load-env" unless="env.WTK_HOME">
+		<available property="env.WTK_HOME" value="c:\WTK-2.2" file="c:\WTK-2.2\lib\cldcapi11.jar"/>
+		<available property="env.WTK_HOME" value="/opt/WTK2.2" file="/opt/WTK2.2/lib/cldcapi11.jar"/>
+	</target>
+	
+	<target name="find-wtk" depends="try-default-wtk-path" unless="wtk.home" if="env.WTK_HOME">
+		<property name="wtk.home" value="${env.WTK_HOME}"/>
+	</target>
+	
+	<target name="wtk-or-fail" depends="find-wtk">
+		<fail unless="wtk.home" message="Sun Wireless Toolkit required to build component jars."/>
+		<echo>Using WTK found in ${wtk.home}</echo>
+		<path id="wtk-libs">
+			<pathelement path="${wtk.home}/lib/cldcapi11.jar"/>
+			<pathelement path="${wtk.home}/lib/midpapi20.jar"/>
+			<pathelement path="${wtk.home}/lib/mmapi.jar"/>
+		</path>
+	</target>
+	
+	<target name="all" depends="clean,jar,module-jars"/>
 </project>
