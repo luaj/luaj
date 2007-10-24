@@ -35,10 +35,13 @@ public class DebugEventType extends EnumType {
     public static DebugEventType suspendedOnStepping = new DebugEventType("suspendedOnStepping", 4);
     public static DebugEventType suspendedOnError = new DebugEventType("suspendedOnError", 5);
     public static DebugEventType resumedByClient = new DebugEventType("resumedByClient", 6);
-    public static DebugEventType resumedOnStepping = new DebugEventType("resumedOnStepping", 7);
-    public static DebugEventType resumedOnError = new DebugEventType("resumedOnError", 8);
-    public static DebugEventType error = new DebugEventType("error", 9);
-    public static DebugEventType terminated = new DebugEventType("terminated", 10);
+    public static DebugEventType resumedOnSteppingInto = new DebugEventType("resumedOnSteppingInto", 7);
+    public static DebugEventType resumedOnSteppingOver = new DebugEventType("resumedOnSteppingOver", 8);
+    public static DebugEventType resumedOnSteppingReturn = new DebugEventType("resumedOnSteppingReturn", 9);
+    public static DebugEventType resumedOnSteppingEnd = new DebugEventType("resumedOnSteppingEnd", 10);    
+    public static DebugEventType resumedOnError = new DebugEventType("resumedOnError", 11);
+    public static DebugEventType error = new DebugEventType("error", 12);
+    public static DebugEventType terminated = new DebugEventType("terminated", 13);
     
     protected static DebugEventType[] ENUMS = new DebugEventType[] {
     	started,
@@ -48,7 +51,10 @@ public class DebugEventType extends EnumType {
     	suspendedOnStepping,
     	suspendedOnError,
     	resumedByClient,
-    	resumedOnStepping,
+    	resumedOnSteppingInto,
+    	resumedOnSteppingOver,
+    	resumedOnSteppingReturn,
+    	resumedOnSteppingEnd,
     	resumedOnError,
     	error,
     	terminated
@@ -62,7 +68,7 @@ public class DebugEventType extends EnumType {
     throws IOException {
 		int ordinal = in.readInt();
 		if (ordinal < 0 || ordinal >= ENUMS.length) {
-			throw new RuntimeException("ordinal is out of the range.");
+			throw new RuntimeException("DebugEventType: ordinal is out of the range.");
 		}
 		return ENUMS[ordinal];
     }

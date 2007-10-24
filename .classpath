@@ -6,7 +6,7 @@
 	<classpathentry kind="src" path="src/test/res"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
-	<classpathentry kind="var" path="WTK_HOME/lib/cldcapi10.jar"/>
+	<classpathentry kind="var" path="WTK_HOME/lib/cldcapi11.jar"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/midpapi20.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

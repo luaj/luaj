@@ -44,14 +44,13 @@ public class DebugEventError extends DebugEvent {
         return super.toString() + " detail: " + getDetail();
     }
     
-    public static void serialize(DataOutputStream out, DebugEventError object)
-			throws IOException {
-		//TODO implement
+    public static void serialize(DataOutputStream out, DebugEventError object) 
+    throws IOException {
+    	out.writeUTF(object.getDetail());
 	}
 
-	public static DebugEvent deserialize(DataInputStream in)
-			throws IOException {
-		//TODO implement
-		return null;
+	public static DebugEvent deserialize(DataInputStream in) throws IOException {
+		String detail = in.readUTF();
+		return new DebugEventError(detail);
 	}
 }

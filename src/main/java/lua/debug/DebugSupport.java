@@ -44,8 +44,10 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
         this.vm = vm;
     }
     
-    protected void releaseServer() {
-        DebugUtils.println("shutting down the debug server...");
+    protected void dispose() {
+    	if (DebugUtils.IS_DEBUG) 
+    		DebugUtils.println("releasing the networkig resources...");
+    	
         if (requestReader != null) {
             try {
                 requestReader.close();
@@ -83,11 +85,8 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
     	
         this.requestWatcherThread = new Thread(new Runnable() {
             public void run() {
-                if (getState() != STOPPED) {
-                    handleRequest();
-                } else {
-                    releaseServer();
-                }
+                loopForRequests();
+                cleanup();
             }
         });
         this.requestWatcherThread.start();
@@ -104,11 +103,12 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
 	 * @see lua.debug.j2se.DebugSupport#stop()
 	 */
     public synchronized void stop() {
-    	DebugUtils.println("stopping the debug support...");
+    	if (DebugUtils.IS_DEBUG)
+    		DebugUtils.println("stopping the debug support...");
         this.state = STOPPED;
     }
     
-    protected void handleRequest() {        
+    protected void loopForRequests() {        
         try {
             while (getState() != STOPPED) {
             	int size = requestReader.readInt();
@@ -116,29 +116,29 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
             	requestReader.readFully(data);                	
                 DebugRequest request 
                     = (DebugRequest) SerializationHelper.deserialize(data);
-                DebugUtils.println("SERVER receives request: " + request.toString());
+            	if (DebugUtils.IS_DEBUG)
+            		DebugUtils.println("SERVER receives request: " + request.toString());
                 
                 DebugResponse response = handleRequest(request);
                 data = SerializationHelper.serialize(response);
                 requestWriter.writeInt(data.length);
                 requestWriter.write(data);
                 requestWriter.flush();
-                DebugUtils.println("SERVER sends response: " + response);
-            }
-            
-            if (getState() == STOPPED) {
-                cleanup();
-            }
+            	if (DebugUtils.IS_DEBUG)
+            		DebugUtils.println("SERVER sends response: " + response);
+            }            
         } catch (EOFException e) {
-            cleanup();
-        } catch (IOException e) {
+        	// expected during shutdown
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void cleanup() {
-        DebugUtils.println("SERVER terminated...");
-        releaseServer();
+    	if (DebugUtils.IS_DEBUG)
+    		DebugUtils.println("SERVER terminated...");
+    	
+        dispose();
         System.exit(0);
     }
 
@@ -160,7 +160,9 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
      * @param event
      */
     protected void sendEvent(DebugEvent event) {
-        DebugUtils.println("SERVER sending event: " + event.toString());
+    	if (DebugUtils.IS_DEBUG)
+    		DebugUtils.println("SERVER sending event: " + event.toString());
+    	
         try {
         	byte[] data = SerializationHelper.serialize(event);
             eventWriter.writeInt(data.length);

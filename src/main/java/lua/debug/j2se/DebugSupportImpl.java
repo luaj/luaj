@@ -28,7 +28,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import lua.debug.DebugSupport;
-import lua.debug.DebugUtils;
 import lua.debug.event.DebugEvent;
 
 public class DebugSupportImpl extends DebugSupport {	
@@ -61,8 +60,8 @@ public class DebugSupportImpl extends DebugSupport {
         super.start();
     }
      
-    protected void releaseServer() {
-    	super.releaseServer();
+    protected void dispose() {
+    	super.dispose();
     	
         if (clientRequestSocket != null) {
             try {
@@ -89,9 +88,9 @@ public class DebugSupportImpl extends DebugSupport {
         }
     }
     
-    protected void handleRequest() {        
+    protected void loopForRequests() {        
         synchronized (clientRequestSocket) {
-        	super.handleRequest();
+        	super.loopForRequests();
         }
     }
 

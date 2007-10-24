@@ -7,7 +7,6 @@ import javax.microedition.io.ServerSocketConnection;
 import javax.microedition.io.SocketConnection;
 
 import lua.debug.DebugSupport;
-import lua.debug.DebugUtils;
 import lua.debug.event.DebugEvent;
 
 public class DebugSupportImpl extends DebugSupport {
@@ -56,8 +55,8 @@ public class DebugSupportImpl extends DebugSupport {
         super.start();
     }
 
-    protected void releaseServer() {
-    	super.releaseServer();
+    protected void dispose() {
+    	super.dispose();
     	
         if (requestSocketConnection != null) {
             try {
@@ -84,9 +83,9 @@ public class DebugSupportImpl extends DebugSupport {
         }
     }
     
-    protected void handleRequest() {        
+    protected void loopForRequests() {        
         synchronized (requestSocketConnection) {
-        	super.handleRequest();
+        	super.loopForRequests();
         }
     }
     

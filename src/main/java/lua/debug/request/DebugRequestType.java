@@ -28,21 +28,24 @@ import lua.debug.EnumType;
 
 
 public class DebugRequestType extends EnumType {
-	public static final DebugRequestType suspend = new DebugRequestType("suspend", 0);
+    public static final DebugRequestType start = new DebugRequestType("start", 0);
     public static final DebugRequestType resume = new DebugRequestType("resume", 1);
-    public static final DebugRequestType exit = new DebugRequestType("exit", 2); 
-    public static final DebugRequestType lineBreakpointSet = new DebugRequestType("lineBreakpointSet", 3); 
-    public static final DebugRequestType lineBreakpointClear = new DebugRequestType("lineBreakpointClear", 4);
-    public static final DebugRequestType watchpointSet = new DebugRequestType("watchpointSet", 5);
-    public static final DebugRequestType watchpointClear = new DebugRequestType("watchpointClear", 6);
-    public static final DebugRequestType callgraph = new DebugRequestType("callgraph", 7);
-    public static final DebugRequestType stack = new DebugRequestType("stack", 8);
-    public static final DebugRequestType step = new DebugRequestType("step", 9);
-    public static final DebugRequestType start = new DebugRequestType("start", 10);
+	public static final DebugRequestType suspend = new DebugRequestType("suspend", 2);
+    public static final DebugRequestType exit = new DebugRequestType("exit", 3); 
+    public static final DebugRequestType lineBreakpointSet = new DebugRequestType("lineBreakpointSet", 4); 
+    public static final DebugRequestType lineBreakpointClear = new DebugRequestType("lineBreakpointClear", 5);
+    public static final DebugRequestType watchpointSet = new DebugRequestType("watchpointSet", 6);
+    public static final DebugRequestType watchpointClear = new DebugRequestType("watchpointClear", 7);
+    public static final DebugRequestType callgraph = new DebugRequestType("callgraph", 8);
+    public static final DebugRequestType stack = new DebugRequestType("stack", 9);
+    public static final DebugRequestType stepInto = new DebugRequestType("stepInto", 10);
+    public static final DebugRequestType stepOver = new DebugRequestType("stepOver", 11);
+    public static final DebugRequestType stepReturn = new DebugRequestType("stepReturn", 12);
     
     protected static final DebugRequestType[] ENUMS = new DebugRequestType[] {
-    	suspend,
+    	start,
     	resume,
+    	suspend,
     	exit,
     	lineBreakpointSet,
     	lineBreakpointClear,
@@ -50,8 +53,9 @@ public class DebugRequestType extends EnumType {
     	watchpointClear,
     	callgraph,
     	stack,
-    	step,
-    	start
+    	stepInto,
+    	stepOver,
+    	stepReturn
     };
     
     public DebugRequestType(String name, int ordinal) {
@@ -61,7 +65,7 @@ public class DebugRequestType extends EnumType {
     public static DebugRequestType deserialize(DataInputStream in) throws IOException {
 		int ordinal = in.readInt();
 		if (ordinal < 0 || ordinal >= ENUMS.length) {
-			throw new RuntimeException("ordinal is out of the range.");
+			throw new RuntimeException("DebugRequestType: ordinal is out of the range.");
 		}
 		return ENUMS[ordinal];
     }

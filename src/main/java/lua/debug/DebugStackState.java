@@ -33,6 +33,7 @@ import lua.StackState;
 import lua.addon.compile.LexState;
 import lua.debug.event.DebugEvent;
 import lua.debug.event.DebugEventBreakpoint;
+import lua.debug.event.DebugEventError;
 import lua.debug.event.DebugEventType;
 import lua.debug.request.DebugRequest;
 import lua.debug.request.DebugRequestLineBreakpointToggle;
@@ -43,7 +44,6 @@ import lua.debug.response.DebugResponse;
 import lua.debug.response.DebugResponseCallgraph;
 import lua.debug.response.DebugResponseSimple;
 import lua.debug.response.DebugResponseStack;
-import lua.io.Closure;
 import lua.io.LocVars;
 import lua.io.Proto;
 import lua.value.LTable;
@@ -51,14 +51,22 @@ import lua.value.LValue;
 
 public class DebugStackState extends StackState implements DebugRequestListener {
 
-	private static final boolean DEBUG = false;
+	// stepping constants and stepping state
+	protected static final int STEP_NONE   = 0;
+	protected static final int STEP_OVER   = 1;
+	protected static final int STEP_INTO   = 2;
+	protected static final int STEP_RETURN = 3;
+    protected int stepping = STEP_NONE;
+    protected boolean shouldPauseForStepping = false;
+    protected int steppingFrame = -1;
     
 	protected Hashtable breakpoints = new Hashtable();
     protected boolean exiting = false;
     protected boolean suspended = false;
-    protected boolean stepping = false;
     protected int lastline = -1;
+    protected String lastSource;
     protected DebugSupport debugSupport = null;
+    
 
 	public DebugStackState() {}
 	
@@ -104,7 +112,6 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		error(message, 1);
 	}
 	
-	
 	private void printLuaTrace() {
 		System.out.println( "Lua location: "+getFileLine(cc) );
 		for ( int cindex=cc-1; cindex>=0; cindex-- )
@@ -117,10 +124,15 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			super.exec();
 		} catch (AbortException e) {
             // ignored. Client aborts the debugging session.
+        } catch ( RuntimeException t ) {        
+			// let other exceptions be processed 
+			// the same as the base class to minimize differences
+			// between the debug and non-debug behavior
+			
+			debugSupport.notifyDebugEvent(new DebugEventError(t.getMessage()));
+			suspend();
+			throw t;
 		}
-		// let other exceptions be processed 
-		// the same as the base class to minimize differences
-		// between the debug and non-debug behavior
 	}
 	
 	
@@ -131,41 +143,65 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		}
 		
 		if(DebugUtils.IS_DEBUG)
-        	DebugUtils.println("entered debugHook...");
+        	DebugUtils.println("entered debugHook on pc=" + pc + "...");
         
 		synchronized ( this ) {
+			CallInfo currentCallInfo = calls[cc];
+            Proto currentProto = currentCallInfo.closure.p;
             
-			// anytime the line doesn't change we keep going
-			int line = getLineNumber(calls[cc]);
-			if ( !stepping && lastline == line ) {
+			// if we are not stepping, we keep going if the line doesn't change 
+			int line = getLineNumber(currentCallInfo);
+            String source = DebugUtils.getSourceFileName(currentProto.source);
+			if ( !isStepping() && lastline == line && source.equals(lastSource) ) {
 				return;
             }
+			
 	        if(DebugUtils.IS_DEBUG)
 	        	DebugUtils.println("debugHook - executing line: " + line);
+            
+            int i = currentProto.code[pc];
+            int opCode = StackState.GET_OPCODE(i);
+            if (isStepping() &&
+                opCode == StackState.OP_RETURN && cc == 0) {
+	    		cancelStepping();
+            } else if (shouldPauseForStepping) {
+	        	shouldPauseForStepping = false;
+				suspendOnStepping();
+	        } else if ( stepping == STEP_INTO ) {            	
+				if (lastline != line){
+					suspendOnStepping();
+				} else if (opCode == StackState.OP_CALL) { 
+					shouldPauseForStepping = true;
+				}
+			} else if (stepping == STEP_OVER) {
+				if ((lastline != line && steppingFrame == cc) || (steppingFrame > cc)) {
+					suspendOnStepping();
+				}
+            } else if (stepping == STEP_RETURN) {
+            	if ((opCode == StackState.OP_RETURN && cc == this.steppingFrame) ||
+            	    (opCode == StackState.OP_TAILCALL && cc == this.steppingFrame)){
+            		shouldPauseForStepping = true;
+            	}
+            }
+			
+            // check for a break point if we aren't suspended already
+			if ( !suspended && lastline != line) {
+                if (DebugUtils.IS_DEBUG)
+                	DebugUtils.println("Source: " + currentProto.source);
 
+                String breakpointKey = constructBreakpointKey(source, line);
+                if (breakpoints.containsKey(breakpointKey)){
+                	if(DebugUtils.IS_DEBUG)
+                		DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
+                	
+                	debugSupport.notifyDebugEvent(new DebugEventBreakpoint(source, line));
+                    suspended = true;                		
+                }                                  	
+			}
+			
 			// save line in case next op is a step
 			lastline = line;
-            
-            if ( stepping ) {
-                DebugUtils.println("suspended by stepping at pc=" + pc);
-                //TODO: notifyDebugEventListeners(new DebugEventStepping());
-                suspended = true;
-            } else if ( !suspended ) {
-                // check for a break point if we aren't suspended already
-                Proto p = calls[cc].closure.p;
-                String source = DebugUtils.getSourceFileName(p.source);                
-                if ( breakpoints.containsKey(constructBreakpointKey(source, line))){
-                	if(DebugUtils.IS_DEBUG) {
-                		DebugUtils.println("hitting breakpoint " + constructBreakpointKey(source, line));
-                	}
-                	if (debugSupport != null) {
-                		debugSupport.notifyDebugEvent(new DebugEventBreakpoint(source, line));
-                	}
-                    suspended = true;
-                } else {
-                    return;
-                }                    
-			}
+			lastSource = source;
 			
 			// wait for a state change
 			while (suspended && !exiting ) {
@@ -178,6 +214,23 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 				}
 			}
 		}
+	}
+
+	private boolean isStepping() {
+		return stepping != STEP_NONE;
+	}
+
+	private void cancelStepping() {
+		debugSupport.notifyDebugEvent(new DebugEvent(DebugEventType.resumedOnSteppingEnd));
+		stepping = STEP_NONE;
+		steppingFrame = -1;
+		shouldPauseForStepping = false;
+	}
+
+	private void suspendOnStepping() {
+		debugSupport.notifyDebugEvent(new DebugEvent(DebugEventType.suspendedOnStepping));
+		suspended = true;
+		steppingFrame = -1;
 	}
 
     /**
@@ -199,7 +252,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 			throw new IllegalStateException("DebugStackState is not equiped with DebugSupport.");
 		}
 		
-        DebugUtils.println("DebugStackState is handling request: " + request.toString());
+		if (DebugUtils.IS_DEBUG)
+			DebugUtils.println("DebugStackState is handling request: " + request.toString());
+		
         DebugRequestType requestType = request.getType();   
         if (DebugRequestType.start == requestType) {
             DebugEvent event = new DebugEvent(DebugEventType.started);
@@ -234,8 +289,20 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
             return new DebugResponseStack(getStack(index));
-    	} else if (DebugRequestType.step == requestType) { 
-            step(); 
+    	} else if (DebugRequestType.stepInto == requestType) {
+        	DebugEvent event = new DebugEvent(DebugEventType.resumedOnSteppingInto);
+            debugSupport.notifyDebugEvent(event);
+            stepInto(); 
+            return DebugResponseSimple.SUCCESS;
+        } else if (DebugRequestType.stepOver == requestType) { 
+        	DebugEvent event = new DebugEvent(DebugEventType.resumedOnSteppingOver);
+            debugSupport.notifyDebugEvent(event);
+            stepOver();
+            return DebugResponseSimple.SUCCESS;
+        } else if (DebugRequestType.stepReturn == requestType) {  
+        	DebugEvent event = new DebugEvent(DebugEventType.resumedOnSteppingReturn);
+            debugSupport.notifyDebugEvent(event);
+            stepReturn();
             return DebugResponseSimple.SUCCESS;
         }
     	
@@ -248,7 +315,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	public void suspend() {
 		synchronized ( this ) {
 			suspended = true;
-			stepping = false;
+			stepping = STEP_NONE;
 			lastline = -1;
 			this.notify();
 		}
@@ -260,7 +327,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	public void resume() {
 		synchronized ( this ) {
 			suspended = false;
-            stepping = false;
+            stepping = STEP_NONE;
 			this.notify();
 		}
 	}
@@ -278,7 +345,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         		debugSupport.stop();
         		debugSupport = null;            		
         	}
-        }, 300);
+        }, 500);
 
         exit();
     }
@@ -298,9 +365,14 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      * @param N the line to set the breakpoint at
      */
 	public void setBreakpoint(String source, int lineNumber) {
-        DebugUtils.println("adding breakpoint " + constructBreakpointKey(source, lineNumber));
+		if (DebugUtils.IS_DEBUG) {
+			DebugUtils.print("source: " + source + " line:"  + lineNumber);
+			DebugUtils.println("adding breakpoint " + constructBreakpointKey(source, lineNumber));
+		}
+		
 		synchronized ( this ) {
-			breakpoints.put(constructBreakpointKey(source, lineNumber), Boolean.TRUE );
+			String normalizedFileName = DebugUtils.getSourceFileName(source);
+			breakpoints.put(constructBreakpointKey(normalizedFileName, lineNumber), Boolean.TRUE );
 		}
 	}
 	
@@ -315,7 +387,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		if(DebugUtils.IS_DEBUG)
 			DebugUtils.println("removing breakpoint " + constructBreakpointKey(source, lineNumber));
 		synchronized ( this ) {
-			breakpoints.remove(constructBreakpointKey(source, lineNumber));
+			String normalizedFileName = DebugUtils.getSourceFileName(source);
+			breakpoints.remove(constructBreakpointKey(normalizedFileName, lineNumber));
 		}
 	}
 	
@@ -364,9 +437,11 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                 LValue value = stack[callInfo.base + i];                
                 if (value != null) {
                     int type = value.luaGetType();
-                    DebugUtils.print("\tType: " + Lua.TYPE_NAMES[type]);
+                    if (DebugUtils.IS_DEBUG)
+                    	DebugUtils.print("\tType: " + Lua.TYPE_NAMES[type]);
                     if (type == Lua.LUA_TTABLE) {
-                        DebugUtils.println(" (selected)");
+                    	if (DebugUtils.IS_DEBUG)
+                    		DebugUtils.println(" (selected)");
                         variables.addElement(
                                 new TableVariable(localVariableCount++, 
                                              varName, 
@@ -374,20 +449,24 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                                              (LTable) value));                        
                     } else if (type != Lua.LUA_TFUNCTION &&
                                type != LUA_TTHREAD) {
-                        DebugUtils.println(" (selected)");
+                    	if (DebugUtils.IS_DEBUG)
+                    		DebugUtils.println(" (selected)");
                         variables.addElement(
                                 new Variable(localVariableCount++, 
                                              varName, 
                                              type, 
                                              value.toString()));
                     } else {
-                        DebugUtils.println("");
+                    	if (DebugUtils.IS_DEBUG)
+                    		DebugUtils.println("");
                     }
                 } else {
-                    DebugUtils.println("");
+                	if (DebugUtils.IS_DEBUG)
+                		DebugUtils.println("");
                 }
             } else {
-                DebugUtils.println("");
+            	if (DebugUtils.IS_DEBUG)
+            		DebugUtils.println("");
             }
         }
         
@@ -400,13 +479,43 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 	
 	
     /**
-     * single step forward (go to next statement)
+     * step over to next line
      */
-	public void step() {
+	public void stepOver() {
 		synchronized ( this ) {
-            suspended = false;
-			stepping = true;
+			if (DebugUtils.IS_DEBUG)
+				DebugUtils.println("stepOver on cc=" + cc + "...");
+
+			suspended = false;
+			stepping = STEP_OVER;
+			steppingFrame = cc;
 			this.notify();
 		}
 	}
+	
+    /**
+     * step a single statement
+     */
+	public void stepInto() {
+		synchronized ( this ) {
+            suspended = false;
+			stepping = STEP_INTO;
+			this.notify();
+		}
+	}
+	
+    /**
+     * return from the method call
+     */
+	public void stepReturn() {
+		synchronized ( this ) {
+			if (DebugUtils.IS_DEBUG)
+				DebugUtils.println("stepReturn on cc=" + cc + "...");
+			
+            suspended = false;
+			stepping = STEP_RETURN;
+			steppingFrame = cc;
+			this.notify();
+		}
+	}	
 }

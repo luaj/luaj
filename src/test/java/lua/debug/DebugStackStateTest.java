@@ -60,7 +60,7 @@ public class DebugStackStateTest extends TestCase {
 		
 		// step for 5 steps
 		for ( int i=0; i<5; i++ ) {
-			state.step();
+			state.stepOver();
 			Thread.sleep(500);
 			System.out.println("--- callgraph="+state.getCallgraph() );
 			System.out.println("--- stack="+state.getStack(0) );

@@ -40,14 +40,14 @@ public class DebugUtils {
     }
 
     public static String getSourceFileName(LString source) {   
-    	String sourceStr = LoadState.getSourceName(source.toJavaString());    	
+    	String sourceStr = LoadState.getSourceName(source.toJavaString());    	    	
+    	return getSourceFileName(sourceStr);
+	}
+
+	public static String getSourceFileName(String sourceStr) {
     	if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
-    		sourceStr = sourceStr.replace('\\', '/');    		  	
-    		int index = sourceStr.lastIndexOf('/');
-    		if (index != -1) {
-    			sourceStr = sourceStr.substring(index + 1);
-    		}    		
+    		sourceStr = sourceStr.replace('\\', '/'); 		
     	}
-    	return sourceStr;
+		return sourceStr;
 	}
 }

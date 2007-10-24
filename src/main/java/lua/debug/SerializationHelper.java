@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import lua.debug.event.DebugEvent;
 import lua.debug.event.DebugEventBreakpoint;
+import lua.debug.event.DebugEventError;
 import lua.debug.event.DebugEventType;
 import lua.debug.request.DebugRequest;
 import lua.debug.request.DebugRequestLineBreakpointToggle;
@@ -60,6 +61,7 @@ public class SerializationHelper {
 	static final int SERIAL_TYPE_DebugEventType = 11;
 	static final int SERIAL_TYPE_DebugEvent = 12;
 	static final int SERIAL_TYPE_DebugEventBreakpoint = 13;
+	static final int SERIAL_TYPE_DebugEventError = 14;
 	
 	public static void serialize(Serializable object, DataOutputStream dout)
 	throws IOException {
@@ -102,6 +104,9 @@ public class SerializationHelper {
 		} else if (object instanceof DebugEventBreakpoint) {
 			dout.writeInt(SERIAL_TYPE_DebugEventBreakpoint);
 			DebugEventBreakpoint.serialize(dout, (DebugEventBreakpoint)object);
+		} else if (object instanceof DebugEventError) {
+			dout.writeInt(SERIAL_TYPE_DebugEventError);
+			DebugEventError.serialize(dout, (DebugEventError)object);
 		} else if (object instanceof DebugEvent) {
 			dout.writeInt(SERIAL_TYPE_DebugEvent);
 			DebugEvent.serialize(dout, (DebugEvent)object);
@@ -154,7 +159,10 @@ public class SerializationHelper {
     		break;
     	case SERIAL_TYPE_DebugEventBreakpoint:
     		object = DebugEventBreakpoint.deserialize(din);
-    		break;    		
+    		break;
+    	case SERIAL_TYPE_DebugEventError:
+    		object = DebugEventError.deserialize(din);
+    		break;
     	case SERIAL_TYPE_DebugEvent:
     		object = DebugEvent.deserialize(din);
     		break;
