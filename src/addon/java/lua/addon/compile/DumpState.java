@@ -30,12 +30,12 @@ public class DumpState {
 	private static final byte[] LUAC_HEADER_SIGNATURE = { '\033', 'L', 'u', 'a' };
 
 	// header fields
-	private static final int IS_LITTLE_ENDIAN = 0;
+	private boolean IS_LITTLE_ENDIAN = false;
+	private boolean IS_NUMBER_INTEGRAL = false;
+	private int SIZEOF_LUA_NUMBER = 8;
 	private static final int SIZEOF_INT = 4;
 	private static final int SIZEOF_SIZET = 4;
 	private static final int SIZEOF_INSTRUCTION = 4;
-	private static final int SIZEOF_LUA_NUMBER = 8;
-	private static final int IS_NUMBER_INTEGRAL = 0;
 
 	DataOutputStream writer;
 	boolean strip;
@@ -56,7 +56,14 @@ public class DumpState {
 	}
 
 	void dumpInt(int x) throws IOException {
-		writer.writeInt(x);
+		if ( IS_LITTLE_ENDIAN ) {
+			writer.writeByte(x&0xff);
+			writer.writeByte((x>>8)&0xff);
+			writer.writeByte((x>>16)&0xff);
+			writer.writeByte((x>>24)&0xff);
+		} else {
+			writer.writeInt(x);
+		}
 	}
 	
 	void dumpString(LString s) throws IOException {
@@ -67,8 +74,15 @@ public class DumpState {
 	}
 	
 	void dumpNumber(double d) throws IOException {
-		long l = Double.doubleToLongBits(d);
-		writer.writeLong(l);
+		if ( IS_NUMBER_INTEGRAL ) {
+			int i = (int) d;
+			if ( i != d )
+				throw new java.lang.IllegalArgumentException("not an integer: "+d);
+			dumpInt( i );
+		} else {
+			long l = Double.doubleToLongBits(d);
+			writer.writeLong(l);
+		}
 	}
 
 	void dumpCode( final Proto f ) throws IOException {
@@ -144,12 +158,12 @@ public class DumpState {
 		writer.write( LUAC_HEADER_SIGNATURE );
 		writer.write( LUAC_VERSION );
 		writer.write( LUAC_FORMAT );
-		writer.write( IS_LITTLE_ENDIAN );
+		writer.write( IS_LITTLE_ENDIAN? 1: 0 );
 		writer.write( SIZEOF_INT );
 		writer.write( SIZEOF_SIZET );
 		writer.write( SIZEOF_INSTRUCTION );
 		writer.write( SIZEOF_LUA_NUMBER );
-		writer.write( IS_NUMBER_INTEGRAL );
+		writer.write( IS_NUMBER_INTEGRAL? 1: 0 );
 	}
 
 	/*
@@ -157,6 +171,16 @@ public class DumpState {
 	*/
 	public static int dump( Proto f, OutputStream w, boolean strip ) throws IOException {
 		DumpState D = new DumpState(w,strip);
+		D.dumpHeader();
+		D.dumpFunction(f,null);
+		return D.status;
+	}
+
+	public static int dump(Proto f, OutputStream w, boolean strip, boolean intonly, boolean littleendian) throws IOException {
+		DumpState D = new DumpState(w,strip);
+		D.IS_LITTLE_ENDIAN = littleendian;
+		D.IS_NUMBER_INTEGRAL = intonly;
+		D.SIZEOF_LUA_NUMBER = (intonly? 4: 8);
 		D.dumpHeader();
 		D.dumpFunction(f,null);
 		return D.status;
