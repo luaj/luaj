@@ -33,6 +33,7 @@ import lua.addon.luajava.LuaJava;
 import lua.debug.DebugStackState;
 import lua.debug.DebugSupport;
 import lua.debug.DebugUtils;
+import lua.debug.VMException;
 import lua.io.Closure;
 import lua.io.LoadState;
 import lua.io.Proto;
@@ -220,7 +221,11 @@ public class StandardLuaJVM {
         for (int i = 0; i < numOfScriptArgs; i++) { 
             vargs[i] = new LString(args[i]);
         }
-        getDebugState().doCall(c, vargs);
+        try {
+        	getDebugState().doCall(c, vargs);
+        } catch (VMException e) {
+        	System.err.println("VMException: " + e.getMessage());
+        }
         getDebugState().stop();
     }   
     

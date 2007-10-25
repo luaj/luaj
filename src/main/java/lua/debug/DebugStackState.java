@@ -65,7 +65,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     protected boolean suspended = false;
     protected int lastline = -1;
     protected String lastSource;
-    protected DebugSupport debugSupport = null;
+    protected DebugSupport debugSupport;    
+    protected VMException lastException;
     
 
 	public DebugStackState() {}
@@ -112,26 +113,21 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 		error(message, 1);
 	}
 	
-	private void printLuaTrace() {
-		System.out.println( "Lua location: "+getFileLine(cc) );
-		for ( int cindex=cc-1; cindex>=0; cindex-- )
-			System.out.println( "\tin "+getFileLine( cindex ) );
-	}
-	
 	// intercept exceptions and fill in line numbers
 	public void exec() {
 		try {
 			super.exec();
-		} catch (AbortException e) {
+		} catch ( AbortException e ) {
             // ignored. Client aborts the debugging session.
-        } catch ( RuntimeException t ) {        
-			// let other exceptions be processed 
+        }  catch ( VMException e ) {
+			// let VM exceptions be processed 
 			// the same as the base class to minimize differences
 			// between the debug and non-debug behavior
-			
-			debugSupport.notifyDebugEvent(new DebugEventError(t.getMessage()));
+			throw e;
+		} catch ( Exception e ) {        
+        	lastException = new VMException(e);
+			debugSupport.notifyDebugEvent(new DebugEventError(e.getMessage()));
 			suspend();
-			throw t;
 		}
 	}
 	
@@ -209,6 +205,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 					this.wait();
 					if(DebugUtils.IS_DEBUG)
 						DebugUtils.println("resuming execution...");
+					
+					if (lastException != null) {
+						throw lastException;
+					}
 				} catch ( InterruptedException ie ) {
 					ie.printStackTrace();
 				}
