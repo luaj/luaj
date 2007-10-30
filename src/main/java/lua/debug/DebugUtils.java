@@ -48,6 +48,12 @@ public class DebugUtils {
     	if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
     		sourceStr = sourceStr.replace('\\', '/'); 		
     	}
+
+    	int index = sourceStr.lastIndexOf('/');
+    	if (index != -1) {
+    		sourceStr = sourceStr.substring(index + 1);
+    	}
+
 		return sourceStr;
 	}
 }

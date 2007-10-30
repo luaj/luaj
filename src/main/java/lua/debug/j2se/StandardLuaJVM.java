@@ -210,8 +210,7 @@ public class StandardLuaJVM {
         DebugUtils.println("start debugging...");
         DebugSupport debugSupport 
         	= new DebugSupportImpl(getRequestPort(), getEventPort());
-        getDebugState().setDebugSupport(debugSupport);
-        getDebugState().suspend();
+        getDebugState().setDebugSupport(debugSupport);        
         
         // create closure and execute
         final Closure c = new Closure(state, p);

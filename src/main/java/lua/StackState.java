@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import lua.io.Closure;
 import lua.io.LoadState;
+import lua.io.LocVars;
 import lua.io.Proto;
 import lua.io.UpVal;
 import lua.value.LBoolean;
@@ -340,11 +341,21 @@ public class StackState extends Lua implements VM {
         // loop until a return instruction is processed, 
         // or the vm yields
         while (true) {
-        	debugAssert( ci == calls[cc] );
-
-            if (TRACE)
+            debugAssert( ci == calls[cc] );
+    
+            // sync up top
+            ci.top = top;
+        	
+            if (TRACE) {
                 Print.printState(this, base, top, base+p.maxstacksize, cl, ci.pc);
-
+                for (int j = 0; j <= cc; j++) {
+                    System.out.println("calls[" + j + "]: " + calls[j].base + "," + calls[j].top);
+                    LocVars[] localVars = calls[j].closure.p.locvars;
+                    for (int t = 0; t < localVars.length; t++)
+                        System.out.println("localVars[" + t + "]: " + localVars[t].varname);
+                }
+            }
+            
             // allow debug hooks a chance to operate
             debugHooks( ci.pc );
             
@@ -367,8 +378,7 @@ public class StackState extends Lua implements VM {
             case StackState.OP_LOADBOOL: {
                 b = StackState.GETARG_B(i);
                 c = StackState.GETARG_C(i);
-                this.stack[base + a] = (b != 0 ? LBoolean.TRUE
-                        : LBoolean.FALSE);
+                this.stack[base + a] = (b != 0 ? LBoolean.TRUE : LBoolean.FALSE);
                 if (c != 0)
                     ci.pc++; /* skip next instruction (if C) */
                 continue;
@@ -535,7 +545,7 @@ public class StackState extends Lua implements VM {
                 
                 // restore base
                 base = ci.base;
-
+                
                 continue;
             }
             
@@ -555,11 +565,20 @@ public class StackState extends Lua implements VM {
                 this.top = base + b;
                 this.nresults = ci.nresults;
                 --cc;
-
+                
                 // make or set up the call
-                if (this.stack[base].luaStackCall(this))
-                    return;
-
+                try {
+                    if (this.stack[base].luaStackCall(this)) {
+                        return;
+                    }
+                } catch (RuntimeException e) {
+                    // in case of error, we need to restore cc so that
+                    // the debug can get the correct location where the error
+                    // occured.
+                    cc++;
+                    throw e;
+                }
+                
                 // adjustTop only for case when call was completed
                 // and number of args > 0. If call completed but
                 // c == 0, leave top to point to end of results
@@ -704,7 +723,6 @@ public class StackState extends Lua implements VM {
                 continue;
             }            
             }
-            ci.top = top;
         }   
     }
     
