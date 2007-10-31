@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import lua.io.Closure;
 import lua.value.LString;
+import lua.value.LTable;
 import lua.value.LValue;
 /**
  * <hr>
@@ -938,6 +939,14 @@ public interface VM {
 	 */
 	public void pushlstring(byte[] bytes, int offset, int length);
 
+	/**
+	 * Push string bytes onto the stack as a string. <span class="apii">[-0, +1,
+	 * <em>m</em>]</span>
+	 * 
+	 * Pushes the bytes in byteArray onto the stack as a lua string. 
+	 */
+	public void pushlstring(byte[] byteArray);
+
 	/** 
 	 * Push an LValue onto the stack. <span class="apii">[-0, +1,
 	 * <em>m</em>]</span>
@@ -1340,6 +1349,15 @@ public interface VM {
 	 * otherwise, the function returns <code>NULL</code>.
 	 */
 	public StackState tothread(int index);
+
+	/**
+	 * Get a value from the stack as a lua table. <span class="apii">[-0, +0, <em>-</em>]</span>
+	 * 
+	 * <p>
+	 * Converts the value at the given acceptable index to a Lua table
+	 * This value must be a table otherwise, the function returns <code>NIL</code>.
+	 */
+	public LTable totable(int index);
 
 	/**
 	 * Get the Object from a userdata value. <span class="apii">[-0, +0,

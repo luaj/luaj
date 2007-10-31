@@ -1,5 +1,7 @@
 package lua.value;
 
+import java.util.Arrays;
+
 import lua.Lua;
 import lua.VM;
 
@@ -513,25 +515,98 @@ public class LTable extends LValue {
 		return m_vector.length;
 	}
 
-	/*
+	/**
+	 * Insert element at a position in the list.
 	 * @pos index to insert at, or 0 to insert at end.
 	 */
 	public void luaInsertPos(int pos, LValue value) {
-		if ( pos != 0 )
-			throw new RuntimeException("luaInsertPos() not implemented");
-		put( m_arrayEntries + m_hashEntries + 1, value );
+		if ( pos > m_arrayEntries + 1 )
+			put( pos, value );
+		else {
+			final int index = Math.max(0,pos==0? m_arrayEntries: pos-1);
+			if ( m_arrayEntries + 1 > m_vector.length )
+				resize( ( m_arrayEntries + 1 ) * 2 );
+			if ( m_vector[index] != LNil.NIL ) {
+				System.arraycopy(m_vector, index, m_vector, index+1, m_vector.length-1-index);
+			}
+			m_vector[index] = value;
+			++m_arrayEntries;
+		}
 	}
 
-	public void luaSort() {
-		throw new RuntimeException("luaSort() not implemented");
-	}
-
+	/**
+	 * Remove an element from the list part of the table
+	 * @param pos position to remove, or 0 to remove last element
+	 */
 	public void luaRemovePos(int pos) {
-		throw new RuntimeException("luaRemovePos() not implemented");
+		if ( pos > m_arrayEntries ) {
+			put( pos, LNil.NIL );
+		} else {
+			final int index = Math.max(0,pos<=0? m_arrayEntries: pos)-1;
+			if ( index < 0 )
+				return;
+			System.arraycopy(m_vector, index+1, m_vector, index, m_vector.length-1-index);
+			m_vector[m_vector.length-1] = LNil.NIL;
+			--m_arrayEntries;
+		}
 	}
 
 	public int luaMaxN() {
-		throw new RuntimeException("luaMaxN() not implemented");
+		return m_arrayEntries;
+	}
+
+	// ----------------- sort support -----------------------------
+	//
+	// implemented heap sort from wikipedia
+	//
+	public void luaSort(VM vm, LValue compare) {
+		heapSort(m_arrayEntries, vm, compare);
+	}
+	
+	private void heapSort(int count, VM vm, LValue cmpfunc) {
+		heapify(count, vm, cmpfunc);
+		for ( int end=count-1; end>0; ) {
+			swap(end, 0);
+			siftDown(0, --end, vm, cmpfunc);
+		}
+	}
+
+	private void heapify(int count, VM vm, LValue cmpfunc) {
+		for ( int start=count/2-1; start>=0; --start )
+			siftDown(start, count - 1, vm, cmpfunc);
+	}
+
+	private void siftDown(int start, int end, VM vm, LValue cmpfunc) {
+		for ( int root=start; root*2+1 <= end; ) { 
+			int child = root*2+1; 
+			if (child < end && compare(child, child + 1, vm, cmpfunc))
+				++child; 
+			if (compare(root, child, vm, cmpfunc)) {
+				swap(root, child);
+				root = child;
+			} else
+				return;
+		}
+	}
+
+	private boolean compare(int i, int j, VM vm, LValue cmpfunc) {
+		if ( cmpfunc != LNil.NIL ) {
+			vm.pushlvalue(cmpfunc);
+			vm.pushlvalue(m_vector[i]);
+			vm.pushlvalue(m_vector[j]);
+			vm.call(2, 1);
+			boolean result = vm.toboolean(1);
+			vm.settop(0);
+			return result;
+		} else {
+			return m_vector[j].luaBinCmpUnknown( Lua.OP_LT, m_vector[i] );
+		}
+	}
+	
+	private void swap(int i, int j) {
+		LValue tmp = m_vector[i];
+		m_vector[i] = m_vector[j];
+		m_vector[j] = tmp;
 	}
 
 }

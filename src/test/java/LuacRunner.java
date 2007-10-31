@@ -30,7 +30,7 @@ public class LuacRunner {
 		LuaJava.install();
 		
 		// new lua state 
-		StackState state = new DebugStackState();
+		StackState state = new StackState();
 		VM vm = state;
 
 		// load the file

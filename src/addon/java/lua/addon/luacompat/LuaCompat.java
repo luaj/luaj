@@ -663,24 +663,26 @@ public class LuaCompat extends LFunction {
 	 * If i is greater than j, returns the empty string.
 	 */
 	private void concat(VM vm) {
-		LTable table = (LTable) vm.getArg(0);
-		LString sep = vm.getArgAsLuaString(1);
-		int i = vm.getArgAsInt(2);
-		int j = vm.getArgAsInt(3);
-		LValue[] keys = table.getKeys();
+		int n = vm.gettop();
+		LTable table = vm.totable(2);
+		LString sep = (n>2? vm.tolstring(3): null);
+		int i = vm.tointeger(4);
+		int j = vm.tointeger(5);
+		int len = table.luaLength();
 		if ( i == 0 ) 
 			i = 1;
 		if ( j == 0 ) 
-			j = keys.length;
+			j = len;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			for ( int k=i; k<=j; k++ ) {
-				LValue v = table.get(keys[k-1]);
+				LValue v = table.get(k);
 					v.luaAsString().write(baos);
-					if ( k<j )
+					if ( k<j && sep!=null )
 						sep.write( baos );
 			}
-			vm.setResult( new LString( baos.toByteArray() ) );
+			vm.settop(0);
+			vm.pushlstring( baos.toByteArray() );
 		} catch (IOException e) {
 			vm.error(e.getMessage());
 		}
@@ -693,10 +695,10 @@ public class LuaCompat extends LFunction {
 	 * table.insert(t,x) inserts x at the end of table t.
 	 */ 
 	private void insert(VM vm) {
-		int n = vm.getArgCount();
-		LTable table = (LTable) vm.getArg(0);
-		int pos = (n>2? vm.getArgAsInt(1): 0);
-		LValue value = vm.getArg(n-1);
+		int n = vm.gettop();
+		LTable table = vm.totable(2);
+		int pos = (n>3? vm.tointeger(3): 0);
+		LValue value = vm.topointer(-1);
 		table.luaInsertPos( pos, value );
 	}
 
@@ -707,8 +709,9 @@ public class LuaCompat extends LFunction {
 	 * indices. (To do its job this function does a linear traversal of the whole table.)
 	 */ 
 	private void maxn(VM vm) {
-		LTable table = (LTable) vm.getArg(0);
-		vm.setResult( LInteger.valueOf( table.luaMaxN() ) );
+		LTable table = vm.totable(2);
+		vm.settop(0);
+		vm.pushinteger( table.luaMaxN() );
 	}
 
 
@@ -719,9 +722,9 @@ public class LuaCompat extends LFunction {
 	 * so that a call table.remove(t) removes the last element of table t.
 	 */ 
 	private void remove(VM vm) {
-		int n = vm.getArgCount();
-		LTable table = (LTable) vm.getArg(0);
-		int pos = (n>1? vm.getArgAsInt(1): 0);
+		int n = vm.gettop();
+		LTable table = vm.totable(2);
+		int pos = (n>1? vm.tointeger(3): 0);
 		table.luaRemovePos( pos );
 	}
 
@@ -735,7 +738,8 @@ public class LuaCompat extends LFunction {
 	 * The sort algorithm is not stable; that is, elements considered equal by the given order may have their relative positions changed by the sort.
 	 */ 
 	private void sort(VM vm) {
-		LTable table = (LTable) vm.getArg(0);
-		table.luaSort();
+		LTable table = vm.totable(2);
+		LValue compare = vm.topointer(3);
+		table.luaSort( vm, compare );
 	}
 }

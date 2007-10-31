@@ -1011,6 +1011,10 @@ public class StackState extends Lua implements VM {
 		pushlvalue(new LString(bytes, offset, length));
 	}
 
+	public void pushlstring(byte[] byteArray) {
+		pushlstring(byteArray, 0, byteArray.length);
+	}
+	
 	public void pushnil() {
 		pushlvalue(LNil.NIL);
 	}

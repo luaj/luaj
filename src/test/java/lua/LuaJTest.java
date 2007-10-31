@@ -96,6 +96,10 @@ public class LuaJTest extends TestCase {
 		runTest( "strlib" );
 	}
 	
+	public void testTable() throws IOException, InterruptedException {
+		runTest( "table" );
+	}
+
 	public void testType() throws IOException, InterruptedException {
 		runTest( "type" );
 	}
@@ -120,7 +124,7 @@ public class LuaJTest extends TestCase {
 		LuaCompat.install();
 		
 		// new lua state 
-		StackState state = new DebugStackState();
+		StackState state = new StackState();
 		
 		// load the file
 		Proto p = loadScriptResource( state, testName );
