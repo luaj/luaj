@@ -1,7 +1,5 @@
 package lua.value;
 
-import java.util.Arrays;
-
 import lua.Lua;
 import lua.VM;
 
