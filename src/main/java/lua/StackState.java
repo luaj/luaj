@@ -346,15 +346,8 @@ public class StackState extends Lua implements VM {
             // sync up top
             ci.top = top;
         	
-            if (TRACE) {
+            if (TRACE)
                 Print.printState(this, base, top, base+p.maxstacksize, cl, ci.pc);
-                for (int j = 0; j <= cc; j++) {
-                    System.out.println("calls[" + j + "]: " + calls[j].base + "," + calls[j].top);
-                    LocVars[] localVars = calls[j].closure.p.locvars;
-                    for (int t = 0; t < localVars.length; t++)
-                        System.out.println("localVars[" + t + "]: " + localVars[t].varname);
-                }
-            }
             
             // allow debug hooks a chance to operate
             debugHooks( ci.pc );
@@ -623,6 +616,7 @@ public class StackState extends Lua implements VM {
                 if (body) {
                     this.stack[base + a] = idx;
                     this.stack[base + a + 3] = idx;
+                    top = base + a + 3 + 1;
                     ci.pc += StackState.GETARG_sBx(i);
                 }
                 continue;
