@@ -291,12 +291,12 @@ public class Print extends Lua {
 		for ( ; i<base; i++ )
 			ps.print('.');
 		ps.print('[');
-		for ( ; i<max && i<state.stack.length; i++ ) {
+		for ( ; i<max; i++ ) {
 			Object v = state.stack[i];
 			ps.print( v!=null? String.valueOf(v): STRING_FOR_NULL );
 			if ( i+1 == top )
 				ps.print(']');
-			ps.print( " " );
+			ps.print( " | " );
 		}
 		ps.println();
 	}

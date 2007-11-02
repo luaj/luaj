@@ -117,7 +117,7 @@ public class StackState extends Lua implements VM {
             System.arraycopy( calls, 0, newcalls, 0, cc+1 );
             calls = newcalls;
         }
-        calls[newcc] = new CallInfo(c, base, resultbase, nresults);
+        calls[newcc] = new CallInfo(c, base, top, resultbase, nresults);
         cc = newcc;
     }
     

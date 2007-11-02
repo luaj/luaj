@@ -53,29 +53,26 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
     // stepping constants and stepping state
     protected static final int STEP_NONE = 0;
-
     protected static final int STEP_OVER = 1;
-
     protected static final int STEP_INTO = 2;
-
     protected static final int STEP_RETURN = 3;
-
     protected int stepping = STEP_NONE;
     protected boolean shouldPauseForStepping = false;
     protected int steppingFrame = -1;
+    
     protected Hashtable breakpoints = new Hashtable();
     protected boolean exiting = false;
     protected boolean suspended = false;
-    protected boolean isStarted = false;
+    protected boolean bSuspendAtStart = false;
     protected int lastline = -1;
     protected String lastSource;
     protected DebugSupport debugSupport;
-    protected VMException lastException;
 
     public DebugStackState() {
     }
-
-    public void setDebugSupport(DebugSupport debugSupport) throws IOException {
+    
+    public void setDebugSupport(DebugSupport debugSupport) 
+    throws IOException {
         if (debugSupport == null) {
             throw new IllegalArgumentException("DebugSupport cannot be null");
         }
@@ -84,7 +81,11 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         debugSupport.setDebugStackState(this);
         debugSupport.start();
     }
-
+    
+    public void setSuspendAtStart(boolean bSuspendAtStart) {
+        this.bSuspendAtStart = bSuspendAtStart;
+    }
+    
     protected void debugAssert(boolean b) {
         if (!b)
             error("assert failure");
@@ -124,15 +125,23 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             super.exec();
         } catch (AbortException e) {
             // ignored. Client aborts the debugging session.
-        } catch (VMException e) {
-            // let VM exceptions be processed
+        } catch (Exception e) {
+            // let VM exceptions be processed if the debugger is not attached
             // the same as the base class to minimize differences
             // between the debug and non-debug behavior
-            throw e;
-        } catch (Exception e) {
-            lastException = new VMException(e);
-            debugSupport.notifyDebugEvent(new DebugEventError(e.getMessage()));
-            suspend();
+            VMException lastException = new VMException(e);
+            if (debugSupport != null) {
+                debugSupport.notifyDebugEvent(new DebugEventError(e.getMessage()));
+                suspend();
+                synchronized (this) {
+                    while (suspended) {
+                        try {
+                            wait();
+                        } catch (InterruptedException e1) {}
+                    }                    
+                }
+            }
+            throw lastException;
         }
     }
 
@@ -142,11 +151,16 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             throw new AbortException("aborted by debug client");
         }
 
-        if (DebugUtils.IS_DEBUG)
-            DebugUtils.println("entered debugHook on pc=" + pc + "...");
-
+        if (DebugUtils.IS_DEBUG) {
+            DebugUtils.println("entered debugHook on pc=" + pc + "...Line: " + getFileLine(cc));
+            for (int j = 0; j <= cc; j++) {
+                DebugUtils.println("calls[" + j + "]: base=" + calls[j].base + ", top=" + calls[j].top + " ,pc=" + calls[j].pc);
+                dumpStack(j);                    
+            }
+        }        
+        
         synchronized (this) {
-            while (!isStarted) {
+            while (bSuspendAtStart) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
@@ -182,13 +196,13 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                     shouldPauseForStepping = true;
                 }
             } else if (stepping == STEP_OVER) {
-                if ((lastline != line && steppingFrame == cc)
-                        || (steppingFrame > cc)) {
+                if ((steppingFrame == cc && lastline != line)|| 
+                    (steppingFrame > cc)) {
                     suspendOnStepping();
                 }
             } else if (stepping == STEP_RETURN) {
-                if ((opCode == StackState.OP_RETURN && cc == this.steppingFrame)
-                        || (opCode == StackState.OP_TAILCALL && cc == this.steppingFrame)) {
+                if ((opCode == StackState.OP_RETURN && cc == this.steppingFrame) || 
+                    (opCode == StackState.OP_TAILCALL && cc == this.steppingFrame)) {
                     shouldPauseForStepping = true;
                 }
             }
@@ -220,10 +234,6 @@ public class DebugStackState extends StackState implements DebugRequestListener 
                     this.wait();
                     if (DebugUtils.IS_DEBUG)
                         DebugUtils.println("resuming execution...");
-
-                    if (lastException != null) {
-                        throw lastException;
-                    }
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
@@ -349,7 +359,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
     protected void setStarted() {
         synchronized (this) {
-            isStarted = true;
+            bSuspendAtStart = false;
             this.notify();
         }
     }
@@ -464,13 +474,23 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         return result;
     }
     
-    private String getVariable(CallInfo callInfo, int index) {
-        Proto prototype = callInfo.closure.p;
-        int count = -1;
-        LocVars[] localVariables = prototype.locvars;
+    private void dumpStack(int index) {
+        CallInfo callInfo = calls[index];
+        LocVars[] localVariables = callInfo.closure.p.locvars;
         for (int i = 0; i < localVariables.length; i++) {
-            if (callInfo.pc < localVariables[i].startpc || 
-                callInfo.pc > localVariables[i].endpc) {
+            if (!isActiveVariable(callInfo.pc, localVariables[i])) {
+                continue;
+            } else {
+                DebugUtils.println("localvars["+i+"]=" + localVariables[i].varname.toJavaString());
+            }
+        }
+    }
+    
+    private String getVariable(CallInfo callInfo, int index) {
+        int count = -1;
+        LocVars[] localVariables = callInfo.closure.p.locvars;
+        for (int i = 0; i < localVariables.length; i++) {
+            if (!isActiveVariable(callInfo.pc, localVariables[i])) {
                 continue;
             } else {
                 count++;
@@ -481,6 +501,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         }
         
         return null;
+    }
+
+    private boolean isActiveVariable(int pc, LocVars localVariable) {
+        return pc >= localVariable.startpc && pc <= localVariable.endpc;
     }
     
     private void addVariables(Vector variables, Hashtable variablesSeen, int index) {
@@ -503,6 +527,8 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         for (int i = base; i < top; i++) {
             String varName = getVariable(callInfo, i-base);
             if (varName == null) {
+                // we don't care about the temporary variables and constants 
+                // on the stack
                 continue;
             }
             
