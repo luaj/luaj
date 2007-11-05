@@ -405,7 +405,7 @@ public class LuaCompat extends LFunction {
 			return input;
 		} else if ( input instanceof LString ) {
 			int base = 10;
-			if ( vm.gettop()>2 ) {
+			if ( vm.gettop()>=3 ) {
 				base = vm.tointeger(3);
 			}
 			return ( (LString) input ).luaToNumber( base );
@@ -663,7 +663,7 @@ public class LuaCompat extends LFunction {
 	private void concat(VM vm) {
 		int n = vm.gettop();
 		LTable table = vm.totable(2);
-		LString sep = (n>2? vm.tolstring(3): null);
+		LString sep = (n>=3? vm.tolstring(3): null);
 		int i = vm.tointeger(4);
 		int j = vm.tointeger(5);
 		int len = table.luaLength();
@@ -695,7 +695,7 @@ public class LuaCompat extends LFunction {
 	private void insert(VM vm) {
 		int n = vm.gettop();
 		LTable table = vm.totable(2);
-		int pos = (n>3? vm.tointeger(3): 0);
+		int pos = (n>=4? vm.tointeger(3): 0);
 		LValue value = vm.topointer(-1);
 		table.luaInsertPos( pos, value );
 	}
@@ -722,7 +722,7 @@ public class LuaCompat extends LFunction {
 	private void remove(VM vm) {
 		int n = vm.gettop();
 		LTable table = vm.totable(2);
-		int pos = (n>1? vm.tointeger(3): 0);
+		int pos = (n>=3? vm.tointeger(3): 0);
 		table.luaRemovePos( pos );
 	}
 
