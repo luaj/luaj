@@ -268,9 +268,10 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      */
     private int getLineNumber(CallInfo ci) {
         int[] lineNumbers = ci.closure.p.lineinfo;
-        int pc = ci.pc;
-        int line = (lineNumbers != null && lineNumbers.length > pc ? lineNumbers[pc]
-                : -1);
+        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
+        int line = (lineNumbers != null && lineNumbers.length > pc ? 
+                    lineNumbers[pc] :
+                    -1);
         return line;
     }
 
@@ -455,6 +456,11 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         return frames;
     }
 
+    /**
+     * Returns the visible local variables on a stack frame.
+     * @param index The stack frame index
+     * @return the visible local variables on the given stack frame.
+     */
     public Variable[] getStack(int index) {
         if (index < 0 || index >= calls.length) {
             throw new RuntimeException("invalid stack index");
