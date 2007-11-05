@@ -24,5 +24,8 @@ print( select(3, "a", "b", "c"))
 print((select(4, "a", "b", "c")))
 print( select(4, "a", "b", "c"))
 
+print( select("#") )
+print( select("#", "a") )
+print( select("#", "a", "b") )
 -- f("hello", "world")
 -- g(1, 2, 3, 4, 5, 6, 7)

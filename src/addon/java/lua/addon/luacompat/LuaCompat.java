@@ -374,7 +374,6 @@ public class LuaCompat extends LFunction {
 		} else if ( arg.toJavaString().equals( "#" ) ) {
 			setResult( vm, LInteger.valueOf( vm.gettop() - 2 ) );
 		}
-		vm.settop(0);
 	}
 	
 	private LValue abs( final LValue v ) {
