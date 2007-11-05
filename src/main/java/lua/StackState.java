@@ -69,26 +69,6 @@ public class StackState extends Lua implements VM {
     
     // ================ interfaces for performing calls
     
-    public void push( int value ) {
-        stack[top++] = LInteger.valueOf(value);
-    }
-
-    public void push( String value ) {
-        stack[top++] = new LString(value);
-    }
-
-    public void push( double value ) {
-        stack[top++] = new LDouble(value);
-    }
-
-    public void push( boolean value ) {
-        stack[top++] = value? LBoolean.TRUE: LBoolean.FALSE;
-    }
-
-    public void push( LValue value ) {
-        stack[top++] = value;
-    }
-    
     public void prepStackCall() {
         Closure c = (Closure) stack[base];
         int resultbase = base;
@@ -127,20 +107,13 @@ public class StackState extends Lua implements VM {
     }
     
     public void doCall( Closure c, LValue[] args ) {
-        setResult( c );
+    	settop(0);
+        pushlvalue( c );
         for ( int i=0, n=(args!=null? args.length: 0); i<n; i++ )
-            push( args[i] );
+            pushlvalue( args[i] );
         prepStackCall();
         execute();
         base = (cc>=0? calls[cc].base: 0);
-    }
-
-    public void setExpectedResultCount( int nresults ) {
-        this.nresults = nresults;
-    }
-    
-    public int getExpectedResultCount() {
-        return this.nresults;
     }
 
 	public void invokeJavaFunction(JavaFunction javaFunction) {
@@ -219,7 +192,8 @@ public class StackState extends Lua implements VM {
             this.cc = oldcc;
             close(oldtop);  /* close eventual pending closures */
             String s = t.getMessage();
-            setResult( s!=null? s: t.toString() ); 
+            settop(0);
+            pushstring( s!=null? s: t.toString() ); 
             return (t instanceof OutOfMemoryError? LUA_ERRMEM: LUA_ERRRUN);
         }
     }
@@ -228,71 +202,12 @@ public class StackState extends Lua implements VM {
     public int load( InputStream is, String chunkname ) {
         try {
             Proto p = LoadState.undump(this, is, chunkname );
-            push( new Closure( this, p ) );
+            pushlvalue( new Closure( p, _G ) );
             return 0;
         } catch ( Throwable t ) {
-            setResult( t.getMessage() ); 
+            pushstring( t.getMessage() ); 
             return (t instanceof OutOfMemoryError? LUA_ERRMEM: LUA_ERRSYNTAX);
         }
-    }
-    
-    // ================ interfaces for being called
-    
-    public int getArgCount() {
-        return top - (base + 1);
-    }
-    
-    public LValue getArg(int index) {
-        int off = (base + 1) + index;
-        return off < top? stack[off]: LNil.NIL;
-    }
-    
-    public int getArgAsInt( int index ) {
-        return getArg(index).toJavaInt();
-    }
-
-    public double getArgAsDouble( int index ) {
-        return getArg(index).toJavaDouble();
-    }   
-    
-    public boolean getArgAsBoolean( int index ) {
-        return getArg(index).toJavaBoolean();
-    }
-
-    public LString getArgAsLuaString( int index ) {
-        return getArg(index).luaAsString();
-    }
-
-    public String getArgAsString( int index ) {
-        return getArgAsLuaString(index).toJavaString();
-    }   
-
-    public void setResult() {
-        top = base;
-    }
-    
-    public void setResult( LValue value ) {
-        setResult();
-        push( value );
-    }
-    
-    public void setResult( String value ) {
-        setResult();
-        push( value );
-    }
-    
-    public void setErrorResult(LValue value, String message) {
-        setResult();
-        push( value );
-        push( message );
-    }
-    
-    public void adjustResults() {
-        if ( nresults != LUA_MULTRET ) {
-            adjustTop( base + nresults );
-        }
-        // Copy base back from value in call frame
-        base = (cc >= 0) ? calls[cc].base : 0;
     }
     
     // ================ execute instructions
@@ -681,7 +596,7 @@ public class StackState extends Lua implements VM {
             case StackState.OP_CLOSURE: {
                 b = StackState.GETARG_Bx(i);
                 proto = cl.p.p[b];
-                newClosure = new Closure(this, proto);
+                newClosure = new Closure(proto, _G);
                 for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
                     i = code[ci.pc];
                     o = StackState.GET_OPCODE(i);

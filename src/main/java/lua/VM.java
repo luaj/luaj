@@ -46,31 +46,6 @@ public interface VM {
 
 	// ================ interfaces for performing calls
 	
-	/** 
-	 * @deprecated - push by type instead or use pushlvalue() 
-	 */
-	public void push( LValue value );
-
-	/**  
-	 * @deprecated - use pushinteger() instead 
-	 */
-	public void push( int value );
-
-	/** 
-	 * @deprecated - use pushnumber() instead 
-	 */
-	public void push( double value );
-
-	/**  
-	 * @deprecated - use pushboolean() instead 
-	 */
-	public void push( boolean value );
-
-	/** 
-	 * @deprecated - use pushstring or pushlstring instead 
-	 */
-	public void push( String value );
-
 	/**
 	 * Create a call frame for a call that has been set up on
 	 * the stack. The first value on the stack must be a Closure,
@@ -100,74 +75,6 @@ public interface VM {
 	 */
 	public void doCall(Closure c, LValue[] values);	
 
-	
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public void setExpectedResultCount( int nresults );
-	
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public int getExpectedResultCount();
-	
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public void adjustResults();
-	
-	// ================ interfaces for getting arguments when called
-	
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public int getArgCount();
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public LValue getArg(int index);
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public int getArgAsInt( int index );
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public double getArgAsDouble( int index );
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public boolean getArgAsBoolean( int index );
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public String getArgAsString( int index );
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public LString getArgAsLuaString( int index );
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public void setResult();
-	
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public void setResult(LValue val);
-
-
-	/**
-	 * @deprecated - use JavaFunction and Java API instead.
-	 */
-	public void setErrorResult(LValue value, String message);
 	
 	// ===============================================================
 	//                    Lua Java API 
