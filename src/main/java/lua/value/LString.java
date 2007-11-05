@@ -42,20 +42,66 @@ public class LString extends LValue {
 	}
 	
 	/**
-	 * Construct a Lua string from the given Java string. Characters are encoded
-	 * using UTF-8.
+	 * Construct a Lua string from the given Java string. 
+	 * Characters are encoded using UTF-8.
 	 */
 	public LString(String string) {
-		byte[] bytes;
-		try {
-			bytes = string.getBytes( "UTF-8" );
-		} catch ( UnsupportedEncodingException exn ) {
-			bytes = stringToUtf8Bytes( string );
+		
+		// measure bytes required to encode
+		int n = string.length();
+		int b = n;
+		char c;
+		for ( int i=0; i<n; i++ ) {
+			if ( (c = string.charAt(i)) >= 0x80 ) {
+				++b;
+				if ( c >= 0x800 )
+					++b;
+			}
+		}		
+		byte[] bytes = new byte[b];
+		int j = 0;
+		for ( int i=0; i<n; i++ ) {
+			if ( (c = string.charAt(i)) < 0x80 ) {
+				bytes[j++] = (byte) c;
+			} else if ( c < 0x800 ) {
+				bytes[j++] = (byte) (0xC0 | ((c>>6)  & 0x1f));
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+			} else {
+				bytes[j++] = (byte) (0xE0 | ((c>>12) & 0x0f));
+				bytes[j++] = (byte) (0x80 | ((c>>6)  & 0x3f));
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+			}
 		}
 		this.m_bytes = bytes;
 		this.m_offset = 0;
-		this.m_length = m_bytes.length;
-		this.m_hash = hashBytes( m_bytes, 0, m_length );
+		this.m_length = b;
+		this.m_hash = hashBytes( bytes, 0, b );
+	}
+
+	/**
+	 * Convert to Java string using UTF-8 encoding
+	 */
+	public String toJavaString() {
+		char[] c = new char[m_length];
+		int n = 0;
+		int b;
+		for ( int i=0; i<m_length; i++ ) {
+			switch ( (b = m_bytes[m_offset+i]) & 0xe0 ) {
+			default:
+				if ( b == 0 )
+					return new String( c, 0, n );
+				c[n++] = (char) (0xff & b);
+				break;
+			case 0xc0:
+				c[n++] = (char) (((b & 0x1f) << 6) | ( m_bytes[m_offset+(++i)] & 0x3f));
+				break;
+			case 0xe0:
+				c[n++] = (char) (((b & 0xf) << 12) | ((m_bytes[m_offset+i+1] & 0x3f) << 6) | (m_bytes[m_offset+i+2] & 0x3f));
+				i += 2;
+				break;
+			}			
+		}
+		return new String( c, 0, n );
 	}
 	
 	/**
@@ -283,14 +329,6 @@ public class LString extends LValue {
 	
 	public LString luaAsString() {
 		return this;
-	}
-	
-	public String toJavaString() {
-		try {
-			return new String( m_bytes, m_offset, m_length, "UTF-8" );
-		} catch ( UnsupportedEncodingException uee ) {
-			throw new RuntimeException("toJavaString: UTF-8 decoding not implemented");
-		}
 	}
 	
 	/** Built-in opcode LEN, for Strings and Tables */

@@ -2,8 +2,6 @@ package lua.addon.luacompat;
 
 import lua.VM;
 import lua.value.LFunction;
-import lua.value.LInteger;
-import lua.value.LNil;
 import lua.value.LNumber;
 import lua.value.LString;
 import lua.value.LTable;
@@ -22,12 +20,12 @@ public class StrLib {
 	 * @param vm the calling vm
 	 */
 	static void byte_( VM vm ) {
-		LString ls = vm.getArgAsLuaString(0);
+		LString ls = vm.tolstring(2);
 		int l = ls.length();
-		final int nargs = vm.getArgCount();
-		int i = posrelat( ( nargs > 1 ) ? vm.getArgAsInt(1) : 1, l );
-		int j = posrelat( ( nargs > 2 ) ? vm.getArgAsInt(2) : i, l );
-		vm.setResult();
+		final int top = vm.gettop();
+		int i = posrelat( ( top >= 3 ) ? vm.tointeger(3) : 1, l );
+		int j = posrelat( ( top >= 4 ) ? vm.tointeger(4) : i, l );
+		vm.settop(0);
 		if ( i <= 0 )
 			i = 1;
 		if ( j > l )
@@ -36,7 +34,7 @@ public class StrLib {
 			return;
 		int n = j - i + 1;
 		for ( int k=0; k < n; k++ )
-			vm.push( LInteger.valueOf( ls.luaByte(k+i-1) ) );
+			vm.pushinteger( ls.luaByte(k+i-1) );
 	}
 
 	/** 
@@ -51,11 +49,12 @@ public class StrLib {
 	 * @param vm the calling VM
 	 */
 	public static void char_( VM vm) {
-		int nargs = vm.getArgCount();
+		int nargs = vm.gettop()-1;
 		byte[] bytes = new byte[nargs];
 		for ( int i=0; i<nargs; i++ )
-			bytes[i] = (byte)( vm.getArgAsInt(i) & 0x0FF );
-		vm.setResult( new LString( bytes ) );
+			bytes[i] = (byte)( vm.tointeger(i+2) & 0x0FF );
+		vm.settop(0);
+		vm.pushlstring( bytes );
 	}
 		
 	/** 
@@ -114,8 +113,9 @@ public class StrLib {
 	 * This function does not accept string values containing embedded zeros, 
 	 * except as arguments to the q option. 
 	 */
-	static void format( VM vm ) {		
-		vm.setResult( new LString("") );
+	static void format( VM vm ) {
+		vm.settop(0);
+		vm.pushstring( "" );
 	}
 
 	/** 
@@ -143,7 +143,8 @@ public class StrLib {
 	 * as this would prevent the iteration.
 	 */
 	static void gmatch( VM vm ) {
-		vm.setResult( new GMatchAux(vm) );
+		vm.settop(0);
+		vm.pushlvalue( new GMatchAux(vm) );
 	}
 
 	static class GMatchAux extends LFunction {
@@ -152,14 +153,14 @@ public class StrLib {
 		private final MatchState ms;
 		private int soffset;
 		public GMatchAux(VM vm) {
-			this.src = vm.getArgAsLuaString(0);
-			this.pat = vm.getArgAsLuaString(1);
+			this.src = vm.tolstring(2);
+			this.pat = vm.tolstring(3);
 			this.srclen = src.length();
 			this.ms = new MatchState(vm, src, pat);
 			this.soffset = 0;
 		}
 		public boolean luaStackCall(VM vm) {
-			vm.setResult();
+			vm.settop(0);
 			for ( ; soffset<srclen; soffset++ ) {
 				int res = ms.match(soffset, 0);
 				if ( res >=0 ) {
@@ -169,7 +170,7 @@ public class StrLib {
 					return false;
 				}
 			}
-			vm.push( LNil.NIL );
+			vm.pushnil();
 			return false;
 		}
 	}
@@ -221,11 +222,11 @@ public class StrLib {
 	 *	     --> x="lua-5.1.tar.gz"
 	 */
 	static void gsub( VM vm ) {
-		LString src = vm.getArgAsLuaString( 0 );
+		LString src = vm.tolstring(2);
 		final int srclen = src.length();
-		LString p = vm.getArgAsLuaString( 1 );
-		LValue repl = vm.getArg( 2 );
-		int max_s = ( vm.getArgCount() > 3 ? vm.getArgAsInt( 3 ) : srclen + 1 );
+		LString p = vm.tolstring(3);
+		LValue repl = vm.topointer( 4 );
+		int max_s = ( vm.gettop() >= 5 ? vm.tointeger( 5 ) : srclen + 1 );
 		final boolean anchor = p.length() > 0 && p.charAt( 0 ) == '^';
 		
 		LBuffer lbuf = new LBuffer( srclen );
@@ -250,9 +251,9 @@ public class StrLib {
 				break;
 		}
 		lbuf.append( src.substring( soffset, srclen ) );
-		vm.setResult();
-		vm.push( lbuf.toLuaString() );
-		vm.push( LInteger.valueOf( n ) );
+		vm.settop(0);
+		vm.pushlstring( lbuf.toLuaString() );
+		vm.pushinteger( n );
 	}
 	
 	/** 
@@ -261,8 +262,10 @@ public class StrLib {
 	 * Receives a string and returns its length. The empty string "" has length 0. 
 	 * Embedded zeros are counted, so "a\000bc\000" has length 5. 
 	 */
-	static void len( VM vm ) {		
-		vm.setResult( LInteger.valueOf( vm.getArgAsLuaString(0).length()) );
+	static void len( VM vm ) {
+		int l = vm.tostring(2).length();
+		vm.settop(0);
+		vm.pushinteger( l );
 	}
 
 	/** 
@@ -272,8 +275,10 @@ public class StrLib {
 	 * changed to lowercase. All other characters are left unchanged. 
 	 * The definition of what an uppercase letter is depends on the current locale.
 	 */
-	static void lower( VM vm ) {		
-		vm.setResult( new LString( vm.getArgAsString(0).toLowerCase() ) );
+	static void lower( VM vm ) {	
+		String s = vm.tostring(2).toLowerCase();
+		vm.settop(0);
+		vm.pushstring( s );
 	}
 
 	/**
@@ -295,18 +300,16 @@ public class StrLib {
 	 * Returns a string that is the concatenation of n copies of the string s. 
 	 */
 	static void rep( VM vm ) {
-		LString s = vm.getArgAsLuaString( 0 );
-		int n = vm.getArgAsInt( 1 );
+		LString s = vm.tolstring(2);
+		int n = vm.tointeger( 3 );
+		vm.settop(0);
 		if ( n >= 0 ) {
 			final byte[] bytes = new byte[ s.length() * n ];
 			int len = s.length();
 			for ( int offset = 0; offset < bytes.length; offset += len ) {
 				s.copyInto( 0, bytes, offset, len );
 			}
-			
-			vm.setResult( new LString( bytes ) );
-		} else {
-			vm.setResult( LNil.NIL );
+			vm.pushlstring( bytes );
 		}
 	}
 
@@ -316,12 +319,13 @@ public class StrLib {
 	 * Returns a string that is the string s reversed. 
 	 */
 	static void reverse( VM vm ) {		
-		LString s = vm.getArgAsLuaString(0);
+		LString s = vm.tolstring(2);
 		int n = s.length();
 		byte[] b = new byte[n];
 		for ( int i=0, j=n-1; i<n; i++, j-- )
 			b[j] = (byte) s.luaByte(i);
-		vm.setResult( new LString(b) );
+		vm.settop(0);
+		vm.pushlstring( b );
 	}
 
 	/** 
@@ -336,23 +340,24 @@ public class StrLib {
 	 * returns a suffix of s with length i.
 	 */
 	static void sub( VM vm ) {
-		final int nargs = vm.getArgCount();
-		final LString s = vm.getArgAsLuaString( 0 );
+		final int top = vm.gettop();
+		final LString s = vm.tolstring(2);
 		final int len = s.length();
 		
-		int i = posrelat( nargs > 1 ? vm.getArgAsInt( 1 ) : 1, len );
-		int j = posrelat( nargs > 2 ? vm.getArgAsInt( 2 ) : -1, len );
+		int i = posrelat( top >= 3 ? vm.tointeger( 3 ) : 1, len );
+		int j = posrelat( top >= 4 ? vm.tointeger( 4 ) : -1, len );
 		
 		if ( i < 1 )
 			i = 1;
 		if ( j > len )
 			j = len;
 		
+		vm.settop(0);
 		if ( i <= j ) {
 			LString result = s.substring( i - 1 , j );
-			vm.setResult( result );
+			vm.pushlstring( result );
 		} else {
-			vm.setResult( new LString( "" ) );
+			vm.pushstring( "" );
 		}
 	}
 	
@@ -364,16 +369,18 @@ public class StrLib {
 	 * The definition of what a lowercase letter is depends on the current locale.	
 	 */
 	static void upper( VM vm ) {
-		vm.setResult( new LString( vm.getArgAsString(0).toUpperCase() ) );
+		String s = vm.tostring(2).toUpperCase();
+		vm.settop(0);
+		vm.pushstring(s);
 	}
 	
 	/**
 	 * This utility method implements both string.find and string.match.
 	 */
 	static void str_find_aux( VM vm, boolean find ) {
-		LString s = vm.getArgAsLuaString( 0 );
-		LString pat = vm.getArgAsLuaString( 1 );
-		int init = vm.getArgCount() > 2 ? vm.getArgAsInt( 2 ) : 1;
+		LString s = vm.tolstring(2);
+		LString pat = vm.tolstring(3);
+		int init = vm.gettop() >= 4 ? vm.tointeger( 4 ) : 1;
 		
 		if ( init > 0 ) {
 			init = Math.min( init - 1, s.length() );
@@ -381,14 +388,14 @@ public class StrLib {
 			init = Math.max( 0, s.length() + init );
 		}
 		
-		boolean fastMatch = find && ( vm.getArgAsBoolean( 3 ) || pat.indexOfAny( SPECIALS ) == -1 );
-		vm.setResult();
+		boolean fastMatch = find && ( vm.toboolean( 5 ) || pat.indexOfAny( SPECIALS ) == -1 );
+		vm.settop(0);
 		
 		if ( fastMatch ) {
 			int result = s.indexOf( pat, init );
 			if ( result != -1 ) {
-				vm.push( result + 1 );
-				vm.push( result + pat.length() );
+				vm.pushinteger( result + 1 );
+				vm.pushinteger( result + pat.length() );
 				return;
 			}
 		} else {
@@ -407,8 +414,8 @@ public class StrLib {
 				ms.reset();
 				if ( ( res = ms.match( soff, poff ) ) != -1 ) {
 					if ( find ) {
-						vm.push( soff + 1 );
-						vm.push( res );
+						vm.pushinteger( soff + 1 );
+						vm.pushinteger( res );
 						ms.push_captures( false, soff, res );
 					} else {
 						ms.push_captures( true, soff, res );
@@ -417,8 +424,7 @@ public class StrLib {
 				}
 			} while ( soff++ < s.length() && !anchor );
 		}
-		
-		vm.setResult( LNil.NIL );
+		vm.pushnil();
 	}
 	
 	private static int posrelat( int pos, int len ) {
@@ -521,7 +527,7 @@ public class StrLib {
 				add_s( lbuf, repl.luaAsString(), soffset, end );
 				return;
 			} else if ( repl instanceof LFunction ) {
-				vm.push( repl );
+				vm.pushlvalue( repl );
 				int n = push_captures( true, soffset, end );
 				vm.call( n, 1 );
 			} else if ( repl instanceof LTable ) {
@@ -556,7 +562,7 @@ public class StrLib {
 		private void push_onecapture( int i, int soff, int end ) {
 			if ( i >= this.level ) {
 				if ( i == 0 ) {
-					vm.push( s.substring( soff, end ) );
+					vm.pushlstring( s.substring( soff, end ) );
 				} else {
 					vm.error( "invalid capture index" );
 				}
@@ -566,10 +572,10 @@ public class StrLib {
 					vm.error( "unfinished capture" );
 				}
 				if ( l == CAP_POSITION ) {
-					vm.push( LInteger.valueOf( cinit[i] + 1 ) );
+					vm.pushinteger( cinit[i] + 1 );
 				} else {
 					int begin = cinit[i];
-					vm.push( s.substring( begin, begin + l ) );
+					vm.pushlstring( s.substring( begin, begin + l ) );
 				}
 			}
 		}
