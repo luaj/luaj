@@ -218,7 +218,7 @@ public class LTable extends LValue {
 		if ( v == LNil.NIL && m_metatable != null ) {
 			super.luaGetTable( vm, table, key );
 		} else {
-			vm.push(v);
+			vm.pushlvalue(v);
 		}
 	}
 	
@@ -282,20 +282,20 @@ public class LTable extends LValue {
 		
 		// perform a lua call
 		public boolean luaStackCall(VM vm) {
-			vm.setResult();
+			vm.settop(0);
 			int i;
 			while ( ( i = arrayIndex++ ) < m_vector.length ) {
 				if ( m_vector[i] != LNil.NIL ) {
-					vm.push( LInteger.valueOf( arrayIndex ) );
-					vm.push( m_vector[ i ] );
+					vm.pushinteger( arrayIndex );
+					vm.pushlvalue( m_vector[ i ] );
 					return false;
 				}
 			}
 			if ( isPairs && (m_hashKeys != null) ) {
 				while ( ( i = hashIndex++ ) < m_hashKeys.length ) {
 					if ( m_hashKeys[i] != null ) {
-						vm.push( m_hashKeys[i] );
-						vm.push( m_hashValues[i] );
+						vm.pushlvalue( m_hashKeys[i] );
+						vm.pushlvalue( m_hashValues[i] );
 						return false;
 					}
 				}

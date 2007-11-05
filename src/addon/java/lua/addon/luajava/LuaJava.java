@@ -58,16 +58,17 @@ public final class LuaJava extends LFunction {
 		String className;
 		switch ( id ) {
 		case BINDCLASS:
-			className = vm.getArgAsString(0);
+			className = vm.tostring(2);
 			try {
 				Class clazz = Class.forName(className);
-				vm.setResult( new LInstance( clazz, clazz ) );
+				vm.settop(0);
+				vm.pushlvalue( new LInstance( clazz, clazz ) );
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 			break;
 		case NEWINSTANCE:
-			className = vm.getArgAsString(0);
+			className = vm.tostring(2);
 			try {
 				// get constructor
 				Class clazz = Class.forName(className);
@@ -79,7 +80,8 @@ public final class LuaJava extends LFunction {
 				Object o = con.newInstance( args );
 				
 				// set the result
-				vm.setResult( new LInstance( o, clazz ) );
+				vm.settop(0);
+				vm.pushlvalue( new LInstance( o, clazz ) );
 				
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -96,11 +98,11 @@ public final class LuaJava extends LFunction {
 		public final Class[] classes;
 		public int hash;
 		ParamsList( VM vm ) {
-			int n = vm.getArgCount()-1;
+			int n = vm.gettop()-2;
 			values = new LValue[n];
 			classes = new Class[n];
 			for ( int i=0; i<n; i++ ) {
-				values[i] = vm.getArg(i+1);
+				values[i] = vm.topointer(i+3);
 				classes[i] = values[i].getClass();
 				hash += classes[i].hashCode();
 			}
@@ -127,9 +129,9 @@ public final class LuaJava extends LFunction {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
 				LValue v = CoerceJavaToLua.coerce( o );
-				vm.push( v );
+				vm.pushlvalue( v );
 			} catch (NoSuchFieldException nsfe) {
-				vm.push( new LMethod(m_instance,clazz,s) );
+				vm.pushlvalue( new LMethod(m_instance,clazz,s) );
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -141,7 +143,7 @@ public final class LuaJava extends LFunction {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
 				f.set(m_instance,v);
-				vm.setResult();
+				vm.settop(0);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -177,7 +179,8 @@ public final class LuaJava extends LFunction {
 				Object result = meth.invoke( instance, args );
 				
 				// coerce the result
-				vm.setResult( CoerceJavaToLua.coerce(result) );
+				vm.settop(0);
+				vm.pushlvalue( CoerceJavaToLua.coerce(result) );
 				return false;
 			} catch (Exception e) {
 				throw new RuntimeException(e);

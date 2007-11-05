@@ -100,7 +100,7 @@ public class LValue {
 				return;
 			}
 		}
-		vm.push( LNil.NIL );
+		vm.pushnil();
 	}
 	
 	/** Get a value from a table 
@@ -117,7 +117,7 @@ public class LValue {
 				return;
 			}
 		}
-		vm.push(LNil.NIL);
+		vm.pushnil();
 	}
 	
 	/** Get the value as a LString 

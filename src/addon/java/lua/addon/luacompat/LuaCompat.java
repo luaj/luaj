@@ -187,28 +187,38 @@ public class LuaCompat extends LFunction {
 		this.id = id;
 	}
 	
+	private static void setResult( VM vm, LValue value ) {
+		vm.settop(0);
+		vm.pushlvalue( value );
+	}
+	
+	private static void setErrorResult( VM vm, String message ) {
+		vm.settop(0);
+		vm.pushnil();
+		vm.pushstring( message );
+	}
+	
 	public boolean luaStackCall( VM vm ) {
 		switch ( id ) {
 		case LOADFILE:
-			loadfile(vm, vm.getArgAsString(0));
+			loadfile(vm, vm.tostring(2));
 			break;
 		case TONUMBER:
-			vm.setResult( toNumber( vm ) );
+			setResult( vm, toNumber( vm ) );
 			break;
 		case RAWGET: {
-			LValue t = vm.getArg(0);
-			LValue k = vm.getArg(1);
-			LValue result = LNil.NIL;
+			LValue t = vm.topointer(2);
+			LValue k = vm.topointer(3);
+			vm.settop(0);
 			if ( t instanceof LTable ) {
-				result = ( (LTable) t ).get( k );
+				vm.pushlvalue(( (LTable) t ).get( k ));
 			}
-			vm.setResult( result );
 		}	break;
 		case RAWSET: {
-			LValue t = vm.getArg(0);
-			LValue k = vm.getArg(1);
-			LValue v = vm.getArg(2);
-			vm.setResult();
+			LValue t = vm.topointer(2);
+			LValue k = vm.topointer(3);
+			LValue v = vm.topointer(4);
+			vm.settop(0);
 			if ( t instanceof LTable ) {
 				( (LTable) t ).put( k, v );
 			} else {
@@ -223,25 +233,25 @@ public class LuaCompat extends LFunction {
 			break;
 		case COLLECTGARBAGE:
 			System.gc();
-			vm.setResult();
+			vm.settop(0);
 			break;
 		case DOFILE:
 			dofile(vm);
 			break;
 		case LOADSTRING:
-			loadstring(vm, vm.getArg(0), vm.getArgAsString(1));
+			loadstring(vm, vm.topointer(2), vm.tostring(3));
 			break;
 		case LOAD:
-			load(vm, vm.getArg(0), vm.getArgAsString(1));
+			load(vm, vm.topointer(2), vm.tostring(3));
 			break;
 		case TOSTRING:
-			vm.setResult( tostring(vm, vm.getArg(0)) );
+			setResult( vm, tostring(vm, vm.topointer(2)) );
 			break;
 		case UNPACK:
 			unpack(vm);
 			break;
 		case NEXT:
-			vm.setResult( next(vm, vm.getArg(0), vm.getArgAsInt(1)) );
+			setResult( vm, next(vm, vm.topointer(2), vm.tointeger(3)) );
 			break;
 		case MODULE: 
 			module(vm);
@@ -252,31 +262,31 @@ public class LuaCompat extends LFunction {
 		
 		// Math functions
 		case ABS:
-			vm.setResult( abs( vm.getArg( 0 ) ) );
+			setResult( vm, abs( vm.topointer( 2 ) ) );
 			break;
 		case COS:
-			vm.setResult( new LDouble( Math.cos ( vm.getArgAsDouble( 0 ) ) ) );
+			setResult( vm, new LDouble( Math.cos ( vm.tonumber(2) ) ) );
 			break;
 		case MAX:
-			vm.setResult( max( vm.getArg( 0 ), vm.getArg( 1 ) ) );
+			setResult( vm, max( vm.topointer(2), vm.topointer(3) ) );
 			break;
 		case MIN:
-			vm.setResult( min( vm.getArg( 0 ), vm.getArg( 1 ) ) );
+			setResult( vm, min( vm.topointer(2), vm.topointer(3) ) );
 			break;
 		case MODF:
 			modf( vm );
 			break;
 		case SIN:
-			vm.setResult( new LDouble( Math.sin( vm.getArgAsDouble( 0 ) ) ) );
+			setResult( vm, new LDouble( Math.sin( vm.tonumber(2) ) ) );
 			break;
 		case SQRT:
-			vm.setResult( new LDouble( Math.sqrt( vm.getArgAsDouble( 0 ) ) ) );
+			setResult( vm, new LDouble( Math.sqrt( vm.tonumber(2) ) ) );
 			break;
 		case CEIL:
-			vm.setResult( LInteger.valueOf( (int) Math.ceil( vm.getArgAsDouble( 0 ) ) ) );
+			setResult( vm, LInteger.valueOf( (int) Math.ceil( vm.tonumber(2) ) ) );
 			break;
 		case FLOOR:
-			vm.setResult( LInteger.valueOf( (int) Math.floor( vm.getArgAsDouble( 0 ) ) ) );
+			setResult( vm, LInteger.valueOf( (int) Math.floor( vm.tonumber(2) ) ) );
 			break;
 			
 		// String functions
@@ -355,28 +365,16 @@ public class LuaCompat extends LFunction {
 	}
 
 	private void select( VM vm ) {
-		LValue arg = vm.getArg( 0 );
+		LValue arg = vm.topointer(2);
 		if ( arg instanceof LNumber ) {
-			final int start;
-			final int numResults;
-			if ( ( start = arg.toJavaInt() ) > 0 &&
-				 ( numResults = Math.max( vm.getArgCount() - start,
-						 				  vm.getExpectedResultCount() ) ) > 0 ) {
-				// since setResult trashes the arguments, we have to save them somewhere.
-				LValue[] results = new LValue[numResults];
-				for ( int i = 0; i < numResults; ++i ) {
-					results[i] = vm.getArg( i+start );
-				}
-				vm.setResult();
-				for ( int i = 0; i < numResults; ++i ) {
-					vm.push( results[i] );
-				}
-				return;
-			}
+			final int start = Math.min(arg.toJavaInt(),vm.gettop());
+			for ( int i=0; i<=start; i++ )
+				vm.remove(1);
+			return;
 		} else if ( arg.toJavaString().equals( "#" ) ) {
-			vm.setResult( LInteger.valueOf( vm.getArgCount() - 1 ) );
+			setResult( vm, LInteger.valueOf( vm.gettop() - 2 ) );
 		}
-		vm.setResult();
+		vm.settop(0);
 	}
 	
 	private LValue abs( final LValue v ) {
@@ -393,23 +391,23 @@ public class LuaCompat extends LFunction {
 	}
 	
 	private void modf( VM vm ) {
-		LValue arg = vm.getArg( 0 );
+		LValue arg = vm.topointer(2);
 		double v = arg.toJavaDouble();
 		double intPart = ( v > 0 ) ? Math.floor( v ) : Math.ceil( v );
 		double fracPart = v - intPart;
-		vm.setResult();
-		vm.push( intPart );
-		vm.push( fracPart );
+		vm.settop(0);
+		vm.pushnumber( intPart );
+		vm.pushnumber( fracPart );
 	}
 	
 	private LValue toNumber( VM vm ) {
-		LValue input = vm.getArg(0);
+		LValue input = vm.topointer(2);
 		if ( input instanceof LNumber ) {
 			return input;
 		} else if ( input instanceof LString ) {
 			int base = 10;
-			if ( vm.getArgCount()>1 ) {
-				base = vm.getArgAsInt(1);
+			if ( vm.gettop()>2 ) {
+				base = vm.tointeger(3);
 			}
 			return ( (LString) input ).luaToNumber( base );
 		}
@@ -417,8 +415,8 @@ public class LuaCompat extends LFunction {
 	}
 	
 	private void setfenv( StackState state ) {
-		LValue f = state.getArg(0);
-		LValue newenv = state.getArg(1);
+		LValue f = state.topointer(2);
+		LValue newenv = state.topointer(3);
 
 		Closure c = null;
 		
@@ -445,11 +443,12 @@ public class LuaCompat extends LFunction {
 			if ( newenv instanceof LTable ) {
 				c.env = (LTable) newenv;
 			}
-			state.setResult( c );
+			state.settop(0);
+			state.pushlvalue( c );
 			return;
 		}
 		
-		state.setResult();
+		state.settop(0);
 		return;
 	}
 
@@ -476,9 +475,9 @@ public class LuaCompat extends LFunction {
 	// return true if laoded, false if error put onto the stack
 	private static boolean loadis(VM vm, InputStream is, String chunkname ) {
 		try {
-			vm.setResult();
+			vm.settop(0);
 			if ( 0 != vm.load(is, chunkname) ) {
-				vm.setErrorResult( LNil.NIL, "cannot load "+chunkname+": "+vm.topointer(-1) );
+				setErrorResult( vm, "cannot load "+chunkname+": "+vm.topointer(-1) );
 				return false;
 			} else {
 				return true;
@@ -498,7 +497,7 @@ public class LuaCompat extends LFunction {
 			script = fileName;
 			is = Platform.getInstance().openFile(fileName);
 			if ( is == null ) {
-				vm.setErrorResult( LNil.NIL, "cannot open "+fileName+": No such file or directory" );
+				setErrorResult( vm, "cannot open "+fileName+": No such file or directory" );
 				return false;
 			}
 		} else {
@@ -512,10 +511,10 @@ public class LuaCompat extends LFunction {
 	
 	// if load succeeds, return 0 for success, 1 for error (as per lua spec)
 	private void dofile( VM vm ) {
-		String filename = vm.getArgAsString(0);
+		String filename = vm.tostring(2);
 		if ( loadfile( vm, filename ) ) {
 			int s = vm.pcall(1, 0, 0);
-			vm.setResult( LInteger.valueOf( s!=0? 1: 0 ) );
+			setResult( vm, LInteger.valueOf( s!=0? 1: 0 ) );
 		} else {
 			vm.error("cannot open "+filename);
 		}
@@ -539,12 +538,12 @@ public class LuaCompat extends LFunction {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			while ( true ) {
-				vm.setResult(c);
+				setResult(vm,c);
 				if ( 0 != vm.pcall(0, 1, 0) ) {
-					vm.setErrorResult(LNil.NIL, vm.getArgAsString(0));
+					setErrorResult(vm, vm.tostring(2));
 					return false;
 				}
-				LValue v = vm.getArg(0);
+				LValue v = vm.topointer(2);
 				if ( v == LNil.NIL )
 					break;
 				LString s = v.luaAsString();
@@ -557,7 +556,7 @@ public class LuaCompat extends LFunction {
 					("".equals(chunkname)? "=(load)": chunkname) );
 			
 		} catch (IOException ioe) {
-			vm.setErrorResult(LNil.NIL, ioe.getMessage());
+			setErrorResult(vm, ioe.getMessage());
 			return false;
 		} finally {
 			closeSafely( baos );
@@ -577,17 +576,17 @@ public class LuaCompat extends LFunction {
 	 * By default, i is 1 and j is the length of the list, as defined by the length operator (see §2.5.5).
 	 */
 	private void unpack(VM vm) {
-		LValue v = vm.getArg(0);
-		int i = vm.getArgAsInt(1);
-		int j = vm.getArgAsInt(2);
+		LValue v = vm.topointer(2);
+		int i = vm.tointeger(3);
+		int j = vm.tointeger(4);
 		LTable list = (LTable) v;
 		if ( i == 0 )
 			i = 1;
 		if ( j == 0 )
 			j = list.luaLength();
-		vm.setResult();
+		vm.settop(0);
 		for ( int k=i; k<=j; k++ ) 
-			vm.push( list.get(k) );
+			vm.pushlvalue( list.get(k) );
 	}
 
 	private LValue next(VM vm, LValue table, int index) {
@@ -628,9 +627,9 @@ public class LuaCompat extends LFunction {
 	 * the module, then require signals an error.
 	 */	
 	public static void require( VM vm ) {
-		LString modname = vm.getArgAsLuaString(0);
+		LString modname = vm.tolstring(2);
 		if ( LOADED.containsKey(modname) )
-			vm.setResult( LOADED.get(modname) );
+			setResult( vm, LOADED.get(modname) );
 		else {
 			String s = modname.toJavaString();
 			if ( ! loadfile(vm, s+".luac") && ! loadfile(vm, s+".lua") )
@@ -641,7 +640,7 @@ public class LuaCompat extends LFunction {
 					LOADED.put(modname, result);
 				else if ( ! LOADED.containsKey(modname) )
 					LOADED.put(modname, result = LBoolean.TRUE);
-				vm.setResult( result );
+				setResult( vm, result );
 			}
 		}
 	}

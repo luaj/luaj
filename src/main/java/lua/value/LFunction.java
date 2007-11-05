@@ -11,17 +11,17 @@ public class LFunction extends LValue {
 	}
 	
 	public void luaSetTable(VM vm, LValue table, LValue key, LValue val) {
-		vm.push( this );
-		vm.push( table );
-		vm.push( key );
-		vm.push( val );
+		vm.pushlvalue( this );
+		vm.pushlvalue( table );
+		vm.pushlvalue( key );
+		vm.pushlvalue( val );
 		vm.call( 3, 0 );
 	}
 
 	public void luaGetTable(VM vm, LValue table, LValue key) {
-		vm.push( this );
-		vm.push( table );
-		vm.push( key );
+		vm.pushlvalue( this );
+		vm.pushlvalue( table );
+		vm.pushlvalue( key );
 		vm.call( 2, 1 );
 	}
 	
