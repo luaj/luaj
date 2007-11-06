@@ -536,16 +536,22 @@ public class LTable extends LValue {
 	 * Remove an element from the list part of the table
 	 * @param pos position to remove, or 0 to remove last element
 	 */
-	public void luaRemovePos(int pos) {
+	public LValue luaRemovePos(int pos) {
 		if ( pos > m_arrayEntries ) {
-			put( pos, LNil.NIL );
+			LValue val = get( pos );
+			if ( val != LNil.NIL )
+				put( pos, LNil.NIL );
+			return val;
 		} else {
+			final int n = m_vector.length - 1;
 			final int index = Math.max(0,pos<=0? m_arrayEntries: pos)-1;
 			if ( index < 0 )
-				return;
-			System.arraycopy(m_vector, index+1, m_vector, index, m_vector.length-1-index);
-			m_vector[m_vector.length-1] = LNil.NIL;
+				return LNil.NIL;
+			LValue val = m_vector[index];
+			System.arraycopy(m_vector, index+1, m_vector, index, n-index);
+			m_vector[n] = LNil.NIL;
 			--m_arrayEntries;
+			return val;
 		}
 	}
 

@@ -723,7 +723,8 @@ public class LuaCompat extends LFunction {
 		int n = vm.gettop();
 		LTable table = vm.totable(2);
 		int pos = (n>=3? vm.tointeger(3): 0);
-		table.luaRemovePos( pos );
+		vm.settop(0);
+		vm.pushlvalue( table.luaRemovePos( pos ) );
 	}
 
 	/** table.sort (table [, comp])
