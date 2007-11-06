@@ -100,18 +100,20 @@ public class DebugStackState extends StackState implements DebugRequestListener 
             Proto p = call.closure.p;
             if (p != null && p.source != null)
                 source = p.source.toJavaString();
-            if (p.lineinfo != null && p.lineinfo.length > call.pc)
-                line = String.valueOf(p.lineinfo[call.pc]);
+            int pc = getCurrentPc(call);
+            if (p.lineinfo != null && p.lineinfo.length > pc)
+                line = String.valueOf(p.lineinfo[pc]);
             // TODO: reverse lookup on function name ????
             func = call.closure.toJavaString();
         }
         return source + ":" + line + "(" + func + ")";
     }
-
+    
     // override and fill in line number info
     public void error(String message, int level) {
-        super.error(level <= 0 ? message : getFileLine(cc + 1 - level) + ": "
-                + message);
+        super.error(level <= 0 ? 
+                    message : 
+                    getFileLine(cc + 1 - level) + ": " + message);
     }
 
     // use line numbers by default
@@ -268,11 +270,16 @@ public class DebugStackState extends StackState implements DebugRequestListener 
      */
     private int getLineNumber(CallInfo ci) {
         int[] lineNumbers = ci.closure.p.lineinfo;
-        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
+        int pc = getCurrentPc(ci);
         int line = (lineNumbers != null && lineNumbers.length > pc ? 
                     lineNumbers[pc] :
                     -1);
         return line;
+    }
+
+    private int getCurrentPc(CallInfo ci) {
+        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
+        return pc;
     }
 
     // ------------------ commands coming from the debugger -------------------
@@ -468,9 +475,7 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
         Vector variables = new Vector();
         Hashtable variablesSeen = new Hashtable();
-        for (int i = index; i >= 0; i--) {
-            addVariables(variables, variablesSeen, i);
-        }
+        addVariables(variables, variablesSeen, index);
 
         Variable[] result = new Variable[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
@@ -483,8 +488,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     private void dumpStack(int index) {
         CallInfo callInfo = calls[index];
         LocVars[] localVariables = callInfo.closure.p.locvars;
+        int pc = getCurrentPc(callInfo);
         for (int i = 0; i < localVariables.length; i++) {
-            if (!isActiveVariable(callInfo.pc, localVariables[i])) {
+            if (!isActiveVariable(pc, localVariables[i])) {
                 continue;
             } else {
                 DebugUtils.println("localvars["+i+"]=" + localVariables[i].varname.toJavaString());
@@ -495,8 +501,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
     private String getVariable(CallInfo callInfo, int index) {
         int count = -1;
         LocVars[] localVariables = callInfo.closure.p.locvars;
+        int pc = getCurrentPc(callInfo);
         for (int i = 0; i < localVariables.length; i++) {
-            if (!isActiveVariable(callInfo.pc, localVariables[i])) {
+            if (!isActiveVariable(pc, localVariables[i])) {
                 continue;
             } else {
                 count++;
