@@ -43,7 +43,7 @@ import lua.debug.request.DebugRequestType;
 import lua.debug.response.DebugResponse;
 import lua.debug.response.DebugResponseCallgraph;
 import lua.debug.response.DebugResponseSimple;
-import lua.debug.response.DebugResponseStack;
+import lua.debug.response.DebugResponseVariables;
 import lua.io.LocVars;
 import lua.io.Proto;
 import lua.value.LTable;
@@ -328,7 +328,9 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         } else if (DebugRequestType.stack == requestType) {
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
-            return new DebugResponseStack(getStack(index));
+            return new DebugResponseVariables(getStack(index));
+        } else if (DebugRequestType.global == requestType) {            
+            return new DebugResponseVariables(getGlobals());
         } else if (DebugRequestType.stepInto == requestType) {
             DebugEvent event = new DebugEvent(
                     DebugEventType.resumedOnSteppingInto);
@@ -477,6 +479,26 @@ public class DebugStackState extends StackState implements DebugRequestListener 
         Hashtable variablesSeen = new Hashtable();
         addVariables(variables, variablesSeen, index);
 
+        Variable[] result = new Variable[variables.size()];
+        for (int i = 0; i < variables.size(); i++) {
+            result[i] = (Variable) variables.elementAt(i);
+        }
+
+        return result;
+    }
+    
+    /**
+     * Returns the visible globals to the current VM.
+     * @return the visible globals.
+     */
+    public Variable[] getGlobals() {
+        Vector variables = new Vector();
+        variables.addElement(
+                new TableVariable(0, 
+                             "*Globals*", 
+                             Lua.LUA_TTABLE, 
+                             (LTable) _G));
+        
         Variable[] result = new Variable[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
             result[i] = (Variable) variables.elementAt(i);

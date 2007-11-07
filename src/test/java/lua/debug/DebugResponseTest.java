@@ -6,7 +6,7 @@ import junit.framework.TestCase;
 import lua.Lua;
 import lua.debug.response.DebugResponseCallgraph;
 import lua.debug.response.DebugResponseSimple;
-import lua.debug.response.DebugResponseStack;
+import lua.debug.response.DebugResponseVariables;
 
 public class DebugResponseTest extends TestCase {
 	public void testDebugResponseSimpleSerialization() {
@@ -46,10 +46,10 @@ public class DebugResponseTest extends TestCase {
 
 	private void doTestDebugResponseStackSerialization(Variable[] variables)
 			throws IOException {
-		DebugResponseStack stackIn = new DebugResponseStack(variables);
+		DebugResponseVariables stackIn = new DebugResponseVariables(variables);
 		byte[] data = SerializationHelper.serialize(stackIn);
-		DebugResponseStack stackOut 
-			= (DebugResponseStack) SerializationHelper.deserialize(data);
+		DebugResponseVariables stackOut 
+			= (DebugResponseVariables) SerializationHelper.deserialize(data);
 		Variable[] variablesIn = stackIn.getVariables();
 		Variable[] variablesOut = stackOut.getVariables();
 		assertNotNull(variablesIn);

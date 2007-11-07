@@ -46,14 +46,16 @@ public class DebugRequest implements Serializable {
         return type.toString();
     }
     
-	public static void serialize(DataOutputStream out, DebugRequest request) 
-	throws IOException {
-		DebugRequestType type = request.getType();
-		SerializationHelper.serialize(type, out);
-	}
-	
-	public static DebugRequest deserialize(DataInputStream in) throws IOException {
-		DebugRequestType type = (DebugRequestType) SerializationHelper.deserialize(in);
-		return new DebugRequest(type);
-	}
+    public static void serialize(DataOutputStream out, DebugRequest request)
+            throws IOException {
+        DebugRequestType type = request.getType();
+        SerializationHelper.serialize(type, out);
+    }
+
+    public static DebugRequest deserialize(DataInputStream in)
+            throws IOException {
+        DebugRequestType type = (DebugRequestType) SerializationHelper
+                .deserialize(in);
+        return new DebugRequest(type);
+    }
 }

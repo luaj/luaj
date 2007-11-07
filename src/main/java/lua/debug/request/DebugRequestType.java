@@ -30,7 +30,7 @@ import lua.debug.EnumType;
 public class DebugRequestType extends EnumType {
     public static final DebugRequestType start = new DebugRequestType("start", 0);
     public static final DebugRequestType resume = new DebugRequestType("resume", 1);
-	public static final DebugRequestType suspend = new DebugRequestType("suspend", 2);
+    public static final DebugRequestType suspend = new DebugRequestType("suspend", 2);
     public static final DebugRequestType exit = new DebugRequestType("exit", 3); 
     public static final DebugRequestType lineBreakpointSet = new DebugRequestType("lineBreakpointSet", 4); 
     public static final DebugRequestType lineBreakpointClear = new DebugRequestType("lineBreakpointClear", 5);
@@ -41,6 +41,7 @@ public class DebugRequestType extends EnumType {
     public static final DebugRequestType stepInto = new DebugRequestType("stepInto", 10);
     public static final DebugRequestType stepOver = new DebugRequestType("stepOver", 11);
     public static final DebugRequestType stepReturn = new DebugRequestType("stepReturn", 12);
+    public static final DebugRequestType global = new DebugRequestType("global", 13);
     
     protected static final DebugRequestType[] ENUMS = new DebugRequestType[] {
     	start,
@@ -55,7 +56,8 @@ public class DebugRequestType extends EnumType {
     	stack,
     	stepInto,
     	stepOver,
-    	stepReturn
+    	stepReturn,
+    	global
     };
     
     public DebugRequestType(String name, int ordinal) {
