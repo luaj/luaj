@@ -477,14 +477,31 @@ public class DebugStackState extends StackState implements DebugRequestListener 
 
         Vector variables = new Vector();
         Hashtable variablesSeen = new Hashtable();
-        addVariables(variables, variablesSeen, index);
-
+        Proto p = calls[index].closure.p;
+        for (int i = index; i >= 0; i--) {
+            if (i == index || isInScope(p, calls[i])) {
+                addVariables(variables, variablesSeen, i);
+            }
+        }
         Variable[] result = new Variable[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
             result[i] = (Variable) variables.elementAt(i);
         }
 
         return result;
+    }
+    
+    protected boolean isInScope(Proto p, CallInfo ci) {
+        Proto[] enclosingProtos = ci.closure.p.p;
+        boolean bFound = false;
+        for (int i = 0; enclosingProtos!= null && i < enclosingProtos.length; i++) {
+            if (enclosingProtos[i] == p) {
+                bFound = true;
+                break;
+            }
+        }
+        
+        return bFound;
     }
     
     /**
