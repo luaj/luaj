@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry kind="src" path="src/addon/java"/>
+	<classpathentry kind="src" path="src/core"/>
+	<classpathentry kind="src" path="src/j2se"/>
+	<classpathentry kind="src" path="src/debug"/>
+	<classpathentry kind="src" path="src/sample"/>
 	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="src" path="src/test/res"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>

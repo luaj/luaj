@@ -1,7 +1,7 @@
 obj = luajava.newInstance("java.lang.Object")
 print( obj )
 
-obj = luajava.newInstance("SampleClass")
+obj = luajava.newInstance("org.luaj.sample.SampleClass")
 print( obj )
 obj.s = "Hello"
 print( obj.s )
