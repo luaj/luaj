@@ -28,16 +28,15 @@ import java.io.IOException;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.Variable;
 
-
-public class DebugResponseStack implements DebugResponse {
+public class DebugResponseVariables implements DebugResponse {
     protected Variable[] variables;
     
-    public DebugResponseStack(Variable[] variables) {
-    	if (variables == null) {
-    		this.variables = new Variable[0];
-    	} else {
-            this.variables = variables;    		
-    	}
+    public DebugResponseVariables(Variable[] variables) {
+        if (variables == null) {
+            this.variables = new Variable[0];
+        } else {
+            this.variables = variables;                 
+        }
     }
     
     public Variable[] getVariables() {
@@ -55,21 +54,23 @@ public class DebugResponseStack implements DebugResponse {
         return buffer.toString();
     }
     
-	public static void serialize(DataOutputStream out, DebugResponseStack response) 
+    public static void serialize(DataOutputStream out,
+                                 DebugResponseVariables response) 
     throws IOException {
-		Variable[] variables = response.getVariables();
-		out.writeInt(variables == null ? 0 : variables.length);
-		for (int i = 0; i < variables.length; i++) {
-			SerializationHelper.serialize(variables[i], out);
-		}
-	}
-	
-    public static DebugResponseStack deserialize(DataInputStream in) throws IOException {
-		int count = in.readInt();
-		Variable[] variables = new Variable[count];
-		for (int i = 0; i < count; i++) {
-			variables[i] = (Variable) SerializationHelper.deserialize(in);
-		}
-		return new DebugResponseStack(variables);
-	}
+        Variable[] variables = response.getVariables();
+        out.writeInt(variables == null ? 0 : variables.length);
+        for (int i = 0; i < variables.length; i++) {
+            SerializationHelper.serialize(variables[i], out);
+        }
+    }
+        
+    public static DebugResponseVariables deserialize(DataInputStream in)
+    throws IOException {
+        int count = in.readInt();
+        Variable[] variables = new Variable[count];
+        for (int i = 0; i < count; i++) {
+            variables[i] = (Variable) SerializationHelper.deserialize(in);
+        }
+        return new DebugResponseVariables(variables);
+    }
 }

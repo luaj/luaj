@@ -40,7 +40,7 @@ import org.luaj.debug.request.DebugRequestType;
 import org.luaj.debug.response.DebugResponse;
 import org.luaj.debug.response.DebugResponseCallgraph;
 import org.luaj.debug.response.DebugResponseSimple;
-import org.luaj.debug.response.DebugResponseStack;
+import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LTable;
@@ -338,7 +338,9 @@ public class DebugStackState extends LuaState implements DebugRequestListener {
         } else if (DebugRequestType.stack == requestType) {
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
-            return new DebugResponseStack(getStack(index));
+            return new DebugResponseVariables(getStack(index));
+        } else if (DebugRequestType.global == requestType) {            
+            return new DebugResponseVariables(getGlobals());
         } else if (DebugRequestType.stepInto == requestType) {
             DebugEvent event = new DebugEvent(
                     DebugEventType.resumedOnSteppingInto);
@@ -485,8 +487,45 @@ public class DebugStackState extends LuaState implements DebugRequestListener {
 
         Vector variables = new Vector();
         Hashtable variablesSeen = new Hashtable();
-        addVariables(variables, variablesSeen, index);
+        LPrototype p = calls[index].closure.p;
+        for (int i = index; i >= 0; i--) {
+            if (i == index || isInScope(p, calls[i])) {
+                addVariables(variables, variablesSeen, i);
+            }
+        }
+        Variable[] result = new Variable[variables.size()];
+        for (int i = 0; i < variables.size(); i++) {
+            result[i] = (Variable) variables.elementAt(i);
+        }
 
+        return result;
+    }
+    
+    protected boolean isInScope(LPrototype p, CallInfo ci) {
+        LPrototype[] enclosingProtos = ci.closure.p.p;
+        boolean bFound = false;
+        for (int i = 0; enclosingProtos!= null && i < enclosingProtos.length; i++) {
+            if (enclosingProtos[i] == p) {
+                bFound = true;
+                break;
+            }
+        }
+        
+        return bFound;
+    }
+    
+    /**
+     * Returns the visible globals to the current VM.
+     * @return the visible globals.
+     */
+    public Variable[] getGlobals() {
+        Vector variables = new Vector();
+        variables.addElement(
+                new TableVariable(0, 
+                             "*Globals*", 
+                             Lua.LUA_TTABLE, 
+                             (LTable) _G));
+        
         Variable[] result = new Variable[variables.size()];
         for (int i = 0; i < variables.size(); i++) {
             result[i] = (Variable) variables.elementAt(i);

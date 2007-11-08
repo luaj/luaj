@@ -2,13 +2,10 @@ package org.luaj.debug;
 
 import java.io.IOException;
 
-import org.luaj.debug.SerializationHelper;
-import org.luaj.debug.StackFrame;
-import org.luaj.debug.TableVariable;
-import org.luaj.debug.Variable;
+
 import org.luaj.debug.response.DebugResponseCallgraph;
 import org.luaj.debug.response.DebugResponseSimple;
-import org.luaj.debug.response.DebugResponseStack;
+import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.Lua;
 
 import junit.framework.TestCase;
@@ -51,10 +48,10 @@ public class DebugResponseTest extends TestCase {
 
 	private void doTestDebugResponseStackSerialization(Variable[] variables)
 			throws IOException {
-		DebugResponseStack stackIn = new DebugResponseStack(variables);
+	    DebugResponseVariables stackIn = new DebugResponseVariables(variables);
 		byte[] data = SerializationHelper.serialize(stackIn);
-		DebugResponseStack stackOut 
-			= (DebugResponseStack) SerializationHelper.deserialize(data);
+		DebugResponseVariables stackOut 
+			= (DebugResponseVariables) SerializationHelper.deserialize(data);
 		Variable[] variablesIn = stackIn.getVariables();
 		Variable[] variablesOut = stackOut.getVariables();
 		assertNotNull(variablesIn);
