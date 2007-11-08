@@ -21,6 +21,10 @@
 ******************************************************************************/
 package org.luaj.debug;
 
+/**
+ * AbortException is thrown by DebugLuaState to abort the VM execution on request
+ * of the debugger client.
+ */
 public class AbortException extends RuntimeException {
     private static final long serialVersionUID = 8043724992294286647L;
 

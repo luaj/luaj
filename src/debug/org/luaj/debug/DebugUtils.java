@@ -26,7 +26,7 @@ import org.luaj.vm.LoadState;
 
 
 public class DebugUtils {
-    public static final boolean IS_DEBUG = false;
+    public static final boolean IS_DEBUG = (null != System.getProperty("TRACE"));
     
     public static void println(String message) {
         if (IS_DEBUG) {

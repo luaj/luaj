@@ -43,11 +43,11 @@ import org.luaj.debug.response.DebugResponseSimple;
 import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LPrototype;
 import org.luaj.vm.LuaState;
 
 
@@ -66,13 +66,12 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected Hashtable breakpoints = new Hashtable();
     protected boolean exiting = false;
     protected boolean suspended = false;
-    protected boolean bSuspendAtStart = false;
+    protected boolean bSuspendOnStart = false;
     protected int lastline = -1;
     protected String lastSource;
     protected DebugSupport debugSupport;
 
-    public DebugLuaState() {
-    }
+    public DebugLuaState() {}
     
     public void setDebugSupport(DebugSupport debugSupport) 
     throws IOException {
@@ -86,7 +85,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
     
     public void setSuspendAtStart(boolean bSuspendAtStart) {
-        this.bSuspendAtStart = bSuspendAtStart;
+        this.bSuspendOnStart = bSuspendAtStart;
     }
     
     protected void debugAssert(boolean b) {
@@ -172,7 +171,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         }        
         
         synchronized (this) {
-            while (bSuspendAtStart) {
+            while (bSuspendOnStart) {
                 try {
                     this.wait();
                 } catch (InterruptedException e) {
@@ -287,6 +286,11 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         return line;
     }
 
+    /**
+     * Returns the current program counter for the given call frame.
+     * @param ci -- A call frame
+     * @return the current program counter for the given call frame.
+     */
     private int getCurrentPc(CallInfo ci) {
         int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
         return pc;
@@ -308,7 +312,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         if (DebugRequestType.start == requestType) {
             DebugEvent event = new DebugEvent(DebugEventType.started);
             debugSupport.notifyDebugEvent(event);
-            setStarted();
+            cancelSuspendOnStart();
             return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.exit == requestType) {
             stop();
@@ -377,10 +381,15 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         }
     }
 
-    protected void setStarted() {
+    /**
+     * If the VM is suspended on start, this method resumes the execution.
+     */
+    protected void cancelSuspendOnStart() {
         synchronized (this) {
-            bSuspendAtStart = false;
-            this.notify();
+            if (bSuspendOnStart) {
+                bSuspendOnStart = false;
+                this.notify();
+            }
         }
     }
 
@@ -395,6 +404,10 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         }
     }
 
+    /**
+     * Stops the debugging communication with the debug client and terminate the
+     * VM execution.
+     */
     public void stop() {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
@@ -427,8 +440,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     /**
      * set breakpoint at line N
      * 
-     * @param N
-     *                the line to set the breakpoint at
+     * @param N -- the line to set the breakpoint at
      */
     public void setBreakpoint(String source, int lineNumber) {
         String fileName = DebugUtils.getSourceFileName(source);
@@ -501,6 +513,13 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         return result;
     }
     
+    /**
+     * Check if the current LPrototype is lexically defined in the caller scope.
+     * @param p -- current LPrototype
+     * @param ci -- caller info
+     * @return true if the current LPrototype is lexically defined in the 
+     * caller scope; false, otherwise.
+     */
     protected boolean isInScope(LPrototype p, CallInfo ci) {
         LPrototype[] enclosingProtos = ci.closure.p.p;
         boolean bFound = false;
@@ -534,9 +553,18 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         return result;
     }
     
+    /**
+     * Debugging Utility. Dumps the variables for a given call frame.
+     * @param index Index of the call frame
+     */
     private void dumpStack(int index) {
+        if (index < 0 || index > cc) return;
+        
         CallInfo callInfo = calls[index];
-        LocVars[] localVariables = callInfo.closure.p.locvars;
+        LPrototype prototype = callInfo.closure.p;
+        LocVars[] localVariables = prototype.locvars;
+        DebugUtils.println("Stack Frame: " + index + " [" + base + "," + top + "], # of localvars: " + localVariables.length + ", pc=" + callInfo.pc);
+        
         int pc = getCurrentPc(callInfo);
         for (int i = 0; i < localVariables.length; i++) {
             if (!isActiveVariable(pc, localVariables[i])) {
@@ -545,8 +573,21 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 DebugUtils.println("localvars["+i+"]=" + localVariables[i].varname.toJavaString());
             }
         }
+        
+        int base = callInfo.base;
+        int top = callInfo.top < callInfo.base ? callInfo.base+1 : callInfo.top;
+        for (int i = base; i < top; i++){
+            DebugUtils.println("stack[" + i + "]=" + stack[i]);
+        }
     }
     
+    /**
+     * Returns the name of the Nth variable in scope of the call info. 
+     * @param callInfo Call info
+     * @param index Index of the variable
+     * @return the name of the Nth variable in scope of the call info. If the 
+     * variable for the given index is not found, null is returned.
+     */
     private String getVariable(CallInfo callInfo, int index) {
         int count = -1;
         LocVars[] localVariables = callInfo.closure.p.locvars;
@@ -565,24 +606,30 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         return null;
     }
 
+    /**
+     * Check if a variable is in scope.
+     * @param pc -- Current program counter.
+     * @param localVariable -- A local variable.
+     * @return true if the variable is active under the given program counter;
+     * false, otherwise.
+     */
     private boolean isActiveVariable(int pc, LocVars localVariable) {
         return pc >= localVariable.startpc && pc <= localVariable.endpc;
     }
     
+    /**
+     * Adds the active variables for the given call frame to the list of variables.
+     * @param variables -- the list of active variables.
+     * @param variablesSeen -- variables already seen so far
+     * @param index -- index of the call frame
+     */
     private void addVariables(Vector variables, Hashtable variablesSeen, int index) {
         CallInfo callInfo = calls[index];
-        LPrototype prototype = callInfo.closure.p;
         int base = callInfo.base;
         int top = callInfo.top < callInfo.base ? callInfo.base+1 : callInfo.top;
 
         if (DebugUtils.IS_DEBUG) {
-            DebugUtils.println("Stack Frame: " + index + " [" + base + "," + top + "], # of localvars: " + prototype.locvars.length + ", pc=" + callInfo.pc);
-            for (int i = 0; i < prototype.locvars.length; i++) {
-                DebugUtils.println("localvars[" + i + "]: " + prototype.locvars[i].varname + "(" + prototype.locvars[i].startpc + "," + prototype.locvars[i].endpc + ")");
-            }
-            for (int i = base; i < top; i++){
-                DebugUtils.println("stack[" + i + "]=" + stack[i]);
-            }
+            dumpStack(index);
         }
         
         int selectedVariableCount = 0;
@@ -649,7 +696,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
 
     /**
-     * step a single statement
+     * step to the next statement
      */
     public void stepInto() {
         synchronized (this) {
@@ -660,7 +707,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
 
     /**
-     * return from the method call
+     * return from the current method call
      */
     public void stepReturn() {
         synchronized (this) {
