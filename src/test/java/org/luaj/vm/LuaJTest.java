@@ -6,7 +6,7 @@ import java.io.OutputStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.debug.DebugStackState;
+import org.luaj.debug.DebugLuaState;
 import org.luaj.lib.MathLib;
 import org.luaj.lib.j2se.LuajavaLib;
 
@@ -112,7 +112,7 @@ public class LuaJTest extends TestCase {
 	private void runTest( String testName ) throws IOException, InterruptedException {
 
 		// new lua state 
-		LuaState state = new DebugStackState();
+		LuaState state = new DebugLuaState();
 		
 		// add LuaJava bindings
 		LuajavaLib.install(state._G);

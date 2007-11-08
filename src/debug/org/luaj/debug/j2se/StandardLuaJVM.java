@@ -26,7 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.debug.DebugStackState;
+import org.luaj.debug.DebugLuaState;
 import org.luaj.debug.DebugSupport;
 import org.luaj.debug.DebugUtils;
 import org.luaj.debug.VMException;
@@ -197,7 +197,7 @@ public class StandardLuaJVM {
         DebugUtils.println("setting up LuaJava and debug stack state...");        
 
         // new lua debug state 
-        state = new DebugStackState();
+        state = new DebugLuaState();
         init(state._G);
 
         // load the Lua file
@@ -228,8 +228,8 @@ public class StandardLuaJVM {
         getDebugState().stop();
     }   
     
-    private DebugStackState getDebugState() {
-        return (DebugStackState)state;
+    private DebugLuaState getDebugState() {
+        return (DebugLuaState)state;
     }
 
     /**

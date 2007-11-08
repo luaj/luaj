@@ -13,7 +13,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.luaj.debug.DebugStackState;
+import org.luaj.debug.DebugLuaState;
 import org.luaj.lib.MathLib;
 
 public class StandardTest extends TestCase {
@@ -65,7 +65,7 @@ public class StandardTest extends TestCase {
 	}
 	
 	public void runTest() {
-		LuaState state = new DebugStackState();
+		LuaState state = new DebugLuaState();
 		MathLib.install(state._G);
 		// hack: it's unpleasant when the test cases fail to terminate;
 		// unfortunately, there is a test in the standard suite that

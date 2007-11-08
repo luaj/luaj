@@ -17,7 +17,7 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
 	protected static final int RUNNING = 1;
 	protected static final int STOPPED = 2;
 
-    protected DebugStackState vm;
+    protected DebugLuaState vm;
     protected int requestPort;
     protected int eventPort;
     protected Thread requestWatcherThread;
@@ -41,7 +41,7 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
         this.eventPort = eventPort;
     }
         
-    public void setDebugStackState(DebugStackState vm) {
+    public void setDebugStackState(DebugLuaState vm) {
         this.vm = vm;
     }
     

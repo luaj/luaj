@@ -51,7 +51,7 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LuaState;
 
 
-public class DebugStackState extends LuaState implements DebugRequestListener {
+public class DebugLuaState extends LuaState implements DebugRequestListener {
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
 
     // stepping constants and stepping state
@@ -71,7 +71,7 @@ public class DebugStackState extends LuaState implements DebugRequestListener {
     protected String lastSource;
     protected DebugSupport debugSupport;
 
-    public DebugStackState() {
+    public DebugLuaState() {
     }
     
     public void setDebugSupport(DebugSupport debugSupport) 

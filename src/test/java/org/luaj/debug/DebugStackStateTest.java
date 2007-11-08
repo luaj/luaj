@@ -24,7 +24,7 @@ package org.luaj.debug;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.debug.DebugStackState;
+import org.luaj.debug.DebugLuaState;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
@@ -38,7 +38,7 @@ public class DebugStackStateTest extends TestCase {
 		String script = "/test6.luac";
 		
 		// set up the vm
-		final DebugStackState state = new DebugStackState();
+		final DebugLuaState state = new DebugLuaState();
 		InputStream is = getClass().getResourceAsStream( script );
 		LPrototype p = LoadState.undump(state, is, script);
 		
