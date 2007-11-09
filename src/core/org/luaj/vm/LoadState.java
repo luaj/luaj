@@ -32,12 +32,20 @@ import java.io.InputStream;
 ** Function Prototypes
 */
 public class LoadState {
+	
+	/** Interface for the compiler, if it is installed. */
+	public interface LuaCompiler {
+		public LPrototype compile(int firstByte, InputStream stream, String name) throws IOException;
+	}
 
+	/** Compiler instance, if installed */
+	public static LuaCompiler compiler = null;
+
+	/** Signature byte indicating the file is a compiled binary chunk */
+	private static final byte[] LUA_SIGNATURE	= "\033Lua".getBytes();
+
+	/** Name for compiled chunks */
 	public static final String SOURCE_BINARY_STRING = "binary string";
-
-
-    /** mark for precompiled code (`<esc>Lua') */
-	public static final String LUA_SIGNATURE	= "\033Lua";
 
 
 	/** for header of binary files -- this is Lua 5.1 */
@@ -48,9 +56,6 @@ public class LoadState {
 
 	/** size of header of binary files */
 	public static final int LUAC_HEADERSIZE		= 12;
-
-	/** expected lua header bytes */
-	private static final byte[] LUAC_HEADER_SIGNATURE = { '\033', 'L', 'u', 'a' };
 
 	// values read from the header
 	private int     luacVersion;
@@ -221,15 +226,7 @@ public class LoadState {
 //		 this.L.pop();
 		 return f;
 	}
-//
-//	static void LoadHeader(LoadState* S)
-//	{
-//	 char h[LUAC_HEADERSIZE];
-//	 char s[LUAC_HEADERSIZE];
-//	 luaU_header(h);
-//	 LoadBlock(S,s,LUAC_HEADERSIZE);
-//	 IF (memcmp(h,s,LUAC_HEADERSIZE)!=0, "bad header");
-//	}
+
 	public void loadHeader() throws IOException {
 		luacVersion = is.readByte();
 		luacFormat = is.readByte();
@@ -243,19 +240,21 @@ public class LoadState {
 	
 	public static LPrototype undump( LuaState L, InputStream stream, String name ) throws IOException {
 		
-		// is this a source file? 
-		LPrototype p = org.luaj.compiler.Compiler.compile(stream, name);
-		if ( p != null )
-			return p;
+		// check first byte to see if its a precompiled chunk 
+		int c = stream.read();
+		if ( c != LUA_SIGNATURE[0] ) {
+			if ( compiler != null )
+				return compiler.compile(c, stream, name);
+			throw new IllegalArgumentException("no compiler");
+		}
 
 		// check rest of signature
-		// (one byte was consumed by compiler check)
 		for ( int i=1; i<4; i++ ) {
-			if ( stream.read() != LUAC_HEADER_SIGNATURE[i] )
+			if ( stream.read() != LUA_SIGNATURE[i] )
 				throw new IllegalArgumentException("bad signature");
 		}
 		
-		// load file
+		// load file as a compiled chunk
 		String sname = getSourceName(name);
 		LoadState s = new LoadState( L, stream, sname );
 		s.loadHeader();

@@ -29,13 +29,13 @@ import org.luaj.compiler.FuncState.BlockCnt;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LInteger;
 import org.luaj.vm.LNumber;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LPrototype;
 
 
-public class LexState extends LuaC {
+public class LexState {
 	
 	protected static final String RESERVED_LOCAL_VAR_FOR_CONTROL = "(for control)";
     protected static final String RESERVED_LOCAL_VAR_FOR_STATE = "(for state)";
@@ -136,7 +136,7 @@ public class LexState extends LuaC {
 	final Token t = new Token();  /* current token */
 	final Token lookahead = new Token();  /* look ahead token */
 	FuncState fs;  /* `FuncState' is private to the parser */
-	Compiler L;
+	LuaC L;
 	Reader z;  /* input stream */
 	char[] buff;  /* buffer for tokens */
 	int nbuff; /* length of buffer */
@@ -196,7 +196,7 @@ public class LexState extends LuaC {
 	}
 	
 	
-	public LexState(Compiler state, Reader reader) {
+	public LexState(LuaC state, Reader reader) {
 		this.z = reader;
 		this.buff = new char[32];
 		this.L = state;
@@ -222,7 +222,7 @@ public class LexState extends LuaC {
 
 	void save( int c) {
 		if ( buff == null || nbuff + 1 > buff.length )
-			buff = realloc( buff, nbuff*2+1 );
+			buff = LuaC.realloc( buff, nbuff*2+1 );
 		buff[nbuff++] = (char) c;
 	}
 
@@ -290,7 +290,7 @@ public class LexState extends LuaC {
 
 	void inclinenumber() {
 		int old = current;
-		_assert( currIsNewline() );
+		LuaC._assert( currIsNewline() );
 		nextChar(); /* skip '\n' or '\r' */
 		if ( currIsNewline() && current != old )
 			nextChar(); /* skip '\n\r' or '\r\n' */
@@ -298,7 +298,7 @@ public class LexState extends LuaC {
 			syntaxerror("chunk has too many lines");
 	}
 
-	void setinput( Compiler L, int firstByte, Reader z, LString source ) {
+	void setinput( LuaC L, int firstByte, Reader z, LString source ) {
 		this.decpoint = '.';
 		this.L = L;
 		this.lookahead.token = TK_EOS; /* no look-ahead token */
@@ -384,7 +384,7 @@ public class LexState extends LuaC {
 	*/
 
 	void read_numeral(SemInfo seminfo) {
-		_assert (isdigit(current));
+		LuaC._assert (isdigit(current));
 		do {
 			save_and_next();
 		} while (isdigit(current) || current == '.');
@@ -403,7 +403,7 @@ public class LexState extends LuaC {
 	int skip_sep() {
 		int count = 0;
 		int s = current;
-		_assert (s == '[' || s == ']');
+		LuaC._assert (s == '[' || s == ']');
 		save_and_next();
 		while (current == '=') {
 			save_and_next();
@@ -637,7 +637,7 @@ public class LexState extends LuaC {
 			}
 			default: {
 				if (isspace(current)) {
-					_assert (!currIsNewline());
+					LuaC._assert (!currIsNewline());
 					nextChar();
 					continue;
 				} else if (isdigit(current)) {
@@ -676,7 +676,7 @@ public class LexState extends LuaC {
 	}
 
 	void lookahead() {
-		_assert (lookahead.token == TK_EOS);
+		LuaC._assert (lookahead.token == TK_EOS);
 		lookahead.token = llex(lookahead.seminfo);
 	}
 
@@ -805,7 +805,7 @@ public class LexState extends LuaC {
 		FuncState fs = this.fs;
 		LPrototype f = fs.f;
 		if (f.locvars == null || fs.nlocvars + 1 > f.locvars.length)
-			f.locvars = realloc( f.locvars, fs.nlocvars*2+1 );
+			f.locvars = LuaC.realloc( f.locvars, fs.nlocvars*2+1 );
 		f.locvars[fs.nlocvars] = new LocVars(varname,0,0);
 		return fs.nlocvars++;
 	}
@@ -884,7 +884,7 @@ public class LexState extends LuaC {
 		FuncState fs = this.fs;
 		LPrototype f = fs.f;
 		if (f.p == null || fs.np + 1 > f.p.length)
-			f.p = realloc( f.p, fs.np*2 + 1 );
+			f.p = LuaC.realloc( f.p, fs.np*2 + 1 );
 		f.p[fs.np++] = func.f;
 		v.init(VRELOCABLE, fs.codeABx(Lua.OP_CLOSURE, 0, fs.np - 1));
 		for (int i = 0; i < func.f.nups; i++) {
@@ -895,7 +895,7 @@ public class LexState extends LuaC {
 	}
 	
 	void open_func (FuncState fs) {
-		  Compiler L = this.L;
+		  LuaC L = this.L;
 		  LPrototype f = new LPrototype();
 		  if ( this.fs!=null )
 			  f.source = this.fs.f.source;
@@ -920,21 +920,20 @@ public class LexState extends LuaC {
 	}
 
 	void close_func() {
-		// Compiler L = this.L;
 		FuncState fs = this.fs;
 		LPrototype f = fs.f;
 		this.removevars(0);
 		fs.ret(0, 0); /* final return */
-		f.code = realloc(f.code, fs.pc);
-		f.lineinfo = realloc(f.lineinfo, fs.pc);
+		f.code = LuaC.realloc(f.code, fs.pc);
+		f.lineinfo = LuaC.realloc(f.lineinfo, fs.pc);
 		// f.sizelineinfo = fs.pc;
-		f.k = realloc(f.k, fs.nk);
-		f.p = realloc(f.p, fs.np);
-		f.locvars = realloc(f.locvars, fs.nlocvars);
+		f.k = LuaC.realloc(f.k, fs.nk);
+		f.p = LuaC.realloc(f.p, fs.np);
+		f.locvars = LuaC.realloc(f.locvars, fs.nlocvars);
 		// f.sizelocvars = fs.nlocvars;
-		f.upvalues = realloc(f.upvalues, f.nups);
-		// _assert (CheckCode.checkcode(f));
-		_assert (fs.bl == null);
+		f.upvalues = LuaC.realloc(f.upvalues, f.nups);
+		// LuaC._assert (CheckCode.checkcode(f));
+		LuaC._assert (fs.bl == null);
 		this.fs = fs.prev;
 //		L.top -= 2; /* remove table and prototype from the stack */
 		// /* last token read was anchored in defunct function; must reanchor it
@@ -1023,7 +1022,7 @@ public class LexState extends LuaC {
 		fs.exp2nextreg(t); /* fix it at stack top (for gc) */
 		this.checknext('{');
 		do {
-			_assert (cc.v.k == VVOID || cc.tostore > 0);
+			LuaC._assert (cc.v.k == VVOID || cc.tostore > 0);
 			if (this.t.token == '}')
 				break;
 			fs.closelistfield(cc);
@@ -1049,8 +1048,8 @@ public class LexState extends LuaC {
 		this.check_match('}', '{', line);
 		fs.lastlistfield(cc);
 		InstructionPtr i = new InstructionPtr(fs.f.code, pc);
-		SETARG_B(i, luaO_int2fb(cc.na)); /* set initial array size */
-		SETARG_C(i, luaO_int2fb(cc.nh));  /* set initial table size */
+		LuaC.SETARG_B(i, luaO_int2fb(cc.na)); /* set initial array size */
+		LuaC.SETARG_C(i, luaO_int2fb(cc.nh));  /* set initial table size */
 	}
 	
 	/*
@@ -1090,10 +1089,10 @@ public class LexState extends LuaC {
 		          /* use `arg' as default name */
 		          this.new_localvarliteral("arg", nparams++);
 		          // f.is_vararg = VARARG_HASARG | VARARG_NEEDSARG;
-		          fs.varargflags = VARARG_HASARG | VARARG_NEEDSARG;
+		          fs.varargflags = LuaC.VARARG_HASARG | LuaC.VARARG_NEEDSARG;
 	          } 
 	          // f.is_vararg |= VARARG_ISVARARG;
-	          fs.varargflags |= VARARG_ISVARARG;
+	          fs.varargflags |= LuaC.VARARG_ISVARARG;
 	          f.is_vararg = true;
 	          break;
 	        }
@@ -1102,7 +1101,7 @@ public class LexState extends LuaC {
 	    } while (!f.is_vararg && this.testnext(','));
 	  }
 	  this.adjustlocalvars(nparams);
-	  f.numparams = (fs.nactvar - (fs.varargflags & VARARG_HASARG));
+	  f.numparams = (fs.nactvar - (fs.varargflags & LuaC.VARARG_HASARG));
 	  fs.reserveregs(fs.nactvar);  /* reserve register for parameters */
 	}
 
@@ -1172,7 +1171,7 @@ public class LexState extends LuaC {
 			return;
 		}
 		}
-		_assert (f.k == VNONRELOC);
+		LuaC._assert (f.k == VNONRELOC);
 		base = f.u.s.info; /* base register for call */
 		if (hasmultret(args.k))
 			nparams = Lua.LUA_MULTRET; /* open call */
@@ -1291,7 +1290,7 @@ public class LexState extends LuaC {
 			this.check_condition(fs.f.is_vararg, "cannot use " + LUA_QL("...")
 					+ " outside a vararg function");
 			// fs.f.is_vararg &= ~VARARG_NEEDSARG; /* don't need 'arg' */
-			fs.varargflags &= ~VARARG_NEEDSARG; /* don't need 'arg' */
+			fs.varargflags &= ~LuaC.VARARG_NEEDSARG; /* don't need 'arg' */
 			fs.f.is_vararg = (fs.varargflags != 0);
 			v.init(VVARARG, fs.codeABC(Lua.OP_VARARG, 0, 1, 0));
 			break;
@@ -1449,7 +1448,7 @@ public class LexState extends LuaC {
 	  BlockCnt bl = new BlockCnt();
 	  fs.enterblock(bl, false);
 	  this.chunk();
-	  _assert(bl.breaklist.i == NO_JUMP);
+	  LuaC._assert(bl.breaklist.i == NO_JUMP);
 	  fs.leaveblock();
 	}
 
@@ -1800,7 +1799,7 @@ public class LexState extends LuaC {
 		LHS_assign v = new LHS_assign();
 		this.primaryexp(v.v);
 		if (v.v.k == VCALL) /* stat -> func */
-			SETARG_C(fs.getcodePtr(v.v), 1); /* call statement uses no results */
+			LuaC.SETARG_C(fs.getcodePtr(v.v), 1); /* call statement uses no results */
 		else { /* stat -> assignment */
 			v.prev = null;
 			this.assignment(v, 1);
@@ -1820,8 +1819,8 @@ public class LexState extends LuaC {
 			if (hasmultret(e.k)) {
 				fs.setmultret(e);
 				if (e.k == VCALL && nret == 1) { /* tail call? */
-					SET_OPCODE(fs.getcodePtr(e), Lua.OP_TAILCALL);
-					_assert (Lua.GETARG_A(fs.getcode(e)) == fs.nactvar);
+					LuaC.SET_OPCODE(fs.getcodePtr(e), Lua.OP_TAILCALL);
+					LuaC._assert (Lua.GETARG_A(fs.getcode(e)) == fs.nactvar);
 				}
 				first = fs.nactvar;
 				nret = Lua.LUA_MULTRET; /* return all values */
@@ -1831,7 +1830,7 @@ public class LexState extends LuaC {
 				else {
 					fs.exp2nextreg(e); /* values must go to the `stack' */
 					first = fs.nactvar; /* return all `active' values */
-					_assert (nret == fs.freereg - first);
+					LuaC._assert (nret == fs.freereg - first);
 				}
 			}
 		}
@@ -1899,7 +1898,7 @@ public class LexState extends LuaC {
 		while (!islast && !block_follow(this.t.token)) {
 			islast = this.statement();
 			this.testnext(';');
-			_assert (this.fs.f.maxstacksize >= this.fs.freereg 
+			LuaC._assert (this.fs.f.maxstacksize >= this.fs.freereg 
 					&& this.fs.freereg >= this.fs.nactvar);
 			this.fs.freereg = this.fs.nactvar; /* free registers */
 		}

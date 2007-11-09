@@ -8,6 +8,14 @@ public class AllTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite("Test for org.luaj");
 		
+		// debug tests
+		TestSuite vm = new TestSuite("VM");
+		vm.addTestSuite(org.luaj.vm.LoadStateTest.class);
+		vm.addTestSuite(org.luaj.vm.LStringTest.class);
+		vm.addTestSuite(org.luaj.vm.LTableTest.class);
+		vm.addTestSuite(org.luaj.vm.LuaJTest.class);
+		suite.addTest(vm);
+		
 		// compiler tests
 		TestSuite compiler = new TestSuite("Compiler");
 		compiler.addTestSuite(org.luaj.compiler.SimpleTests.class);
@@ -27,14 +35,6 @@ public class AllTests {
 		debug.addTestSuite(org.luaj.debug.VariableTest.class);
 		debug.addTestSuite(org.luaj.debug.j2se.LuaJVMTest.class);
 		suite.addTest(debug);
-		
-		// debug tests
-		TestSuite vm = new TestSuite("VM");
-		vm.addTestSuite(org.luaj.vm.LoadStateTest.class);
-		vm.addTestSuite(org.luaj.vm.LStringTest.class);
-		vm.addTestSuite(org.luaj.vm.LTableTest.class);
-		vm.addTestSuite(org.luaj.vm.LuaJTest.class);
-		suite.addTest(vm);
 		
 		return suite;
 	}

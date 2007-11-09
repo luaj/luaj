@@ -26,20 +26,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
 import org.luaj.debug.DebugSupport;
 import org.luaj.debug.DebugUtils;
 import org.luaj.debug.VMException;
-import org.luaj.lib.CoroutineLib;
-import org.luaj.lib.MathLib;
-import org.luaj.lib.PackageLib;
-import org.luaj.lib.StringLib;
-import org.luaj.lib.TableLib;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
-import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaState;
@@ -170,7 +165,10 @@ public class StandardLuaJVM {
 		state.installStandardLibs();
         
         // add LuaJava bindings
-        LuajavaLib.install(state._G);        
+        LuajavaLib.install(state._G);  
+        
+        // add the compiler
+        LuaC.install();
 
     }
     

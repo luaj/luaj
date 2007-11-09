@@ -30,11 +30,11 @@ import org.luaj.vm.LDouble;
 import org.luaj.vm.LInteger;
 import org.luaj.vm.LNil;
 import org.luaj.vm.LNumber;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LPrototype;
 
 
 public class FuncState extends LuaC {
@@ -56,7 +56,7 @@ public class FuncState extends LuaC {
 	Hashtable htable;  /* table to find (and reuse) elements in `k' */
 	FuncState prev;  /* enclosing function */
 	LexState ls;  /* lexical state */
-	Compiler L;  /* copy of the Lua state */
+	LuaC L;  /* compiler being invoked */
 	BlockCnt bl;  /* chain of current blocks */
 	int pc;  /* next position to code (equivalent to `ncode') */
 	int lasttarget;   /* `pc' of last `jump target' */
@@ -1036,11 +1036,11 @@ public class FuncState extends LuaC {
 		this.dischargejpc(); /* `pc' will change */
 		/* put new instruction in code array */
 		if (f.code == null || this.pc + 1 > f.code.length)
-			f.code = LexState.realloc(f.code, this.pc * 2 + 1);
+			f.code = LuaC.realloc(f.code, this.pc * 2 + 1);
 		f.code[this.pc] = instruction;
 		/* save corresponding line information */
 		if (f.lineinfo == null || this.pc + 1 > f.lineinfo.length)
-			f.lineinfo = LexState.realloc(f.lineinfo,
+			f.lineinfo = LuaC.realloc(f.lineinfo,
 					this.pc * 2 + 1);
 		f.lineinfo[this.pc] = line;
 		return this.pc++;

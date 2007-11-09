@@ -17,7 +17,7 @@ public class SimpleTests extends TestCase {
     private void doTest( String script ) {
     	try {
         	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
-			LPrototype p = Compiler.compile( is, "script" );
+			LPrototype p = LuaC.compile( is, "script" );
 			assertNotNull( p );
 			Print.printCode( p );
 			

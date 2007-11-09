@@ -21,20 +21,34 @@
 ******************************************************************************/
 package org.luaj.compiler;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.Hashtable;
+
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LoadState;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LPrototype;
+import org.luaj.vm.Platform;
+import org.luaj.vm.LoadState.LuaCompiler;
 
 
 /**
- * Additional constants and utilities required for the compiler, 
- * but not required for the interpreter.
- * 
- *  * @deprecated - this class will go away.  Constants will probably move to LexState 
+ * Compiler for Lua 
  */
-public class LuaC extends Lua {
+public class LuaC extends Lua implements LuaCompiler {
+
+	/** Install the compiler so that LoadState will first 
+	 * try to use it when handed bytes that are 
+	 * not already a compiled lua chunk.
+	 */
+	public static void install() {
+		LoadState.compiler = new LuaC();
+	}
+
 	protected static void _assert(boolean b) {		
 		if (!b) throw new RuntimeException("assert failed");
 	}
@@ -144,6 +158,72 @@ public class LuaC extends Lua {
 		if ( v != null )
 			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
 		return a;
+	}
+
+	public int nCcalls;
+	Hashtable strings = new Hashtable();
+
+	/** Utility method to invoke the compiler for an input stream 
+	 */
+	public static LPrototype compile(InputStream is, String string) throws IOException {
+		return new LuaC().compile(is.read(), is, string);
+	}
+
+	/** Compile source bytes into a LPrototype.  
+	 * 
+	 * Try to compile the file, and return the Prototype on success, 
+	 * or throw RuntimeException on syntax error or I/O Exception
+	 * 
+	 * @param firstByte the first byte from the InputStream.  
+	 * This can be read by the client and tested to see if it is already a binary chunk.  
+	 * @param stream  InputStream to read from. 
+	 * @param name Name of the chunk
+	 * @return null if the first byte indicates it is a binary chunk, 
+	 *   a LPrototype instance if it can be compiled, 
+	 *   or an exception is thrown if there is an error.
+	 * @throws IOException if an I/O exception occurs
+	 * @throws RuntimeException if there is a syntax error.
+	 */
+	public LPrototype compile(int firstByte, InputStream stream, String name) throws IOException {
+		Reader r = Platform.getInstance().createReader( stream );
+		LuaC compiler = new LuaC();
+		return compiler.luaY_parser(firstByte, r, name);
+	}
+
+	/** Parse the input */
+	private LPrototype luaY_parser(int firstByte, Reader z, String name) {
+		LexState lexstate = new LexState(this, z);
+		FuncState funcstate = new FuncState();
+		// lexstate.buff = buff;
+		lexstate.setinput( this, firstByte, z, new LString(name) );
+		lexstate.open_func(funcstate);
+		/* main func. is always vararg */
+		funcstate.varargflags = LuaC.VARARG_ISVARARG;
+		funcstate.f.is_vararg = true;
+		funcstate.f.source = new LString("@"+name);
+		lexstate.next(); /* read first token */
+		lexstate.chunk();
+		lexstate.check(LexState.TK_EOS);
+		lexstate.close_func();
+		LuaC._assert (funcstate.prev == null);
+		LuaC._assert (funcstate.f.nups == 0);
+		LuaC._assert (lexstate.fs == null);
+		return funcstate.f;
+	}
+
+	public LString newlstr(char[] chars, int offset, int len) {
+		return newTString( new String(chars,offset,len) );
+	}
+
+	public LString newTString(String s) {
+		LString t = (LString) strings.get(s);
+		if ( t == null )
+			strings.put( s, t = new LString(s) );
+		return t;
+	}
+
+	public String pushfstring(String string) {
+		return string;
 	}
 
 }

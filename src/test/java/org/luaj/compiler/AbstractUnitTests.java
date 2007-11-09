@@ -4,19 +4,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.net.URL;
 
-import org.luaj.compiler.Compiler;
-import org.luaj.compiler.DumpState;
-import org.luaj.debug.Print;
-import org.luaj.vm.LoadState;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LuaState;
-
 import junit.framework.TestCase;
+
+import org.luaj.debug.Print;
+import org.luaj.vm.LPrototype;
+import org.luaj.vm.LoadState;
+import org.luaj.vm.LuaState;
 
 
 abstract 
@@ -38,7 +34,7 @@ public class AbstractUnitTests extends TestCase {
 			
 			// compile in memory
 			InputStream is = new ByteArrayInputStream( lua );
-	    	LPrototype p = Compiler.compile(is, dir+"/"+file);
+	    	LPrototype p = LuaC.compile(is, dir+"/"+file);
 	    	String actual = protoToString( p );
 			
 			// load expected value from jar
