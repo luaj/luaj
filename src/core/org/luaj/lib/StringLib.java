@@ -1,3 +1,24 @@
+/*******************************************************************************
+* Copyright (c) 2007 LuaJ. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+******************************************************************************/
 package org.luaj.lib;
 
 import org.luaj.vm.LFunction;
@@ -8,7 +29,117 @@ import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
 
 
-public class StringLib {
+public class StringLib extends LFunction {
+	
+	private static final String[] NAMES = {
+		"string",
+		"byte",
+		"char",
+		"dump",
+		"find",
+		"format",
+		"gmatch",
+		"gsub",
+		"len",
+		"lower",
+		"match",
+		"rep",
+		"reverse",
+		"sub",
+		"upper",
+	};
+	
+	private static final int INSTALL = 0;
+	private static final int BYTE    = 1;
+	private static final int CHAR    = 2;
+	private static final int DUMP    = 3;
+	private static final int FIND    = 4;
+	private static final int FORMAT  = 5;
+	private static final int GMATCH  = 6;
+	private static final int GSUB    = 7;
+	private static final int LEN     = 8;
+	private static final int LOWER   = 9;
+	private static final int MATCH   = 10;
+	private static final int REP     = 11;
+	private static final int REVERSE = 12;
+	private static final int SUB     = 13;
+	private static final int UPPER   = 14;	
+
+	public static void install( LTable globals ) {
+		LTable string = LString.getMetatable();
+		for ( int i=1; i<NAMES.length; i++ )
+			string.put(NAMES[i], new StringLib(i));
+		globals.put( "string", string );
+	}
+
+	private final int id;
+
+	public StringLib() {
+		this.id = 0;
+	}
+	
+	private StringLib( int id ) {
+		this.id = id;
+	}
+	
+	public String toString() {
+		return NAMES[id]+"()";
+	}
+		
+	public boolean luaStackCall( LuaState vm ) {
+		switch ( id ) {
+		case INSTALL:
+			install( vm._G );
+			break;
+		case BYTE:
+			StringLib.byte_( vm );
+			break;
+		case CHAR:
+			StringLib.char_( vm );
+			break;
+		case DUMP:
+			StringLib.dump( vm );
+			break;
+		case FIND:
+			StringLib.find( vm );
+			break;
+		case FORMAT:
+			StringLib.format( vm );
+			break;
+		case GMATCH:
+			StringLib.gmatch( vm );
+			break;
+		case GSUB:
+			StringLib.gsub( vm );
+			break;
+		case LEN:
+			StringLib.len( vm );
+			break;
+		case LOWER:
+			StringLib.lower( vm );
+			break;
+		case MATCH:
+			StringLib.match( vm );
+			break;
+		case REP:
+			StringLib.rep( vm );
+			break;
+		case REVERSE:
+			StringLib.reverse( vm );
+			break;
+		case SUB:
+			StringLib.sub( vm );
+			break;
+		case UPPER:
+			StringLib.upper( vm );
+			break;
+			
+		default:
+			luaUnsupportedOperation();
+		}
+		return false;
+	}
+	
 	/**
 	 * string.byte (s [, i [, j]]) 
 	 * 

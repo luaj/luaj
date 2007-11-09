@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.luaj.debug.DebugLuaState;
-import org.luaj.lib.MathLib;
+import org.luaj.lib.BaseLib;
 
 public class StandardTest extends TestCase {
 	
@@ -66,7 +66,10 @@ public class StandardTest extends TestCase {
 	
 	public void runTest() {
 		LuaState state = new DebugLuaState();
-		MathLib.install(state._G);
+		
+        // add standard bindings
+		state.installStandardLibs();
+		
 		// hack: it's unpleasant when the test cases fail to terminate;
 		// unfortunately, there is a test in the standard suite that
 		// relies on weak tables having their elements removed by

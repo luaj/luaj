@@ -7,7 +7,7 @@ import java.io.OutputStream;
 import junit.framework.TestCase;
 
 import org.luaj.debug.DebugLuaState;
-import org.luaj.lib.MathLib;
+import org.luaj.lib.BaseLib;
 import org.luaj.lib.j2se.LuajavaLib;
 
 
@@ -114,11 +114,11 @@ public class LuaJTest extends TestCase {
 		// new lua state 
 		LuaState state = new DebugLuaState();
 		
-		// add LuaJava bindings
-		LuajavaLib.install(state._G);
-
-		// add LuaCompat bindings
-		MathLib.install(state._G);
+        // add standard bindings
+		state.installStandardLibs();
+		
+		// add luajava
+		LuajavaLib.install( state._G );
 		
 		// load the file
 		LPrototype p = loadScriptResource( state, testName );

@@ -30,7 +30,11 @@ import org.luaj.debug.DebugLuaState;
 import org.luaj.debug.DebugSupport;
 import org.luaj.debug.DebugUtils;
 import org.luaj.debug.VMException;
+import org.luaj.lib.CoroutineLib;
 import org.luaj.lib.MathLib;
+import org.luaj.lib.PackageLib;
+import org.luaj.lib.StringLib;
+import org.luaj.lib.TableLib;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
@@ -160,20 +164,21 @@ public class StandardLuaJVM {
         }
     }
     
-    protected void init(LTable globals) {
+    protected void init(LuaState state) {
     	
+        // add standard bindings
+		state.installStandardLibs();
+        
         // add LuaJava bindings
-        LuajavaLib.install(globals);        
+        LuajavaLib.install(state._G);        
 
-        // add LuaCompat bindings
-        MathLib.install(globals);  
     }
     
     protected void doRun() throws IOException {
         
         // new lua state 
         state = new LuaState();
-        init(state._G);
+        init(state);
 
         // convert args to lua
         String[] scriptArgs = getScriptArgs();
@@ -198,7 +203,7 @@ public class StandardLuaJVM {
 
         // new lua debug state 
         state = new DebugLuaState();
-        init(state._G);
+        init(state);
 
         // load the Lua file
         DebugUtils.println("loading Lua script '" + getScript() + "'");

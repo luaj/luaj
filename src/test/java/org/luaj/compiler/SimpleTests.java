@@ -1,17 +1,16 @@
 package org.luaj.compiler;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.compiler.Compiler;
-import org.luaj.debug.Print;
-import org.luaj.vm.LClosure;
-import org.luaj.vm.LValue;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LuaState;
-
 import junit.framework.TestCase;
+
+import org.luaj.debug.Print;
+import org.luaj.lib.BaseLib;
+import org.luaj.vm.LClosure;
+import org.luaj.vm.LPrototype;
+import org.luaj.vm.LValue;
+import org.luaj.vm.LuaState;
 
 public class SimpleTests extends TestCase {
 
@@ -24,6 +23,7 @@ public class SimpleTests extends TestCase {
 			
 			// try running the code!
 			LuaState state = new LuaState();
+			BaseLib.install( state._G );
 			LClosure c = new LClosure( state, p );
 			state.doCall( c, new LValue[0] );
     	} catch ( Exception e ) {
