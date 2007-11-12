@@ -29,7 +29,7 @@ import org.luaj.debug.EnumType;
 
 
 public class DebugEventType extends EnumType {
-	public static DebugEventType started = new DebugEventType("started", 0);
+    public static DebugEventType started = new DebugEventType("started", 0);
     public static DebugEventType suspendedByClient = new DebugEventType("suspendedByClient", 1);
     public static DebugEventType suspendedOnBreakpoint = new DebugEventType("suspendedOnBreakpoint", 2);
     public static DebugEventType suspendedOnWatchpoint = new DebugEventType("suspendedOnWatchpoint", 3);
@@ -43,6 +43,12 @@ public class DebugEventType extends EnumType {
     public static DebugEventType resumedOnError = new DebugEventType("resumedOnError", 11);
     public static DebugEventType error = new DebugEventType("error", 12);
     public static DebugEventType terminated = new DebugEventType("terminated", 13);
+    public static DebugEventType clientRequestCallgraphReply 
+        = new DebugEventType("clientRequestCallgraphReply", 14);
+    public static DebugEventType clientRequestStackReply 
+        = new DebugEventType("clientRequestStackReply", 15);
+    public static DebugEventType clientRequestGlobalReply 
+        = new DebugEventType("clientRequestGlobalReply", 16);
     
     protected static DebugEventType[] ENUMS = new DebugEventType[] {
     	started,
@@ -58,7 +64,10 @@ public class DebugEventType extends EnumType {
     	resumedOnSteppingEnd,
     	resumedOnError,
     	error,
-    	terminated
+    	terminated,
+    	clientRequestCallgraphReply,
+    	clientRequestStackReply,
+    	clientRequestGlobalReply
     };
 	
     protected DebugEventType(String name, int ordinal) {

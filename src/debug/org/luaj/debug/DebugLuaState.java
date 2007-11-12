@@ -37,9 +37,8 @@ import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestListener;
 import org.luaj.debug.request.DebugRequestStack;
 import org.luaj.debug.request.DebugRequestType;
-import org.luaj.debug.response.DebugResponse;
 import org.luaj.debug.response.DebugResponseCallgraph;
-import org.luaj.debug.response.DebugResponseSimple;
+import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
@@ -192,7 +191,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 
             if (DebugUtils.IS_DEBUG)
                 DebugUtils.println("debugHook - executing line: " + line);
-
+            
             int i = currentProto.code[pc];
             int opCode = LuaState.GET_OPCODE(i);
             if (isStepping() && opCode == LuaState.OP_RETURN && cc == 0) {
@@ -298,7 +297,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 
     // ------------------ commands coming from the debugger -------------------
 
-    public DebugResponse handleRequest(DebugRequest request) {
+    public void handleRequest(DebugRequest request) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
                     "DebugStackState is not equiped with DebugSupport.");
@@ -313,60 +312,59 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             DebugEvent event = new DebugEvent(DebugEventType.started);
             debugSupport.notifyDebugEvent(event);
             cancelSuspendOnStart();
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.exit == requestType) {
             stop();
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.suspend == requestType) {
             suspend();
             DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
             debugSupport.notifyDebugEvent(event);
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.resume == requestType) {
             resume();
             DebugEvent event = new DebugEvent(DebugEventType.resumedByClient);
             debugSupport.notifyDebugEvent(event);
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.lineBreakpointSet == requestType) {
-            DebugRequestLineBreakpointToggle setBreakpointRequest = (DebugRequestLineBreakpointToggle) request;
+            DebugRequestLineBreakpointToggle setBreakpointRequest 
+                = (DebugRequestLineBreakpointToggle) request;
             setBreakpoint(setBreakpointRequest.getSource(),
                     setBreakpointRequest.getLineNumber());
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.lineBreakpointClear == requestType) {
-            DebugRequestLineBreakpointToggle clearBreakpointRequest = (DebugRequestLineBreakpointToggle) request;
+            DebugRequestLineBreakpointToggle clearBreakpointRequest 
+                = (DebugRequestLineBreakpointToggle) request;
             clearBreakpoint(clearBreakpointRequest.getSource(),
                     clearBreakpointRequest.getLineNumber());
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.callgraph == requestType) {
-            return new DebugResponseCallgraph(getCallgraph());
+            DebugResponseCallgraph callgraph 
+                = new DebugResponseCallgraph(getCallgraph());
+            debugSupport.notifyDebugEvent(callgraph);
         } else if (DebugRequestType.stack == requestType) {
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
-            return new DebugResponseVariables(getStack(index));
+            DebugResponseStack stackState 
+                = new DebugResponseStack(index, getStack(index));
+            debugSupport.notifyDebugEvent(stackState);
         } else if (DebugRequestType.global == requestType) {            
-            return new DebugResponseVariables(getGlobals());
+            DebugResponseVariables globals 
+                = new DebugResponseVariables(getGlobals(), DebugEventType.clientRequestGlobalReply);
+            debugSupport.notifyDebugEvent(globals);
         } else if (DebugRequestType.stepInto == requestType) {
             DebugEvent event = new DebugEvent(
                     DebugEventType.resumedOnSteppingInto);
             debugSupport.notifyDebugEvent(event);
             stepInto();
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.stepOver == requestType) {
             DebugEvent event = new DebugEvent(
                     DebugEventType.resumedOnSteppingOver);
             debugSupport.notifyDebugEvent(event);
             stepOver();
-            return DebugResponseSimple.SUCCESS;
         } else if (DebugRequestType.stepReturn == requestType) {
             DebugEvent event = new DebugEvent(
                     DebugEventType.resumedOnSteppingReturn);
             debugSupport.notifyDebugEvent(event);
             stepReturn();
-            return DebugResponseSimple.SUCCESS;
+        } else {
+            throw new java.lang.IllegalArgumentException("unkown request type: "
+                    + request.getType());
         }
-
-        throw new java.lang.IllegalArgumentException("unkown request type: "
-                + request.getType());
     }
 
     /**

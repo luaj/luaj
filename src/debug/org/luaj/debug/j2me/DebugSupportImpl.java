@@ -9,90 +9,63 @@ import javax.microedition.io.SocketConnection;
 import org.luaj.debug.DebugSupport;
 import org.luaj.debug.event.DebugEvent;
 
-
 public class DebugSupportImpl extends DebugSupport {
-	protected ServerSocketConnection requestServerConnection;
-	protected SocketConnection requestSocketConnection;
+    protected ServerSocketConnection serverConnection;
+    protected SocketConnection clientDebugConnection;
+    protected SocketConnection eventSocketConnection;
 
-	protected ServerSocketConnection eventServerConnection;
-	protected SocketConnection eventSocketConnection;
-	
-	public DebugSupportImpl(int requestPort, 
-            				int eventPort) {
-		super(requestPort, eventPort);
-	}
-	
-    /* (non-Javadoc)
-	 * @see lua.debug.j2se.DebugSupport#start()
-	 */
+    public DebugSupportImpl(int debugPort) {
+        super(debugPort);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see lua.debug.j2se.DebugSupport#start()
+     */
     public synchronized void start() throws IOException {
-    	System.out.println("Starting the sockets....");
-    	// Set up the request socket and request input + output streams
-    	this.requestServerConnection 
-    		= (ServerSocketConnection)Connector.open("socket://:" + this.requestPort);
-    	this.requestSocketConnection = 
-    		(SocketConnection) requestServerConnection.acceptAndOpen();
-    	requestSocketConnection.setSocketOption(SocketConnection.DELAY, 0);
-    	requestSocketConnection.setSocketOption(SocketConnection.LINGER, 0);
-    	requestSocketConnection.setSocketOption(SocketConnection.KEEPALIVE, 1);
-    	requestSocketConnection.setSocketOption(SocketConnection.RCVBUF, 1024);
-    	requestSocketConnection.setSocketOption(SocketConnection.SNDBUF, 1024);
-		this.requestReader = requestSocketConnection.openDataInputStream();
-		this.requestWriter = requestSocketConnection.openDataOutputStream();
+        // Set up the request socket and request input + event output streams
+        this.serverConnection = (ServerSocketConnection) Connector
+                .open("socket://:" + this.debugPort);
+        this.clientDebugConnection = (SocketConnection) serverConnection
+                .acceptAndOpen();
+        clientDebugConnection.setSocketOption(SocketConnection.DELAY, 0);
+        clientDebugConnection.setSocketOption(SocketConnection.LINGER, 0);
+        clientDebugConnection.setSocketOption(SocketConnection.KEEPALIVE, 1);
+        clientDebugConnection.setSocketOption(SocketConnection.RCVBUF, 1024);
+        clientDebugConnection.setSocketOption(SocketConnection.SNDBUF, 1024);
+        this.requestReader = clientDebugConnection.openDataInputStream();
+        this.eventWriter = clientDebugConnection.openDataOutputStream();
 
-		// Set up the event socket and event output stream
-		this.eventServerConnection 
-			= (ServerSocketConnection)Connector.open("socket://:" + this.eventPort);
-		this.eventSocketConnection 
-			= (SocketConnection) eventServerConnection.acceptAndOpen();
-		eventSocketConnection.setSocketOption(SocketConnection.DELAY, 0);
-		eventSocketConnection.setSocketOption(SocketConnection.LINGER, 0);
-		eventSocketConnection.setSocketOption(SocketConnection.KEEPALIVE, 1);
-		eventSocketConnection.setSocketOption(SocketConnection.RCVBUF, 1024);
-		eventSocketConnection.setSocketOption(SocketConnection.SNDBUF, 1024);
-        this.eventWriter = eventSocketConnection.openDataOutputStream();;                 
-
-        System.out.println("Lua debug server is started on ports: " + requestPort + ", " + eventPort);
+        System.out.println("Lua debug server is started on ports: " + debugPort);
         super.start();
     }
 
     protected void dispose() {
-    	super.dispose();
-    	
-        if (requestSocketConnection != null) {
+        super.dispose();
+
+        if (this.clientDebugConnection != null) {
             try {
-            	requestSocketConnection.close();
-            } catch (IOException e) {}
+                clientDebugConnection.close();
+            } catch (IOException e) {
+            }
         }
-        
-        if (requestServerConnection != null) {
+
+        if (this.serverConnection != null) {
             try {
-            	requestServerConnection.close();
-            } catch (IOException e) {}
-        }
-        
-        if (eventSocketConnection != null) {
-            try {
-            	eventSocketConnection.close();
-            } catch (IOException e) {}
-        }
-        
-        if (eventServerConnection != null){
-            try {
-            	eventServerConnection.close();
-            } catch (IOException e) {}
+                serverConnection.close();
+            } catch (IOException e) {
+            }
         }
     }
-    
-    protected void loopForRequests() {        
-        synchronized (requestSocketConnection) {
-        	super.loopForRequests();
-        }
+
+    public Object getClientConnection() {
+        return clientDebugConnection;
     }
-    
+
     protected void sendEvent(DebugEvent event) {
         synchronized (eventSocketConnection) {
-        	super.sendEvent(event);
+            super.sendEvent(event);
         }
     }
 }

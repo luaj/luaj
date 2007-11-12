@@ -9,37 +9,28 @@ import org.luaj.debug.event.DebugEvent;
 import org.luaj.debug.event.DebugEventListener;
 import org.luaj.debug.request.DebugRequest;
 import org.luaj.debug.request.DebugRequestListener;
-import org.luaj.debug.response.DebugResponse;
 
 /**
  *  DebugSupport provides the network communication support for the debugger and
  *  debugee. 
  */
-public class DebugSupport implements DebugRequestListener, DebugEventListener {
+public abstract class DebugSupport implements DebugRequestListener, DebugEventListener {
     protected static final int UNKNOWN = 0;
     protected static final int RUNNING = 1;
     protected static final int STOPPED = 2;
 
     protected DebugLuaState vm;
-    protected int requestPort;
-    protected int eventPort;
+    protected int debugPort;
     protected Thread requestWatcherThread;
     protected int state = UNKNOWN;
     protected DataInputStream requestReader;
-    protected DataOutputStream requestWriter;
     protected DataOutputStream eventWriter;
 
-    public DebugSupport(int requestPort, int eventPort) {
-        if (requestPort == -1) {
+    public DebugSupport(int debugPort) {
+        if (debugPort == -1) {
             throw new IllegalArgumentException("requestPort is invalid");
         }
-
-        if (eventPort == -1) {
-            throw new IllegalArgumentException("eventPort is invalid");
-        }
-
-        this.requestPort = requestPort;
-        this.eventPort = eventPort;
+        this.debugPort = debugPort;
     }
 
     public void setDebugStackState(DebugLuaState vm) {
@@ -54,14 +45,6 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
             try {
                 requestReader.close();
             } catch (IOException e) {
-            }
-        }
-
-        if (requestWriter != null) {
-            try {
-                requestWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
 
@@ -81,7 +64,7 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
     public synchronized void start() throws IOException {
         if (this.vm == null) {
             throw new IllegalStateException(
-                    "DebugStackState is not set. Please call setDebugStackState first.");
+                    "DebugLuaState is not set. Please call setDebugStackState first.");
         }
 
         this.requestWatcherThread = new Thread(new Runnable() {
@@ -93,8 +76,7 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
         this.requestWatcherThread.start();
         this.state = RUNNING;
 
-        System.out.println("LuaJ debug server is started on ports: "
-                + requestPort + ", " + eventPort);
+        System.out.println("LuaJ debug server is listening on port: " + debugPort);
     }
 
     protected synchronized int getState() {
@@ -107,28 +89,26 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
         this.state = STOPPED;
     }
 
+    public abstract Object getClientConnection();
+    
     protected void loopForRequests() {
         try {
             while (getState() != STOPPED) {
+                byte[] data = null;
                 int size = requestReader.readInt();
-                byte[] data = new byte[size];
+                data = new byte[size];
                 requestReader.readFully(data);
+                                    
                 DebugRequest request = (DebugRequest) SerializationHelper
-                        .deserialize(data);
-                if (DebugUtils.IS_DEBUG)
-                    DebugUtils.println("SERVER receives request: "
-                            + request.toString());
-
-                DebugResponse response = handleRequest(request);
-                data = SerializationHelper.serialize(response);
-                requestWriter.writeInt(data.length);
-                requestWriter.write(data);
-                requestWriter.flush();
-                if (DebugUtils.IS_DEBUG)
-                    DebugUtils.println("SERVER sends response: " + response);
+                        .deserialize(data);                
+                if (DebugUtils.IS_DEBUG) {
+                    DebugUtils.println("SERVER receives request: " + request.toString());
+                }
+                
+                handleRequest(request);
             }
         } catch (EOFException e) {
-            // expected during shutdown
+            // expected. it may occur depending on the timing during the termination
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -184,12 +164,11 @@ public class DebugSupport implements DebugRequestListener, DebugEventListener {
      * 
      * @see org.luaj.debug.request.DebugRequestListener#handleRequest(org.luaj.debug.request.DebugRequest)
      */
-    public DebugResponse handleRequest(DebugRequest request) {
+    public void handleRequest(DebugRequest request) {
         if (DebugUtils.IS_DEBUG) {
-            DebugUtils.println("handling request: " + request.toString());
+            DebugUtils.println("SERVER handling request: " + request.toString());
         }
 
-        DebugResponse response = vm.handleRequest(request);
-        return response;
+        vm.handleRequest(request);
     }
 }

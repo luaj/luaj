@@ -32,31 +32,23 @@ import org.luaj.debug.event.DebugEvent;
 
 
 public class DebugSupportImpl extends DebugSupport {	
-    protected ServerSocket requestSocket;
-    protected Socket clientRequestSocket;
-    
-    protected ServerSocket eventSocket;
-    protected Socket clientEventSocket;
+    protected ServerSocket serverSocket;
+    protected Socket clientSocket;
         
-    public DebugSupportImpl(int requestPort, int eventPort) {
-    	super(requestPort, eventPort);
+    public DebugSupportImpl(int debugPort) {
+    	super(debugPort);
     }        
     
     /* (non-Javadoc)
 	 * @see lua.debug.j2se.DebugSupport#start()
 	 */
     public synchronized void start() throws IOException {
-        this.requestSocket = new ServerSocket(requestPort);
-        this.clientRequestSocket = requestSocket.accept();
+        this.serverSocket = new ServerSocket(debugPort, 1);
+        this.clientSocket = serverSocket.accept();
         this.requestReader 
-            = new DataInputStream(clientRequestSocket.getInputStream());
-        this.requestWriter 
-            = new DataOutputStream(clientRequestSocket.getOutputStream());
-        
-        this.eventSocket = new ServerSocket(eventPort);
-        this.clientEventSocket = eventSocket.accept();
+            = new DataInputStream(clientSocket.getInputStream());
         this.eventWriter 
-            = new DataOutputStream(clientEventSocket.getOutputStream());                 
+            = new DataOutputStream(clientSocket.getOutputStream());                 
         
         super.start();
     }
@@ -64,35 +56,21 @@ public class DebugSupportImpl extends DebugSupport {
     protected void dispose() {
     	super.dispose();
     	
-        if (clientRequestSocket != null) {
+        if (this.clientSocket != null) {
             try {
-                clientRequestSocket.close();
+                clientSocket.close();
             } catch (IOException e) {}
         }
         
-        if (requestSocket != null) {
+        if (this.serverSocket != null) {
             try {
-                requestSocket.close();
+                serverSocket.close();
             } catch (IOException e) {}
-        }
-        
-        if (clientEventSocket != null) {
-            try {
-                clientEventSocket.close();
-            } catch (IOException e) {}
-        }
-        
-        if (eventSocket != null){
-            try {
-                eventSocket.close();
-            } catch (IOException e) {}
-        }
+        }        
     }
     
-    protected void loopForRequests() {        
-        synchronized (clientRequestSocket) {
-        	super.loopForRequests();
-        }
+    public Object getClientConnection() {        
+        return clientSocket;
     }
 
     /**
@@ -113,8 +91,8 @@ public class DebugSupportImpl extends DebugSupport {
      * @param event
      */
     protected void sendEvent(DebugEvent event) {
-        synchronized (eventSocket) {
-        	super.sendEvent(event);
+        synchronized (clientSocket) {
+            super.sendEvent(event);
         }
     }
 }

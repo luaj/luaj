@@ -27,11 +27,14 @@ import java.io.IOException;
 
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.Variable;
+import org.luaj.debug.event.DebugEvent;
+import org.luaj.debug.event.DebugEventType;
 
-public class DebugResponseVariables implements DebugResponse {
+public class DebugResponseVariables extends DebugEvent {
     protected Variable[] variables;
     
-    public DebugResponseVariables(Variable[] variables) {
+    public DebugResponseVariables(Variable[] variables, DebugEventType type) {
+        super(type);
         if (variables == null) {
             this.variables = new Variable[0];
         } else {
@@ -57,6 +60,7 @@ public class DebugResponseVariables implements DebugResponse {
     public static void serialize(DataOutputStream out,
                                  DebugResponseVariables response) 
     throws IOException {
+        DebugEventType.serialize(out, response.getType());
         Variable[] variables = response.getVariables();
         out.writeInt(variables == null ? 0 : variables.length);
         for (int i = 0; i < variables.length; i++) {
@@ -64,13 +68,14 @@ public class DebugResponseVariables implements DebugResponse {
         }
     }
         
-    public static DebugResponseVariables deserialize(DataInputStream in)
+    public static DebugEvent deserialize(DataInputStream in)
     throws IOException {
+        DebugEventType type = DebugEventType.deserialize(in);
         int count = in.readInt();
         Variable[] variables = new Variable[count];
         for (int i = 0; i < count; i++) {
             variables[i] = (Variable) SerializationHelper.deserialize(in);
         }
-        return new DebugResponseVariables(variables);
+        return new DebugResponseVariables(variables, type);
     }
 }
