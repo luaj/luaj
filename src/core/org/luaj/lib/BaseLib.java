@@ -129,9 +129,12 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case GETMETATABLE: {
-			int r = vm.getmetatable(2);
-			vm.settop(0);
-			vm.pushinteger(r);
+			if ( 0 == vm.getmetatable(2) )
+				vm.settop(0);
+			else {
+				vm.insert(1);
+				vm.settop(1);
+			}
 			break;
 		}
 		case SETMETATABLE: {
