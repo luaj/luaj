@@ -1622,7 +1622,14 @@ public class LuaState extends Lua {
 	public void pushlvalue(LValue value) {
 		if ( value == null )
 			throw new java.lang.IllegalArgumentException("stack values cannot be null");
-		stack[top++] = value;
+		try {
+			stack[top] = value;
+		} catch ( java.lang.RuntimeException arrayIndexOutOfBounds ) {
+			checkstack( LUA_MINSTACK );
+			stack[top] = value;
+		} finally {
+			++top;
+		}
 	}
 
 	/**
