@@ -53,18 +53,6 @@ public class LuaErrorException extends RuntimeException {
 	 * and with the default message. 
 	 */
 	public LuaErrorException(Throwable cause) {
-		super(DEFAULT_MESSAGE, cause);
+		super(DEFAULT_MESSAGE+": "+cause);
 	}
-
-	/** 
-	 * Construct a LuaErrorException in response to a Throwable that was caught
-	 * and with a specific message.
-	 *  
-	 * @param message message to supply
-	 * @param cause
-	 */
-	public LuaErrorException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
 }
