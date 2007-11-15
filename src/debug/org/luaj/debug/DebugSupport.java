@@ -2,7 +2,6 @@ package org.luaj.debug;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 
 import org.luaj.debug.event.DebugEvent;
@@ -21,12 +20,48 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
 
     protected DebugLuaState vm;
     protected int debugPort;
-    protected Thread requestWatcherThread;
+    protected ClientConnectionTask clientConnectionTask;
     protected int state = UNKNOWN;
     protected DataInputStream requestReader;
     protected DataOutputStream eventWriter;
 
-    public DebugSupport(int debugPort) {
+    class ClientConnectionTask implements Runnable {
+        protected boolean bDisconnected = false;
+                
+        public synchronized void disconnect () {
+            this.bDisconnected = true;
+        }
+        
+        public synchronized boolean isDisconnected() {
+            return this.bDisconnected;
+        }
+        
+        public void run() {
+            try {
+                acceptClientConnection();
+                
+                while (getState() != STOPPED && !isDisconnected()) {
+                    loopForRequest();
+                }
+                
+                if (isDisconnected()) {
+                    releaseClientConnection();
+                } else {
+                    dispose();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                
+                // the connected debugging client aborted abnormally
+                // discard the current connection and start new
+                vm.reset();
+                releaseClientConnection();
+                newClientConnection();
+            }
+        }
+    }
+    
+    public DebugSupport(int debugPort) throws IOException {
         if (debugPort == -1) {
             throw new IllegalArgumentException("requestPort is invalid");
         }
@@ -36,7 +71,9 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
     public void setDebugStackState(DebugLuaState vm) {
         this.vm = vm;
     }
-
+    
+    protected abstract void releaseClientConnection();
+    
     protected void dispose() {
         if (DebugUtils.IS_DEBUG)
             DebugUtils.println("releasing the networkig resources...");
@@ -44,6 +81,7 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
         if (requestReader != null) {
             try {
                 requestReader.close();
+                requestReader = null;
             } catch (IOException e) {
             }
         }
@@ -51,6 +89,7 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
         if (eventWriter != null) {
             try {
                 eventWriter.close();
+                eventWriter = null;
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,16 +106,15 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
                     "DebugLuaState is not set. Please call setDebugStackState first.");
         }
 
-        this.requestWatcherThread = new Thread(new Runnable() {
-            public void run() {
-                loopForRequests();
-                cleanup();
-            }
-        });
-        this.requestWatcherThread.start();
+        newClientConnection();
         this.state = RUNNING;
 
         System.out.println("LuaJ debug server is listening on port: " + debugPort);
+    }
+
+    private void newClientConnection() {
+        this.clientConnectionTask = new ClientConnectionTask();
+        new Thread(clientConnectionTask).start();
     }
 
     protected synchronized int getState() {
@@ -89,37 +127,21 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
         this.state = STOPPED;
     }
 
-    public abstract Object getClientConnection();
+    public abstract void acceptClientConnection() throws IOException;
     
-    protected void loopForRequests() {
-        try {
-            while (getState() != STOPPED) {
-                byte[] data = null;
-                int size = requestReader.readInt();
-                data = new byte[size];
-                requestReader.readFully(data);
-                                    
-                DebugRequest request = (DebugRequest) SerializationHelper
-                        .deserialize(data);                
-                if (DebugUtils.IS_DEBUG) {
-                    DebugUtils.println("SERVER receives request: " + request.toString());
-                }
-                
-                handleRequest(request);
-            }
-        } catch (EOFException e) {
-            // expected. it may occur depending on the timing during the termination
-        } catch (Exception e) {
-            e.printStackTrace();
+    protected void loopForRequest() throws IOException {
+        byte[] data = null;
+        int size = requestReader.readInt();
+        data = new byte[size];
+        requestReader.readFully(data);
+                            
+        DebugRequest request = (DebugRequest) SerializationHelper
+                .deserialize(data);                
+        if (DebugUtils.IS_DEBUG) {
+            DebugUtils.println("SERVER receives request: " + request.toString());
         }
-    }
-
-    private void cleanup() {
-        if (DebugUtils.IS_DEBUG)
-            DebugUtils.println("SERVER terminated...");
-
-        dispose();
-        System.exit(0);
+        
+        handleRequest(request);
     }
 
     /**
@@ -136,10 +158,12 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
      * 
      * @param event
      */
-    protected void sendEvent(DebugEvent event) {
+    protected synchronized void sendEvent(DebugEvent event) {
         if (DebugUtils.IS_DEBUG)
             DebugUtils.println("SERVER sending event: " + event.toString());
 
+        if (eventWriter == null) return;
+        
         try {
             byte[] data = SerializationHelper.serialize(event);
             eventWriter.writeInt(data.length);
@@ -170,5 +194,12 @@ public abstract class DebugSupport implements DebugRequestListener, DebugEventLi
         }
 
         vm.handleRequest(request);
+    }
+
+    public synchronized void disconnect() {
+        clientConnectionTask.disconnect();
+        clientConnectionTask = null;
+        
+        newClientConnection();
     }
 }

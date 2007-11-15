@@ -279,6 +279,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             cancelSuspendOnStart();
         } else if (DebugRequestType.exit == requestType) {
             stop();
+        } else if (DebugRequestType.disconnect == requestType) {
+            disconnect();
         } else if (DebugRequestType.suspend == requestType) {
             suspend();
             DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
@@ -361,8 +363,10 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      */
     public void resume() {
         synchronized (this) {
-            suspended = false;
-            stepping = STEP_NONE;
+            this.suspended = false;
+            this.stepping = STEP_NONE;
+            this.shouldPauseForStepping = false;
+            this.steppingFrame = -1;
             this.notify();
         }
     }
@@ -390,6 +394,27 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         exit();
     }
 
+    public void disconnect() {
+        if (this.debugSupport == null) {
+            throw new IllegalStateException(
+                    "DebugStackState is not equiped with DebugSupport.");
+        }
+        
+        reset();
+        debugSupport.disconnect(); 
+        DebugEvent event = new DebugEvent(DebugEventType.disconnected);
+        debugSupport.notifyDebugEvent(event);                   
+    }
+    
+    protected void reset() {
+        synchronized (this) {
+            this.breakpoints.clear();
+            if (this.suspended) {
+                resume();                
+            }
+        }
+    }
+    
     /**
      * terminate the execution
      */

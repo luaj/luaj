@@ -28,71 +28,44 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.luaj.debug.DebugSupport;
-import org.luaj.debug.event.DebugEvent;
 
 
 public class DebugSupportImpl extends DebugSupport {	
     protected ServerSocket serverSocket;
     protected Socket clientSocket;
         
-    public DebugSupportImpl(int debugPort) {
+    public DebugSupportImpl(int debugPort) throws IOException {
     	super(debugPort);
+        this.serverSocket = new ServerSocket(debugPort, 1);
     }        
     
-    /* (non-Javadoc)
-	 * @see lua.debug.j2se.DebugSupport#start()
-	 */
-    public synchronized void start() throws IOException {
-        this.serverSocket = new ServerSocket(debugPort, 1);
+    public void acceptClientConnection() throws IOException {
         this.clientSocket = serverSocket.accept();
         this.requestReader 
             = new DataInputStream(clientSocket.getInputStream());
         this.eventWriter 
             = new DataOutputStream(clientSocket.getOutputStream());                 
-        
-        super.start();
     }
      
-    protected void dispose() {
-    	super.dispose();
-    	
+    protected void releaseClientConnection() {
+        super.dispose();
+        
         if (this.clientSocket != null) {
             try {
                 clientSocket.close();
-            } catch (IOException e) {}
-        }
-        
-        if (this.serverSocket != null) {
-            try {
-                serverSocket.close();
+                clientSocket = null;
             } catch (IOException e) {}
         }        
     }
     
-    public Object getClientConnection() {        
-        return clientSocket;
-    }
-
-    /**
-     * This method provides the second communication channel with the debugging
-     * client. The server can send events via this channel to notify the client
-     * about debug events (see below) asynchronously.
-     * 
-     * The following events can be fired:
-     * 1. started    -- the vm is started and ready to receive debugging requests
-     *                  (guaranteed to be the first event sent)
-     * 2. terminated -- the vm is terminated (guaranteed to be the last event sent)
-     * 3. suspended client|step|breakpoint N
-     *               -- the vm is suspended by client, due to a stepping request or
-     *                  the breakpoint at line N is hit 
-     * 4. resumed client|step
-     *               -- the vm resumes execution by client or step
-     *              
-     * @param event
-     */
-    protected void sendEvent(DebugEvent event) {
-        synchronized (clientSocket) {
-            super.sendEvent(event);
-        }
+    protected void dispose() {        
+        releaseClientConnection();
+        
+        if (this.serverSocket != null) {
+            try {
+                serverSocket.close();
+                serverSocket = null;
+            } catch (IOException e) {}
+        }        
     }
 }
