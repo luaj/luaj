@@ -94,8 +94,6 @@ public class LuaState extends Lua {
     // main debug hook, overridden by DebugStackState
     protected void debugHooks(int pc) {
     }
-    protected void debugPcallError(Throwable t) {       
-    }
     protected void debugAssert(boolean b) {
     }
     
@@ -377,7 +375,6 @@ public class LuaState extends Lua {
             
             return 0;
         } catch ( Throwable t ) {
-            debugPcallError( t );
             this.base = oldbase;
             this.cc = oldcc;
             closeUpVals(oldtop);  /* close eventual pending closures */
@@ -709,8 +706,8 @@ public class LuaState extends Lua {
                     if (this.stack[base].luaStackCall(this)) {
                         return;
                     }
-                } catch (RuntimeException e) {
-                    // in case of error, we need to restore cc so that
+                } catch (LuaErrorException e) {
+                    // in case of lua error, we need to restore cc so that
                     // the debug can get the correct location where the error
                     // occured.
                     cc++;
@@ -898,7 +895,7 @@ public class LuaState extends Lua {
     //===============================================================
     
 	private void notImplemented() {
-		throw new java.lang.RuntimeException("AbstractStack: not yet implemented");
+		throw new LuaErrorException("AbstractStack: not yet implemented");
 	}
 	
 	/**
@@ -922,26 +919,57 @@ public class LuaState extends Lua {
 		return f;
 	}
 	
-	/**
+    /**
+     * Returns the current program counter for the given call frame.
+     * @param ci -- A call frame
+     * @return the current program counter for the given call frame.
+     */
+    protected int getCurrentPc(CallInfo ci) {
+        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
+        return pc;
+    }
+
+    /** 
+     * Get the file line number info for a particular call frame.
+     * @param cindex
+     * @return
+     */
+    protected String getFileLine(int cindex) {
+        String source = "?";
+        String line = "";
+        if (cindex >= 0) {
+            CallInfo call = this.calls[cindex];
+            LPrototype p = call.closure.p;
+            if (p != null && p.source != null)
+                source = p.source.toJavaString();
+            int pc = getCurrentPc(call);
+            if (p.lineinfo != null && p.lineinfo.length > pc)
+                line = ":" + String.valueOf(p.lineinfo[pc]);
+        }
+        return source + line;
+    }
+    
+    /**
 	 * Raises an error.   The message is pushed onto the stack and used as the error message.  
 	 * It also adds at the beginning of the message the file name and the line number where 
 	 * the error occurred, if this information is available.
 	 * 
-	 * In the java implementation this throws a RuntimeException, possibly filling 
-	 * line number information first.
+	 * In the java implementation this throws a LuaErrorException 
+	 * after filling line number information first when level > 0.
 	 */
     public void error(String message, int level) {
-        error( message );
+    	if ( level > 0 )
+    		message = getFileLine(cc + 1 - level) + ": " + message;
+        throw new LuaErrorException( message );
     }
     
 	/**
 	 * Raises an error with the default level.   
 	 * 
-	 * In the java implementation this throws a RuntimeException, possibly filling 
-	 * line number information first.
+	 * In the java implementation this calls error(message,1)
 	 */
     public void error(String message) {
-        throw new RuntimeException( message );
+    	error( message, 1 );
     }
     
 	/**
@@ -955,7 +983,7 @@ public class LuaState extends Lua {
 	 */
 	public void error() {
 		String message = tostring(-1);
-		pop(1);
+		// pop(1);
 		error( message );
 	}
 	
@@ -1624,7 +1652,7 @@ public class LuaState extends Lua {
 			throw new java.lang.IllegalArgumentException("stack values cannot be null");
 		try {
 			stack[top] = value;
-		} catch ( java.lang.RuntimeException arrayIndexOutOfBounds ) {
+		} catch ( java.lang.ArrayIndexOutOfBoundsException aiobe ) {
 			checkstack( LUA_MINSTACK );
 			stack[top] = value;
 		} finally {

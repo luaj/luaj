@@ -92,32 +92,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             error("assert failure");
     }
 
-    private String getFileLine(int cindex) {
-        String func = "?";
-        String line = "?";
-        String source = "?";
-        if (cindex >= 0) {
-            CallInfo call = this.calls[cindex];
-            LPrototype p = call.closure.p;
-            if (p != null && p.source != null)
-                source = p.source.toJavaString();
-            int pc = getCurrentPc(call);
-            if (p.lineinfo != null && p.lineinfo.length > pc)
-                line = String.valueOf(p.lineinfo[pc]);
-            // TODO: reverse lookup on function name ????
-            func = call.closure.toJavaString();
-        }
-        return source + ":" + line + "(" + func + ")";
-    }
-    
-    // override and fill in line number info
-    public void error(String message, int level) {
-        super.error(level <= 0 ? 
-                    message : 
-                    getFileLine(cc + 1 - level) + ": " + message);
-    }
-
-    // use line numbers by default
+     // use line numbers by default
     public void error(String message) {
         error(message, 1);
     }
@@ -283,16 +258,6 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                     lineNumbers[pc] :
                     -1);
         return line;
-    }
-
-    /**
-     * Returns the current program counter for the given call frame.
-     * @param ci -- A call frame
-     * @return the current program counter for the given call frame.
-     */
-    private int getCurrentPc(CallInfo ci) {
-        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
-        return pc;
     }
 
     // ------------------ commands coming from the debugger -------------------

@@ -32,6 +32,7 @@ import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.Platform;
 import org.luaj.vm.LoadState.LuaCompiler;
 
@@ -50,7 +51,7 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	protected static void _assert(boolean b) {		
-		if (!b) throw new RuntimeException("assert failed");
+		if (!b) throw new LuaErrorException("compiler assert failed");
 	}
 	
 	public static final int MAXSTACK = 250;
@@ -172,7 +173,7 @@ public class LuaC extends Lua implements LuaCompiler {
 	/** Compile source bytes into a LPrototype.  
 	 * 
 	 * Try to compile the file, and return the Prototype on success, 
-	 * or throw RuntimeException on syntax error or I/O Exception
+	 * or throw LuaErrorException on syntax error or I/O Exception
 	 * 
 	 * @param firstByte the first byte from the InputStream.  
 	 * This can be read by the client and tested to see if it is already a binary chunk.  
@@ -182,7 +183,7 @@ public class LuaC extends Lua implements LuaCompiler {
 	 *   a LPrototype instance if it can be compiled, 
 	 *   or an exception is thrown if there is an error.
 	 * @throws IOException if an I/O exception occurs
-	 * @throws RuntimeException if there is a syntax error.
+	 * @throws LuaErrorException if there is a syntax error.
 	 */
 	public LPrototype compile(int firstByte, InputStream stream, String name) throws IOException {
 		Reader r = Platform.getInstance().createReader( stream );

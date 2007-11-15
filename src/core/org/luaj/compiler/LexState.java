@@ -33,6 +33,7 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
 
 
 public class LexState {
@@ -257,7 +258,7 @@ public class LexState {
 		L.pushfstring( cid+":"+linenumber+": "+msg );
 		if ( token != 0 )
 			L.pushfstring( "syntax error: "+msg+" near "+txtToken(token) );
-		throw new RuntimeException(cid+":"+linenumber+": "+msg);
+		throw new LuaErrorException(cid+":"+linenumber+": "+msg);
 	}
 
 	String chunkid( String source ) {

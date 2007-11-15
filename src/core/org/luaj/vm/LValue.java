@@ -32,11 +32,11 @@ public class LValue {
 	public static final LString TM_NEWINDEX = new LString("__newindex");
 	
 	protected static LValue luaUnsupportedOperation() {
-		throw new java.lang.RuntimeException( "not supported" );
+		throw new LuaErrorException( "not supported" );
 	}
 
 	protected void luaConversionError(String target) {
-		throw new java.lang.RuntimeException( "bad conversion: "+luaGetTypeName()+" to "+target );
+		throw new LuaErrorException( "bad conversion: "+luaGetTypeName()+" to "+target );
 	}
 
 

@@ -20,6 +20,7 @@ import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -289,7 +290,7 @@ public class BaseLib extends LFunction {
 			} else {
 				// This is supposed to set the environment of the current
 				// "thread". But, we have not implemented coroutines yet.
-				throw new RuntimeException( "not implemented" );
+				throw new LuaErrorException( "not implemented" );
 			}
 		}
 		
@@ -440,7 +441,7 @@ public class BaseLib extends LFunction {
 	}
 
 	private LValue next(LuaState vm, LValue table, int index) {
-		throw new java.lang.RuntimeException("next() not supported yet");
+		throw new LuaErrorException("next() not supported yet");
 	}
 
 	

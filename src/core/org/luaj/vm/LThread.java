@@ -81,7 +81,7 @@ public class LThread extends LValue implements Runnable {
 	public boolean yield() {
 		synchronized ( this ) {
 			if ( status != STATUS_RUNNING )
-				throw new RuntimeException(this+" not running");
+				threadVm.error(this+" not running");
 			status = STATUS_SUSPENDED;
 			this.notify();
 			try {
@@ -89,7 +89,7 @@ public class LThread extends LValue implements Runnable {
 				status = STATUS_RUNNING;
 			} catch ( InterruptedException e ) {
 				status = STATUS_DEAD;
-				throw new RuntimeException(this+" "+e);
+				threadVm.error(this+" "+e);
 			}
 			return false;
 		}

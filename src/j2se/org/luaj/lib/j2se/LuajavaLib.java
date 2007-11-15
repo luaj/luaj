@@ -39,6 +39,7 @@ import org.luaj.vm.LFunction;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LUserData;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
 
@@ -84,7 +85,7 @@ public final class LuajavaLib extends LFunction {
 				vm.settop(0);
 				vm.pushlvalue( new LInstance( clazz, clazz ) );
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new LuaErrorException(e);
 			}
 			break;
 		case NEWINSTANCE:
@@ -104,7 +105,7 @@ public final class LuajavaLib extends LFunction {
 				vm.pushlvalue( new LInstance( o, clazz ) );
 				
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new LuaErrorException(e);
 			}
 			break;
 		default:
@@ -153,7 +154,7 @@ public final class LuajavaLib extends LFunction {
 			} catch (NoSuchFieldException nsfe) {
 				vm.pushlvalue( new LMethod(m_instance,clazz,s) );
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new LuaErrorException(e);
 			}
 		}
 		public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
@@ -165,7 +166,7 @@ public final class LuajavaLib extends LFunction {
 				f.set(m_instance,v);
 				vm.settop(0);
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new LuaErrorException(e);
 			}
 		}
 		
@@ -203,7 +204,7 @@ public final class LuajavaLib extends LFunction {
 				vm.pushlvalue( CoerceJavaToLua.coerce(result) );
 				return false;
 			} catch (Exception e) {
-				throw new RuntimeException(e);
+				throw new LuaErrorException(e);
 			}
 		}
 	}
