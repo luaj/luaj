@@ -48,7 +48,7 @@ public class LThread extends LValue implements Runnable {
 	
 	public LThread(LClosure c) {
 		threadVm = new LuaState(c.env);
-		threadVm.pushlvalue(new LClosure(c.p, threadVm._G));
+		threadVm.pushlvalue(c);
 	}
 
 	public int luaGetType() {
