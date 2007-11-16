@@ -59,6 +59,12 @@ public class LThread extends LValue implements Runnable {
 		return "thread: "+hashCode();
 	}
 
+	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
+	public int luaSetEnv(LTable t) {
+		threadVm._G = t;
+		return 1;
+	}
+
 	public String getStatus() {
 		return NAMES[status];
 	}

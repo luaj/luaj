@@ -47,6 +47,7 @@ public class BaseLib extends LFunction {
 		"tonumber",
 		"rawget",
 		"rawset",
+		"getfenv",
 		"setfenv",
 		"select",
 		"collectgarbage",
@@ -72,15 +73,16 @@ public class BaseLib extends LFunction {
 	private static final int TONUMBER       = 11;
 	private static final int RAWGET         = 12;
 	private static final int RAWSET         = 13;
-	private static final int SETFENV        = 14;
-	private static final int SELECT         = 15;
-	private static final int COLLECTGARBAGE = 16;
-	private static final int DOFILE         = 17;
-	private static final int LOADSTRING     = 18;
-	private static final int LOAD           = 19;
-	private static final int TOSTRING       = 20;
-	private static final int UNPACK         = 21;
-	private static final int NEXT           = 22;
+	private static final int GETFENV        = 14;
+	private static final int SETFENV        = 15;
+	private static final int SELECT         = 16;
+	private static final int COLLECTGARBAGE = 17;
+	private static final int DOFILE         = 18;
+	private static final int LOADSTRING     = 19;
+	private static final int LOAD           = 20;
+	private static final int TOSTRING       = 21;
+	private static final int UNPACK         = 22;
+	private static final int NEXT           = 23;
 	
 	public static void install(LTable globals) {
 		for ( int i=1; i<NAMES.length; i++ )
@@ -130,20 +132,26 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case GETMETATABLE: {
-			if ( 0 == vm.getmetatable(2) )
+			if ( 0 == vm.getmetatable(2) ) {
 				vm.settop(0);
-			else {
+				vm.pushnil();
+			} else {
 				vm.insert(1);
 				vm.settop(1);
 			}
 			break;
 		}
 		case SETMETATABLE: {
+			if ( ! vm.istable(2) )
+				vm.error("bad argument #1 to '?' (table expected, got "+vm.typename(2)+")");
 			vm.setmetatable(2);
 			vm.remove(1);
 			break;
 		}		
 		case TYPE: {
+			// TODO: generalize, compute location insofar as possible
+			if ( vm.gettop() < 2 ) 
+				vm.error("bad argument #1 to '?' (value expected)");
 			LValue v = vm.topointer(2);
 			vm.settop(0);
 			vm.pushlstring( v.luaGetTypeName() );
@@ -163,7 +171,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case ERROR: {
-			vm.error(vm.tostring(2), vm.gettop()>2? vm.tointeger(3): 1);
+			vm.error(vm.tostring(2), vm.gettop()>=3? vm.tointeger(3): 1);
 			break;
 		}
 		case ASSERT: {
@@ -211,9 +219,38 @@ public class BaseLib extends LFunction {
 				vm.error( "expected table" );
 			}
 		}	break;
-		case SETFENV:
-			setfenv( (LuaState) vm );
+		case GETFENV: {
+			if ( vm.gettop() <= 1 ) {
+				vm.pushlvalue(vm._G);
+			} else {
+				if ( ! vm.isfunction(2) ) {
+					int i = (vm.isnil(2)? 1: vm.tointeger(2));
+					vm.pushlvalue( vm.getStackFrame(i).closure );
+				}
+				vm.getfenv(-1);
+			}
+			vm.insert(1);
+			vm.settop(1);
 			break;
+		}
+		case SETFENV: {
+			LTable t = vm.totable(-1);
+			if ( vm.setfenv(2) != 0 ) {
+				vm.remove(1);
+				break;
+			}
+			int i = vm.tointeger(2);
+			if ( i == 0 ) {
+				vm._G = t;
+				vm.settop(0);
+			} else {
+				LClosure c = vm.getStackFrame(i-1).closure;
+				c.luaSetEnv(t);
+				vm.settop(0);
+				vm.pushlvalue(c);
+			}
+			break;
+		}
 		case SELECT:
 			select( vm );
 			break;
@@ -269,43 +306,6 @@ public class BaseLib extends LFunction {
 		}
 	}
 	
-	private void setfenv( LuaState state ) {
-		LValue f = state.topointer(2);
-		LValue newenv = state.topointer(3);
-
-		LClosure c = null;
-		
-		// Lua reference manual says that first argument, f, can be a "Lua
-		// function" or an integer. Lots of things extend LFunction, but only
-		// instances of Closure are "Lua functions".
-		if ( f instanceof LClosure ) {
-			c = (LClosure) f;
-		} else {
-			int callStackDepth = f.toJavaInt();
-			if ( callStackDepth > 0 ) {
-				CallInfo frame = state.getStackFrame( callStackDepth );
-				if ( frame != null ) {
-					c = frame.closure;
-				}
-			} else {
-				// This is supposed to set the environment of the current
-				// "thread". But, we have not implemented coroutines yet.
-				throw new LuaErrorException( "not implemented" );
-			}
-		}
-		
-		if ( c != null ) {
-			if ( newenv instanceof LTable ) {
-				c.env = (LTable) newenv;
-			}
-			state.settop(0);
-			state.pushlvalue( c );
-			return;
-		}
-		
-		state.settop(0);
-		return;
-	}
 
 	// closes the input stream, provided its not null or System.in
 	private static void closeSafely(InputStream is) {

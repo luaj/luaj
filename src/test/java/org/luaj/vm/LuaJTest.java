@@ -6,13 +6,14 @@ import java.io.OutputStream;
 
 import junit.framework.TestCase;
 
+import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
 import org.luaj.lib.BaseLib;
 import org.luaj.lib.j2se.LuajavaLib;
 
 
 public class LuaJTest extends TestCase {
-
+	
 	public void testTest1() throws IOException, InterruptedException {
 		runTest( "test1" );
 	}
@@ -45,6 +46,10 @@ public class LuaJTest extends TestCase {
 		runTest( "autoload" );
 	}
 
+	public void testBaseLib() throws IOException, InterruptedException {
+		runTest( "baselib" );
+	}
+	
 	public void testBoolean() throws IOException, InterruptedException {
 		runTest( "boolean" );
 	}
@@ -81,6 +86,10 @@ public class LuaJTest extends TestCase {
 		runTest( "select" );
 	}
 
+	public void testSetfenv() throws IOException, InterruptedException {
+		runTest( "setfenv" );
+	}
+
 	public void testSetlist() throws IOException, InterruptedException {
 		runTest( "setlist" );
 	}
@@ -108,7 +117,7 @@ public class LuaJTest extends TestCase {
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
 	}
-
+//*/
 	private void runTest( String testName ) throws IOException, InterruptedException {
 
 		// new lua state 
@@ -119,6 +128,7 @@ public class LuaJTest extends TestCase {
 		
 		// add luajava
 		LuajavaLib.install( state._G );
+		LuaC.install();
 		
 		// load the file
 		LPrototype p = loadScriptResource( state, testName );

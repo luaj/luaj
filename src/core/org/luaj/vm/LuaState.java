@@ -958,8 +958,8 @@ public class LuaState extends Lua {
 	 * after filling line number information first when level > 0.
 	 */
     public void error(String message, int level) {
-    	if ( level > 0 )
-    		message = getFileLine(cc + 1 - level) + ": " + message;
+    	if ( level > 1 )
+    		message = getFileLine(cc + 2 - level) + ": " + message;
         throw new LuaErrorException( message );
     }
     
@@ -1117,7 +1117,8 @@ public class LuaState extends Lua {
 	 * index.
 	 */
 	public void getfenv(int index) {
-		notImplemented();
+		LValue f = topointer(index);
+		pushlvalue( ((LClosure) f).env );
 	}
 	
 	/**
@@ -1130,8 +1131,10 @@ public class LuaState extends Lua {
 	 * returns 0. Otherwise it returns 1.
 	 */
 	public int setfenv(int index) {
-		notImplemented();
-		return 0;
+		LTable t = totable(-1);
+		LValue f = topointer(index);
+		pop(1);
+		return f.luaSetEnv(t);
 	}
 
 	

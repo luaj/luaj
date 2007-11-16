@@ -57,4 +57,11 @@ public class LClosure extends LFunction {
 		vm.prepStackCall();
 		return true;
 	}
+
+	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
+	public int luaSetEnv(LTable t) {
+		this.env = t;
+		return 1;
+	}
+
 }

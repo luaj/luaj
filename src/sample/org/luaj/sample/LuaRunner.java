@@ -24,15 +24,9 @@ package org.luaj.sample;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.lib.CoroutineLib;
-import org.luaj.lib.MathLib;
-import org.luaj.lib.PackageLib;
-import org.luaj.lib.StringLib;
-import org.luaj.lib.TableLib;
-import org.luaj.lib.j2se.LuajavaLib;
+import org.luaj.compiler.LuaC;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
-import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaState;
@@ -56,6 +50,7 @@ public class LuaRunner {
 		
         // add standard bindings
 		state.installStandardLibs();
+		LuaC.install();
 				
 		// load the file
 		InputStream is = LuaRunner.class.getResourceAsStream( script );

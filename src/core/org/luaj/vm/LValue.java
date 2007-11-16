@@ -297,4 +297,9 @@ public class LValue {
 		return null;
 	}
 
+	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
+	public int luaSetEnv(LTable t) {
+		return 0;
+	}
+
 }
