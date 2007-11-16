@@ -336,6 +336,7 @@ public class Lua {
 	public static final int LUA_TFUNCTION		= 6;
 	public static final int LUA_TUSERDATA		= 7;
 	public static final int LUA_TTHREAD			= 8;
+	public static final int LUA_TVALUE          = 9;
 
 	public static final String[] TYPE_NAMES = {
 		"nil", 
@@ -347,6 +348,7 @@ public class Lua {
 		"function",
 		"userdata",
 		"thread",
+		"value",
 	};
 
 }

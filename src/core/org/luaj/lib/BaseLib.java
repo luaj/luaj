@@ -110,6 +110,20 @@ public class BaseLib extends LFunction {
 		vm.pushstring( message );
 	}
 	
+	private void checkargexists(LuaState vm, int index, int type) {
+		if ( vm.gettop() < index )
+			vm.error("bad argument #"+(index-1)+" to '?' ("+
+					(type == Lua.LUA_TVALUE? 
+						"value expected)":
+						Lua.TYPE_NAMES[type]+" expected, got no value)") );
+	}
+
+	private void checkargtype(LuaState vm, int index, int type) {		
+		checkargexists( vm, index, type );
+		if ( vm.type(index) != type )
+			vm.error("bad argument #"+(index-1)+" to '?' ("+Lua.TYPE_NAMES[type]+" expected, got "+vm.typename(index)+")");		
+	}
+
 	public boolean luaStackCall(LuaState vm) {
 		switch ( id ) {
 		case PRINT: {
@@ -208,23 +222,23 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case RAWGET: {
-			LValue t = vm.topointer(2);
+			checkargtype(vm,2,Lua.LUA_TTABLE);
+			checkargexists(vm,3,Lua.LUA_TVALUE);
+			LTable t = vm.totable(2);
 			LValue k = vm.topointer(3);
 			vm.resettop();
-			if ( t instanceof LTable ) {
-				vm.pushlvalue(( (LTable) t ).get( k ));
-			}
+			vm.pushlvalue( t.get( k ) );
 		}	break;
 		case RAWSET: {
-			LValue t = vm.topointer(2);
+			checkargtype(vm,2,Lua.LUA_TTABLE);
+			checkargexists(vm,3,Lua.LUA_TVALUE);
+			checkargexists(vm,4,Lua.LUA_TVALUE);
+			LTable t = vm.totable(2);
 			LValue k = vm.topointer(3);
 			LValue v = vm.topointer(4);
+			t.put( k, v );
 			vm.resettop();
-			if ( t instanceof LTable ) {
-				( (LTable) t ).put( k, v );
-			} else {
-				vm.error( "expected table" );
-			}
+			vm.pushlvalue(t);
 		}	break;
 		case GETFENV: {
 			if ( vm.gettop() <= 1 ) {
@@ -258,13 +272,44 @@ public class BaseLib extends LFunction {
 			}
 			break;
 		}
-		case SELECT:
-			select( vm );
+		case SELECT: {
+			int n = vm.gettop();
+			if ( n < 2 )  
+				vm.error( "bad argument #1 to '?' (number expected, got no value)" );
+			if ( vm.isnumber(2) ) {
+				int index = vm.tointeger(2);
+				if ( index < 0 )
+					index += n-1;
+				if ( index <= 0 )
+					vm.error( "bad argument #1 to '?' (index out of range)" );
+				if ( index >= n )
+					vm.resettop();
+				else {
+					for ( int i=0; i<=index; i++ )
+						vm.remove(1);
+				}					
+			} else if ( vm.tostring(2).equals( "#" ) ) {
+				vm.resettop();
+				vm.pushnumber( n - 2 );
+			} else {
+				vm.error( "bad argument #1 to '?' (number expected, got "+vm.typename(2)+")" );
+			}
 			break;
-		case COLLECTGARBAGE:
-			System.gc();
+		}
+		case COLLECTGARBAGE: {
+			String s = vm.tostring(2);
+			int result = 0;
 			vm.resettop();
+			if ( "collect".equals(s) )
+				System.gc();
+			else {
+				Runtime rt = Runtime.getRuntime();
+				long used = rt.totalMemory() - rt.freeMemory();
+				result = (int) (used >> 10);
+			}
+			vm.pushnumber(result);
 			break;
+		}
 		case DOFILE:
 			dofile(vm);
 			break;
@@ -318,19 +363,6 @@ public class BaseLib extends LFunction {
 	public static void restoreStandardOutput() {
 		stdout = System.out;
 	}
-
-	private void select( LuaState vm ) {
-		LValue arg = vm.topointer(2);
-		if ( arg instanceof LNumber ) {
-			final int start = Math.min(arg.toJavaInt(),vm.gettop());
-			for ( int i=0; i<=start; i++ )
-				vm.remove(1);
-			return;
-		} else if ( arg.toJavaString().equals( "#" ) ) {
-			setResult( vm, LInteger.valueOf( vm.gettop() - 2 ) );
-		}
-	}
-	
 
 	// closes the input stream, provided its not null or System.in
 	private static void closeSafely(InputStream is) {
