@@ -186,18 +186,25 @@ public class BaseLib extends LFunction {
 			break;
 			
 		case TONUMBER: {
-			LValue input = vm.topointer(2);
-			vm.resettop();
-			if ( input instanceof LNumber ) {
-				vm.pushlvalue(input);
-			} else if ( input instanceof LString ) {
+			switch ( vm.type(2) ) {
+			case Lua.LUA_TNUMBER:
+				break;
+			case Lua.LUA_TSTRING:
+				LString s = vm.tolstring(2);
 				int base = 10;
-				if ( vm.gettop()>=3 ) {
+				if ( vm.gettop() >= 3 ) {
 					base = vm.tointeger(3);
+					if ( base < 2 || base > 36 )
+						vm.error("bad argument #2 to '?' (base out of range)");
 				}
-				vm.pushlvalue( ( (LString) input ).luaToNumber( base ) );
+				vm.pushlvalue( s.luaToNumber(base) );
+				break;
+			default:
+				vm.pushnil();
+				break;
 			}
-			vm.pushnil();
+			vm.insert(1);
+			vm.settop(1);
 			break;
 		}
 		case RAWGET: {
