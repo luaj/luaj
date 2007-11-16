@@ -2170,6 +2170,15 @@ public class LuaState extends Lua {
 			stack[--top] = null;
 	}
 
+	/** 
+	 * Set the top to the base.  Equivalent to settop(0) 
+	 */
+	public void resettop() {
+		debugAssert( top >= base );
+		while ( top > base )
+			stack[--top] = null;
+	}
+	
 	private int index2adr(int index) {
 		// TODO: upvalues? globals? environment?   
 		int ai = index>0? base+index-1: top+index;

@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
@@ -87,6 +86,7 @@ public class BaseLib extends LFunction {
 	public static void install(LTable globals) {
 		for ( int i=1; i<NAMES.length; i++ )
 			globals.put( NAMES[i], new BaseLib(i) );
+		globals.put("_VERSION", new LString("Lua 5.1"));
 	}
 
 	private int id;
@@ -268,14 +268,32 @@ public class BaseLib extends LFunction {
 			load(vm, vm.topointer(2), vm.tostring(3));
 			break;
 		case TOSTRING: {
+			if ( vm.gettop() < 2 )  
+				vm.error( "bad argument #1 to '?' (value expected)" );
 			LValue v = vm.topointer(2);
 			vm.settop(0);
 			vm.pushlvalue( v.luaAsString() );			
 			break;
 		}
-		case UNPACK:
-			unpack(vm);
+		case UNPACK: {
+			int n = vm.gettop();
+			if ( n < 2 )  
+				vm.error( "bad argument #1 to '?' (table expected, got no value)" );
+			if ( ! vm.istable(2) )
+				vm.error( "bad argument #1 to '?' (table expected, got "+vm.typename(2)+")" );
+			LTable list = vm.totable(2);
+			int i = vm.tointeger(3);
+			int j = vm.tointeger(4);
+			if ( n <= 2 )
+				i = 1;
+			if ( n <= 3 )
+				j = list.luaLength();
+			vm.settop(0);
+			vm.checkstack(j+1-i);
+			for ( int k=i; k<=j; k++ )
+				vm.pushlvalue(list.get(k));
 			break;
+		}
 		case NEXT: {
 			setResult( vm, next(vm, vm.topointer(2), vm.tointeger(3)) );
 			break;
@@ -416,28 +434,6 @@ public class BaseLib extends LFunction {
 		} finally {
 			closeSafely( baos );
 		}
-	}
-
-	/** unpack (list [, i [, j]])
-	 * 
-	 * Returns the elements from the given table. This function is equivalent to
-	 *      return list[i], list[i+1], ···, list[j]
-	 *      
-	 * except that the above code can be written only for a fixed number of elements. 
-	 * By default, i is 1 and j is the length of the list, as defined by the length operator (see §2.5.5).
-	 */
-	private void unpack(LuaState vm) {
-		LValue v = vm.topointer(2);
-		int i = vm.tointeger(3);
-		int j = vm.tointeger(4);
-		LTable list = (LTable) v;
-		if ( i == 0 )
-			i = 1;
-		if ( j == 0 )
-			j = list.luaLength();
-		vm.settop(0);
-		for ( int k=i; k<=j; k++ ) 
-			vm.pushlvalue( list.get(k) );
 	}
 
 	private LValue next(LuaState vm, LValue table, int index) {

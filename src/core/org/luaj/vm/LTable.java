@@ -209,6 +209,9 @@ public class LTable extends LValue {
 			return m_vector[key - 1];
 		}
 		
+		if ( m_hashKeys == null )
+			return LNil.NIL;
+
 		int slot = findSlot( key );
 		return ( m_hashKeys[slot] != null ) ? m_hashValues[slot] : LNil.NIL;
 	}
