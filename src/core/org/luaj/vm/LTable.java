@@ -304,7 +304,7 @@ public class LTable extends LValue {
 		
 		// perform a lua call
 		public boolean luaStackCall(LuaState vm) {
-			vm.settop(0);
+			vm.resettop();
 			int i;
 			while ( ( i = arrayIndex++ ) < m_vector.length ) {
 				if ( m_vector[i] != LNil.NIL ) {
@@ -622,7 +622,7 @@ public class LTable extends LValue {
 			vm.pushlvalue(m_vector[j]);
 			vm.call(2, 1);
 			boolean result = vm.toboolean(1);
-			vm.settop(0);
+			vm.resettop();
 			return result;
 		} else {
 			return m_vector[j].luaBinCmpUnknown( Lua.OP_LT, m_vector[i] );

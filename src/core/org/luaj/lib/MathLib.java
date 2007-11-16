@@ -76,7 +76,7 @@ public class MathLib extends LFunction {
 	}
 	
 	private static void setResult( LuaState vm, LValue value ) {
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlvalue( value );
 	}
 	
@@ -135,7 +135,7 @@ public class MathLib extends LFunction {
 		double v = arg.toJavaDouble();
 		double intPart = ( v > 0 ) ? Math.floor( v ) : Math.ceil( v );
 		double fracPart = v - intPart;
-		vm.settop(0);
+		vm.resettop();
 		vm.pushnumber( intPart );
 		vm.pushnumber( fracPart );
 	}

@@ -157,7 +157,7 @@ public class StringLib extends LFunction {
 		final int top = vm.gettop();
 		int i = posrelat( ( top >= 3 ) ? vm.tointeger(3) : 1, l );
 		int j = posrelat( ( top >= 4 ) ? vm.tointeger(4) : i, l );
-		vm.settop(0);
+		vm.resettop();
 		if ( i <= 0 )
 			i = 1;
 		if ( j > l )
@@ -185,7 +185,7 @@ public class StringLib extends LFunction {
 		byte[] bytes = new byte[nargs];
 		for ( int i=0; i<nargs; i++ )
 			bytes[i] = (byte)( vm.tointeger(i+2) & 0x0FF );
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlstring( bytes );
 	}
 		
@@ -246,7 +246,7 @@ public class StringLib extends LFunction {
 	 * except as arguments to the q option. 
 	 */
 	static void format( LuaState vm ) {
-		vm.settop(0);
+		vm.resettop();
 		vm.pushstring( "" );
 	}
 
@@ -275,7 +275,7 @@ public class StringLib extends LFunction {
 	 * as this would prevent the iteration.
 	 */
 	static void gmatch( LuaState vm ) {
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlvalue( new GMatchAux(vm) );
 	}
 
@@ -292,7 +292,7 @@ public class StringLib extends LFunction {
 			this.soffset = 0;
 		}
 		public boolean luaStackCall(LuaState vm) {
-			vm.settop(0);
+			vm.resettop();
 			for ( ; soffset<srclen; soffset++ ) {
 				int res = ms.match(soffset, 0);
 				if ( res >=0 ) {
@@ -383,7 +383,7 @@ public class StringLib extends LFunction {
 				break;
 		}
 		lbuf.append( src.substring( soffset, srclen ) );
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlstring( lbuf.toLuaString() );
 		vm.pushinteger( n );
 	}
@@ -396,7 +396,7 @@ public class StringLib extends LFunction {
 	 */
 	static void len( LuaState vm ) {
 		int l = vm.tostring(2).length();
-		vm.settop(0);
+		vm.resettop();
 		vm.pushinteger( l );
 	}
 
@@ -409,7 +409,7 @@ public class StringLib extends LFunction {
 	 */
 	static void lower( LuaState vm ) {	
 		String s = vm.tostring(2).toLowerCase();
-		vm.settop(0);
+		vm.resettop();
 		vm.pushstring( s );
 	}
 
@@ -434,7 +434,7 @@ public class StringLib extends LFunction {
 	static void rep( LuaState vm ) {
 		LString s = vm.tolstring(2);
 		int n = vm.tointeger( 3 );
-		vm.settop(0);
+		vm.resettop();
 		if ( n >= 0 ) {
 			final byte[] bytes = new byte[ s.length() * n ];
 			int len = s.length();
@@ -456,7 +456,7 @@ public class StringLib extends LFunction {
 		byte[] b = new byte[n];
 		for ( int i=0, j=n-1; i<n; i++, j-- )
 			b[j] = (byte) s.luaByte(i);
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlstring( b );
 	}
 
@@ -484,7 +484,7 @@ public class StringLib extends LFunction {
 		if ( j > len )
 			j = len;
 		
-		vm.settop(0);
+		vm.resettop();
 		if ( i <= j ) {
 			LString result = s.substring( i - 1 , j );
 			vm.pushlstring( result );
@@ -502,7 +502,7 @@ public class StringLib extends LFunction {
 	 */
 	static void upper( LuaState vm ) {
 		String s = vm.tostring(2).toUpperCase();
-		vm.settop(0);
+		vm.resettop();
 		vm.pushstring(s);
 	}
 	
@@ -521,7 +521,7 @@ public class StringLib extends LFunction {
 		}
 		
 		boolean fastMatch = find && ( vm.toboolean( 5 ) || pat.indexOfAny( SPECIALS ) == -1 );
-		vm.settop(0);
+		vm.resettop();
 		
 		if ( fastMatch ) {
 			int result = s.indexOf( pat, init );

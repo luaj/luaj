@@ -107,7 +107,7 @@ public class TableLib extends LFunction {
 						if ( k<j && sep!=null )
 							sep.write( baos );
 				}
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlstring( baos.toByteArray() );
 			} catch (IOException e) {
 				vm.error(e.getMessage());
@@ -137,7 +137,7 @@ public class TableLib extends LFunction {
 		 */ 
 		case MAXN: { 
 			LTable table = vm.totable(2);
-			vm.settop(0);
+			vm.resettop();
 			vm.pushinteger( table.luaMaxN() );
 			break;
 		}
@@ -152,7 +152,7 @@ public class TableLib extends LFunction {
 			int n = vm.gettop();
 			LTable table = vm.totable(2);
 			int pos = (n>=3? vm.tointeger(3): 0);
-			vm.settop(0);
+			vm.resettop();
 			vm.pushlvalue( table.luaRemovePos( pos ) );
 			break;
 		}
@@ -170,7 +170,7 @@ public class TableLib extends LFunction {
 			LTable table = vm.totable(2);
 			LValue compare = vm.topointer(3);
 			table.luaSort( vm, compare );
-			vm.settop(0);
+			vm.resettop();
 			break;
 		}
 			

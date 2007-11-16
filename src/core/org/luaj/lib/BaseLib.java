@@ -100,12 +100,12 @@ public class BaseLib extends LFunction {
 	}
 	
 	private static void setResult( LuaState vm, LValue value ) {
-		vm.settop(0);
+		vm.resettop();
 		vm.pushlvalue( value );
 	}
 	
 	private static void setErrorResult( LuaState vm, String message ) {
-		vm.settop(0);
+		vm.resettop();
 		vm.pushnil();
 		vm.pushstring( message );
 	}
@@ -120,20 +120,20 @@ public class BaseLib extends LFunction {
 				stdout.print( vm.tostring(i) );
 			}
 			stdout.println();
-			vm.settop(0);
+			vm.resettop();
 			break;
 		}
 		case PAIRS:
 		case IPAIRS: {
 			LValue v = vm.topointer(2);
 			LValue r = v.luaPairs(id==PAIRS);
-			vm.settop(0);
+			vm.resettop();
 			vm.pushlvalue( r );
 			break;
 		}
 		case GETMETATABLE: {
 			if ( 0 == vm.getmetatable(2) ) {
-				vm.settop(0);
+				vm.resettop();
 				vm.pushnil();
 			} else {
 				vm.insert(1);
@@ -153,7 +153,7 @@ public class BaseLib extends LFunction {
 			if ( vm.gettop() < 2 ) 
 				vm.error("bad argument #1 to '?' (value expected)");
 			LValue v = vm.topointer(2);
-			vm.settop(0);
+			vm.resettop();
 			vm.pushlstring( v.luaGetTypeName() );
 			break;
 		}
@@ -187,7 +187,7 @@ public class BaseLib extends LFunction {
 			
 		case TONUMBER: {
 			LValue input = vm.topointer(2);
-			vm.settop(0);
+			vm.resettop();
 			if ( input instanceof LNumber ) {
 				vm.pushlvalue(input);
 			} else if ( input instanceof LString ) {
@@ -203,7 +203,7 @@ public class BaseLib extends LFunction {
 		case RAWGET: {
 			LValue t = vm.topointer(2);
 			LValue k = vm.topointer(3);
-			vm.settop(0);
+			vm.resettop();
 			if ( t instanceof LTable ) {
 				vm.pushlvalue(( (LTable) t ).get( k ));
 			}
@@ -212,7 +212,7 @@ public class BaseLib extends LFunction {
 			LValue t = vm.topointer(2);
 			LValue k = vm.topointer(3);
 			LValue v = vm.topointer(4);
-			vm.settop(0);
+			vm.resettop();
 			if ( t instanceof LTable ) {
 				( (LTable) t ).put( k, v );
 			} else {
@@ -242,11 +242,11 @@ public class BaseLib extends LFunction {
 			int i = vm.tointeger(2);
 			if ( i == 0 ) {
 				vm._G = t;
-				vm.settop(0);
+				vm.resettop();
 			} else {
 				LClosure c = vm.getStackFrame(i-1).closure;
 				c.luaSetEnv(t);
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlvalue(c);
 			}
 			break;
@@ -256,7 +256,7 @@ public class BaseLib extends LFunction {
 			break;
 		case COLLECTGARBAGE:
 			System.gc();
-			vm.settop(0);
+			vm.resettop();
 			break;
 		case DOFILE:
 			dofile(vm);
@@ -271,7 +271,7 @@ public class BaseLib extends LFunction {
 			if ( vm.gettop() < 2 )  
 				vm.error( "bad argument #1 to '?' (value expected)" );
 			LValue v = vm.topointer(2);
-			vm.settop(0);
+			vm.resettop();
 			vm.pushlvalue( v.luaAsString() );			
 			break;
 		}
@@ -288,7 +288,7 @@ public class BaseLib extends LFunction {
 				i = 1;
 			if ( n <= 3 )
 				j = list.luaLength();
-			vm.settop(0);
+			vm.resettop();
 			vm.checkstack(j+1-i);
 			for ( int k=i; k<=j; k++ )
 				vm.pushlvalue(list.get(k));
@@ -348,7 +348,7 @@ public class BaseLib extends LFunction {
 	// return true if laoded, false if error put onto the stack
 	private static boolean loadis(LuaState vm, InputStream is, String chunkname ) {
 		try {
-			vm.settop(0);
+			vm.resettop();
 			if ( 0 != vm.load(is, chunkname) ) {
 				setErrorResult( vm, "cannot load "+chunkname+": "+vm.topointer(-1) );
 				return false;

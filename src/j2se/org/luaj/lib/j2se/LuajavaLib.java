@@ -82,7 +82,7 @@ public final class LuajavaLib extends LFunction {
 			className = vm.tostring(2);
 			try {
 				Class clazz = Class.forName(className);
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlvalue( new LInstance( clazz, clazz ) );
 			} catch (Exception e) {
 				throw new LuaErrorException(e);
@@ -101,7 +101,7 @@ public final class LuajavaLib extends LFunction {
 				Object o = con.newInstance( args );
 				
 				// set the result
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlvalue( new LInstance( o, clazz ) );
 				
 			} catch (Exception e) {
@@ -164,7 +164,7 @@ public final class LuajavaLib extends LFunction {
 				Field f = c.getField(s);
 				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
 				f.set(m_instance,v);
-				vm.settop(0);
+				vm.resettop();
 			} catch (Exception e) {
 				throw new LuaErrorException(e);
 			}
@@ -200,7 +200,7 @@ public final class LuajavaLib extends LFunction {
 				Object result = meth.invoke( instance, args );
 				
 				// coerce the result
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlvalue( CoerceJavaToLua.coerce(result) );
 				return false;
 			} catch (Exception e) {

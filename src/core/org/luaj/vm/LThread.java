@@ -110,7 +110,7 @@ public class LThread extends LValue implements Runnable {
 
 		synchronized ( this ) {
  			if ( status == STATUS_DEAD ) {
-				vm.settop(0);
+				vm.resettop();
 				vm.pushboolean(false);
 				vm.pushstring("cannot resume dead coroutine");
 				return;
@@ -132,7 +132,7 @@ public class LThread extends LValue implements Runnable {
 					thread = new Thread(this);
 					thread.start();
 				} else {
-					threadVm.settop(0);
+					threadVm.resettop();
 					vm.xmove(threadVm, nargs);
 				}
 	
@@ -141,7 +141,7 @@ public class LThread extends LValue implements Runnable {
 				this.wait();
 				
 				// copy return values from yielding stack state
-				vm.settop(0);
+				vm.resettop();
 				vm.pushboolean(true);
 				if ( threadVm.cc >= 0 ) { 
 					threadVm.xmove(vm, threadVm.gettop() - 1);
@@ -152,7 +152,7 @@ public class LThread extends LValue implements Runnable {
 	
 			} catch ( Throwable t ) {
 				status = STATUS_DEAD;
-				vm.settop(0);
+				vm.resettop();
 				vm.pushboolean(false);
 				vm.pushstring("thread: "+t);
 				this.notify();

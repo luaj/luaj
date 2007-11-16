@@ -132,7 +132,7 @@ public class PackageLib extends LFunction {
 	public static void require( LuaState vm ) {
 		LString modname = vm.tolstring(2);
 		if ( LOADED.containsKey(modname) ) {
-			vm.settop(0);
+			vm.resettop();
 			vm.pushlvalue( LOADED.get(modname) );
 		}
 		else {
@@ -145,7 +145,7 @@ public class PackageLib extends LFunction {
 					LOADED.put(modname, result);
 				else if ( ! LOADED.containsKey(modname) )
 					LOADED.put(modname, result = LBoolean.TRUE);
-				vm.settop(0);
+				vm.resettop();
 				vm.pushlvalue( result );
 			}
 		}
