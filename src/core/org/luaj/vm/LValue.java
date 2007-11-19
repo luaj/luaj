@@ -302,4 +302,9 @@ public class LValue {
 		return 0;
 	}
 
+	/** Convert to a number if possible, or nil otherwise */
+	public LValue luaToNumber() {
+		return LNil.NIL;
+	}
+
 }

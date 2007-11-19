@@ -635,4 +635,59 @@ public class LTable extends LValue {
 		m_vector[j] = tmp;
 	}
 
+	/**
+	 * Leave nil on top, or index,value pair
+	 * @param vm
+	 * @param index
+	 */
+	public void next(LuaState vm, LValue index) {
+		
+		// look through vector first
+		int start = index.toJavaInt();
+		if ( start > 0 && start <= m_vector.length ) {
+			for ( int i=start; i<m_vector.length; i++ ) {
+				if ( m_vector[i] != LNil.NIL ) {
+					vm.pushinteger(i+1);
+					vm.pushlvalue(m_vector[i]);
+					return;
+				}
+			}
+		}		
+
+		// look up key first
+		if ( index != LNil.NIL ) {
+			if ( m_hashEntries != 0 && (start <= 0 || start > m_vector.length) ) {
+				for ( int i=0; i<m_hashKeys.length; i++ ) { 
+					if ( index.luaBinCmpUnknown( Lua.OP_EQ, m_hashKeys[i] ) ) {
+						start = m_vector.length+i+1;
+						break;
+					}
+				}
+			}
+		}
+		
+		// start looking
+		if ( start < m_vector.length ) {
+			if ( m_arrayEntries != 0 ) {
+				for ( int i=start; i<m_vector.length; i++ ) {
+					if ( m_vector[i] != LNil.NIL ) {
+						vm.pushinteger(i+1);
+						vm.pushlvalue(m_vector[i]);
+						return;
+					}
+				}
+				start = m_vector.length;
+			}
+			if ( m_hashEntries != 0 ) {
+				for ( int i=start-m_vector.length; i<m_hashKeys.length; i++ ) { 
+					if ( index.luaBinCmpUnknown( Lua.OP_EQ, m_hashKeys[i] ) ) {
+						vm.pushlvalue(m_hashKeys[i]);
+						vm.pushlvalue(m_hashValues[i]);
+						return;
+					}
+				}
+			}
+		}
+		vm.pushnil();
+	}
 }

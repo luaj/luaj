@@ -169,6 +169,8 @@ public class LuaState extends Lua {
         }
         calls[newcc] = new CallInfo(c, base, top, resultbase, nresults);
         cc = newcc;
+        
+        stackClear( top, base + c.p.maxstacksize );        
     }
     
 	/**
@@ -461,6 +463,12 @@ public class LuaState extends Lua {
         top = newTop;
     }
     
+	private final void stackClear(int startIndex, int endIndex) {
+		for (; startIndex < endIndex; startIndex++) {
+			stack[startIndex] = LNil.NIL;
+		}
+	}    
+
     /** execute instructions up to a yield, return, or call */
     public void exec() {
         if ( cc < 0 )
@@ -1460,9 +1468,20 @@ public class LuaState extends Lua {
 	 * string convertible to a number, and 0&nbsp;otherwise.
 	 */
 	public boolean isnumber(int index) {
-		return type(index) == Lua.LUA_TNUMBER;
+		return tolnumber(index) != LNil.NIL;
 	}
 
+	/** 
+	 * Convert a value to an LNumber<span class="apii">[-0, +0, <em>-</em>]</span>
+	 * 
+	 * <p>
+	 * Returns an LNumber if the value at the given acceptable index is a number or a
+	 * string convertible to a number, and LNil.NIL&nbsp;otherwise.
+	 */
+	public LValue tolnumber(int index) {
+		return topointer(index).luaToNumber();
+	}
+	
 	/**
 	 * Test if a value is a string <span class="apii">[-0, +0, <em>m</em>]</span>
 	 * 

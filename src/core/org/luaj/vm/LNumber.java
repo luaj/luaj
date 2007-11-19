@@ -78,4 +78,9 @@ public class LNumber extends LValue {
 		return new Short(toJavaShort());
 	}
 	
+	/** Convert to a number if possible, or nil otherwise */
+	public LValue luaToNumber() {
+		return this;
+	}
+
 }

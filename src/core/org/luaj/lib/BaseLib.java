@@ -109,7 +109,7 @@ public class BaseLib extends LFunction {
 		vm.pushnil();
 		vm.pushstring( message );
 	}
-	
+
 	private void checkargexists(LuaState vm, int index, int type) {
 		if ( vm.gettop() < index )
 			vm.error("bad argument #"+(index-1)+" to '?' ("+
@@ -120,8 +120,13 @@ public class BaseLib extends LFunction {
 
 	private void checkargtype(LuaState vm, int index, int type) {		
 		checkargexists( vm, index, type );
-		if ( vm.type(index) != type )
-			vm.error("bad argument #"+(index-1)+" to '?' ("+Lua.TYPE_NAMES[type]+" expected, got "+vm.typename(index)+")");		
+		int t = vm.type(index);
+		if ( t != type ) {
+			if ( type == Lua.LUA_TNUMBER && t == Lua.LUA_TSTRING && vm.isnumber(index) )
+				return;
+			vm.error("bad argument #"+(index-1)+" to '?' ("+
+					Lua.TYPE_NAMES[type]+" expected, got "+vm.typename(index)+")");
+		}
 	}
 
 	public boolean luaStackCall(LuaState vm) {
@@ -139,13 +144,15 @@ public class BaseLib extends LFunction {
 		}
 		case PAIRS:
 		case IPAIRS: {
-			LValue v = vm.topointer(2);
+			checkargtype(vm,2,Lua.LUA_TTABLE);
+			LTable v = vm.totable(2);
 			LValue r = v.luaPairs(id==PAIRS);
 			vm.resettop();
 			vm.pushlvalue( r );
 			break;
 		}
 		case GETMETATABLE: {
+			checkargexists(vm,2,Lua.LUA_TVALUE);
 			if ( 0 == vm.getmetatable(2) ) {
 				vm.resettop();
 				vm.pushnil();
@@ -156,8 +163,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SETMETATABLE: {
-			if ( ! vm.istable(2) )
-				vm.error("bad argument #1 to '?' (table expected, got "+vm.typename(2)+")");
+			checkargtype(vm,2,Lua.LUA_TTABLE);
 			vm.setmetatable(2);
 			vm.remove(1);
 			break;
@@ -200,13 +206,14 @@ public class BaseLib extends LFunction {
 			break;
 			
 		case TONUMBER: {
+			checkargexists(vm,2,Lua.LUA_TVALUE);
 			switch ( vm.type(2) ) {
 			case Lua.LUA_TNUMBER:
 				break;
 			case Lua.LUA_TSTRING:
 				LString s = vm.tolstring(2);
 				int base = 10;
-				if ( vm.gettop() >= 3 ) {
+				if ( vm.isnumber(3) ) {
 					base = vm.tointeger(3);
 					if ( base < 2 || base > 36 )
 						vm.error("bad argument #2 to '?' (base out of range)");
@@ -273,9 +280,8 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SELECT: {
+			checkargexists(vm,2,Lua.LUA_TNUMBER);
 			int n = vm.gettop();
-			if ( n < 2 )  
-				vm.error( "bad argument #1 to '?' (number expected, got no value)" );
 			if ( vm.isnumber(2) ) {
 				int index = vm.tointeger(2);
 				if ( index < 0 )
@@ -320,26 +326,27 @@ public class BaseLib extends LFunction {
 			load(vm, vm.topointer(2), vm.tostring(3));
 			break;
 		case TOSTRING: {
-			if ( vm.gettop() < 2 )  
-				vm.error( "bad argument #1 to '?' (value expected)" );
+			checkargexists(vm,2,Lua.LUA_TVALUE);
 			LValue v = vm.topointer(2);
 			vm.resettop();
 			vm.pushlvalue( v.luaAsString() );			
 			break;
 		}
 		case UNPACK: {
-			int n = vm.gettop();
-			if ( n < 2 )  
-				vm.error( "bad argument #1 to '?' (table expected, got no value)" );
-			if ( ! vm.istable(2) )
-				vm.error( "bad argument #1 to '?' (table expected, got "+vm.typename(2)+")" );
+			checkargtype(vm,2,Lua.LUA_TTABLE);
 			LTable list = vm.totable(2);
-			int i = vm.tointeger(3);
-			int j = vm.tointeger(4);
-			if ( n <= 2 )
-				i = 1;
-			if ( n <= 3 )
+			int n = vm.gettop();
+			int i=1,j;
+			if ( n >= 3 ) {
+				checkargtype(vm,3,Lua.LUA_TNUMBER);
+				i = vm.tointeger(3);
+			}
+			if ( n >= 4 ) {
+				checkargtype(vm,4,Lua.LUA_TNUMBER);
+				j = vm.tointeger(4);
+			} else {
 				j = list.luaLength();
+			}
 			vm.resettop();
 			vm.checkstack(j+1-i);
 			for ( int k=i; k<=j; k++ )
@@ -347,7 +354,11 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case NEXT: {
-			setResult( vm, next(vm, vm.topointer(2), vm.tointeger(3)) );
+			checkargtype(vm,2,Lua.LUA_TTABLE);
+			LTable t = vm.totable(2);
+			LValue v = vm.topointer(3);
+			vm.resettop();
+			t.next(vm,v);
 			break;
 		}
 		default:
@@ -474,11 +485,4 @@ public class BaseLib extends LFunction {
 			closeSafely( baos );
 		}
 	}
-
-	private LValue next(LuaState vm, LValue table, int index) {
-		throw new LuaErrorException("next() not supported yet");
-	}
-
-	
-
 }
