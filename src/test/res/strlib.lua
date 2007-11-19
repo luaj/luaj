@@ -43,3 +43,7 @@ local function badpat()
 end
 
 print( pcall( badpat ) )
+
+for k, v in string.gmatch("w=200&h=150", "(%w+)=(%w+)") do
+    print(k, v)
+end

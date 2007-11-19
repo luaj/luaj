@@ -275,18 +275,17 @@ public class StringLib extends LFunction {
 	 * as this would prevent the iteration.
 	 */
 	static void gmatch( LuaState vm ) {
+		LString src = vm.tolstring( 2 );
+		LString pat = vm.tolstring( 3 );
 		vm.resettop();
-		vm.pushlvalue( new GMatchAux(vm) );
+		vm.pushlvalue( new GMatchAux(vm, src, pat) );
 	}
 
 	static class GMatchAux extends LFunction {
-		private final LString src,pat;
 		private final int srclen;
 		private final MatchState ms;
 		private int soffset;
-		public GMatchAux(LuaState vm) {
-			this.src = vm.tolstring(2);
-			this.pat = vm.tolstring(3);
+		public GMatchAux(LuaState vm, LString src, LString pat) {
 			this.srclen = src.length();
 			this.ms = new MatchState(vm, src, pat);
 			this.soffset = 0;
@@ -294,6 +293,7 @@ public class StringLib extends LFunction {
 		public boolean luaStackCall(LuaState vm) {
 			vm.resettop();
 			for ( ; soffset<srclen; soffset++ ) {
+				ms.reset();
 				int res = ms.match(soffset, 0);
 				if ( res >=0 ) {
 					int soff = soffset;
