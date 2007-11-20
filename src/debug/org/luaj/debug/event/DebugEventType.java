@@ -50,7 +50,9 @@ public class DebugEventType extends EnumType {
     public static DebugEventType clientRequestGlobalReply 
         = new DebugEventType("clientRequestGlobalReply", 16);
     public static DebugEventType disconnected 
-    = new DebugEventType("disconnected", 17);
+        = new DebugEventType("disconnected", 17);
+    public static DebugEventType session 
+        = new DebugEventType("session", 17);
     
     protected static DebugEventType[] ENUMS = new DebugEventType[] {
     	started,
@@ -70,7 +72,8 @@ public class DebugEventType extends EnumType {
     	clientRequestCallgraphReply,
     	clientRequestStackReply,
     	clientRequestGlobalReply,
-    	disconnected
+    	disconnected,
+    	session
     };
 	
     protected DebugEventType(String name, int ordinal) {

@@ -39,7 +39,6 @@ public class TableVariable extends Variable {
         super(index, name, type, null);
         
         int size = table.size();
-        DebugUtils.println("table size:" + size);
         Vector keyList = new Vector();  
         Vector valueList = new Vector();
         LValue[] keyValues = table.getKeys();        
@@ -52,12 +51,10 @@ public class TableVariable extends Variable {
             
             keyList.addElement(keyValues[i].toString());
             if (value instanceof LTable) {
-            	DebugUtils.println("table: value[" + i + "]=" + value.toString());
             	valueList.addElement(new TableVariable(i, "element[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
             } else {
                 valueList.addElement(value.toString());
-            }
-            DebugUtils.println("["+ keyValues[i].toString() + "," + value.toString() + "]");            	
+            }            	
         }
         
         this.keys = new String[keyList.size()];

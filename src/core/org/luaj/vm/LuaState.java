@@ -937,6 +937,24 @@ public class LuaState extends Lua {
         return pc;
     }
 
+    protected String getSourceFileName(LString source) {
+        String sourceStr = LoadState.getSourceName(source.toJavaString());
+        return getSourceFileName(sourceStr);
+    }
+
+    protected String getSourceFileName(String sourceStr) {
+        if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
+            sourceStr = sourceStr.replace('\\', '/');
+        }
+
+        int index = sourceStr.lastIndexOf('/');
+        if (index != -1) {
+            sourceStr = sourceStr.substring(index + 1);
+        }
+
+        return sourceStr;
+    }
+    
     /** 
      * Get the file line number info for a particular call frame.
      * @param cindex
@@ -949,12 +967,22 @@ public class LuaState extends Lua {
             CallInfo call = this.calls[cindex];
             LPrototype p = call.closure.p;
             if (p != null && p.source != null)
-                source = p.source.toJavaString();
+                source = getSourceFileName(p.source);
             int pc = getCurrentPc(call);
             if (p.lineinfo != null && p.lineinfo.length > pc)
                 line = ":" + String.valueOf(p.lineinfo[pc]);
         }
         return source + line;
+    }
+    
+    public String getStackTrace() {
+        StringBuffer buffer = new StringBuffer("Stack Trace:\n");
+        for (int i = cc; i >= 0; i--) {
+            buffer.append("   ");
+            buffer.append(getFileLine(i));
+            buffer.append("\n");
+        }
+        return buffer.toString();
     }
     
     /**

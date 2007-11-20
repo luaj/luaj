@@ -11,10 +11,12 @@ import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
 import org.luaj.debug.event.DebugEventType;
 import org.luaj.debug.request.DebugRequest;
+import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestStack;
 import org.luaj.debug.request.DebugRequestType;
 import org.luaj.debug.response.DebugResponseCallgraph;
+import org.luaj.debug.response.DebugResponseSession;
 import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.debug.response.DebugResponseVariables;
 
@@ -49,18 +51,20 @@ public class SerializationHelper {
     static final int SERIAL_TYPE_NullableString                         = 0;
     static final int SERIAL_TYPE_TableVariable                          = 1;
     static final int SERIAL_TYPE_Variable                               = 2;
-    static final int SERIAL_TYPE_DebugResponseCallgraph                 = 3;
-    static final int SERIAL_TYPE_DebugResponseVariables                 = 4;
-    static final int SERIAL_TYPE_DebugResponseStack                     = 5;
-    static final int SERIAL_TYPE_StackFrame                             = 6;
-    static final int SERIAL_TYPE_DebugRequestType                       = 7;
-    static final int SERIAL_TYPE_DebugRequest                           = 8;
-    static final int SERIAL_TYPE_DebugRequestStack                      = 9;
-    static final int SERIAL_TYPE_DebugRequestLineBreakpointToggle       = 10;
-    static final int SERIAL_TYPE_DebugEventType                         = 11;
-    static final int SERIAL_TYPE_DebugEvent                             = 12;
-    static final int SERIAL_TYPE_DebugEventBreakpoint                   = 13;
-    static final int SERIAL_TYPE_DebugEventError                        = 14;
+    static final int SERIAL_TYPE_StackFrame                             = 3;
+    static final int SERIAL_TYPE_DebugRequestType                       = 4;
+    static final int SERIAL_TYPE_DebugRequest                           = 5;
+    static final int SERIAL_TYPE_DebugRequestStack                      = 6;
+    static final int SERIAL_TYPE_DebugRequestLineBreakpointToggle       = 7;
+    static final int SERIAL_TYPE_DebugRequestDisconnect                 = 8;
+    static final int SERIAL_TYPE_DebugEventType                         = 9;
+    static final int SERIAL_TYPE_DebugEvent                             = 10;
+    static final int SERIAL_TYPE_DebugEventBreakpoint                   = 11;
+    static final int SERIAL_TYPE_DebugEventError                        = 12;
+    static final int SERIAL_TYPE_DebugResponseCallgraph                 = 13;
+    static final int SERIAL_TYPE_DebugResponseVariables                 = 14;
+    static final int SERIAL_TYPE_DebugResponseStack                     = 15;   
+    static final int SERIAL_TYPE_DebugResponseSession                   = 16;
 
     public static void serialize(Serializable object, DataOutputStream dout)
             throws IOException {
@@ -76,16 +80,6 @@ public class SerializationHelper {
         } else if (object instanceof StackFrame) {
             dout.writeInt(SERIAL_TYPE_StackFrame);
             StackFrame.serialize(dout, (StackFrame) object);
-        } else if (object instanceof DebugResponseStack) {
-            dout.writeInt(SERIAL_TYPE_DebugResponseStack);
-            DebugResponseStack.serialize(dout, (DebugResponseStack) object);
-        } else if (object instanceof DebugResponseVariables) {
-            dout.writeInt(SERIAL_TYPE_DebugResponseVariables);
-            DebugResponseVariables.serialize(dout, (DebugResponseVariables) object);
-        } else if (object instanceof DebugResponseCallgraph) {
-            dout.writeInt(SERIAL_TYPE_DebugResponseCallgraph);
-            DebugResponseCallgraph.serialize(dout,
-                    (DebugResponseCallgraph) object);
         } else if (object instanceof DebugRequestType) {
             dout.writeInt(SERIAL_TYPE_DebugRequestType);
             DebugRequestType.serialize(dout, (DebugRequestType) object);
@@ -96,6 +90,9 @@ public class SerializationHelper {
             dout.writeInt(SERIAL_TYPE_DebugRequestLineBreakpointToggle);
             DebugRequestLineBreakpointToggle.serialize(dout,
                     (DebugRequestLineBreakpointToggle) object);
+        } else if (object instanceof DebugRequestDisconnect) {
+            dout.writeInt(SERIAL_TYPE_DebugRequestDisconnect);
+            DebugRequestDisconnect.serialize(dout, (DebugRequestDisconnect) object);
         } else if (object instanceof DebugRequest) {
             dout.writeInt(SERIAL_TYPE_DebugRequest);
             DebugRequest.serialize(dout, (DebugRequest) object);
@@ -108,6 +105,19 @@ public class SerializationHelper {
         } else if (object instanceof DebugEventError) {
             dout.writeInt(SERIAL_TYPE_DebugEventError);
             DebugEventError.serialize(dout, (DebugEventError) object);
+        } else if (object instanceof DebugResponseStack) {
+            dout.writeInt(SERIAL_TYPE_DebugResponseStack);
+            DebugResponseStack.serialize(dout, (DebugResponseStack) object);
+        } else if (object instanceof DebugResponseVariables) {
+            dout.writeInt(SERIAL_TYPE_DebugResponseVariables);
+            DebugResponseVariables.serialize(dout, (DebugResponseVariables) object);
+        } else if (object instanceof DebugResponseCallgraph) {
+            dout.writeInt(SERIAL_TYPE_DebugResponseCallgraph);
+            DebugResponseCallgraph.serialize(dout,
+                    (DebugResponseCallgraph) object);
+        } else if (object instanceof DebugResponseSession) {
+            dout.writeInt(SERIAL_TYPE_DebugResponseSession);
+            DebugResponseSession.serialize(dout, (DebugResponseSession) object);
         } else if (object instanceof DebugEvent) {
             dout.writeInt(SERIAL_TYPE_DebugEvent);
             DebugEvent.serialize(dout, (DebugEvent) object);
@@ -136,15 +146,6 @@ public class SerializationHelper {
         case SERIAL_TYPE_StackFrame:
             object = StackFrame.deserialize(din);
             break;
-        case SERIAL_TYPE_DebugResponseCallgraph:
-            object = DebugResponseCallgraph.deserialize(din);
-            break;
-        case SERIAL_TYPE_DebugResponseStack:
-            object = DebugResponseStack.deserialize(din);
-            break;
-        case SERIAL_TYPE_DebugResponseVariables:
-            object = DebugResponseVariables.deserialize(din);
-            break;
         case SERIAL_TYPE_DebugRequestType:
             object = DebugRequestType.deserialize(din);
             break;
@@ -153,6 +154,9 @@ public class SerializationHelper {
             break;
         case SERIAL_TYPE_DebugRequestLineBreakpointToggle:
             object = DebugRequestLineBreakpointToggle.deserialize(din);
+            break;
+        case SERIAL_TYPE_DebugRequestDisconnect:
+            object = DebugRequestDisconnect.deserialize(din);
             break;
         case SERIAL_TYPE_DebugRequest:
             object = DebugRequest.deserialize(din);
@@ -166,12 +170,24 @@ public class SerializationHelper {
         case SERIAL_TYPE_DebugEventError:
             object = DebugEventError.deserialize(din);
             break;
+        case SERIAL_TYPE_DebugResponseCallgraph:
+            object = DebugResponseCallgraph.deserialize(din);
+            break;
+        case SERIAL_TYPE_DebugResponseStack:
+            object = DebugResponseStack.deserialize(din);
+            break;
+        case SERIAL_TYPE_DebugResponseVariables:
+            object = DebugResponseVariables.deserialize(din);
+            break;
+        case SERIAL_TYPE_DebugResponseSession:
+            object = DebugResponseSession.deserialize(din);
+            break;
         case SERIAL_TYPE_DebugEvent:
             object = DebugEvent.deserialize(din);
             break;
         default:
             throw new RuntimeException(
-                    "deserialization operation is not supported");
+                    "deserialization operation is not supported: " + type);
         }
 
         return object;

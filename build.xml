@@ -56,6 +56,8 @@
 			<src path="src/debug" />
 			<exclude name="org/luaj/debug/j2se/**"/>
 			<exclude name="org/luaj/debug/j2me/**"/>
+	        <exclude name="org/luaj/debug/net/j2se/**"/>
+			<exclude name="org/luaj/debug/net/j2me/**"/>
 		</javac>
 	</target>
 	
@@ -66,6 +68,7 @@
 			<src path="src/debug" />
 			<src path="src/j2se" />
 			<include name="org/luaj/debug/j2se/**"/>
+            <include name="org/luaj/debug/net/j2se/**"/>			
 			<include name="org/luaj/lib/j2se/**"/>
 		</javac>
 	</target>
@@ -76,6 +79,7 @@
 			   bootclasspathref="wtk-libs" classpath="build/core/classes">
 			<src path="src/debug" />
 			<exclude name="org/luaj/debug/j2se/**"/>
+	        <exclude name="org/luaj/debug/net/j2se/**"/>
 		</javac>
 	</target>
 	

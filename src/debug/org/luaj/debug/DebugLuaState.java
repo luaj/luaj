@@ -23,8 +23,6 @@ package org.luaj.debug;
 
 import java.io.IOException;
 import java.util.Hashtable;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import org.luaj.compiler.LexState;
@@ -32,7 +30,9 @@ import org.luaj.debug.event.DebugEvent;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
 import org.luaj.debug.event.DebugEventType;
+import org.luaj.debug.net.DebugSupport;
 import org.luaj.debug.request.DebugRequest;
+import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestListener;
 import org.luaj.debug.request.DebugRequestStack;
@@ -47,6 +47,7 @@ import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
 
@@ -69,6 +70,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected int lastline = -1;
     protected String lastSource;
     protected DebugSupport debugSupport;
+    protected LuaErrorException lastError;
 
     public DebugLuaState() {}
     
@@ -103,23 +105,29 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             super.exec();
         } catch (AbortException e) {
             // ignored. Client aborts the debugging session.
-        } catch (Exception e) {
-            // let VM exceptions be processed if the debugger is not attached
-            // the same as the base class to minimize differences
-            // between the debug and non-debug behavior
-            VMException lastException = new VMException(e);
-            if (debugSupport != null) {
-                debugSupport.notifyDebugEvent(new DebugEventError(e.getMessage()));
-                suspend();
-                synchronized (this) {
-                    while (suspended) {
-                        try {
-                            wait();
-                        } catch (InterruptedException e1) {}
-                    }                    
-                }
+        } catch (LuaErrorException e) {
+            // give debug client a chance to see the error
+            if (e != lastError) {
+                lastError = e;
+                debugErrorHook(e);                
             }
-            throw lastException;
+            throw e;
+        }
+    }
+
+    private void debugErrorHook(Exception e) {
+        if (debugSupport != null) {
+            String msg = getFileLine(cc) + ": " + e.getMessage();
+            String trace = getStackTrace();
+            debugSupport.notifyDebugEvent(new DebugEventError(msg, trace));            
+            synchronized (this) {
+                suspend();
+                while (suspended) {
+                    try {
+                        wait();                      
+                    } catch (InterruptedException ex) {}
+                }                    
+            }
         }
     }
 
@@ -135,16 +143,16 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         if (exiting) {
             throw new AbortException("aborted by debug client");
         }
-        
+
 /*
-        if (DebugUtils.IS_DEBUG) {
-            DebugUtils.println("entered debugHook on pc=" + pc + "...Line: " + getFileLine(cc));
+        if (TRACE) {
+            System.out.println("entered debugHook on pc=" + pc + "...Line: " + getFileLine(cc));
             for (int j = 0; j <= cc; j++) {
-                DebugUtils.println("calls[" + j + "]: base=" + calls[j].base + ", top=" + calls[j].top + " ,pc=" + calls[j].pc);
+                System.out.println("calls[" + j + "]: base=" + calls[j].base + ", top=" + calls[j].top + " , pc=" + calls[j].pc);
                 dumpStack(j);                    
             }
-        }        
-  */      
+        }
+*/
         synchronized (this) {
             while (bSuspendOnStart) {
                 try {
@@ -160,13 +168,13 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             // if we are not stepping, we would keep going if the line doesn't
             // change
             int line = getLineNumber(currentCallInfo);
-            String source = DebugUtils.getSourceFileName(currentProto.source);
+            String source = getSourceFileName(currentProto.source);
             if (!isStepping() && lastline == line && source.equals(lastSource)) {
                 return;
             }
 
-            if (DebugUtils.IS_DEBUG)
-                DebugUtils.println("debugHook - executing line: " + line);
+            if (TRACE)
+                System.out.println("debugHook - executing line: " + line);
             
             int i = currentProto.code[pc];
             int opCode = LuaState.GET_OPCODE(i);
@@ -195,17 +203,18 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 
             // check for a break point if we aren't suspended already
             if (!suspended && lastline != line) {
-                if (DebugUtils.IS_DEBUG)
-                    DebugUtils.println("Source: " + currentProto.source);
-                String fileName = DebugUtils.getSourceFileName(source);
+                if (TRACE)
+                    System.out.println("Source: " + currentProto.source);
+                String fileName = getSourceFileName(source);
                 String breakpointKey = constructBreakpointKey(fileName, line);
                 if (breakpoints.containsKey(breakpointKey)) {
-                    if (DebugUtils.IS_DEBUG)
-                        DebugUtils.println("hitting breakpoint "
+                    if (TRACE)
+                        System.out.println("hitting breakpoint "
                                 + constructBreakpointKey(fileName, line));
-
-                    debugSupport.notifyDebugEvent(new DebugEventBreakpoint(
-                            fileName, line));
+                    if (debugSupport != null) {
+                        debugSupport.notifyDebugEvent(
+                                new DebugEventBreakpoint(fileName, line));
+                    }
                     suspended = true;
                 }
             }
@@ -218,8 +227,6 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             while (suspended && !exiting) {
                 try {
                     this.wait();
-                    if (DebugUtils.IS_DEBUG)
-                        DebugUtils.println("resuming execution...");
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
@@ -232,16 +239,20 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
 
     private void cancelStepping() {
-        debugSupport.notifyDebugEvent(new DebugEvent(
-                DebugEventType.resumedOnSteppingEnd));
+        if (debugSupport != null) {
+            debugSupport.notifyDebugEvent(
+                    new DebugEvent(DebugEventType.resumedOnSteppingEnd));
+        }
         stepping = STEP_NONE;
         steppingFrame = -1;
         shouldPauseForStepping = false;
     }
 
     private void suspendOnStepping() {
-        debugSupport.notifyDebugEvent(new DebugEvent(
-                DebugEventType.suspendedOnStepping));
+        if (debugSupport != null) {
+            debugSupport.notifyDebugEvent(new DebugEvent(
+                    DebugEventType.suspendedOnStepping));
+        }
         suspended = true;
         steppingFrame = -1;
     }
@@ -266,11 +277,11 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     public void handleRequest(DebugRequest request) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugStackState is not equiped with DebugSupport.");
+                    "DebugSupport must be defined.");
         }
 
-        if (DebugUtils.IS_DEBUG)
-            DebugUtils.println("DebugStackState is handling request: "
+        if (TRACE)
+            System.out.println("DebugStackState is handling request: "
                     + request.toString());
 
         DebugRequestType requestType = request.getType();
@@ -281,7 +292,12 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         } else if (DebugRequestType.exit == requestType) {
             stop();
         } else if (DebugRequestType.disconnect == requestType) {
-            disconnect();
+            DebugRequestDisconnect disconnectRequest 
+                = (DebugRequestDisconnect) request;
+            int connectionId = disconnectRequest.getSessionId();
+            disconnect(connectionId);
+        } else if (DebugRequestType.reset == requestType) {
+            reset();
         } else if (DebugRequestType.suspend == requestType) {
             suspend();
             DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
@@ -379,35 +395,29 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     public void stop() {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugStackState is not equiped with DebugSupport.");
+                    "DebugSupport must be defined.");
         }
 
         DebugEvent event = new DebugEvent(DebugEventType.terminated);
         debugSupport.notifyDebugEvent(event);
-
-        new Timer().schedule(new TimerTask() {
-            public void run() {
-                debugSupport.stop();
-                debugSupport = null;
-            }
-        }, 500);
-
         exit();
+        debugSupport.stop();
+        debugSupport = null;
     }
 
-    public void disconnect() {
+    public void disconnect(int connectionId) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugStackState is not equiped with DebugSupport.");
+                    "DebugSupport must be defined.");
         }
         
         reset();
-        debugSupport.disconnect(); 
         DebugEvent event = new DebugEvent(DebugEventType.disconnected);
-        debugSupport.notifyDebugEvent(event);                   
+        debugSupport.notifyDebugEvent(event);
+        debugSupport.disconnect(connectionId);                   
     }
     
-    protected void reset() {
+    public void reset() {
         synchronized (this) {
             this.breakpoints.clear();
             if (this.suspended) {
@@ -432,11 +442,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      * @param N -- the line to set the breakpoint at
      */
     public void setBreakpoint(String source, int lineNumber) {
-        String fileName = DebugUtils.getSourceFileName(source);
+        String fileName = getSourceFileName(source);
         String breakpointKey = constructBreakpointKey(fileName, lineNumber);
-
-        if (DebugUtils.IS_DEBUG)
-            DebugUtils.println("adding breakpoint " + breakpointKey);
 
         breakpoints.put(breakpointKey, Boolean.TRUE);
     }
@@ -449,11 +456,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      * clear breakpoint at line lineNumber of source source
      */
     public void clearBreakpoint(String source, int lineNumber) {
-        String fileName = DebugUtils.getSourceFileName(source);
+        String fileName = getSourceFileName(source);
         String breakpointKey = constructBreakpointKey(fileName, lineNumber);
-
-        if (DebugUtils.IS_DEBUG)
-            DebugUtils.println("removing breakpoint " + breakpointKey);
 
         breakpoints.remove(breakpointKey);
     }
@@ -471,7 +475,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         StackFrame[] frames = new StackFrame[n + 1];
         for (int i = 0; i <= n; i++) {
             CallInfo ci = calls[i];
-            frames[i] = new StackFrame(ci, getLineNumber(ci));
+            String src = getSourceFileName(ci.closure.p.source);
+            frames[i] = new StackFrame(src, getLineNumber(ci));
         }
         return frames;
     }
@@ -552,21 +557,21 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         CallInfo callInfo = calls[index];
         LPrototype prototype = callInfo.closure.p;
         LocVars[] localVariables = prototype.locvars;
-        DebugUtils.println("Stack Frame: " + index + " [" + base + "," + top + "], # of localvars: " + localVariables.length + ", pc=" + callInfo.pc);
+        System.out.println("Stack Frame: " + index + " [" + base + "," + top + "], # of localvars: " + localVariables.length + ", pc=" + callInfo.pc);
         
         int pc = getCurrentPc(callInfo);
         for (int i = 0; i < localVariables.length; i++) {
             if (!isActiveVariable(pc, localVariables[i])) {
                 continue;
             } else {
-                DebugUtils.println("localvars["+i+"]=" + localVariables[i].varname.toJavaString());
+                System.out.println("localvars["+i+"]=" + localVariables[i].varname.toJavaString());
             }
         }
         
         int base = callInfo.base;
         int top = callInfo.top < callInfo.base ? callInfo.base+1 : callInfo.top;
         for (int i = base; i < top; i++){
-            DebugUtils.println("stack[" + i + "]=" + stack[i]);
+            System.out.println("stack[" + i + "]=" + stack[i]);
         }
     }
     
@@ -617,7 +622,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         int base = callInfo.base;
         int top = callInfo.top < callInfo.base ? callInfo.base+1 : callInfo.top;
 
-        if (DebugUtils.IS_DEBUG) {
+        if (TRACE) {
             dumpStack(index);
         }
         
@@ -630,9 +635,9 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 continue;
             }
             
-            if(DebugUtils.IS_DEBUG) {
-                DebugUtils.print("\tVariable: " + varName); 
-                DebugUtils.print("\tValue: " + stack[i]);
+            if(TRACE) {
+                System.out.print("\tVariable: " + varName); 
+                System.out.print("\tValue: " + stack[i]);
             }
             if (!variablesSeen.contains(varName) &&
                 !LexState.isReservedKeyword(varName)) {
@@ -640,11 +645,11 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 LValue value = stack[i];              
                 if (value != null) {
                     int type = value.luaGetType();
-                    if (DebugUtils.IS_DEBUG)
-                        DebugUtils.print("\tType: " + Lua.TYPE_NAMES[type]);
+                    if (TRACE)
+                        System.out.print("\tType: " + Lua.TYPE_NAMES[type]);
                     if (type == Lua.LUA_TTABLE) {
-                        if (DebugUtils.IS_DEBUG)
-                            DebugUtils.print(" (selected)");
+                        if (TRACE)
+                            System.out.print(" (selected)");
                         variables.addElement(
                                 new TableVariable(selectedVariableCount++, 
                                              varName, 
@@ -653,8 +658,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                     } else if (type == LUA_TTHREAD) {
                         // coroutines
                     } else if (type != LUA_TFUNCTION) {
-                        if (DebugUtils.IS_DEBUG)
-                            DebugUtils.print(" (selected)");
+                        if (TRACE)
+                            System.out.print(" (selected)");
                         variables.addElement(
                                 new Variable(selectedVariableCount++, 
                                              varName, 
@@ -664,8 +669,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 }
             }
             
-            if (DebugUtils.IS_DEBUG)
-                DebugUtils.println("");            
+            if (TRACE)
+                System.out.print("");            
         }
     }
 
@@ -674,9 +679,6 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      */
     public void stepOver() {
         synchronized (this) {
-            if (DebugUtils.IS_DEBUG)
-                DebugUtils.println("stepOver on cc=" + cc + "...");
-
             suspended = false;
             stepping = STEP_OVER;
             steppingFrame = cc;
@@ -700,9 +702,6 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      */
     public void stepReturn() {
         synchronized (this) {
-            if (DebugUtils.IS_DEBUG)
-                DebugUtils.println("stepReturn on cc=" + cc + "...");
-
             suspended = false;
             stepping = STEP_RETURN;
             steppingFrame = cc;
