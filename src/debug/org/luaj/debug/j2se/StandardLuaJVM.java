@@ -28,15 +28,15 @@ import java.io.InputStream;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
-import org.luaj.debug.DebugSupport;
-import org.luaj.debug.DebugUtils;
-import org.luaj.debug.VMException;
+import org.luaj.debug.net.DebugSupport;
+import org.luaj.debug.net.j2se.DebugSupportImpl;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
 /**
@@ -131,7 +131,6 @@ public class StandardLuaJVM {
         }
 
         this.script = args[0];
-        DebugUtils.println("Lua script to run: " + this.script);
         int scriptArgsLength = args.length - 1;
         if (scriptArgsLength > 0) {
             this.scriptArgs = new String[scriptArgsLength];
@@ -167,11 +166,19 @@ public class StandardLuaJVM {
         return this.scriptArgs;
     }
 
-    public void run() throws IOException {
-        if (isDebug()) {
-            doDebug();
-        } else {
-            doRun();
+    public void run() {
+        try {
+            if (isDebug()) {
+                doDebug();
+            } else {
+                doRun();
+            }
+        } catch (LuaErrorException e) { 
+            System.err.println("Error: " + e.getMessage());
+            System.err.print(state.getStackTrace());
+            System.err.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -202,29 +209,24 @@ public class StandardLuaJVM {
         }
 
         // load the Lua file
-        DebugUtils.println("loading Lua script '" + getScript() + "'");
         InputStream is = new FileInputStream(new File(getScript()));
         LPrototype p = LoadState.undump(state, is, getScript());
 
         // create closure and execute
-        LClosure c = new LClosure(state, p);
+        LClosure c = new LClosure(state, p);        
         state.doCall(c, vargs);
     }
 
     protected void doDebug() throws IOException {
-        DebugUtils.println("setting up LuaJava and debug stack state...");
-
         // new lua debug state 
         state = new DebugLuaState();
         init(state);
 
         // load the Lua file
-        DebugUtils.println("loading Lua script '" + getScript() + "'");
         InputStream is = new FileInputStream(new File(getScript()));
         LPrototype p = LoadState.undump(state, is, getScript());
 
         // set up debug support if the file is successfully loaded
-        DebugUtils.println("start debugging...");
         DebugSupport debugSupport = new DebugSupportImpl(getDebugPort());
         getDebugState().setSuspendAtStart(getSuspendOnStart());
         getDebugState().setDebugSupport(debugSupport);
@@ -239,10 +241,9 @@ public class StandardLuaJVM {
         }
         try {
             getDebugState().doCall(c, vargs);
-        } catch (VMException e) {
-            System.err.println("VMException: " + e.getMessage());
+        } finally {
+            getDebugState().stop();
         }
-        getDebugState().stop();
     }
 
     private DebugLuaState getDebugState() {
@@ -264,9 +265,6 @@ public class StandardLuaJVM {
             System.out.println("Error: " + e.getMessage());
             vm.printUsage();
             return;
-        } catch (IOException e) {
-            System.out.println("Error: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }

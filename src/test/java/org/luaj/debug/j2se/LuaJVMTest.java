@@ -111,7 +111,6 @@ public class LuaJVMTest extends TestCase {
             vm.run();
             fail("Should never reach this line.");
         } catch (ParseException e) {} 
-          catch (IOException e) {}
 
         // lua script cannot be found
         args = new String[] { "dummy.lua" };
@@ -122,7 +121,7 @@ public class LuaJVMTest extends TestCase {
             fail("Bad parsing program. Should never reach this line.");
         } catch (ParseException e) {
             fail("Should never reach this line.");
-        } catch (IOException e) {}
+        }
 
         // valid command line
         args = new String[] { "-Dport=1044,suspendOnStart=true", "dummy.lua" };

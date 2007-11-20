@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 public class StackFrameTest extends TestCase {
 	public void testSerialization() {
 		try {
-			StackFrame stackIn = new StackFrame(10, "test.lua");
+			StackFrame stackIn = new StackFrame("test.lua", 10);
 			byte[] data = SerializationHelper.serialize(stackIn);
 			StackFrame stackOut = (StackFrame) SerializationHelper.deserialize(data);
 			assertNotNull(stackOut);

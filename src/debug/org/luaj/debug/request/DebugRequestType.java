@@ -44,6 +44,8 @@ public class DebugRequestType extends EnumType {
     public static final DebugRequestType stepReturn = new DebugRequestType("stepReturn", 12);
     public static final DebugRequestType global = new DebugRequestType("global", 13);
     public static final DebugRequestType disconnect = new DebugRequestType("disconnect", 14);
+    public static final DebugRequestType reset = new DebugRequestType("reset", 15);
+    public static final DebugRequestType session = new DebugRequestType("session", 16);
     
     protected static final DebugRequestType[] ENUMS = new DebugRequestType[] {
         start,
@@ -60,7 +62,9 @@ public class DebugRequestType extends EnumType {
         stepOver,
         stepReturn,
         global,
-        disconnect
+        disconnect,
+        reset,
+        session
     };
     
     public DebugRequestType(String name, int ordinal) {

@@ -4,10 +4,9 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import org.luaj.debug.event.DebugEventType;
 import org.luaj.debug.response.DebugResponseCallgraph;
+import org.luaj.debug.response.DebugResponseSession;
 import org.luaj.debug.response.DebugResponseStack;
-import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.Lua;
 
 public class DebugResponseTest extends TestCase {
@@ -62,7 +61,7 @@ public class DebugResponseTest extends TestCase {
             doTestDebugResponseCallgraphSerialization(new StackFrame[0]);
 
             StackFrame[] frames = new StackFrame[1];
-            frames[0] = new StackFrame(100, "test.lua");
+            frames[0] = new StackFrame("test.lua", 100);
             doTestDebugResponseCallgraphSerialization(frames);
         } catch (IOException e) {
             fail(e.getMessage());
@@ -82,6 +81,19 @@ public class DebugResponseTest extends TestCase {
         assertEquals(inFrames.length, outFrames.length);
         for (int i = 0; i < inFrames.length; i++) {
             assertEquals(inFrames[i], outFrames[i]);
+        }
+    }
+    
+    public void testDebugResponseSession() {
+        try {
+            DebugResponseSession sessionResponse = new DebugResponseSession(100);
+            byte[] data = SerializationHelper.serialize(sessionResponse);
+            DebugResponseSession sessionOut 
+                = (DebugResponseSession) SerializationHelper.deserialize(data);
+            assertNotNull(sessionOut);
+            assertEquals(sessionResponse.getSessionId(), sessionOut.getSessionId());            
+        } catch (IOException e) {
+            fail(e.getMessage());
         }
     }
 }
