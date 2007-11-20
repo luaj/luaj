@@ -135,7 +135,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         if (exiting) {
             throw new AbortException("aborted by debug client");
         }
-
+        
+/*
         if (DebugUtils.IS_DEBUG) {
             DebugUtils.println("entered debugHook on pc=" + pc + "...Line: " + getFileLine(cc));
             for (int j = 0; j <= cc; j++) {
@@ -143,7 +144,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 dumpStack(j);                    
             }
         }        
-        
+  */      
         synchronized (this) {
             while (bSuspendOnStart) {
                 try {

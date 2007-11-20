@@ -636,58 +636,64 @@ public class LTable extends LValue {
 	}
 
 	/**
-	 * Leave nil on top, or index,value pair
-	 * @param vm
-	 * @param index
+	 * Leave key,value pair on top, or nil if at end of list.
+	 * @param vm the LuaState to leave the values on
+	 * @param index index to start search
 	 */
-	public void next(LuaState vm, LValue index) {
+	public void next(LuaState vm, LValue key ) {
+
+		// find place to start looking
+		int start = nextKey2StartIndex( vm, key );
 		
-		// look through vector first
-		int start = index.toJavaInt();
-		if ( start > 0 && start <= m_vector.length ) {
-			for ( int i=start; i<m_vector.length; i++ ) {
+		// look in vector part
+		int n = m_vector.length;
+		if ( start < n ) {
+			for ( int i=start; i<n; i++ ) {
 				if ( m_vector[i] != LNil.NIL ) {
 					vm.pushinteger(i+1);
 					vm.pushlvalue(m_vector[i]);
 					return;
 				}
 			}
-		}		
+			start = n;
+		}
 
-		// look up key first
-		if ( index != LNil.NIL ) {
-			if ( m_hashEntries != 0 && (start <= 0 || start > m_vector.length) ) {
-				for ( int i=0; i<m_hashKeys.length; i++ ) { 
-					if ( index.luaBinCmpUnknown( Lua.OP_EQ, m_hashKeys[i] ) ) {
-						start = m_vector.length+i+1;
-						break;
-					}
+		// look in hash part
+		if ( m_hashKeys != null ) {
+			for ( int i=start-n; i<m_hashKeys.length; i++ ) { 
+				if ( m_hashKeys[i] != null ) {
+					vm.pushlvalue(m_hashKeys[i]);
+					vm.pushlvalue(m_hashValues[i]);
+					return;
 				}
 			}
 		}
 		
-		// start looking
-		if ( start < m_vector.length ) {
-			if ( m_arrayEntries != 0 ) {
-				for ( int i=start; i<m_vector.length; i++ ) {
-					if ( m_vector[i] != LNil.NIL ) {
-						vm.pushinteger(i+1);
-						vm.pushlvalue(m_vector[i]);
-						return;
-					}
-				}
-				start = m_vector.length;
-			}
-			if ( m_hashEntries != 0 ) {
-				for ( int i=start-m_vector.length; i<m_hashKeys.length; i++ ) { 
-					if ( index.luaBinCmpUnknown( Lua.OP_EQ, m_hashKeys[i] ) ) {
-						vm.pushlvalue(m_hashKeys[i]);
-						vm.pushlvalue(m_hashValues[i]);
-						return;
-					}
-				}
+		// nothing found, return nil.
+		vm.pushnil();
+	}
+	
+	private int nextKey2StartIndex( LuaState vm, LValue key ) {
+		if ( key == LNil.NIL )
+			return 0;
+		
+		int n = m_vector.length;
+		if ( n > 0 && key.isInteger() ) {
+			final int index = key.toJavaInt() - 1;
+			if ( index >= 0 && index < n ) {
+				if ( m_vector[index] == LNil.NIL )
+					vm.error( "invalid key to 'next'" );
+				return index + 1;
 			}
 		}
-		vm.pushnil();
+		
+		if ( m_hashKeys == null )
+			vm.error( "invalid key to 'next'" );
+		
+		int slot = findSlot( key );
+		if ( m_hashKeys[slot] == null ) 
+			vm.error( "invalid key to 'next'" );
+		
+		return n + slot + 1;
 	}
 }

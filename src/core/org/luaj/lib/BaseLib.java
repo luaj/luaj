@@ -214,7 +214,7 @@ public class BaseLib extends LFunction {
 				LString s = vm.tolstring(2);
 				int base = 10;
 				if ( vm.isnumber(3) ) {
-					base = vm.tointeger(3);
+					base = vm.tolnumber(3).toJavaInt();
 					if ( base < 2 || base > 36 )
 						vm.error("bad argument #2 to '?' (base out of range)");
 				}
@@ -281,9 +281,9 @@ public class BaseLib extends LFunction {
 		}
 		case SELECT: {
 			checkargexists(vm,2,Lua.LUA_TNUMBER);
-			int n = vm.gettop();
+			int n = vm.gettop();			
 			if ( vm.isnumber(2) ) {
-				int index = vm.tointeger(2);
+				int index = vm.tolnumber(2).toJavaInt();
 				if ( index < 0 )
 					index += n-1;
 				if ( index <= 0 )
@@ -339,11 +339,11 @@ public class BaseLib extends LFunction {
 			int i=1,j;
 			if ( n >= 3 ) {
 				checkargtype(vm,3,Lua.LUA_TNUMBER);
-				i = vm.tointeger(3);
+				i = vm.tolnumber(3).toJavaInt();
 			}
 			if ( n >= 4 ) {
 				checkargtype(vm,4,Lua.LUA_TNUMBER);
-				j = vm.tointeger(4);
+				j = vm.tolnumber(4).toJavaInt();
 			} else {
 				j = list.luaLength();
 			}

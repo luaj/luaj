@@ -1,20 +1,20 @@
 -- unit tests for functions in BaseLib.java
+local ids = {}
+local function id(obj)
+	local v = ids[obj]
+	if v then
+		return v
+	end
+	table.insert(ids,obj)
+	ids[obj] = type(obj)..'.'..tostring(#ids)
+	return ids[obj]
+end 
 
--- error, pcall
-print( 'pcall(error)', pcall(error) )
-print( 'pcall(error,"msg")', pcall(error,"msg") )
-print( 'pcall(error,"msg",1)', pcall(error,"msg",1) )
-print( 'pcall(error,"msg",2)', pcall(error,"msg",2) )
-local function le(level) 
-	error("msg",level) 
-end
-function ge(level) 
-	error("msg",level)
-end
-for i = 0,4 do
-	print( 'pcall(le,i)', i, pcall(le,i) )
-	print( 'pcall(ge,i)', i, pcall(ge,i) )
-end
+-- print
+print()
+print(11)
+print("abc",123,nil,"pqr")
+
 
 -- assert
 print( 'assert(true)', assert(true) )
@@ -27,7 +27,36 @@ print( 'pcall(assert,nil,"msg")', pcall(assert,nil,"msg") )
 print( 'pcall(assert,false,"msg","msg2")', pcall(assert,false,"msg","msg2") )
 
 -- collectgarbage (not supported)
+print( 'collectgarbage("count")', id(collectgarbage("count")))
+print( 'collectgarbage("collect")', collectgarbage("collect"))
+print( 'collectgarbage("count")', id(collectgarbage("count")))
+
 -- dofile (not supported)
+-- ipairs
+print( 'pcall(ipairs)', pcall(ipairs) )
+print( 'pcall(ipairs,nil)', pcall(ipairs,nil) )
+print( 'pcall(ipairs,"a")', pcall(ipairs,"a") )
+print( 'pcall(ipairs,1)', pcall(ipairs,1) )
+for k,v in ipairs({}) do print('ipairs1',k,v)end
+for k,v in ipairs({'one','two'}) do print('ipairs2',k,v)end
+for k,v in ipairs({aa='aaa',bb='bbb'}) do print('ipairs3',k,v)end
+for k,v in ipairs({aa='aaa',bb='bbb','one','two'}) do print('ipairs4',k,v)end
+for k,v in ipairs({[30]='30',[20]='20'}) do print('ipairs5',k,v)end
+
+-- load
+-- loadfile
+-- loadstring
+
+-- pairs
+print( 'pcall(pairs)', pcall(pairs) )
+print( 'pcall(pairs,nil)', pcall(pairs,nil) )
+print( 'pcall(pairs,"a")', pcall(pairs,"a") )
+print( 'pcall(pairs,1)', pcall(pairs,1) )
+for k,v in pairs({}) do print('pairs1',k,v)end
+for k,v in pairs({'one','two'}) do print('pairs2',k,v)end
+for k,v in pairs({aa='aaa',bb='bbb'}) do print('pairs3',k,v)end
+for k,v in pairs({aa='aaa',bb='bbb','one','two'}) do print('pairs4',k,v)end
+for k,v in pairs({[30]='30',[20]='20'}) do print('pairs5',k,v)end
 
 -- _G
 print( '_G["abc"] (before)', _G["abc"] )
@@ -67,16 +96,80 @@ print( 'pcall(setmetatable,nil)', pcall(setmetatable,nil) )
 print( 'pcall(setmetatable,"ABC")', pcall(setmetatable,"ABC") )
 print( 'pcall(setmetatable,function() end)', pcall(setmetatable,function() end) )
 
--- ipairs
--- load
--- loadfile
--- loadstring
--- next
--- pairs
--- print
--- rawget
--- rawset
+
+-- rawget,rawset
+local mt = {aa="aaa", bb="bbb"}
+mt.__index = mt
+mt.__newindex = mt
+local s = {cc="ccc", dd="ddd", }
+local t = {cc="ccc", dd="ddd"}
+setmetatable(t,mt)
+print( 'pcall(rawget)', pcall(rawget))
+print( 'pcall(rawget,"a")', pcall(rawget,"a"))
+print( 'pcall(rawget,s)', pcall(rawget,s))
+print( 'pcall(rawget,t)', pcall(rawget,t))
+
+function printtables()
+	function printtable(name,t)
+		print( '  '..name, t["aa"], t["bb"], t["cc"], t["dd"], t["ee"], t["ff"], t["gg"] )
+		print( '  '..name, 
+			rawget(t,"aa"), 
+			rawget(t,"bb"), 
+			rawget(t,"cc"), 
+			rawget(t,"dd"), 
+			rawget(t,"ee"), 
+			rawget(t,"ff"), 
+			rawget(t,"gg") ) 
+	end
+	printtable( 's', s )	
+	printtable( 't', t )	
+	printtable( 'mt', mt )	
+end
+printtables()
+print( 'pcall(rawset,s,"aa","www")', id(rawset(s,"aa","www")))
+printtables()
+print( 'pcall(rawset,s,"cc","xxx")', id(rawset(s,"cc","xxx")))
+printtables()
+print( 'pcall(rawset,t,"bb","yyy")', id(rawset(t,"aa","yyy")))
+printtables()
+print( 'pcall(rawset,t,"dd","zzz")', id(rawset(s,"dd","zzz")))
+printtables()
+
+printtables()
+print( 's["ee"]="ppp"' ); s["ee"]="ppp"
+printtables()
+print( 's["cc"]="qqq"' ); s["cc"]="qqq"
+printtables()
+print( 's["bb"]="rrr"' ); t["bb"]="rrr"
+printtables()
+print( 's["dd"]="sss"' ); t["dd"]="sss"
+printtables()
+print( 's["gg"]="ttt"' ); mt["gg"]="ttt"
+printtables()
+
+
 -- select
+print( 'pcall(select)', pcall(select) )
+print( 'select(1,11,22,33,44,55)', select(1,11,22,33,44,55) )
+print( 'select(2,11,22,33,44,55)', select(2,11,22,33,44,55) )
+print( 'select(3,11,22,33,44,55)', select(3,11,22,33,44,55) )
+print( 'select(4,11,22,33,44,55)', select(4,11,22,33,44,55) )
+print( 'pcall(select,5,11,22,33,44,55)', pcall(select,5,11,22,33,44,55) )
+print( 'pcall(select,6,11,22,33,44,55)', pcall(select,6,11,22,33,44,55) )
+print( 'pcall(select,7,11,22,33,44,55)', pcall(select,7,11,22,33,44,55) )
+print( 'pcall(select,0,11,22,33,44,55)', pcall(select,0,11,22,33,44,55) )
+print( 'pcall(select,-1,11,22,33,44,55)', pcall(select,-1,11,22,33,44,55) )
+print( 'pcall(select,-2,11,22,33,44,55)', pcall(select,-2,11,22,33,44,55) )
+print( 'pcall(select,-4,11,22,33,44,55)', pcall(select,-4,11,22,33,44,55) )
+print( 'pcall(select,-5,11,22,33,44,55)', pcall(select,-5,11,22,33,44,55) )
+print( 'pcall(select,-6,11,22,33,44,55)', pcall(select,-6,11,22,33,44,55) )
+print( 'pcall(select,1)', pcall(select,1) )
+print( 'pcall(select,select)', pcall(select,select) )
+print( 'pcall(select,{})', pcall(select,{}) )
+print( 'pcall(select,"2",11,22,33)', pcall(select,"2",11,22,33) )
+print( 'pcall(select,"abc",11,22,33)', pcall(select,"abc",11,22,33) )
+
+
 -- tonumber
 print( 'pcall(tonumber)', pcall(tostring) )
 print( 'pcall(tonumber,nil)', pcall(tonumber,nil) )
@@ -116,9 +209,9 @@ print( 'pcall(tostring,"abc","def")', pcall(tostring,"abc","def") )
 print( 'pcall(tostring,123)', pcall(tostring,123) )
 print( 'pcall(tostring,true)', pcall(tostring,true) )
 print( 'pcall(tostring,false)', pcall(tostring,false) )
-print( 'tostring(tostring):sub(1,10)', tostring(tostring):sub(1,10) )
-print( 'tostring(function() end)', tostring(function() end):sub(1,10) )
-print( 'tostring({"one","two",a="aa",b="bb"})', tostring({"one","two",a="aa",b="bb"}):sub(1,7) )
+print( 'tostring(tostring)', id(tostring(tostring)) )
+print( 'tostring(function() end)', id(tostring(function() end)) )
+print( 'tostring({"one","two",a="aa",b="bb"})', id(tostring({"one","two",a="aa",b="bb"})) )
 
 -- unpack
 print( 'pcall(unpack)', pcall(unpack) );

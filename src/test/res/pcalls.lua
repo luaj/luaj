@@ -34,3 +34,19 @@ print( 'pcall(ct,le,22,33,44)', pcall(ct,le,22,33,44) )
 print( "assert(true,'a','b','c')", assert( true, 'a', 'b', 'c' ) )
 print( "pcall(assert,true,'a','b','c')", pcall(assert, true, 'a', 'b', 'c' ) )
 print( "pcall(assert,false,'a','b','c')", pcall(assert, false, 'a', 'b', 'c' ) )
+
+-- more error, pcall tests
+print( 'pcall(error)', pcall(error) )
+print( 'pcall(error,"msg")', pcall(error,"msg") )
+print( 'pcall(error,"msg",1)', pcall(error,"msg",1) )
+print( 'pcall(error,"msg",2)', pcall(error,"msg",2) )
+local function le(level) 
+	error("msg",level) 
+end
+function ge(level) 
+	error("msg",level)
+end
+for i = 0,4 do
+	print( 'pcall(le,i)', i, pcall(le,i) )
+	print( 'pcall(ge,i)', i, pcall(ge,i) )
+end

@@ -78,6 +78,10 @@ public class LuaJTest extends TestCase {
 		runTest( "metatables" );
 	}
 
+	public void testNext() throws IOException, InterruptedException {
+		runTest( "next" );
+	}
+
 	public void testPcalls() throws IOException, InterruptedException {
 		runTest( "pcalls" );
 	}
@@ -117,7 +121,7 @@ public class LuaJTest extends TestCase {
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
 	}
-//*/
+
 	private void runTest( String testName ) throws IOException, InterruptedException {
 
 		// new lua state 
