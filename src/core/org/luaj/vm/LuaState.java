@@ -875,14 +875,14 @@ public class LuaState extends Lua {
         int i;
         for ( i = this.upvals.size() - 1; i >= 0; --i ) {
             up = (UpVal) this.upvals.elementAt( i );
-            if ( up.stack == this.stack && up.position == target ) {
+            if ( up.state == this && up.position == target ) {
                 return up;
             } else if ( up.position < target ) {
                 break;
             }
         }
         
-        up = new UpVal( upValName, this.stack, target );
+        up = new UpVal( upValName, this, target );
         this.upvals.insertElementAt( up, i + 1 );
         return up;
     }

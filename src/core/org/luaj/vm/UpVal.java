@@ -25,12 +25,13 @@ package org.luaj.vm;
 public class UpVal {
 
 	private LString name;
-	public LValue[] stack;
-	public int position;
+	LuaState state;
+	int position;
+	LValue value;
 	
-	public UpVal( LString string, LValue[] stack, int i ) {
+	public UpVal( LString string, LuaState state, int i ) {
 		this.name = string;
-		this.stack = stack;
+		this.state = state;
 		this.position = i;
 	}
 	
@@ -39,18 +40,23 @@ public class UpVal {
 	}
 	
 	public LValue getValue() {
-		return stack[ position ];
+		if ( state == null )
+			return value;
+		else
+			return state.stack[ position ];
 	}
 	
 	public void setValue( LValue value ) {
-		stack[ position ] = value;
+		if ( state == null )
+			this.value = value;
+		else
+			state.stack[ position ] = value;
 	}
 	
 	public boolean close( int limit ) {
 		if ( position >= limit ) {
-			final LValue v = stack[ position ];
-			stack = new LValue[] { v };
-			position = 0;
+			value = state.stack[ position ];
+			state = null;
 			return true;
 		} else {
 			return false;
