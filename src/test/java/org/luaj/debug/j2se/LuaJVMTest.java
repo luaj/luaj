@@ -118,7 +118,6 @@ public class LuaJVMTest extends TestCase {
         try {
             vm.parse(args);
             vm.run();
-            fail("Bad parsing program. Should never reach this line.");
         } catch (ParseException e) {
             fail("Should never reach this line.");
         }
