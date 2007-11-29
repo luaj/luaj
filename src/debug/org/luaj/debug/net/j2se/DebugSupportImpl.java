@@ -148,7 +148,7 @@ public class DebugSupportImpl extends DebugSupport {
                     new Thread(clientConnectionTask).start();
                 }
             }
-        } finally {
+        } catch (IOException e) {
             dispose();
         }
     }
