@@ -117,7 +117,7 @@ public class PackageLib extends LFunction {
 	
 	// ======================== Module, Package loading =============================
 	/**
-	 * module (name [, ···])
+	 * module (name [, ...])
 	 * 
 	 * Creates a module. If there is a table in package.loaded[name], this table
 	 * is the module. Otherwise, if there is a global table t with the given
