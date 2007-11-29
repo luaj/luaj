@@ -25,21 +25,18 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import org.luaj.debug.DebugLuaState;
-import org.luaj.debug.event.DebugEvent;
+import org.luaj.debug.DebugMessage;
 import org.luaj.debug.net.DebugSupport;
-import org.luaj.debug.request.DebugRequest;
 
+/**
+ * J2SE version of DebugSupport. The luaj-vm opens a port accepting the debug
+ * client connections. The current implementation allows the vm to accept one 
+ * and only one debug client connection at any time.
+ */
+public class DebugSupportImpl extends DebugSupport {	
 
-public class DebugSupportImpl implements DebugSupport {	
-    protected static final int UNKNOWN = 0;
-    protected static final int RUNNING = 1;
-    protected static final int STOPPED = 2;
-    
-    protected int state = UNKNOWN;
     protected int numClientConnectionsAllowed;
     protected int numClientConnections = 0;
-    protected DebugLuaState vm;
     protected ServerSocket serverSocket;
     protected int debugPort;
     protected ClientConnectionTask clientConnectionTask;
@@ -74,10 +71,6 @@ public class DebugSupportImpl implements DebugSupport {
         this.debugPort = port;
         this.numClientConnectionsAllowed = connections;
     }
-    
-    public void setDebugStackState(DebugLuaState vm) {
-        this.vm = vm;
-    }
         
     public void start() throws IOException {
         if (this.vm == null) {
@@ -110,15 +103,7 @@ public class DebugSupportImpl implements DebugSupport {
     public synchronized int getClientCount() {
         return this.numClientConnections;
     }
-    
-    protected synchronized void setState(int state) {
-        this.state = state;
-    }
-    
-    protected synchronized boolean isRunning() {
-        return this.state == RUNNING;
-    }
-    
+        
     public synchronized void stop() {
         setState(STOPPED);
         if (clientConnectionTask != null) {
@@ -129,22 +114,16 @@ public class DebugSupportImpl implements DebugSupport {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see org.luaj.debug.event.DebugEventListener#notifyDebugEvent(org.luaj.debug.event.DebugEvent)
+     * @see org.luaj.debug.event.DebugEventListener#notifyDebugEvent(org.luaj.debug.DebugMessage)
      */
-    public void notifyDebugEvent(DebugEvent event) {
+    public void notifyDebugEvent(DebugMessage event) {
         if (clientConnectionTask != null) {
             clientConnectionTask.notifyDebugEvent(event);
         }
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.luaj.debug.request.DebugRequestListener#handleRequest(org.luaj.debug.request.DebugRequest)
-     */
-    public void handleRequest(DebugRequest request) {
-        vm.handleRequest(request);
+    
+    public synchronized void disconnect() {
+        disconnect(clientConnectionTask.getSessionId());
     }
     
     public synchronized void disconnect(int id) {
@@ -152,26 +131,34 @@ public class DebugSupportImpl implements DebugSupport {
             clientConnectionTask.disconnect();
             clientConnectionTask = null;
         } else {
-            throw new RuntimeException("Internal Error: mismatching sesion Id: " + id + " current task: " + clientConnectionTask.getSessionId());
+            throw new RuntimeException("Internal Error: mismatching sesion Id");
         }
     }        
     
     public void acceptClientConnection() throws IOException {
-        Socket clientSocket = serverSocket.accept();
-        int count = getClientCount();
-        if (count == numClientConnectionsAllowed) {
-            clientSocket.close();
-        } else {
-            synchronized(this) {
-                incrementClientCount();
-                this.clientConnectionTask = new ClientConnectionTask(this, clientSocket);
-                new Thread(clientConnectionTask).start();
+        try {
+            Socket clientSocket = serverSocket.accept();
+            int count = getClientCount();
+            if (count == numClientConnectionsAllowed) {
+                clientSocket.close();
+            } else {
+                synchronized(this) {
+                    incrementClientCount();
+                    this.clientConnectionTask = new ClientConnectionTask(this, clientSocket);
+                    new Thread(clientConnectionTask).start();
+                }
             }
+        } finally {
+            dispose();
         }
     }
          
     protected synchronized void dispose() {
-        this.clientConnectionTask = null;
+        if (this.clientConnectionTask != null) {
+            clientConnectionTask.dispose();
+            clientConnectionTask = null;
+        }
+        
         if (this.serverSocket != null) {
             try {
                 serverSocket.close();

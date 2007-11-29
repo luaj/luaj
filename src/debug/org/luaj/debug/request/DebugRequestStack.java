@@ -25,13 +25,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.luaj.debug.Serializable;
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 
-public class DebugRequestStack extends DebugRequest implements Serializable {
+public class DebugRequestStack extends DebugMessage {
     protected int index;
 
     public DebugRequestStack(int index) {
-        super(DebugRequestType.stack);
+        super(DebugMessageType.stack);
         this.index = index;
     }
 
@@ -53,7 +54,7 @@ public class DebugRequestStack extends DebugRequest implements Serializable {
         out.writeInt(request.getIndex());
     }
 
-    public static DebugRequest deserialize(DataInputStream in)
+    public static DebugMessage deserialize(DataInputStream in)
             throws IOException {
         int index = in.readInt();
 

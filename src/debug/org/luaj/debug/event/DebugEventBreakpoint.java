@@ -25,13 +25,16 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugEventBreakpoint extends DebugEvent {
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
+
+public class DebugEventBreakpoint extends DebugMessage {
     protected String source;
 
     protected int lineNumber;
 
     public DebugEventBreakpoint(String source, int lineNumber) {
-        super(DebugEventType.suspendedOnBreakpoint);
+        super(DebugMessageType.suspendedOnBreakpoint);
         if (source == null) {
             throw new IllegalArgumentException("argument source cannot be null");
         }
@@ -69,7 +72,7 @@ public class DebugEventBreakpoint extends DebugEvent {
         out.writeInt(object.getLineNumber());
     }
 
-    public static DebugEvent deserialize(DataInputStream in) throws IOException {
+    public static DebugMessage deserialize(DataInputStream in) throws IOException {
         String source = in.readUTF();
         int lineNo = in.readInt();
 

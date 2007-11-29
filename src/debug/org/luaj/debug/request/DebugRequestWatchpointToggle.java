@@ -21,13 +21,15 @@
 ******************************************************************************/
 package org.luaj.debug.request;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.EnumType;
 
-public class DebugRequestWatchpointToggle extends DebugRequest {    
+public class DebugRequestWatchpointToggle extends DebugMessage {    
     public static class AccessType extends EnumType {
-		private static final long serialVersionUID = 3523086189648091587L;
+        private static final long serialVersionUID = 3523086189648091587L;
 		
-		public static final AccessType Ignore = new AccessType("Ignore", 0);
+        public static final AccessType Ignore = new AccessType("Ignore", 0);
         public static final AccessType Read = new AccessType("Read", 1);
         public static final AccessType Modify = new AccessType("Modify", 2);
         public static final AccessType ReadAndModify = new AccessType("ReadAndModify", 3);
@@ -44,8 +46,8 @@ public class DebugRequestWatchpointToggle extends DebugRequest {
                                         String variableName, 
                                         AccessType accessType) {        
         super(accessType == AccessType.Ignore ? 
-              DebugRequestType.watchpointClear : 
-              DebugRequestType.watchpointSet);
+              DebugMessageType.watchpointClear : 
+              DebugMessageType.watchpointSet);
         this.functionName = functionName;
         this.variableName = variableName;
     }

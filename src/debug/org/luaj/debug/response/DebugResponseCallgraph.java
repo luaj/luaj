@@ -25,15 +25,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.StackFrame;
-import org.luaj.debug.event.DebugEvent;
-import org.luaj.debug.event.DebugEventType;
 
-public class DebugResponseCallgraph extends DebugEvent {
+public class DebugResponseCallgraph extends DebugMessage {
     protected StackFrame[] stackFrames;
 
     public DebugResponseCallgraph(StackFrame[] callgraph) {
-        super(DebugEventType.clientRequestCallgraphReply);
+        super(DebugMessageType.clientRequestCallgraphReply);
         if (callgraph == null) {
             this.stackFrames = new StackFrame[0];
         } else {
@@ -64,7 +64,7 @@ public class DebugResponseCallgraph extends DebugEvent {
         }
     }
 
-    public static DebugEvent deserialize(DataInputStream in) throws IOException {
+    public static DebugMessage deserialize(DataInputStream in) throws IOException {
         int count = in.readInt();
         StackFrame[] stackFrames = new StackFrame[count];
         for (int i = 0; i < count; i++) {

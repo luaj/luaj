@@ -25,15 +25,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.Variable;
-import org.luaj.debug.event.DebugEvent;
-import org.luaj.debug.event.DebugEventType;
 
-public class DebugResponseVariables extends DebugEvent {
+public class DebugResponseVariables extends DebugMessage {
     protected Variable[] variables;
     
-    public DebugResponseVariables(Variable[] variables, DebugEventType type) {
+    public DebugResponseVariables(Variable[] variables, DebugMessageType type) {
         super(type);
         if (variables == null) {
             this.variables = new Variable[0];
@@ -60,7 +60,7 @@ public class DebugResponseVariables extends DebugEvent {
     public static void serialize(DataOutputStream out,
                                  DebugResponseVariables response) 
     throws IOException {
-        DebugEventType.serialize(out, response.getType());
+        DebugMessageType.serialize(out, response.getType());
         Variable[] variables = response.getVariables();
         out.writeInt(variables == null ? 0 : variables.length);
         for (int i = 0; i < variables.length; i++) {
@@ -68,9 +68,9 @@ public class DebugResponseVariables extends DebugEvent {
         }
     }
         
-    public static DebugEvent deserialize(DataInputStream in)
+    public static DebugMessage deserialize(DataInputStream in)
     throws IOException {
-        DebugEventType type = DebugEventType.deserialize(in);
+        DebugMessageType type = DebugMessageType.deserialize(in);
         int count = in.readInt();
         Variable[] variables = new Variable[count];
         for (int i = 0; i < count; i++) {

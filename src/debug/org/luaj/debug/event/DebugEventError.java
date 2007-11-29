@@ -25,12 +25,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugEventError extends DebugEvent {
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
+
+public class DebugEventError extends DebugMessage {
     protected String cause;
     protected String trace;
 
     public DebugEventError(String cause, String trace) {
-        super(DebugEventType.error);
+        super(DebugMessageType.error);
         this.cause = cause;
         this.trace = trace;
     }
@@ -58,7 +61,7 @@ public class DebugEventError extends DebugEvent {
         out.writeUTF(object.getTrace());
     }
 
-    public static DebugEvent deserialize(DataInputStream in) throws IOException {
+    public static DebugMessage deserialize(DataInputStream in) throws IOException {
         String detail = in.readUTF();
         String trace = in.readUTF();
         return new DebugEventError(detail, trace);

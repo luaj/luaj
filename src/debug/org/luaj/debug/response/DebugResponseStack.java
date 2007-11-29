@@ -4,16 +4,16 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.Variable;
-import org.luaj.debug.event.DebugEvent;
-import org.luaj.debug.event.DebugEventType;
 
 public class DebugResponseStack extends DebugResponseVariables {
     protected int stackFrameIndex;
     
     public DebugResponseStack(int index, Variable[] variables) {
-        super(variables, DebugEventType.clientRequestStackReply);
+        super(variables, DebugMessageType.clientRequestStackReply);
         this.stackFrameIndex = index;
     }
     
@@ -33,7 +33,7 @@ public class DebugResponseStack extends DebugResponseVariables {
         }
     }
 
-    public static DebugEvent deserialize(DataInputStream in) throws IOException {
+    public static DebugMessage deserialize(DataInputStream in) throws IOException {
         int index = in.readInt();
         
         int count = in.readInt();

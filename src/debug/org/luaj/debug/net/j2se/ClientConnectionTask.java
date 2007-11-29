@@ -6,11 +6,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.SerializationHelper;
-import org.luaj.debug.event.DebugEvent;
 import org.luaj.debug.event.DebugEventListener;
-import org.luaj.debug.request.DebugRequest;
-import org.luaj.debug.request.DebugRequestType;
 import org.luaj.debug.response.DebugResponseSession;
 
 public class ClientConnectionTask implements Runnable, DebugEventListener {
@@ -23,6 +22,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
     protected DataInputStream requestReader;
     protected DataOutputStream eventWriter;
     protected DebugSupportImpl debugSupport;
+    protected boolean isDisposed = false;
     
     public ClientConnectionTask(DebugSupportImpl debugSupport, Socket socket) 
     throws IOException {
@@ -67,7 +67,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
                 data = new byte[size];
                 requestReader.readFully(data);
                                     
-                DebugRequest request = (DebugRequest) SerializationHelper
+                DebugMessage request = (DebugMessage) SerializationHelper
                         .deserialize(data);                
                 if (TRACE) {
                     System.out.println("SERVER receives request: " + request.toString());
@@ -83,33 +83,30 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             
             // if the connected debugging client aborted abnormally,
             // discard the current connection.
-            handleRequest(new DebugRequest(DebugRequestType.reset));            
+            handleRequest(new DebugMessage(DebugMessageType.reset));
+            
+            debugSupport.disconnect(getSessionId());
         } finally {
             dispose();
         }
     }
     
-    public void handleRequest(DebugRequest request) {
+    public void handleRequest(DebugMessage request) {
         if (TRACE) {
             System.out.println("SERVER handling request: " + request.toString());
         }
 
-        if (request.getType() == DebugRequestType.session) {
+        if (request.getType() == DebugMessageType.session) {
             notifyDebugEvent(new DebugResponseSession(getSessionId()));
         } else {
             debugSupport.handleRequest(request);
         }
     }
     
-    public void notifyDebugEvent(DebugEvent event) {
+    public void notifyDebugEvent(DebugMessage event) {
         if (TRACE)
             System.out.println("SERVER sending event: " + event.toString());
-        
-        if (event == null)
-            System.out.println("notifyDebugEvent: event is null");       
-        if (eventWriter == null)
-            System.out.println("notifyDebugEvent: eventWriter is null");
-        
+
         try {
             byte[] data = SerializationHelper.serialize(event);
             eventWriter.writeInt(data.length);
@@ -120,7 +117,10 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
         }        
     }
     
-    protected void dispose() {
+    public void dispose() {
+        if ( this.isDisposed ) return;
+        
+        this.isDisposed = true;
         debugSupport.decrementClientCount();
         
         if (this.requestReader != null) {

@@ -2,74 +2,71 @@ package org.luaj.debug.net.j2me;
 
 import java.io.IOException;
 
-import javax.microedition.io.Connector;
-import javax.microedition.io.ServerSocketConnection;
-import javax.microedition.io.SocketConnection;
-
-import org.luaj.debug.DebugLuaState;
-import org.luaj.debug.event.DebugEvent;
+import org.luaj.debug.DebugMessage;
 import org.luaj.debug.net.DebugSupport;
-import org.luaj.debug.request.DebugRequest;
 
-public class DebugSupportImpl implements DebugSupport {
-    protected ServerSocketConnection serverConnection;
+/**
+ * J2ME version of DebugSupport implementation. The vm will connect to a debug
+ * service hosted on a remote machine and have the debug service relay the 
+ * debugging messages between the vm and the debug client.
+ */
+public class DebugSupportImpl extends DebugSupport {
+    protected String host;
+    protected int port;
+    ClientConnectionTask clientTask;
+    Thread main;
 
-    public DebugSupportImpl(int port) throws IOException {
-        this.serverConnection 
-        = (ServerSocketConnection) Connector.open(
-                "socket://:" + port);
-    }
-    
-    public synchronized void acceptClientConnection() 
-    throws IOException {        
-        // Set up the request socket and request input + event output streams
-        SocketConnection clientDebugConnection 
-            = (SocketConnection) serverConnection.acceptAndOpen();
-        clientDebugConnection.setSocketOption(SocketConnection.DELAY, 0);
-        clientDebugConnection.setSocketOption(SocketConnection.LINGER, 0);
-        clientDebugConnection.setSocketOption(SocketConnection.KEEPALIVE, 1);
-        clientDebugConnection.setSocketOption(SocketConnection.RCVBUF, 1024);
-        clientDebugConnection.setSocketOption(SocketConnection.SNDBUF, 1024);
-        //TODO....
-    }
-    
-    protected void dispose() {
-        if (this.serverConnection != null) {
-            try {
-                serverConnection.close();
-                serverConnection = null;
-            } catch (IOException e) {
-            }
-        }
-    }
-
-    public void disconnect(int id) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    public void setDebugStackState(DebugLuaState vm) {
-        // TODO Auto-generated method stub
-        
+    public DebugSupportImpl(String host, int port) throws IOException {
+        this.host = host;
+        this.port = port;
     }
 
     public void start() throws IOException {
-        // TODO Auto-generated method stub
-        
+        setState(RUNNING);
+        main = new Thread(new Runnable() {
+            public void run() {
+                while ( isRunning() ) {
+                    synchronized (DebugSupportImpl.this) {
+                        if ( clientTask == null ) {
+                            clientTask = new ClientConnectionTask(host, port, DebugSupportImpl.this);
+                            new Thread(clientTask).start();
+                        }                        
+                    }
+                    
+                    synchronized(main) {
+                        try {
+                            main.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }                        
+                    }
+                }
+            }
+        });
+        main.start();
     }
 
+    
     public void stop() {
-        // TODO Auto-generated method stub
-        
+        setState(STOPPED);
+        disconnect(1);        
     }
 
-    public void handleRequest(DebugRequest request) {
-        // TODO Auto-generated method stub
-        
+    public void disconnect() {
+        clientTask.disconnect();
+        clientTask = null;
+        synchronized(main) {
+            main.notify();
+        }        
+    }
+    
+    public synchronized void disconnect(int id) {
+        disconnect();
     }
 
-    public void notifyDebugEvent(DebugEvent event) {
-        // TODO Auto-generated method stub
-        
+    public synchronized void notifyDebugEvent(DebugMessage event) {
+        if (clientTask != null) {
+            clientTask.notifyDebugEvent(event);
+        }        
     }
 }

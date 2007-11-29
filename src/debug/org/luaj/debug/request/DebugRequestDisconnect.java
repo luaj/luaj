@@ -4,11 +4,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class DebugRequestDisconnect extends DebugRequest {
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
+
+public class DebugRequestDisconnect extends DebugMessage {
     protected int sessionId;
     
     public DebugRequestDisconnect(int connectionId) {
-        super(DebugRequestType.disconnect);
+        super(DebugMessageType.disconnect);
         this.sessionId = connectionId;
     }
     
@@ -25,7 +28,7 @@ public class DebugRequestDisconnect extends DebugRequest {
         out.writeInt(request.getSessionId());
     }
 
-    public static DebugRequest deserialize(DataInputStream in)
+    public static DebugMessage deserialize(DataInputStream in)
             throws IOException {
         int id = in.readInt();
 

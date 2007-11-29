@@ -4,14 +4,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.luaj.debug.event.DebugEvent;
-import org.luaj.debug.event.DebugEventType;
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 
-public class DebugResponseSession extends DebugEvent {
+public class DebugResponseSession extends DebugMessage {
     protected int sessionId;
     
     public DebugResponseSession(int id) {
-        super(DebugEventType.session);
+        super(DebugMessageType.session);
         this.sessionId = id;
     }
     
@@ -29,7 +29,7 @@ public class DebugResponseSession extends DebugEvent {
         out.writeInt(response.getSessionId());
     }
     
-    public static DebugEvent deserialize(DataInputStream in) throws IOException {
+    public static DebugMessage deserialize(DataInputStream in) throws IOException {
         int id = in.readInt();
         return new DebugResponseSession(id);
     }

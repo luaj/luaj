@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.debug.event;
 
+import org.luaj.debug.DebugMessage;
+
 public interface DebugEventListener {
-    public void notifyDebugEvent(DebugEvent event);
+    public void notifyDebugEvent(DebugMessage event);
 }

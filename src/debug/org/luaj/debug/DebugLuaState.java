@@ -26,17 +26,13 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import org.luaj.compiler.LexState;
-import org.luaj.debug.event.DebugEvent;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
-import org.luaj.debug.event.DebugEventType;
 import org.luaj.debug.net.DebugSupport;
-import org.luaj.debug.request.DebugRequest;
 import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestListener;
 import org.luaj.debug.request.DebugRequestStack;
-import org.luaj.debug.request.DebugRequestType;
 import org.luaj.debug.response.DebugResponseCallgraph;
 import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.debug.response.DebugResponseVariables;
@@ -241,7 +237,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     private void cancelStepping() {
         if (debugSupport != null) {
             debugSupport.notifyDebugEvent(
-                    new DebugEvent(DebugEventType.resumedOnSteppingEnd));
+                    new DebugMessage(DebugMessageType.resumedOnSteppingEnd));
         }
         stepping = STEP_NONE;
         steppingFrame = -1;
@@ -250,8 +246,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 
     private void suspendOnStepping() {
         if (debugSupport != null) {
-            debugSupport.notifyDebugEvent(new DebugEvent(
-                    DebugEventType.suspendedOnStepping));
+            debugSupport.notifyDebugEvent(
+                    new DebugMessage(DebugMessageType.suspendedOnStepping));
         }
         suspended = true;
         steppingFrame = -1;
@@ -274,7 +270,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 
     // ------------------ commands coming from the debugger -------------------
 
-    public void handleRequest(DebugRequest request) {
+    public void handleRequest(DebugMessage request) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
                     "DebugSupport must be defined.");
@@ -284,65 +280,67 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             System.out.println("DebugStackState is handling request: "
                     + request.toString());
 
-        DebugRequestType requestType = request.getType();
-        if (DebugRequestType.start == requestType) {
-            DebugEvent event = new DebugEvent(DebugEventType.started);
+        DebugMessageType requestType = request.getType();
+        if (DebugMessageType.start == requestType) {
+            DebugMessage event = new DebugMessage(DebugMessageType.started);
             debugSupport.notifyDebugEvent(event);
             cancelSuspendOnStart();
-        } else if (DebugRequestType.exit == requestType) {
+        } else if (DebugMessageType.exit == requestType) {
             stop();
-        } else if (DebugRequestType.disconnect == requestType) {
+        } else if (DebugMessageType.disconnect == requestType) {
             DebugRequestDisconnect disconnectRequest 
                 = (DebugRequestDisconnect) request;
             int connectionId = disconnectRequest.getSessionId();
             disconnect(connectionId);
-        } else if (DebugRequestType.reset == requestType) {
+        } else if (DebugMessageType.debugServiceDown == requestType) {
+            disconnectFromDebugService();
+        } else if (DebugMessageType.reset == requestType) {
             reset();
-        } else if (DebugRequestType.suspend == requestType) {
+        } else if (DebugMessageType.suspend == requestType) {
             suspend();
-            DebugEvent event = new DebugEvent(DebugEventType.suspendedByClient);
+            DebugMessage event = new DebugMessage(DebugMessageType.suspendedByClient);
             debugSupport.notifyDebugEvent(event);
-        } else if (DebugRequestType.resume == requestType) {
+        } else if (DebugMessageType.resume == requestType) {
             resume();
-            DebugEvent event = new DebugEvent(DebugEventType.resumedByClient);
+            DebugMessage event = new DebugMessage(DebugMessageType.resumedByClient);
             debugSupport.notifyDebugEvent(event);
-        } else if (DebugRequestType.lineBreakpointSet == requestType) {
+        } else if (DebugMessageType.lineBreakpointSet == requestType) {
             DebugRequestLineBreakpointToggle setBreakpointRequest 
                 = (DebugRequestLineBreakpointToggle) request;
             setBreakpoint(setBreakpointRequest.getSource(),
                     setBreakpointRequest.getLineNumber());
-        } else if (DebugRequestType.lineBreakpointClear == requestType) {
+        } else if (DebugMessageType.lineBreakpointClear == requestType) {
             DebugRequestLineBreakpointToggle clearBreakpointRequest 
                 = (DebugRequestLineBreakpointToggle) request;
             clearBreakpoint(clearBreakpointRequest.getSource(),
                     clearBreakpointRequest.getLineNumber());
-        } else if (DebugRequestType.callgraph == requestType) {
+        } else if (DebugMessageType.callgraph == requestType) {
             DebugResponseCallgraph callgraph 
                 = new DebugResponseCallgraph(getCallgraph());
             debugSupport.notifyDebugEvent(callgraph);
-        } else if (DebugRequestType.stack == requestType) {
+        } else if (DebugMessageType.stack == requestType) {
             DebugRequestStack stackRequest = (DebugRequestStack) request;
             int index = stackRequest.getIndex();
             DebugResponseStack stackState 
                 = new DebugResponseStack(index, getStack(index));
             debugSupport.notifyDebugEvent(stackState);
-        } else if (DebugRequestType.global == requestType) {            
+        } else if (DebugMessageType.global == requestType) {            
             DebugResponseVariables globals 
-                = new DebugResponseVariables(getGlobals(), DebugEventType.clientRequestGlobalReply);
+                = new DebugResponseVariables(getGlobals(), DebugMessageType.clientRequestGlobalReply);
             debugSupport.notifyDebugEvent(globals);
-        } else if (DebugRequestType.stepInto == requestType) {
-            DebugEvent event = new DebugEvent(
-                    DebugEventType.resumedOnSteppingInto);
+        } else if (DebugMessageType.stepInto == requestType) {
+            DebugMessage event = new DebugMessage(
+                    DebugMessageType.resumedOnSteppingInto);
             debugSupport.notifyDebugEvent(event);
             stepInto();
-        } else if (DebugRequestType.stepOver == requestType) {
-            DebugEvent event = new DebugEvent(
-                    DebugEventType.resumedOnSteppingOver);
+        } else if (DebugMessageType.stepOver == requestType) {
+            DebugMessage event = new DebugMessage(
+                    DebugMessageType.resumedOnSteppingOver);
             debugSupport.notifyDebugEvent(event);
             stepOver();
-        } else if (DebugRequestType.stepReturn == requestType) {
-            DebugEvent event = new DebugEvent(
-                    DebugEventType.resumedOnSteppingReturn);
+        } else if (DebugMessageType.stepReturn == requestType) {
+            DebugMessage event = new DebugMessage(
+                    DebugMessageType.resumedOnSteppingReturn);
             debugSupport.notifyDebugEvent(event);
             stepReturn();
         } else {
@@ -393,16 +391,20 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      * VM execution.
      */
     public void stop() {
-        if (this.debugSupport == null) {
-            throw new IllegalStateException(
-                    "DebugSupport must be defined.");
-        }
+        synchronized (this) {
+            if (exiting) return;
+            
+            if (this.debugSupport == null) {
+                throw new IllegalStateException(
+                        "DebugSupport must be defined.");
+            }
 
-        DebugEvent event = new DebugEvent(DebugEventType.terminated);
-        debugSupport.notifyDebugEvent(event);
-        exit();
-        debugSupport.stop();
-        debugSupport = null;
+            DebugMessage event = new DebugMessage(DebugMessageType.terminated);
+            debugSupport.notifyDebugEvent(event);
+            exit();
+            debugSupport.stop();
+            debugSupport = null;            
+        }
     }
 
     public void disconnect(int connectionId) {
@@ -412,9 +414,19 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         }
         
         reset();
-        DebugEvent event = new DebugEvent(DebugEventType.disconnected);
+        DebugMessage event = new DebugMessage(DebugMessageType.disconnected);
         debugSupport.notifyDebugEvent(event);
         debugSupport.disconnect(connectionId);                   
+    }
+    
+    public void disconnectFromDebugService() {
+        if (this.debugSupport == null) {
+            throw new IllegalStateException(
+                    "DebugSupport must be defined.");
+        }
+        
+        reset();
+        debugSupport.disconnect();                           
     }
     
     public void reset() {

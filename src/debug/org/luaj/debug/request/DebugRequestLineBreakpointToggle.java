@@ -25,14 +25,16 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.luaj.debug.DebugMessage;
+import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.SerializationHelper;
 
 
-public class DebugRequestLineBreakpointToggle extends DebugRequest {
+public class DebugRequestLineBreakpointToggle extends DebugMessage {
     protected String source;
     protected int lineNumber;
     
-    public DebugRequestLineBreakpointToggle(DebugRequestType type, String source, int lineNumber) {
+    public DebugRequestLineBreakpointToggle(DebugMessageType type, String source, int lineNumber) {
         super(type);
         if (lineNumber < 0) {
             throw new IllegalArgumentException("lineNumber must be equal to greater than zero");
@@ -63,8 +65,8 @@ public class DebugRequestLineBreakpointToggle extends DebugRequest {
 		out.writeInt(request.getLineNumber());
 	}
 	
-	public static DebugRequest deserialize(DataInputStream in) throws IOException {
-		DebugRequestType type = (DebugRequestType)SerializationHelper.deserialize(in);
+	public static DebugMessage deserialize(DataInputStream in) throws IOException {
+	    DebugMessageType type = (DebugMessageType)SerializationHelper.deserialize(in);
 		String source = in.readUTF();
 		int lineNo = in.readInt();
 		

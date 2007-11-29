@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.debug.request;
 
+import org.luaj.debug.DebugMessage;
+
 
 public interface DebugRequestListener {
     
@@ -37,5 +39,5 @@ public interface DebugRequestListener {
      *              listing the (variable, value) pairs
      * step      -- single step forward (go to next statement)                         
      */ 
-    public void handleRequest(DebugRequest request);
+    public void handleRequest(DebugMessage request);
 }

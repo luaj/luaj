@@ -1,5 +1,5 @@
 <project default="all">
-	<property name="version" value="0.9"/>
+	<property name="version" value="0.10"/>
 
 	<target name="clean">
 		<delete dir="build"/>
