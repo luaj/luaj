@@ -153,7 +153,7 @@ public class BaseLib extends LFunction {
 		}
 		case GETMETATABLE: {
 			checkargexists(vm,2,Lua.LUA_TVALUE);
-			if ( 0 == vm.getmetatable(2) ) {
+			if ( ! vm.getmetatable(2) ) {
 				vm.resettop();
 				vm.pushnil();
 			} else {
@@ -248,14 +248,16 @@ public class BaseLib extends LFunction {
 			vm.pushlvalue(t);
 		}	break;
 		case GETFENV: {
-			if ( vm.gettop() <= 1 ) {
-				vm.pushlvalue(vm._G);
-			} else {
-				if ( ! vm.isfunction(2) ) {
-					int i = (vm.isnil(2)? 1: vm.tointeger(2));
-					vm.pushlvalue( vm.getStackFrame(i).closure );
-				}
+			if ( vm.isfunction(2) ) {
 				vm.getfenv(-1);
+			} else {
+				int i = (vm.isnil(2)? 1: vm.tointeger(2));
+				if ( i <= 0 )
+					vm.pushlvalue(vm._G);
+				else if ( i-1 <= vm.cc )
+					vm.pushlvalue( vm.getStackFrame(i-1).closure.env );
+				else
+					vm.pushnil();
 			}
 			vm.insert(1);
 			vm.settop(1);

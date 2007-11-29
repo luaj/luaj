@@ -222,6 +222,17 @@ public class LString extends LValue {
 		return -1;
 	}
 	
+	public int lastIndexOf( LString s ) {
+		final int slen = s.length();
+		final int limit = m_offset + m_length - slen;
+		for ( int i = limit; i >= m_offset; --i ) {
+			if ( equals( m_bytes, i, s.m_bytes, s.m_offset, slen ) ) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	public static LString valueOf( double d ) {
 		return new LString( String.valueOf( d ) );
 	}

@@ -1355,15 +1355,17 @@ public class LuaState extends Lua {
 	 * <p>
 	 * Pushes onto the stack the metatable of the value at the given acceptable
 	 * index. If the index is not valid, or if the value does not have a
-	 * metatable, the function returns&nbsp;0 and pushes nothing on the stack.
+	 * metatable, the function returns false and pushes nothing on the stack.
+	 * 
+	 * @return true if the metatable was pushed onto the stack, false otherwise
 	 */
-	public int getmetatable(int index) {
+	public boolean getmetatable(int index) {
 		LTable mt = topointer(index).luaGetMetatable();
 		if ( mt != null ) {
 			pushlvalue( mt );
-			return 1;			
+			return true;			
 		}
-		return 0;
+		return false;
 	}
 	
 	/**

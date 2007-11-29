@@ -24,12 +24,14 @@ package org.luaj.lib;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.luaj.vm.CallInfo;
 import org.luaj.vm.LBoolean;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LNil;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
+import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
 
 
@@ -38,6 +40,13 @@ public class PackageLib extends LFunction {
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
 	public static LTable      LOADED = new LTable();
+
+	private static final LString _M = new LString("_M");
+	private static final LString _NAME = new LString("_NAME");	
+	private static final LString _PACKAGE = new LString("_PACKAGE");	
+	private static final LString _DOT = new LString(".");
+	private static final LString _EMPTY = new LString("");
+	private static final LString __INDEX = new LString("__index");
 	
 	private static final String[] NAMES = {
 		"package",
@@ -51,7 +60,8 @@ public class PackageLib extends LFunction {
 	private static final int MODULE         = 1;
 	private static final int REQUIRE        = 2;
 	private static final int LOADLIB        = 3;
-	private static final int SEEALL         = 4;	
+	private static final int SEEALL         = 4;
+	
 	
 	public static void install( LTable globals ) {
 		for ( int i=1; i<LOADLIB; i++ )
@@ -87,9 +97,17 @@ public class PackageLib extends LFunction {
 		case LOADLIB: 
 			loadlib(vm);
 			break;
-		case SEEALL: 
-			seeall(vm);
+		case SEEALL: { 
+			if ( ! vm.istable(2) )
+				vm.error( "table expected, got "+vm.typename(2) );
+			LTable t = vm.totable(2);
+			LTable m = t.luaGetMetatable();
+			if ( m == null )
+				t.luaSetMetatable(m = new LTable());
+			m.put(__INDEX, vm._G);
+			vm.resettop();
 			break;
+		}
 		default:
 			luaUnsupportedOperation();
 		}
@@ -98,9 +116,98 @@ public class PackageLib extends LFunction {
 	
 	
 	// ======================== Module, Package loading =============================
-	
-	public static void module( LuaState vm ) {		
-		vm.error( "module not implemented" );
+	/**
+	 * module (name [, ···])
+	 * 
+	 * Creates a module. If there is a table in package.loaded[name], this table
+	 * is the module. Otherwise, if there is a global table t with the given
+	 * name, this table is the module. Otherwise creates a new table t and sets
+	 * it as the value of the global name and the value of package.loaded[name].
+	 * This function also initializes t._NAME with the given name, t._M with the
+	 * module (t itself), and t._PACKAGE with the package name (the full module
+	 * name minus last component; see below). Finally, module sets t as the new
+	 * environment of the current function and the new value of
+	 * package.loaded[name], so that require returns t.
+	 * 
+	 * If name is a compound name (that is, one with components separated by
+	 * dots), module creates (or reuses, if they already exist) tables for each
+	 * component. For instance, if name is a.b.c, then module stores the module
+	 * table in field c of field b of global a.
+	 * 
+	 * This function may receive optional options after the module name, where
+	 * each option is a function to be applied over the module.
+	 */
+	public static void module(LuaState vm) {
+		LString modname = vm.tolstring(2);
+		int n = vm.gettop();
+		LValue value = LOADED.get(modname);
+		LTable module;
+		if ( value.luaGetType() != Lua.LUA_TTABLE ) { /* not found? */
+			
+		    /* try global variable (and create one if it does not exist) */
+			module = findtable( vm._G, modname );
+			if ( module == null )
+				vm.error( "name conflict for module '"+modname+"'", 2 );
+			LOADED.luaSetTable(vm, LOADED, modname, module);
+		} else {
+			module = (LTable) value;
+		}
+		
+		
+		/* check whether table already has a _NAME field */
+		module.luaGetTable(vm, module, _NAME);
+		if ( vm.isnil(-1) ) {
+			modinit( vm, module, modname );
+		}
+		
+		// set the environment of the current function
+		CallInfo ci = vm.getStackFrame(0);
+		ci.closure.env = module;
+		
+		// apply the functions
+		for ( int i=3; i<=n; i++ ) {
+			vm.pushvalue( i );   /* get option (a function) */
+			vm.pushlvalue( module );  /* module */
+			vm.call( 1, 0 );
+		}
+		
+		// returns no results
+		vm.resettop();
+	}
+
+	/**
+	 * 
+	 * @param table the table at which to start the search
+	 * @param fname the name to look up or create, such as "abc.def.ghi"
+	 * @return the table for that name, possible a new one, or null if a non-table has that name already. 
+	 */
+	private static LTable findtable(LTable table, LString fname) {
+		int b, e=(-1);
+		do {
+			e = fname.indexOf(_DOT, b=e+1 );
+			if ( e < 0 )
+				e = fname.m_length;
+			LString key = fname.substring(b, e);
+			LValue val = table.get(key);
+			if ( val == LNil.NIL ) { /* no such field? */
+				LTable field = new LTable(); /* new table for field */
+				table.put(key, field);
+				table = field;
+			} else if ( val.luaGetType() != Lua.LUA_TTABLE ) {  /* field has a non-table value? */
+				return null;
+			} else {
+				table = (LTable) val;
+			}
+		} while ( e < fname.m_length );
+		return table;
+	}
+
+	private static void modinit(LuaState vm, LTable module, LString modname) {
+		/* module._M = module */
+		module.luaSetTable(vm, module, _M, module);
+		int e = modname.lastIndexOf(_DOT);
+		module.luaSetTable(vm, module, _NAME, modname );
+		module.luaSetTable(vm, module, _PACKAGE, (e<0? _EMPTY: modname.substring(0,e+1)) );
 	}
 
 	/** 
@@ -153,9 +260,5 @@ public class PackageLib extends LFunction {
 
 	public static void loadlib( LuaState vm ) {
 		vm.error( "loadlib not implemented" );
-	}
-	
-	public static void seeall( LuaState vm ) {
-		vm.error( "seeall not implemented" );
 	}
 }

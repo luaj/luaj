@@ -13,7 +13,7 @@ import org.luaj.lib.j2se.LuajavaLib;
 
 
 public class LuaJTest extends TestCase {
-	
+
 	public void testTest1() throws IOException, InterruptedException {
 		runTest( "test1" );
 	}
@@ -76,6 +76,10 @@ public class LuaJTest extends TestCase {
 
 	public void testMetatables() throws IOException, InterruptedException {
 		runTest( "metatables" );
+	}
+
+	public void testModule() throws IOException, InterruptedException {
+		runTest( "module" );
 	}
 
 	public void testNext() throws IOException, InterruptedException {
