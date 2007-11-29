@@ -136,7 +136,7 @@ public class LValue {
 				return;
 			}
 		}
-		vm.pushnil();
+		vm.error( "attempt to index ? (a "+table.luaGetTypeName()+" value)", 2 );
 	}
 	
 	/** Get the value as a LString 
