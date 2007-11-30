@@ -28,8 +28,6 @@ import java.io.InputStream;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
-import org.luaj.debug.net.DebugSupport;
-import org.luaj.debug.net.j2se.DebugSupportImpl;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
@@ -81,8 +79,10 @@ public class StandardLuaJVM {
             if (args.length < 2) {
                 throw new ParseException("Invalid command line arguments.");
             }
-
+            
             this.isDebugMode = true;
+            System.setProperty(LuaState.PROPERTY_LUAJ_DEBUG, "true");
+            
             String debugOptions = args[0];
             debugOptions = debugOptions.substring(2); // remove '-D'
             String[] options = debugOptions.split(",");
@@ -91,6 +91,7 @@ public class StandardLuaJVM {
                     String portString = options[i].substring(CMD_LINE_DEBUG_OPTION_PORT.length());
                     try {
                         this.debugPort = Integer.parseInt(portString);
+                        System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, String.valueOf(debugPort));
                         if (this.debugPort <= 0) {
                             throw new ParseException(
                                     "Invalid debug port: it must be greater than zero.");
@@ -105,12 +106,13 @@ public class StandardLuaJVM {
                         !suspendOnStartStr.equalsIgnoreCase("false")) {
                         throw new ParseException("invalid debug flag: suspendOnStart");
                     }
-                    this.bSuspendOnStart = Boolean.valueOf(suspendOnStartStr).booleanValue();                    
+                    this.bSuspendOnStart = Boolean.parseBoolean(suspendOnStartStr);
+                    System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, suspendOnStartStr);
                 } else {
                     throw new ParseException("Invalid command line argument: " + debugOptions);
                 }
             }
-           
+
             if (this.debugPort == -1) {
                 throw new ParseException("Invalid command line: debug port is missing");
             }
@@ -168,10 +170,28 @@ public class StandardLuaJVM {
 
     public void run() {
         try {
-            if (isDebug()) {
-                doDebug();
-            } else {
-                doRun();
+            // new lua debug state 
+            state = LuaState.newState();
+            init(state);
+
+            // load the Lua file
+            InputStream is = new FileInputStream(new File(getScript()));
+            LPrototype p = LoadState.undump(state, is, getScript());
+
+            // create closure and execute
+            final LClosure c = new LClosure(p, state._G);
+            String[] args = getScriptArgs();
+            int numOfScriptArgs = (args != null ? args.length : 0);
+            LValue[] vargs = new LValue[numOfScriptArgs];
+            for (int i = 0; i < numOfScriptArgs; i++) {
+                vargs[i] = new LString(args[i]);
+            }
+            try {
+                state.doCall(c, vargs);
+            } finally {
+                if (state instanceof DebugLuaState) {
+                    ((DebugLuaState)state).stop();
+                }
             }
         } catch (LuaErrorException e) { 
             System.err.println("Error: " + e.getMessage());
@@ -192,62 +212,6 @@ public class StandardLuaJVM {
         
         // add the compiler
         LuaC.install();
-    }
-
-    protected void doRun() throws IOException {
-
-        // new lua state 
-        state = new LuaState();
-        init(state);
-
-        // convert args to lua
-        String[] scriptArgs = getScriptArgs();
-        int numOfScriptArgs = (scriptArgs == null) ? 0 : scriptArgs.length;
-        LValue[] vargs = new LValue[numOfScriptArgs];
-        for (int i = 0; i < numOfScriptArgs; i++) {
-            vargs[i] = new LString(getScriptArgs()[i]);
-        }
-
-        // load the Lua file
-        InputStream is = new FileInputStream(new File(getScript()));
-        LPrototype p = LoadState.undump(state, is, getScript());
-
-        // create closure and execute
-        LClosure c = new LClosure(state, p);        
-        state.doCall(c, vargs);
-    }
-
-    protected void doDebug() throws IOException {
-        // new lua debug state 
-        state = new DebugLuaState();
-        init(state);
-
-        // load the Lua file
-        InputStream is = new FileInputStream(new File(getScript()));
-        LPrototype p = LoadState.undump(state, is, getScript());
-
-        // set up debug support if the file is successfully loaded
-        DebugSupport debugSupport = new DebugSupportImpl(getDebugPort());
-        getDebugState().setSuspendAtStart(getSuspendOnStart());
-        getDebugState().setDebugSupport(debugSupport);
-
-        // create closure and execute
-        final LClosure c = new LClosure(p, state._G);
-        String[] args = getScriptArgs();
-        int numOfScriptArgs = (args != null ? args.length : 0);
-        LValue[] vargs = new LValue[numOfScriptArgs];
-        for (int i = 0; i < numOfScriptArgs; i++) {
-            vargs[i] = new LString(args[i]);
-        }
-        try {
-            getDebugState().doCall(c, vargs);
-        } finally {
-            getDebugState().stop();
-        }
-    }
-
-    private DebugLuaState getDebugState() {
-        return (DebugLuaState) state;
     }
 
     /**

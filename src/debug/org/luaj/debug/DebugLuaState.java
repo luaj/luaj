@@ -45,9 +45,14 @@ import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 
 public class DebugLuaState extends LuaState implements DebugRequestListener {
+    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
+    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
+    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
+    
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
 
     // stepping constants and stepping state
@@ -68,9 +73,35 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected DebugSupport debugSupport;
     protected LuaErrorException lastError;
 
+    /**
+     * Creates an instance of DebugLuaState.
+     * 
+     * @deprecated As of version 0.10, replaced by {@link #LuaState.newState()}
+     */
     public DebugLuaState() {}
     
-    public void setDebugSupport(DebugSupport debugSupport) 
+    public void init() { 
+        Platform platform = Platform.getInstance();
+
+        // set if the vm should be suspended at start
+        String suspendOnStartStr = platform.getProperty(PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, "false");
+        boolean bSuspendOnStart = Boolean.parseBoolean(suspendOnStartStr);
+        setSuspendAtStart(bSuspendOnStart);
+    
+        // set up the debug networking support
+        try {
+            DebugSupport debugSupport = platform.getDebugSupport();
+            if (debugSupport != null) 
+                setDebugSupport(debugSupport);
+            else 
+                System.out.println("Warning: DebugSupport is not implemented.");
+        } catch (IOException e) {
+            // no debug client can talk to VM, but VM can continue functioning
+            System.out.println("Warning: no debug client support due to error: " + e.getMessage());
+        }
+    }
+    
+    protected void setDebugSupport(DebugSupport debugSupport) 
     throws IOException {
         if (debugSupport == null) {
             throw new IllegalArgumentException("DebugSupport cannot be null");
@@ -394,16 +425,17 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         synchronized (this) {
             if (exiting) return;
             
-            if (this.debugSupport == null) {
-                throw new IllegalStateException(
-                        "DebugSupport must be defined.");
+            if (this.debugSupport != null) {
+                DebugMessage event = new DebugMessage(DebugMessageType.terminated);
+                debugSupport.notifyDebugEvent(event);
             }
 
-            DebugMessage event = new DebugMessage(DebugMessageType.terminated);
-            debugSupport.notifyDebugEvent(event);
             exit();
-            debugSupport.stop();
-            debugSupport = null;            
+            
+            if (this.debugSupport != null) {
+                debugSupport.stop();
+                debugSupport = null;       
+            }
         }
     }
 

@@ -21,13 +21,14 @@
  ******************************************************************************/
 package org.luaj.debug.j2se;
 
-import java.io.IOException;
 import java.net.URL;
-
-import org.luaj.debug.j2se.StandardLuaJVM;
-import org.luaj.debug.j2se.StandardLuaJVM.ParseException;
+import java.util.Properties;
 
 import junit.framework.TestCase;
+
+import org.luaj.debug.DebugLuaState;
+import org.luaj.debug.j2se.StandardLuaJVM.ParseException;
+import org.luaj.vm.LuaState;
 
 /**
  * Sanity test for StandardLuaJVM.
@@ -88,7 +89,7 @@ public class LuaJVMTest extends TestCase {
         vm = new StandardLuaJVM();
         try {
             vm.parse(args);
-            assertFalse(1044 == vm.getDebugPort());
+            assertTrue(1044 == vm.getDebugPort());
             assertFalse(true == vm.getSuspendOnStart());
             assertEquals("dummy.lua", vm.getScript());
         } catch (ParseException e) {
@@ -133,7 +134,18 @@ public class LuaJVMTest extends TestCase {
         } catch (ParseException e) {
             fail("Should never reach this line.");
         }
-        
+
+        args = new String[] { "-Dport=1044,suspendOnStart=True", "dummy.lua" };
+        vm = new StandardLuaJVM();
+        try {
+            vm.parse(args);
+            assertEquals(1044, vm.getDebugPort());
+            assertEquals(true, vm.getSuspendOnStart());
+            assertEquals("dummy.lua", vm.getScript());
+        } catch (ParseException e) {
+            fail("Should never reach this line.");
+        }
+
         args = new String[] { "-DsuspendOnStart=true,port=1044", "dummy.lua" };
         vm = new StandardLuaJVM();
         try {
@@ -169,13 +181,37 @@ public class LuaJVMTest extends TestCase {
     }
 
     public void testRun() {
+        Properties props = System.getProperties();
+        props.remove(LuaState.PROPERTY_LUAJ_DEBUG);
+        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_HOST);
+        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
+        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);        
+        System.setProperties(props);
+        
         String[] tests = new String[] { "autoload", "boolean", "calls",
                 "coercions", "compare", "math", "mathlib", "metatables",
                 "select", "setlist", "swingapp", "test1", "test2", "test3",
                 "test4", "test5", "test6", "test7", "type", "upvalues",
-        // "strlib"
+                "strlib"
         };
+        doRun(tests);
+    }
 
+    public void testDebugRun() {
+        Properties props = System.getProperties();
+        props.setProperty(LuaState.PROPERTY_LUAJ_DEBUG, "true");
+        props.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, "1999");        
+        System.setProperties(props);
+
+        String[] tests = new String[] { "boolean", "calls",
+                "coercions", "compare", "math", "mathlib", "metatables",
+                "select", "setlist", "swingapp", "test1", "test2", "test3",
+                "test4", "test5", "test6", "test7", "type", "upvalues"
+        };
+        doRun(tests);
+    }
+    
+    private void doRun(String[] tests) {
         for (int i = 0; i < tests.length; i++) {
             String test = tests[i];
             System.out.println("==> running test: " + test + ".lua");
@@ -185,7 +221,7 @@ public class LuaJVMTest extends TestCase {
             System.out.println();
         }
     }
-
+    
     protected void doTestRun(String testName) {
         String[] args = new String[1];
         URL filePath = getClass().getResource("/" + testName);

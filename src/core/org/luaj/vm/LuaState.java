@@ -70,6 +70,9 @@ import org.luaj.lib.TableLib;
  */
 public class LuaState extends Lua {
 
+    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug";
+    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";    
+    
     /* thread status; 0 is OK */
     private static final int LUA_YIELD  = 1;
     private static final int LUA_ERRRUN = 2;
@@ -109,6 +112,8 @@ public class LuaState extends Lua {
 	 * does all memory allocation for this state through this function. The
 	 * second argument, <code>ud</code>, is an opaque pointer that Lua simply
 	 * passes to the allocator in every call.
+	 * 
+	 * @deprecated As of version 0.10, replaced by {@link #newState()}
 	 */
 	public LuaState() {
 		_G = new LTable();
@@ -119,6 +124,38 @@ public class LuaState extends Lua {
 		_G = globals;
 	}
 
+	/**
+	 * Factory method to return an instance of LuaState. If debug property is
+	 * present, it will create a DebugLuaState instance.
+	 * @return
+	 */
+	public static LuaState newState() {
+	    String isDebugStr 
+	        = Platform.getInstance().getProperty(PROPERTY_LUAJ_DEBUG, "false");
+	    boolean isDebug = Boolean.parseBoolean(isDebugStr);
+
+	    LuaState vm = null;
+	    if ( isDebug ) {
+                try {
+                    vm = (LuaState) Class.forName( DEBUG_CLASS_NAME ).newInstance();
+                } catch (Exception e) {
+                    System.out.println("Warning: no debug support, " + e );
+                }
+	    }
+	    
+            if ( vm == null )
+                vm = new LuaState();
+            
+            vm.init();
+            
+            return vm;
+	}
+	
+	/**
+	 * Performs the initialization.
+	 */
+	public void init() {}
+	
 	/**
 	 * Install the standard set of libraries used by most implementations:
 	 * BaseLib, CoroutineLib, MathLib, PackageLib, TableLib, StringLib
