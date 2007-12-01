@@ -73,7 +73,7 @@ public class LuaJVMTest extends TestCase {
 
             private int getDebugPortNumber() throws IOException {
                 String portStr =
-                    Platform.getInstance().getProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
+                    getProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
                 int port = -1;
                 if (portStr == null) {
                     throw new IOException("Port number must be specified in the System property");
