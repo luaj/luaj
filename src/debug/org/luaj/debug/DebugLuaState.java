@@ -49,11 +49,7 @@ import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 
-public class DebugLuaState extends LuaState implements DebugRequestListener {
-    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
-    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
-    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
-    
+public class DebugLuaState extends LuaState implements DebugRequestListener {   
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
 
     // stepping constants and stepping state

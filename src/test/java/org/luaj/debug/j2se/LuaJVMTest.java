@@ -66,25 +66,9 @@ public class LuaJVMTest extends TestCase {
              * Provides a J2SE DebugSupport instance.
              */
             public DebugNetSupport getDebugSupport() throws IOException {
-                int port = getDebugPortNumber();
+                int port = getDebugPort();
                 DebugSupportImpl debugSupport = new DebugSupportImpl(port);
                 return debugSupport;
-            }
-
-            private int getDebugPortNumber() throws IOException {
-                String portStr =
-                    getProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
-                int port = -1;
-                if (portStr == null) {
-                    throw new IOException("Port number must be specified in the System property");
-                } else {
-                    try {
-                        port = Integer.parseInt(portStr);
-                    } catch (NumberFormatException e) {
-                        throw new IOException("Bad port number: " + portStr);
-                    }
-                }
-                return port;
             }
         });
     }

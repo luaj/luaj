@@ -70,8 +70,12 @@ import org.luaj.lib.TableLib;
  */
 public class LuaState extends Lua {
 
-    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug";
-    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";    
+    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
+    
+    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug"; 
+    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
+    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
+    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
     
     /* thread status; 0 is OK */
     private static final int LUA_YIELD  = 1;
