@@ -28,7 +28,7 @@ import java.util.Vector;
 import org.luaj.compiler.LexState;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
-import org.luaj.debug.net.DebugSupport;
+import org.luaj.debug.net.DebugNetSupportBase;
 import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestListener;
@@ -37,6 +37,7 @@ import org.luaj.debug.response.DebugResponseCallgraph;
 import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.debug.response.DebugResponseVariables;
 import org.luaj.vm.CallInfo;
+import org.luaj.vm.DebugNetSupport;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LTable;
@@ -70,7 +71,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected boolean bSuspendOnStart = false;
     protected int lastline = -1;
     protected String lastSource;
-    protected DebugSupport debugSupport;
+    protected DebugNetSupportBase debugSupport;
     protected LuaErrorException lastError;
 
     /**
@@ -84,31 +85,31 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         Platform platform = Platform.getInstance();
 
         // set if the vm should be suspended at start
-        String suspendOnStartStr = platform.getProperty(PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, "false");
-        boolean bSuspendOnStart = Boolean.parseBoolean(suspendOnStartStr);
+        String suspendOnStartStr = platform.getProperty(PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);
+        boolean bSuspendOnStart = (suspendOnStartStr != null && "true".equalsIgnoreCase(suspendOnStartStr));
         setSuspendAtStart(bSuspendOnStart);
     
         // set up the debug networking support
         try {
-            DebugSupport debugSupport = platform.getDebugSupport();
+            DebugNetSupport debugSupport = platform.getDebugSupport();
             if (debugSupport != null) 
                 setDebugSupport(debugSupport);
             else 
-                System.out.println("Warning: DebugSupport is not implemented.");
+                System.out.println("Warning: DebugNetSupportBase is not implemented.");
         } catch (IOException e) {
             // no debug client can talk to VM, but VM can continue functioning
             System.out.println("Warning: no debug client support due to error: " + e.getMessage());
         }
     }
     
-    protected void setDebugSupport(DebugSupport debugSupport) 
+    protected void setDebugSupport(DebugNetSupport debugSupport) 
     throws IOException {
         if (debugSupport == null) {
-            throw new IllegalArgumentException("DebugSupport cannot be null");
+            throw new IllegalArgumentException("DebugNetSupportBase cannot be null");
         }
 
-        this.debugSupport = debugSupport;
-        debugSupport.setDebugStackState(this);
+        this.debugSupport = (DebugNetSupportBase) debugSupport;
+        this.debugSupport.setDebugStackState(this);
         debugSupport.start();
     }
     
@@ -304,7 +305,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     public void handleRequest(DebugMessage request) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugSupport must be defined.");
+                    "DebugNetSupportBase must be defined.");
         }
 
         if (TRACE)
@@ -442,7 +443,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     public void disconnect(int connectionId) {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugSupport must be defined.");
+                    "DebugNetSupportBase must be defined.");
         }
         
         reset();
@@ -454,7 +455,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     public void disconnectFromDebugService() {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
-                    "DebugSupport must be defined.");
+                    "DebugNetSupportBase must be defined.");
         }
         
         reset();

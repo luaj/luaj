@@ -6,25 +6,31 @@ import org.luaj.debug.DebugLuaState;
 import org.luaj.debug.DebugMessage;
 import org.luaj.debug.event.DebugEventListener;
 import org.luaj.debug.request.DebugRequestListener;
+import org.luaj.vm.DebugNetSupport;
 
 /**
- *  DebugSupport provides the network communication support between the luaj-vm 
+ *  DebugNetSupportBase provides the network communication support between the luaj-vm 
  *  and debug clients. 
  */
-public abstract class DebugSupport implements DebugRequestListener, DebugEventListener {
+public abstract class DebugNetSupportBase implements DebugRequestListener, DebugEventListener, DebugNetSupport {
     
+    /* (non-Javadoc)
+     * @see org.luaj.debug.net.DebugNetSupport#start()
+     */
     public abstract void start() throws IOException;
     
+    /* (non-Javadoc)
+     * @see org.luaj.debug.net.DebugNetSupport#stop()
+     */
     public abstract void stop();
 
-    /**
-     * Disconnect all connected clients.
+    /* (non-Javadoc)
+     * @see org.luaj.debug.net.DebugNetSupport#disconnect()
      */
     public abstract void disconnect();
     
-    /**
-     * Disconnect the client with the given id.
-     * @param id -- client id
+    /* (non-Javadoc)
+     * @see org.luaj.debug.net.DebugNetSupport#disconnect(int)
      */
     public abstract void disconnect(int id);
 

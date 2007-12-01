@@ -26,14 +26,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import org.luaj.debug.DebugMessage;
-import org.luaj.debug.net.DebugSupport;
+import org.luaj.debug.net.DebugNetSupportBase;
 
 /**
- * J2SE version of DebugSupport. The luaj-vm opens a port accepting the debug
+ * J2SE version of DebugNetSupportBase. The luaj-vm opens a port accepting the debug
  * client connections. The current implementation allows the vm to accept one 
  * and only one debug client connection at any time.
  */
-public class DebugSupportImpl extends DebugSupport {	
+public class DebugSupportImpl extends DebugNetSupportBase {	
 
     protected int numClientConnectionsAllowed;
     protected int numClientConnections = 0;
@@ -42,7 +42,7 @@ public class DebugSupportImpl extends DebugSupport {
     protected ClientConnectionTask clientConnectionTask;
     
     /**
-     * Creates an instance of DebugSupportImpl at the given port
+     * Creates an instance of DebugNetSupportBase at the given port
      * @param debugPort
      * @throws IOException
      */

@@ -19,7 +19,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
     
     protected String host;
     protected int port;
-    DebugSupportImpl debugSupport;
+    protected DebugSupportImpl debugSupport;
     protected boolean bDisconnected = false;
     
     protected SocketConnection connection;

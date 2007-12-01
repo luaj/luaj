@@ -131,8 +131,8 @@ public class LuaState extends Lua {
 	 */
 	public static LuaState newState() {
 	    String isDebugStr 
-	        = Platform.getInstance().getProperty(PROPERTY_LUAJ_DEBUG, "false");
-	    boolean isDebug = Boolean.parseBoolean(isDebugStr);
+	        = Platform.getInstance().getProperty(PROPERTY_LUAJ_DEBUG);
+	    boolean isDebug = (isDebugStr != null && "true".equalsIgnoreCase(isDebugStr));
 
 	    LuaState vm = null;
 	    if ( isDebug ) {

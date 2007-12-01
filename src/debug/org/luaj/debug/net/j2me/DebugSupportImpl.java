@@ -3,14 +3,14 @@ package org.luaj.debug.net.j2me;
 import java.io.IOException;
 
 import org.luaj.debug.DebugMessage;
-import org.luaj.debug.net.DebugSupport;
+import org.luaj.debug.net.DebugNetSupportBase;
 
 /**
- * J2ME version of DebugSupport implementation. The vm will connect to a debug
+ * J2ME version of DebugNetSupportBase implementation. The vm will connect to a debug
  * service hosted on a remote machine and have the debug service relay the 
  * debugging messages between the vm and the debug client.
  */
-public class DebugSupportImpl extends DebugSupport {
+public class DebugSupportImpl extends DebugNetSupportBase {
     protected String host;
     protected int port;
     ClientConnectionTask clientTask;

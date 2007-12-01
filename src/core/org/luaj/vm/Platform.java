@@ -26,10 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.luaj.debug.DebugLuaState;
-import org.luaj.debug.net.DebugSupport;
-import org.luaj.debug.net.j2se.DebugSupportImpl;
-
 /**
  * Singleton to manage platform-specific behaviors. 
  *
@@ -59,22 +55,15 @@ abstract public class Platform {
                     /**
                      * Assumes J2SE platform, return the corresponding system property
                      */
-                    public String getProperty(String propertyName,
-                            String defaultValue) {
-                        return System.getProperty(propertyName, defaultValue);
+                    public String getProperty(String propertyName) {
+                        return System.getProperty(propertyName);
                     }
                     
                     /**
                      * Provides a J2SE DebugSupport instance.
                      */
-                    public DebugSupport getDebugSupport() throws IOException {
-                        String portStr = getProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, "-1");
-                        try {
-                            int port = Integer.parseInt(portStr);
-                            return new DebugSupportImpl(port);
-                        } catch (NumberFormatException e) {
-                            throw new IOException("Bad port number: " + portStr);
-                        }
+                    public DebugNetSupport getDebugSupport() throws IOException {
+                        return null;
                     }
                 };
             }
@@ -108,14 +97,13 @@ abstract public class Platform {
 	/**
 	 * Returns the value for the given platform property. 
 	 * @param propertyName Property name
-	 * @param defaultValue Default property value
 	 * @return Property value
 	 */
-	abstract public String getProperty(String propertyName, String defaultValue);
+	abstract public String getProperty(String propertyName);
 	
 	/**
 	 * Returns an platform dependent DebugSupport instance.
-	 * @return an plaform dependent DebugSupport instance.
+	 * @return an platform dependent DebugSupport instance.
 	 */
-	abstract public DebugSupport getDebugSupport() throws IOException;
+	abstract public DebugNetSupport getDebugSupport() throws IOException;
 }

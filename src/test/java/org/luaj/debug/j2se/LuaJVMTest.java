@@ -21,6 +21,10 @@
  ******************************************************************************/
 package org.luaj.debug.j2se;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.Properties;
 
@@ -28,12 +32,63 @@ import junit.framework.TestCase;
 
 import org.luaj.debug.DebugLuaState;
 import org.luaj.debug.j2se.StandardLuaJVM.ParseException;
+import org.luaj.debug.net.j2se.DebugSupportImpl;
+import org.luaj.vm.DebugNetSupport;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 /**
  * Sanity test for StandardLuaJVM.
  */
 public class LuaJVMTest extends TestCase {
+    protected void setUp() throws Exception {
+        super.setUp();
+        
+        System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, "1999"); 
+        
+        Platform.setInstance(new Platform() {
+            public Reader createReader(InputStream inputStream) {
+                return new InputStreamReader(inputStream);
+            }
+
+            public InputStream openFile(String fileName) {
+                return getClass().getResourceAsStream("/" + fileName);
+            }
+
+            /**
+             * Assumes J2SE platform, return the corresponding system property
+             */
+            public String getProperty(String propertyName) {
+                return System.getProperty(propertyName);
+            }
+            
+            /**
+             * Provides a J2SE DebugSupport instance.
+             */
+            public DebugNetSupport getDebugSupport() throws IOException {
+                int port = getDebugPortNumber();
+                DebugSupportImpl debugSupport = new DebugSupportImpl(port);
+                return debugSupport;
+            }
+
+            private int getDebugPortNumber() throws IOException {
+                String portStr =
+                    Platform.getInstance().getProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
+                int port = -1;
+                if (portStr == null) {
+                    throw new IOException("Port number must be specified in the System property");
+                } else {
+                    try {
+                        port = Integer.parseInt(portStr);
+                    } catch (NumberFormatException e) {
+                        throw new IOException("Bad port number: " + portStr);
+                    }
+                }
+                return port;
+            }
+        });
+    }
+
     public void testCommandLineParse() {
         // null arguments
         String[] args = null;
