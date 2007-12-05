@@ -309,13 +309,13 @@ public class PackageLib extends LFunction {
 		vm.call( 1, 1 ); /* run loaded module */
 		if ( ! vm.isnil(-1) ) /* non-nil return? */
 			LOADED.luaSetTable(vm, LOADED, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
-		vm.resettop();
 		LOADED.luaGetTable(vm, LOADED, name);		
 		if ( vm.topointer(-1) == _SENTINEL ) {   /* module did not set a value? */
 			LOADED.luaSetTable(vm, LOADED, name, LBoolean.TRUE ); /* _LOADED[name] = true */
-			vm.resettop();
 			vm.pushboolean(true);
 		}
+		vm.insert(1);
+		vm.settop(1);
 	}
 
 	public static void loadlib( LuaState vm ) {
@@ -371,21 +371,25 @@ public class PackageLib extends LFunction {
 		if ( ! vm.isstring(-1) )
 			vm.error("package."+pname+" must be a string");
 		String path = vm.tostring(-1);
-		int te = -1;
+		int e = -1;
 		int n = path.length();
 		StringBuffer sb = null;
-		while ( te < n ) {
+		name = name.replace('.','/');
+		while ( e < n ) {
 			
 			// find next template
-			int tb = te+1;
-			te = path.indexOf(';',tb);
-			if ( te < 0 )
-				te = path.length();
-			String template = path.substring(tb,te);
+			int b = e+1;
+			e = path.indexOf(';',b);
+			if ( e < 0 )
+				e = path.length();
+			String template = path.substring(b,e);
 
 			// create filename
-			int ques = template.indexOf('?');
-			String filename = (ques<0? template: template.substring(0,ques)+name+template.substring(ques+1));
+			int q = template.indexOf('?');
+			String filename = template;
+			if ( q >= 0 ) {
+				filename = template.substring(0,q) + name + template.substring(q+1);
+			}
 			
 			// try opening the file
 			InputStream is = p.openFile(filename);
