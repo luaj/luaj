@@ -40,10 +40,10 @@ public class LThread extends LValue implements Runnable {
 	
 	private int status = STATUS_SUSPENDED;
 	
-	private LuaState threadVm;
-	private Thread thread;
+	LuaState threadVm;
+	Thread thread;
 	
-	private static LThread running;
+	static LThread running;
 	
 	
 	public LThread(LClosure c) {

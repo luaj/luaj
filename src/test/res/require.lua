@@ -1,5 +1,6 @@
 -- unit tests for require() function
 local ids = {}
+local ti = table.insert
 local function id(obj)
 	if not obj or type(obj) == 'number' or type(obj) == 'string' then
 		return obj
@@ -8,12 +9,13 @@ local function id(obj)
 	if v then
 		return v
 	end
-	table.insert(ids,obj)
+	ti(ids,obj)
 	ids[obj] = type(obj)..'.'..tostring(#ids)
 	return ids[obj]
 end 
 
 -- tests on require
+package.path='?.lua;src/test/res/?.lua'
 function f( name )
 	print( module( 'testmod', package.seeall ) )
 	print( 'before', id(sample), id(bogus), id(_G[name]) );
@@ -33,7 +35,7 @@ f('bogus')
 print( 'main', id(sample), id(bogus), id(custom) );
 
 -- custom loader chain
-for i=1,4 do
+for i=1,3 do
 	print( i,id(package.loaders[i]) )
 end
 function loader1( ... ) 

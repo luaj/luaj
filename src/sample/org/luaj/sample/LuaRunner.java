@@ -54,6 +54,8 @@ public class LuaRunner {
 				
 		// load the file
 		InputStream is = LuaRunner.class.getResourceAsStream( script );
+		if ( is == null )
+			throw new java.io.FileNotFoundException( "not found: "+script );
 		LPrototype p = LoadState.undump(state, is, script);
 		
 		// create closure and execute

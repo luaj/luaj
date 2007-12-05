@@ -24,9 +24,10 @@ package org.luaj.vm;
 
 
 public class LClosure extends LFunction {
-	public LTable env;
 	public LPrototype p;
 	public UpVal[] upVals;
+	public LTable env;
+	
 	
 	/**
 	 * @deprecated construct with environment instead 
@@ -57,11 +58,10 @@ public class LClosure extends LFunction {
 		vm.prepStackCall();
 		return true;
 	}
-
+	
 	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
 	public int luaSetEnv(LTable t) {
 		this.env = t;
 		return 1;
 	}
-
 }

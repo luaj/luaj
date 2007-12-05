@@ -96,6 +96,7 @@ public class LuaState extends Lua {
     protected Stack upvals = new Stack();
 	protected LFunction panic;
     
+	public static LTable DEFAULT_GLOBALS;
     public LTable _G;
 
     // main debug hook, overridden by DebugStackState
@@ -120,11 +121,16 @@ public class LuaState extends Lua {
 	 * @deprecated As of version 0.10, replaced by {@link #newState()}
 	 */
 	public LuaState() {
-		_G = new LTable();
+		_G = DEFAULT_GLOBALS = new LTable();
 		_G.put("_G", _G);
 	}
 
-	public LuaState(LTable globals) {
+	/** 
+	 * Create a LuaState with a specific global environment. Used by LThread.
+	 * 
+	 * @param globals the LTable to use as globals for this LuaState  
+	 */
+	LuaState(LTable globals) {
 		_G = globals;
 	}
 
@@ -1364,11 +1370,9 @@ public class LuaState extends Lua {
 	 * href="#2.8">&sect;2.8</a>).
 	 * 
 	 */
-	public void getfield(int index, String k) {
+	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		// TODO: what if this triggers metatable ops
-		// pushlvalue( t.luaGetTable(this, t, new LString(k)) );
-		t.luaGetTable(this, t, new LString(k));
+		t.luaGetTable(this, t, k);
 	}
 	
 	/**
@@ -2039,10 +2043,10 @@ public class LuaState extends Lua {
 	 * trigger a metamethod for the "newindex" event (see <a
 	 * href="#2.8">&sect;2.8</a>).
 	 */
-	public void setfield(int index, String k) {
+	public void setfield(int index, LString k) {
 		LTable t = totable(index);
 		LValue v = poplvalue();
-		t.luaSetTable(this, t, new LString(k), v);
+		t.luaSetTable(this, t, k, v);
 	}
 
 	/**
@@ -2569,5 +2573,22 @@ public class LuaState extends Lua {
 	public Long toboxedlong(int index) {
 		return topointer(index).toJavaBoxedLong();
 	}
+	
+	/**
+	 * Get the current environment. 
+	 * 
+	 * @return LTable the current environment
+	 */
+//	public LTable curr_env() {
+//		LuaState vm = (LThread.running!=null? 
+//				LThread.running.threadVm: 
+//				this);
+//		for ( int i=vm.cc; i>=0; i-- ) {
+//			LClosure c = vm.calls[cc].closure;
+//			if ( c != null ) 
+//				return c.env;
+//		}
+//		return _G;
+//	}
 	
 }

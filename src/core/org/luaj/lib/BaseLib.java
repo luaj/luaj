@@ -397,8 +397,8 @@ public class BaseLib extends LFunction {
 		}
 	}
 
-	// return true if laoded, false if error put onto the stack
-	private static boolean loadis(LuaState vm, InputStream is, String chunkname ) {
+	// return true if loaded, false if error put onto the stack
+	static boolean loadis(LuaState vm, InputStream is, String chunkname ) {
 		try {
 			vm.resettop();
 			if ( 0 != vm.load(is, chunkname) ) {

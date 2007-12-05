@@ -90,6 +90,10 @@ public class LuaJTest extends TestCase {
 		runTest( "pcalls" );
 	}
 	
+	public void testRequire() throws IOException, InterruptedException {
+		runTest( "require" );
+	}
+	
 	public void testSelect() throws IOException, InterruptedException {
 		runTest( "select" );
 	}

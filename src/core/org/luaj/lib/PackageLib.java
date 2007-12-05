@@ -23,6 +23,7 @@ package org.luaj.lib;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Vector;
 
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LBoolean;
@@ -33,10 +34,13 @@ import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 
 public class PackageLib extends LFunction {
 
+	public static final String DEFAULT_LUA_PATH = "?.luac;?.lua";
+	
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
 	public static LTable      LOADED = new LTable();
@@ -47,6 +51,11 @@ public class PackageLib extends LFunction {
 	private static final LString _DOT = new LString(".");
 	private static final LString _EMPTY = new LString("");
 	private static final LString __INDEX = new LString("__index");
+	private static final LString _LOADERS = new LString("loaders");
+	private static final LString _PRELOAD = new LString("preload");
+	private static final LString _PATH = new LString("path");
+	private static final LValue  _SENTINEL = _EMPTY;
+	private static final LString _LUA_PATH = new LString(DEFAULT_LUA_PATH);
 	
 	private static final String[] NAMES = {
 		"package",
@@ -54,6 +63,9 @@ public class PackageLib extends LFunction {
 		"require",
 		"loadlib",
 		"seeall",
+		"preload_loader",
+		"lua_loader",
+		"java_loader",
 	};
 	
 	private static final int INSTALL        = 0;
@@ -61,16 +73,27 @@ public class PackageLib extends LFunction {
 	private static final int REQUIRE        = 2;
 	private static final int LOADLIB        = 3;
 	private static final int SEEALL         = 4;
+	private static final int PRELOAD_LOADER = 5;
+	private static final int LUA_LOADER     = 6;
+	private static final int JAVA_LOADER    = 7;
 	
+	// all functions in package share this environment 
+	private static LTable pckg;
 	
 	public static void install( LTable globals ) {
-		for ( int i=1; i<LOADLIB; i++ )
+		for ( int i=1; i<=REQUIRE; i++ )
 			globals.put( NAMES[i], new PackageLib(i) );
-		LTable pckg = new LTable();
-		for ( int i=LOADLIB; i<NAMES.length; i++ )
+		pckg = new LTable();
+		for ( int i=LOADLIB; i<=SEEALL; i++ )
 			pckg.put( NAMES[i], new PackageLib(i) );
+		pckg.put( "loaded", LOADED );
+		pckg.put( _PRELOAD, new LTable() );
+		LTable loaders = new LTable(3,0);
+		for ( int i=PRELOAD_LOADER; i<=JAVA_LOADER; i++ )
+			loaders.luaInsertPos(0, new PackageLib(i) );
+		pckg.put( "loaders", loaders );
+		pckg.put( _PATH, _LUA_PATH );
 		globals.put( "package", pckg );
-		pckg.put( "loaded", LOADED );	
 	}
 	
 	private final int id;
@@ -106,6 +129,18 @@ public class PackageLib extends LFunction {
 				t.luaSetMetatable(m = new LTable());
 			m.put(__INDEX, vm._G);
 			vm.resettop();
+			break;
+		}
+		case PRELOAD_LOADER: {
+			loader_preload(vm);
+			break;
+		}
+		case LUA_LOADER: {
+			loader_Lua(vm);
+			break;
+		}
+		case JAVA_LOADER: {
+			loader_Java(vm);
 			break;
 		}
 		default:
@@ -236,29 +271,141 @@ public class PackageLib extends LFunction {
 	 * If there is any error loading or running the module, or if it cannot find any loader for 
 	 * the module, then require signals an error.
 	 */	
-	public static void require( LuaState vm ) {
-		LString modname = vm.tolstring(2);
-		if ( LOADED.containsKey(modname) ) {
+	public void require( LuaState vm ) {
+		LString name = vm.tolstring(2);
+		LValue loaded = LOADED.get(name);
+		if ( loaded.toJavaBoolean() ) {
+			if ( loaded == _SENTINEL )
+				vm.error("loop or previous error loading module '"+name+"'");
 			vm.resettop();
-			vm.pushlvalue( LOADED.get(modname) );
+			vm.pushlvalue( loaded );
+			return;
 		}
-		else {
-			String s = modname.toJavaString();
-			if ( ! BaseLib.loadfile(vm, s+".luac") && ! BaseLib.loadfile(vm, s+".lua") )
-				vm.error( "not found: "+s );
-			else if ( 0 == vm.pcall(0, 1, 0) ) {
-				LValue result = vm.topointer( -1 ); 
-				if ( result != LNil.NIL )
-					LOADED.put(modname, result);
-				else if ( ! LOADED.containsKey(modname) )
-					LOADED.put(modname, result = LBoolean.TRUE);
-				vm.resettop();
-				vm.pushlvalue( result );
-			}
+		vm.settop(0);
+		
+		/* else must load it; iterate over available loaders */
+		pckg.luaGetTable(vm, pckg, _LOADERS);
+		if ( ! vm.istable(1) )
+			vm.error( "'package.loaders' must be a table" );
+		Vector v = new Vector();
+		for ( int i=1; true; i++ ) {
+		    vm.rawgeti(1, i);
+		    if ( vm.isnil(-1) ) {
+		    	vm.error( "module '"+name+"' not found: "+v );
+		    }
+		    /* call loader with module name as argument */
+		    vm.pushlstring(name);
+		    vm.call(1, 1);
+		    if ( vm.isfunction(-1) )
+		    	break;  /* module loaded successfully */
+		    if ( vm.isstring(-1) )  /* loader returned error message? */
+		    	v.addElement(vm.tolstring(-1));  /* accumulate it */
+	    	vm.pop(1);
+		}
+
+		// load the module using the loader
+		LOADED.luaSetTable(vm, LOADED, name, _SENTINEL);
+		vm.pushlstring( name );  /* pass name as argument to module */
+		vm.call( 1, 1 ); /* run loaded module */
+		if ( ! vm.isnil(-1) ) /* non-nil return? */
+			LOADED.luaSetTable(vm, LOADED, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
+		vm.resettop();
+		LOADED.luaGetTable(vm, LOADED, name);		
+		if ( vm.topointer(-1) == _SENTINEL ) {   /* module did not set a value? */
+			LOADED.luaSetTable(vm, LOADED, name, LBoolean.TRUE ); /* _LOADED[name] = true */
+			vm.resettop();
+			vm.pushboolean(true);
 		}
 	}
 
 	public static void loadlib( LuaState vm ) {
 		vm.error( "loadlib not implemented" );
+	}
+
+
+	private void loader_preload( LuaState vm ) {
+		LString name = vm.tolstring(2);
+		pckg.luaGetTable(vm, pckg, _PRELOAD);
+		if ( ! vm.istable(-1) )
+			vm.error("package.preload '"+name+"' must be a table");
+		LTable preload = vm.totable(-1); 
+		preload.luaGetTable(vm, preload, name);
+		if ( vm.isnil(-1) )
+			vm.pushstring("\n\tno field package.preload['"+name+"']");
+		vm.insert(1);
+		vm.settop(1);
+	}
+
+	private void loader_Lua( LuaState vm ) {
+		String name = vm.tostring(2);
+		InputStream is = findfile( vm, name, _PATH );
+		if ( is != null ) {
+			String filename = vm.tostring(-1);
+			if ( ! BaseLib.loadis(vm, is, filename) )
+				loaderror( vm, filename );
+		}
+		vm.insert(1);
+		vm.settop(1);
+	}
+
+	private void loader_Java( LuaState vm ) {
+		String name = vm.tostring(2);
+		Class c = null;
+		LValue v = null;
+		try {
+			c = Class.forName(name);
+			v = (LValue) c.newInstance();
+			vm.pushlvalue( v );
+		} catch ( ClassNotFoundException  cnfe ) {
+			vm.pushstring("\n\tno class '"+name+"'" );
+		} catch ( Exception e ) {
+			vm.pushstring("\n\tjava load failed on '"+name+"', "+e );
+		}
+		vm.insert(1);
+		vm.settop(1);		
+	}
+
+	private InputStream findfile(LuaState vm, String name, LString pname) {
+		Platform p = Platform.getInstance();
+		pckg.luaGetTable(vm, pckg, pname);
+		if ( ! vm.isstring(-1) )
+			vm.error("package."+pname+" must be a string");
+		String path = vm.tostring(-1);
+		int te = -1;
+		int n = path.length();
+		StringBuffer sb = null;
+		while ( te < n ) {
+			
+			// find next template
+			int tb = te+1;
+			te = path.indexOf(';',tb);
+			if ( te < 0 )
+				te = path.length();
+			String template = path.substring(tb,te);
+
+			// create filename
+			int ques = template.indexOf('?');
+			String filename = (ques<0? template: template.substring(0,ques)+name+template.substring(ques+1));
+			
+			// try opening the file
+			InputStream is = p.openFile(filename);
+			if ( is != null ) {
+				vm.pushstring(filename);
+				return is;
+			}
+			
+			// report error
+			if ( sb == null )
+				sb = new StringBuffer();
+			sb.append( "\n\tno file '"+filename+"'");
+		}
+		
+		// not found, push error on stack and return
+		vm.pushstring(sb.toString());
+		return null;
+	}
+
+	private static void loaderror(LuaState vm, String filename) {
+		vm.error( "error loading module '"+vm.tostring(1)+"' from file '"+filename+"':\n\t"+vm.tostring(-1) );
 	}
 }
