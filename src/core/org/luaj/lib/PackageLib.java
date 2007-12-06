@@ -97,7 +97,7 @@ public class PackageLib extends LFunction {
 	}
 
 	public static void setLuaPath( String newLuaPath ) {
-		pckg.put( _PATH, _LUA_PATH );
+		pckg.put( _PATH, new LString(newLuaPath) );
 	}
 	
 	private final int id;
