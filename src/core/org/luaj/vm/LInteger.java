@@ -85,7 +85,7 @@ public class LInteger extends LNumber {
 		case Lua.OP_MOD: return LInteger.valueOf( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
 		case Lua.OP_POW: return LInteger.valueOf( ipow(m_value, rhs) );
 		}
-		return luaUnsupportedOperation();
+		throw new RuntimeException("bad opcode");
 	}
 	
 	private static int ipow(int v, int rhs) {
@@ -113,8 +113,7 @@ public class LInteger extends LNumber {
 		case Lua.OP_LT: return m_value < rhs;
 		case Lua.OP_LE: return m_value <= rhs;
 		}
-		luaUnsupportedOperation();
-		return false;
+		throw new RuntimeException("bad opcode");
 	}
 	
 	// unsupported except for numbers

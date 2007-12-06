@@ -109,7 +109,7 @@ public final class LuajavaLib extends LFunction {
 			}
 			break;
 		default:
-			luaUnsupportedOperation();
+			throw new LuaErrorException("not yet supported: "+this);
 		}
 		return false;
 	}

@@ -175,7 +175,7 @@ public class TableLib extends LFunction {
 		}
 			
 		default:
-			luaUnsupportedOperation();
+			throw new RuntimeException( "bad id" );
 		}
 		return false;
 	}

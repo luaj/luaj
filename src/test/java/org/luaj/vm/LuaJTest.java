@@ -70,6 +70,10 @@ public class LuaJTest extends TestCase {
 		runTest( "compare" );
 	}
 
+	public void testErrors() throws IOException, InterruptedException {
+		runTest( "errors" );
+	}
+
 	public void testMathLib() throws IOException, InterruptedException {
 		runTest( "mathlib" );
 	}
@@ -129,7 +133,7 @@ public class LuaJTest extends TestCase {
 	public void testUpvalues2() throws IOException, InterruptedException {
 		runTest( "upvalues2" );
 	}
-
+//*/
 	private void runTest( String testName ) throws IOException, InterruptedException {
 
 		// new lua state 

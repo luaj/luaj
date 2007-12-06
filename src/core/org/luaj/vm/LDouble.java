@@ -77,25 +77,27 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
 		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
-		// case Lua.OP_POW: return new LDouble( dpow(lhs, rhs) );
+		case Lua.OP_POW: throw new LuaErrorException("math.pow() not implemented for doubles");
 		}
-		return luaUnsupportedOperation();
+		throw new RuntimeException("bad opcode");
 	}
 
-	/*
+	/* warning: NOT TESTED
 	public static double dpow(double a, double b) {
 		if ( b < 0 )
 			return 1 / dpow( a, -b );
-		int p = 1;
+		double p = 1;
 		int whole = (int) b;
-		for ( double v=a; whole > 0; whole>>=1, v=v*v )
+		for ( double v=a; whole > 0; whole>>=1, v*=v )
 			if ( (whole & 1) != 0 )
 				p *= v;
-		int frac = (int) (0x10000 * b);
-		for ( ; (frac&0xffff)!=0; frac<<=1 ) {
-			a = Math.sqrt(a);
-			if ( (frac & 0x8000) != 0 )
-				p *= a;
+		if ( (b -= whole) > 0 ) {
+			int frac = (int) (0x10000 * b);
+			for ( ; (frac&0xffff)!=0; frac<<=1 ) {
+				a = Math.sqrt(a);
+				if ( (frac & 0x8000) != 0 )
+					p *= a;
+			}
 		}
 		return p;
 	}
@@ -132,8 +134,7 @@ public class LDouble extends LNumber {
 		case Lua.OP_LT: return lhs < rhs;
 		case Lua.OP_LE: return lhs <= rhs;
 		}
-		luaUnsupportedOperation();
-		return false;
+		throw new RuntimeException("bad opcode");
 	}
 
 	/** Arithmetic negative */

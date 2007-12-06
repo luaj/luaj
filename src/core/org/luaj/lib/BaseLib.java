@@ -364,7 +364,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		default:
-			luaUnsupportedOperation();
+			throw new RuntimeException( "bad id: "+id );
 		}
 		return false;
 	}

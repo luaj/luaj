@@ -135,7 +135,7 @@ public class StringLib extends LFunction {
 			break;
 			
 		default:
-			luaUnsupportedOperation();
+			vm.error( "bad id" );
 		}
 		return false;
 	}

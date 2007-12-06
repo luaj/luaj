@@ -96,7 +96,7 @@ public class LuaState extends Lua {
     protected Stack upvals = new Stack();
 	protected LFunction panic;
     
-	public static LTable DEFAULT_GLOBALS;
+	static LuaState mainState;
     public LTable _G;
 
     // main debug hook, overridden by DebugStackState
@@ -121,8 +121,9 @@ public class LuaState extends Lua {
 	 * @deprecated As of version 0.10, replaced by {@link #newState()}
 	 */
 	public LuaState() {
-		_G = DEFAULT_GLOBALS = new LTable();
+		_G = new LTable();
 		_G.put("_G", _G);
+		mainState = this;
 	}
 
 	/** 
@@ -1004,13 +1005,13 @@ public class LuaState extends Lua {
     
     /** 
      * Get the file line number info for a particular call frame.
-     * @param cindex
+     * @param cindex index into call stack
      * @return
      */
     protected String getFileLine(int cindex) {
         String source = "?";
         String line = "";
-        if (cindex >= 0) {
+        if (cindex >= 0 && cindex <= cc) {
             CallInfo call = this.calls[cindex];
             LPrototype p = call.closure.p;
             if (p != null && p.source != null)
@@ -1041,18 +1042,14 @@ public class LuaState extends Lua {
 	 * after filling line number information first when level > 0.
 	 */
     public void error(String message, int level) {
-    	if ( level > 1 )
-    		message = getFileLine(cc + 2 - level) + ": " + message;
-        throw new LuaErrorException( message );
+        throw new LuaErrorException( this, message, level );
     }
     
 	/**
 	 * Raises an error with the default level.   
-	 * 
-	 * In the java implementation this calls error(message,1)
 	 */
     public void error(String message) {
-    	error( message, 1 );
+    	throw new LuaErrorException( this, message, 1 );
     }
     
 	/**
@@ -1065,9 +1062,7 @@ public class LuaState extends Lua {
 	 * 
 	 */
 	public void error() {
-		String message = tostring(-1);
-		// pop(1);
-		error( message );
+		throw new LuaErrorException( this, tostring(-1), 0);
 	}
 	
 	/**

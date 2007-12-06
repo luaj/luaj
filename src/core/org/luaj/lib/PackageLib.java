@@ -144,7 +144,7 @@ public class PackageLib extends LFunction {
 			break;
 		}
 		default:
-			luaUnsupportedOperation();
+			throw new RuntimeException( "bad id: "+id );
 		}
 		return false;
 	}
@@ -182,7 +182,7 @@ public class PackageLib extends LFunction {
 		    /* try global variable (and create one if it does not exist) */
 			module = findtable( vm._G, modname );
 			if ( module == null )
-				vm.error( "name conflict for module '"+modname+"'", 2 );
+				vm.error( "name conflict for module '"+modname+"'" );
 			LOADED.luaSetTable(vm, LOADED, modname, module);
 		} else {
 			module = (LTable) value;

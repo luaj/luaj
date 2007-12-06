@@ -36,7 +36,15 @@ public class LuaErrorException extends RuntimeException {
 	 * Construct a LuaErrorException with the default message. 
 	 */
 	public LuaErrorException() {
-		super(DEFAULT_MESSAGE);
+		this(DEFAULT_MESSAGE);
+	}
+
+	/**
+	 * Construct a LuaErrorException in response to a Throwable that was caught
+	 * and with the default message. 
+	 */
+	public LuaErrorException(Throwable cause) {
+		this(DEFAULT_MESSAGE+": "+cause);
 	}
 
 	/**
@@ -45,14 +53,35 @@ public class LuaErrorException extends RuntimeException {
 	 * @param message message to supply
 	 */
 	public LuaErrorException(String message) {
-		super(message);
+		this(null, message, 1);
 	}
 
 	/**
-	 * Construct a LuaErrorException in response to a Throwable that was caught
-	 * and with the default message. 
+	 * Construct the message around a specific vm and with a particular level of debug info
+	 * @param vm
+	 * @param message
+	 * @param level
 	 */
-	public LuaErrorException(Throwable cause) {
-		super(DEFAULT_MESSAGE+": "+cause);
+	public LuaErrorException(LuaState vm, String message, int level) {
+		super( addLineInfo( vm, message, level ) );
+	}
+
+	/** 
+	 * Append line info as per level
+	 * @param vm
+	 * @param message
+	 * @param level
+	 * @return
+	 */
+	private static String addLineInfo(LuaState vm, String message, int level) {
+		if ( level < 1 )
+			return message;
+		if ( vm == null ) {
+			if ( LThread.running != null )
+				vm = LThread.running.threadVm;
+			else
+				vm = LuaState.mainState;
+		}
+		return vm.getFileLine(vm.cc + 1 - level) + ": " + message;
 	}
 }

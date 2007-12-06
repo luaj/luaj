@@ -126,7 +126,7 @@ public class CoroutineLib extends LFunction {
 				if ( vm.toboolean(1) )
 					vm.remove(1);
 				else
-					vm.error( vm.tostring(2), 0 );
+					vm.error( vm.tostring(2) );
 				return false;
 			}
 		}

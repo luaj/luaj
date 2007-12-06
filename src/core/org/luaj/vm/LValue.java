@@ -31,14 +31,21 @@ public class LValue {
 	/** Metatable tag for intercepting table sets */
 	public static final LString TM_NEWINDEX = new LString("__newindex");
 	
-	protected static LValue luaUnsupportedOperation() {
-		throw new LuaErrorException( "not supported" );
-	}
-
-	protected void luaConversionError(String target) {
+	protected void conversionError(String target) {
 		throw new LuaErrorException( "bad conversion: "+luaGetTypeName()+" to "+target );
 	}
 
+	private static LValue arithmeticError( Object type ) {
+		throw new LuaErrorException( "attempt to perform arithmetic on ? (a "+type+" value)" );
+	}
+
+	protected static LValue compareError( Object typea, Object typeb ) {
+		throw new LuaErrorException( "attempt to compare "+typea+" with "+typeb );
+	}
+
+	private void indexError(LuaState vm, LValue nontable) {
+		vm.error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 2 );
+	}
 
 	public String id() {
 		return Integer.toHexString(hashCode());
@@ -58,24 +65,24 @@ public class LValue {
 
 	// unsupported except for numbers
 	public LValue luaBinOpUnknown(int opcode, LValue lhs) {
-		return luaUnsupportedOperation();
+		return arithmeticError(lhs.luaGetTypeName());
 	}
 
 	// unsupported except for numbers
 	public LValue luaBinOpInteger(int opcode, int m_value) {
-		return luaUnsupportedOperation();
+		return arithmeticError("number");
 	}
 
 	// unsupported except for numbers
 	public LValue luaBinOpDouble(int opcode, double m_value) {
-		return luaUnsupportedOperation();
+		return arithmeticError("number");
 	}
 
 	// unsupported except for numbers, strings, and == with various combinations of Nil, Boolean, etc. 
 	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
 		if ( opcode == Lua.OP_EQ )
 			return lhs == this;
-		luaUnsupportedOperation();
+		compareError(lhs.luaGetTypeName(), luaGetTypeName());
 		return false;
 	}
 	
@@ -83,7 +90,7 @@ public class LValue {
 	public boolean luaBinCmpString(int opcode, LString rhs) {
 		if ( opcode == Lua.OP_EQ )
 			return false;
-		luaUnsupportedOperation();
+		compareError(luaGetTypeName(), "string");
 		return false;
 	}
 	
@@ -91,7 +98,7 @@ public class LValue {
 	public boolean luaBinCmpInteger(int opcode, int rhs) {
 		if ( opcode == Lua.OP_EQ )
 			return false;
-		luaUnsupportedOperation();
+		compareError(luaGetTypeName(), "number");
 		return false;
 	}
 	
@@ -99,7 +106,7 @@ public class LValue {
 	public boolean luaBinCmpDouble(int opcode, double rhs) {
 		if ( opcode == Lua.OP_EQ )
 			return false;
-		luaUnsupportedOperation();
+		compareError(luaGetTypeName(), "number");
 		return false;
 	}
 	
@@ -119,7 +126,7 @@ public class LValue {
 				return;
 			}
 		}
-		vm.pushnil();
+		indexError( vm, table );
 	}
 	
 	/** Get a value from a table 
@@ -136,7 +143,7 @@ public class LValue {
 				return;
 			}
 		}
-		vm.error( "attempt to index ? (a "+table.luaGetTypeName()+" value)", 2 );
+		indexError( vm, table );
 	}
 	
 	/** Get the value as a LString 
@@ -152,20 +159,12 @@ public class LValue {
 	
 	/** Arithmetic negative */
 	public LValue luaUnaryMinus() {
-		return luaUnsupportedOperation();
+		return arithmeticError(luaGetTypeName());
 	}
 
 	/** Built-in opcode LEN, for Strings and Tables */
 	public int luaLength() {
-		// TODO: call meta-method TM_LEN here
-		luaUnsupportedOperation();
-		return 0;
-	}
-
-	/** Valid for tables 
-	 * @param isPairs true to iterate over non-integers as well */
-	public LValue luaPairs(boolean isPairs) {
-		return luaUnsupportedOperation();
+		throw new LuaErrorException( "attempt to get length of ? (a "+luaGetTypeName()+" value)" );
 	}
 
 	/**
@@ -184,7 +183,7 @@ public class LValue {
 
 	/** Valid for tables */
 	public void luaSetMetatable(LValue metatable) {
-		luaUnsupportedOperation();
+		throw new LuaErrorException( "bad argument #1 to 'setmetatable' (table expected, got "+metatable.luaGetTypeName()+")");
 	}
 
 	/** Valid for all types: return the int value identifying the type of this value */
@@ -229,7 +228,7 @@ public class LValue {
 
 	/** Return value as an integer */
 	public int toJavaInt() {
-		luaConversionError("number");
+		conversionError("number");
 		return 0;
 	}
 
@@ -245,55 +244,55 @@ public class LValue {
 
 	/** Convert to a Boolean value */
 	public Boolean toJavaBoxedBoolean() {
-		luaConversionError("Boolean");
+		conversionError("Boolean");
 		return null;
 	}
 
 	/** Convert to a Byte value */
 	public Byte toJavaBoxedByte() {
-		luaConversionError("Byte");
+		conversionError("Byte");
 		return null;
 	}
 
 	/** Convert to a boxed Character value */
 	public Character toJavaBoxedCharacter() {
-		luaConversionError("Character");
+		conversionError("Character");
 		return null;
 	}
 
 	/** Convert to a boxed Double value */
 	public Double toJavaBoxedDouble() {
-		luaConversionError("Double");
+		conversionError("Double");
 		return null;
 	}
 
 	/** Convert to a boxed Float value */
 	public Float toJavaBoxedFloat() {
-		luaConversionError("Float");
+		conversionError("Float");
 		return null;
 	}
 
 	/** Convert to a boxed Integer value */
 	public Integer toJavaBoxedInteger() {
-		luaConversionError("Integer");
+		conversionError("Integer");
 		return null;
 	}
 
 	/** Convert to a boxed Long value */
 	public Long toJavaBoxedLong() {
-		luaConversionError("Long");
+		conversionError("Long");
 		return null;
 	}
 
 	/** Convert to a boxed Short value */
 	public Short toJavaBoxedShort() {
-		luaConversionError("Short");
+		conversionError("Short");
 		return null;
 	}
 
 	/** Convert to a Java Object iff this is a LUserData value */
 	public Object toJavaInstance() {
-		luaConversionError("instance");
+		conversionError("instance");
 		return null;
 	}
 

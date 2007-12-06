@@ -315,8 +315,7 @@ public class LString extends LValue {
 		case Lua.OP_LT: return compareTo(rhs) < 0;
 		case Lua.OP_LE: return compareTo(rhs) <= 0;
 		}
-		luaUnsupportedOperation();
-		return false;
+		throw new RuntimeException("bad opcode");
 	}
 	
 	public LValue luaBinOpDouble( int opcode, double m_value ) {
