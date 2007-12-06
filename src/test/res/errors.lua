@@ -1,4 +1,5 @@
 -- object ids
+package.path = "?.lua;src/test/res/?.lua"
 require 'ids'
 ids = {}
 
@@ -83,6 +84,9 @@ t = {}
 print( 'a(setmetatable(t))  ', a(function() return sm(t,{}) end) )
 print( 'a(setmetatable(t*))  ', a(function() return sm(t,{__metatable='some string'}) end) )
 print( 'a(setmetatable(t))  ', a(function() return sm(t,{}) end) )
+print( 'a(setmetatable(t,nil))  ', a(function() return sm(t,nil) end) )
+print( 'a(setmetatable(t))  ', a(function() return sm(t) end) )
+print( 'a(setmetatable({},"abc"))  ', a(function() return sm({},'abc') end) )
 
 -- bad args to error!
 print( 'error("msg","arg")', a(function() error('some message', 'some bad arg') end) )

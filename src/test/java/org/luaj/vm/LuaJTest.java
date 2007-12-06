@@ -252,9 +252,27 @@ public class LuaJTest extends TestCase {
 			});
 			outputCopier.start();
 			
+			// start another thread to read output from the subprocess.
+			Thread errorCopier = (new Thread() {
+				public void run() {
+					try {
+						InputStream processError = p.getErrorStream();
+						try {
+							copy( processError, System.err );
+						} finally {
+							processError.close();
+						}
+					} catch ( IOException ioe ) {
+						ioe.printStackTrace();
+					}
+				}
+			});
+			errorCopier.start();
+			
 			p.waitFor();
 			inputCopier.join();
 			outputCopier.join();
+			errorCopier.join();
 			
 			return new String( baos.toByteArray() );
 			
