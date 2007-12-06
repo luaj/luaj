@@ -113,7 +113,7 @@ public class MathLib extends LFunction {
 			setResult( vm, LInteger.valueOf( (int) Math.floor( vm.tonumber(2) ) ) );
 			break;
 		default:
-			throw new RuntimeException( "bad id: "+id );
+			LuaState.vmerror( "bad math id" );
 		}
 		return false;
 	}

@@ -79,7 +79,8 @@ public class LDouble extends LNumber {
 		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
 		case Lua.OP_POW: throw new LuaErrorException("math.pow() not implemented for doubles");
 		}
-		throw new RuntimeException("bad opcode");
+		LuaState.vmerror( "bad bin opcode" );
+		return null;
 	}
 
 	/* warning: NOT TESTED
@@ -134,7 +135,8 @@ public class LDouble extends LNumber {
 		case Lua.OP_LT: return lhs < rhs;
 		case Lua.OP_LE: return lhs <= rhs;
 		}
-		throw new RuntimeException("bad opcode");
+		LuaState.vmerror( "bad cmp opcode" );
+		return false;
 	}
 
 	/** Arithmetic negative */

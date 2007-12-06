@@ -42,7 +42,7 @@ public class LuaRunner {
 	public static void main( String[] args ) throws IOException {
 
 		// new lua state 
-		LuaState state = new LuaState();
+		LuaState state = LuaState.newState();
 		
 		// get script name
 		String script = (args.length>0? args[0]: "/test2.luac");

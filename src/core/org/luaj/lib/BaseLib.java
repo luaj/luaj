@@ -364,7 +364,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		default:
-			throw new RuntimeException( "bad id: "+id );
+			LuaState.vmerror( "bad base id" );
 		}
 		return false;
 	}

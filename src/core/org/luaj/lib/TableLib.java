@@ -175,7 +175,7 @@ public class TableLib extends LFunction {
 		}
 			
 		default:
-			throw new RuntimeException( "bad id" );
+			LuaState.vmerror( "bad table id" );
 		}
 		return false;
 	}

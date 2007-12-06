@@ -822,34 +822,30 @@ public class LuaState extends Lua {
             case LuaState.OP_FORPREP: {
                 init = this.stack[base + a];
                 step = this.stack[base + a + 2];
-                this.stack[base + a] = step.luaBinOpUnknown(Lua.OP_SUB,
-                        init);
+                this.stack[base + a] = step.luaBinOpUnknown(Lua.OP_SUB, init);
                 b = LuaState.GETARG_sBx(i);
                 ci.pc += b;
                 continue;
             }
             case LuaState.OP_TFORLOOP: {
-                cb = a + 3; /* call base */
-                System.arraycopy(this.stack, base + a, this.stack,
-                        base + cb, 3);
-                base += cb;
-                try {
-                    top = base + 3; /* func. + 2 args (state and index) */
-                    
-                    // call the iterator
-                    c = LuaState.GETARG_C(i);
-                    if (this.stack[base].luaStackCall(this))
-                        execute();
-                    adjustTop( base + c - 1 );
-                    
-                    // test for continuation
-                    if (this.stack[base] != LNil.NIL) { // continue?
-                        this.stack[base - 1] = this.stack[base]; // save control variable
-                    } else {
-                        ci.pc++; // skip over jump
-                    }
-                } finally {
-                    base -= cb;
+            	cb = base + a + 3; /* call base */
+            	base = cb;
+            	adjustTop( cb + 3 );
+                System.arraycopy(this.stack, cb-3, this.stack, cb, 3);
+                
+                // call the iterator
+                c = LuaState.GETARG_C(i);
+                this.nresults = c;
+                if (this.stack[cb].luaStackCall(this))
+                    execute();
+                base = ci.base;
+                adjustTop( cb + c );
+                
+                // test for continuation
+                if (this.stack[cb] != LNil.NIL ) { // continue?
+                    this.stack[cb-1] = this.stack[cb]; // save control variable
+                } else {
+                    ci.pc++; // skip over jump
                 }
                 continue;
             }
@@ -2568,22 +2564,14 @@ public class LuaState extends Lua {
 	public Long toboxedlong(int index) {
 		return topointer(index).toJavaBoxedLong();
 	}
-	
+
+
 	/**
-	 * Get the current environment. 
-	 * 
-	 * @return LTable the current environment
+	 * Method to indicate a vm internal error has occurred. 
+	 * Generally, this is not recoverable, so we convert to 
+	 * a lua error during production so that the code may recover.
 	 */
-//	public LTable curr_env() {
-//		LuaState vm = (LThread.running!=null? 
-//				LThread.running.threadVm: 
-//				this);
-//		for ( int i=vm.cc; i>=0; i-- ) {
-//			LClosure c = vm.calls[cc].closure;
-//			if ( c != null ) 
-//				return c.env;
-//		}
-//		return _G;
-//	}
-	
+	public static void vmerror(String description) {
+		throw new LuaErrorException( "internal error: "+description );
+	}
 }
