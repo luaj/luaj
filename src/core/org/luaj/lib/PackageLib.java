@@ -95,6 +95,10 @@ public class PackageLib extends LFunction {
 		pckg.put( _PATH, _LUA_PATH );
 		globals.put( "package", pckg );
 	}
+
+	public static void setLuaPath( String newLuaPath ) {
+		pckg.put( _PATH, _LUA_PATH );
+	}
 	
 	private final int id;
 
@@ -144,7 +148,7 @@ public class PackageLib extends LFunction {
 			break;
 		}
 		default:
-			throw new RuntimeException( "bad id: "+id );
+			LuaState.vmerror( "bad package id" );
 		}
 		return false;
 	}
