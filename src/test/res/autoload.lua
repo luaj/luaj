@@ -2,8 +2,7 @@
 math = nil
 
 local function autoload(table, key)
-	local chunk = loadfile(key..".luac")
-	local pkg = chunk()
+	local pkg = require(key)
 	table[key] = pkg
 	return pkg
 end
@@ -13,4 +12,4 @@ setmetatable(_G, { __index = autoload } )
 -- local result = math.sqrt(9.0)
 -- print("x=", result)
 print("square root of 9.0 is ", math.sqrt(9.0))
-print("math.pi=", math.pi);
+print("square root of 4.0 is ", math.sqrt(4.0))
