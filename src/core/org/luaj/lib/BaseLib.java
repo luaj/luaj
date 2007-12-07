@@ -29,7 +29,6 @@ public class BaseLib extends LFunction {
 
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
-	private static PrintStream stdout = System.out;	
 	
 	private static final String[] NAMES = { 
 		"base",
@@ -136,10 +135,10 @@ public class BaseLib extends LFunction {
 			int n = vm.gettop();
 			for ( int i=2; i<=n; i++ ) {
 				if ( i > 2 )
-					stdout.print( "\t" );
-				stdout.print( vm.tostring(i) );
+					STDOUT.print( "\t" );
+				STDOUT.print( vm.tostring(i) );
 			}
-			stdout.println();
+			STDOUT.println();
 			vm.resettop();
 			break;
 		}
@@ -374,11 +373,11 @@ public class BaseLib extends LFunction {
 	}
 	
 	public static void redirectOutput( OutputStream newStdOut ) {
-		stdout = new PrintStream( newStdOut );
+		STDOUT = new PrintStream( newStdOut );
 	}
 	
 	public static void restoreStandardOutput() {
-		stdout = System.out;
+		STDOUT = System.out;
 	}
 
 	// closes the input stream, provided its not null or System.in
