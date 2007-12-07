@@ -5,6 +5,7 @@ import java.io.IOException;
 import junit.framework.TestCase;
 
 import org.luaj.debug.event.DebugEventBreakpoint;
+import org.luaj.debug.event.DebugEventOutputRedirect;
 
 public class DebugEventTest extends TestCase {
     public void testDebugEventSerialization() {
@@ -30,6 +31,19 @@ public class DebugEventTest extends TestCase {
             assertNotNull(eventOut);
             assertEquals(event.getSource(), eventOut.getSource());
             assertEquals(event.getLineNumber(), eventOut.getLineNumber());
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+    }
+    
+    public void testDebugEventOutputRedirectSerialization() {
+        try {
+            String msg = "This is a testing message";
+            DebugEventOutputRedirect redirectEvent = new DebugEventOutputRedirect(msg);
+            byte[] data = SerializationHelper.serialize(redirectEvent);
+            DebugEventOutputRedirect redirectEventOut = (DebugEventOutputRedirect)
+                SerializationHelper.deserialize(data);
+            assertEquals(msg, redirectEventOut.getOutput());            
         } catch (IOException e) {
             fail(e.getMessage());
         }

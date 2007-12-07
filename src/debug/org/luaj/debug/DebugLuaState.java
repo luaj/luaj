@@ -91,10 +91,10 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             if (debugSupport != null) 
                 setDebugSupport(debugSupport);
             else 
-                System.out.println("Warning: DebugNetSupportBase is not implemented.");
+                System.out.println("Warning: DebugNetSupport is missing. Cannot communicate with a debugging client.");
         } catch (IOException e) {
             // no debug client can talk to VM, but VM can continue functioning
-            System.out.println("Warning: no debug client support due to error: " + e.getMessage());
+            System.out.println("Warning: cannot communicate with a debugging client due to error: " + e.getMessage());
         }
     }
     

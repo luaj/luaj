@@ -36,6 +36,7 @@ import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 /**
  * StandardLuaJVM executes a lua program in normal run mode or debug mode. 
@@ -170,7 +171,9 @@ public class StandardLuaJVM {
 
     public void run() {
         try {
-            // new lua debug state 
+            // new lua debug state
+            Platform.setInstance(new J2sePlatform());
+            
             state = LuaState.newState();
             init(state);
 

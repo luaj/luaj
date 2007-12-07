@@ -66,6 +66,7 @@ public class DebugMessageType extends EnumType {
     public static final DebugMessageType disconnected = new DebugMessageType("disconnected", 34);
     public static final DebugMessageType sessionId = new DebugMessageType("sessionId", 35);    
     public static final DebugMessageType debugServiceDown = new DebugMessageType("debugServiceDown", 36);
+    public static final DebugMessageType outputRedirect = new DebugMessageType("outputRedirect", 37);
     
     protected static DebugMessageType[] ENUMS = new DebugMessageType[] {
         start,
@@ -104,7 +105,8 @@ public class DebugMessageType extends EnumType {
     	clientRequestGlobalReply,
     	disconnected,
     	sessionId,
-        debugServiceDown
+        debugServiceDown,
+        outputRedirect
     };
 	
     protected DebugMessageType(String name, int ordinal) {

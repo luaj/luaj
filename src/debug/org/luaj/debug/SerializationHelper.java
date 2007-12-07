@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
+import org.luaj.debug.event.DebugEventOutputRedirect;
 import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestStack;
@@ -59,6 +60,7 @@ public class SerializationHelper {
     static final int SERIAL_TYPE_DebugResponseVariables                 = 12;
     static final int SERIAL_TYPE_DebugResponseStack                     = 13;   
     static final int SERIAL_TYPE_DebugResponseSession                   = 14;
+    static final int SERIAL_TYPE_DebugEventOutputRedirect               = 15;
 
     public static void serialize(Serializable object, DataOutputStream dout)
             throws IOException {
@@ -93,6 +95,9 @@ public class SerializationHelper {
         } else if (object instanceof DebugEventError) {
             dout.writeInt(SERIAL_TYPE_DebugEventError);
             DebugEventError.serialize(dout, (DebugEventError) object);
+        } else if (object instanceof DebugEventOutputRedirect) {
+            dout.writeInt(SERIAL_TYPE_DebugEventOutputRedirect);
+            DebugEventOutputRedirect.serialize(dout, (DebugEventOutputRedirect) object);
         } else if (object instanceof DebugResponseStack) {
             dout.writeInt(SERIAL_TYPE_DebugResponseStack);
             DebugResponseStack.serialize(dout, (DebugResponseStack) object);
@@ -151,6 +156,9 @@ public class SerializationHelper {
             break;
         case SERIAL_TYPE_DebugEventError:
             object = DebugEventError.deserialize(din);
+            break;
+        case SERIAL_TYPE_DebugEventOutputRedirect:
+            object = DebugEventOutputRedirect.deserialize(din);
             break;
         case SERIAL_TYPE_DebugResponseCallgraph:
             object = DebugResponseCallgraph.deserialize(din);

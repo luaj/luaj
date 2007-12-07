@@ -8,9 +8,11 @@ import java.net.Socket;
 
 import org.luaj.debug.DebugMessage;
 import org.luaj.debug.DebugMessageType;
+import org.luaj.debug.RedirectOutputStream;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.event.DebugEventListener;
 import org.luaj.debug.response.DebugResponseSession;
+import org.luaj.lib.BaseLib;
 
 public class ClientConnectionTask implements Runnable, DebugEventListener {
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
@@ -23,6 +25,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
     protected DataOutputStream eventWriter;
     protected DebugSupportImpl debugSupport;
     protected boolean isDisposed = false;
+    protected RedirectOutputStream redirectOutputStream;
     
     public ClientConnectionTask(DebugSupportImpl debugSupport, Socket socket) 
     throws IOException {
@@ -60,6 +63,10 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
     
     public void run() {
         try {
+            // to redirect the print to the debug client console
+            this.redirectOutputStream = new RedirectOutputStream(this);
+            BaseLib.redirectOutput( redirectOutputStream );
+
             // loop for incoming requests
             while (!isDisconnected()) {
                 byte[] data = null;
@@ -87,6 +94,13 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             
             debugSupport.disconnect(getSessionId());
         } finally {
+            try {
+                redirectOutputStream.close();
+            } catch (IOException ignore) {}
+            
+            // restore the print output
+            BaseLib.restoreStandardOutput();
+            
             dispose();
         }
     }

@@ -10,9 +10,11 @@ import javax.microedition.io.SocketConnection;
 
 import org.luaj.debug.DebugMessage;
 import org.luaj.debug.DebugMessageType;
+import org.luaj.debug.RedirectOutputStream;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.event.DebugEventListener;
 import org.luaj.debug.response.DebugResponseSession;
+import org.luaj.lib.BaseLib;
 
 public class ClientConnectionTask implements Runnable, DebugEventListener {
     private static final boolean TRACE = true; //(null != System.getProperty("TRACE"));
@@ -25,6 +27,8 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
     protected SocketConnection connection;
     protected DataInputStream inStream;
     protected DataOutputStream outStream;
+    
+    protected RedirectOutputStream redirectOutputStream;
     
     public ClientConnectionTask(String host, int port, DebugSupportImpl debugSupport) {
         this.host = host;
@@ -59,6 +63,10 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             if ( TRACE )
                 System.out.println("LuaJ debug server connected to " + host + ":" + port);
         
+            // to redirect the print to the debug client console
+            this.redirectOutputStream = new RedirectOutputStream(this);
+            BaseLib.redirectOutput( redirectOutputStream );
+           
             // loop for incoming requests
             while ( !isDisconnected() ) {
                 byte[] data = null;
@@ -85,6 +93,13 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             
             debugSupport.disconnect(1);
         } finally {
+            try {
+                redirectOutputStream.close();
+            } catch (IOException ignore) {}
+            
+            // restore the print output
+            BaseLib.restoreStandardOutput();
+            
             dispose();
         }
     }
