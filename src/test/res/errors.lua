@@ -88,3 +88,7 @@ print( 'a(setmetatable({},"abc"))  ', a(function() return sm({},'abc') end) )
 
 -- bad args to error!
 print( 'error("msg","arg")', a(function() error('some message', 'some bad arg') end) )
+
+-- loadfile, dofile on missing files 
+print( 'loadfile("bogus.txt")', a(function() return loadfile("bogus.txt") end) )
+print( 'dofile("bogus.txt")', a(function() return dofile("bogus.txt") end) )
