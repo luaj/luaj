@@ -43,7 +43,7 @@ public class PackageLib extends LFunction {
 	
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
-	public static LTable      LOADED = new LTable();
+	public static LTable      LOADED = null;
 
 	private static final LString _M = new LString("_M");
 	private static final LString _NAME = new LString("_NAME");	
@@ -86,6 +86,7 @@ public class PackageLib extends LFunction {
 		pckg = new LTable();
 		for ( int i=LOADLIB; i<=SEEALL; i++ )
 			pckg.put( NAMES[i], new PackageLib(i) );
+		LOADED = new LTable();
 		pckg.put( "loaded", LOADED );
 		pckg.put( _PRELOAD, new LTable() );
 		LTable loaders = new LTable(3,0);

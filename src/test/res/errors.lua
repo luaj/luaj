@@ -1,7 +1,6 @@
 -- object ids
 package.path = "?.lua;src/test/res/?.lua"
 require 'ids'
-ids = {}
 
 -- test of common types of errors
 local function c(f,...) return f(...) end
@@ -9,7 +8,6 @@ local function b(...) return c(...) end
 local function a(...) return pcall(b,...) end
 s = 'some string'
 local t = {}
-
 -- error message tests
 print( 'a(error)', a(error) )
 print( 'a(error,"msg")', a(error,"msg") )

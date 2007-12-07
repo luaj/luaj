@@ -141,7 +141,7 @@ public class LuaJTest extends TestCase {
 	private void runTest( String testName ) throws IOException, InterruptedException {
 
 		// new lua state 
-		LuaState state = new DebugLuaState();
+		LuaState state = LuaState.newState();
 		
         // add standard bindings
 		state.installStandardLibs();

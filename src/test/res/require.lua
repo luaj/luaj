@@ -1,18 +1,6 @@
 -- unit tests for require() function
-local ids = {}
-local ti = table.insert
-local function id(obj)
-	if not obj or type(obj) == 'number' or type(obj) == 'string' or type(obj) == 'boolean' then
-		return obj
-	end
-	local v = ids[obj]
-	if v then
-		return v
-	end
-	ti(ids,obj)
-	ids[obj] = type(obj)..'.'..tostring(#ids)
-	return ids[obj]
-end 
+package.path = "?.lua;src/test/res/?.lua"
+require 'ids'
 
 -- tests on require
 package.path='?.lua;src/test/res/?.lua'

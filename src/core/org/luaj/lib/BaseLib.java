@@ -118,7 +118,8 @@ public class BaseLib extends LFunction {
 						Lua.TYPE_NAMES[type]+" expected, got no value)") );
 	}
 
-	private void checkargtype(LuaState vm, int index, int type) {		
+	private void checkargtype
+	(LuaState vm, int index, int type) {		
 		checkargexists( vm, index, type );
 		int t = vm.type(index);
 		if ( t != type ) {
@@ -164,8 +165,11 @@ public class BaseLib extends LFunction {
 		}
 		case SETMETATABLE: {
 			checkargtype(vm,2,Lua.LUA_TTABLE);
+			if ( vm.gettop()<3 || ! (vm.isnil(3) || vm.istable(3)) )
+				vm.error( "bad argument #2 to '?' (nil or table expected)" );
 			vm.setmetatable(2);
 			vm.remove(1);
+			vm.settop(1);
 			break;
 		}		
 		case TYPE: {

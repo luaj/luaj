@@ -85,8 +85,6 @@ public class LTable extends LValue {
 	
 	private LTable m_metatable;
 	
-	
-	
 	/** Construct an empty LTable with no initial capacity. */
 	public LTable() {
 		m_vector = EMPTY_ARRAY;
@@ -273,8 +271,14 @@ public class LTable extends LValue {
 
 	/** Valid for tables */
 	public void luaSetMetatable(LValue metatable) {
-		this.m_metatable = ( metatable != null && metatable != LNil.NIL ) ?
-					(LTable) metatable : null;
+		if ( m_metatable != null &&  m_metatable.containsKey(TM_METATABLE) )
+			throw new LuaErrorException("cannot change a protected metatable");
+		if ( metatable == null || metatable == LNil.NIL )
+			this.m_metatable = null;
+		else if ( metatable.luaGetType() == Lua.LUA_TTABLE ) 
+			this.m_metatable = (LTable) metatable;
+		else
+			throw new LuaErrorException("nil or table expected, got "+metatable.luaGetTypeName());
 	}
 
 	public String toJavaString() {

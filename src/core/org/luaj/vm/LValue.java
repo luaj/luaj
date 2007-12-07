@@ -31,6 +31,9 @@ public class LValue {
 	/** Metatable tag for intercepting table sets */
 	public static final LString TM_NEWINDEX = new LString("__newindex");
 	
+	/** Metatable tag for intercepting table sets */
+	public static final LString TM_METATABLE = new LString("__metatable");
+	
 	protected void conversionError(String target) {
 		throw new LuaErrorException( "bad conversion: "+luaGetTypeName()+" to "+target );
 	}
@@ -70,12 +73,12 @@ public class LValue {
 
 	// unsupported except for numbers
 	public LValue luaBinOpInteger(int opcode, int m_value) {
-		return arithmeticError("number");
+		return arithmeticError(luaGetTypeName());
 	}
 
 	// unsupported except for numbers
 	public LValue luaBinOpDouble(int opcode, double m_value) {
-		return arithmeticError("number");
+		return arithmeticError(luaGetTypeName());
 	}
 
 	// unsupported except for numbers, strings, and == with various combinations of Nil, Boolean, etc. 

@@ -1,14 +1,6 @@
 -- unit tests for functions in BaseLib.java
-local ids = {}
-local function id(obj)
-	local v = ids[obj]
-	if v then
-		return v
-	end
-	table.insert(ids,obj)
-	ids[obj] = type(obj)..'.'..tostring(#ids)
-	return ids[obj]
-end 
+package.path = "?.lua;src/test/res/?.lua"
+require 'ids'
 
 -- print
 print()
