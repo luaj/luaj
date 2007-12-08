@@ -330,8 +330,6 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             debugSupport.notifyDebugEvent(event);
         } else if (DebugMessageType.resume == requestType) {
             resume();
-            DebugMessage event = new DebugMessage(DebugMessageType.resumedByClient);
-            debugSupport.notifyDebugEvent(event);
         } else if (DebugMessageType.lineBreakpointSet == requestType) {
             DebugRequestLineBreakpointToggle setBreakpointRequest 
                 = (DebugRequestLineBreakpointToggle) request;
@@ -357,19 +355,10 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 = new DebugResponseVariables(getGlobals(), DebugMessageType.clientRequestGlobalReply);
             debugSupport.notifyDebugEvent(globals);
         } else if (DebugMessageType.stepInto == requestType) {
-            DebugMessage event = new DebugMessage(
-                    DebugMessageType.resumedOnSteppingInto);
-            debugSupport.notifyDebugEvent(event);
             stepInto();
         } else if (DebugMessageType.stepOver == requestType) {
-            DebugMessage event = new DebugMessage(
-                    DebugMessageType.resumedOnSteppingOver);
-            debugSupport.notifyDebugEvent(event);
             stepOver();
         } else if (DebugMessageType.stepReturn == requestType) {
-            DebugMessage event = new DebugMessage(
-                    DebugMessageType.resumedOnSteppingReturn);
-            debugSupport.notifyDebugEvent(event);
             stepReturn();
         } else {
             throw new java.lang.IllegalArgumentException("unkown request type: "

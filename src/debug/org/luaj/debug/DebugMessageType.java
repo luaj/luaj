@@ -52,21 +52,17 @@ public class DebugMessageType extends EnumType {
     public static final DebugMessageType suspendedOnWatchpoint = new DebugMessageType("suspendedOnWatchpoint", 20);
     public static final DebugMessageType suspendedOnStepping = new DebugMessageType("suspendedOnStepping", 21);
     public static final DebugMessageType suspendedOnError = new DebugMessageType("suspendedOnError", 22);
-    public static final DebugMessageType resumedByClient = new DebugMessageType("resumedByClient", 23);
-    public static final DebugMessageType resumedOnSteppingInto = new DebugMessageType("resumedOnSteppingInto", 24);
-    public static final DebugMessageType resumedOnSteppingOver = new DebugMessageType("resumedOnSteppingOver", 25);
-    public static final DebugMessageType resumedOnSteppingReturn = new DebugMessageType("resumedOnSteppingReturn", 26);
-    public static final DebugMessageType resumedOnSteppingEnd = new DebugMessageType("resumedOnSteppingEnd", 27);    
-    public static final DebugMessageType resumedOnError = new DebugMessageType("resumedOnError", 28);
-    public static final DebugMessageType error = new DebugMessageType("error", 29);
-    public static final DebugMessageType terminated = new DebugMessageType("terminated", 30);
-    public static final DebugMessageType clientRequestCallgraphReply = new DebugMessageType("clientRequestCallgraphReply", 31);
-    public static final DebugMessageType clientRequestStackReply = new DebugMessageType("clientRequestStackReply", 32);
-    public static final DebugMessageType clientRequestGlobalReply = new DebugMessageType("clientRequestGlobalReply", 33);
-    public static final DebugMessageType disconnected = new DebugMessageType("disconnected", 34);
-    public static final DebugMessageType sessionId = new DebugMessageType("sessionId", 35);    
-    public static final DebugMessageType debugServiceDown = new DebugMessageType("debugServiceDown", 36);
-    public static final DebugMessageType outputRedirect = new DebugMessageType("outputRedirect", 37);
+    public static final DebugMessageType resumedOnSteppingEnd = new DebugMessageType("resumedOnSteppingEnd", 23);    
+    public static final DebugMessageType resumedOnError = new DebugMessageType("resumedOnError", 24);
+    public static final DebugMessageType error = new DebugMessageType("error", 25);
+    public static final DebugMessageType terminated = new DebugMessageType("terminated", 26);
+    public static final DebugMessageType clientRequestCallgraphReply = new DebugMessageType("clientRequestCallgraphReply", 27);
+    public static final DebugMessageType clientRequestStackReply = new DebugMessageType("clientRequestStackReply", 28);
+    public static final DebugMessageType clientRequestGlobalReply = new DebugMessageType("clientRequestGlobalReply", 29);
+    public static final DebugMessageType disconnected = new DebugMessageType("disconnected", 30);
+    public static final DebugMessageType sessionId = new DebugMessageType("sessionId", 31);    
+    public static final DebugMessageType debugServiceDown = new DebugMessageType("debugServiceDown", 32);
+    public static final DebugMessageType outputRedirect = new DebugMessageType("outputRedirect", 333);
     
     protected static DebugMessageType[] ENUMS = new DebugMessageType[] {
         start,
@@ -92,10 +88,6 @@ public class DebugMessageType extends EnumType {
     	suspendedOnWatchpoint,
     	suspendedOnStepping,
     	suspendedOnError,
-    	resumedByClient,
-    	resumedOnSteppingInto,
-    	resumedOnSteppingOver,
-    	resumedOnSteppingReturn,
     	resumedOnSteppingEnd,
     	resumedOnError,
     	error,
