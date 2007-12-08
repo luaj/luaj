@@ -121,12 +121,10 @@ public class TableLib extends LFunction {
 		 * 
 		 * Get length of table t.
 		 */ 
-		case INSERT: { 
-			int n = vm.gettop();
+		case GETN: { 
 			LTable table = vm.totable(2);
-			int pos = (n>=4? vm.tointeger(3): 0);
-			LValue value = vm.topointer(-1);
-			table.luaInsertPos( pos, value );
+			vm.resettop();
+			vm.pushinteger(table.luaLength());
 			break;
 		}
 		
@@ -136,10 +134,12 @@ public class TableLib extends LFunction {
 		 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
 		 * table.insert(t,x) inserts x at the end of table t.
 		 */ 
-		case GETN: { 
+		case INSERT: { 
+			int n = vm.gettop();
 			LTable table = vm.totable(2);
-			vm.resettop();
-			vm.pushinteger(table.luaLength());
+			int pos = (n>=4? vm.tointeger(3): 0);
+			LValue value = vm.topointer(-1);
+			table.luaInsertPos( pos, value );
 			break;
 		}
 
