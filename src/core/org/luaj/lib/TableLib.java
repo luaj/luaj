@@ -36,6 +36,7 @@ public class TableLib extends LFunction {
 	public static final String[] NAMES = {
 		"table",
 		"concat",
+		"getn",
 		"insert",
 		"maxn",
 		"remove",
@@ -44,10 +45,11 @@ public class TableLib extends LFunction {
 	
 	private static final int INSTALL = 0;
 	private static final int CONCAT  = 1;
-	private static final int INSERT  = 2;
-	private static final int MAXN    = 3;
-	private static final int REMOVE  = 4;
-	private static final int SORT    = 5;
+	private static final int GETN    = 2;
+	private static final int INSERT  = 3;
+	private static final int MAXN    = 4;
+	private static final int REMOVE  = 5;
+	private static final int SORT    = 6;
 	
 	public static void install( LTable globals ) {
 		LTable table = new LTable();
@@ -114,12 +116,10 @@ public class TableLib extends LFunction {
 			}
 			break;
 		}
-			
-		/* table.insert (table, [pos,] value)
+		
+		/* table.getn (table)
 		 * 
-		 * Inserts element value at position pos in table, shifting up other elements to open space, if necessary. 
-		 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
-		 * table.insert(t,x) inserts x at the end of table t.
+		 * Get length of table t.
 		 */ 
 		case INSERT: { 
 			int n = vm.gettop();
@@ -127,6 +127,19 @@ public class TableLib extends LFunction {
 			int pos = (n>=4? vm.tointeger(3): 0);
 			LValue value = vm.topointer(-1);
 			table.luaInsertPos( pos, value );
+			break;
+		}
+		
+		/* table.insert (table, [pos,] value)
+		 * 
+		 * Inserts element value at position pos in table, shifting up other elements to open space, if necessary. 
+		 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
+		 * table.insert(t,x) inserts x at the end of table t.
+		 */ 
+		case GETN: { 
+			LTable table = vm.totable(2);
+			vm.resettop();
+			vm.pushinteger(table.luaLength());
 			break;
 		}
 
