@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.lib;
 
+import java.util.Random;
+
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
@@ -43,18 +45,22 @@ public class MathLib extends LFunction {
 		"sqrt",
 		"ceil",
 		"floor",
+		"random",
+		"randomseed",
 	};
 
-	private static final int INSTALL = 0;
-	private static final int ABS     = 1;
-	private static final int COS     = 2;
-	private static final int MAX     = 3;
-	private static final int MIN     = 4;
-	private static final int MODF    = 5;
-	private static final int SIN     = 6;
-	private static final int SQRT    = 7;
-	private static final int CEIL    = 8;
-	private static final int FLOOR   = 9;
+	private static final int INSTALL      = 0;
+	private static final int ABS          = 1;
+	private static final int COS          = 2;
+	private static final int MAX          = 3;
+	private static final int MIN          = 4;
+	private static final int MODF         = 5;
+	private static final int SIN          = 6;
+	private static final int SQRT         = 7;
+	private static final int CEIL         = 8;
+	private static final int FLOOR        = 9;
+	private static final int RANDOM       = 10;
+	private static final int RANDOMSEED   = 11;
 	
 	public static void install( LTable globals ) {
 		LTable math = new LTable();
@@ -65,6 +71,8 @@ public class MathLib extends LFunction {
 		globals.put( "math", math );
 	}
 
+	private static Random random = null;
+	
 	private final int id;
 
 	private MathLib( int id ) {
@@ -111,6 +119,34 @@ public class MathLib extends LFunction {
 			break;
 		case FLOOR:
 			setResult( vm, LInteger.valueOf( (int) Math.floor( vm.tonumber(2) ) ) );
+			break;
+		case RANDOM: {
+			if ( random == null )
+				random = new Random();
+			switch ( vm.gettop() ) {
+			case 1:
+				vm.resettop();
+				vm.pushnumber(random.nextDouble());
+				break;
+			case 2: {
+				int m = vm.tointeger(2);
+				vm.resettop();
+				vm.pushinteger(1+random.nextInt(m));
+				break;
+			}
+			default: {
+				int m = vm.tointeger(2);
+				int n = vm.tointeger(3);
+				vm.resettop();
+				vm.pushinteger(m+random.nextInt(n+1-m));
+				break;
+			}
+			}
+			break;
+		}
+		case RANDOMSEED:
+			random = new Random( vm.tointeger(2) );
+			vm.resettop();
 			break;
 		default:
 			LuaState.vmerror( "bad math id" );
