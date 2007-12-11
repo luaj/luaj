@@ -28,6 +28,7 @@ import java.io.InputStream;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
+import org.luaj.lib.PackageLib;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
@@ -52,6 +53,7 @@ public class StandardLuaJVM {
     protected boolean bSuspendOnStart = false;
     protected String script;
     protected String[] scriptArgs;
+    protected String luaPath;
     protected LuaState state;
     protected boolean isReady = false;
     protected boolean isTerminated = false;
@@ -67,7 +69,7 @@ public class StandardLuaJVM {
 
     protected void printUsage() {
         System.out.println("Usage:");
-        System.out.println("\t java StandardLuaJVM [-Dport=<port>[,suspendedOnStart=<true|false>]] <script> [<script arguments>]");
+        System.out.println("\t java StandardLuaJVM [-Dport=<port>[,suspendedOnStart=<true|false>]] [-L<lua path>] <script> [<script arguments>]");
         System.out.println("where [] denotes an optional argument and <> denotes a placeholder.");
     }
 
@@ -76,7 +78,8 @@ public class StandardLuaJVM {
             throw new ParseException("Invalid command line arguments.");
         }
 
-        if (args[0] != null && args[0].startsWith("-D")) {
+        int index = 0;
+        if (args[index] != null && args[index].startsWith("-D")) {
             if (args.length < 2) {
                 throw new ParseException("Invalid command line arguments.");
             }
@@ -84,7 +87,7 @@ public class StandardLuaJVM {
             this.isDebugMode = true;
             System.setProperty(LuaState.PROPERTY_LUAJ_DEBUG, "true");
             
-            String debugOptions = args[0];
+            String debugOptions = args[index];
             debugOptions = debugOptions.substring(2); // remove '-D'
             String[] options = debugOptions.split(",");
             for (int i = 0; options != null && i < options.length; i++) {
@@ -118,13 +121,24 @@ public class StandardLuaJVM {
                 throw new ParseException("Invalid command line: debug port is missing");
             }
             
-            int tempArgsCount = args.length - 1;
-            String[] tempArgs = new String[tempArgsCount];
-            System.arraycopy(args, 1, tempArgs, 0, tempArgsCount);
-            parseScriptArgs(tempArgs);
-        } else {
-            parseScriptArgs(args);
+            index++;
+        } 
+
+        if (args[index] != null && args[index].startsWith("-L")) {
+            luaPath = args[index].substring(2); //remove -L fromt the arg
+            index++;
         }
+        
+        String[] scriptArgStrs;
+        if (index != 0) {
+            int scriptArgsCount = args.length - index;
+            scriptArgStrs = new String[scriptArgsCount];
+            System.arraycopy(args, index, scriptArgStrs, 0, scriptArgsCount);
+        } else {
+            scriptArgStrs = args;
+        }
+        
+        parseScriptArgs(scriptArgStrs);
     }
 
     private void parseScriptArgs(String[] args)
@@ -169,6 +183,10 @@ public class StandardLuaJVM {
         return this.scriptArgs;
     }
 
+    String getLuaPath() {
+        return this.luaPath;
+    }
+    
     public void run() {
         try {
             // new lua debug state
@@ -215,6 +233,11 @@ public class StandardLuaJVM {
         
         // add the compiler
         LuaC.install();
+        
+        // set the lua path if present
+        if (luaPath != null && luaPath.trim().length() > 0) {
+            PackageLib.setLuaPath(luaPath);
+        }
     }
 
     /**

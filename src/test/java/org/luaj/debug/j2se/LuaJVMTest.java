@@ -216,7 +216,28 @@ public class LuaJVMTest extends TestCase {
             assertEquals("dummy.lua", vm.getScript());
         } catch (ParseException e) {
             fail("Should never reach this line.");
-        }        
+        }
+        
+        args = new String[] { "-LC:\\lua\\scripts", "dummy.lua" };
+        vm = new StandardLuaJVM();
+        try {
+            vm.parse(args);
+            assertEquals("C:\\lua\\scripts", vm.getLuaPath());
+            assertEquals("dummy.lua", vm.getScript());
+        } catch (ParseException e) {
+            fail("Should never reach this line.");
+        }
+        
+        args = new String[] { "-Dport=1044", "-LC:\\lua\\scripts", "dummy.lua" };
+        vm = new StandardLuaJVM();
+        try {
+            vm.parse(args);
+            assertEquals(1044, vm.getDebugPort());
+            assertEquals("C:\\lua\\scripts", vm.getLuaPath());
+            assertEquals("dummy.lua", vm.getScript());
+        } catch (ParseException e) {
+            fail("Should never reach this line.");
+        }
     }
 
     public void testRun() {

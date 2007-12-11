@@ -77,7 +77,11 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      */
     public DebugLuaState() {}
     
-    public void init() { 
+    /*
+     * (non-Javadoc)
+     * @see org.luaj.vm.LuaState#init()
+     */
+    public void init() {
         Platform platform = Platform.getInstance();
 
         // set if the vm should be suspended at start
@@ -96,6 +100,14 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             // no debug client can talk to VM, but VM can continue functioning
             System.out.println("Warning: cannot communicate with a debugging client due to error: " + e.getMessage());
         }
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see org.luaj.vm.LuaState#shutdown()
+     */
+    public void shutdown() {
+        stop();
     }
     
     protected void setDebugSupport(DebugNetSupport debugSupport) 

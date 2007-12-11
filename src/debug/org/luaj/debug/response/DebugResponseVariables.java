@@ -50,7 +50,7 @@ public class DebugResponseVariables extends DebugMessage {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer(getType().toString() + ":");
         for (int i = 0; variables != null && i < variables.length; i++) {
             buffer.append("\t" + variables[i].getName() + ":" + variables[i].getIndex() + "\n");
         }

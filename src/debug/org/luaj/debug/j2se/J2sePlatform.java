@@ -1,5 +1,7 @@
 package org.luaj.debug.j2se;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,8 +16,13 @@ public class J2sePlatform extends Platform {
         return new InputStreamReader(inputStream);
     }
 
-    public InputStream openFile(String fileName) {
-        return getClass().getResourceAsStream("/" + fileName);
+    public InputStream openFile(String filePath) {
+        try {
+            FileInputStream fis = new FileInputStream(new File(filePath));
+            return fis;
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /**

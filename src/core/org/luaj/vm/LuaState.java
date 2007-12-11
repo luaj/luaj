@@ -168,6 +168,11 @@ public class LuaState extends Lua {
 	public void init() {}
 	
 	/**
+	 * Perform any shutdown/clean up tasks if needed
+	 */
+	public void shutdown() {}
+	
+	/**
 	 * Install the standard set of libraries used by most implementations:
 	 * BaseLib, CoroutineLib, MathLib, PackageLib, TableLib, StringLib
 	 */

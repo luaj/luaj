@@ -46,7 +46,7 @@ public class DebugResponseCallgraph extends DebugMessage {
     }
 
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer("callgraph: ");
         for (int i = 0; i < stackFrames.length; i++) {
             StackFrame frame = stackFrames[i];
             buffer.append(frame.toString());
