@@ -66,3 +66,36 @@ table.sort(t)
 print( table.concat(t,'-'), table.maxn(t), #t )
 table.sort(t,function(a,b) return b<a end)
 print( table.concat(t,'-'), table.maxn(t), #t )
+
+-- getn
+t0 = {}
+t1 = { 'one', 'two', 'three' }
+t2 = { a='aa', b='bb', c='cc' }
+t3 = { 'one', 'two', 'three', a='aa', b='bb', c='cc' }
+print( 'getn(t0)', pcall( table.getn, t0 ) ) 
+print( 'getn(t0)', pcall( table.getn, t1 ) ) 
+print( 'getn(t0)', pcall( table.getn, t2 ) ) 
+print( 'getn(t0)', pcall( table.getn, t3 ) ) 
+
+-- foreach
+function test( f, t, result, name ) 
+	status, value = pcall( f, t, function(...) 
+		print(name,...)
+		return result 
+	end )
+	print( name, 's,v', status, value )
+end
+function testall( f, t, name ) 
+	test( f, t, nil, name..'nil' )
+	test( f, t, false, name..'fls' )
+	test( f, t, 100, name..'100' )
+end
+testall( table.foreach, t0, 'table.foreach(t0)' )
+testall( table.foreach, t1, 'table.foreach(t1)' )
+testall( table.foreach, t2, 'table.foreach(t2)' )
+testall( table.foreach, t3, 'table.foreach(t3)' )
+testall( table.foreachi, t0, 'table.foreachi(t0)' )
+testall( table.foreachi, t1, 'table.foreachi(t1)' )
+testall( table.foreachi, t2, 'table.foreachi(t2)' )
+testall( table.foreachi, t3, 'table.foreachi(t3)' )
+

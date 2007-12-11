@@ -700,4 +700,45 @@ public class LTable extends LValue {
 		
 		return n + slot + 1;
 	}
+
+	
+	/**
+	 * Executes the given f over all elements of table. For each element, f is
+	 * called with the index and respective value as arguments. If f returns a
+	 * non-nil value, then the loop is broken, and this value is returned as the
+	 * final value of foreach.
+	 * 
+	 * @param vm
+	 * @param function
+	 * @param isforeachi is a table.foreachi() call, not a table.foreach() call
+	 * @return
+	 */
+	public LValue foreach(LuaState vm, LFunction function, boolean isforeachi) {
+		for ( int i = 0; i < m_vector.length; ++i ) {
+			if ( m_vector[ i ] != LNil.NIL ) {
+				if ( foreachitem( vm, function, LInteger.valueOf(i+1), m_vector[i] ) )
+					return vm.topointer(1);
+			}
+		}
+		
+		if ( (! isforeachi) && m_hashKeys != null ) {
+			for ( int i = 0; i < m_hashKeys.length; ++i ) {
+				if ( m_hashKeys[ i ] != null ) {
+					if ( foreachitem( vm, function, m_hashKeys[i], m_hashValues[i] ) )
+						return vm.topointer(1);
+				}
+			}
+		}
+		
+		return LNil.NIL;
+	}
+
+	private static boolean foreachitem(LuaState vm, LFunction f, LValue key, LValue value) {
+		vm.resettop();
+		vm.pushlvalue( f );
+		vm.pushlvalue( key );
+		vm.pushlvalue( value );
+		vm.call(2, 1);
+		return ! vm.isnil(1);
+	}
 }

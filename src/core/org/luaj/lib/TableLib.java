@@ -36,6 +36,8 @@ public class TableLib extends LFunction {
 	public static final String[] NAMES = {
 		"table",
 		"concat",
+		"foreach",
+		"foreachi",
 		"getn",
 		"insert",
 		"maxn",
@@ -43,13 +45,15 @@ public class TableLib extends LFunction {
 		"sort",
 	};
 	
-	private static final int INSTALL = 0;
-	private static final int CONCAT  = 1;
-	private static final int GETN    = 2;
-	private static final int INSERT  = 3;
-	private static final int MAXN    = 4;
-	private static final int REMOVE  = 5;
-	private static final int SORT    = 6;
+	private static final int INSTALL  = 0;
+	private static final int CONCAT   = 1;
+	private static final int FOREACH  = 2;
+	private static final int FOREACHI = 3;
+	private static final int GETN     = 4;
+	private static final int INSERT   = 5;
+	private static final int MAXN     = 6;
+	private static final int REMOVE   = 7;
+	private static final int SORT     = 8;
 	
 	public static void install( LTable globals ) {
 		LTable table = new LTable();
@@ -114,6 +118,21 @@ public class TableLib extends LFunction {
 			} catch (IOException e) {
 				vm.error(e.getMessage());
 			}
+			break;
+		}
+		
+		/* table.getn (table)
+		 * 
+		 * Get length of table t.
+		 */ 
+		case FOREACH: 
+		case FOREACHI: 
+		{ 
+			LTable table = vm.totable(2);
+			LFunction function = vm.tojavafunction(3);
+			LValue result = table.foreach( vm, function, id==FOREACHI );
+			vm.resettop();
+			vm.pushlvalue( result );
 			break;
 		}
 		
