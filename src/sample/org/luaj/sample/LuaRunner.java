@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.sample;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -29,6 +31,7 @@ import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
 
@@ -45,23 +48,39 @@ public class LuaRunner {
 		LuaState state = LuaState.newState();
 		
 		// get script name
-		String script = (args.length>0? args[0]: "/test2.luac");
-		System.out.println("loading '"+script+"'");
-		
-        // add standard bindings
-		state.installStandardLibs();
-		LuaC.install();
+		for ( int i=0; i<args.length; i++ ) {
+			String script = args[i];
+			try {
+				System.out.println("loading '"+script+"'");
 				
-		// load the file
-		InputStream is = LuaRunner.class.getResourceAsStream( script );
-		if ( is == null )
-			throw new java.io.FileNotFoundException( "not found: "+script );
-		LPrototype p = LoadState.undump(state, is, script);
+		        // add standard bindings
+				state.installStandardLibs();
+				LuaC.install();
+						
+				// load the file
+				InputStream is = null;
+				File f = new File(script);
+				if ( f.exists() )
+					is = new FileInputStream( f );
+				else
+					is = LuaRunner.class.getResourceAsStream( script );
+				if ( is == null )			
+					throw new java.io.FileNotFoundException( "not found: "+script );
+				LPrototype p = LoadState.undump(state, is, script);
+				
+				// create closure and execute
+				LClosure c = new LClosure( p, state._G );
 		
-		// create closure and execute
-		LClosure c = new LClosure( p, state._G );
-
-		// do the call
-		state.doCall( c, new LValue[0] );
+				// do the call
+				state.doCall( c, new LValue[0] );
+			} catch ( LuaErrorException lee ) {
+				System.err.println(script+" lua error, "+lee.getMessage() );
+			} catch ( Throwable t ) {
+				System.err.println(script+" threw "+t);
+			} finally {
+				System.out.flush();
+				System.err.flush();
+			}
+		}
 	}
 }

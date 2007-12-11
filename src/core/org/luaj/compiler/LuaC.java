@@ -51,7 +51,8 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	protected static void _assert(boolean b) {		
-		if (!b) throw new LuaErrorException("compiler assert failed");
+		if (!b)
+			throw new LuaErrorException("compiler assert failed");
 	}
 	
 	public static final int MAXSTACK = 250;

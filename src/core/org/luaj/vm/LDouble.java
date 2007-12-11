@@ -39,19 +39,20 @@ public class LDouble extends LNumber {
 	}
 
 	public String toJavaString() {
+		if ( Double.isNaN(m_value) )
+			return "-1.#IND";
+		if ( Double.isInfinite(m_value) )
+			return (m_value>0? "1.#INF": "-1.#INF");		
 		long l = (long) m_value;
-		if ( m_value == (double) l ) {
-			// TODO: is this a good idea?
+		if ( (m_value == (double) l) && (m_value <= Long.MAX_VALUE) && (m_value >= Long.MIN_VALUE) ) {
 			return Long.toString( l );
 		} else {
 			return Double.toString( m_value );
 		}
 	}
 	
-	
+	// return true if value survives as an integer
 	public boolean isInteger() {
-		// Cast to int and then back to double and see if the value
-		// survives the round trip.
 		return ( (double) ( (int) m_value ) ) == m_value;
 	}
 	
@@ -77,13 +78,17 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
 		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
-		case Lua.OP_POW: throw new LuaErrorException("math.pow() not implemented for doubles");
+		case Lua.OP_POW: {
+			// allow platform to override math.pow()
+			LValue result = Platform.getInstance().mathPow(lhs, rhs);
+			if ( result == null )
+				return new LDouble( dpow( lhs, rhs ) );
+		}
 		}
 		LuaState.vmerror( "bad bin opcode" );
 		return null;
 	}
 
-	/* warning: NOT TESTED
 	public static double dpow(double a, double b) {
 		if ( b < 0 )
 			return 1 / dpow( a, -b );
@@ -102,8 +107,6 @@ public class LDouble extends LNumber {
 		}
 		return p;
 	}
-	*/
-
 
 	public int toJavaInt() {
 		return (int) m_value;

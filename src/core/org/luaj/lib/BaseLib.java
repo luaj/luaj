@@ -199,7 +199,7 @@ public class BaseLib extends LFunction {
 		}
 		case ASSERT: {
 			if ( ! vm.toboolean(2) )
-				vm.error( vm.gettop()>2? vm.tostring(3): "assertion failed!", 0 );
+				vm.error( vm.gettop()>2? vm.tostring(3): "assertion failed!" );
 			vm.remove(1);
 			break;
 		}

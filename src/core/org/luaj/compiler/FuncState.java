@@ -35,6 +35,7 @@ import org.luaj.vm.LString;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
+import org.luaj.vm.Platform;
 
 
 public class FuncState extends LuaC {
@@ -840,11 +841,9 @@ public class FuncState extends LuaC {
 		case OP_MOD:
 			r = (LNumber) v2.luaBinOpUnknown(op, v1);
 			break;
-			/* TODO: replace this with something reasonable.
 		case OP_POW:
-			r = new LDouble( Math.pow(v1.luaAsDouble(), v2.luaAsDouble() ) );
+			r = Platform.getInstance().mathPow( v1.toJavaDouble(), v2.toJavaDouble() );
 			break;
-			//*/
 		case OP_UNM:
 			r = (LNumber) v1.luaUnaryMinus();
 			break;

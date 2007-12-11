@@ -139,4 +139,14 @@ abstract public class Platform {
         }
         return port;
     }
+
+    /** 
+     * Compute math.pow() for two numbers using double math when available. 
+     * @param lhs LNumber base
+     * @param rhs LNumber exponent
+     * @return base ^ exponent as a LNumber, or null if not implemented
+     */
+	public LNumber mathPow(double lhs, double rhs) {
+		return null;
+	}
 }

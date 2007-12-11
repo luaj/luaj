@@ -12,6 +12,7 @@ public class AllTests {
 		TestSuite vm = new TestSuite("VM");
 		vm.addTestSuite(org.luaj.vm.LoadStateTest.class);
 		vm.addTestSuite(org.luaj.vm.LStringTest.class);
+		vm.addTestSuite(org.luaj.vm.MathLibTest.class);
 		vm.addTestSuite(org.luaj.vm.LTableTest.class);
 		vm.addTestSuite(org.luaj.vm.LuaJTest.class);
 		suite.addTest(vm);

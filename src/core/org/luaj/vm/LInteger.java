@@ -81,20 +81,13 @@ public class LInteger extends LNumber {
 		case Lua.OP_ADD: return LInteger.valueOf( m_value + rhs );
 		case Lua.OP_SUB: return LInteger.valueOf( m_value - rhs );
 		case Lua.OP_MUL: return LInteger.valueOf( m_value * rhs );
-		case Lua.OP_DIV: return LInteger.valueOf( m_value / rhs );
-		case Lua.OP_MOD: return LInteger.valueOf( m_value - ((int) Math.floor(m_value/(double)rhs)) * rhs );
-		case Lua.OP_POW: return LInteger.valueOf( ipow(m_value, rhs) );
+		case Lua.OP_DIV:
+		case Lua.OP_MOD: 
+		case Lua.OP_POW: 
+			return LDouble.luaBinOpDoubleDouble(opcode, m_value, rhs);
 		}
 		LuaState.vmerror( "bad bin opcode" );
 		return null;
-	}
-	
-	private static int ipow(int v, int rhs) {
-		int p = 1;
-		for ( ; rhs > 0; rhs>>=1, v=v*v )
-			if ( (rhs & 1) != 0 )
-				p *= v;
-		return p;
 	}
 
 	// binary operations on mixed integer, double
