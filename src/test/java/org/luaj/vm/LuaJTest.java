@@ -42,6 +42,10 @@ public class LuaJTest extends TestCase {
 		runTest( "test7" );
 	}
 
+	public void testTest8() throws IOException, InterruptedException {
+		runTest( "test8" );
+	}
+
 	public void testAutoload() throws IOException, InterruptedException {
 		runTest( "autoload" );
 	}

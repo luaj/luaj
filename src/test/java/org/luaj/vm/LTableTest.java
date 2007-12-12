@@ -102,6 +102,23 @@ public class LTableTest extends TestCase {
 		assertEquals( 2, t.size() );
 	}
 	
+	public void testRemove0() {
+		LTable t = new LTable(2, 0);
+		
+		t.put( 1, new LString("foo") );
+		t.put( 2, new LString("bah") );
+		assertNotSame(LNil.NIL, t.get(1));
+		assertNotSame(LNil.NIL, t.get(2));
+		assertEquals(LNil.NIL, t.get(3));
+		
+		t.put( 1, LNil.NIL );
+		t.put( 2, LNil.NIL );
+		t.put( 3, LNil.NIL );
+		assertEquals(LNil.NIL, t.get(1));
+		assertEquals(LNil.NIL, t.get(2));
+		assertEquals(LNil.NIL, t.get(3));
+	}
+	
 	public void testRemove1() {
 		LTable t = new LTable(0, 1);
 		

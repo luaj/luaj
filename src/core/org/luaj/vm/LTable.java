@@ -362,6 +362,7 @@ public class LTable extends LValue {
 			final int index = key - 1;
 			if ( index < m_vector.length ) {
 				if ( m_vector[ index ] != LNil.NIL ) {
+					m_vector[ index ] = LNil.NIL;
 					--m_arrayEntries;
 				}
 				return;
