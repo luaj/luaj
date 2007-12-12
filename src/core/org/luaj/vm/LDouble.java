@@ -81,8 +81,9 @@ public class LDouble extends LNumber {
 		case Lua.OP_POW: {
 			// allow platform to override math.pow()
 			LValue result = Platform.getInstance().mathPow(lhs, rhs);
-			if ( result == null )
-				return new LDouble( dpow( lhs, rhs ) );
+			return (result != null?
+					result:
+					new LDouble( dpow( lhs, rhs ) ));
 		}
 		}
 		LuaState.vmerror( "bad bin opcode" );
