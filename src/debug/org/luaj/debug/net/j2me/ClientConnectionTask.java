@@ -93,12 +93,14 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             
             debugSupport.disconnect(1);
         } finally {
-            try {
-                redirectOutputStream.close();
-            } catch (IOException ignore) {}
-            
-            // restore the print output
-            BaseLib.restoreStandardOutput();
+            if (redirectOutputStream != null) {
+                try {
+                    redirectOutputStream.close();
+                } catch (IOException ignore) {}
+                
+                // restore the print output
+                BaseLib.restoreStandardOutput();                
+            }
             
             dispose();
         }
