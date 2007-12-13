@@ -47,3 +47,24 @@ print( pcall( badpat ) )
 for k, v in string.gmatch("w=200&h=150", "(%w+)=(%w+)") do
     print(k, v)
 end
+
+-- string.sub
+function t(str)
+	local i = { 0, 1, 2, 8, -1 }
+	for ki,vi in ipairs(i) do
+		local s,v = pcall( string.sub, str, vi )
+		print( 'string.sub("'..str..'",'..tostring(vi)..')='..tostring(s)..','..tostring(v) )
+		local j = { 0, 1, 2, 4, 8, -1 }
+		for kj,vj in ipairs(j) do
+			local s,v = pcall( string.sub, str, vi, vj )
+			print( 'string.sub("'..str..'",'..tostring(vi)..','..tostring(vj)..')='..tostring(s)..','..tostring(v) )
+		end
+	end
+end
+t( 'abcdefghijklmn' )
+t( 'abcdefg' )
+t( 'abcd' )
+t( 'abc' )
+t( 'ab' )
+t( 'a' )
+t( '' )
