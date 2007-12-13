@@ -53,7 +53,6 @@ public class StandardLuaJVM {
     protected boolean bSuspendOnStart = false;
     protected String script;
     protected String[] scriptArgs;
-    protected String luaPath;
     protected LuaState state;
     protected boolean isReady = false;
     protected boolean isTerminated = false;
@@ -123,11 +122,6 @@ public class StandardLuaJVM {
             
             index++;
         } 
-
-        if (args[index] != null && args[index].startsWith("-L")) {
-            luaPath = args[index].substring(2); //remove -L fromt the arg
-            index++;
-        }
         
         String[] scriptArgStrs;
         if (index != 0) {
@@ -184,7 +178,7 @@ public class StandardLuaJVM {
     }
 
     String getLuaPath() {
-        return this.luaPath;
+        return System.getProperty("LUA_PATH");
     }
     
     public void run() {
@@ -235,6 +229,7 @@ public class StandardLuaJVM {
         LuaC.install();
         
         // set the lua path if present
+        String luaPath = getLuaPath();
         if (luaPath != null && luaPath.trim().length() > 0) {
             PackageLib.setLuaPath(luaPath);
         }

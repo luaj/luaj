@@ -83,7 +83,8 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             }
         } catch (EOFException e) {
             // client has terminated the connection
-            // it's time to exit.
+            // it may be time to exit.
+            handleRequest(new DebugMessage(DebugMessageType.reset));
         } catch (IOException e) {
             e.printStackTrace();
             
