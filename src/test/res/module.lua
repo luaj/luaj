@@ -61,3 +61,14 @@ print( pcall( trymodule, 'uvw.abc' ) )
 print( "uvw", id(uvw) )
 print( "uvw.xyz", id(uvw.xyz) )
 print( "uvw.abc", id(uvw.abc) )
+
+function f()
+ module( 'fff', package.seeall )
+ a = 'aaa'
+ print( a )
+ end
+f()
+f()
+print( a )
+print( getfenv(f)['a'] )
+print( a )
