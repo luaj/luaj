@@ -38,6 +38,10 @@ for k,v in ipairs({[30]='30',[20]='20'}) do print('ipairs5',k,v)end
 -- load
 -- loadfile
 -- loadstring
+local lst = "print(3+4); return 8"
+local lss,lsv = pcall( loadstring, lst )
+print( 'loadstring("'..lst..'")', lss, id(lsv) )
+print(  'loadstring("'..lst..'")()', pcall( lsv ) ) 
 
 -- pairs
 print( 'pcall(pairs)', pcall(pairs) )
