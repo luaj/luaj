@@ -5,7 +5,6 @@ import java.io.IOException;
 import junit.framework.TestCase;
 
 import org.luaj.debug.response.DebugResponseCallgraph;
-import org.luaj.debug.response.DebugResponseSession;
 import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.vm.Lua;
 
@@ -81,19 +80,6 @@ public class DebugResponseTest extends TestCase {
         assertEquals(inFrames.length, outFrames.length);
         for (int i = 0; i < inFrames.length; i++) {
             assertEquals(inFrames[i], outFrames[i]);
-        }
-    }
-    
-    public void testDebugResponseSession() {
-        try {
-            DebugResponseSession sessionResponse = new DebugResponseSession(100);
-            byte[] data = SerializationHelper.serialize(sessionResponse);
-            DebugResponseSession sessionOut 
-                = (DebugResponseSession) SerializationHelper.deserialize(data);
-            assertNotNull(sessionOut);
-            assertEquals(sessionResponse.getSessionId(), sessionOut.getSessionId());            
-        } catch (IOException e) {
-            fail(e.getMessage());
         }
     }
 }

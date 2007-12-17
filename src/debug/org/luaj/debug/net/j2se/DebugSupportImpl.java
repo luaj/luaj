@@ -107,7 +107,7 @@ public class DebugSupportImpl extends DebugNetSupportBase {
     public synchronized void stop() {
         setState(STOPPED);
         if (clientConnectionTask != null) {
-            disconnect(clientConnectionTask.getSessionId());
+            disconnect();
         }
         dispose();
     }
@@ -123,17 +123,9 @@ public class DebugSupportImpl extends DebugNetSupportBase {
     }
     
     public synchronized void disconnect() {
-        disconnect(clientConnectionTask.getSessionId());
+        clientConnectionTask.disconnect();
+        clientConnectionTask = null;
     }
-    
-    public synchronized void disconnect(int id) {
-        if (clientConnectionTask.getSessionId() == id) {
-            clientConnectionTask.disconnect();
-            clientConnectionTask = null;
-        } else {
-            throw new RuntimeException("Internal Error: mismatching sesion Id");
-        }
-    }        
     
     public void acceptClientConnection() throws IOException {
         try {

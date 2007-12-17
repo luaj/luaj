@@ -9,11 +9,9 @@ import java.io.IOException;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
 import org.luaj.debug.event.DebugEventOutputRedirect;
-import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestStack;
 import org.luaj.debug.response.DebugResponseCallgraph;
-import org.luaj.debug.response.DebugResponseSession;
 import org.luaj.debug.response.DebugResponseStack;
 import org.luaj.debug.response.DebugResponseVariables;
 
@@ -53,14 +51,12 @@ public class SerializationHelper {
     static final int SERIAL_TYPE_DebugMessage                           = 5;
     static final int SERIAL_TYPE_DebugRequestStack                      = 6;
     static final int SERIAL_TYPE_DebugRequestLineBreakpointToggle       = 7;
-    static final int SERIAL_TYPE_DebugRequestDisconnect                 = 8;
-    static final int SERIAL_TYPE_DebugEventBreakpoint                   = 9;
-    static final int SERIAL_TYPE_DebugEventError                        = 10;
-    static final int SERIAL_TYPE_DebugResponseCallgraph                 = 11;
-    static final int SERIAL_TYPE_DebugResponseVariables                 = 12;
-    static final int SERIAL_TYPE_DebugResponseStack                     = 13;   
-    static final int SERIAL_TYPE_DebugResponseSession                   = 14;
-    static final int SERIAL_TYPE_DebugEventOutputRedirect               = 15;
+    static final int SERIAL_TYPE_DebugEventBreakpoint                   = 8;
+    static final int SERIAL_TYPE_DebugEventError                        = 9;
+    static final int SERIAL_TYPE_DebugResponseCallgraph                 = 10;
+    static final int SERIAL_TYPE_DebugResponseVariables                 = 11;
+    static final int SERIAL_TYPE_DebugResponseStack                     = 12;   
+    static final int SERIAL_TYPE_DebugEventOutputRedirect               = 13;
 
     public static void serialize(Serializable object, DataOutputStream dout)
             throws IOException {
@@ -86,9 +82,6 @@ public class SerializationHelper {
             dout.writeInt(SERIAL_TYPE_DebugRequestLineBreakpointToggle);
             DebugRequestLineBreakpointToggle.serialize(dout,
                     (DebugRequestLineBreakpointToggle) object);
-        } else if (object instanceof DebugRequestDisconnect) {
-            dout.writeInt(SERIAL_TYPE_DebugRequestDisconnect);
-            DebugRequestDisconnect.serialize(dout, (DebugRequestDisconnect) object);
         } else if (object instanceof DebugEventBreakpoint) {
             dout.writeInt(SERIAL_TYPE_DebugEventBreakpoint);
             DebugEventBreakpoint.serialize(dout, (DebugEventBreakpoint) object);
@@ -108,9 +101,6 @@ public class SerializationHelper {
             dout.writeInt(SERIAL_TYPE_DebugResponseCallgraph);
             DebugResponseCallgraph.serialize(dout,
                     (DebugResponseCallgraph) object);
-        } else if (object instanceof DebugResponseSession) {
-            dout.writeInt(SERIAL_TYPE_DebugResponseSession);
-            DebugResponseSession.serialize(dout, (DebugResponseSession) object);
         } else if (object instanceof DebugMessage) {
             dout.writeInt(SERIAL_TYPE_DebugMessage);
             DebugMessage.serialize(dout, (DebugMessage) object);
@@ -148,9 +138,6 @@ public class SerializationHelper {
         case SERIAL_TYPE_DebugRequestLineBreakpointToggle:
             object = DebugRequestLineBreakpointToggle.deserialize(din);
             break;
-        case SERIAL_TYPE_DebugRequestDisconnect:
-            object = DebugRequestDisconnect.deserialize(din);
-            break;
         case SERIAL_TYPE_DebugEventBreakpoint:
             object = DebugEventBreakpoint.deserialize(din);
             break;
@@ -168,9 +155,6 @@ public class SerializationHelper {
             break;
         case SERIAL_TYPE_DebugResponseVariables:
             object = DebugResponseVariables.deserialize(din);
-            break;
-        case SERIAL_TYPE_DebugResponseSession:
-            object = DebugResponseSession.deserialize(din);
             break;
         case SERIAL_TYPE_DebugMessage:
             object = DebugMessage.deserialize(din);

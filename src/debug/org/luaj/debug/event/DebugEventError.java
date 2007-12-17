@@ -33,7 +33,7 @@ public class DebugEventError extends DebugMessage {
     protected String trace;
 
     public DebugEventError(String cause, String trace) {
-        super(DebugMessageType.error);
+        super(DebugMessageType.suspendedOnError);
         this.cause = cause;
         this.trace = trace;
     }

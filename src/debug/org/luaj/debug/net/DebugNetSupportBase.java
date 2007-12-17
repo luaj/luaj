@@ -29,11 +29,6 @@ public abstract class DebugNetSupportBase implements DebugRequestListener, Debug
      */
     public abstract void disconnect();
     
-    /* (non-Javadoc)
-     * @see org.luaj.debug.net.DebugNetSupport#disconnect(int)
-     */
-    public abstract void disconnect(int id);
-
     protected DebugLuaState vm;
     public void setDebugStackState(DebugLuaState vm) {
         this.vm = vm;

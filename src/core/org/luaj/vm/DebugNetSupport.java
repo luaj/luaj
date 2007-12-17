@@ -19,11 +19,4 @@ public interface DebugNetSupport {
      * Disconnect all connected clients.
      */
     public abstract void disconnect();
-
-    /**
-     * Disconnect the client with the given id.
-     * @param id -- client id
-     */
-    public abstract void disconnect(int id);
-
 }

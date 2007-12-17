@@ -31,44 +31,45 @@ public class DebugMessageType extends EnumType {
     public static final DebugMessageType resume = new DebugMessageType("resume", 1);
     public static final DebugMessageType suspend = new DebugMessageType("suspend", 2);
     public static final DebugMessageType exit = new DebugMessageType("exit", 3); 
-    public static final DebugMessageType lineBreakpointSet = new DebugMessageType("lineBreakpointSet", 4); 
-    public static final DebugMessageType lineBreakpointClear = new DebugMessageType("lineBreakpointClear", 5);
-    public static final DebugMessageType watchpointSet = new DebugMessageType("watchpointSet", 6);
-    public static final DebugMessageType watchpointClear = new DebugMessageType("watchpointClear", 7);
-    public static final DebugMessageType callgraph = new DebugMessageType("callgraph", 8);
-    public static final DebugMessageType stack = new DebugMessageType("stack", 9);
-    public static final DebugMessageType stepInto = new DebugMessageType("stepInto", 10);
-    public static final DebugMessageType stepOver = new DebugMessageType("stepOver", 11);
-    public static final DebugMessageType stepReturn = new DebugMessageType("stepReturn", 12);
-    public static final DebugMessageType global = new DebugMessageType("global", 13);
-    public static final DebugMessageType disconnect = new DebugMessageType("disconnect", 14);
+    public static final DebugMessageType disconnect = new DebugMessageType("disconnect", 4);
+    public static final DebugMessageType lineBreakpointSet = new DebugMessageType("lineBreakpointSet", 5); 
+    public static final DebugMessageType lineBreakpointClear = new DebugMessageType("lineBreakpointClear", 6);
+    public static final DebugMessageType watchpointSet = new DebugMessageType("watchpointSet", 7);
+    public static final DebugMessageType watchpointClear = new DebugMessageType("watchpointClear", 8);
+    public static final DebugMessageType callgraph = new DebugMessageType("callgraph", 9);
+    public static final DebugMessageType stack = new DebugMessageType("stack", 10);
+    public static final DebugMessageType stepInto = new DebugMessageType("stepInto", 11);
+    public static final DebugMessageType stepOver = new DebugMessageType("stepOver", 12);
+    public static final DebugMessageType stepReturn = new DebugMessageType("stepReturn", 13);
+    public static final DebugMessageType global = new DebugMessageType("global", 14);
     public static final DebugMessageType reset = new DebugMessageType("reset", 15);
-    public static final DebugMessageType session = new DebugMessageType("session", 16);
-    
+    public static final DebugMessageType debugServiceDown = new DebugMessageType("debugServiceDown", 16);
+
+    // responses
+    public static final DebugMessageType clientRequestCallgraphReply = new DebugMessageType("clientRequestCallgraphReply", 17);
+    public static final DebugMessageType clientRequestStackReply = new DebugMessageType("clientRequestStackReply", 18);
+    public static final DebugMessageType clientRequestGlobalReply = new DebugMessageType("clientRequestGlobalReply", 19);
+
     // events
-    public static final DebugMessageType started = new DebugMessageType("started", 17);
-    public static final DebugMessageType suspendedByClient = new DebugMessageType("suspendedByClient", 18);
-    public static final DebugMessageType suspendedOnBreakpoint = new DebugMessageType("suspendedOnBreakpoint", 19);
-    public static final DebugMessageType suspendedOnWatchpoint = new DebugMessageType("suspendedOnWatchpoint", 20);
-    public static final DebugMessageType suspendedOnStepping = new DebugMessageType("suspendedOnStepping", 21);
-    public static final DebugMessageType suspendedOnError = new DebugMessageType("suspendedOnError", 22);
-    public static final DebugMessageType resumedOnSteppingEnd = new DebugMessageType("resumedOnSteppingEnd", 23);
-    public static final DebugMessageType error = new DebugMessageType("error", 24);
-    public static final DebugMessageType terminated = new DebugMessageType("terminated", 25);
-    public static final DebugMessageType clientRequestCallgraphReply = new DebugMessageType("clientRequestCallgraphReply", 26);
-    public static final DebugMessageType clientRequestStackReply = new DebugMessageType("clientRequestStackReply", 27);
-    public static final DebugMessageType clientRequestGlobalReply = new DebugMessageType("clientRequestGlobalReply", 28);
-    public static final DebugMessageType disconnected = new DebugMessageType("disconnected", 29);
-    public static final DebugMessageType sessionId = new DebugMessageType("sessionId", 30);    
-    public static final DebugMessageType debugServiceDown = new DebugMessageType("debugServiceDown", 31);
-    public static final DebugMessageType outputRedirect = new DebugMessageType("outputRedirect", 32);
+    public static final DebugMessageType started = new DebugMessageType("started", 20);
+    public static final DebugMessageType suspendedByClient = new DebugMessageType("suspendedByClient", 21);
+    public static final DebugMessageType suspendedOnBreakpoint = new DebugMessageType("suspendedOnBreakpoint", 22);
+    public static final DebugMessageType suspendedOnWatchpoint = new DebugMessageType("suspendedOnWatchpoint", 23);
+    public static final DebugMessageType suspendedOnStepping = new DebugMessageType("suspendedOnStepping", 24);
+    public static final DebugMessageType suspendedOnError = new DebugMessageType("suspendedOnError", 25);
+    public static final DebugMessageType resumedOnSteppingEnd = new DebugMessageType("resumedOnSteppingEnd", 26);
+    public static final DebugMessageType outputRedirect = new DebugMessageType("outputRedirect", 27);
+    public static final DebugMessageType terminated = new DebugMessageType("terminated", 28);
+    public static final DebugMessageType disconnected = new DebugMessageType("disconnected", 29);  
     
     protected static DebugMessageType[] ENUMS = new DebugMessageType[] {
+        // requests
         start,
         resume,
         suspend,
         exit,
-        lineBreakpointSet,
+        disconnect,
+        lineBreakpointSet, 
         lineBreakpointClear,
         watchpointSet,
         watchpointClear,
@@ -78,25 +79,25 @@ public class DebugMessageType extends EnumType {
         stepOver,
         stepReturn,
         global,
-        disconnect,
         reset,
-        session,
-    	started,
-    	suspendedByClient,
-    	suspendedOnBreakpoint,
-    	suspendedOnWatchpoint,
-    	suspendedOnStepping,
-    	suspendedOnError,
-    	resumedOnSteppingEnd,
-    	error,
-    	terminated,
-    	clientRequestCallgraphReply,
-    	clientRequestStackReply,
-    	clientRequestGlobalReply,
-    	disconnected,
-    	sessionId,
         debugServiceDown,
-        outputRedirect
+
+        // responses
+        clientRequestCallgraphReply,
+        clientRequestStackReply,
+        clientRequestGlobalReply,
+
+        // events
+        started,
+        suspendedByClient,
+        suspendedOnBreakpoint,
+        suspendedOnWatchpoint,
+        suspendedOnStepping,
+        suspendedOnError,
+        resumedOnSteppingEnd,
+        outputRedirect,
+        terminated,
+        disconnected  
     };
 	
     protected DebugMessageType(String name, int ordinal) {

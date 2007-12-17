@@ -29,7 +29,6 @@ import org.luaj.compiler.LexState;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
 import org.luaj.debug.net.DebugNetSupportBase;
-import org.luaj.debug.request.DebugRequestDisconnect;
 import org.luaj.debug.request.DebugRequestLineBreakpointToggle;
 import org.luaj.debug.request.DebugRequestListener;
 import org.luaj.debug.request.DebugRequestStack;
@@ -49,6 +48,110 @@ import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 
+/**
+ * <code>DebugLuaState</code> extends <code>LuaState</code> to provide the 
+ * debugging support for luaj-vm. It defines the debugging protocol between a 
+ * debugger, such as LuaJEclipse in Eclipse, and the luaj-vm. The 
+ * debugger and luaj-vm communicates via <code>DebugMessage</code>. The
+ * debugger sends requests to the luaj-vm and receive responses and events from 
+ * the luaj-vm. For requests that require immediately replies, luaj-vm responds
+ * synchronously. For events occurs in the luaj-vm, for instance, an exception 
+ * is raised or a breakpoint is hit, luaj-vm informs the debugger when the event
+ * occurs.  
+ * <p>
+ * <i>Debugger Requests:</i>
+ * <ul>
+ * <li><code>DebugMessageType.start</code>: The first message for the handshake 
+ * between the debugger and the luaj-vm. The VM responds with 
+ * <code>DebugMessageType.started</code> immediately. If the VM is paused 
+ * on start, it will now resume the execution.
+ * <li><code>DebugMessageType.resume</code>: The debugger instructs the 
+ * luaj-vm to resume the execution when the VM is suspended. No reply is needed.
+ * <li><code>DebugMessageType.suspend</code>: The debugger instructs the luaj-vm
+ * to suspend. VM replies with <code>DebugMessageType.suspendedByClient</code> 
+ * when it is suspended.
+ * <li><code>DebugMessageType.lineBreakpointSet</code>: The debugger informs the 
+ * VM that a breakpoint at the given source and line number is set. No reply 
+ * is needed. For future improvement, VM should check if the breakpoint is
+ * valid and gives the debugger feedback. 
+ * <li><code>DebugMessageType.lineBreakpointClear</code>: The debugger informs 
+ * the VM to clear a breakpoint at the given source and line number. No reply 
+ * is needed. For future enhancement, VM should check if the breakpoint is
+ * valid and gives the debugger feedback.
+ * <li><code>DebugMessageType.watchpointSet</code>: The debugger sets a watchpoint
+ * on the given source and line number. Not implemented yet.
+ * <li><code>DebugMessageType.watchpointClear</code>: The debugger clears a 
+ * watchpoint at the given source and line number. Not implemented yet.
+ * <li><code>DebugMessageType.callgraph</code>: The debugger requests for the 
+ * current call graph. VM replies with the call graph immediately in a debug
+ * message of type <code>DebugMessageType.clientRequestCallgraphReply</code>.
+ * <li><code>DebugMessageType.stack</code>: The debugger request for the stack 
+ * information for the given stack. VM replies with the variables on the stack 
+ * immediately in a debug message of type 
+ * <code>DebugMessageType.clientRequestStackReply</code>.
+ * <li><code>DebugMessageType.stepInto</code>: The debugger instructs the VM
+ * to begin stepping in stepInto mode. No reply is needed.
+ * <li><code>DebugMessageType.stepOver</code>: The debugger instructs the VM to
+ * begin stepping in stepOver mode. No rely is needed.
+ * <li><code>DebugMessageType.stepReturn</code>: The debugger instructs the VM 
+ * to begin stepping in stepReturn mode. No reply is needed.
+ * <li><code>DebugMessageType.global</code>: The debug request the information
+ * about the globals. VM replies with global variables in a debug message of
+ * type <code>DebugMessageType.clientRequestGlobalReply</code>. 
+ * <li><code>DebugMessageType.disconnect</code>: The debugger informs the VM 
+ * that it is about to disconnect from the VM. VM resets its state and responds
+ * with <code>DebugMessageType.disconnected</code> immediately.
+ * <li><code>DebugMessageType.exit</code>: The debugger instructs the VM to 
+ * terminate. VM prepares for termination and responds with 
+ * <code>DebugMessageType.terminated</code>.
+ * <li><code>DebugMessageType.reset</code>: This is an internal debug message. 
+ * When the communication layer detects that the debugger or the debug service
+ * exits abnormally, it sends the message to the VM for reset. VM acts upon the
+ * message and reset its internal state.
+ * <li><code>DebugMessageType.debugServiceDown</code>: This message is sent from 
+ * the debug service (on-device remote debugging) when the debug service observed
+ * that the debugger exits abnormally. Before the debug service restarts the debug
+ * session, it informs the VM to reset itself.
+ * </ul>
+ * <p>
+ * <i>VM Responses and Events:</i>
+ * <ul>
+ * <li><code>DebugMessageType.clientRequestCallgraphReply</code>: VM replies to
+ * the <code>DebugMessageType.callgraph</code> request with the information
+ * about the current call graph. A call graph is made of a list of call stacks.
+ * Call stacks are organized chronically with the most recent call on the top
+ * of the stack. 
+ * <li><code>DebugMessageType.clientRequestStackReply</code>: VM replies
+ * to the <code>DebugMessageType.stack</code> request with the variables visible
+ * on the call stack <code>i</code> where <code>i</code> the call stack index 
+ * ranging between 0 and <code>LuaState.calls.length</code>.
+ * <li><code>DebugMessageType.clientRequestGlobalReply</code>: VM replies to the 
+ * <code>DebugMessageType.global</code> request with all the globals.
+ * <li><code>DebugMessageType.started</code>: VM replies when a 
+ * <code>DebugMessageType.start</code> request is received.
+ * <li><code>DebugMessageType.resumedOnSteppingEnd</code>: VM informs the debugger
+ * that VM is getting out of the stepping mode upon step return because it has 
+ * reached the last call stack.
+ * <li><code>DebugMessageType.suspendedByClient</code>: VM sends the event to
+ * respond to a debugger pause action.
+ * <li><code>DebugMessageType.suspendedOnBreakpoint</code>: VM sends the event
+ * when a breakpoint is hit during the execution.
+ * <li><code>DebugMessageType.suspendedOnWatchpoint</code>: Not implemented yet. 
+ * VM sends the event when VM is paused to evaluate a watchpoint.
+ * <li><code>DebugMessageType.suspendedOnStepping</code>: VM sends the event when
+ * VM is paused during the stepping. The debugger has instructed the VM to begin
+ * stepping into, over or return earlier.
+ * <li><code>DebugMessageType.suspendedOnError</code>: VM sends the event when
+ * an error is raised in VM.
+ * <li><code>DebugMessageType.terminated</code>: VM sends the event when it is
+ * ready to exit. 
+ * <li><code>DebugMessageType.disconnected</code>: VM sends the event when it 
+ * has de-attached the debugger from the debug session. 
+ * <li><code>DebugMessageType.outputRedirect</code>: VM forwards the print 
+ * output to the debugger console.
+ * </ul>
+ * <p> 
+ */
 public class DebugLuaState extends LuaState implements DebugRequestListener {   
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
 
@@ -328,10 +431,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         } else if (DebugMessageType.exit == requestType) {
             stop();
         } else if (DebugMessageType.disconnect == requestType) {
-            DebugRequestDisconnect disconnectRequest 
-                = (DebugRequestDisconnect) request;
-            int connectionId = disconnectRequest.getSessionId();
-            disconnect(connectionId);
+            disconnect();
         } else if (DebugMessageType.debugServiceDown == requestType) {
             disconnectFromDebugService();
         } else if (DebugMessageType.reset == requestType) {
@@ -437,7 +537,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         }
     }
 
-    public void disconnect(int connectionId) {
+    public void disconnect() {
         if (this.debugSupport == null) {
             throw new IllegalStateException(
                     "DebugNetSupportBase must be defined.");
@@ -446,7 +546,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         reset();
         DebugMessage event = new DebugMessage(DebugMessageType.disconnected);
         debugSupport.notifyDebugEvent(event);
-        debugSupport.disconnect(connectionId);                   
+        debugSupport.disconnect();                   
     }
     
     public void disconnectFromDebugService() {
@@ -505,7 +605,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
 
     /**
-     * return the current call graph (i.e. stack frames from old to new, include
+     * return the current call graph (i.e. stack frames from new to old, include
      * information about file, method, etc.)
      */
     public StackFrame[] getCallgraph() {
@@ -514,11 +614,12 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         if (n < 0 || n >= calls.length)
             return new StackFrame[0];
 
-        StackFrame[] frames = new StackFrame[n + 1];
-        for (int i = 0; i <= n; i++) {
+        int length = n + 1;
+        StackFrame[] frames = new StackFrame[length];
+        for (int i = 0; i < length; i++) {
             CallInfo ci = calls[i];
             String src = getSourceFileName(ci.closure.p.source);
-            frames[i] = new StackFrame(src, getLineNumber(ci));
+            frames[length - i - 1] = new StackFrame(src, getLineNumber(ci));
         }
         return frames;
     }

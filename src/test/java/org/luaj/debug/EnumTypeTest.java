@@ -17,7 +17,7 @@ public class EnumTypeTest extends TestCase {
 
     public void testDebugEventTypeSerialization() {
         try {
-            DebugMessageType type = DebugMessageType.error;
+            DebugMessageType type = DebugMessageType.suspendedOnError;
             byte[] data = SerializationHelper.serialize(type);
             DebugMessageType typeOut = (DebugMessageType) SerializationHelper
                     .deserialize(data);

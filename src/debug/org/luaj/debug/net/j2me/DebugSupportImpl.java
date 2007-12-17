@@ -49,7 +49,7 @@ public class DebugSupportImpl extends DebugNetSupportBase {
     
     public void stop() {
         setState(STOPPED);
-        disconnect(1);        
+        disconnect();        
     }
 
     public void disconnect() {
@@ -60,10 +60,6 @@ public class DebugSupportImpl extends DebugNetSupportBase {
         }        
     }
     
-    public synchronized void disconnect(int id) {
-        disconnect();
-    }
-
     public synchronized void notifyDebugEvent(DebugMessage event) {
         if (clientTask != null) {
             clientTask.notifyDebugEvent(event);

@@ -11,7 +11,6 @@ import org.luaj.debug.DebugMessageType;
 import org.luaj.debug.RedirectOutputStream;
 import org.luaj.debug.SerializationHelper;
 import org.luaj.debug.event.DebugEventListener;
-import org.luaj.debug.response.DebugResponseSession;
 import org.luaj.lib.BaseLib;
 
 public class ClientConnectionTask implements Runnable, DebugEventListener {
@@ -92,7 +91,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             // discard the current connection.
             handleRequest(new DebugMessage(DebugMessageType.reset));
             
-            debugSupport.disconnect(getSessionId());
+            debugSupport.disconnect();
         } finally {
             try {
                 redirectOutputStream.close();
@@ -110,11 +109,7 @@ public class ClientConnectionTask implements Runnable, DebugEventListener {
             System.out.println("SERVER handling request: " + request.toString());
         }
 
-        if (request.getType() == DebugMessageType.session) {
-            notifyDebugEvent(new DebugResponseSession(getSessionId()));
-        } else {
-            debugSupport.handleRequest(request);
-        }
+        debugSupport.handleRequest(request);
     }
     
     public void notifyDebugEvent(DebugMessage event) {
