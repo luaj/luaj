@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/core"/>
+	<classpathentry kind="src" path="src/j2me"/>
 	<classpathentry kind="src" path="src/j2se"/>
 	<classpathentry kind="src" path="src/debug"/>
 	<classpathentry kind="src" path="src/sample"/>

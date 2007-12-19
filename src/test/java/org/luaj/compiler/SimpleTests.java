@@ -5,14 +5,21 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
+import org.luaj.TestPlatform;
 import org.luaj.debug.Print;
 import org.luaj.lib.BaseLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 public class SimpleTests extends TestCase {
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        Platform.setInstance(new TestPlatform());
+    }
 
     private void doTest( String script ) {
     	try {
@@ -22,7 +29,7 @@ public class SimpleTests extends TestCase {
 			Print.printCode( p );
 			
 			// try running the code!
-			LuaState state = new LuaState();
+			LuaState state = Platform.newLuaState();
 			BaseLib.install( state._G );
 			LClosure c = new LClosure( state, p );
 			state.doCall( c, new LValue[0] );

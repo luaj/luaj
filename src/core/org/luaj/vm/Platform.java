@@ -23,16 +23,27 @@ package org.luaj.vm;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
- * Singleton to manage platform-specific behaviors.
- * 
- * @deprecated - will probably be replaced with Config, LuaConfig or something
- *             similar.
+ * Singleton to manage platform-specific behaviors. 
+ * <p>
+ * Here is the sample code to set up the platform instance and create a new
+ * LuaState instance.
+ * <pre>
+ *    Platform.setInstance(new J2meMidp20Cldc11Platform());
+ *    LuaState vm = Platform.newLuaState();
+ * </pre>
  */
 abstract public class Platform {
+
+    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
+    
+    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug"; 
+    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
+    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
+    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
+    
     private static Platform instance;
 
     /**
@@ -43,31 +54,9 @@ abstract public class Platform {
      */
     public static Platform getInstance() {
         if (instance == null) {
-            instance = new Platform() {
-                public Reader createReader(InputStream inputStream) {
-                    return new InputStreamReader(inputStream);
-                }
-
-                public InputStream openFile(String fileName) {
-                    return getClass().getResourceAsStream("/" + fileName);
-                }
-
-                /**
-                 * Assumes J2SE platform, return the corresponding system
-                 * property
-                 */
-                public String getProperty(String propertyName) {
-                    return System.getProperty(propertyName);
-                }
-
-                /**
-                 * Provides a J2SE DebugSupport instance.
-                 */
-                public DebugNetSupport getDebugSupport() throws IOException {
-                    return null;
-                }
-            };
+            throw new RuntimeException("Platform instance is null. Use Platform.setInstance(Platform p) to set the instance first.");
         }
+        
         return instance;
     }
 
@@ -81,6 +70,35 @@ abstract public class Platform {
         instance = platform;
     }
 
+    /**
+     * Creates a new instance of LuaState. If debug properties are present,
+     * DebugLuaState (a LuaState with debugging capabilities) will be created.
+     * 
+     * @return a new instance of LuaState
+     */
+    public static LuaState newLuaState() {
+        Platform p = Platform.getInstance();
+        String isDebugStr = p.getProperty(PROPERTY_LUAJ_DEBUG);
+        boolean isDebug = (isDebugStr != null && "true".equalsIgnoreCase(isDebugStr));
+
+        LuaState vm = null;
+        if (isDebug) {
+            try {
+                vm = (LuaState) Class.forName(DEBUG_CLASS_NAME).newInstance();
+            } catch (Exception e) {
+                System.out.println("Warning: no debug support, " + e);
+            }
+        }
+
+        if (vm == null)
+            vm = new LuaState();
+
+        vm.init();
+        p.installOptionalLibs(vm);
+        
+        return vm;
+    }
+    
     /**
      * Return an InputStream or null if not found for a particular file name.
      * 
@@ -116,11 +134,25 @@ abstract public class Platform {
     abstract public DebugNetSupport getDebugSupport() throws IOException;
 
     /**
+     * Install optional libraries on the LuaState.
+     * @param vm LuaState instance
+     */
+    abstract protected void installOptionalLibs(LuaState vm);
+    
+    /** 
+     * Compute math.pow() for two numbers using double math when available. 
+     * @param lhs LNumber base
+     * @param rhs LNumber exponent
+     * @return base ^ exponent as a LNumber, throw RuntimeException if not implemented
+     */
+    abstract public LNumber mathPow(double lhs, double rhs);
+
+    /**
      * Convenience method for the subclasses to figure out the debug host.
      * @return the debug host property. If it is not present, null is returned.
      */
     protected String getDebugHost() {
-        String host = getProperty(LuaState.PROPERTY_LUAJ_DEBUG_HOST);
+        String host = getProperty(PROPERTY_LUAJ_DEBUG_HOST);
         return host;
     }
 
@@ -130,7 +162,7 @@ abstract public class Platform {
      * as an integer if it is present in the platform properties and valid. 
      */
     protected int getDebugPort() {
-        String portStr = getProperty(LuaState.PROPERTY_LUAJ_DEBUG_PORT);
+        String portStr = getProperty(PROPERTY_LUAJ_DEBUG_PORT);
         int port = -1;
         if (portStr != null) {
             try {
@@ -139,14 +171,4 @@ abstract public class Platform {
         }
         return port;
     }
-
-    /** 
-     * Compute math.pow() for two numbers using double math when available. 
-     * @param lhs LNumber base
-     * @param rhs LNumber exponent
-     * @return base ^ exponent as a LNumber, or null if not implemented
-     */
-	public LNumber mathPow(double lhs, double rhs) {
-		return null;
-	}
 }

@@ -27,12 +27,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.luaj.compiler.LuaC;
+import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 
 /**
@@ -45,18 +47,16 @@ public class LuaRunner {
 	public static void main( String[] args ) throws IOException {
 
 		// new lua state 
-		LuaState state = LuaState.newState();
+	        Platform.setInstance(new J2sePlatform());
+		LuaState state = Platform.newLuaState();
+		LuaC.install();
 		
 		// get script name
 		for ( int i=0; i<args.length; i++ ) {
 			String script = args[i];
 			try {
 				System.out.println("loading '"+script+"'");
-				
-		        // add standard bindings
-				state.installStandardLibs();
-				LuaC.install();
-						
+										
 				// load the file
 				InputStream is = null;
 				File f = new File(script);

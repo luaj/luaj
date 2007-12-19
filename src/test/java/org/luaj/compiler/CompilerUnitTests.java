@@ -1,29 +1,14 @@
 package org.luaj.compiler;
 
-import org.luaj.debug.j2se.J2sePlatform;
-import org.luaj.vm.LDouble;
-import org.luaj.vm.LNumber;
-import org.luaj.vm.Platform;
 
 
 public class CompilerUnitTests extends AbstractUnitTests {
 
-	static {
-		// override platform to test with standard debug features. 
-		Platform.setInstance( new J2sePlatform() {
-			public LNumber mathPow(double lhs, double rhs) {
-				double d = Math.pow(lhs, rhs);
-				return LDouble.valueOf(d);
-			}
-		});
-	}
-	
-	public CompilerUnitTests() {
-		super( "src/test/compile/lua5.1-tests.zip", 
-				"lua5.1-tests" );
-	}
-	
-	public void testAll()        { doTest("all.lua"); }
+    public CompilerUnitTests() {
+        super("src/test/compile/lua5.1-tests.zip", "lua5.1-tests");
+    }
+
+    public void testAll()        { doTest("all.lua"); }
 	public void testApi()        { doTest("api.lua"); }
 	public void testAttrib()     { doTest("attrib.lua"); }
 	public void testBig()        { doTest("big.lua"); }

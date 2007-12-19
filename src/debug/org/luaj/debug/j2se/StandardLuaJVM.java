@@ -29,7 +29,7 @@ import java.io.InputStream;
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.DebugLuaState;
 import org.luaj.lib.PackageLib;
-import org.luaj.lib.j2se.LuajavaLib;
+import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
@@ -84,7 +84,7 @@ public class StandardLuaJVM {
             }
             
             this.isDebugMode = true;
-            System.setProperty(LuaState.PROPERTY_LUAJ_DEBUG, "true");
+            System.setProperty(Platform.PROPERTY_LUAJ_DEBUG, "true");
             
             String debugOptions = args[index];
             debugOptions = debugOptions.substring(2); // remove '-D'
@@ -94,7 +94,7 @@ public class StandardLuaJVM {
                     String portString = options[i].substring(CMD_LINE_DEBUG_OPTION_PORT.length());
                     try {
                         this.debugPort = Integer.parseInt(portString);
-                        System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, String.valueOf(debugPort));
+                        System.setProperty(Platform.PROPERTY_LUAJ_DEBUG_PORT, String.valueOf(debugPort));
                         if (this.debugPort <= 0) {
                             throw new ParseException(
                                     "Invalid debug port: it must be greater than zero.");
@@ -110,7 +110,7 @@ public class StandardLuaJVM {
                         throw new ParseException("invalid debug flag: suspendOnStart");
                     }
                     this.bSuspendOnStart = Boolean.parseBoolean(suspendOnStartStr);
-                    System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, suspendOnStartStr);
+                    System.setProperty(Platform.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, suspendOnStartStr);
                 } else {
                     throw new ParseException("Invalid command line argument: " + debugOptions);
                 }
@@ -184,9 +184,8 @@ public class StandardLuaJVM {
     public void run() {
         try {
             // new lua debug state
-            Platform.setInstance(new J2sePlatform());
-            
-            state = LuaState.newState();
+            Platform.setInstance(new J2sePlatform());            
+            state = Platform.newLuaState();
             init(state);
 
             // load the Lua file
@@ -218,13 +217,6 @@ public class StandardLuaJVM {
     }
 
     protected void init(LuaState state) {
-
-        // add standard bindings
-        state.installStandardLibs();
-
-        // add LuaJava bindings
-        LuajavaLib.install(state._G);  
-        
         // add the compiler
         LuaC.install();
         

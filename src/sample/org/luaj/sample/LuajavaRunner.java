@@ -24,18 +24,14 @@ package org.luaj.sample;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.lib.CoroutineLib;
-import org.luaj.lib.MathLib;
-import org.luaj.lib.PackageLib;
-import org.luaj.lib.StringLib;
-import org.luaj.lib.TableLib;
 import org.luaj.lib.j2se.LuajavaLib;
+import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
-import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 
 /**
@@ -48,14 +44,10 @@ public class LuajavaRunner {
 
 	public static void main( String[] args ) throws IOException {
 
+	        Platform.setInstance(new J2sePlatform());
+	        
 		// new lua state 
-		LuaState state = new LuaState();
-
-        // add standard bindings
-		state.installStandardLibs();
-				
-		// add LuaJava bindings
-		LuajavaLib.install(state._G);
+		LuaState state = Platform.newLuaState();
 		
 		// get script name
 		String script = (args.length>0? args[0]: "/swingapp.luac");

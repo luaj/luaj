@@ -176,7 +176,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     /**
      * Creates an instance of DebugLuaState.
      * 
-     * @deprecated As of version 0.10, replaced by {@link #LuaState.newState()}
+     * @deprecated As of version 0.10, replaced by {@link #Platform.newLuaState()}
      */
     public DebugLuaState() {}
     
@@ -185,10 +185,12 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      * @see org.luaj.vm.LuaState#init()
      */
     public void init() {
+        super.init();
+        
         Platform platform = Platform.getInstance();
 
         // set if the vm should be suspended at start
-        String suspendOnStartStr = platform.getProperty(PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);
+        String suspendOnStartStr = platform.getProperty(Platform.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);
         boolean bSuspendOnStart = (suspendOnStartStr != null && "true".equalsIgnoreCase(suspendOnStartStr));
         setSuspendAtStart(bSuspendOnStart);
     

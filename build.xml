@@ -1,5 +1,5 @@
 <project default="all">
-	<property name="version" value="0.14"/>
+	<property name="version" value="0.15"/>
 
 	<target name="clean">
 		<delete dir="build"/>
@@ -9,7 +9,7 @@
 		<delete file="luaj-vm-${version}.jar"/>
 		<delete file="luaj-vm-core-${version}.jar"/>
 		<delete file="luaj-vm-extras-j2se-${version}.jar"/>
-		<delete file="luaj-vm-debug-j2me-${version}.jar"/>
+		<delete file="luaj-vm-extras-j2me-${version}.jar"/>
 	</target>
 	
 	<target name="compile">
@@ -17,6 +17,7 @@
 		<javac destdir="build/all/classes" encoding="utf-8" source="1.3" target="1.1">
 			<src path="src/core" />
 			<src path="src/j2se" />
+			<exclude name="org/luaj/platform/**"/>
 		</javac>
 	</target>
 	
@@ -34,7 +35,7 @@
 		<echo>Skipping steps that require J2ME WTK.</echo>
 	</target>
 	
-	<target name="j2me-jars" depends="wtk-or-fail,jar-core,jar-j2se-extras,jar-j2me-debug"/>
+	<target name="j2me-jars" depends="wtk-or-fail,jar-core,jar-j2se-extras,jar-j2me-extra"/>
 	
 	<target name="jar-core" depends="compile-core">
 		<jar destfile="luaj-vm-core-${version}.jar" basedir="build/core/classes"/>
@@ -44,8 +45,8 @@
 		<jar destfile="luaj-vm-extras-j2se-${version}.jar" basedir="build/extras-j2se/classes"/>
 	</target>
 	
-	<target name="jar-j2me-debug" depends="compile-j2me-debug">
-		<jar destfile="luaj-vm-debug-j2me-${version}.jar" basedir="build/extras-j2me/classes"/>
+	<target name="jar-j2me-extra" depends="compile-j2me-extra">
+		<jar destfile="luaj-vm-extras-j2me-${version}.jar" basedir="build/extras-j2me/classes"/>
 	</target>
 	
 	<target name="compile-core" depends="wtk-or-fail">
@@ -73,10 +74,11 @@
 		</javac>
 	</target>
 	
-	<target name="compile-j2me-debug" depends="wtk-or-fail">
+	<target name="compile-j2me-extra" depends="wtk-or-fail">
 		<mkdir dir="build/extras-j2me/classes"/>
 		<javac destdir="build/extras-j2me/classes" encoding="utf-8" source="1.3" target="1.1"
 			   bootclasspathref="wtk-libs" classpath="build/core/classes">
+	        <src path="src/j2me" />
 			<src path="src/debug" />
 			<exclude name="org/luaj/debug/j2se/**"/>
 	        <exclude name="org/luaj/debug/net/j2se/**"/>

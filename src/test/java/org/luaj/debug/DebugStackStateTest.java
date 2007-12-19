@@ -24,21 +24,33 @@ package org.luaj.debug;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.debug.DebugLuaState;
+import junit.framework.TestCase;
+
+import org.luaj.TestPlatform;
+import org.luaj.compiler.LuaC;
+import org.luaj.vm.DebugNetSupport;
 import org.luaj.vm.LClosure;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
-import org.luaj.vm.LPrototype;
-
-import junit.framework.TestCase;
+import org.luaj.vm.LuaState;
+import org.luaj.vm.Platform;
 
 public class DebugStackStateTest extends TestCase {
 
 	public void testDebugStackState() throws InterruptedException, IOException {
-		String script = "/test6.luac";
+		String script = "/test6.lua";
 		
 		// set up the vm
-		final DebugLuaState state = new DebugLuaState();
+		System.setProperty(Platform.PROPERTY_LUAJ_DEBUG, "true");
+		Platform.setInstance(new TestPlatform() {
+		    public DebugNetSupport getDebugSupport() throws IOException {
+		        return null;
+		    }
+		});
+
+		final DebugLuaState state = (DebugLuaState) Platform.newLuaState();
+                LuaC.install();
 		InputStream is = getClass().getResourceAsStream( script );
 		LPrototype p = LoadState.undump(state, is, script);
 		

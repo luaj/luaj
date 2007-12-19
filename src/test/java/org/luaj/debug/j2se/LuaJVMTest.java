@@ -21,20 +21,13 @@
  ******************************************************************************/
 package org.luaj.debug.j2se;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.luaj.debug.DebugLuaState;
+import org.luaj.TestPlatform;
 import org.luaj.debug.j2se.StandardLuaJVM.ParseException;
-import org.luaj.debug.net.j2se.DebugSupportImpl;
-import org.luaj.vm.DebugNetSupport;
-import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 /**
@@ -44,33 +37,8 @@ public class LuaJVMTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         
-        System.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, "1999"); 
-        
-        Platform.setInstance(new Platform() {
-            public Reader createReader(InputStream inputStream) {
-                return new InputStreamReader(inputStream);
-            }
-
-            public InputStream openFile(String fileName) {
-                return getClass().getResourceAsStream("/" + fileName);
-            }
-
-            /**
-             * Assumes J2SE platform, return the corresponding system property
-             */
-            public String getProperty(String propertyName) {
-                return System.getProperty(propertyName);
-            }
-            
-            /**
-             * Provides a J2SE DebugSupport instance.
-             */
-            public DebugNetSupport getDebugSupport() throws IOException {
-                int port = getDebugPort();
-                DebugSupportImpl debugSupport = new DebugSupportImpl(port);
-                return debugSupport;
-            }
-        });
+        System.setProperty(Platform.PROPERTY_LUAJ_DEBUG_PORT, "1999");         
+        Platform.setInstance(new TestPlatform());
     }
 
     public void testCommandLineParse() {
@@ -244,10 +212,10 @@ public class LuaJVMTest extends TestCase {
 
     public void testRun() {
         Properties props = System.getProperties();
-        props.remove(LuaState.PROPERTY_LUAJ_DEBUG);
-        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_HOST);
-        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT);
-        props.remove(DebugLuaState.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);        
+        props.remove(Platform.PROPERTY_LUAJ_DEBUG);
+        props.remove(Platform.PROPERTY_LUAJ_DEBUG_HOST);
+        props.remove(Platform.PROPERTY_LUAJ_DEBUG_PORT);
+        props.remove(Platform.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START);        
         System.setProperties(props);
         
         String[] tests = new String[] { "autoload", "boolean", "calls",
@@ -261,8 +229,8 @@ public class LuaJVMTest extends TestCase {
 
     public void testDebugRun() {
         Properties props = System.getProperties();
-        props.setProperty(LuaState.PROPERTY_LUAJ_DEBUG, "true");
-        props.setProperty(DebugLuaState.PROPERTY_LUAJ_DEBUG_PORT, "1999");        
+        props.setProperty(Platform.PROPERTY_LUAJ_DEBUG, "true");
+        props.setProperty(Platform.PROPERTY_LUAJ_DEBUG_PORT, "1999");        
         System.setProperties(props);
 
         String[] tests = new String[] { "boolean", "calls",

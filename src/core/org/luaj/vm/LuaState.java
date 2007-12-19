@@ -69,14 +69,6 @@ import org.luaj.lib.TableLib;
  * 
  */
 public class LuaState extends Lua {
-
-    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
-    
-    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug"; 
-    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
-    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
-    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
-    
     /* thread status; 0 is OK */
     private static final int LUA_YIELD  = 1;
     private static final int LUA_ERRRUN = 2;
@@ -117,10 +109,8 @@ public class LuaState extends Lua {
 	 * does all memory allocation for this state through this function. The
 	 * second argument, <code>ud</code>, is an opaque pointer that Lua simply
 	 * passes to the allocator in every call.
-	 * 
-	 * @deprecated As of version 0.10, replaced by {@link #newState()}
 	 */
-	public LuaState() {
+	protected LuaState() {
 		_G = new LTable();
 		_G.put("_G", _G);
 		mainState = this;
@@ -133,33 +123,6 @@ public class LuaState extends Lua {
 	 */
 	LuaState(LTable globals) {
 		_G = globals;
-	}
-
-	/**
-	 * Factory method to return an instance of LuaState. If debug property is
-	 * present, it will create a DebugLuaState instance.
-	 * @return
-	 */
-	public static LuaState newState() {
-	    String isDebugStr 
-	        = Platform.getInstance().getProperty(PROPERTY_LUAJ_DEBUG);
-	    boolean isDebug = (isDebugStr != null && "true".equalsIgnoreCase(isDebugStr));
-
-	    LuaState vm = null;
-	    if ( isDebug ) {
-                try {
-                    vm = (LuaState) Class.forName( DEBUG_CLASS_NAME ).newInstance();
-                } catch (Exception e) {
-                    System.out.println("Warning: no debug support, " + e );
-                }
-	    }
-	    
-            if ( vm == null )
-                vm = new LuaState();
-            
-            vm.init();
-            
-            return vm;
 	}
 	
 	/**
