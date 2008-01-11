@@ -23,6 +23,7 @@ package org.luaj.sample;
 
 public class SampleClass {
 
+	public Object o;
 	public String s;
 	public String t;
 	
@@ -40,5 +41,13 @@ public class SampleClass {
 	
 	public void setS(String s) {
 		this.s = s;
+	}
+	
+	public void setObj(Object o) {
+		this.o = o;
+	}
+	
+	public Object getObj() {
+		return o;
 	}
 }

@@ -43,7 +43,7 @@ public class LUserData extends LValue {
 	public int hashCode() {
 		return System.identityHashCode( m_instance );
 	}
-
+	
 	public int luaGetType() {
 		return Lua.LUA_TUSERDATA;
 	}
@@ -51,8 +51,14 @@ public class LUserData extends LValue {
 	public LTable luaGetMetatable() {
 		return m_metatable; 
 	}
-
+	
 	public Object toJavaInstance() {
 		return m_instance;
+	}
+	
+	public boolean luaBinCmpUnknown( int opcode, LValue lhs ) {
+		if ( opcode == Lua.OP_EQ )
+			return lhs.equals( this );
+		return super.luaBinCmpUnknown( opcode, lhs );
 	}
 }
