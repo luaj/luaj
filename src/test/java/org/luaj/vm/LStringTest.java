@@ -76,6 +76,7 @@ public class LStringTest extends TestCase {
 		assertEquals( userFriendly( before ), userFriendly( after ) );
 		
 	}
+
 	public void testNullTerminated() {		
 		char[] c = { 'a', 'b', 'c', '\0', 'd', 'e', 'f' };
 		String before = new String(c);
