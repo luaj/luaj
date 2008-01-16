@@ -68,7 +68,7 @@ public class LValue {
 
 	// unsupported except for numbers
 	public LValue luaBinOpUnknown(int opcode, LValue lhs) {
-		return arithmeticError(lhs.luaGetTypeName());
+		return arithmeticError(luaGetTypeName());
 	}
 
 	// unsupported except for numbers
