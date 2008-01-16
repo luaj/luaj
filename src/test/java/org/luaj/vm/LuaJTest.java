@@ -131,8 +131,12 @@ public class LuaJTest extends TestCase {
                 runTest( "simplemetatables" );
         }
         
+        public void testStack() throws IOException, InterruptedException {
+            runTest( "stack" );
+        }
+        
         public void testStrLib() throws IOException, InterruptedException {
-                runTest( "strlib" );
+            runTest( "strlib" );
         }
         
         public void testTable() throws IOException, InterruptedException {
