@@ -1192,7 +1192,7 @@ public class LuaState extends Lua {
 	 * 
 	 */
 	public void checkstack(int extra) {
-		if ( top + extra > stack.length ) {
+		if ( top + extra >= stack.length ) {
 			int n = Math.max( top + extra + LUA_MINSTACK, stack.length * 2 );
 			LValue[] s = new LValue[n];
 			System.arraycopy(stack, 0, s, 0, stack.length);
