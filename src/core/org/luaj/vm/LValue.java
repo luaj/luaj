@@ -47,7 +47,7 @@ public class LValue {
 	}
 
 	private void indexError(LuaState vm, LValue nontable) {
-		vm.error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 2 );
+		vm.error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
 	}
 
 	public String id() {
