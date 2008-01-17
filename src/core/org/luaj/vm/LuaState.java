@@ -843,7 +843,7 @@ public class LuaState extends Lua {
             case LuaState.OP_CLOSURE: {
                 b = LuaState.GETARG_Bx(i);
                 proto = cl.p.p[b];
-                newClosure = new LClosure(proto, _G);
+                newClosure = new LClosure(proto, cl.env);
                 for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
                     i = code[ci.pc];
                     o = LuaState.GET_OPCODE(i);
