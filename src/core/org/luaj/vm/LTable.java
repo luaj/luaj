@@ -499,7 +499,7 @@ public class LTable extends LValue {
 					int slot = findSlot( i+1 );
 					if ( m_hashKeys[ slot ] != null ) {
 						newVector[ i ] = m_hashValues[ slot ];
-						m_hashKeys[ i ] = null;
+						m_hashKeys[ slot ] = null;
 						--m_hashEntries;
 					} else {
 						// Make sure all array-part values are initialized to nil
@@ -507,6 +507,10 @@ public class LTable extends LValue {
 						// whenever we need to check if a slot is full or not.
 						newVector[ i ] = LNil.NIL;
 					}
+				}
+				if ( m_hashEntries == 0 ) {
+					m_hashKeys = null;
+					m_hashValues = null;
 				}
 			} else {
 				for ( int i = oldCapacity; i < newCapacity; ++i ) {

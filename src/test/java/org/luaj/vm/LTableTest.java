@@ -30,6 +30,25 @@ public class LTableTest extends TestCase {
 		}
 	}
 	
+	public void testResize() {
+		LTable t = new LTable();
+		
+		// NOTE: This order of insertion is important.
+		t.put(3, LInteger.valueOf(3));
+		t.put(1, LInteger.valueOf(1));
+		t.put(5, LInteger.valueOf(5));
+		t.put(4, LInteger.valueOf(4));
+		t.put(6, LInteger.valueOf(6));
+		t.put(2, LInteger.valueOf(2));
+		
+		for ( int i = 1; i < 6; ++i ) {
+			assertEquals(LInteger.valueOf(i), t.get(i));
+		}
+		
+		assertEquals( 0, t.getHashCapacity() );
+		assertTrue( t.getArrayCapacity() >= 6 );
+	}
+	
 	public void testOutOfOrderIntegerKeyInsertion() {
 		LTable t = new LTable();
 		
