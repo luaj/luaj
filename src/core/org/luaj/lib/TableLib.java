@@ -170,7 +170,7 @@ public class TableLib extends LFunction {
 		case MAXN: { 
 			LTable table = vm.totable(2);
 			vm.resettop();
-			vm.pushinteger( table.luaMaxN() );
+			vm.pushlvalue( table.luaMaxN() );
 			break;
 		}
 			

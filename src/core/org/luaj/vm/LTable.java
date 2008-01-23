@@ -494,28 +494,22 @@ public class LTable extends LValue {
 		// getting bigger, and from array part to hash part if array is getting
 		// smaller.
 		if ( newCapacity > oldCapacity ) {
-			if ( m_hashKeys != null ) {
-				for ( int i = oldCapacity; i < newCapacity; ++i ) {
+			for ( int i = oldCapacity; i < newCapacity; ++i ) {
+				// Test for m_hashKeys != null must be inside the loop because
+				// call to clearSlot may result in m_hashKeys becoming null
+				// at any time.
+				if ( m_hashKeys != null ) {
 					int slot = findSlot( i+1 );
 					if ( m_hashKeys[ slot ] != null ) {
 						newVector[ i ] = m_hashValues[ slot ];
-						m_hashKeys[ slot ] = null;
-						--m_hashEntries;
-					} else {
-						// Make sure all array-part values are initialized to nil
-						// so that we can just do one compare instead of two
-						// whenever we need to check if a slot is full or not.
-						newVector[ i ] = LNil.NIL;
+						clearSlot( slot );
+						continue;
 					}
 				}
-				if ( m_hashEntries == 0 ) {
-					m_hashKeys = null;
-					m_hashValues = null;
-				}
-			} else {
-				for ( int i = oldCapacity; i < newCapacity; ++i ) {
-					newVector[ i ] = LNil.NIL;
-				}
+				// Make sure all array-part values are initialized to nil
+				// so that we can just do one compare instead of two
+				// whenever we need to check if a slot is full or not.
+				newVector[ i ] = LNil.NIL;
 			}
 		} else {
 			for ( int i = newCapacity; i < oldCapacity; ++i ) {
@@ -586,8 +580,29 @@ public class LTable extends LValue {
 		}
 	}
 
-	public int luaMaxN() {
-		return m_arrayEntries;
+	public LValue luaMaxN() {
+		LValue result = LInteger.valueOf(0);
+		
+		for ( int i = m_vector.length - 1; i >= 0; i-- ) {
+			if ( m_vector[i] != LNil.NIL ) {
+				result = LInteger.valueOf(i + 1);
+				break;
+			}
+		}
+		
+		if ( m_hashKeys != null ) {
+			final int hlen = m_hashKeys.length;
+			for ( int i = 0; i < hlen; ++i ) {
+				LValue k = m_hashKeys[i];
+				if ( k != null && k.luaGetType() == Lua.LUA_TNUMBER ) {
+					if ( k.luaBinCmpUnknown(Lua.OP_LT, result ) ) {
+						result = k;
+					}
+				}
+			}
+		}
+		
+		return result;
 	}
 
 	// ----------------- sort support -----------------------------
