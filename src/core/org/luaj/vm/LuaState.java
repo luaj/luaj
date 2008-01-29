@@ -1347,9 +1347,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		LTable t = this._G;
-		// TODO: what if this triggers metatable ops
-		// pushlvalue( t.luaGetTable(this, t, new LString(s)));
+		LTable t = calls[cc].closure.env;
 		t.luaGetTable(this, t, new LString(s));
 	}
 	
@@ -2022,7 +2020,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void setglobal(String name) {
-		LTable g = this._G;
+		LTable g = calls[cc].closure.env;
 		LValue v = poplvalue();
 		g.luaSetTable(this, g, new LString(name), v);
 	}
