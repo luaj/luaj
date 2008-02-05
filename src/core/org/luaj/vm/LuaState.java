@@ -1347,7 +1347,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		LTable t = calls[cc].closure.env;
+		LTable t = this._G;
 		t.luaGetTable(this, t, new LString(s));
 	}
 	
@@ -2020,7 +2020,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void setglobal(String name) {
-		LTable g = calls[cc].closure.env;
+		LTable g = this._G;
 		LValue v = poplvalue();
 		g.luaSetTable(this, g, new LString(name), v);
 	}
