@@ -87,7 +87,11 @@ public class LuaJTest extends TestCase {
                 runTest( "errors" );
         }
 
-        public void testLoops() throws IOException, InterruptedException {
+        public void testHugeTable() throws IOException, InterruptedException {
+            runTest( "hugetable" );
+        }
+
+       public void testLoops() throws IOException, InterruptedException {
                 runTest( "loops" );
         }
 
