@@ -93,7 +93,12 @@ public class LuaJTest extends TestCase {
 
        public void testLoops() throws IOException, InterruptedException {
                 runTest( "loops" );
-        }
+       }
+       
+       public void testManyLocals() throws IOException, InterruptedException {
+           	runTest( "manylocals" );
+       }
+
 
         public void testMathLib() throws IOException, InterruptedException {
                 runTest( "mathlib" );
