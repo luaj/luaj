@@ -58,7 +58,6 @@ public class LuaC extends Lua implements LuaCompiler {
 	public static final int MAXSTACK = 250;
 	static final int LUAI_MAXUPVALUES = 60;
 	static final int LUAI_MAXVARS = 200;
-	static final int LFIELDS_PER_FLUSH = 50;
 	static final int NO_REG		 = MAXARG_A;
 	
 	/* masks for new-style vararg */

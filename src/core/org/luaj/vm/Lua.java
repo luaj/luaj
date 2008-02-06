@@ -24,11 +24,7 @@ package org.luaj.vm;
 
 /**
  * Constants for lua limits and opcodes
- * 
- * @author jim_roseborough
- * 
- * @deprecated - this class will go away.  Constants will probably move to LuaState 
- * 
+ *
  */
 public class Lua {
 
@@ -324,6 +320,9 @@ public class Lua {
 		return 0 != (luaP_opmodes[m] & (1 << 7));
 	}
 
+	/* number of list items to accumulate before a SETLIST instruction */
+	public static final int LFIELDS_PER_FLUSH = 50;
+	
 	// type constants
 	
 	public static final int LUA_TNONE			= (-1);
@@ -351,4 +350,5 @@ public class Lua {
 		"value",
 	};
 
+	
 }

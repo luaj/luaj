@@ -827,11 +827,10 @@ public class LuaState extends Lua {
                 if (c == 0) {
                     c = code[ci.pc++];
                 }
-                table = this.stack[base + a];
-                for (int index = 1; index <= b; index++) {
-                    val = this.stack[listBase + index];
-                    table.luaSetTable(this, table, LInteger.valueOf(index),
-                            val);
+                int offset = (c-1) * LFIELDS_PER_FLUSH;
+                LTable tbl = (LTable) this.stack[base + a];
+                for (int j=1; j<=b; j++) {
+                    tbl.put(offset+j, stack[listBase + j]);
                 }
                 top = base + a - 1;
                 continue;
