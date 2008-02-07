@@ -163,6 +163,11 @@ public class LuaJTest extends TestCase {
         public void testUpvalues2() throws IOException, InterruptedException {
                 runTest( "upvalues2" );
         }
+        
+        public void testUpvalues3() throws IOException, InterruptedException {
+                runTest( "upvalues3" );
+        }
+        
 //*/
         private void runTest( String testName ) throws IOException, InterruptedException {
 
