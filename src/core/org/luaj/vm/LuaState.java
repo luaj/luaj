@@ -836,7 +836,7 @@ public class LuaState extends Lua {
                 continue;
             }
             case LuaState.OP_CLOSE: {
-                closeUpVals( a ); // close upvals higher in the stack than position a
+                closeUpVals( base + a ); // close upvals higher in the stack than position a
                 continue;
             }
             case LuaState.OP_CLOSURE: {
