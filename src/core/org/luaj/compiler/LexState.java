@@ -829,7 +829,7 @@ public class LexState {
 
 	void adjustlocalvars(int nvars) {
 		FuncState fs = this.fs;
-		fs.nactvar = (byte) (fs.nactvar + nvars);
+		fs.nactvar = (short) (fs.nactvar + nvars);
 		for (; nvars > 0; nvars--) {
 			fs.getlocvar(fs.nactvar - nvars).startpc = fs.pc;
 		}

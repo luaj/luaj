@@ -47,7 +47,7 @@ public class FuncState extends LuaC {
 	static class BlockCnt {
 		  BlockCnt previous;  /* chain */
 		  IntPtr breaklist = new IntPtr();  /* list of jumps out of this loop */
-		  byte nactvar;  /* # active locals outside the breakable structure */
+		  short nactvar;  /* # active locals outside the breakable structure */
 		  boolean upval;  /* true if some variable in the block is an upvalue */
 		  boolean isbreakable;  /* true if `block' is a loop */
 		};
@@ -66,7 +66,7 @@ public class FuncState extends LuaC {
 	int nk;  /* number of elements in `k' */
 	int np;  /* number of elements in `p' */
 	short nlocvars;  /* number of elements in `locvars' */
-	byte nactvar;  /* number of active local variables */
+	short nactvar;  /* number of active local variables */
 	upvaldesc upvalues[] = new upvaldesc[LUAI_MAXUPVALUES];  /* upvalues */
 	short actvar[] = new short[LUAI_MAXVARS];  /* declared-variable stack */
 	int varargflags; /* whether varargs are needed */
@@ -413,7 +413,7 @@ public class FuncState extends LuaC {
 		if (newstack > this.f.maxstacksize) {
 			if (newstack >= MAXSTACK)
 				ls.syntaxerror("function or expression too complex");
-			this.f.maxstacksize = (byte) newstack;
+			this.f.maxstacksize = newstack;
 		}
 	}
 
