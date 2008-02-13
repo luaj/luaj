@@ -149,6 +149,20 @@ public class LString extends LValue {
 		this.m_hash = hashBytes( bytes, off, len );
 	}
 	
+	public static LString newStringCopy(LString src) {
+		return newStringCopy( src.m_bytes, src.m_offset, src.m_length );
+	}
+	
+	public static LString newStringCopy(byte[] buf, int off, int len) {
+		byte[] b = new byte[len];
+		System.arraycopy( buf, off, b, 0, len );
+		return new LString( b, 0, len );
+	}
+	
+	public static LString newStringNoCopy(byte[] buf, int off, int len) {
+		return new LString( buf, off, len );
+	}
+	
 	public boolean equals(Object o) {
 		if ( o != null && o instanceof LString ) {
 			LString s = (LString) o;

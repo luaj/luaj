@@ -179,6 +179,7 @@ public class LuaJTest extends TestCase {
                 
                 // load the file
                 LPrototype p = loadScriptResource( state, testName );
+                p.source = LString.valueOf("stdin");
                 
                 // Replace System.out with a ByteArrayOutputStream
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -208,7 +209,9 @@ public class LuaJTest extends TestCase {
                 }
                 
                 try {
-                        return LoadState.undump(state, script, name);
+                        // Use "stdin" instead of resource name so that output matches
+                        // standard Lua.
+                        return LoadState.undump(state, script, "stdin");
                 } finally {
                         script.close();
                 }

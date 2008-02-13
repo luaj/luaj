@@ -22,7 +22,7 @@
 package org.luaj.compiler;
 
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.util.Hashtable;
 
 import org.luaj.compiler.FuncState.BlockCnt;
@@ -138,11 +138,11 @@ public class LexState {
 	final Token lookahead = new Token();  /* look ahead token */
 	FuncState fs;  /* `FuncState' is private to the parser */
 	LuaC L;
-	Reader z;  /* input stream */
-	char[] buff;  /* buffer for tokens */
+	InputStream z;  /* input stream */
+	byte[] buff;  /* buffer for tokens */
 	int nbuff; /* length of buffer */
 	LString source;  /* current source name */
-	char decpoint;  /* locale decimal point */
+	byte decpoint;  /* locale decimal point */
 
 	/* ORDER RESERVED */
 	final static String luaX_tokens [] = {
@@ -197,9 +197,9 @@ public class LexState {
 	}
 	
 	
-	public LexState(LuaC state, Reader reader) {
-		this.z = reader;
-		this.buff = new char[32];
+	public LexState(LuaC state, InputStream stream) {
+		this.z = stream;
+		this.buff = new byte[32];
 		this.L = state;
 	}
 
@@ -221,10 +221,10 @@ public class LexState {
 		nextChar();
 	}
 
-	void save( int c) {
+	void save(int c) {
 		if ( buff == null || nbuff + 1 > buff.length )
 			buff = LuaC.realloc( buff, nbuff*2+1 );
-		buff[nbuff++] = (char) c;
+		buff[nbuff++] = (byte) c;
 	}
 
 
@@ -281,12 +281,12 @@ public class LexState {
 		lexerror( msg, t.token );
 	}
 
-	LString newstring( char[] chars, int offset, int len) {
-		return newstring( new String(chars, offset, len) );
+	LString newstring( String s ) {
+		return L.newTString( LString.valueOf(s) );
 	}
 
-	LString newstring( String s ) {
-		return L.newTString( s );
+	LString newstring( byte[] chars, int offset, int len ) {
+		return L.newTString( LString.newStringNoCopy(chars, offset, len) );
 	}
 
 	void inclinenumber() {
@@ -299,7 +299,7 @@ public class LexState {
 			syntaxerror("chunk has too many lines");
 	}
 
-	void setinput( LuaC L, int firstByte, Reader z, LString source ) {
+	void setinput( LuaC L, int firstByte, InputStream z, LString source ) {
 		this.decpoint = '.';
 		this.L = L;
 		this.lookahead.token = TK_EOS; /* no look-ahead token */
@@ -335,9 +335,9 @@ public class LexState {
 		return true;
 	}
 
-	void buffreplace(char from, char to) {
+	void buffreplace(byte from, byte to) {
 		int n = nbuff;
-		char[] p = buff;
+		byte[] p = buff;
 		while ((--n) >= 0)
 			if (p[n] == from)
 				p[n] = to;
@@ -394,7 +394,7 @@ public class LexState {
 		while (isalnum(current) || current == '_')
 			save_and_next();
 		save('\0');
-		buffreplace('.', decpoint); /* follow locale for decimal point */
+		buffreplace((byte)'.', decpoint); /* follow locale for decimal point */
 		String str = new String(buff, 0, nbuff);
 //		if (!str2d(str, seminfo)) /* format error? */
 //			trydecpoint(str, seminfo); /* try to update decimal point separator */

@@ -23,7 +23,6 @@ package org.luaj.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.util.Hashtable;
 
 import org.luaj.vm.LPrototype;
@@ -33,7 +32,6 @@ import org.luaj.vm.LoadState;
 import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaErrorException;
-import org.luaj.vm.Platform;
 import org.luaj.vm.LoadState.LuaCompiler;
 
 
@@ -154,8 +152,8 @@ public class LuaC extends Lua implements LuaCompiler {
 		return a;
 	}
 
-	static char[] realloc(char[] v, int n) {
-		char[] a = new char[n];
+	static byte[] realloc(byte[] v, int n) {
+		byte[] a = new byte[n];
 		if ( v != null )
 			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
 		return a;
@@ -186,13 +184,12 @@ public class LuaC extends Lua implements LuaCompiler {
 	 * @throws LuaErrorException if there is a syntax error.
 	 */
 	public LPrototype compile(int firstByte, InputStream stream, String name) throws IOException {
-		Reader r = Platform.getInstance().createReader( stream );
 		LuaC compiler = new LuaC();
-		return compiler.luaY_parser(firstByte, r, name);
+		return compiler.luaY_parser(firstByte, stream, name);
 	}
 
 	/** Parse the input */
-	private LPrototype luaY_parser(int firstByte, Reader z, String name) {
+	private LPrototype luaY_parser(int firstByte, InputStream z, String name) {
 		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
@@ -213,13 +210,15 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	public LString newlstr(char[] chars, int offset, int len) {
-		return newTString( new String(chars,offset,len) );
+		return newTString( LString.valueOf( new String(chars,offset,len) ) );
 	}
 
-	public LString newTString(String s) {
+	public LString newTString(LString s) {
 		LString t = (LString) strings.get(s);
-		if ( t == null )
-			strings.put( s, t = new LString(s) );
+		if ( t == null ) {
+			t = LString.newStringCopy(s);
+			strings.put( t, t );
+		}
 		return t;
 	}
 

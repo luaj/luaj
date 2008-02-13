@@ -65,13 +65,15 @@ public class Print extends Lua {
 	};
 
 
-	static void printString(String s) {
-		char[] chars = s.toCharArray();
+	static void printString(final LString s) {
+		final byte[] bytes = s.m_bytes;
+		final int off = s.m_offset;
+		
 		ps.print('"');
-		for (int i = 0, n = chars.length; i < n; i++) {
-			char c = chars[i];
+		for (int i = 0, n = s.m_length; i < n; i++) {
+			int c = bytes[i+off] & 0x0FF;
 			if ( c >= ' ' && c <= '~' && c != '\"' && c != '\\' )
-				ps.print(c);
+				ps.print((char) c);
 			else {
 				switch (c) {
 					case '"':
@@ -99,9 +101,8 @@ public class Print extends Lua {
 						ps.print("\\v");
 						break;
 					default:
-						ps.print("\\u");
-						ps.print(Integer.toHexString(0x10000 + (int) c)
-								.substring(1));
+						ps.print('\\');
+						ps.print(Integer.toString(1000 + c).substring(1));
 						break;
 				}
 			}
@@ -111,7 +112,7 @@ public class Print extends Lua {
 
 	static void printValue( LValue v ) {
 		if ( v instanceof LString )
-			printString(v.toString());
+			printString( v.luaAsString() );
 		else if ( v instanceof LInteger ) {
 			ps.print( v.toJavaInt() );
 		} else if ( v instanceof LDouble ) {
@@ -180,7 +181,7 @@ public class Print extends Lua {
 		}
 		switch (o) {
 		case OP_LOADK:
-			printString("  ; ");
+			ps.print("  ; ");
 			printConstant(f, bx);
 			break;
 		case OP_GETUPVAL:
