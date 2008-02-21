@@ -483,59 +483,51 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     /**
      * suspend the execution
      */
-    public void suspend() {
-        synchronized (this) {
-            suspended = true;
-            stepping = STEP_NONE;
-            lastline = -1;
-            this.notify();
-        }
+    public synchronized void suspend() {
+        suspended = true;
+        stepping = STEP_NONE;
+        lastline = -1;
+        this.notify();
     }
 
     /**
      * If the VM is suspended on start, this method resumes the execution.
      */
-    protected void cancelSuspendOnStart() {
-        synchronized (this) {
-            if (bSuspendOnStart) {
-                bSuspendOnStart = false;
-                this.notify();
-            }
+    protected synchronized void cancelSuspendOnStart() {
+        if (bSuspendOnStart) {
+            bSuspendOnStart = false;
+            this.notify();
         }
     }
 
     /**
      * resume the execution
      */
-    public void resume() {
-        synchronized (this) {
-            this.suspended = false;
-            this.stepping = STEP_NONE;
-            this.shouldPauseForStepping = false;
-            this.steppingFrame = -1;
-            this.notify();
-        }
+    public synchronized void resume() {
+        this.suspended = false;
+        this.stepping = STEP_NONE;
+        this.shouldPauseForStepping = false;
+        this.steppingFrame = -1;
+        this.notify();
     }
 
     /**
      * Stops the debugging communication with the debug client and terminate the
      * VM execution.
      */
-    public void stop() {
-        synchronized (this) {
-            if (exiting) return;
-            
-            if (this.debugSupport != null) {
-                DebugMessage event = new DebugMessage(DebugMessageType.terminated);
-                debugSupport.notifyDebugEvent(event);
-            }
+    public synchronized void stop() {
+        if (exiting) return;
+        
+        if (this.debugSupport != null) {
+            DebugMessage event = new DebugMessage(DebugMessageType.terminated);
+            debugSupport.notifyDebugEvent(event);
+        }
 
-            exit();
-            
-            if (this.debugSupport != null) {
-                debugSupport.stop();
-                debugSupport = null;       
-            }
+        exit();
+        
+        if (this.debugSupport != null) {
+            debugSupport.stop();
+            debugSupport = null;       
         }
     }
 
@@ -561,23 +553,19 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         debugSupport.disconnect();                           
     }
     
-    public void reset() {
-        synchronized (this) {
-            this.breakpoints.clear();
-            if (this.suspended) {
-                resume();                
-            }
+    public synchronized void reset() {
+        this.breakpoints.clear();
+        if (this.suspended) {
+            resume();                
         }
     }
     
     /**
      * terminate the execution
      */
-    public void exit() {
-        synchronized (this) {
-            exiting = true;
-            this.notify();
-        }
+    public synchronized void exit() {
+        exiting = true;
+        this.notify();
     }
 
     /**
@@ -822,35 +810,29 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     /**
      * step over to next line
      */
-    public void stepOver() {
-        synchronized (this) {
-            suspended = false;
-            stepping = STEP_OVER;
-            steppingFrame = cc;
-            this.notify();
-        }
+    public synchronized void stepOver() {
+        suspended = false;
+        stepping = STEP_OVER;
+        steppingFrame = cc;
+        this.notify();
     }
 
     /**
      * step to the next statement
      */
-    public void stepInto() {
-        synchronized (this) {
-            suspended = false;
-            stepping = STEP_INTO;
-            this.notify();
-        }
+    public synchronized void stepInto() {
+        suspended = false;
+        stepping = STEP_INTO;
+        this.notify();
     }
 
     /**
      * return from the current method call
      */
-    public void stepReturn() {
-        synchronized (this) {
-            suspended = false;
-            stepping = STEP_RETURN;
-            steppingFrame = cc;
-            this.notify();
-        }
+    public synchronized void stepReturn() {
+        suspended = false;
+        stepping = STEP_RETURN;
+        steppingFrame = cc;
+        this.notify();
     }
 }
