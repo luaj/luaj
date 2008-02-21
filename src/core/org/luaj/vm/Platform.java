@@ -37,7 +37,7 @@ import java.io.Reader;
  */
 abstract public class Platform {
 
-    protected static final String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
+    public static String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
     
     public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug"; 
     public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
