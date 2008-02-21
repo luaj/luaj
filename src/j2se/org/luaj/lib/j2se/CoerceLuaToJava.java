@@ -59,7 +59,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion intCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return Integer.valueOf( value.toJavaInt() );
+				return new Integer( value.toJavaInt() );
 			}
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
@@ -73,7 +73,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion doubleCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return Double.valueOf( value.toJavaDouble() );
+				return new Double( value.toJavaDouble() );
 			}
 			public int score(LValue value) {
 				if ( value instanceof LDouble )
@@ -102,9 +102,9 @@ public class CoerceLuaToJava {
 				if ( value instanceof LString )
 					return value.toJavaString();
 				if ( value instanceof LInteger )
-					return Integer.valueOf(value.toJavaInt());
+					return new Integer(value.toJavaInt());
 				if ( value instanceof LDouble )
-					return Double.valueOf(value.toJavaDouble());
+					return new Double(value.toJavaDouble());
 				if ( value instanceof LBoolean )
 					return Boolean.valueOf(value.toJavaBoolean());
 				if ( value == LNil.NIL )

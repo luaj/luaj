@@ -234,7 +234,7 @@ public final class LuajavaLib extends LFunction {
 			Constructor[] cons = clazz.getConstructors();
 			for ( int i=0; i<cons.length; i++ ) {
 				Constructor con = cons[i];
-				Integer n = Integer.valueOf( con.getParameterTypes().length );
+				Integer n = new Integer( con.getParameterTypes().length );
 				List list = (List) index.get(n);
 				if ( list == null )
 					index.put( n, list = new ArrayList() );
@@ -243,7 +243,7 @@ public final class LuajavaLib extends LFunction {
 		}
 		
 		// figure out best list of arguments == supplied args
-		Integer n = Integer.valueOf( params.classes.length );
+		Integer n = new Integer( params.classes.length );
 		List list = (List) index.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no constructor with "+n+" args");
@@ -296,7 +296,7 @@ public final class LuajavaLib extends LFunction {
 			for ( int i=0; i<meths.length; i++ ) {
 				Method meth = meths[i];
 				String s = meth.getName();
-				Integer n = Integer.valueOf(meth.getParameterTypes().length);
+				Integer n = new Integer(meth.getParameterTypes().length);
 				Map map = (Map) index.get(s);
 				if ( map == null )
 					index.put( s, map = new HashMap() );
@@ -311,7 +311,7 @@ public final class LuajavaLib extends LFunction {
 		Map map = (Map) index.get(methodName);
 		if ( map == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"'");
-		Integer n = Integer.valueOf( params.classes.length );
+		Integer n = new Integer( params.classes.length );
 		List list = (List) map.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
