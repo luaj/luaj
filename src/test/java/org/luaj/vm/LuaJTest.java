@@ -148,6 +148,10 @@ public class LuaJTest extends TestCase {
             runTest( "strlib" );
         }
         
+        public void testSort() throws IOException, InterruptedException {
+            runTest( "sort" );
+        }
+
         public void testTable() throws IOException, InterruptedException {
                 runTest( "table" );
         }

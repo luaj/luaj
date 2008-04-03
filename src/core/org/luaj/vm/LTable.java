@@ -645,7 +645,7 @@ public class LTable extends LValue {
 			vm.pushlvalue(m_vector[i]);
 			vm.pushlvalue(m_vector[j]);
 			vm.call(2, 1);
-			boolean result = vm.toboolean(1);
+			boolean result = vm.toboolean(-1);
 			vm.resettop();
 			return result;
 		} else {
