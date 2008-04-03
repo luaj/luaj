@@ -147,6 +147,14 @@ public class LTable extends LValue {
 	}
 	
 	/**
+	 * Utility method for putting a string key, int value directly, typically for
+	 * initializing a table. Bypasses the metatable, if any.
+	 */
+	public void put( String key, int value ) {
+		put( new LString( key ), LInteger.valueOf(value) );
+	}
+		
+	/**
 	 * Method for putting an integer-keyed value. Bypasses the metatable, if
 	 * any.
 	 */
