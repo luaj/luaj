@@ -107,6 +107,28 @@
 			<pathelement path="${wtk.home}/lib/mmapi.jar"/>
 		</path>
 	</target>
+
+	<target name="dist">
+		<delete dir="build/luaj-${version}"/>
+		<mkdir dir="build/luaj-${version}/src"/>
+		<mkdir dir="build/luaj-${version}/lib"/>
+		<copy todir="build/luaj-${version}/src">
+		    <fileset dir="src"/>
+		</copy>
+		<copy todir="build/luaj-${version}/lib">
+		    <fileset dir=".">
+				<include name="*-${version}.jar"/>
+		    </fileset>		
+		</copy>
+		<copy todir="build/luaj-${version}">
+		    <fileset dir=".">
+				<include name="build.xml"/>
+				<include name="version.properties"/>
+		    </fileset>		
+		</copy>
+		<zip destfile="luaj-${version}.zip" 
+			basedir="build" includes="luaj-${version}/**"/>
+	</target>
 	
 	<target name="all" depends="clean,jar,module-jars"/>
 </project>
