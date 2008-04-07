@@ -31,6 +31,11 @@ public class LUserData extends LValue {
 		m_instance = obj;
 	}
 	
+	public LUserData(Object obj, LTable metatable) {
+		m_instance = obj;
+		m_metatable = metatable;
+	}
+	
 	public String toJavaString() {
 		return String.valueOf(m_instance);
 	}
