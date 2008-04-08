@@ -172,6 +172,10 @@ public class LuaJTest extends TestCase {
                 runTest( "upvalues3" );
         }
         
+        public void testWeakTable() throws IOException, InterruptedException {
+            runTest( "weaktable" );
+        }
+
 //*/
         private void runTest( String testName ) throws IOException, InterruptedException {
 
