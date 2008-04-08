@@ -57,33 +57,35 @@ public class LTable extends LValue {
 	 * Elements of m_hashKeys are never LNil.NIL - they are null to indicate
 	 * the hash slot is empty and some non-null, non-nil value otherwise.
 	 */
-	private LValue[] m_hashKeys;
+	protected LValue[] m_hashKeys;
 	
 	/**
 	 * Values in the hash part. Must be null when m_hashKeys is null and equal
 	 * in size otherwise.
 	 */
-	private LValue[] m_hashValues;
+	protected LValue[] m_hashValues;
 	
 	/**
 	 * m_hashEntries is the number of slots that are used. Must always be less
 	 * than m_hashKeys.length.
 	 */
-	private int m_hashEntries;
+	protected int m_hashEntries;
 	
 	/**
 	 * Array of values to store the "array part" of the table, that is the
 	 * entries with positive integer keys. Elements must never be null: "empty"
 	 * slots are set to LNil.NIL.
 	 */
-	private LValue[] m_vector;
+	protected LValue[] m_vector;
 	
 	/**
 	 * Number of values in m_vector that non-nil.
 	 */
-	private int m_arrayEntries;
+	protected int m_arrayEntries;
 	
 	private LTable m_metatable;
+
+	private static final int INVALID_KEY_TO_NEXT = -2;
 	
 	/** Construct an empty LTable with no initial capacity. */
 	public LTable() {
@@ -123,7 +125,7 @@ public class LTable extends LValue {
 		if ( key.isInteger() ) {
 			// call the integer-specific put method
 			put( key.toJavaInt(), val );
-		} else if ( val == null || val == LNil.NIL ) {
+		} else if ( val == null || val.isNil() ) {
 			// Remove the key if the value is nil. This comes after the check
 			// for an integer key so that values are properly removed from
 			// the array part.
@@ -159,7 +161,7 @@ public class LTable extends LValue {
 	 * any.
 	 */
 	public void put( int key, LValue value ) {
-		if (value == null || value == LNil.NIL) {
+		if (value == null || value.isNil()) {
 			remove( key );
 			return;
 		}
@@ -167,7 +169,7 @@ public class LTable extends LValue {
 			final int index = key - 1;
 			for ( ;; ) {
 				if ( index < m_vector.length ) {
-					if ( m_vector[index] == LNil.NIL ) {
+					if ( m_vector[index].isNil() ) {
 						++m_arrayEntries;
 					}
 					m_vector[index] = value;
@@ -231,8 +233,7 @@ public class LTable extends LValue {
 		if ( m_vector.length > 0 && key.isInteger() ) {
 			final int index = key.toJavaInt() - 1;
 			if ( index >= 0 && index < m_vector.length ) {
-				final LValue v = m_vector[index];
-				return v != LNil.NIL;
+				return ! m_vector[index].isNil();
 			}
 		}
 		if ( m_hashKeys == null )
@@ -243,7 +244,7 @@ public class LTable extends LValue {
 
 	public void luaGetTable(LuaState vm, LValue table, LValue key) {
 		LValue v = get(key);
-		if ( v == LNil.NIL && m_metatable != null ) {
+		if ( v.isNil() && m_metatable != null ) {
 			super.luaGetTable( vm, table, key );
 		} else {
 			vm.pushlvalue(v);
@@ -264,8 +265,8 @@ public class LTable extends LValue {
 	 */
 	public int luaLength() {
 		for ( int i = Math.max( 0, m_arrayEntries-1 ); i < m_vector.length; ++i ) {
-			if ( m_vector[i] != LNil.NIL &&
-					( i+1 == m_vector.length || m_vector[i+1] == LNil.NIL ) ) {
+			if ( ! m_vector[i].isNil() &&
+					( i+1 == m_vector.length || m_vector[i+1].isNil() ) ) {
 				return i+1;
 			}
 		}
@@ -278,15 +279,24 @@ public class LTable extends LValue {
 	}
 
 	/** Valid for tables */
-	public void luaSetMetatable(LValue metatable) {
-		if ( m_metatable != null &&  m_metatable.containsKey(TM_METATABLE) )
+	public LValue luaSetMetatable(LValue metatable) {
+		if ( m_metatable != null && m_metatable.containsKey(TM_METATABLE) )
 			throw new LuaErrorException("cannot change a protected metatable");
-		if ( metatable == null || metatable == LNil.NIL )
+		if ( metatable == null || metatable.isNil() )
 			this.m_metatable = null;
-		else if ( metatable.luaGetType() == Lua.LUA_TTABLE ) 
-			this.m_metatable = (LTable) metatable;
+		else if ( metatable.luaGetType() == Lua.LUA_TTABLE ) { 
+			LTable t = (LTable) metatable;
+			LValue m = t.get(TM_MODE);
+			if ( "v".equals(m.toJavaString()) ) {
+				LTable n = new LWeakTable(this);
+				n.m_metatable = t;
+				return n;
+			}
+			this.m_metatable = t;
+		} 
 		else
 			throw new LuaErrorException("nil or table expected, got "+metatable.luaGetTypeName());
+		return null;
 	}
 
 	public String toJavaString() {
@@ -295,47 +305,6 @@ public class LTable extends LValue {
 
 	public int luaGetType() {
 		return Lua.LUA_TTABLE;
-	}
-	
-	/** Valid for tables */
-	public LValue luaPairs(boolean isPairs) {
-		return new LTableIterator(isPairs);
-	}
-	
-	/** Iterator for tables */
-	private final class LTableIterator extends LFunction {
-		private int arrayIndex;
-		private int hashIndex;
-		private final boolean isPairs;
-		
-		private LTableIterator(boolean isPairs) {
-			this.arrayIndex = 0;
-			this.hashIndex = 0;
-			this.isPairs = isPairs;
-		}
-		
-		// perform a lua call
-		public boolean luaStackCall(LuaState vm) {
-			vm.resettop();
-			int i;
-			while ( ( i = arrayIndex++ ) < m_vector.length ) {
-				if ( m_vector[i] != LNil.NIL ) {
-					vm.pushinteger( arrayIndex );
-					vm.pushlvalue( m_vector[ i ] );
-					return false;
-				}
-			}
-			if ( isPairs && (m_hashKeys != null) ) {
-				while ( ( i = hashIndex++ ) < m_hashKeys.length ) {
-					if ( m_hashKeys[i] != null ) {
-						vm.pushlvalue( m_hashKeys[i] );
-						vm.pushlvalue( m_hashValues[i] );
-						return false;
-					}
-				}
-			}
-			return false;
-		}
 	}
 
 	/**
@@ -349,7 +318,7 @@ public class LTable extends LValue {
 		int out = 0;
 		
 		for ( int i = 0; i < m_vector.length; ++i ) {
-			if ( m_vector[ i ] != LNil.NIL ) {
+			if ( ! m_vector[ i ].isNil() ) {
 				keys[ out++ ] = LInteger.valueOf( i + 1 );
 			}
 		}
@@ -365,11 +334,11 @@ public class LTable extends LValue {
 	}
 	
 	/** Remove the value in the table with the given integer key. */
-	private void remove( int key ) {
+	protected void remove( int key ) {
 		if ( key > 0 ) {
 			final int index = key - 1;
 			if ( index < m_vector.length ) {
-				if ( m_vector[ index ] != LNil.NIL ) {
+				if ( ! m_vector[ index ].isNil() ) {
 					m_vector[ index ] = LNil.NIL;
 					--m_arrayEntries;
 				}
@@ -383,7 +352,7 @@ public class LTable extends LValue {
 		}
 	}
 	
-	private void remove( LValue key ) {
+	protected void remove( LValue key ) {
 		if ( m_hashKeys != null ) {
 			int slot = findSlot( key );
 			clearSlot( slot );
@@ -522,7 +491,7 @@ public class LTable extends LValue {
 		} else {
 			for ( int i = newCapacity; i < oldCapacity; ++i ) {
 				LValue v = m_vector[i];
-				if ( v != LNil.NIL ) {
+				if ( ! v.isNil() ) {
 					if (checkLoadFactor())
 						rehash();
 					final int slot = findSlot( i+1 );
@@ -557,7 +526,7 @@ public class LTable extends LValue {
 			final int index = Math.max(0,pos==0? m_arrayEntries: pos-1);
 			if ( m_arrayEntries + 1 > m_vector.length )
 				resize( ( m_arrayEntries + 1 ) * 2 );
-			if ( m_vector[index] != LNil.NIL ) {
+			if ( ! m_vector[index].isNil() ) {
 				System.arraycopy(m_vector, index, m_vector, index+1, m_vector.length-1-index);
 			}
 			m_vector[index] = value;
@@ -572,7 +541,7 @@ public class LTable extends LValue {
 	public LValue luaRemovePos(int pos) {
 		if ( pos > m_arrayEntries ) {
 			LValue val = get( pos );
-			if ( val != LNil.NIL )
+			if ( ! val.isNil() )
 				put( pos, LNil.NIL );
 			return val;
 		} else {
@@ -592,7 +561,7 @@ public class LTable extends LValue {
 		LValue result = LInteger.valueOf(0);
 		
 		for ( int i = m_vector.length - 1; i >= 0; i-- ) {
-			if ( m_vector[i] != LNil.NIL ) {
+			if ( ! m_vector[i].isNil() ) {
 				result = LInteger.valueOf(i + 1);
 				break;
 			}
@@ -648,7 +617,7 @@ public class LTable extends LValue {
 	}
 
 	private boolean compare(int i, int j, LuaState vm, LValue cmpfunc) {
-		if ( cmpfunc != LNil.NIL ) {
+		if ( ! cmpfunc.isNil() ) {
 			vm.pushlvalue(cmpfunc);
 			vm.pushlvalue(m_vector[i]);
 			vm.pushlvalue(m_vector[j]);
@@ -670,65 +639,77 @@ public class LTable extends LValue {
 	/**
 	 * Leave key,value pair on top, or nil if at end of list.
 	 * @param vm the LuaState to leave the values on
+	 * @param indexedonly TODO
 	 * @param index index to start search
+	 * @return true if next exists, false if at end of list
 	 */
-	public void next(LuaState vm, LValue key ) {
+	public boolean next(LuaState vm, LValue key, boolean indexedonly ) {
 
-		// find place to start looking
-		int start = nextKey2StartIndex( vm, key );
+		int n = (m_vector != null? m_vector.length: 0);
+		int i = findindex(key, n, indexedonly);
+		if ( i == INVALID_KEY_TO_NEXT )
+			vm.error( "invalid key to 'next'" );
 		
-		// look in vector part
-		int n = m_vector.length;
-		if ( start < n ) {
-			for ( int i=start; i<n; i++ ) {
-				if ( m_vector[i] != LNil.NIL ) {
-					vm.pushinteger(i+1);
-					vm.pushlvalue(m_vector[i]);
-					return;
-				}
+		// check vector part
+		for ( ++i; i<n; ++i ) {
+			if ( ! m_vector[i].isNil() ) {
+				vm.pushinteger(i+1);
+				vm.pushlvalue(m_vector[i]);
+				return true;
+			} else if ( indexedonly ) {
+				vm.pushnil();
+				return false;
 			}
-			start = n;
 		}
 
-		// look in hash part
-		if ( m_hashKeys != null ) {
-			for ( int i=start-n; i<m_hashKeys.length; i++ ) { 
+		// check hash part
+		if ( (! indexedonly) && (m_hashKeys != null) ) {
+			int m = m_hashKeys.length;
+			for ( i-=n; i<m; ++i ) {
 				if ( m_hashKeys[i] != null ) {
 					vm.pushlvalue(m_hashKeys[i]);
 					vm.pushlvalue(m_hashValues[i]);
-					return;
+					return true;
 				}
 			}
 		}
 		
-		// nothing found, return nil.
+		// nothing found, push nil, return nil.
 		vm.pushnil();
-	}
-	
-	private int nextKey2StartIndex( LuaState vm, LValue key ) {
-		if ( key == LNil.NIL )
-			return 0;
-		
-		int n = m_vector.length;
-		if ( n > 0 && key.isInteger() ) {
-			final int index = key.toJavaInt() - 1;
-			if ( index >= 0 && index < n ) {
-				if ( m_vector[index] == LNil.NIL )
-					vm.error( "invalid key to 'next'" );
-				return index + 1;
-			}
-		}
-		
-		if ( m_hashKeys == null )
-			vm.error( "invalid key to 'next'" );
-		
-		int slot = findSlot( key );
-		if ( m_hashKeys[slot] == null ) 
-			vm.error( "invalid key to 'next'" );
-		
-		return n + slot + 1;
+		return false;
 	}
 
+	private int findindex (LValue key, int n, boolean indexedonly) {
+
+		// first iteration
+		if ( key.isNil() )
+			return -1;
+
+		// is `key' inside array part?
+		if ( key.isInteger() ) { 
+			int i = key.toJavaInt();
+			if ( (0 < i) && (i <= n) ) {
+				if ( m_vector[i-1] == LNil.NIL )
+					return INVALID_KEY_TO_NEXT;
+				return i-1;				
+			}
+		}
+
+		// vector only? 
+		if ( indexedonly )
+			return n;
+		
+		if ( m_hashKeys == null )
+			return INVALID_KEY_TO_NEXT;
+		
+		// find slot
+		int slot = findSlot(key);
+		if ( m_hashKeys[slot] == null ) 
+			return INVALID_KEY_TO_NEXT;
+		
+		return n + slot;
+	}
+	
 	
 	/**
 	 * Executes the given f over all elements of table. For each element, f is
@@ -738,35 +719,26 @@ public class LTable extends LValue {
 	 * 
 	 * @param vm
 	 * @param function
-	 * @param isforeachi is a table.foreachi() call, not a table.foreach() call
+	 * @param indexedonly is a table.foreachi() call, not a table.foreach() call
 	 * @return
 	 */
-	public LValue foreach(LuaState vm, LFunction function, boolean isforeachi) {
-		for ( int i = 0; i < m_vector.length; ++i ) {
-			if ( m_vector[ i ] != LNil.NIL ) {
-				if ( foreachitem( vm, function, LInteger.valueOf(i+1), m_vector[i] ) )
-					return vm.topointer(1);
-			}
-		}
-		
-		if ( (! isforeachi) && m_hashKeys != null ) {
-			for ( int i = 0; i < m_hashKeys.length; ++i ) {
-				if ( m_hashKeys[ i ] != null ) {
-					if ( foreachitem( vm, function, m_hashKeys[i], m_hashValues[i] ) )
-						return vm.topointer(1);
-				}
-			}
-		}
-		
-		return LNil.NIL;
-	}
+	public LValue foreach(LuaState vm, LFunction function, boolean indexedonly) {
 
-	private static boolean foreachitem(LuaState vm, LFunction f, LValue key, LValue value) {
-		vm.resettop();
-		vm.pushlvalue( f );
-		vm.pushlvalue( key );
-		vm.pushlvalue( value );
-		vm.call(2, 1);
-		return ! vm.isnil(1);
+		LValue key = LNil.NIL;
+		while ( true ) {
+			// push function onto stack
+			vm.resettop();
+			vm.pushlvalue(function);
+
+			// get next value
+			if ( ! next(vm,key,indexedonly) ) 
+				return LNil.NIL;
+			key = vm.topointer(2);
+			
+			// call function
+			vm.call(2, 1);
+			if ( ! vm.isnil(-1) )
+				return vm.poplvalue();
+		}
 	}
 }

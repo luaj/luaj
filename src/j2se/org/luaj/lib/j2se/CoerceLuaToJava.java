@@ -50,7 +50,7 @@ public class CoerceLuaToJava {
 				return value.toJavaBoolean()? Boolean.TRUE: Boolean.FALSE;
 			} 
 			public int score(LValue value) {
-				if ( value instanceof LBoolean || value == LNil.NIL )
+				if ( value instanceof LBoolean || value.isNil() )
 					return 0;
 				if ( value instanceof LNumber )
 					return 1;
@@ -66,7 +66,7 @@ public class CoerceLuaToJava {
 					return 0;
 				if ( value instanceof LNumber )
 					return 1;
-				if ( value instanceof LBoolean || value == LNil.NIL )
+				if ( value instanceof LBoolean || value.isNil() )
 					return 2;
 				return 4;
 			}
@@ -80,7 +80,7 @@ public class CoerceLuaToJava {
 					return 0;
 				if ( value instanceof LNumber )
 					return 1;
-				if ( value instanceof LBoolean || value == LNil.NIL )
+				if ( value instanceof LBoolean || value.isNil() )
 					return 2;
 				return 4;
 			}
@@ -107,7 +107,7 @@ public class CoerceLuaToJava {
 					return new Double(value.toJavaDouble());
 				if ( value instanceof LBoolean )
 					return Boolean.valueOf(value.toJavaBoolean());
-				if ( value == LNil.NIL )
+				if ( value.isNil() )
 					return null;
 				return value;
 			} 

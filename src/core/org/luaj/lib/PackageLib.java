@@ -229,7 +229,7 @@ public class PackageLib extends LFunction {
 				e = fname.m_length;
 			LString key = fname.substring(b, e);
 			LValue val = table.get(key);
-			if ( val == LNil.NIL ) { /* no such field? */
+			if ( val.isNil() ) { /* no such field? */
 				LTable field = new LTable(); /* new table for field */
 				table.put(key, field);
 				table = field;

@@ -28,6 +28,7 @@ import org.luaj.vm.LFunction;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LWeakTable;
 import org.luaj.vm.LuaState;
 
 
@@ -205,7 +206,7 @@ public class TableLib extends LFunction {
 			vm.resettop();
 			break;
 		}
-			
+
 		default:
 			LuaState.vmerror( "bad table id" );
 		}

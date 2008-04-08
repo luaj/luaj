@@ -55,6 +55,7 @@ public class BaseLib extends LFunction {
 		"tostring",
 		"unpack",
 		"next",
+		"_inext", // not public
 		};
 
 	private static final int INSTALL        = 0;
@@ -81,10 +82,16 @@ public class BaseLib extends LFunction {
 	private static final int TOSTRING       = 21;
 	private static final int UNPACK         = 22;
 	private static final int NEXT           = 23;
+	private static final int INEXT          = 24;
+
+	private static LFunction next;
+	private static LFunction inext;
 	
 	public static void install(LTable globals) {
-		for ( int i=1; i<NAMES.length; i++ )
+		for ( int i=1, n=NAMES.length; i<n; i++ )
 			globals.put( NAMES[i], new BaseLib(i) );
+		next = new BaseLib(NEXT);
+		inext = new BaseLib(INEXT);
 		globals.put("_VERSION", new LString("Lua 5.1"));
 	}
 
@@ -142,13 +149,23 @@ public class BaseLib extends LFunction {
 			vm.resettop();
 			break;
 		}
-		case PAIRS:
-		case IPAIRS: {
+		case IPAIRS:
+		case PAIRS: {			
 			checkargtype(vm,2,Lua.LUA_TTABLE);
-			LTable v = vm.totable(2);
-			LValue r = v.luaPairs(id==PAIRS);
+			LTable t = vm.totable(2);
 			vm.resettop();
-			vm.pushlvalue( r );
+			vm.pushjavafunction( (id==IPAIRS)? inext: next );
+			vm.pushlvalue( t );
+			vm.pushnil();
+			break;
+		}
+		case INEXT:
+		case NEXT: {
+			checkargtype(vm,2,Lua.LUA_TTABLE);
+			LTable t = vm.totable(2);
+			LValue v = vm.topointer(3);
+			vm.resettop();
+			t.next(vm,v,(id==INEXT));
 			break;
 		}
 		case GETMETATABLE: {
@@ -358,14 +375,6 @@ public class BaseLib extends LFunction {
 				vm.pushlvalue(list.get(k));
 			break;
 		}
-		case NEXT: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			LTable t = vm.totable(2);
-			LValue v = vm.topointer(3);
-			vm.resettop();
-			t.next(vm,v);
-			break;
-		}
 		default:
 			LuaState.vmerror( "bad base id" );
 		}
@@ -472,7 +481,7 @@ public class BaseLib extends LFunction {
 					return false;
 				}
 				LValue v = vm.topointer(2);
-				if ( v == LNil.NIL )
+				if ( v.isNil() )
 					break;
 				LString s = v.luaAsString();
 				s.write(baos, 0, s.length());

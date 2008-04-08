@@ -810,7 +810,7 @@ public class LuaState extends Lua {
                 adjustTop( cb + c );
                 
                 // test for continuation
-                if (this.stack[cb] != LNil.NIL ) { // continue?
+                if (!this.stack[cb].isNil() ) { // continue?
                     this.stack[cb-1] = this.stack[cb]; // save control variable
                 } else {
                     ci.pc++; // skip over jump
@@ -1463,7 +1463,7 @@ public class LuaState extends Lua {
 	 * 0&nbsp;otherwise.
 	 */
 	public boolean isnil(int index) {
-		return topointer(index) == LNil.NIL;
+		return topointer(index).isNil();
 	}
 
 	/**
@@ -1499,7 +1499,7 @@ public class LuaState extends Lua {
 	 * string convertible to a number, and 0&nbsp;otherwise.
 	 */
 	public boolean isnumber(int index) {
-		return tolnumber(index) != LNil.NIL;
+		return ! tolnumber(index).isNil();
 	}
 
 	/** 
@@ -1689,7 +1689,7 @@ public class LuaState extends Lua {
 		for ( int i=0; i<n; i++ )
 			stack[--top] = null;
 	}
-	private LValue poplvalue() {
+	public LValue poplvalue() {
 		LValue p = stack[--top];
 		stack[top] = null;
 		return p;
@@ -2034,7 +2034,11 @@ public class LuaState extends Lua {
 	public void setmetatable(int index) {
 		LTable t = totable(index);
 		LValue v = poplvalue();
-		t.luaSetMetatable(v);
+		LValue n = t.luaSetMetatable(v);
+		if ( n != null ) {
+			pushlvalue(n);
+			replace(index);
+		}
 	}
 
 	/**

@@ -29,6 +29,10 @@ public final class LNil extends LValue {
 		return luaGetTypeName();
 	}
 
+	public boolean isNil() {
+		return true;
+	}
+
 	public boolean toJavaBoolean() {
 		return false;
 	}

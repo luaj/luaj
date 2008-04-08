@@ -1,12 +1,14 @@
--- concat
-print( '-- weak table tests' )
 
--- construct new weak table
-function newweak(t) 
-	return setmetatable(t,{__mode="v"})	
+
+function newtable(t)
+	n = setmetatable(t,{__mode="v"})
+	for k,v in pairs(t) do
+		n[k] = v
+	end
+	return n;
 end
 
--- print the elements of a table in a platform-independent way
+-- normalized printing
 function eles(t,f)
 	f = f or pairs
 	all = {}
@@ -14,12 +16,47 @@ function eles(t,f)
 		table.insert( all, "["..tostring(k).."]="..tostring(v) )
 	end
 	table.sort( all )
-	return "{"..table.concat(all,',').."}"
+	return tostring(t).."{"..table.concat(all,',').."}"
 end
+
+
+-- basic weak-reference table test
+local src = "return { 'one', 'two', 'three', 'four', a='aaa', b='bbb', c='ccc', d='ddd'}"
+local weak = newtable( loadstring(src)() )
+local strong = { weak[1], weak[3], a=weak.a, c=weak.c }
+print( 'before, weak:', eles(weak) )
+print( 'before, strong:', eles(strong) )
+print( 'gc', pcall( collectgarbage, "collect" ) )
+print( 'after, weak:', eles(weak) )
+print( 'after, strong:', eles(strong) )
+print( 'gc', pcall( collectgarbage, "collect" ) )
+print( 'after, weak:', eles(weak) )
+print( 'after, strong:', eles(strong) )
+
+
+
+print( '-- concat tests' )
+function tryconcat(t)
+	print( table.concat(t) )
+	print( table.concat(t,'--') )
+	print( table.concat(t,',',2) )
+	print( table.concat(t,',',2,2) )
+	print( table.concat(t,',',5,2) )
+end
+tryconcat( newtable{ "one", "two", "three", a='aaa', b='bbb', c='ccc' } )
+tryconcat( newtable{ "one", "two", "three", "four", "five" } )
+function tryconcat(t)
+	print( table.concat(t) )
+	print( table.concat(t,'--') )
+	print( table.concat(t,',',2) )
+end
+tryconcat( newtable{ a='aaa', b='bbb', c='ccc', d='ddd', e='eee' } )
+tryconcat( newtable{ [501]="one", [502]="two", [503]="three", [504]="four", [505]="five" } )
+tryconcat( newtable{} )
 
 -- insert, maxn
 print( '-- insert, maxn tests' )
-local t = newweak{ "one", "two", "three", a='aaa', b='bbb', c='ccc' }
+local t = newtable{ "one", "two", "three", a='aaa', b='bbb', c='ccc' }
 print( eles(t) )
 table.insert(t,'six'); print( eles(t) )
 table.insert(t,1,'seven'); print( eles(t) )
@@ -29,20 +66,20 @@ table.insert(t,10,'ten');  print( eles(t) )
 
 -- remove
 print( '-- remove tests' )
-t = newweak{ "one", "two", "three", "four", "five", "six", "seven", [10]="ten", a='aaa', b='bbb', c='ccc' }
+t = newtable{ "one", "two", "three", "four", "five", "six", "seven", [10]="ten", a='aaa', b='bbb', c='ccc' }
 print( eles(t) )
-print( table.remove(t) ); print( eles(t) )
-print( table.remove(t,1) ); print( eles(t) )
-print( table.remove(t,3) ); print( eles(t) )
-print( table.remove(t,5) ); print( eles(t) )
-print( table.remove(t,10) ); print( eles(t) )
-print( table.remove(t,-1) ); print( eles(t) )
-print( table.remove(t,-1) ) ; print( eles(t) )
+print( 'table.remove(t)', table.remove(t) ); print( eles(t) )
+print( 'table.remove(t,1)', table.remove(t,1) ); print( eles(t) )
+print( 'table.remove(t,3)', table.remove(t,3) ); print( eles(t) )
+print( 'table.remove(t,5)', table.remove(t,5) ); print( eles(t) )
+print( 'table.remove(t,10)', table.remove(t,10) ); print( eles(t) )
+print( 'table.remove(t,-1)', table.remove(t,-1) ); print( eles(t) )
+print( 'table.remove(t,-1)', table.remove(t,-1) ) ; print( eles(t) )
 
 -- sort
 print( '-- sort tests' )
 function sorttest(t,f)
-	t = newweak(t)
+	t = (t)
 	print( table.concat(t,'-') )
 	if f then
 		table.sort(t,f)
@@ -50,25 +87,28 @@ function sorttest(t,f)
 		table.sort(t)
 	end
 	print( table.concat(t,'-') )
-end	
-sorttest{ "one", "two", "three" }
-sorttest{  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" }
-sorttest( {  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" }, function(a,b) return b<a end)
+end
+--[[	
+sorttest( newtable{ "one", "two", "three" } )
+sorttest( newtable{  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" } )
+sorttest( newtable{  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" }, function(a,b) return b<a end)
+--]]
 
 -- getn
-t0 = newweak{}
-t1 = newweak{ 'one', 'two', 'three' }
-t2 = newweak{ a='aa', b='bb', c='cc' }
-t3 = newweak{ 'one', 'two', 'three', a='aa', b='bb', c='cc' }
-print( 'getn(t0)', pcall( table.getn, t0 ) ) 
-print( 'getn(t1)', pcall( table.getn, t1 ) ) 
-print( 'getn(t2)', pcall( table.getn, t2 ) ) 
-print( 'getn(t3)', pcall( table.getn, t3 ) ) 
+t0 = newtable{}
+t1 = newtable{ 'one', 'two', 'three' }
+t2 = newtable{ a='aa', b='bb', c='cc' }
+t3 = newtable{ 'one', 'two', 'three', a='aa', b='bb', c='cc' }
+print( 'getn('..eles(t0)..')', pcall( table.getn, t0 ) ) 
+print( 'getn('..eles(t1)..')', pcall( table.getn, t1 ) ) 
+print( 'getn('..eles(t2)..')', pcall( table.getn, t2 ) ) 
+print( 'getn('..eles(t3)..')', pcall( table.getn, t3 ) ) 
 
 -- foreach
 function test( f, t, result, name ) 
 	status, value = pcall( f, t, function(...) 
-		print(name,...)
+		print('  -- ',...)
+		print('  next',next(t,(...)))
 		return result 
 	end )
 	print( name, 's,v', status, value )
@@ -78,29 +118,32 @@ function testall( f, t, name )
 	test( f, t, false, name..'fls' )
 	test( f, t, 100, name..'100' )
 end
-testall( table.foreach, t0, 'table.foreach(t0)' )
-testall( table.foreach, t1, 'table.foreach(t1)' )
-testall( table.foreach, t2, 'table.foreach(t2)' )
-testall( table.foreach, t3, 'table.foreach(t3)' )
-testall( table.foreachi, t0, 'table.foreachi(t0)' )
-testall( table.foreachi, t1, 'table.foreachi(t1)' )
-testall( table.foreachi, t2, 'table.foreachi(t2)' )
-testall( table.foreachi, t3, 'table.foreachi(t3)' )
+testall( table.foreach, t0, 'table.foreach('..eles(t0)..')' )
+testall( table.foreach, t1, 'table.foreach('..eles(t1)..')' )
+testall( table.foreach, t2, 'table.foreach('..eles(t2)..')' )
+testall( table.foreach, t3, 'table.foreach('..eles(t3)..')' )
+testall( table.foreachi, t0, 'table.foreachi('..eles(t0)..')' )
+testall( table.foreachi, t1, 'table.foreachi('..eles(t1)..')' )
+testall( table.foreachi, t2, 'table.foreachi('..eles(t2)..')' )
+testall( table.foreachi, t3, 'table.foreachi('..eles(t3)..')' )
 
 -- pairs, ipairs
 function testpairs(f, t, name)
-	print( name, unpack(t) )
+	print( name )
 	for a,b in f(t) do
-		print( a, b )
+		print( ' ', a, b )
 	end
 end
-testpairs( pairs, t0, 'pairs(t0)' )
-testpairs( pairs, t1, 'pairs(t1)' )
-testpairs( pairs, t2, 'pairs(t2)' )
-testpairs( pairs, t3, 'pairs(t3)' )
-testpairs( ipairs, t0, 'ipairs(t0)' )
-testpairs( ipairs, t1, 'ipairs(t1)' )
-testpairs( ipairs, t2, 'ipairs(t2)' )
-testpairs( ipairs, t3, 'ipairs(t3)' )
-
-
+function testbothpairs(t)
+	testpairs( pairs, t, 'pairs( '..eles(t)..' )' )
+	testpairs( ipairs, t, 'ipairs( '..eles(t)..' )' )
+end
+for i,t in ipairs({t0,t1,t2,t3}) do
+	testbothpairs(t)
+end
+t = newtable{ 'one', 'two', 'three', 'four', 'five' }
+testbothpairs(t)
+t[6] = 'six'
+testbothpairs(t)
+t[4] = nil
+testbothpairs(t)

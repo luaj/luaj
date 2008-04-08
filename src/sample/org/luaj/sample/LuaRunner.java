@@ -77,6 +77,7 @@ public class LuaRunner {
 				System.err.println(script+" lua error, "+lee.getMessage() );
 			} catch ( Throwable t ) {
 				System.err.println(script+" threw "+t);
+				t.printStackTrace();
 			} finally {
 				System.out.flush();
 				System.err.flush();

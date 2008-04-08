@@ -119,7 +119,7 @@ public class DumpState {
 		dumpInt(n);
 		for (i = 0; i < n; i++) {
 			final LValue o = f.k[i];
-			if (o == LNil.NIL) {
+			if (o.isNil()) {
 				writer.write(Lua.LUA_TNIL);
 				// do nothing more
 			} else if (o instanceof LBoolean) {

@@ -34,6 +34,9 @@ public class LValue {
 	/** Metatable tag for intercepting table sets */
 	public static final LString TM_METATABLE = new LString("__metatable");
 	
+	/** Metatable tag for setting table mode */
+	public static final LString TM_MODE = new LString("__mode");
+	
 	protected void conversionError(String target) {
 		throw new LuaErrorException( "bad conversion: "+luaGetTypeName()+" to "+target );
 	}
@@ -56,6 +59,11 @@ public class LValue {
 	
 	/** Return true if this value can be represented as an "int" */
 	public boolean isInteger() {
+		return false;
+	}
+	
+	/** Return true if this value is LNil.NIL, false otherwise */
+	public boolean isNil() {
 		return false;
 	}
 	
@@ -124,7 +132,7 @@ public class LValue {
 		LTable mt = luaGetMetatable();
 		if ( mt != null ) {
 			LValue event = mt.get( TM_NEWINDEX );
-			if ( event != null && event != LNil.NIL ) {
+			if ( event != null && ! event.isNil() ) {
 				event.luaSetTable( vm, table, key, val );
 				return;
 			}
@@ -141,7 +149,7 @@ public class LValue {
 		LTable mt = luaGetMetatable();
 		if ( mt != null ) {
 			LValue event = mt.get( TM_INDEX );
-			if ( event != null && event != LNil.NIL ) {
+			if ( event != null && ! event.isNil() ) {
 				event.luaGetTable( vm, table, key );
 				return;
 			}
@@ -184,13 +192,14 @@ public class LValue {
 		return null;
 	}
 
-	/** Valid for tables */
-	public void luaSetMetatable(LValue metatable) {
+	/** Valid for tables 
+	 * @return TODO*/
+	public LValue luaSetMetatable(LValue metatable) {
 		throw new LuaErrorException( "bad argument #1 to 'setmetatable' (table expected, got "+metatable.luaGetTypeName()+")");
 	}
 
 	/** Valid for all types: return the int value identifying the type of this value */
-	public abstract int luaGetType();
+	abstract public int luaGetType();
 
 	
 	/** Valid for all types: return the type of this value as an LString */
@@ -309,4 +318,8 @@ public class LValue {
 		return LNil.NIL;
 	}
 
+	/** Dereference a potentially weak reference, and return the value */
+	public LValue toStrongReference() {
+		return this;
+	}
 }
