@@ -1,11 +1,6 @@
 package org.luaj.vm;
 
-import org.luaj.vm.LDouble;
-import org.luaj.vm.LInteger;
-import org.luaj.vm.LNil;
-import org.luaj.vm.LString;
-import org.luaj.vm.LTable;
-import org.luaj.vm.LValue;
+import java.util.Vector;
 
 import junit.framework.TestCase;
 
@@ -17,6 +12,11 @@ public class LTableTest extends TestCase {
 		for ( int i = 1; i <= 32; ++i ) {
 			t.put( i, new LString( "Test Value! "+i ) );
 		}
+
+		// Ensure all keys are still there.
+		for ( int i = 1; i <= 32; ++i ) {
+			assertEquals( "Test Value! " + i, t.get( i ).toJavaString() );
+		}
 		
 		// Ensure capacities make sense
 		assertEquals( 0, t.getHashCapacity() );
@@ -24,10 +24,6 @@ public class LTableTest extends TestCase {
 		assertTrue( t.getArrayCapacity() >= 32 );
 		assertTrue( t.getArrayCapacity() <= 64 );
 		
-		// Ensure all keys are still there.
-		for ( int i = 1; i <= 32; ++i ) {
-			assertEquals( "Test Value! " + i, t.get( i ).luaAsString().toJavaString() );
-		}
 	}
 	
 	public void testResize() {
@@ -45,8 +41,8 @@ public class LTableTest extends TestCase {
 			assertEquals(LInteger.valueOf(i), t.get(i));
 		}
 		
-		assertEquals( 0, t.getHashCapacity() );
-		assertTrue( t.getArrayCapacity() >= 6 );
+		assertTrue( t.getArrayCapacity() >= 0 && t.getArrayCapacity() <= 2 );
+		assertTrue( t.getHashCapacity() >= 4 );
 	}
 	
 	public void testOutOfOrderIntegerKeyInsertion() {
@@ -55,17 +51,19 @@ public class LTableTest extends TestCase {
 		for ( int i = 32; i > 0; --i ) {
 			t.put( i, new LString( "Test Value! "+i ) );
 		}
-		
-		// Ensure capacities make sense
-		assertEquals( 0, t.getHashCapacity() );
-		
-		assertTrue( t.getArrayCapacity() >= 32 );
-		assertTrue( t.getArrayCapacity() <= 64 );
-		
+
 		// Ensure all keys are still there.
 		for ( int i = 1; i <= 32; ++i ) {
-			assertEquals( "Test Value! " + i, t.get( i ).luaAsString() );
+			assertEquals( "Test Value! "+i, t.get( i ).toJavaString() );
 		}
+		
+		// Ensure capacities make sense
+		assertTrue( t.getArrayCapacity() >= 0 );
+		assertTrue( t.getArrayCapacity() <= 6 );
+		
+		assertTrue( t.getHashCapacity() >= 16 );
+		assertTrue( t.getHashCapacity() <= 64 );
+		
 	}
 	
 	public void testStringAndIntegerKeys() {
@@ -177,4 +175,136 @@ public class LTableTest extends TestCase {
 		assertEquals( 0, t.size() );
 	}
 
+	public void testInOrderLuaLength() {
+		LTable t = new LTable();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			t.put( i, new LString( "Test Value! "+i ) );
+			assertEquals( i, t.luaLength() );
+			assertEquals( i, t.luaMaxN().toJavaInt() );
+		}
+	}
+
+	public void testOutOfOrderLuaLength() {
+		LTable t = new LTable();
+
+		for ( int j=8; j<32; j+=8 ) {
+			for ( int i = j; i > 0; --i ) {
+				t.put( i, new LString( "Test Value! "+i ) );
+			}
+			assertEquals( j, t.luaLength() );
+			assertEquals( j, t.luaMaxN().toJavaInt() );
+		}
+	}
+	
+	public void testStringKeysLuaLength() {
+		LTable t = new LTable();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			t.put( "str-"+i, new LString( "String Key Test Value! "+i ) );
+			assertEquals( 0, t.luaLength() );
+			assertEquals( 0, t.luaMaxN().toJavaInt() );
+		}
+	}
+
+	public void testMixedKeysLuaLength() {
+		LTable t = new LTable();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			t.put( "str-"+i, new LString( "String Key Test Value! "+i ) );
+			t.put( i, new LString( "Int Key Test Value! "+i ) );
+			assertEquals( i, t.luaLength() );
+			assertEquals( i, t.luaMaxN().toJavaInt() );
+		}
+	}
+
+	private static final void compareLists(LTable t,Vector v) {
+		int n = v.size();
+		assertEquals(v.size(),t.luaLength());
+		for ( int j=0; j<n; j++ ) {
+			Object vj = v.elementAt(j);
+			Object tj = t.get(j+1).toJavaString();
+			assertEquals(vj,tj);
+		}
+	}
+	
+	public void testInsertBeginningOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			String test = "Test Value! "+i;
+			t.luaInsertPos(1, LString.valueOf(test));
+			v.insertElementAt(test, 0);						
+			compareLists(t,v);
+		}
+	}
+
+	public void testInsertEndOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			String test = "Test Value! "+i;
+			t.luaInsertPos(0, LString.valueOf(test));
+			v.insertElementAt(test, v.size());						
+			compareLists(t,v);
+		}
+	}
+
+	public void testInsertMiddleOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		
+		for ( int i = 1; i <= 32; ++i ) {
+			String test = "Test Value! "+i;
+			int m = i / 2;
+			t.luaInsertPos(m+1, LString.valueOf(test));
+			v.insertElementAt(test, m);
+			compareLists(t,v);
+		}
+	}
+	
+	private static final void prefillLists(LTable t,Vector v) {
+		for ( int i = 1; i <= 32; ++i ) {
+			String test = "Test Value! "+i;
+			t.luaInsertPos(0, LString.valueOf(test));
+			v.insertElementAt(test, v.size());
+		}
+	}
+	
+	public void testRemoveBeginningOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		prefillLists(t,v);
+		for ( int i = 1; i <= 32; ++i ) {
+			t.luaRemovePos(1);
+			v.removeElementAt(0);
+			compareLists(t,v);
+		}
+	}
+	
+	public void testRemoveEndOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		prefillLists(t,v);
+		for ( int i = 1; i <= 32; ++i ) {
+			t.luaRemovePos(0);
+			v.removeElementAt(v.size()-1);
+			compareLists(t,v);
+		}
+	}
+
+	public void testRemoveMiddleOfList() {
+		LTable t = new LTable();
+		Vector v = new Vector();
+		prefillLists(t,v);
+		for ( int i = 1; i <= 32; ++i ) {
+			int m = v.size() / 2;
+			t.luaRemovePos(m+1);
+			v.removeElementAt(m);
+			compareLists(t,v);
+		}
+	}
+	
 }
