@@ -49,8 +49,8 @@ import org.luaj.vm.LuaState;
  */
 public class LTable extends LValue {
 
-	private Object[] array;
-	private LValue[] hashKeys;
+	protected Object[] array;
+	protected LValue[] hashKeys;
 	private Object[] hashValues;
 	private int hashEntries;
 	private LTable m_metatable;
@@ -70,7 +70,8 @@ public class LTable extends LValue {
 	 * in the range 1 .. narray and nhash non-integer keys.
 	 */
 	public LTable( int narray, int nhash ) {
-		nhash = Math.max(nhash,MIN_HASH_CAPACITY);
+		if ( nhash > 0 && nhash < MIN_HASH_CAPACITY )
+			nhash = MIN_HASH_CAPACITY;
 		array = new Object[narray];
 		hashKeys = new LValue[nhash];
 		hashValues = new Object[nhash];
@@ -205,9 +206,8 @@ public class LTable extends LValue {
 	}
 
 	/**
-	 * Return true if the table contains an entry with the given key, false if
-	 * not. Ignores the metatable.
-	 * 
+	 * Return true if the table contains an entry with the given key, 
+	 * false if not. Ignores the metatable.
 	 */
 	public boolean containsKey( LValue key ) {
 		if ( key.isInteger() ) {
@@ -218,11 +218,14 @@ public class LTable extends LValue {
 		return null != hashGet(key);
 	}
 
-	/** Check if a integer-valued key exists */
+	/**
+	 * Return true if the table contains an entry with the given integer-valued key, 
+	 * false if not. Ignores the metatable.
+	 */
 	public boolean containsKey( int key ) {
-		return null != (key>0 && key<=array.length? 
-					array[key-1]:
-					hashGet(LInteger.valueOf(key)) );
+		return (key>0 && key<=array.length? 
+					array[key-1] != null:
+					(hashKeys.length>0 && hashKeys[hashFindSlot(LInteger.valueOf(key))]!=null));
 	}
 	
 
@@ -244,9 +247,9 @@ public class LTable extends LValue {
 
 	private static final int MAX_KEY = 0x3fffffff;
 	
-	/*
-	** Try to find a boundary in table `t'. A `boundary' is an integer index
-	** such that t[i] is non-nil and t[i+1] is nil (and 0 if t[1] is nil).
+	/**
+	* Try to find a boundary in table `t'. A `boundary' is an integer index
+	* such that t[i] is non-nil and t[i+1] is nil (and 0 if t[1] is nil).
 	*/
 	public int luaLength() {
 		int j = array.length;
@@ -258,10 +261,8 @@ public class LTable extends LValue {
 		
 		// find `i' and `j' such that i is present and j is not
 		int i = 0;
-		while ( containsKey(j) && j < MAX_KEY ) {
+		for ( ++j; containsKey(j) && j < MAX_KEY; j*=2 )
 			i = j;
-			j *= 2;
-		}
 
 		// binary search
 		while ( j - i > 1) {
@@ -289,7 +290,7 @@ public class LTable extends LValue {
 			org.luaj.vm.LTable t = (org.luaj.vm.LTable) metatable;
 			LValue m = t.get(TM_MODE);
 			if ( "v".equals(m.toJavaString()) ) {
-				// m_backing = new WeakBacking(m_backing);
+				return new LWeakTable(this);
 			}
 			this.m_metatable = t;
 		} 
@@ -435,8 +436,8 @@ public class LTable extends LValue {
 	}
 
 	private boolean compare(int i, int j, LuaState vm, LValue cmpfunc) {
-		LValue a = get(i);
-		LValue b = get(j);
+		LValue a = get(i+1);
+		LValue b = get(j+1);
 		if ( a.isNil() || b.isNil() )
 			return false;
 		if ( ! cmpfunc.isNil() ) {
@@ -453,9 +454,9 @@ public class LTable extends LValue {
 	}
 	
 	private void swap(int i, int j) {
-		LValue a = get(i);
-		put(i, get(j));
-		put(j, a);
+		LValue a = get(i+1);
+		put(i+1, get(j+1));
+		put(j+1, a);
 	}
 
 	/**
@@ -478,7 +479,7 @@ public class LTable extends LValue {
 			Object a = array[i];
 			if ( a != null ) {
 				vm.pushinteger(i+1);
-				vm.pushlvalue((LValue)a);
+				vm.pushlvalue(normalizeGet(a));
 				return true;
 			} else if ( indexedonly ) {
 				vm.pushnil();
@@ -493,7 +494,7 @@ public class LTable extends LValue {
 				if ( v != null ) {
 					LValue k = hashKeys[i];
 					vm.pushlvalue(k);
-					vm.pushlvalue((LValue)v);
+					vm.pushlvalue(normalizeGet(v));
 					return true;
 				}
 			}
@@ -508,7 +509,7 @@ public class LTable extends LValue {
 
 		// first iteration
 		if ( key.isNil() )
-			return -1;
+			return 0;
 
 		// is `key' inside array part?
 		if ( key.isInteger() ) { 

@@ -1,28 +1,29 @@
 
 
-function newtable(t)
-	n = setmetatable(t,{__mode="v"})
-	for k,v in pairs(t) do
-		n[k] = v
-	end
-	return n;
-end
-
 -- normalized printing
 function eles(t,f)
 	f = f or pairs
 	all = {}
 	for k,v in f(t) do
+		if type(v) == 'table' then
+			v = '{'..tostring(v.v)..'}'
+		end
 		table.insert( all, "["..tostring(k).."]="..tostring(v) )
 	end
 	table.sort( all )
-	return tostring(t).."{"..table.concat(all,',').."}"
+	return "{"..table.concat(all,',').."}"
 end
 
+function newtable(t)
+	return setmetatable(t,{__mode="v"})
+end
+
+function new(a)
+	return {v='_'..tostring(a).."_"}
+end
 
 -- basic weak-reference table test
-local src = "return { 'one', 'two', 'three', 'four', a='aaa', b='bbb', c='ccc', d='ddd'}"
-local weak = newtable( loadstring(src)() )
+local weak = newtable{ new('one'), new('two'), new('three'), new('four'), a=new('aaa'), b=new('bbb'), c=new('ccc'), d=new('ddd') }
 local strong = { weak[1], weak[3], a=weak.a, c=weak.c }
 print( 'before, weak:', eles(weak) )
 print( 'before, strong:', eles(strong) )

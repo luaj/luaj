@@ -36,6 +36,17 @@ public class LWeakTable extends LTable {
 		super(narray, nhash);
 	}
 
+	public LWeakTable(LTable copy) {
+		super( copy.array.length, copy.hashKeys.length );
+		for ( int i=0, k=1, n=copy.array.length; i<n; i++, k++ )
+			this.put( k, copy.get(k) );
+		for ( int i=0, n=copy.hashKeys.length; i<n; i++ ) {
+			LValue k = copy.hashKeys[i];
+			if ( k != null )
+				this.put( k, copy.get(k) );
+		}
+	}
+
 	protected LValue normalizeGet(Object val) {
 		if ( val != null ) 
 			val = ((WeakReference)val).get();
@@ -44,6 +55,16 @@ public class LWeakTable extends LTable {
 
 	protected Object normalizePut(LValue val) {
 		return val==LNil.NIL? null: new WeakReference(val);
+	}
+	
+	public boolean next(LuaState vm, LValue key, boolean indexedonly) {
+		while ( super.next(vm, key, indexedonly) ) {
+			if ( ! vm.isnil(-1) )
+				return true;
+			vm.pop(1);
+			key = vm.poplvalue();
+		}
+		return false;
 	}
 	
 }

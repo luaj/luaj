@@ -28,7 +28,6 @@ import org.luaj.vm.LFunction;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
-import org.luaj.vm.LWeakTable;
 import org.luaj.vm.LuaState;
 
 
@@ -186,7 +185,9 @@ public class TableLib extends LFunction {
 			LTable table = vm.totable(2);
 			int pos = (n>=3? vm.tointeger(3): 0);
 			vm.resettop();
-			vm.pushlvalue( table.luaRemovePos( pos ) );
+			LValue v = table.luaRemovePos(pos);
+			if ( ! v.isNil() )
+				vm.pushlvalue( v );
 			break;
 		}
 			
