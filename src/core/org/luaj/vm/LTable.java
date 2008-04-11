@@ -21,6 +21,16 @@
 ******************************************************************************/
 package org.luaj.vm;
 
+import java.util.Vector;
+
+import org.luaj.vm.LFunction;
+import org.luaj.vm.LInteger;
+import org.luaj.vm.LNil;
+import org.luaj.vm.LString;
+import org.luaj.vm.LValue;
+import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
+import org.luaj.vm.LuaState;
 
 /**
  * Simple implementation of table structure for Lua VM. Maintains both an array
@@ -35,61 +45,24 @@ package org.luaj.vm;
  * remove() methods are private: setting a key's value to nil is the correct way
  * to remove an entry from the table.
  * 
- * TODO: Support for weak tables has to be shoehorned in here somehow.
  * 
  */
 public class LTable extends LValue {
-	
-	/**
-	 * Zero-length array to use instead of null, so that we don't need to
-	 * check for null everywhere.
-	 */
-	private static final LValue[] EMPTY_ARRAY = new LValue[0];
-	
-	/**
-	 * Minimum legal capacity for the hash portion. Note that the hash portion
-	 * must never be filled to capacity or findSlot() will run forever.
-	 */
-	private static final int MIN_HASH_CAPACITY = 2;
-	
-	/**
-	 * Array of keys in the hash part. When there is no hash part this is null.
-	 * Elements of m_hashKeys are never LNil.NIL - they are null to indicate
-	 * the hash slot is empty and some non-null, non-nil value otherwise.
-	 */
-	protected LValue[] m_hashKeys;
-	
-	/**
-	 * Values in the hash part. Must be null when m_hashKeys is null and equal
-	 * in size otherwise.
-	 */
-	protected LValue[] m_hashValues;
-	
-	/**
-	 * m_hashEntries is the number of slots that are used. Must always be less
-	 * than m_hashKeys.length.
-	 */
-	protected int m_hashEntries;
-	
-	/**
-	 * Array of values to store the "array part" of the table, that is the
-	 * entries with positive integer keys. Elements must never be null: "empty"
-	 * slots are set to LNil.NIL.
-	 */
-	protected LValue[] m_vector;
-	
-	/**
-	 * Number of values in m_vector that non-nil.
-	 */
-	protected int m_arrayEntries;
-	
-	private LTable m_metatable;
 
-	private static final int INVALID_KEY_TO_NEXT = -2;
+	private Object[] array;
+	private LValue[] hashKeys;
+	private Object[] hashValues;
+	private int hashEntries;
+	private LTable m_metatable;
 	
+	private static final int MIN_HASH_CAPACITY = 2;
+	private static final LValue[] NONE = {};
+
+
 	/** Construct an empty LTable with no initial capacity. */
 	public LTable() {
-		m_vector = EMPTY_ARRAY;
+		array = NONE;
+		hashKeys = NONE;
 	}
 
 	/**
@@ -97,46 +70,70 @@ public class LTable extends LValue {
 	 * in the range 1 .. narray and nhash non-integer keys.
 	 */
 	public LTable( int narray, int nhash ) {
-		if ( nhash > 0 ) {
-			// Allocate arrays 25% bigger than nhash to account for load factor.
-			final int capacity = Math.max( nhash + ( nhash >> 2 ), nhash + 1 );
-			m_hashKeys = new LValue[capacity];
-			m_hashValues = new LValue[capacity];
-		}
-		m_vector = new LValue[narray];
-		for ( int i = 0; i < narray; ++i ) {
-			m_vector[i] = LNil.NIL;
-		}
+		nhash = Math.max(nhash,MIN_HASH_CAPACITY);
+		array = new Object[narray];
+		hashKeys = new LValue[nhash];
+		hashValues = new Object[nhash];
 	}
-	
+
+	/** Get capacity of hash part */
+	public int getArrayCapacity() {
+		return array.length;
+	}
+
+	/** Get capacity of hash part */
+	public int getHashCapacity() {
+		return hashKeys.length;
+	}
+
 	/**
 	 * Return total number of keys mapped to non-nil values. Not to be confused
 	 * with luaLength, which returns some number n such that the value at n+1 is
 	 * nil.
+	 * 
+	 * @deprecated this is not scalable.  Does a linear search through the table.  Use luaLength() instead.  
 	 */
 	public int size() {
-		return m_hashEntries + m_arrayEntries;
+		int count = 0;
+		for ( int i=array.length; --i>=0; )
+			if ( array[i] != null )
+				count++;
+		for ( int i=hashKeys.length; --i>=0; )
+			if ( hashKeys[i] != null )
+				count++;
+		return count;
 	}
-
+	
 	/**
 	 * Generic put method for all types of keys, but does not use the metatable.
 	 */
 	public void put( LValue key, LValue val ) {
 		if ( key.isInteger() ) {
-			// call the integer-specific put method
-			put( key.toJavaInt(), val );
-		} else if ( val == null || val.isNil() ) {
-			// Remove the key if the value is nil. This comes after the check
-			// for an integer key so that values are properly removed from
-			// the array part.
-			remove( key );
-		} else {
-			if ( checkLoadFactor() )
-				rehash();
-			int slot = findSlot( key );
-			if ( fillHashSlot( slot, val ) )
+			int pos = key.toJavaInt() - 1;
+			int n = array.length;
+			if ( pos>=0 && pos<=n ) {
+				if ( pos == n )
+					expandArrayPart();
+				array[pos] =  normalizePut(val);
 				return;
-			m_hashKeys[slot] = key;
+			}
+		}
+		hashSet( key, normalizePut(val) );
+	}
+	
+	/**
+	 * Method for putting an integer-keyed value. Bypasses the metatable, if
+	 * any.
+	 */
+	public void put( int key, LValue val ) {
+		int pos = key - 1;
+		int n = array.length;
+		if ( pos>=0 && pos<=n ) {
+			if ( pos == n )
+				expandArrayPart();
+			array[pos] = normalizePut(val);
+		} else {
+			hashSet( LInteger.valueOf(key), normalizePut(val) );
 		}
 	}
 	
@@ -144,103 +141,90 @@ public class LTable extends LValue {
 	 * Utility method for putting a string-keyed value directly, typically for
 	 * initializing a table. Bypasses the metatable, if any.
 	 */
-	public void put( String key, LValue value ) {
-		put( new LString( key ), value );
+	public void put( String key, LValue val ) {
+		hashSet( LString.valueOf(key), normalizePut(val) );
 	}
 	
 	/**
 	 * Utility method for putting a string key, int value directly, typically for
 	 * initializing a table. Bypasses the metatable, if any.
 	 */
-	public void put( String key, int value ) {
-		put( new LString( key ), LInteger.valueOf(value) );
+	public void put( String key, int val ) {
+		hashSet( LString.valueOf(key), LInteger.valueOf(val) );
 	}
-		
-	/**
-	 * Method for putting an integer-keyed value. Bypasses the metatable, if
-	 * any.
+
+	/** 
+	 * Expand the array part of the backing for more values to fit in.
 	 */
-	public void put( int key, LValue value ) {
-		if (value == null || value.isNil()) {
-			remove( key );
-			return;
-		}
-		if ( key > 0 ) {
-			final int index = key - 1;
-			for ( ;; ) {
-				if ( index < m_vector.length ) {
-					if ( m_vector[index].isNil() ) {
-						++m_arrayEntries;
-					}
-					m_vector[index] = value;
-					return;
-				} else if ( index < ( m_arrayEntries + 1 ) * 2 ) {
-					resize( ( m_arrayEntries + 1 ) * 2 );
-				} else {
-					break;
-				}
+	private void expandArrayPart() {
+		int n = array.length;
+		int m = Math.max(2,n*2);
+		arrayExpand(m);
+		for ( int i=n; i<m; i++ ) {
+			LInteger k = LInteger.valueOf(i+1);
+			Object v = hashGet(k);
+			if ( v != null ) {
+				hashSet(k, null);
+				array[i] = v;
 			}
 		}
-		
-		// No room in array part, use hash part instead.
-		if ( checkLoadFactor() )
-			rehash();
-		int slot = findSlot( key );
-		if ( fillHashSlot( slot, value ) )
-			return;
-		m_hashKeys[ slot ] = LInteger.valueOf( key );
 	}
 	
-	
+	/** Check for nil, and convert to null or leave alone
+	 */
+	protected Object normalizePut(LValue val) {
+		return val==LNil.NIL? null: val;
+	}
+
 	/**
 	 * Utility method to directly get the value in a table, without metatable
 	 * calls. Must never return null, use LNil.NIL instead.
 	 */
 	public LValue get( LValue key ) {
-		if ( m_vector.length > 0 && key.isInteger() ) {
-			final int index = key.toJavaInt() - 1;
-			if ( index >= 0 && index < m_vector.length ) {
-				return m_vector[index];
-			}
+		if ( key.isInteger() ) {
+			int ikey = key.toJavaInt();
+			if ( ikey>0 && ikey<=array.length )
+				return normalizeGet(array[ikey-1]);
 		}
-		
-		if ( m_hashKeys == null )
-			return LNil.NIL;
-		
-		int slot = findSlot( key );
-		return ( m_hashKeys[slot] != null ) ? m_hashValues[slot] : LNil.NIL;
+		return normalizeGet(hashGet(key));
 	}
+
+	
 	
 	/** Utility method for retrieving an integer-keyed value */
 	public LValue get( int key ) {
-		if ( key > 0 && key <= m_vector.length ) {
-			return m_vector[key - 1];
-		}
-		
-		if ( m_hashKeys == null )
-			return LNil.NIL;
-
-		int slot = findSlot( key );
-		return ( m_hashKeys[slot] != null ) ? m_hashValues[slot] : LNil.NIL;
+		return normalizeGet( key>0 && key<=array.length? 
+					array[key-1]:
+					hashGet(LInteger.valueOf(key)) );
 	}
 	
-	
+	/** Check for null, and convert to nilor leave alone
+	 */
+	protected LValue normalizeGet(Object val) {
+		return val==null? LNil.NIL: (LValue) val;
+	}
+
 	/**
 	 * Return true if the table contains an entry with the given key, false if
 	 * not. Ignores the metatable.
+	 * 
 	 */
 	public boolean containsKey( LValue key ) {
-		if ( m_vector.length > 0 && key.isInteger() ) {
-			final int index = key.toJavaInt() - 1;
-			if ( index >= 0 && index < m_vector.length ) {
-				return ! m_vector[index].isNil();
-			}
+		if ( key.isInteger() ) {
+			int ikey = key.toJavaInt();
+			if ( ikey>0 && ikey<=array.length )
+				return null != array[ikey-1];
 		}
-		if ( m_hashKeys == null )
-			return false;
-		final int slot = findSlot( key );
-		return m_hashKeys[ slot ] != null;
+		return null != hashGet(key);
 	}
+
+	/** Check if a integer-valued key exists */
+	public boolean containsKey( int key ) {
+		return null != (key>0 && key<=array.length? 
+					array[key-1]:
+					hashGet(LInteger.valueOf(key)) );
+	}
+	
 
 	public void luaGetTable(LuaState vm, LValue table, LValue key) {
 		LValue v = get(key);
@@ -257,24 +241,41 @@ public class LTable extends LValue {
 		else
 			put(key,val);
 	}
+
+	private static final int MAX_KEY = 0x3fffffff;
 	
-	/**
-	 * Return the "length" of this table. This will not return the same result
-	 * as the C version in all cases, but that's ok because the length operation
-	 * on a table where the integer keys are sparse is vaguely defined.
-	 */
+	/*
+	** Try to find a boundary in table `t'. A `boundary' is an integer index
+	** such that t[i] is non-nil and t[i+1] is nil (and 0 if t[1] is nil).
+	*/
 	public int luaLength() {
-		for ( int i = Math.max( 0, m_arrayEntries-1 ); i < m_vector.length; ++i ) {
-			if ( ! m_vector[i].isNil() &&
-					( i+1 == m_vector.length || m_vector[i+1].isNil() ) ) {
-				return i+1;
-			}
+		int j = array.length;
+		int k = hashKeys.length;
+		
+		// degenerate case
+		if ( j + k <= 0 )
+			return 0;
+		
+		// find `i' and `j' such that i is present and j is not
+		int i = 0;
+		while ( containsKey(j) && j < MAX_KEY ) {
+			i = j;
+			j *= 2;
 		}
-		return 0;
+
+		// binary search
+		while ( j - i > 1) {
+			int m = (i+j) / 2;
+			if ( ! containsKey(m) )
+				j = m;
+			else
+				i = m;
+		}
+	    return i;
 	}
-	
+		
 	/** Valid for tables */
-	public LTable luaGetMetatable() {
+	public org.luaj.vm.LTable luaGetMetatable() {
 		return this.m_metatable;
 	}
 
@@ -285,12 +286,10 @@ public class LTable extends LValue {
 		if ( metatable == null || metatable.isNil() )
 			this.m_metatable = null;
 		else if ( metatable.luaGetType() == Lua.LUA_TTABLE ) { 
-			LTable t = (LTable) metatable;
+			org.luaj.vm.LTable t = (org.luaj.vm.LTable) metatable;
 			LValue m = t.get(TM_MODE);
 			if ( "v".equals(m.toJavaString()) ) {
-				LTable n = new LWeakTable(this);
-				n.m_metatable = t;
-				return n;
+				// m_backing = new WeakBacking(m_backing);
 			}
 			this.m_metatable = t;
 		} 
@@ -312,274 +311,93 @@ public class LTable extends LValue {
 	 * used instead of keys() (which returns an enumeration) when an array is
 	 * more convenient. Note that for a very large table, getting an Enumeration
 	 * instead would be more space efficient.
+	 * 
+	 * @deprecated this is not scalable.  Does a linear search through the table.  
 	 */
 	public LValue[] getKeys() {
-		LValue[] keys = new LValue[ m_arrayEntries + m_hashEntries ];
-		int out = 0;
-		
-		for ( int i = 0; i < m_vector.length; ++i ) {
-			if ( ! m_vector[ i ].isNil() ) {
-				keys[ out++ ] = LInteger.valueOf( i + 1 );
-			}
+		int n = array.length;
+		int o = hashKeys.length;
+		LValue k;
+		Vector v = new Vector();
+
+		// array parts
+		for ( int pos=0; pos<n; ++pos ) {
+			if ( array[pos] != null )
+				v.addElement( LInteger.valueOf( pos+1 ) );
 		}
 		
-		if ( m_hashKeys != null ) {
-			for ( int i = 0; i < m_hashKeys.length; ++i ) {
-				if ( m_hashKeys[ i ] != null )
-					keys[ out++ ] = m_hashKeys[i];
-			}
+		// hash parts
+		for ( int pos=0; pos<o; pos++  ) {
+			if ( null != (k = hashKeys[pos]) )
+				v.addElement( k );
 		}
 		
+		LValue[] keys = new LValue[ v.size() ];
+		v.copyInto( keys );
 		return keys;
 	}
-	
-	/** Remove the value in the table with the given integer key. */
-	protected void remove( int key ) {
-		if ( key > 0 ) {
-			final int index = key - 1;
-			if ( index < m_vector.length ) {
-				if ( ! m_vector[ index ].isNil() ) {
-					m_vector[ index ] = LNil.NIL;
-					--m_arrayEntries;
-				}
-				return;
-			}
-		}
-		
-		if ( m_hashKeys != null ) {
-			int slot = findSlot( key );
-			clearSlot( slot );
-		}
-	}
-	
-	protected void remove( LValue key ) {
-		if ( m_hashKeys != null ) {
-			int slot = findSlot( key );
-			clearSlot( slot );
-		}
-	}
-	
-	private void clearSlot( int i ) {
-		if ( m_hashKeys[ i ] != null ) {
-			
-			int j = i;
-			while ( m_hashKeys[ j = ( ( j + 1 ) % m_hashKeys.length ) ] != null ) {
-				final int k = hashToIndex( m_hashKeys[ j ].hashCode() );
-				if ( ( j > i && ( k <= i || k > j ) ) ||
-					 ( j < i && ( k <= i && k > j ) ) ) {
-					m_hashKeys[ i ] = m_hashKeys[ j ];
-					m_hashValues[ i ] = m_hashValues[ j ];
-					i = j;
-				}
-			}
-			
-			--m_hashEntries;
-			m_hashKeys[ i ] = null;
-			m_hashValues[ i ] = null;
-			
-			if ( m_hashEntries == 0 ) {
-				m_hashKeys = null;
-				m_hashValues = null;
-			}
-		}
-	}
-	
-	private int findSlot( LValue key ) {
-		int i = hashToIndex( key.hashCode() );
-		
-		// This loop is guaranteed to terminate as long as we never allow the
-		// table to get 100% full.
-		LValue k;
-		while ( ( k = m_hashKeys[i] ) != null &&
-				!key.luaBinCmpUnknown( Lua.OP_EQ, k ) ) {
-			i = ( i + 1 ) % m_hashKeys.length;
-		}
-		return i;
-	}
-	
-	private int findSlot( int key ) {
-		int i = hashToIndex( LInteger.hashCodeOf( key ) );
-		
-		// This loop is guaranteed to terminate as long as we never allow the
-		// table to get 100% full.
-		LValue k;
-		while ( ( k = m_hashKeys[i] ) != null &&
-				  !k.luaBinCmpInteger( Lua.OP_EQ, key ) ) {
-			i = ( i + 1 ) % m_hashKeys.length;
-		}
-		return i;
-	}
-	
-	/**
-	 * @return true if the given slot was already occupied, false otherwise.
-	 */
-	private boolean fillHashSlot( int slot, LValue value ) {
-		m_hashValues[ slot ] = value;
-		if ( m_hashKeys[ slot ] != null ) {
-			return true;
-		} else {
-			++m_hashEntries;
-			return false;
-		}
-	}
-	
-	private int hashToIndex( int hash ) {
-		return ( hash & 0x7FFFFFFF ) % m_hashKeys.length;
-	}
-	
-	/**
-	 * Should be called before inserting a value into the hash.
-	 * 
-	 * @return true if the hash portion of the LTable is at its capacity.
-	 */
-	private boolean checkLoadFactor() {
-		if ( m_hashKeys == null )
-			return true;
-		// Using a load factor of 2/3 because that is easy to compute without
-		// overflow or division.
-		final int hashCapacity = m_hashKeys.length;
-		return ( hashCapacity >> 1 ) >= ( hashCapacity - m_hashEntries );
-	}
-	
-	private void rehash() {
-		final int oldCapacity = ( m_hashKeys != null ) ? m_hashKeys.length : 0;
-		final int newCapacity = ( oldCapacity > 0 ) ? 2 * oldCapacity : MIN_HASH_CAPACITY;
-		
-		final LValue[] oldKeys = m_hashKeys;
-		final LValue[] oldValues = m_hashValues;
-		
-		m_hashKeys = new LValue[ newCapacity ];
-		m_hashValues = new LValue[ newCapacity ];
-		
-		for ( int i = 0; i < oldCapacity; ++i ) {
-			final LValue k = oldKeys[i];
-			if ( k != null ) {
-				final LValue v = oldValues[i];
-				final int slot = findSlot( k );
-				m_hashKeys[slot] = k;
-				m_hashValues[slot] = v;
-			}
-		}
-	}
-	
-	private void resize( int newCapacity ) {
-		final int oldCapacity = m_vector.length;
-		LValue[] newVector = new LValue[ newCapacity ];
-		System.arraycopy( m_vector, 0, newVector, 0, Math.min( oldCapacity, newCapacity ) );
-		
-		// We need to move keys from hash part to array part if array part is
-		// getting bigger, and from array part to hash part if array is getting
-		// smaller.
-		if ( newCapacity > oldCapacity ) {
-			for ( int i = oldCapacity; i < newCapacity; ++i ) {
-				// Test for m_hashKeys != null must be inside the loop because
-				// call to clearSlot may result in m_hashKeys becoming null
-				// at any time.
-				if ( m_hashKeys != null ) {
-					int slot = findSlot( i+1 );
-					if ( m_hashKeys[ slot ] != null ) {
-						newVector[ i ] = m_hashValues[ slot ];
-						clearSlot( slot );
-						continue;
-					}
-				}
-				// Make sure all array-part values are initialized to nil
-				// so that we can just do one compare instead of two
-				// whenever we need to check if a slot is full or not.
-				newVector[ i ] = LNil.NIL;
-			}
-		} else {
-			for ( int i = newCapacity; i < oldCapacity; ++i ) {
-				LValue v = m_vector[i];
-				if ( ! v.isNil() ) {
-					if (checkLoadFactor())
-						rehash();
-					final int slot = findSlot( i+1 );
-					m_hashKeys[ slot ] = LInteger.valueOf( i+1 );
-					m_hashValues[ slot ] = v;
-					++m_hashEntries;
-				}
-			}
-		}
-		
-		m_vector = newVector;
-	}
-	
-	// hooks for junit
-	
-	int getHashCapacity() {
-		return ( m_hashKeys != null ) ? m_hashKeys.length : 0;
-	}
-	
-	int getArrayCapacity() {
-		return m_vector.length;
-	}
 
 	/**
-	 * Insert element at a position in the list.
+	 * Insert element at a position in the list, shifting contiguous elements up.
 	 * @pos index to insert at, or 0 to insert at end.
 	 */
-	public void luaInsertPos(int pos, LValue value) {
-		if ( pos > m_arrayEntries + 1 )
-			put( pos, value );
-		else {
-			final int index = Math.max(0,pos==0? m_arrayEntries: pos-1);
-			if ( m_arrayEntries + 1 > m_vector.length )
-				resize( ( m_arrayEntries + 1 ) * 2 );
-			if ( ! m_vector[index].isNil() ) {
-				System.arraycopy(m_vector, index, m_vector, index+1, m_vector.length-1-index);
-			}
-			m_vector[index] = value;
-			++m_arrayEntries;
-		}
+	public void luaInsertPos(int ikey, LValue value) {
+		if ( ikey == 0 )
+			ikey = luaLength()+1;
+		do {
+			LValue tmp = get(ikey);
+			put(ikey++, value);
+			value = tmp;
+		} while ( ! value.isNil() );
 	}
 
 	/**
-	 * Remove an element from the list part of the table
+	 * Remove an element from the list, moving contiguous elements down
 	 * @param pos position to remove, or 0 to remove last element
 	 */
-	public LValue luaRemovePos(int pos) {
-		if ( pos > m_arrayEntries ) {
-			LValue val = get( pos );
-			if ( ! val.isNil() )
-				put( pos, LNil.NIL );
-			return val;
-		} else {
-			final int n = m_vector.length - 1;
-			final int index = Math.max(0,pos<=0? m_arrayEntries: pos)-1;
-			if ( index < 0 )
+	public LValue luaRemovePos(int ikey) {
+		if ( ikey == 0 )
+			if ( (ikey = luaLength()) <= 0 )
 				return LNil.NIL;
-			LValue val = m_vector[index];
-			System.arraycopy(m_vector, index+1, m_vector, index, n-index);
-			m_vector[n] = LNil.NIL;
-			--m_arrayEntries;
-			return val;
-		}
+		LValue removed = get(ikey);
+		LValue replaced;
+		do {
+			put(ikey, replaced=get(ikey+1));
+			ikey++;
+		} while ( ! replaced.isNil() );
+		return removed;
 	}
 
+	/**
+	 * Returns the largest positive numerical index of the given table, 
+	 * or zero if the table has no positive numerical indices. 
+	 * (To do its job this function does a linear traversal of the whole table.)
+	 * @return LValue that is the largest int 
+	 */
 	public LValue luaMaxN() {
-		LValue result = LInteger.valueOf(0);
+		int n = array.length;
+		int m = hashKeys.length;
+		int r = Integer.MIN_VALUE;
 		
-		for ( int i = m_vector.length - 1; i >= 0; i-- ) {
-			if ( ! m_vector[i].isNil() ) {
-				result = LInteger.valueOf(i + 1);
+		// array part
+		for ( int i=n; --i>=0; ) {
+			if ( array[i] != null ) {
+				r = i+1;
 				break;
 			}
 		}
-		
-		if ( m_hashKeys != null ) {
-			final int hlen = m_hashKeys.length;
-			for ( int i = 0; i < hlen; ++i ) {
-				LValue k = m_hashKeys[i];
-				if ( k != null && k.luaGetType() == Lua.LUA_TNUMBER ) {
-					if ( k.luaBinCmpUnknown(Lua.OP_LT, result ) ) {
-						result = k;
-					}
-				}
+
+		// hash part
+		for ( int i=0; i<m; i++ ) {
+			LValue key = hashKeys[i];
+			if ( key != null && key.isInteger() ) {
+				int k = key.toJavaInt();
+				if ( k > r )
+					r = k;
 			}
 		}
 		
-		return result;
+		return LInteger.valueOf( r == Integer.MIN_VALUE? 0: r );
 	}
 
 	// ----------------- sort support -----------------------------
@@ -587,7 +405,7 @@ public class LTable extends LValue {
 	// implemented heap sort from wikipedia
 	//
 	public void luaSort(LuaState vm, LValue compare) {
-		heapSort(m_arrayEntries, vm, compare);
+		heapSort(luaLength(), vm, compare);
 	}
 	
 	private void heapSort(int count, LuaState vm, LValue cmpfunc) {
@@ -617,23 +435,27 @@ public class LTable extends LValue {
 	}
 
 	private boolean compare(int i, int j, LuaState vm, LValue cmpfunc) {
+		LValue a = get(i);
+		LValue b = get(j);
+		if ( a.isNil() || b.isNil() )
+			return false;
 		if ( ! cmpfunc.isNil() ) {
 			vm.pushlvalue(cmpfunc);
-			vm.pushlvalue(m_vector[i]);
-			vm.pushlvalue(m_vector[j]);
+			vm.pushlvalue(a);
+			vm.pushlvalue(b);
 			vm.call(2, 1);
 			boolean result = vm.toboolean(-1);
 			vm.resettop();
 			return result;
 		} else {
-			return m_vector[j].luaBinCmpUnknown( Lua.OP_LT, m_vector[i] );
+			return b.luaBinCmpUnknown( Lua.OP_LT, a );
 		}
 	}
 	
 	private void swap(int i, int j) {
-		LValue tmp = m_vector[i];
-		m_vector[i] = m_vector[j];
-		m_vector[j] = tmp;
+		LValue a = get(i);
+		put(i, get(j));
+		put(j, a);
 	}
 
 	/**
@@ -645,16 +467,18 @@ public class LTable extends LValue {
 	 */
 	public boolean next(LuaState vm, LValue key, boolean indexedonly ) {
 
-		int n = (m_vector != null? m_vector.length: 0);
-		int i = findindex(key, n, indexedonly);
-		if ( i == INVALID_KEY_TO_NEXT )
+		int n = array.length;
+		int m = (indexedonly? -1: hashKeys.length);
+		int i = findindex(key, n, m);
+		if ( i < 0 )
 			vm.error( "invalid key to 'next'" );
 		
-		// check vector part
-		for ( ++i; i<n; ++i ) {
-			if ( ! m_vector[i].isNil() ) {
+		// check array part
+		for ( ; i<n; ++i ) {
+			Object a = array[i];
+			if ( a != null ) {
 				vm.pushinteger(i+1);
-				vm.pushlvalue(m_vector[i]);
+				vm.pushlvalue((LValue)a);
 				return true;
 			} else if ( indexedonly ) {
 				vm.pushnil();
@@ -663,12 +487,13 @@ public class LTable extends LValue {
 		}
 
 		// check hash part
-		if ( (! indexedonly) && (m_hashKeys != null) ) {
-			int m = m_hashKeys.length;
+		if ( (! indexedonly) ) {
 			for ( i-=n; i<m; ++i ) {
-				if ( m_hashKeys[i] != null ) {
-					vm.pushlvalue(m_hashKeys[i]);
-					vm.pushlvalue(m_hashValues[i]);
+				Object v = hashValues[i];
+				if ( v != null ) {
+					LValue k = hashKeys[i];
+					vm.pushlvalue(k);
+					vm.pushlvalue((LValue)v);
 					return true;
 				}
 			}
@@ -679,7 +504,7 @@ public class LTable extends LValue {
 		return false;
 	}
 
-	private int findindex (LValue key, int n, boolean indexedonly) {
+	private int findindex (LValue key, int n, int m) {
 
 		// first iteration
 		if ( key.isNil() )
@@ -689,25 +514,27 @@ public class LTable extends LValue {
 		if ( key.isInteger() ) { 
 			int i = key.toJavaInt();
 			if ( (0 < i) && (i <= n) ) {
-				if ( m_vector[i-1] == LNil.NIL )
-					return INVALID_KEY_TO_NEXT;
-				return i-1;				
+				if ( array[i-1] == null )
+					return -1;
+				return i;				
 			}
 		}
 
-		// vector only? 
-		if ( indexedonly )
+		// array only? 
+		if ( m < 0 )
 			return n;
 		
-		if ( m_hashKeys == null )
-			return INVALID_KEY_TO_NEXT;
+		// bad index? 
+		if ( m == 0 )
+			return -1;
 		
 		// find slot
-		int slot = findSlot(key);
-		if ( m_hashKeys[slot] == null ) 
-			return INVALID_KEY_TO_NEXT;
-		
-		return n + slot;
+		int slot = hashFindSlot(key);
+		if ( hashKeys[slot] == null )
+			return -1;
+
+		// return next slot!
+		return n + slot + 1;
 	}
 	
 	
@@ -739,6 +566,121 @@ public class LTable extends LValue {
 			vm.call(2, 1);
 			if ( ! vm.isnil(-1) )
 				return vm.poplvalue();
+		}
+	}
+
+
+	// ============== array part ===============
+	
+	public void arrayExpand(int newLength) {
+		Object[] v = new Object[newLength];
+		System.arraycopy(array, 0, v, 0, array.length);
+		array = v;
+	}
+
+	// ============= Hashtable ================
+	
+	public void hashSet(LValue key, Object value) {
+		if ( value == null )
+			hashRemove(key);
+		else {
+			if ( checkLoadFactor() )
+				rehash();
+
+			int slot = hashFindSlot( key );
+			if ( hashFillSlot( slot, value ) )
+				return;
+			hashKeys[slot] = key;
+			hashValues[slot] = value;
+		}
+	}
+	
+	public Object hashGet(LValue key) {
+		if ( hashKeys.length <= 0 )
+			return null;
+		return hashValues[hashFindSlot(key)];
+	}
+	
+	public int hashFindSlot(LValue key) {		
+		int i = ( key.hashCode() & 0x7FFFFFFF ) % hashKeys.length;
+		
+		// This loop is guaranteed to terminate as long as we never allow the
+		// table to get 100% full.
+		LValue k;
+		while ( ( k = hashKeys[i] ) != null && !k.luaBinCmpUnknown( Lua.OP_EQ, key ) ) {
+			i = ( i + 1 ) % hashKeys.length;
+		}
+		return i;
+	}
+
+	private boolean hashFillSlot( int slot, Object value ) {
+		hashValues[ slot ] = value;
+		if ( hashKeys[ slot ] != null ) {
+			return true;
+		} else {
+			++hashEntries;
+			return false;
+		}
+	}
+	
+	protected void hashRemove( LValue key ) {
+		if ( hashKeys.length > 0 ) {
+			int slot = hashFindSlot( key );
+			hashClearSlot( slot );
+		}
+	}
+	
+	private void hashClearSlot( int i ) {
+		if ( hashKeys[ i ] != null ) {
+			
+			int j = i;
+			int n = hashKeys.length; 
+			while ( hashKeys[ j = ( ( j + 1 ) % n ) ] != null ) {
+				final int k = ( ( hashKeys[ j ].hashCode() )& 0x7FFFFFFF ) % n;
+				if ( ( j > i && ( k <= i || k > j ) ) ||
+					 ( j < i && ( k <= i && k > j ) ) ) {
+					hashKeys[ i ] = hashKeys[ j ];
+					hashValues[ i ] = hashValues[ j ];
+					i = j;
+				}
+			}
+			
+			--hashEntries;
+			hashKeys[ i ] = null;
+			hashValues[ i ] = null;
+			
+			if ( hashEntries == 0 ) {
+				hashKeys = NONE;
+				hashValues = null;
+			}
+		}
+	}
+
+	private boolean checkLoadFactor() {
+		// Using a load factor of 2/3 because that is easy to compute without
+		// overflow or division.
+		final int hashCapacity = hashKeys.length;
+		return ( hashCapacity >> 1 ) >= ( hashCapacity - hashEntries );
+	}
+	
+	private void rehash() {
+		final int oldCapacity = hashKeys.length;
+		final int newCapacity = ( oldCapacity > 0 ) ? 2 * oldCapacity : MIN_HASH_CAPACITY;
+		
+		final LValue[] oldKeys = hashKeys;
+		final Object[] oldValues = hashValues;
+		
+		hashKeys = new LValue[ newCapacity ];
+		hashValues = new Object[ newCapacity ];
+		
+		for ( int i = 0; i < oldCapacity; ++i ) {
+			final LValue k = oldKeys[i];
+			if ( k != null ) {
+				final Object v = oldValues[i];
+				final int slot = hashFindSlot( k );
+				hashKeys[slot] = k;
+				hashValues[slot] = v;
+			}
 		}
 	}
 }

@@ -6,8 +6,16 @@ import junit.framework.TestCase;
 
 public class LTableTest extends TestCase {
 	
+	protected LTable new_LTable() {
+		return new LTable();
+	}
+	
+	protected LTable new_LTable(int n,int m) {
+		return new LTable(n,m);
+	}
+	
 	public void testInOrderIntegerKeyInsertion() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 1; i <= 32; ++i ) {
 			t.put( i, new LString( "Test Value! "+i ) );
@@ -27,7 +35,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testResize() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		// NOTE: This order of insertion is important.
 		t.put(3, LInteger.valueOf(3));
@@ -46,7 +54,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testOutOfOrderIntegerKeyInsertion() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 32; i > 0; --i ) {
 			t.put( i, new LString( "Test Value! "+i ) );
@@ -67,7 +75,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testStringAndIntegerKeys() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 0; i < 10; ++i ) {
 			LString str = new LString( String.valueOf( i ) );
@@ -112,7 +120,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testBadInitialCapacity() {
-		LTable t = new LTable(0, 1);
+		LTable t = new_LTable(0, 1);
 		
 		t.put( "test", new LString("foo") );
 		t.put( "explode", new LString("explode") );
@@ -120,7 +128,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testRemove0() {
-		LTable t = new LTable(2, 0);
+		LTable t = new_LTable(2, 0);
 		
 		t.put( 1, new LString("foo") );
 		t.put( 2, new LString("bah") );
@@ -137,12 +145,12 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testRemove1() {
-		LTable t = new LTable(0, 1);
+		LTable t = new_LTable(0, 1);
 		
 		t.put( "test", new LString("foo") );
 		t.put( "explode", LNil.NIL );
 		t.put( 42, LNil.NIL );
-		t.put( new LTable(), LNil.NIL );
+		t.put( new_LTable(), LNil.NIL );
 		t.put( "test", LNil.NIL );
 		assertEquals( 0, t.size() );
 		
@@ -152,7 +160,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testRemove2() {
-		LTable t = new LTable(0, 1);
+		LTable t = new_LTable(0, 1);
 		
 		t.put( "test", new LString("foo") );
 		t.put( "string", LInteger.valueOf( 10 ) );
@@ -176,7 +184,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testInOrderLuaLength() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 1; i <= 32; ++i ) {
 			t.put( i, new LString( "Test Value! "+i ) );
@@ -186,7 +194,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testOutOfOrderLuaLength() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 
 		for ( int j=8; j<32; j+=8 ) {
 			for ( int i = j; i > 0; --i ) {
@@ -198,7 +206,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testStringKeysLuaLength() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 1; i <= 32; ++i ) {
 			t.put( "str-"+i, new LString( "String Key Test Value! "+i ) );
@@ -208,7 +216,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testMixedKeysLuaLength() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		
 		for ( int i = 1; i <= 32; ++i ) {
 			t.put( "str-"+i, new LString( "String Key Test Value! "+i ) );
@@ -229,7 +237,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testInsertBeginningOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
@@ -241,7 +249,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testInsertEndOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
@@ -253,7 +261,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testInsertMiddleOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
@@ -274,7 +282,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testRemoveBeginningOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		prefillLists(t,v);
 		for ( int i = 1; i <= 32; ++i ) {
@@ -285,7 +293,7 @@ public class LTableTest extends TestCase {
 	}
 	
 	public void testRemoveEndOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		prefillLists(t,v);
 		for ( int i = 1; i <= 32; ++i ) {
@@ -296,7 +304,7 @@ public class LTableTest extends TestCase {
 	}
 
 	public void testRemoveMiddleOfList() {
-		LTable t = new LTable();
+		LTable t = new_LTable();
 		Vector v = new Vector();
 		prefillLists(t,v);
 		for ( int i = 1; i <= 32; ++i ) {

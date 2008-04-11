@@ -2,9 +2,19 @@ package org.luaj.vm;
 
 import java.util.Random;
 
-import junit.framework.TestCase;
+import org.luaj.vm.LNil;
+import org.luaj.vm.LString;
+import org.luaj.vm.LValue;
 
-public class LWeakTableTest extends TestCase  {
+public class LWeakTableTest extends LTableTest {
+	
+	protected LTable new_LTable() {
+		return new LWeakTable();
+	}
+	
+	protected LTable new_LTable(int n,int m) {
+		return new LWeakTable(n,m);
+	}
 
 	Random random = new Random(0);
 	Runtime rt = Runtime.getRuntime();

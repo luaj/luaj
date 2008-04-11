@@ -14,6 +14,7 @@ public class AllTests {
 		vm.addTestSuite(org.luaj.vm.LStringTest.class);
 		vm.addTestSuite(org.luaj.vm.MathLibTest.class);
 		vm.addTestSuite(org.luaj.vm.LTableTest.class);
+		vm.addTestSuite(org.luaj.vm.LWeakTableTest.class);
 		vm.addTestSuite(org.luaj.vm.LuaJTest.class);
 		suite.addTest(vm);
 		
