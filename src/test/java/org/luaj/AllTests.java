@@ -10,6 +10,7 @@ public class AllTests {
 		
 		// debug tests
 		TestSuite vm = new TestSuite("VM");
+		vm.addTestSuite(org.luaj.vm.LuaStateTest.class);
 		vm.addTestSuite(org.luaj.vm.LoadStateTest.class);
 		vm.addTestSuite(org.luaj.vm.LStringTest.class);
 		vm.addTestSuite(org.luaj.vm.MathLibTest.class);
