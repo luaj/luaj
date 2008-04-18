@@ -232,6 +232,7 @@ public class LTableTest extends TestCase {
 		for ( int j=0; j<n; j++ ) {
 			Object vj = v.elementAt(j);
 			Object tj = t.get(j+1).toJavaString();
+			vj = ((LString)vj).toJavaString();
 			assertEquals(vj,tj);
 		}
 	}
@@ -241,8 +242,8 @@ public class LTableTest extends TestCase {
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
-			String test = "Test Value! "+i;
-			t.luaInsertPos(1, LString.valueOf(test));
+			LString test = new LString("Test Value! "+i);
+			t.luaInsertPos(1, test);
 			v.insertElementAt(test, 0);						
 			compareLists(t,v);
 		}
@@ -253,8 +254,8 @@ public class LTableTest extends TestCase {
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
-			String test = "Test Value! "+i;
-			t.luaInsertPos(0, LString.valueOf(test));
+			LString test = new LString("Test Value! "+i);
+			t.luaInsertPos(0, test);
 			v.insertElementAt(test, v.size());						
 			compareLists(t,v);
 		}
@@ -265,9 +266,9 @@ public class LTableTest extends TestCase {
 		Vector v = new Vector();
 		
 		for ( int i = 1; i <= 32; ++i ) {
-			String test = "Test Value! "+i;
+			LString test = new LString("Test Value! "+i);
 			int m = i / 2;
-			t.luaInsertPos(m+1, LString.valueOf(test));
+			t.luaInsertPos(m+1, test);
 			v.insertElementAt(test, m);
 			compareLists(t,v);
 		}
@@ -275,8 +276,8 @@ public class LTableTest extends TestCase {
 	
 	private static final void prefillLists(LTable t,Vector v) {
 		for ( int i = 1; i <= 32; ++i ) {
-			String test = "Test Value! "+i;
-			t.luaInsertPos(0, LString.valueOf(test));
+			LString test = new LString("Test Value! "+i);
+			t.luaInsertPos(0, test);
 			v.insertElementAt(test, v.size());
 		}
 	}
