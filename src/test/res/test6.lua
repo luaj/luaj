@@ -1,9 +1,11 @@
+package.path = "?.lua;src/test/res/?.lua"
+require 'ids'
 
 t = { 11, 22, 33, you='one', me='two' }
 
 print( "---------" )
 for a,b in pairs(t) do
-	print( a, b )
+	print( id(a), id(b) )
 end
 print( "----" )
 print( "t[2]", t[2] )
@@ -15,10 +17,12 @@ print( "me", me )
 print( "fred", fred )
 print( "t[me]", t[me] )
 print( "t[fred]", t[fred] )
-
+function out(t,...)
+	print(type(t),...)
+end
 -- basic metatable setting 
 t = { 11, 22, 33, you='one', me='two' }
-mt = { __index = print, __newindex = print }
+mt = { __index = out, __newindex = out }
 setmetatable(t,mt)
 a = t[11]
 b = t.one
@@ -29,7 +33,7 @@ t[1] = 'pipe'
 print( a, b, c, d )
 print( "---------" )
 for a,b in pairs(t) do
-	print( a, b )
+	print( id(a), id(b) )
 end
 print( "----" )
 
@@ -45,7 +49,7 @@ print( t.me )
 t[5] = 99
 print( "---------" )
 for a,b in pairs(s) do
-	print( a, b )
+	print( id(a), id(b) )
 end
 print( "----" )
 
@@ -65,30 +69,31 @@ function Vector:dot(v)
 end
  
 v1 = Vector:new(3,4)
-print( "--------" )
+print( "---------" )
 for a,b in pairs(v1) do
-	print( a, b )
+	print( id(a), id(b) )
 end
+
 print( "----" )
 
 v2 = Vector:new(2,1)
 print( v2:dot(v1) )
 
-print( Vector )
+print( id(Vector) )
 
-print( "---------" )
-for a,b in pairs(Vector) do
-	print( a, b )
+print( "=======" )
+for a,b in spairs(Vector) do
+	print( id(a), id(b) )
 end
 print( "----" )
 
-print( v1, v2 )
+print( id(v1), id(v2) )
 
-print( Vector_mt, getmetatable(v1), getmetatable(v2) )
+print( id(Vector_mt), id(getmetatable(v1)), id(getmetatable(v2)) )
 
 print( "---------" )
 for a,b in pairs(Vector_mt) do
-	print( a, b )
+	print( id(a), id(b) )
 end
 print( "----" )
 
