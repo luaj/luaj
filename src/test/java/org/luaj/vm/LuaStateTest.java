@@ -22,4 +22,41 @@ public class LuaStateTest extends TestCase {
 		assertEquals( LNil.NIL, vm.topointer(1) );
 		assertEquals( LNil.NIL, vm.topointer(-1) );
 	}
+	
+	public void testFuncCall() throws IOException {
+		vm.pushstring("bogus");
+		vm.pushjavafunction(new SomeFunc( "arg" ));
+		vm.pushstring("arg");
+		vm.call(1, 1);
+		assertEquals( 2, vm.gettop() );
+		assertEquals( "bogus", vm.tostring(1) );
+		assertEquals( LNil.NIL, vm.topointer(2) );
+		assertEquals( LNil.NIL, vm.topointer(-1) );
+	}
+		
+	public void testFuncCall2() throws IOException {
+		vm.pushstring("bogus");
+		vm.pushjavafunction(new SomeFunc( "nil" ));
+		vm.call(0, 1);
+		assertEquals( 2, vm.gettop() );
+		assertEquals( "bogus", vm.tostring(1) );
+		assertEquals( LNil.NIL, vm.topointer(2) );
+		assertEquals( LNil.NIL, vm.topointer(-1) );
+	}
+	
+	private static final class SomeFunc extends LFunction {
+		private String expected;
+		public SomeFunc(String expected) {
+			this.expected = expected;
+		}
+		public boolean luaStackCall(LuaState vm) {
+			String arg = vm.tostring(2);
+			assertEquals(expected, arg);
+			vm.pushnil();
+			vm.replace(1);
+			vm.settop(1);
+			return false;
+		}
+		
+	}
 }
