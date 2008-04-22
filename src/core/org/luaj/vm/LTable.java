@@ -252,17 +252,16 @@ public class LTable extends LValue {
 	* such that t[i] is non-nil and t[i+1] is nil (and 0 if t[1] is nil).
 	*/
 	public int luaLength() {
-		int j = array.length;
-		int k = hashKeys.length;
-		
-		// degenerate case
-		if ( j + k <= 0 )
-			return 0;
 		
 		// find `i' and `j' such that i is present and j is not
 		int i = 0;
-		for ( ++j; containsKey(j) && j < MAX_KEY; j*=2 )
-			i = j;
+		int j = array.length;
+		if (j<=0 || containsKey(j)) {
+			if ( hashKeys.length == 0 )
+				return j;	
+			for ( ++j; containsKey(j) && j < MAX_KEY; j*=2 )
+				i = j;
+		}
 
 		// binary search
 		while ( j - i > 1) {
