@@ -639,13 +639,11 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_B(i);
                 c = LuaState.GETARG_C(i);
                 int numValues = c - b + 1;
-                LString[] strings = new LString[numValues];
-                
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 for (int j = b, l = 0; j <= c; j++, l++) {
-                    LString s = this.stack[base + j].luaAsString();
-                    strings[l] = s;
+                    this.stack[base + j].luaConcatTo( baos );
                 }
-                this.stack[base + a] = LString.concat( strings );
+                this.stack[base + a] = new LString( baos.toByteArray() );
                 continue;
             }
             case LuaState.OP_JMP: {

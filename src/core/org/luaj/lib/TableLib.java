@@ -98,26 +98,17 @@ public class TableLib extends LFunction {
 			int n = vm.gettop();
 			LTable table = vm.totable(2);
 			LString sep = (n>=3? vm.tolstring(3): null);
-			int i = vm.tointeger(4);
-			int j = vm.tointeger(5);
-			int len = table.luaLength();
-			if ( i == 0 ) 
-				i = 1;
-			if ( j == 0 ) 
-				j = len;
+			int i = (n>=4? vm.tointeger(4): 1);
+			int j = (n>=5? vm.tointeger(5): table.luaLength());
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try {
-				for ( int k=i; k<=j; k++ ) {
-					LValue v = table.get(k);
-						v.luaAsString().write(baos);
-						if ( k<j && sep!=null )
-							sep.write( baos );
-				}
-				vm.resettop();
-				vm.pushlstring( baos.toByteArray() );
-			} catch (IOException e) {
-				vm.error(e.getMessage());
+			for ( int k=i; k<=j; k++ ) {
+				LValue v = table.get(k);
+				v.luaConcatTo(baos);
+				if ( k<j && sep!=null )
+					sep.luaConcatTo( baos );
 			}
+			vm.resettop();
+			vm.pushlstring( baos.toByteArray() );
 			break;
 		}
 		

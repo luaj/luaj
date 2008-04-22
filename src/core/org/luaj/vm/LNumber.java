@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm;
 
+import java.io.ByteArrayOutputStream;
+
 
 abstract
 public class LNumber extends LValue {
@@ -81,6 +83,11 @@ public class LNumber extends LValue {
 	/** Convert to a number if possible, or nil otherwise */
 	public LValue luaToNumber() {
 		return this;
+	}
+
+	/** Write as a string */
+	public void luaConcatTo(ByteArrayOutputStream baos) {
+		luaAsString().luaConcatTo( baos );
 	}
 
 }

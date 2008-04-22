@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm;
 
+import java.io.ByteArrayOutputStream;
+
 
 abstract
 public class LValue {
@@ -321,5 +323,10 @@ public class LValue {
 	/** Dereference a potentially weak reference, and return the value */
 	public LValue toStrongReference() {
 		return this;
+	}
+
+	/** Concatenate this value to a ByteArrayOutputStream */
+	public void luaConcatTo(ByteArrayOutputStream baos) {
+		throw new LuaErrorException( "attempt to concat ? (a "+luaGetTypeName()+" value)");
 	}
 }

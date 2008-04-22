@@ -22,6 +22,7 @@
 package org.luaj.vm;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -262,23 +263,6 @@ public class LString extends LValue {
 		return new LString( s );
 	}
 	
-	public static LString concat( final LString[] strings ) {
-		int length = 0;
-		for ( int i = 0; i < strings.length; ++i ) {
-			length += strings[i].length();
-		}
-		byte[] bytes = new byte[length];
-		
-		for ( int i = 0, offset = 0; i < strings.length; ++i ) {
-			LString s = strings[i];
-			final int len = s.length();
-			System.arraycopy( s.m_bytes, s.m_offset, bytes, offset, len );
-			offset += len;
-		}
-		
-		return new LString( bytes );
-	}
-	
 	/**
 	 * Write the specified substring of this string to the given output stream.
 	 */
@@ -437,5 +421,8 @@ public class LString extends LValue {
 		return m_bytes[m_offset + index] & 0x0FF;
 	}
 
+	public void luaConcatTo(ByteArrayOutputStream baos) {
+		baos.write( m_bytes, m_offset, m_length );
+	}
 
 }

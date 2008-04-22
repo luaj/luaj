@@ -60,6 +60,33 @@ print( 'a(-a)  ', a(function() return -a end) )
 print( 'a(-s)  ', a(function() return -s end) )
 print( 'a(-true)', a(function() local b = true; return -b end) )
 
+-- string concatenation
+local function concatsuite(comparefunc) 
+	print( '"a".."b"', comparefunc("a","b") )
+	print( '"a"..nil', comparefunc("a",nil) )
+	print( 'nil.."b"', comparefunc(nil,"b") )
+	print( '"a"..{}', comparefunc("a",{}) )
+	print( '{}.."b"', comparefunc({},"b") )
+	print( '"a"..2', comparefunc("a",2) )
+	print( '2.."b"', comparefunc(2,"b") )
+	print( '"a"..print', comparefunc("a",print) )
+	print( 'print.."b"', comparefunc(print,"b") )
+	print( '"a"..true', comparefunc("a",true) )
+	print( 'true.."b"', comparefunc(true,"b") )
+	print( 'nil..true', comparefunc(nil,true) )
+	print( '"a"..3.5', comparefunc("a",3.5) )
+	print( '3.5.."b"', comparefunc(3.5,"b") )
+end
+local function strconcat(a,b)
+	return pcall( function() return a..b end ) 
+end
+local function tblconcat(a,b) 
+	local t={a,b}
+	return pcall( function() return table.concat(t,'-') end )
+end
+-- concatsuite(strconcat)
+concatsuite(tblconcat)
+
 -- pairs
 print( 'a(pairs(nil))', a(function() return id(pairs(nil,{})) end) )
 print( 'a(pairs(a))  ', a(function() return id(pairs(a,{})) end) )
