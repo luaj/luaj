@@ -848,7 +848,7 @@ public class LuaState extends Lua {
                     if (o == LuaState.OP_GETUPVAL) {
                         newClosure.upVals[j] = cl.upVals[b];
                     } else if (o == LuaState.OP_MOVE) {
-                        newClosure.upVals[j] = findUpVal( proto.upvalues[j], base + b );
+                        newClosure.upVals[j] = findUpVal( base + b );
                     } else {
                         throw new java.lang.IllegalArgumentException(
                                 "bad opcode: " + o);
@@ -879,7 +879,7 @@ public class LuaState extends Lua {
         }   
     }
     
-    private UpVal findUpVal( LString upValName, int target ) {
+    private UpVal findUpVal( int target ) {
         UpVal up;
         int i;
         for ( i = this.upvals.size() - 1; i >= 0; --i ) {
@@ -891,7 +891,7 @@ public class LuaState extends Lua {
             }
         }
         
-        up = new UpVal( upValName, this, target );
+        up = new UpVal( this, target );
         this.upvals.insertElementAt( up, i + 1 );
         return up;
     }

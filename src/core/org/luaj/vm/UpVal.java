@@ -24,19 +24,17 @@ package org.luaj.vm;
 
 public class UpVal {
 
-	private LString name;
 	LuaState state;
 	int position;
 	LValue value;
 	
-	public UpVal( LString string, LuaState state, int i ) {
-		this.name = string;
+	public UpVal( LuaState state, int i ) {
 		this.state = state;
 		this.position = i;
 	}
 	
 	public String toString() {
-		return "up."+name;
+		return "up."+position;
 	}
 	
 	public LValue getValue() {
