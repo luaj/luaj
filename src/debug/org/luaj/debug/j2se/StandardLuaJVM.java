@@ -109,7 +109,7 @@ public class StandardLuaJVM {
                         !suspendOnStartStr.equalsIgnoreCase("false")) {
                         throw new ParseException("invalid debug flag: suspendOnStart");
                     }
-                    this.bSuspendOnStart = "true".equals(suspendOnStartStr);
+                    this.bSuspendOnStart = "true".equalsIgnoreCase(suspendOnStartStr);
                     System.setProperty(Platform.PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START, suspendOnStartStr);
                 } else {
                     throw new ParseException("Invalid command line argument: " + debugOptions);
