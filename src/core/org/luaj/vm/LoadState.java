@@ -76,22 +76,38 @@ public class LoadState {
 	/** The VM doing the loading */
 	LuaState L;
 	
-	int loadByte() throws IOException {
-		return is.readUnsignedByte();
-	}
-
+	/** Read buffer */
+	private byte[] buf = new byte[4];
+	
+	private static int[] EMPTY_INT_ARRAY = {};
+	
 	int loadInt() throws IOException {
-		if ( this.luacLittleEndian ) {
-			int a = is.readUnsignedByte();
-			int b = is.readUnsignedByte();
-			int c = is.readUnsignedByte();
-			int d = is.readUnsignedByte();
-			return (d << 24) | (c << 16) | (b << 8) | a;
-		} else {
-			return is.readInt();
-		}
+		is.readFully(buf,0,4);
+		return luacLittleEndian? 
+				(buf[3] << 24) | ((0xff & buf[2]) << 16) | ((0xff & buf[1]) << 8) | (0xff & buf[0]):
+				(buf[0] << 24) | ((0xff & buf[1]) << 16) | ((0xff & buf[2]) << 8) | (0xff & buf[3]);
 	}
 	
+	int[] loadIntArray() throws IOException {
+		int n = loadInt();
+		if ( n == 0 )
+			return EMPTY_INT_ARRAY;
+		
+		// read all data at once
+		int m = n << 2;
+		if ( buf.length < m )
+			buf = new byte[m];
+		is.readFully(buf,0,m);
+		int[] array = new int[n];
+		for ( int i=0, j=0; i<n; ++i, j+=4 )
+			array[i] = luacLittleEndian? 
+					(buf[j+3] << 24) | ((0xff & buf[j+2]) << 16) | ((0xff & buf[j+1]) << 8) | (0xff & buf[j+0]):
+					(buf[j+0] << 24) | ((0xff & buf[j+1]) << 16) | ((0xff & buf[j+2]) << 8) | (0xff & buf[j+3]);
+
+		return array;
+	}
+	
+
 	long loadInt64() throws IOException {
 		int a,b;
 		if ( this.luacLittleEndian ) {
@@ -109,7 +125,7 @@ public class LoadState {
 		if ( size == 0 )
 			return null;
 		byte[] bytes = new byte[size];
-		is.readFully( bytes );
+		is.readFully( bytes, 0, size );
 		return new LString( bytes, 0, bytes.length - 1 );
 	}
 	
@@ -143,24 +159,16 @@ public class LoadState {
 		}
 	}
 
-	public void loadCode( LPrototype f ) throws IOException {
-		int n = loadInt();
-		int[] code = new int[n];
-		for ( int i=0; i<n; i++ )
-			code[i] = loadInt();
-		f.code = code;
-	}
-
 	void loadConstants(LPrototype f) throws IOException {
 		int n = loadInt();
 		LValue[] values = new LValue[n];
 		for ( int i=0; i<n; i++ ) {
-			switch ( loadByte() ) {
+			switch ( is.readUnsignedByte() ) {
 			case Lua.LUA_TNIL:
 				values[i] = LNil.NIL;
 				break;
 			case Lua.LUA_TBOOLEAN:
-				values[i] = (0 != loadByte()? LBoolean.TRUE: LBoolean.FALSE);
+				values[i] = (0 != is.readUnsignedByte()? LBoolean.TRUE: LBoolean.FALSE);
 				break;
 			case Lua.LUA_TNUMBER:
 				values[i] = loadNumber();
@@ -182,12 +190,8 @@ public class LoadState {
 	}
 
 	void loadDebug( LPrototype f ) throws IOException {
+		f.lineinfo = loadIntArray();
 		int n = loadInt();
-		f.lineinfo = new int[n];
-		for ( int i=0; i<n; i++ )
-			f.lineinfo[i] = loadInt();
-		
-		n = loadInt();
 		f.locvars = new LocVars[n];
 		for ( int i=0; i<n; i++ ) {
 			LString varname = loadString();
@@ -211,11 +215,11 @@ public class LoadState {
 			f.source = p;
 		f.linedefined = loadInt();
 		f.lastlinedefined = loadInt();
-		f.nups = loadByte();
-		f.numparams = loadByte();
-		f.is_vararg = (0 != loadByte());
-		f.maxstacksize = loadByte();
-		loadCode(f);
+		f.nups = is.readUnsignedByte();
+		f.numparams = is.readUnsignedByte();
+		f.is_vararg = (0 != is.readUnsignedByte());
+		f.maxstacksize = is.readUnsignedByte();
+		f.code = loadIntArray();
 		loadConstants(f);
 		loadDebug(f);
 		
