@@ -521,9 +521,11 @@ public class LuaState extends Lua {
             // advance program counter
             i = code[ci.pc++];
             
-            // get first opcode arg
-            a = LuaState.GETARG_A(i);
-            switch (LuaState.GET_OPCODE(i)) {
+            // get opcode and first arg
+        	o = (i >> POS_OP) & MAX_OP;
+    		a = (i >> POS_A) & MAXARG_A;
+        	
+            switch (o) {
             case LuaState.OP_MOVE: {
                 b = LuaState.GETARG_B(i);
                 this.stack[base + a] = this.stack[base + b];
@@ -613,7 +615,6 @@ public class LuaState extends Lua {
             case LuaState.OP_DIV:
             case LuaState.OP_MOD:
             case LuaState.OP_POW: {
-                o = LuaState.GET_OPCODE(i);
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
                 this.stack[base + a] = rkc.luaBinOpUnknown(o, rkb);
@@ -653,7 +654,6 @@ public class LuaState extends Lua {
             case LuaState.OP_EQ:
             case LuaState.OP_LT:
             case LuaState.OP_LE: {
-                o = LuaState.GET_OPCODE(i);
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
                 boolean test = rkc.luaBinCmpUnknown(o, rkb);
