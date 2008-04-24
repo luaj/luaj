@@ -77,7 +77,7 @@ public class LoadState {
 	LuaState L;
 	
 	/** Read buffer */
-	private byte[] buf = new byte[4];
+	private byte[] buf = new byte[512];
 	
 	private static int[] EMPTY_INT_ARRAY = {};
 	
