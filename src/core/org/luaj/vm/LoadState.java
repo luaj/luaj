@@ -262,8 +262,7 @@ public class LoadState {
 		String sname = getSourceName(name);
 		LoadState s = new LoadState( L, stream, sname );
 		s.loadHeader();
-		LString literal = new LString("=?");
-		return s.loadFunction( literal );
+		return s.loadFunction( LString.valueOf(sname) );
 	}
 
     public static String getSourceName(String name) {
