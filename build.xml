@@ -1,88 +1,71 @@
 <project default="all">
 	<property file="version.properties"/>
 
+	<property name="jar.name.j2me" value="luaj-j2me-${version}.jar"/>
+	<property name="jar.name.j2se" value="luaj-j2se-${version}.jar"/>
+	<property name="jar.name.script" value="luaj-script-${version}.jar"/>
+	
 	<target name="clean">
 		<delete dir="build"/>
+		<delete>
+		    <fileset dir="." includes="luaj-*.jar"/>
+		</delete>
 	</target>
 	
-	<target name="real-clean" depends="clean">
-		<delete file="luaj-vm-${version}.jar"/>
-		<delete file="luaj-vm-core-${version}.jar"/>
-		<delete file="luaj-vm-extras-j2se-${version}.jar"/>
-		<delete file="luaj-vm-extras-j2me-${version}.jar"/>
-	</target>
-	
-	<target name="compile">
-		<mkdir dir="build/all/classes"/>
-		<javac destdir="build/all/classes" encoding="utf-8" source="1.3" target="1.1">
-			<src path="src/core" />
-			<src path="src/j2se" />
-			<exclude name="org/luaj/platform/**"/>
-		</javac>
-	</target>
-	
-	<target name="jar" depends="compile">
-		<jar destfile="luaj-vm-${version}.jar" basedir="build/all/classes"/>
-	</target>
-	
-	<target name="module-jars" depends="find-wtk,j2me-jars-maybe,j2me-jars-skipped"/>
-	
-	<target name="j2me-jars-maybe" if="wtk.home">
-		<antcall target="j2me-jars" inheritrefs="true"/>
-	</target>
-	
-	<target name="j2me-jars-skipped" unless="wtk.home">
-		<echo>Skipping steps that require J2ME WTK.</echo>
-	</target>
-	
-	<target name="j2me-jars" depends="wtk-or-fail,jar-core,jar-j2se-extras,jar-j2me-extra"/>
-	
-	<target name="jar-core" depends="compile-core">
-		<jar destfile="luaj-vm-core-${version}.jar" basedir="build/core/classes"/>
-	</target>
-	
-	<target name="jar-j2se-extras" depends="compile-j2se-extras">
-		<jar destfile="luaj-vm-extras-j2se-${version}.jar" basedir="build/extras-j2se/classes"/>
-	</target>
-	
-	<target name="jar-j2me-extra" depends="compile-j2me-extra">
-		<jar destfile="luaj-vm-extras-j2me-${version}.jar" basedir="build/extras-j2me/classes"/>
-	</target>
-	
-	<target name="compile-core" depends="wtk-or-fail">
+	<target name="compile" depends="wtk-or-fail">
 		<mkdir dir="build/core/classes"/>
-		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1"
-			   bootclasspathref="wtk-libs">
-			<src path="src/core" />
-			<src path="src/debug" />
-			<exclude name="org/luaj/debug/j2se/**"/>
-			<exclude name="org/luaj/debug/j2me/**"/>
-	        <exclude name="org/luaj/debug/net/j2se/**"/>
-			<exclude name="org/luaj/debug/net/j2me/**"/>
+		<mkdir dir="build/j2me/classes"/>
+		<mkdir dir="build/j2se/classes"/>
+		<mkdir dir="build/script/classes"/>
+		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1">
+			<src path="src/core"/>
+			<src path="src/debug"/>
+		</javac>
+		<javac destdir="build/j2me/classes" encoding="utf-8" source="1.3" target="1.1">
+			<classpath>
+				<pathelement location="build/core/classes"/>
+				<pathelement path="${wtk.home}/lib/cldcapi11.jar"/>
+				<pathelement path="${wtk.home}/lib/midpapi20.jar"/>
+				<pathelement path="${wtk.home}/lib/mmapi.jar"/>
+			</classpath>
+			<src path="src/j2me"/>
+		</javac>
+		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.3" target="1.1">
+			<classpath path="build/core/classes"/>
+			<src path="src/j2se"/>
+		</javac>
+		<javac destdir="build/script/classes" encoding="utf-8" source="1.6" target="1.6">
+			<classpath>
+		        <pathelement location="build/core/classes/"/>
+		        <pathelement location="build/j2se/classes/"/>
+			</classpath>
+			<src path="src/script"/>
 		</javac>
 	</target>
 	
-	<target name="compile-j2se-extras" depends="wtk-or-fail">
-		<mkdir dir="build/extras-j2se/classes"/>
-		<javac destdir="build/extras-j2se/classes" encoding="utf-8" source="1.3" target="1.1"
-			   classpath="build/core/classes">
-			<src path="src/debug" />
-			<src path="src/j2se" />
-			<include name="org/luaj/debug/j2se/**"/>
-            <include name="org/luaj/debug/net/j2se/**"/>			
-			<include name="org/luaj/lib/j2se/**"/>
-		</javac>
+	<target name="jar-j2me" depends="compile">
+		<jar destfile="${jar.name.j2me}">
+			<fileset dir="build/core/classes"/>
+			<fileset dir="build/j2me/classes"/>
+		</jar>
 	</target>
 	
-	<target name="compile-j2me-extra" depends="wtk-or-fail">
-		<mkdir dir="build/extras-j2me/classes"/>
-		<javac destdir="build/extras-j2me/classes" encoding="utf-8" source="1.3" target="1.1"
-			   bootclasspathref="wtk-libs" classpath="build/core/classes">
-	        <src path="src/j2me" />
-			<src path="src/debug" />
-			<exclude name="org/luaj/debug/j2se/**"/>
-	        <exclude name="org/luaj/debug/net/j2se/**"/>
-		</javac>
+	<target name="jar-j2se" depends="compile">
+		<jar destfile="${jar.name.j2se}">
+			<fileset dir="build/core/classes"/>
+			<fileset dir="build/j2se/classes"/>
+		</jar>
+	</target>
+	
+	<target name="jar-script" depends="compile">
+		<jar destfile="${jar.name.script}">
+			<fileset dir="build/core/classes"/>
+			<fileset dir="build/j2se/classes"/>
+			<fileset dir="build/script/classes"/>
+		    <fileset dir="src/script">
+				<include name="META-INF/**"/>
+		    </fileset>		
+		</jar>
 	</target>
 	
 	<target name="load-env">
@@ -101,11 +84,6 @@
 	<target name="wtk-or-fail" depends="find-wtk">
 		<fail unless="wtk.home" message="Sun Wireless Toolkit required to build component jars."/>
 		<echo>Using WTK found in ${wtk.home}</echo>
-		<path id="wtk-libs">
-			<pathelement path="${wtk.home}/lib/cldcapi11.jar"/>
-			<pathelement path="${wtk.home}/lib/midpapi20.jar"/>
-			<pathelement path="${wtk.home}/lib/mmapi.jar"/>
-		</path>
 	</target>
 
 	<target name="dist">
@@ -130,5 +108,5 @@
 			basedir="build" includes="luaj-${version}/**"/>
 	</target>
 	
-	<target name="all" depends="clean,jar,module-jars"/>
+	<target name="all" depends="clean,jar-j2me,jar-j2se,jar-script"/>
 </project>
