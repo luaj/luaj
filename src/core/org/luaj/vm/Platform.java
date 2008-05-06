@@ -43,6 +43,7 @@ abstract public class Platform {
     public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
     public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
     public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
+    public static final String PROPERTY_LUAJ_DEBUG_CLASS = "Luaj-Debug-Class"; 
     
     private static Platform instance;
 
@@ -84,7 +85,8 @@ abstract public class Platform {
         LuaState vm = null;
         if (isDebug) {
             try {
-                vm = (LuaState) Class.forName(DEBUG_CLASS_NAME).newInstance();
+            	String c = p.getProperty(PROPERTY_LUAJ_DEBUG_CLASS);
+                vm = (LuaState) Class.forName(c!=null? c: DEBUG_CLASS_NAME).newInstance();
             } catch (Exception e) {
                 System.out.println("Warning: no debug support, " + e);
             }
