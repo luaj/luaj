@@ -17,17 +17,12 @@
 		<mkdir dir="build/j2me/classes"/>
 		<mkdir dir="build/j2se/classes"/>
 		<mkdir dir="build/script/classes"/>
-		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1">
+		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
 			<src path="src/core"/>
 			<src path="src/debug"/>
 		</javac>
-		<javac destdir="build/j2me/classes" encoding="utf-8" source="1.3" target="1.1">
-			<classpath>
-				<pathelement location="build/core/classes"/>
-				<pathelement path="${wtk.home}/lib/cldcapi11.jar"/>
-				<pathelement path="${wtk.home}/lib/midpapi20.jar"/>
-				<pathelement path="${wtk.home}/lib/mmapi.jar"/>
-			</classpath>
+		<javac destdir="build/j2me/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
+			<classpath path="build/core/classes"/>
 			<src path="src/j2me"/>
 		</javac>
 		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.3" target="1.1">
@@ -84,6 +79,11 @@
 	<target name="wtk-or-fail" depends="find-wtk">
 		<fail unless="wtk.home" message="Sun Wireless Toolkit required to build component jars."/>
 		<echo>Using WTK found in ${wtk.home}</echo>
+		<path id="wtk-libs">
+			<pathelement path="${wtk.home}/lib/cldcapi11.jar"/>
+			<pathelement path="${wtk.home}/lib/midpapi20.jar"/>
+			<pathelement path="${wtk.home}/lib/mmapi.jar"/>
+		</path>
 	</target>
 
 	<target name="dist">
