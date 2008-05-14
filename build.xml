@@ -48,6 +48,7 @@
 	<target name="jar-j2se" depends="compile">
 		<jar destfile="${jar.name.j2se}">
 			<fileset dir="build/core/classes"/>
+			<fileset dir="build/j2me/classes"/>
 			<fileset dir="build/j2se/classes"/>
 		</jar>
 	</target>
@@ -55,6 +56,7 @@
 	<target name="jar-script" depends="compile">
 		<jar destfile="${jar.name.script}">
 			<fileset dir="build/core/classes"/>
+			<fileset dir="build/j2me/classes"/>
 			<fileset dir="build/j2se/classes"/>
 			<fileset dir="build/script/classes"/>
 		    <fileset dir="src/script">
