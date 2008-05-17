@@ -29,6 +29,9 @@ package org.luaj.vm;
 public class LPrototype {
  	public LPrototype() {
 	}
+	public LClosure newClosure(LTable env) {
+		return new LClosure(this,env);
+	}
 
 	/* constants used by the function */
 	public LValue[] k; 

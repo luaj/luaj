@@ -141,7 +141,7 @@ public class Print extends Lua {
 		}
 	}
 
-	static void printOpCode(LPrototype f, int pc) {
+	public static void printOpCode(LPrototype f, int pc) {
 		int[] code = f.code;
 		int i = code[pc];
 		int o = GET_OPCODE(i);
