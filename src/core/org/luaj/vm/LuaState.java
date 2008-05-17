@@ -80,7 +80,7 @@ public class LuaState extends Lua {
     private static final int LUA_MINCALLS = 10;
 
     public int base = 0;
-    protected int top = 0;
+    public int top = 0;
     protected int nresults = -1;
     public LValue[] stack = new LValue[LUA_MINSTACK];
     public int cc = -1;
