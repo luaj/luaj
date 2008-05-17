@@ -1,19 +1,27 @@
 package org.luaj.jit;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.PrintStream;
+import java.util.Arrays;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
+import javax.tools.JavaCompiler.CompilationTask;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.Print;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
-import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
@@ -30,11 +38,8 @@ public class LuaJit extends Lua {
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
 		test( p );
-		LPrototype q = LuaJit.compile( p );
+		LPrototype q = LuaJit.jitCompile( p );
 		test( q );
-//		JitPrototype jp = new JitPrototypeOne();
-//		jp.setLuaPrototype(p);
-//		test( jp );
 	}
 	
 	private static void test(LPrototype p) {
@@ -47,21 +52,68 @@ public class LuaJit extends Lua {
 			e.printStackTrace();
 		}
 	}
+	
+	private static int counter = 0;
+	
+	private static synchronized String filename() {
+		return "LuaJit"+(counter++);
+	}
 
-	public static LPrototype compile( LPrototype p ) {
-        int i, a, b, c, o, n, cb;
+	public static LPrototype jitCompile( LPrototype p ) {
+        try {
+			final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+			if (compiler == null) {
+				System.err.println("no java compiler");
+				return p;
+			}
+
+			// write the file
+			String name = filename();
+			File source = new File(name+JavaFileObject.Kind.SOURCE.extension);
+			PrintStream ps = new PrintStream(new FileOutputStream(source));
+			writeSource(ps, name, p);
+			ps.close();
+
+			// set up output location 
+			Iterable<? extends File> dest = Arrays.asList(new File[] { new File("bin") });
+			StandardJavaFileManager fm = compiler.getStandardFileManager( null, null, null);
+			fm.setLocation(StandardLocation.CLASS_OUTPUT, dest);
+			
+			// compile the file
+			Iterable<? extends JavaFileObject> compilationUnits = fm.getJavaFileObjects(source);
+			CompilationTask task = compiler.getTask(null, fm, null, null, null, compilationUnits);
+			boolean success = task.call();
+			System.out.println("Success: " + success);
+
+			// instantiate, config and return
+			if (success) {
+				Class clazz = Class.forName(name);
+				Object instance = clazz.newInstance();
+				JitPrototype jp = (JitPrototype) instance;
+				jp.setLuaPrototype(p);
+				return jp;
+			}
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		return p;
+        
+	}
+        
+	private static void writeSource( PrintStream ps, String name, LPrototype p ) {
+		
+		int i, a, b, c, o, n, cb;
         LValue rkb, rkc, nvarargs, key, val;
         LValue i0, step, idx, limit, init, table;
         boolean back, body;
-
-        PrintWriter pw = new PrintWriter( System.out );
-        String name = "JitPrototypeOne";
-		pw.print( 
-				"package org.luaj.jit;\n"+
-				"import org.luaj.vm.LTable;\n"+
-				"import org.luaj.vm.LuaState;\n"+
+        
+		ps.print( 
+				"import org.luaj.vm.*;\n"+
+				"import org.luaj.jit.*;\n"+
+				"\n"+
 				"public class "+name+" extends JitPrototype {\n"+
 				"	public void jitCall(LuaState vm, LTable env) {\n"+
+				"		int base = vm.base;\n"+
 				"" );
 		
         int[] code = p.code;
@@ -72,10 +124,9 @@ public class LuaJit extends Lua {
 		for ( int pc=0; pc<code.length; pc++ ) {
 
 			// print the instruction 
-			pw.print( "\n\t\t// "); 
-			pw.flush();
-            Print.printOpCode(p, pc);
-            pw.println();
+			ps.print( "\n\t\t// "); 
+            Print.printOpCode(ps, p, pc);
+            ps.println();
 			
             // get instruction
             i = code[pc];
@@ -88,13 +139,13 @@ public class LuaJit extends Lua {
             case LuaState.OP_MOVE: {
                 b = LuaState.GETARG_B(i);
                 // this.stack[base + a] = this.stack[base + b];
-                pw.println( "\t\tvm.stack[base+"+a+"] = vm.stack[base+"+b+"];" );
+                ps.println( "\t\tvm.stack[base+"+a+"] = vm.stack[base+"+b+"];" );
                 continue;
             }
             case LuaState.OP_LOADK: {
                 b = LuaState.GETARG_Bx(i);
                 // this.stack[base + a] = k[b];
-                pw.println( "\t\tvm.stack[base+"+a+"] = p.k["+b+"];" );
+                ps.println( "\t\tvm.stack[base+"+a+"] = p.k["+b+"];" );
                 continue;
             }
             /*
@@ -126,8 +177,8 @@ public class LuaJit extends Lua {
                 // top = base + a;
                 // table.luaGetTable(this, table, key);
                 // pw.println("\t\tvm.top = base+"+a+";");
-                pw.println("\t\tvm.settop("+a+");");
-                pw.println("\t\tenv.luaGetTable(vm, env, p.k["+b+"]);");
+                ps.println("\t\tvm.settop("+a+");");
+                ps.println("\t\tenv.luaGetTable(vm, env, p.k["+b+"]);");
                 continue;
             }
             /*
@@ -445,13 +496,8 @@ public class LuaJit extends Lua {
             */
             }
 		}
-        pw.print( "\n"+	
-        	"		return false;\n"+
+        ps.print( 	
 			"	}\n"+
 			"}\n" );
-        pw.flush();
-		return p;
-		
     }
-	
 }

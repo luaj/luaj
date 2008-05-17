@@ -65,7 +65,7 @@ public class Print extends Lua {
 	};
 
 
-	static void printString(final LString s) {
+	static void printString(PrintStream ps, final LString s) {
 		final byte[] bytes = s.m_bytes;
 		final int off = s.m_offset;
 		
@@ -110,9 +110,9 @@ public class Print extends Lua {
 		ps.print('"');
 	}
 
-	static void printValue( LValue v ) {
+	static void printValue( PrintStream ps, LValue v ) {
 		if ( v instanceof LString )
-			printString( v.luaAsString() );
+			printString( ps, v.luaAsString() );
 		else if ( v instanceof LInteger ) {
 			ps.print( v.toJavaInt() );
 		} else if ( v instanceof LDouble ) {
@@ -128,8 +128,8 @@ public class Print extends Lua {
 		}
 	}
 	
-	static void printConstant(LPrototype f, int i) {
-		printValue( f.k[i] );
+	static void printConstant(PrintStream ps, LPrototype f, int i) {
+		printValue( ps, f.k[i] );
 	}
 
 	public static void printCode(LPrototype f) {
@@ -142,6 +142,10 @@ public class Print extends Lua {
 	}
 
 	public static void printOpCode(LPrototype f, int pc) {
+		printOpCode(ps,f,pc);
+	}
+	
+	public static void printOpCode(PrintStream ps, LPrototype f, int pc) {
 		int[] code = f.code;
 		int i = code[pc];
 		int o = GET_OPCODE(i);
@@ -182,26 +186,26 @@ public class Print extends Lua {
 		switch (o) {
 		case OP_LOADK:
 			ps.print("  ; ");
-			printConstant(f, bx);
+			printConstant(ps, f, bx);
 			break;
 		case OP_GETUPVAL:
 		case OP_SETUPVAL:
 			ps.print("  ; ");
 			if ( f.upvalues.length > b )
-				printValue(f.upvalues[b]);
+				printValue(ps, f.upvalues[b]);
 			else
 				ps.print( "-" );
 			break;
 		case OP_GETGLOBAL:
 		case OP_SETGLOBAL:
 			ps.print("  ; ");
-			printConstant( f, bx );
+			printConstant( ps, f, bx );
 			break;
 		case OP_GETTABLE:
 		case OP_SELF:
 			if (ISK(c)) {
 				ps.print("  ; ");
-				printConstant(f, INDEXK(c));
+				printConstant(ps, f, INDEXK(c));
 			}
 			break;
 		case OP_SETTABLE:
@@ -216,12 +220,12 @@ public class Print extends Lua {
 			if (ISK(b) || ISK(c)) {
 				ps.print("  ; ");
 				if (ISK(b))
-					printConstant(f, INDEXK(b));
+					printConstant(ps, f, INDEXK(b));
 				else
 					ps.print("-");
 				ps.print(" ");
 				if (ISK(c))
-					printConstant(f, INDEXK(c));
+					printConstant(ps, f, INDEXK(c));
 				else
 					ps.print("-");
 			}
@@ -272,7 +276,7 @@ public class Print extends Lua {
 		ps.print("constants (" + n + ") for " + id(f) + ":\n");
 		for (i = 0; i < n; i++) {
 			ps.print("  " + (i + 1) + "  ");
-			printValue( f.k[i] );
+			printValue( ps, f.k[i] );
 			ps.print( "\n");
 		}
 	}
@@ -354,5 +358,6 @@ public class Print extends Lua {
 	private static String id(LPrototype f) {
 		return "Proto";
 	}
+
 
 }
