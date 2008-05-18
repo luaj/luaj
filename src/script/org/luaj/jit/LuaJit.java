@@ -547,15 +547,13 @@ public class LuaJit extends Lua {
             	String step = "s"+(a+2);
             	String idx = "s"+(a+3);
             	String back = "back"+(forlevel++);
-            	ps.println( "\t\t"+back+"="+step+".luaBinCmpInteger(Lua.OP_LT,0);");
-            	ps.println( "\t\tfor ( "+idx+"="+init+";\n" +
+            	ps.println( "\t\tfor ( "+idx+"="+init+", "+back+"="+step+".luaBinCmpInteger(Lua.OP_LT,0);\n" +
             			"\t\t\t"+back+"? "+idx+".luaBinCmpUnknown(Lua.OP_LE, "+limit+"): "+limit+".luaBinCmpUnknown(Lua.OP_LE, "+idx+");\n" +
             			"\t\t\t"+idx+"="+idx+".luaBinOpUnknown(Lua.OP_ADD,"+step+") ) {");
-                forlevel++;
 				break;
             }
             case LuaState.OP_FORLOOP: {
-            	forlevel--;
+            	--forlevel;
             	ps.println( "\t\t}");
 				//i0 = this.stack[base + a];
 				//step = this.stack[base + a + 2];
