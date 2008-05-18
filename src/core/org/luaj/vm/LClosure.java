@@ -30,22 +30,11 @@ public class LClosure extends LFunction {
 	
 	
 	/**
-	 * @deprecated construct with environment instead 
-	 * @param state
-	 * @param p
-	 */ 
-	public LClosure(LuaState state, LPrototype p) {
-		this.env = state._G;
-		this.p = p;
-		upVals = new UpVal[p.nups];
-	}
-
-	/**
 	 * Construct using a prototype and initial environment. 
 	 * @param p
 	 * @param env
 	 */
-	public LClosure(LPrototype p, LTable env) {
+	protected LClosure(LPrototype p, LTable env) {
 		this.p = p;
 		this.env = env;
 		upVals = new UpVal[p.nups];

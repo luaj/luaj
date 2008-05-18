@@ -74,7 +74,7 @@ public class StandardTest extends TestCase {
 		// the garbage collector. Until we implement that, remove the
 		// built-in collectgarbage function.
 		state._G.put( "collectgarbage", LNil.NIL );
-		LClosure c = new LClosure( code, state._G );
+		LClosure c = code.newClosure( state._G );
 		
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		BaseLib.redirectOutput( output );

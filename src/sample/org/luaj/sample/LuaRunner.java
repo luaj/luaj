@@ -69,7 +69,7 @@ public class LuaRunner {
 				LPrototype p = LoadState.undump(state, is, script);
 				
 				// create closure and execute
-				LClosure c = new LClosure( p, state._G );
+				LClosure c = p.newClosure( state._G );
 		
 				// do the call
 				state.doCall( c, new LValue[0] );

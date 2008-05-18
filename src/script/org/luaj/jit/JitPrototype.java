@@ -14,6 +14,10 @@ public class JitPrototype extends LPrototype {
 		super();
 	}
 	
+	protected void unimplemented() {
+		throw new RuntimeException("unimplemented");
+	}
+	
 	protected void setLuaPrototype(LPrototype lp) {
 		this.p = lp;
 	}
@@ -22,17 +26,17 @@ public class JitPrototype extends LPrototype {
 		return new JitClosure(this, env);
 	}
 
-	private static final class JitClosure extends LClosure {
+	protected static final class JitClosure extends LClosure {
 		private final JitPrototype jp;
 		public JitClosure(JitPrototype jitPrototype, LTable env) {
 			super( jitPrototype.p, env );
 			this.jp = jitPrototype;
 		}
 		public boolean luaStackCall(LuaState vm) {
-			jp.jitCall(vm,env);
+			jp.jitCall(vm,env,this);
 			return false;
 		}
 	}
 	
-	public abstract void jitCall( LuaState vm, LTable env );	
+	public abstract void jitCall( LuaState vm, LTable env, JitClosure jcl );	
 }

@@ -193,7 +193,7 @@ public class StandardLuaJVM {
             LPrototype p = LoadState.undump(state, is, getScript());
 
             // create closure and execute
-            final LClosure c = new LClosure(p, state._G);
+            final LClosure c = p.newClosure(state._G);
             String[] args = getScriptArgs();
             int numOfScriptArgs = (args != null ? args.length : 0);
             LValue[] vargs = new LValue[numOfScriptArgs];

@@ -194,7 +194,7 @@ public class LuaJTest extends TestCase {
                 BaseLib.redirectOutput( outputStream );
                 try {
                         // create closure and execute
-                        LClosure c = new LClosure( p, state._G );
+                        LClosure c = p.newClosure( state._G );
                         state.doCall(c, new LValue[0]);
                         
                         final String actualOutput = new String( outputStream.toByteArray() );
@@ -207,7 +207,7 @@ public class LuaJTest extends TestCase {
                 }
         }
         
-        private LPrototype loadScriptResource( LuaState state, String name ) throws IOException {
+        protected LPrototype loadScriptResource( LuaState state, String name ) throws IOException {
                 InputStream script = getClass().getResourceAsStream( "/"+name+".luac" );
                 if ( script == null ) {
                         script = getClass().getResourceAsStream( "/"+name+".lua" );

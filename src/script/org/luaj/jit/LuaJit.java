@@ -19,6 +19,7 @@ import javax.tools.JavaCompiler.CompilationTask;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.Print;
+import org.luaj.jit.JitPrototype.JitClosure;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
@@ -99,26 +100,89 @@ public class LuaJit extends Lua {
 		return p;
         
 	}
-        
+	
+    private static String RKBC_jit(int bc) {
+        return LuaState.ISK(bc) ? 
+                "k"+LuaState.INDEXK(bc):
+                "s"+bc;
+    }
+    
+    private static String GETARG_RKB_jit(int i) {
+        return RKBC_jit(GETARG_B(i));
+    }
+
+    private static String GETARG_RKC_jit(int i) {
+        return RKBC_jit(GETARG_C(i));
+    }
+
 	private static void writeSource( PrintStream ps, String name, LPrototype p ) {
 		
 		int i, a, b, c, o, n, cb;
         LValue rkb, rkc, nvarargs, key, val;
-        LValue i0, step, idx, limit, init, table;
-        boolean back, body;
+        LValue i0, table;
+        boolean body;
+        String bs, cs;
+
+        int[] code = p.code;
+        LValue[] k = p.k;
         
+        // class header
 		ps.print( 
 				"import org.luaj.vm.*;\n"+
 				"import org.luaj.jit.*;\n"+
 				"\n"+
-				"public class "+name+" extends JitPrototype {\n"+
-				"	public void jitCall(LuaState vm, LTable env) {\n"+
-				"		int base = vm.base;\n"+
-				"" );
+				"public class "+name+" extends JitPrototype {\n" );
 		
-        int[] code = p.code;
-        LValue[] k = p.k;
-        
+		// static constants
+		int nk = k.length;
+		if ( nk > 0 ) {
+			ps.print( "\tprivate LValue k0" ) ;
+			for (int ik=1; ik<nk; ik++ )
+				ps.print( ",k"+ik ) ;
+			ps.println( ";" ) ;
+			ps.println("	protected void setLuaPrototype(LPrototype lp) {\n" );
+			ps.println("		super.setLuaPrototype(lp);\n" );
+			ps.println( "		final LValue[] k = p.k;" ) ;
+			for (int ik=0; ik<nk; ik++ ) 
+				ps.println( "		k"+ik+" = k["+ik+"];" ) ;
+			ps.println("	}" ) ;
+		}
+		
+		// jit call
+		ps.println( "\tpublic void jitCall(LuaState vm, LTable env, JitClosure jcl) {" );
+		ps.println( "\t\tint base = vm.base;" );
+		
+		// parameters
+		int ns = p.maxstacksize;
+		int is = 0;
+		if ( ! p.is_vararg ) {
+			ps.println( "\t\tvm.settop("+p.numparams+");");
+			for (; is<p.numparams; is++ ) 
+				ps.println( "\t\tLValue s"+is+" = vm.stack[base+"+is+"];" );
+		}
+		for (; is<ns; is++ ) 
+			ps.println( "\t\tLValue s"+is+" = LNil.NIL;" );
+		ps.println();
+		
+		
+        // find local variables, jump points
+		int forlevel=0,maxforlevels=0;
+        int[] jumpdeltas = new int[code.length];
+		for ( int pc=0; pc<code.length; pc++ ) {
+            i = code[pc];
+        	o = (i >> POS_OP) & MAX_OP;
+            switch (o) {
+            case OP_FORPREP:
+            	maxforlevels = Math.max(maxforlevels, ++forlevel);
+            	break;
+            case OP_FORLOOP:
+            	forlevel--;
+            	break;
+            }
+		}
+		for ( int j=0; j<maxforlevels; j++ )
+			ps.println("\t\tboolean back"+j+";");
+
         // loop until a return instruction is processed, 
         // or the vm yields
 		for ( int pc=0; pc<code.length; pc++ ) {
@@ -136,16 +200,19 @@ public class LuaJit extends Lua {
     		a = (i >> POS_A) & MAXARG_A;
         	
             switch (o) {
+            default:
+            	ps.println( "\t\tunimplemented();");
+            	break;
             case LuaState.OP_MOVE: {
                 b = LuaState.GETARG_B(i);
                 // this.stack[base + a] = this.stack[base + b];
-                ps.println( "\t\tvm.stack[base+"+a+"] = vm.stack[base+"+b+"];" );
+                ps.println( "\t\ts"+a+" = s"+b+";" );
                 continue;
             }
             case LuaState.OP_LOADK: {
                 b = LuaState.GETARG_Bx(i);
                 // this.stack[base + a] = k[b];
-                ps.println( "\t\tvm.stack[base+"+a+"] = p.k["+b+"];" );
+                ps.println( "\t\ts"+a+" = k"+b+";" );
                 continue;
             }
             /*
@@ -157,75 +224,104 @@ public class LuaJit extends Lua {
                     ci.pc++; // skip next instruction (if C)
                 continue;
             }
+            */
             case LuaState.OP_LOADNIL: {
-                b = LuaState.GETARG_B(i);
-                do {
-                    this.stack[base + b] = LNil.NIL;
-                } while ((--b) >= a);
-                continue;
+				b = LuaState.GETARG_B(i);
+        		ps.print("\t\t");
+            	for ( int j=a; j<=b; j++ )
+            		ps.print("s"+j+"=");
+        		ps.println("LNil.NIL;");
+				break;
             }
             case LuaState.OP_GETUPVAL: {
-                b = LuaState.GETARG_B(i);
-                this.stack[base + a] = cl.upVals[b].getValue();
-                continue;
+				//b = LuaState.GETARG_B(i);
+				//this.stack[base + a] = cl.upVals[b].getValue();
+				//continue;
+				b = LuaState.GETARG_B(i);
+				ps.println("\t\t\ts"+a+" = jcl.upVals["+b+"].getValue();");
+				break;
             }
-            */
             case LuaState.OP_GETGLOBAL: {
-                b = LuaState.GETARG_Bx(i);
+                // b = LuaState.GETARG_Bx(i);
                 // key = k[b];
                 // table = cl.env;
                 // top = base + a;
                 // table.luaGetTable(this, table, key);
                 // pw.println("\t\tvm.top = base+"+a+";");
-                ps.println("\t\tvm.top = "+a+";");
-                ps.println("\t\tenv.luaGetTable(vm, env, p.k["+b+"]);");
-                continue;
+                // continue
+                b = LuaState.GETARG_Bx(i);
+                ps.println("\t\tenv.luaGetTable(vm, env, k"+b+");");
+                ps.println("\t\ts"+a+" = vm.stack[--vm.top];");
+                break;
             }
-            /*
             case LuaState.OP_GETTABLE: {
-                b = LuaState.GETARG_B(i);
-                key = GETARG_RKC(k, i);
-                table = this.stack[base + b];
-                top = base + a;
-                table.luaGetTable(this, table, key);
-                continue;
+				//b = GETARG_B(i);
+				//key = GETARG_RKC(k, i);
+				//table = this.stack[base + b];
+				//top = base + a;
+				//table.luaGetTable(this, table, key);
+				//continue;
+				b = GETARG_B(i);
+				cs = GETARG_RKC_jit(i);
+                ps.println("\t\ts"+b+".luaGetTable(vm, s"+b+", "+cs+");");
+                ps.println("\t\ts"+a+" = vm.stack[--vm.top];");
+                break;
             }
             case LuaState.OP_SETGLOBAL: {
+                //b = LuaState.GETARG_Bx(i);
+                //key = k[b];
+				//val = this.stack[base + a];
+				//table = cl.env;
+				//table.luaSetTable(this, table, key, val);
+                //continue;
                 b = LuaState.GETARG_Bx(i);
-                key = k[b];
-                val = this.stack[base + a];
-                table = cl.env;
-                table.luaSetTable(this, table, key, val);
-                continue;
+                ps.println("\t\tenv.luaSetTable(vm, env, k"+b+", s"+a+");");
+                break;
             }
             case LuaState.OP_SETUPVAL: {
-                b = LuaState.GETARG_B(i);
-                cl.upVals[b].setValue( this.stack[base + a] );
-                continue;
+				//b = LuaState.GETARG_B(i);
+				//cl.upVals[b].setValue( this.stack[base + a] );
+				//continue;
+				b = LuaState.GETARG_B(i);
+				ps.println("\t\t\tjcl.upVals["+b+"].setValue(s"+a+");");
+            	break;
             }
             case LuaState.OP_SETTABLE: {
-                key = GETARG_RKB(k, i);
-                val = GETARG_RKC(k, i);
-                table = this.stack[base + a];
-                table.luaSetTable(this, table, key, val);
-                continue;
+				//key = GETARG_RKB(k, i);
+				//val = GETARG_RKC(k, i);
+				//table = this.stack[base + a];
+				//table.luaSetTable(this, table, key, val);
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				cs = GETARG_RKC_jit(i);
+				ps.println("\t\ts"+a+".luaSetTable(vm, s"+a+", "+bs+", "+cs+");");
+				break;
             }
             case LuaState.OP_NEWTABLE: {
-                b = LuaState.GETARG_B(i);
-                c = LuaState.GETARG_C(i);
-                this.stack[base + a] = new LTable(b, c);
-                continue;
+				//b = LuaState.GETARG_B(i);
+				//c = LuaState.GETARG_C(i);
+				//this.stack[base + a] = new LTable(b, c);
+				//continue;
+				b = GETARG_B(i);
+				c = GETARG_C(i);
+				ps.println("\t\ts"+a+" = new LTable("+b+","+c+");");
+				break;
             }
             case LuaState.OP_SELF: {
-                rkb = GETARG_RKB(k, i);
-                rkc = GETARG_RKC(k, i);
-                top = base + a;
-                rkb.luaGetTable(this, rkb, rkc);
-                this.stack[base + a + 1] = rkb;
-                // StkId rb = RB(i);
-                // setobjs2s(L, ra+1, rb);
-                // Protect(luaV_gettable(L, rb, RKC(i), ra));
-                continue;
+				//rkb = GETARG_RKB(k, i);
+				//rkc = GETARG_RKC(k, i);
+				//top = base + a;
+				//rkb.luaGetTable(this, rkb, rkc);
+				//this.stack[base + a + 1] = rkb;
+				//// StkId rb = RB(i);
+				//// setobjs2s(L, ra+1, rb);
+				//// Protect(luaV_gettable(L, rb, RKC(i), ra));
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				cs = GETARG_RKC_jit(i);
+				ps.println("\t\t"+bs+".luaGetTable(vm, "+bs+", "+cs+");");
+				ps.println("\t\ts"+(a+1)+" = "+bs+";");
+				break;
             }
             case LuaState.OP_ADD:
             case LuaState.OP_SUB:
@@ -233,27 +329,39 @@ public class LuaJit extends Lua {
             case LuaState.OP_DIV:
             case LuaState.OP_MOD:
             case LuaState.OP_POW: {
-                rkb = GETARG_RKB(k, i);
-                rkc = GETARG_RKC(k, i);
-                this.stack[base + a] = rkc.luaBinOpUnknown(o, rkb);
-                continue;
+				//rkb = GETARG_RKB(k, i);
+				//rkc = GETARG_RKC(k, i);
+				//this.stack[base + a] = rkc.luaBinOpUnknown(o, rkb);
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				cs = GETARG_RKC_jit(i);
+				ps.println("\t\ts"+a+" = "+cs+".luaBinOpUnknown("+o+","+bs+");");
+            	break;
             }
             case LuaState.OP_UNM: {
-                rkb = GETARG_RKB(k, i);
-                this.stack[base + a] = rkb.luaUnaryMinus();
-                continue;
+				//rkb = GETARG_RKB(k, i);
+				//this.stack[base + a] = rkb.luaUnaryMinus();
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				ps.println("\t\ts"+a+" = "+bs+".luaUnaryMinus();");
             }
             case LuaState.OP_NOT: {
-                rkb = GETARG_RKB(k, i);
-                this.stack[base + a] = (!rkb.toJavaBoolean() ? LBoolean.TRUE
-                        : LBoolean.FALSE);
-                continue;
+				//rkb = GETARG_RKB(k, i);
+				//this.stack[base + a] = (!rkb.toJavaBoolean() ? LBoolean.TRUE
+				//        : LBoolean.FALSE);
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				ps.println("\t\ts"+a+" = ("+bs+".toJavaBoolean()? LBoolean.TRUE: LBoolean.FALSE);");
+				break;
             }
             case LuaState.OP_LEN: {
-                rkb = GETARG_RKB(k, i);
-                this.stack[base + a] = LInteger.valueOf( rkb.luaLength() );
-                continue;
+				//rkb = GETARG_RKB(k, i);
+				//this.stack[base + a] = LInteger.valueOf( rkb.luaLength() );
+				//continue;
+				bs = GETARG_RKB_jit(i);
+				ps.println("\t\ts"+a+" = LInteger.valueOf("+bs+".luaLength());");
             }
+            /*
             case LuaState.OP_CONCAT: {
                 b = LuaState.GETARG_B(i);
                 c = LuaState.GETARG_C(i);
@@ -296,50 +404,57 @@ public class LuaJit extends Lua {
             }
             */
             case LuaState.OP_CALL: {               
-                
-                // ra is base of new call frame
-                // this.base += a;
-            	// ps.println("\t\tvm.base = base+"+a+";");
-                
-                // number of args
-                b = LuaState.GETARG_B(i);
+				//
+				//// ra is base of new call frame
+				//this.base += a;
+				//
+				//// number of args
+				//b = LuaState.GETARG_B(i);
+				//if (b != 0) // else use previous instruction set top
+				//    top = base + b;
+				//
+				//// number of return values we need
+				//c = LuaState.GETARG_C(i);
+				//
+				//// make or set up the call
+				//this.nresults = c - 1;
+				//if (this.stack[base].luaStackCall(this))
+				//    return;
+				//
+				//// adjustTop only for case when call was completed
+				//// and number of args > 0. If call completed but
+				//// c == 0, leave top to point to end of results
+				//if (c > 0)
+				//    adjustTop(base + c - 1);
+				//
+				//// restore base
+				//base = ci.base;
+				//
+				//continue;
 
-                // adjust top before the call
-                if (b != 0) { // else use previous instruction set top
-                    // top = base + b;
-                    ps.println("\t\tvm.top = "+(a+b)+";");
-                }
-                
-                // number of return values we need
-                c = LuaState.GETARG_C(i);
+            	// copy call to vm stack
+				ps.println( "\t\tvm.stack[base+"+a+"] = s"+a+";" );
+				
+				// number of args
+				b = LuaState.GETARG_B(i);
+				if (b > 0) { // else use previous instruction set top
+					for ( int j=1; j<b; j++ )
+						ps.println( "\t\tvm.stack[base+"+(a+j)+"] = s"+(a+j)+";" );
+					ps.println( "\t\tvm.top = base+"+(a+b)+";" );
+				}
+				
+				// number of return values we need
+				c = LuaState.GETARG_C(i);
 
-                // make the call
-                ps.println("\t\tvm.call("+(b-1)+","+(c-1)+");");
-//                
-//
-//                // make or set up the call
-//                // this.nresults = c - 1;
-//                int nresults = c - 1;
-//                ps.println("\t\tvm.nresults = "+nresults+";");               
-//                // if (this.stack[base].luaStackCall(this))
-//                //    return;
-//                ps.println("\t\tif ( vm.stack[base].luaStackCall(vm) ) {");
-//                ps.println("\t\t\tvm.execute();");
-//                ps.println("\t\t}");
-//                
-//                // adjustTop only for case when call was completed
-//                // and number of args > 0. If call completed but
-//                // c == 0, leave top to point to end of results
-//                if (c > 0) {
-//                    // adjustTop(base + c - 1);
-//                	ps.println( "\t\tvm.settop("+nresults+");");
-//                }
-//                
-//                // restore base
-//                // base = ci.base;
-//                
-//                // continue;
-                break;
+				// make the call
+				ps.println("\t\tvm.call("+(b-1)+","+(c-1)+");");
+				
+				// copy results to local vars
+				if ( c > 0 )
+					for ( int j=0; j<c-1; j++ )
+						ps.println( "\t\ts"+(a+j)+" = vm.stack[base+"+(a+j)+"];" );
+            	
+            	break;
             }
             /*
             case LuaState.OP_TAILCALL: {
@@ -381,31 +496,40 @@ public class LuaJit extends Lua {
                 // force restore of base, etc.
                 return;
             }
-
-            case LuaState.OP_RETURN: {
-                // number of return vals to return
-                b = LuaState.GETARG_B(i) - 1; 
-                if (b == -1)
-                    b = top - (base + a);
-
-                // close open upvals
-                closeUpVals( base ); 
-
-                // number to copy down
-                System.arraycopy(stack, base + a, stack, ci.resultbase, b);
-                top = ci.resultbase + b;
-
-                // adjust results to what caller expected
-                if (ci.nresults >= 0)
-                    adjustTop(ci.resultbase + ci.nresults);
-
-                // pop the call stack
-                --cc;
-                
-                // force a reload of the calling context
-                return;
-            }
             */
+            case LuaState.OP_RETURN: {
+				//// number of return vals to return
+				//b = LuaState.GETARG_B(i) - 1; 
+				//if (b == -1)
+				//    b = top - (base + a);
+				//
+				//// close open upvals
+				//closeUpVals( base ); 
+				//
+				//// number to copy down
+				//System.arraycopy(stack, base + a, stack, ci.resultbase, b);
+				//top = ci.resultbase + b;
+				//
+				//// adjust results to what caller expected
+				//if (ci.nresults >= 0)
+				//    adjustTop(ci.resultbase + ci.nresults);
+				//
+				//// pop the call stack
+				//--cc;
+				//
+				//// force a reload of the calling context
+				//return;
+				// number of return vals to return
+
+            	b = LuaState.GETARG_B(i); 
+				if (b > 0) {
+					for ( int j=1; j<b; j++ )
+						ps.println( "\t\tvm.stack[base+"+(a+j-1)+"] = s"+(a+j-1)+";" );
+					ps.println( "\t\tvm.top = base+"+(a+b)+";" );
+				}
+				ps.println( "\t\treturn;" );
+				break;
+            }
             case LuaState.OP_FORPREP: {
 				//init = this.stack[base + a];
 				//step = this.stack[base + a + 2];
@@ -418,16 +542,21 @@ public class LuaJit extends Lua {
             	b = LuaState.GETARG_sBx(i);
 				
             	// set up the loop variables
-            	ps.println( "\t\tdouble index = vm.stack[base+"+a+"].toJavaDouble();");            
-            	ps.println( "\t\tdouble limit = vm.stack[base+"+(a+1)+"].toJavaDouble();");
-            	ps.println( "\t\tdouble step = vm.stack[base+"+(a+2)+"].toJavaDouble();");
-            	ps.println( "\t\tboolean back = step < 0;");
-            	ps.println( "\t\tfor ( ; back? (index>=limit): (index<=limit); index+=step ) {");
-            	ps.println( "\t\tvm.stack[base+"+(a+3)+"] = LDouble.valueOf(index);");            
+            	String init = "s"+(a);
+            	String limit = "s"+(a+1);
+            	String step = "s"+(a+2);
+            	String idx = "s"+(a+3);
+            	String back = "back"+(forlevel++);
+            	ps.println( "\t\t"+back+"="+step+".luaBinCmpInteger(Lua.OP_LT,0);");
+            	ps.println( "\t\tfor ( "+idx+"="+init+";\n" +
+            			"\t\t\t"+back+"? "+idx+".luaBinCmpUnknown(Lua.OP_LE, "+limit+"): "+limit+".luaBinCmpUnknown(Lua.OP_LE, "+idx+");\n" +
+            			"\t\t\t"+idx+"="+idx+".luaBinOpUnknown(Lua.OP_ADD,"+step+") ) {");
+                forlevel++;
 				break;
             }
             case LuaState.OP_FORLOOP: {
-            	ps.println( "\t\t}");   
+            	forlevel--;
+            	ps.println( "\t\t}");
 				//i0 = this.stack[base + a];
 				//step = this.stack[base + a + 2];
 				//idx = step.luaBinOpUnknown(Lua.OP_ADD, i0);
@@ -444,8 +573,8 @@ public class LuaJit extends Lua {
 				//continue;
             	break;
             }
+            /*
             case LuaState.OP_TFORLOOP: {
-            	ps.println( "\t\t}");   
 				//cb = base + a + 3; // call base 
 				//base = cb;
 				//adjustTop( cb + 3 );
@@ -467,7 +596,6 @@ public class LuaJit extends Lua {
 				//}
 				//continue;
             }
-            /*
             case LuaState.OP_SETLIST: {
                 b = LuaState.GETARG_B(i);
                 c = LuaState.GETARG_C(i);
@@ -493,7 +621,7 @@ public class LuaJit extends Lua {
             case LuaState.OP_CLOSURE: {
                 b = LuaState.GETARG_Bx(i);
                 proto = cl.p.p[b];
-                newClosure = new LClosure(proto, cl.env);
+                newClosure = proto.newClosure(cl.env);
                 for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
                     i = code[ci.pc];
                     o = LuaState.GET_OPCODE(i);

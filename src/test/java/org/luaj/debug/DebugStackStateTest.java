@@ -55,7 +55,7 @@ public class DebugStackStateTest extends TestCase {
 		LPrototype p = LoadState.undump(state, is, script);
 		
 		// create closure and execute
-		final LClosure c = new LClosure( state, p );
+		final LClosure c = p.newClosure( state._G );
 
 		// suspend the vm right away
 		state.suspend();

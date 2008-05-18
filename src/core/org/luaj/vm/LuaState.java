@@ -450,7 +450,7 @@ public class LuaState extends Lua {
     public int load( InputStream is, String chunkname ) {
         try {
             LPrototype p = LoadState.undump(this, is, chunkname );
-            pushlvalue( new LClosure( p, _G ) );
+            pushlvalue( p.newClosure( _G ) );
             return 0;
         } catch ( Throwable t ) {
             pushstring( t.getMessage() ); 
@@ -840,7 +840,7 @@ public class LuaState extends Lua {
             case LuaState.OP_CLOSURE: {
                 b = LuaState.GETARG_Bx(i);
                 proto = cl.p.p[b];
-                newClosure = new LClosure(proto, cl.env);
+                newClosure = proto.newClosure(cl.env);
                 for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
                     i = code[ci.pc];
                     o = LuaState.GET_OPCODE(i);

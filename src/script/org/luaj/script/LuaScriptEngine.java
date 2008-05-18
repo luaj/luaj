@@ -111,7 +111,7 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
 	    	LineNumberInputStream is = new LineNumberInputStream( bais );
 	    	try {
 				LPrototype p = LoadState.undump(luaState, is, "script");
-				LClosure c = new LClosure( p, luaState._G );
+				LClosure c = p.newClosure( luaState._G );
 				luaState.doCall( c, new LValue[0] );
 				return luaState.topointer(1);
 			} catch ( LuaErrorException lee ) {

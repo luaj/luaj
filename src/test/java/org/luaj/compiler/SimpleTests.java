@@ -31,7 +31,7 @@ public class SimpleTests extends TestCase {
 			// try running the code!
 			LuaState state = Platform.newLuaState();
 			BaseLib.install( state._G );
-			LClosure c = new LClosure( state, p );
+			LClosure c = p.newClosure( state._G );
 			state.doCall( c, new LValue[0] );
     	} catch ( Exception e ) {
     		fail("i/o exception: "+e );
