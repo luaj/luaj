@@ -112,7 +112,6 @@ public class LuaState extends Lua {
 	 */
 	protected LuaState() {
 		_G = new LTable();
-		_G.put("_G", _G);
 		mainState = this;
 	}
 

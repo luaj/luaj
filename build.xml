@@ -13,12 +13,21 @@
 	</target>
 	
 	<target name="compile" depends="wtk-or-fail">
+		<mkdir dir="build/core/src"/>
 		<mkdir dir="build/core/classes"/>
 		<mkdir dir="build/j2me/classes"/>
 		<mkdir dir="build/j2se/classes"/>
 		<mkdir dir="build/script/classes"/>
+		<copy todir="build/core/src">
+			<fileset dir="src/core"/>
+			<filterchain>
+				<tokenfilter>
+			  	    <replacestring from='"Luaj 0.0"' to='"Luaj ${version}"'/>
+				</tokenfilter>
+			</filterchain>
+		</copy>
 		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
-			<src path="src/core"/>
+			<src path="build/core/src"/>
 			<src path="src/debug"/>
 		</javac>
 		<javac destdir="build/j2me/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
@@ -67,6 +76,7 @@
 	
 	<target name="load-env">
 		<property environment="env"/>
+		<echo>WTK_HOME from env ${env.WTK_HOME}</echo>
 	</target>
 	
 	<target name="try-default-wtk-path" depends="load-env" unless="env.WTK_HOME">

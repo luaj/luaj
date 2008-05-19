@@ -1,6 +1,8 @@
 package org.luaj.jit;
+
 import java.io.IOException;
 
+import org.luaj.jit.LuaJit;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LuaJTest;
 import org.luaj.vm.LuaState;

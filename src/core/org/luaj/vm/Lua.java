@@ -27,6 +27,8 @@ package org.luaj.vm;
  *
  */
 public class Lua {
+	/** version is supplied by ant build task */
+	public static final String _VERSION = "Luaj 0.0";
 
 	/** use return values from previous op */
 	public static final int LUA_MULTRET = -1;

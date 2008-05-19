@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -19,16 +17,24 @@ import javax.tools.JavaCompiler.CompilationTask;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.debug.Print;
-import org.luaj.jit.JitPrototype.JitClosure;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LoadState;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
+import org.luaj.vm.LoadState.LuaCompiler;
 
-public class LuaJit extends Lua {
+public class LuaJit extends Lua implements LuaCompiler {
+
+	private static LuaC luac;
+	
+	public static void install() {
+		luac = new LuaC();
+		LoadState.compiler = new LuaJit();
+	}
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -54,12 +60,16 @@ public class LuaJit extends Lua {
 		}
 	}
 	
-	private static int counter = 0;
+	private static int filenum = 0;
 	
 	private static synchronized String filename() {
-		return "LuaJit"+(counter++);
+		return "LuaJit"+(filenum++);
 	}
-
+	
+	public LPrototype compile(int firstByte, InputStream stream, String name) throws IOException {
+		return jitCompile( luac.compile(firstByte, stream, name) );
+	}
+	
 	public static LPrototype jitCompile( LPrototype p ) {
         try {
 			final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();

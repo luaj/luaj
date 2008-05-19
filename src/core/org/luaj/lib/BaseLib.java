@@ -92,7 +92,8 @@ public class BaseLib extends LFunction {
 			globals.put( NAMES[i], new BaseLib(i) );
 		next = new BaseLib(NEXT);
 		inext = new BaseLib(INEXT);
-		globals.put("_VERSION", new LString("Lua 5.1"));
+		globals.put("_G", globals);
+		globals.put("_VERSION", new LString(Lua._VERSION));
 	}
 
 	private int id;
