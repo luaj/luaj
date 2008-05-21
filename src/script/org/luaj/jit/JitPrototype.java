@@ -1,8 +1,10 @@
 package org.luaj.jit;
 
 import org.luaj.vm.LClosure;
+import org.luaj.vm.LNil;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LTable;
+import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
 
 abstract
@@ -39,4 +41,5 @@ public class JitPrototype extends LPrototype {
 	}
 	
 	public abstract void jitCall( LuaState vm, LTable env, JitClosure jcl );	
+
 }

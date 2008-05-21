@@ -41,7 +41,10 @@ public class LuaJit extends Lua implements LuaCompiler {
 	    Platform.setInstance(new J2sePlatform());
 		LuaC.install();
 		
-		String program = "print 'starting'\nfor i=1,10 do\n\tprint 'hello, world'\nend";
+		String program = "print 'starting'\n" +
+				"for i=1,10 do\n" +
+				"	print 'hello, world'\n" +
+				"end";
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
 		test( p );
@@ -172,6 +175,15 @@ public class LuaJit extends Lua implements LuaCompiler {
 		}
 		for (; is<ns; is++ ) 
 			ps.println( "\t\tLValue s"+is+" = LNil.NIL;" );
+        ps.println("\t\tLClosure newcl;");
+		ps.println();
+
+		// save var args
+		if ( p.is_vararg ) {
+			ps.println( "\t\tint ncopy, ntotal;" );
+			ps.println( "\t\tint nvarargs = vm.top - vm.base;" );
+			ps.println( "\t\tbase = base + nvarargs;" );
+		}
 		ps.println();
 		
 		
@@ -531,6 +543,9 @@ public class LuaJit extends Lua implements LuaCompiler {
 				//return;
 				// number of return vals to return
 
+            	if ( p.is_vararg )
+        			ps.println( "\t\tbase -= nvarargs;" );
+
             	b = LuaState.GETARG_B(i); 
 				if (b > 0) {
 					for ( int j=1; j<b; j++ )
@@ -626,45 +641,71 @@ public class LuaJit extends Lua implements LuaCompiler {
                 closeUpVals( base + a ); // close upvals higher in the stack than position a
                 continue;
             }
+            */
             case LuaState.OP_CLOSURE: {
-                b = LuaState.GETARG_Bx(i);
-                proto = cl.p.p[b];
-                newClosure = proto.newClosure(cl.env);
-                for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
-                    i = code[ci.pc];
-                    o = LuaState.GET_OPCODE(i);
-                    b = LuaState.GETARG_B(i);
-                    if (o == LuaState.OP_GETUPVAL) {
-                        newClosure.upVals[j] = cl.upVals[b];
-                    } else if (o == LuaState.OP_MOVE) {
-                        newClosure.upVals[j] = findUpVal( base + b );
-                    } else {
-                        throw new java.lang.IllegalArgumentException(
-                                "bad opcode: " + o);
-                    }
-                }
-                this.stack[base + a] = newClosure;
-                continue;
+				//b = LuaState.GETARG_Bx(i);
+				//proto = cl.p.p[b];
+				//newClosure = proto.newClosure(cl.env);
+				//for (int j = 0; j < newClosure.upVals.length; j++, ci.pc++) {
+				//    i = code[ci.pc];
+				//    o = LuaState.GET_OPCODE(i);
+				//    b = LuaState.GETARG_B(i);
+				//    if (o == LuaState.OP_GETUPVAL) {
+				//        newClosure.upVals[j] = cl.upVals[b];
+				//    } else if (o == LuaState.OP_MOVE) {
+				//        newClosure.upVals[j] = findUpVal( base + b );
+				//    } else {
+				//        throw new java.lang.IllegalArgumentException(
+				//                "bad opcode: " + o);
+				//    }
+				//}
+				//this.stack[base + a] = newClosure;
+				//continue;
+				b = LuaState.GETARG_Bx(i);
+				ps.println("\t\ts"+a+" = newcl = p.p["+b+"].newClosure(env);");
+				for (int j = 0, nj=p.p[b].nups; j < nj; j++, pc++) {
+				    i = code[pc];
+				    o = LuaState.GET_OPCODE(i);
+				    b = LuaState.GETARG_B(i);
+				    if (o == LuaState.OP_GETUPVAL) {
+				        ps.println("\t\tnewcl.upVals[j] = newcl.upVals["+b+"];");
+				    } else if (o == LuaState.OP_MOVE) {
+				        ps.println("\t\tnewcl.upVals[j] = vm.findUpVal(base+"+b+");");
+				    } else {
+				        throw new java.lang.IllegalArgumentException("bad opcode: " + o);
+				    }
+				}
+				break;
             }
             case LuaState.OP_VARARG: {
-                // figure out how many args to copy
-                b = LuaState.GETARG_B(i) - 1;
-                nvarargs = this.stack[base - 1];
-                n = nvarargs.toJavaInt();
-                if (b == LuaState.LUA_MULTRET) {
-                    b = n; // use entire varargs supplied
-                }
-
-                // copy args up to call stack area
-                checkstack(a+b);
-                for (int j = 0; j < b; j++)
-                    this.stack[base + a + j] = (j < n ? this.stack[base
-                            - n + j - 1]
-                            : LNil.NIL);
-                top = base + a + b;
-                continue;
+				//// figure out how many args to copy
+				//b = LuaState.GETARG_B(i) - 1;
+				//nvarargs = this.stack[base - 1];
+				//n = nvarargs.toJavaInt();
+				//if (b == LuaState.LUA_MULTRET) {
+				//    b = n; // use entire varargs supplied
+				//}
+				//
+				//// copy args up to call stack area
+				//checkstack(a+b);
+				//for (int j = 0; j < b; j++)
+				//    this.stack[base + a + j] = (j < n ? this.stack[base
+				//            - n + j - 1]
+				//            : LNil.NIL);
+				//top = base + a + b;
+				//continue;
+				b = LuaState.GETARG_B(i) - 1;
+				if ( b == LuaState.LUA_MULTRET ) {
+					ps.println( "\t\tncopy = ntotal = nvarargs;" );
+				} else {
+					ps.println( "\t\tncopy = Math.min(ntotal="+b+",nvarargs);" );
+				}
+				ps.println( "\t\tSystem.arraycopy(vm.stack,base-nvarargs,vm.stack,base+"+a+",ncopy);" );
+				ps.println( "\t\tfor (int j = ncopy; j < ntotal; j++)" );
+				ps.println( "\t\t\tvm.stack[base+j] = LNil.NIL;" );
+				ps.println( "\t\tvm.top = base+ntotal+"+(a)+";" );
+            	break;
             }            
-            */
             }
 		}
         ps.print( 	
