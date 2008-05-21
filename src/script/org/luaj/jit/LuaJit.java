@@ -45,6 +45,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 				"for i=1,10 do\n" +
 				"	print 'hello, world'\n" +
 				"end";
+		program = "f(); if v then a(); else b(); end; g()";
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
 		test( p );
@@ -143,6 +144,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 		ps.print( 
 				"import org.luaj.vm.*;\n"+
 				"import org.luaj.jit.*;\n"+
+				"import java.io.*;\n"+
 				"\n"+
 				"public class "+name+" extends JitPrototype {\n" );
 		
@@ -176,6 +178,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 		for (; is<ns; is++ ) 
 			ps.println( "\t\tLValue s"+is+" = LNil.NIL;" );
         ps.println("\t\tLClosure newcl;");
+		ps.println("\t\tByteArrayOutputStream baos;");
 		ps.println();
 
 		// save var args
@@ -383,18 +386,25 @@ public class LuaJit extends Lua implements LuaCompiler {
 				bs = GETARG_RKB_jit(i);
 				ps.println("\t\ts"+a+" = LInteger.valueOf("+bs+".luaLength());");
             }
-            /*
             case LuaState.OP_CONCAT: {
-                b = LuaState.GETARG_B(i);
-                c = LuaState.GETARG_C(i);
-                int numValues = c - b + 1;
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                for (int j = b, l = 0; j <= c; j++, l++) {
-                    this.stack[base + j].luaConcatTo( baos );
-                }
-                this.stack[base + a] = new LString( baos.toByteArray() );
-                continue;
+				//b = LuaState.GETARG_B(i);
+				//c = LuaState.GETARG_C(i);
+				//int numValues = c - b + 1;
+				//ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				//for (int j = b, l = 0; j <= c; j++, l++) {
+				//    this.stack[base + j].luaConcatTo( baos );
+				//}
+				//this.stack[base + a] = new LString( baos.toByteArray() );
+				//continue;
+				b = LuaState.GETARG_B(i);
+				c = LuaState.GETARG_C(i);
+				ps.println("\t\tbaos = new ByteArrayOutputStream();");
+				for (int j = b; j <= c; j++)
+				    ps.println("\t\ts"+j+".luaConcatTo( baos );");
+			    ps.println("\t\ts"+a+" = new LString( baos.toByteArray() );");
+            	break;
             }
+            /*
             case LuaState.OP_JMP: {
                 ci.pc += LuaState.GETARG_sBx(i);
                 continue;
@@ -619,24 +629,39 @@ public class LuaJit extends Lua implements LuaCompiler {
 				//}
 				//continue;
             }
+            */
             case LuaState.OP_SETLIST: {
-                b = LuaState.GETARG_B(i);
-                c = LuaState.GETARG_C(i);
-                int listBase = base + a;
-                if (b == 0) {
-                    b = top - listBase - 1;
-                }
-                if (c == 0) {
-                    c = code[ci.pc++];
-                }
-                int offset = (c-1) * LFIELDS_PER_FLUSH;
-                LTable tbl = (LTable) this.stack[base + a];
-                for (int j=1; j<=b; j++) {
-                    tbl.put(offset+j, stack[listBase + j]);
-                }
-                top = base + a - 1;
-                continue;
+				//b = LuaState.GETARG_B(i);
+				//c = LuaState.GETARG_C(i);
+				//int listBase = base + a;
+				//if (b == 0) {
+				//    b = top - listBase - 1;
+				//}
+				//if (c == 0) {
+				//    c = code[ci.pc++];
+				//}
+				//int offset = (c-1) * LFIELDS_PER_FLUSH;
+				//LTable tbl = (LTable) this.stack[base + a];
+				//for (int j=1; j<=b; j++) {
+				//    tbl.put(offset+j, stack[listBase + j]);
+				//}
+				//top = base + a - 1;
+				//continue;
+				b = LuaState.GETARG_B(i);
+				c = LuaState.GETARG_C(i);
+				if (c == 0)
+				    c = code[++pc];
+				int offset = (c-1) * LFIELDS_PER_FLUSH;
+				if ( b == 0 ) {
+					ps.println("\t\tfor ( int j=0, nj=vm.top-base-"+(a+1)+"; j<nj; j++ )");
+					ps.println("\t\t\ts"+(a)+".put("+offset+"+j,vm.stack[base+"+a+"+j]);");
+				} else {
+					for (int j=1; j<=b; j++)
+						ps.println("\t\ts"+(a)+".put("+(offset+j)+",s"+(a+j)+");");
+				}
+            	break;
             }
+            /*
             case LuaState.OP_CLOSE: {
                 closeUpVals( base + a ); // close upvals higher in the stack than position a
                 continue;
