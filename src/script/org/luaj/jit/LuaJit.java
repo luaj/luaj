@@ -45,7 +45,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 				"for i=1,10 do\n" +
 				"	print 'hello, world'\n" +
 				"end";
-		program = "f(); if v then a(); else b(); end; g()";
+		program = "f(); if v then a(); elseif w then c(); else b(); end; g()";
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
 		test( p );
@@ -219,6 +219,10 @@ public class LuaJit extends Lua implements LuaCompiler {
 			
             // get instruction
             i = code[pc];
+
+            // close if-related jump bodies
+            while ( jumpdeltas[pc]++ < 0 )
+            	ps.println("\t\t}");
             
             // get opcode and first arg
         	o = (i >> POS_OP) & MAX_OP;
@@ -404,11 +408,12 @@ public class LuaJit extends Lua implements LuaCompiler {
 			    ps.println("\t\ts"+a+" = new LString( baos.toByteArray() );");
             	break;
             }
-            /*
             case LuaState.OP_JMP: {
-                ci.pc += LuaState.GETARG_sBx(i);
-                continue;
+				//ci.pc += LuaState.GETARG_sBx(i);
+				//continue;
+            	break;
             }
+            /*
             case LuaState.OP_EQ:
             case LuaState.OP_LT:
             case LuaState.OP_LE: {
@@ -419,12 +424,20 @@ public class LuaJit extends Lua implements LuaCompiler {
                     ci.pc++;
                 continue;
             }
+            */
             case LuaState.OP_TEST: {
-                c = LuaState.GETARG_C(i);
-                if (this.stack[base + a].toJavaBoolean() != (c != 0))
-                    ci.pc++;
-                continue;
+				//c = LuaState.GETARG_C(i);
+				//if (this.stack[base + a].toJavaBoolean() != (c != 0))
+				//    ci.pc++;
+				//continue;
+				c = LuaState.GETARG_C(i);
+				ps.println("\t\tif ( "+(c!=0?"!":"")+" s"+a+".toJavaBoolean())");
+				ps.println("\t\t{");
+				int jump = LuaState.GETARG_sBx(code[++pc]);
+                jumpdeltas[pc+jump]--;
+            	break;
             }
+            /*
             case LuaState.OP_TESTSET: {
                 rkb = GETARG_RKB(k, i);
                 c = LuaState.GETARG_C(i);
