@@ -663,14 +663,14 @@ public class LuaJit extends Lua implements LuaCompiler {
 				//continue;
 				b = LuaState.GETARG_Bx(i);
 				ps.println("\t\ts"+a+" = newcl = p.p["+b+"].newClosure(env);");
-				for (int j = 0, nj=p.p[b].nups; j < nj; j++, pc++) {
-				    i = code[pc];
+				for (int j = 0, nj=p.p[b].nups; j < nj; j++) {
+				    i = code[++pc];
 				    o = LuaState.GET_OPCODE(i);
 				    b = LuaState.GETARG_B(i);
 				    if (o == LuaState.OP_GETUPVAL) {
-				        ps.println("\t\tnewcl.upVals[j] = newcl.upVals["+b+"];");
+				        ps.println("\t\tnewcl.upVals["+j+"] = newcl.upVals["+b+"];");
 				    } else if (o == LuaState.OP_MOVE) {
-				        ps.println("\t\tnewcl.upVals[j] = vm.findUpVal(base+"+b+");");
+				        ps.println("\t\tnewcl.upVals["+j+"] = vm.findUpVal(base+"+b+");");
 				    } else {
 				        throw new java.lang.IllegalArgumentException("bad opcode: " + o);
 				    }

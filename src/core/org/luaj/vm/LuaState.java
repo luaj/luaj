@@ -878,7 +878,7 @@ public class LuaState extends Lua {
         }   
     }
     
-    private UpVal findUpVal( int target ) {
+    public UpVal findUpVal( int target ) {
         UpVal up;
         int i;
         for ( i = this.upvals.size() - 1; i >= 0; --i ) {
@@ -895,7 +895,7 @@ public class LuaState extends Lua {
         return up;
     }
     
-    private void closeUpVals( int limit ) {
+    public void closeUpVals( int limit ) {
         while ( !upvals.empty() && ( (UpVal) this.upvals.lastElement() ).close( limit ) ) {
             this.upvals.pop();
         }
