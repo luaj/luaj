@@ -45,7 +45,15 @@ public class LuaJit extends Lua implements LuaCompiler {
 				"for i=1,10 do\n" +
 				"	print 'hello, world'\n" +
 				"end";
-		program = "f(); if v then a(); elseif w then c(); else b(); end; g()";
+		program = "print 'a'\n" +
+				"if a then\n" +
+				"	print 'a'\n" +
+				"elseif b then\n" +
+				"	print 'b'\n" +
+				"else\n" +
+				"	print 'c'\n" +
+				"end\n" +
+				"print 'd'\n";
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
 		test( p );
@@ -129,6 +137,15 @@ public class LuaJit extends Lua implements LuaCompiler {
         return RKBC_jit(GETARG_C(i));
     }
 
+    private static boolean istest(int i) {
+    	int o = Lua.GET_OPCODE(i);
+    	return (o==OP_TEST);
+    }
+    
+    private static boolean isjump(int i) {
+    	return Lua.GET_OPCODE(i) == OP_JMP;
+    }
+    
 	private static void writeSource( PrintStream ps, String name, LPrototype p ) {
 		
 		int i, a, b, c, o, n, cb;
@@ -192,7 +209,8 @@ public class LuaJit extends Lua implements LuaCompiler {
 		
         // find local variables, jump points
 		int forlevel=0,maxforlevels=0;
-        int[] jumpdeltas = new int[code.length];
+        int[] closes = new int[code.length];
+        boolean[] iselse = new boolean[code.length];
 		for ( int pc=0; pc<code.length; pc++ ) {
             i = code[pc];
         	o = (i >> POS_OP) & MAX_OP;
@@ -203,6 +221,13 @@ public class LuaJit extends Lua implements LuaCompiler {
             case OP_FORLOOP:
             	forlevel--;
             	break;
+            case OP_JMP: {
+				int delta = LuaState.GETARG_sBx(code[pc]);
+                ++closes[pc+delta+1];
+                if ( istest(code[pc-1]) && isjump(code[pc+delta]) )
+                	iselse[pc+delta+1] = true;
+            	break;
+            }
             }
 		}
 		for ( int j=0; j<maxforlevels; j++ )
@@ -221,8 +246,14 @@ public class LuaJit extends Lua implements LuaCompiler {
             i = code[pc];
 
             // close if-related jump bodies
-            while ( jumpdeltas[pc]++ < 0 )
-            	ps.println("\t\t}");
+            if ( closes[pc]>0 || iselse[pc] ) {
+            	ps.print("\t\t");
+	            while ( closes[pc]-- > 0 )
+	            	ps.print("} ");
+	            if ( iselse[pc] )
+	            	ps.print(" else {");
+            	ps.println();
+            }
             
             // get opcode and first arg
         	o = (i >> POS_OP) & MAX_OP;
@@ -433,8 +464,6 @@ public class LuaJit extends Lua implements LuaCompiler {
 				c = LuaState.GETARG_C(i);
 				ps.println("\t\tif ( "+(c!=0?"!":"")+" s"+a+".toJavaBoolean())");
 				ps.println("\t\t{");
-				int jump = LuaState.GETARG_sBx(code[++pc]);
-                jumpdeltas[pc+jump]--;
             	break;
             }
             /*
