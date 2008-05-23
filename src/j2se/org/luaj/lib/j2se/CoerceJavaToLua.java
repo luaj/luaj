@@ -24,7 +24,6 @@ package org.luaj.lib.j2se;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.luaj.lib.j2se.LuajavaLib.LInstance;
 import org.luaj.vm.LBoolean;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LInteger;
@@ -81,7 +80,7 @@ public class CoerceJavaToLua {
 		Coercion c = (Coercion) COERCIONS.get( clazz );
 		if ( c != null )
 			return c.coerce( o );
-		return new LInstance( o, o.getClass() );
+		return LuajavaLib.toUserdata( o, clazz );
 	}
 
 }

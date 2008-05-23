@@ -65,6 +65,8 @@ public final class LuajavaLib extends LFunction {
 		"createProxy", 
 		"loadLib" };
 	
+	private static final Map classMetatables = new HashMap(); 
+	
 	private int id;
 	private LuajavaLib( int id ) {			
 		this.id = id;
@@ -83,7 +85,7 @@ public final class LuajavaLib extends LFunction {
 			try {
 				Class clazz = Class.forName(className);
 				vm.resettop();
-				vm.pushlvalue( new LInstance( clazz, clazz ) );
+				vm.pushlvalue( toUserdata( clazz, clazz ) );
 			} catch (Exception e) {
 				throw new LuaErrorException(e);
 			}
@@ -102,7 +104,7 @@ public final class LuajavaLib extends LFunction {
 				
 				// set the result
 				vm.resettop();
-				vm.pushlvalue( new LInstance( o, clazz ) );
+				vm.pushlvalue( toUserdata( o, clazz ) );
 				
 			} catch (Exception e) {
 				throw new LuaErrorException(e);
@@ -123,7 +125,7 @@ public final class LuajavaLib extends LFunction {
 			values = new LValue[n];
 			classes = new Class[n];
 			for ( int i=0; i<n; i++ ) {
-				values[i] = vm.topointer(i+3);
+				values[i] = vm.topointer(i-n);
 				classes[i] = values[i].getClass();
 				hash += classes[i].hashCode();
 			}
@@ -137,45 +139,49 @@ public final class LuajavaLib extends LFunction {
 				false;
 		}
 	}
-	
-	public static class LInstance extends LUserData {
-		private Class clazz;
-		public LInstance(Object o, Class clazz) {
-			super(o);
-			this.clazz = clazz;
-		}
-		public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-			final String s = key.toJavaString();
-			try {
-				Field f = clazz.getField(s);
-				Object o = f.get(m_instance);
-				return CoerceJavaToLua.coerce( o );
-			} catch (NoSuchFieldException nsfe) {
-				return new LMethod(m_instance,clazz,s);
-			} catch (Exception e) {
-				throw new LuaErrorException(e);
-			}
-		}
-		public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
-			Class c = m_instance.getClass();
-			String s = key.toJavaString();
-			try {
-				Field f = c.getField(s);
-				Object v = CoerceLuaToJava.coerceArg(val, f.getType());
-				f.set(m_instance,v);
-				vm.resettop();
-			} catch (Exception e) {
-				throw new LuaErrorException(e);
-			}
-		}
 		
-		public boolean luaStackCall(LuaState vm) {
-			// TODO Auto-generated method stub
-			return super.luaStackCall(vm);
+	static LUserData toUserdata(final Object instance, final Class clazz) {
+		LTable mt = (LTable) classMetatables.get(clazz);
+		if ( mt == null ) {
+			mt = new LTable();
+			mt.put( LValue.TM_INDEX, new LFunction() {
+				public boolean luaStackCall(LuaState vm) {
+					LValue key = vm.topointer(3);
+					final String s = key.toJavaString();
+					vm.resettop();
+					try {
+						Field f = clazz.getField(s);
+						Object o = f.get(instance);
+						vm.pushlvalue( CoerceJavaToLua.coerce( o ) );
+					} catch (NoSuchFieldException nsfe) {
+						vm.pushlvalue( new LMethod(instance,clazz,s) );
+					} catch (Exception e) {
+						throw new LuaErrorException(e);
+					}
+					return false;
+				}
+			});
+			mt.put( LValue.TM_NEWINDEX, new LFunction() {
+				public boolean luaStackCall(LuaState vm) {
+					LValue key = vm.topointer(3);
+					LValue val = vm.topointer(4);
+					String s = key.toJavaString();
+					try {
+						Field f = clazz.getField(s);
+						Object v = CoerceLuaToJava.coerceArg(val, f.getType());
+						f.set(instance,v);
+						vm.resettop();
+					} catch (Exception e) {
+						throw new LuaErrorException(e);
+					}
+					return false;
+				}
+			});
+			classMetatables.put(clazz, mt);
 		}
-		
+		return new LUserData(instance,mt);
 	}
-
+	
 	private static final class LMethod extends LFunction {
 		private final Object instance;
 		private final Class clazz;
