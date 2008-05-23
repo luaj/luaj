@@ -578,7 +578,7 @@ public class LuaState extends Lua {
                 val = this.stack[base + a];
                 table = cl.env;
                 this.top = base + a;
-                table.luaSetTable(this, table, key, val);
+                luaV_settable(table, key, val);
                 continue;
             }
             case LuaState.OP_SETUPVAL: {
@@ -591,7 +591,7 @@ public class LuaState extends Lua {
                 val = GETARG_RKC(k, i);
                 table = this.stack[base + a];
                 this.top = base + a;
-                table.luaSetTable(this, table, key, val);
+                luaV_settable(table, key, val);
                 continue;
             }
             case LuaState.OP_NEWTABLE: {
@@ -915,8 +915,12 @@ public class LuaState extends Lua {
     	LValue h = mt.get(tag);
     	return h.isNil()? null: h;
     }
+
+    private void indexError(LValue nontable) {
+		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
+	}
     
-    private void luaV_gettable(LValue table, LValue key) {
+    public void luaV_gettable(LValue table, LValue key) {
     	LTable m;
     	LValue v,h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
@@ -934,7 +938,7 @@ public class LuaState extends Lua {
     		} else {
     			h = mtget(t, LTable.TM_INDEX);
     			if ( h == null ) {
-          	    	error("type error: "+t.luaGetTypeName()+" (index)");
+    				indexError(t);
     			}
     		}
        	    if (h.isFunction()) {
@@ -947,6 +951,40 @@ public class LuaState extends Lua {
        	    t = h;
     	}
       	error("loop in gettable");
+   	}    
+    
+    public void luaV_settable(LValue table, LValue key, LValue val) {
+    	LTable m;
+    	LValue v,h=LNil.NIL,t=table;
+    	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
+    		if ( t.isTable() ) {
+    			LTable lt = (LTable) t;
+    			if ( lt.containsKey(key) ) {
+    				lt.put(key, val);
+    				return;
+    			}
+    			h = mtget(t, LTable.TM_NEWINDEX);
+    			if ( h == null ) {
+    				lt.put(key, val);
+    				return;
+    			}
+    		} else {
+    			h = mtget(t, LTable.TM_NEWINDEX);
+    			if ( h == null ) {
+    				indexError(t);
+    			}
+    		}
+       	    if (h.isFunction()) {
+       	    	pushlvalue(h);
+       	    	pushlvalue(table);
+       	    	pushlvalue(key);
+       	    	pushlvalue(val);
+       	    	call(3,0);
+       	    	return;
+       	    }
+       	    t = h;
+    	}
+      	error("loop in settable");
    	}    
     
     //===============================================================
@@ -2038,8 +2076,7 @@ public class LuaState extends Lua {
 	 */
 	public void setfield(int index, LString k) {
 		LTable t = totable(index);
-		LValue v = poplvalue();
-		t.luaSetTable(this, t, k, v);
+		luaV_settable(t, k, poplvalue());
 	}
 
 	/**
@@ -2056,9 +2093,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void setglobal(String name) {
-		LTable g = this._G;
-		LValue v = poplvalue();
-		g.luaSetTable(this, g, new LString(name), v);
+		luaV_settable(_G, new LString(name), poplvalue());
 	}
 
 	/**
@@ -2098,7 +2133,7 @@ public class LuaState extends Lua {
 		LTable t = totable(index);
 		LValue v = poplvalue();
 		LValue k = poplvalue();
-		t.luaSetTable(this, t, k, v);
+		luaV_settable(t, k, v);
 	}
 
 	/**
