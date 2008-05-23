@@ -553,15 +553,17 @@ public class LuaState extends Lua {
             case LuaState.OP_GETGLOBAL: {
                 b = LuaState.GETARG_Bx(i);
                 key = k[b];
-                table = cl.env;    
-                this.stack[base + a] = luaV_gettable(table, key);
+                table = cl.env;
+                val = luaV_gettable(table, key);
+                this.stack[base + a] = val;
                 continue;
             }
             case LuaState.OP_GETTABLE: {
                 b = LuaState.GETARG_B(i);
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
-                this.stack[base + a] = luaV_gettable(table, key);
+                val = luaV_gettable(table, key);
+                this.stack[base + a] = val;
                 continue;
             }
             case LuaState.OP_SETGLOBAL: {
@@ -593,11 +595,9 @@ public class LuaState extends Lua {
             case LuaState.OP_SELF: {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
-                this.stack[base + a] = luaV_gettable(rkb, rkc);
+                val = luaV_gettable(rkb, rkc);
+                this.stack[base + a] = val;
                 this.stack[base + a + 1] = rkb;
-                // StkId rb = RB(i);
-                // setobjs2s(L, ra+1, rb);
-                // Protect(luaV_gettable(L, rb, RKC(i), ra));
                 continue;
             }
             case LuaState.OP_ADD:
