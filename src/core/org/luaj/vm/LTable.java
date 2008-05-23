@@ -232,21 +232,13 @@ public class LTable extends LValue {
 					(hashKeys.length>0 && hashKeys[hashFindSlot(LInteger.valueOf(key))]!=null));
 	}
 	
-
 	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-		LValue v = get(key);
-		if ( v.isNil() && m_metatable != null ) {
-			return super.luaGetTable( vm, table, key );
-		} else {
-			return v;
-		}
+		vm.luaV_gettable(table, key);
+		return vm.poplvalue();
 	}
 	
 	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
-		if ( (!containsKey( key )) && m_metatable != null && m_metatable.containsKey(TM_NEWINDEX) )
-			m_metatable.get(TM_NEWINDEX).luaSetTable( vm, table, key, val );
-		else
-			put(key,val);
+		vm.luaV_settable(table, key, val);
 	}
 
 	private static final int MAX_KEY = 0x3fffffff;

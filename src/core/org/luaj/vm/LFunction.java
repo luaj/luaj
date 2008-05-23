@@ -33,22 +33,6 @@ public class LFunction extends LValue {
 		return true;
 	}
 	
-	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
-		vm.pushlvalue( this );
-		vm.pushlvalue( table );
-		vm.pushlvalue( key );
-		vm.pushlvalue( val );
-		vm.call( 3, 0 );
-	}
-
-	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-		vm.pushlvalue( this );
-		vm.pushlvalue( table );
-		vm.pushlvalue( key );
-		vm.call( 2, 1 );
-		return vm.poplvalue();
-	}
-	
 	public int luaGetType() {
 		return Lua.LUA_TFUNCTION;
 	}
