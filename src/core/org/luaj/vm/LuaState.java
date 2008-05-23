@@ -77,7 +77,8 @@ public class LuaState extends Lua {
     private static final int LUA_ERRERR = 5;
 
     private static final int LUA_MINSTACK = 20;
-    private static final int LUA_MINCALLS = 10;
+    private static final int LUA_MINCALLS = 10;    
+    private static final int MAXTAGLOOP	= 100;
 
     public int base = 0;
     public int top = 0;
@@ -560,7 +561,7 @@ public class LuaState extends Lua {
                 key = k[b];
                 table = cl.env;    
                 this.top = base + a;
-                this.stack[base+a] = table.luaGetTable(this, table, key);
+                luaV_gettable(table, key);
                 continue;
             }
             case LuaState.OP_GETTABLE: {
@@ -568,7 +569,7 @@ public class LuaState extends Lua {
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
                 this.top = base + a;
-                this.stack[base+a] = table.luaGetTable(this, table, key);
+                luaV_gettable(table, key);
                 continue;
             }
             case LuaState.OP_SETGLOBAL: {
@@ -603,7 +604,7 @@ public class LuaState extends Lua {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
                 this.top = base + a;
-                this.stack[base + a] = rkb.luaGetTable(this, rkb, rkc);
+                luaV_gettable(rkb, rkc);
                 this.stack[base + a + 1] = rkb;
                 // StkId rb = RB(i);
                 // setobjs2s(L, ra+1, rb);
@@ -797,8 +798,8 @@ public class LuaState extends Lua {
             case LuaState.OP_TFORLOOP: {
             	cb = base + a + 3; /* call base */
             	base = cb;
-            	adjustTop( cb + 3 );
                 System.arraycopy(this.stack, cb-3, this.stack, cb, 3);
+                top = cb + 3;
                 
                 // call the iterator
                 c = LuaState.GETARG_C(i);
@@ -907,6 +908,46 @@ public class LuaState extends Lua {
         return calls[cc-callStackDepth];
     }
     
+    private LValue mtget(LValue t, LString tag) {
+    	LTable mt = t.luaGetMetatable();
+    	if ( mt == null )
+    		return null;
+    	LValue h = mt.get(tag);
+    	return h.isNil()? null: h;
+    }
+    
+    private void luaV_gettable(LValue table, LValue key) {
+    	LTable m;
+    	LValue v,h=LNil.NIL,t=table;
+    	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
+    		if ( t.isTable() ) {
+    			v = ((LTable) t).get(key);
+    			if ( !v.isNil() ) {
+    				pushlvalue( v );
+    				return;
+    			}
+    			h = mtget(t, LTable.TM_INDEX);
+    			if ( h == null ) {
+    				pushnil();
+    				return;
+    			}
+    		} else {
+    			h = mtget(t, LTable.TM_INDEX);
+    			if ( h == null ) {
+          	    	error("type error: "+t.luaGetTypeName()+" (index)");
+    			}
+    		}
+       	    if (h.isFunction()) {
+       	    	pushlvalue(h);
+       	    	pushlvalue(table);
+       	    	pushlvalue(key);
+       	    	call(2,1);
+       	    	return;
+       	    }
+       	    t = h;
+    	}
+      	error("loop in gettable");
+   	}    
     
     //===============================================================
     //              Lua Java API
@@ -1329,7 +1370,7 @@ public class LuaState extends Lua {
 	 */
 	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		pushlvalue( t.luaGetTable(this, t, k) );
+		luaV_gettable(t, k);
 	}
 	
 	/**
@@ -1345,8 +1386,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		LTable t = this._G;
-		pushlvalue( t.luaGetTable(this, t, new LString(s)) );
+		luaV_gettable(_G, new LString(s));
 	}
 	
 	/**
@@ -1385,9 +1425,7 @@ public class LuaState extends Lua {
 	public void gettable(int index) {
 		LValue t = totable(index);
 		LValue k = poplvalue();
-		// todo: what if this triggers metatable ops
-		// pushlvalue( t.luaGetTable(this, t, k) );
-		pushlvalue( t.luaGetTable(this, t, k) );
+		luaV_gettable(t, k);
 	}
 	
 	/**

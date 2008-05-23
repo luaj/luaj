@@ -29,6 +29,10 @@ public class LFunction extends LValue {
 		return "function: "+hashCode();
 	}
 	
+	public boolean isFunction() {
+		return true;
+	}
+	
 	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
 		vm.pushlvalue( this );
 		vm.pushlvalue( table );

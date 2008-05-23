@@ -340,4 +340,9 @@ public class LValue {
 	public boolean isTable() {
 		return false;
 	}
+
+	/** Return true if this is a LFunction */
+	public boolean isFunction() {
+		return false;
+	}
 }
