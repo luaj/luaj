@@ -144,15 +144,14 @@ public final class LuajavaLib extends LFunction {
 			super(o);
 			this.clazz = clazz;
 		}
-		public void luaGetTable(LuaState vm, LValue table, LValue key) {
+		public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
 			final String s = key.toJavaString();
 			try {
 				Field f = clazz.getField(s);
 				Object o = f.get(m_instance);
-				LValue v = CoerceJavaToLua.coerce( o );
-				vm.pushlvalue( v );
+				return CoerceJavaToLua.coerce( o );
 			} catch (NoSuchFieldException nsfe) {
-				vm.pushlvalue( new LMethod(m_instance,clazz,s) );
+				return new LMethod(m_instance,clazz,s);
 			} catch (Exception e) {
 				throw new LuaErrorException(e);
 			}

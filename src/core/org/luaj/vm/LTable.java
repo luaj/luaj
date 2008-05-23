@@ -77,6 +77,10 @@ public class LTable extends LValue {
 		hashValues = new Object[nhash];
 	}
 
+	public boolean isTable() {
+		return true;
+		
+	}
 	/** Get capacity of hash part */
 	public int getArrayCapacity() {
 		return array.length;
@@ -229,12 +233,12 @@ public class LTable extends LValue {
 	}
 	
 
-	public void luaGetTable(LuaState vm, LValue table, LValue key) {
+	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
 		LValue v = get(key);
 		if ( v.isNil() && m_metatable != null ) {
-			super.luaGetTable( vm, table, key );
+			return super.luaGetTable( vm, table, key );
 		} else {
-			vm.pushlvalue(v);
+			return v;
 		}
 	}
 	

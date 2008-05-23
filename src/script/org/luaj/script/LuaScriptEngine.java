@@ -183,11 +183,11 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
         b.put(k,v);
 	}
 
-	public void luaGetTable(LuaState vm, LValue table, LValue key) {
+	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
 		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
 		String k = key.toJavaString();
 		Object v = b.get(k);
-		vm.pushlvalue((LValue)v);
+		return (LValue) v;
 	}
     
     public Bindings getBindings(int scope) {

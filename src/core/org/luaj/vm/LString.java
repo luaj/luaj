@@ -163,7 +163,11 @@ public class LString extends LValue {
 	public static LString newStringNoCopy(byte[] buf, int off, int len) {
 		return new LString( buf, off, len );
 	}
-	
+
+	public boolean isString() {
+		return true;
+	}
+
 	public boolean equals(Object o) {
 		if ( o != null && o instanceof LString ) {
 			LString s = (LString) o;

@@ -195,8 +195,8 @@ public class PackageLib extends LFunction {
 		
 		
 		/* check whether table already has a _NAME field */
-		module.luaGetTable(vm, module, _NAME);
-		if ( vm.isnil(-1) ) {
+		LValue name = module.luaGetTable(vm, module, _NAME);
+		if ( name.isNil() ) {
 			modinit( vm, module, modname );
 		}
 		
@@ -289,9 +289,10 @@ public class PackageLib extends LFunction {
 		vm.settop(0);
 		
 		/* else must load it; iterate over available loaders */
-		pckg.luaGetTable(vm, pckg, _LOADERS);
-		if ( ! vm.istable(1) )
+		LValue val = pckg.luaGetTable(vm, pckg, _LOADERS);
+		if ( ! val.isTable() )
 			vm.error( "'package.loaders' must be a table" );
+		vm.pushlvalue(val);
 		Vector v = new Vector();
 		for ( int i=1; true; i++ ) {
 		    vm.rawgeti(1, i);
@@ -330,15 +331,14 @@ public class PackageLib extends LFunction {
 
 	private void loader_preload( LuaState vm ) {
 		LString name = vm.tolstring(2);
-		pckg.luaGetTable(vm, pckg, _PRELOAD);
-		if ( ! vm.istable(-1) )
+		LValue preload = pckg.luaGetTable(vm, pckg, _PRELOAD);
+		if ( ! preload.isTable() )
 			vm.error("package.preload '"+name+"' must be a table");
-		LTable preload = vm.totable(-1); 
-		preload.luaGetTable(vm, preload, name);
-		if ( vm.isnil(-1) )
+		LValue val = preload.luaGetTable(vm, preload, name);
+		if ( val.isNil() )
 			vm.pushstring("\n\tno field package.preload['"+name+"']");
-		vm.insert(1);
-		vm.settop(1);
+		vm.resettop();
+		vm.pushlvalue(val);
 	}
 
 	private void loader_Lua( LuaState vm ) {
@@ -372,10 +372,10 @@ public class PackageLib extends LFunction {
 
 	private InputStream findfile(LuaState vm, String name, LString pname) {
 		Platform p = Platform.getInstance();
-		pckg.luaGetTable(vm, pckg, pname);
-		if ( ! vm.isstring(-1) )
+		LValue pkg = pckg.luaGetTable(vm, pckg, pname);
+		if ( ! pkg.isString() )
 			vm.error("package."+pname+" must be a string");
-		String path = vm.tostring(-1);
+		String path = pkg.toJavaString();
 		int e = -1;
 		int n = path.length();
 		StringBuffer sb = null;

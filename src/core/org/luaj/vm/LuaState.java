@@ -558,17 +558,17 @@ public class LuaState extends Lua {
             case LuaState.OP_GETGLOBAL: {
                 b = LuaState.GETARG_Bx(i);
                 key = k[b];
-                table = cl.env;
-                top = base + a;
-                table.luaGetTable(this, table, key);
+                table = cl.env;    
+                this.top = base + a;
+                this.stack[base+a] = table.luaGetTable(this, table, key);
                 continue;
             }
             case LuaState.OP_GETTABLE: {
                 b = LuaState.GETARG_B(i);
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
-                top = base + a;
-                table.luaGetTable(this, table, key);
+                this.top = base + a;
+                this.stack[base+a] = table.luaGetTable(this, table, key);
                 continue;
             }
             case LuaState.OP_SETGLOBAL: {
@@ -576,6 +576,7 @@ public class LuaState extends Lua {
                 key = k[b];
                 val = this.stack[base + a];
                 table = cl.env;
+                this.top = base + a;
                 table.luaSetTable(this, table, key, val);
                 continue;
             }
@@ -588,6 +589,7 @@ public class LuaState extends Lua {
                 key = GETARG_RKB(k, i);
                 val = GETARG_RKC(k, i);
                 table = this.stack[base + a];
+                this.top = base + a;
                 table.luaSetTable(this, table, key, val);
                 continue;
             }
@@ -600,8 +602,8 @@ public class LuaState extends Lua {
             case LuaState.OP_SELF: {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
-                top = base + a;
-                rkb.luaGetTable(this, rkb, rkc);
+                this.top = base + a;
+                this.stack[base + a] = rkb.luaGetTable(this, rkb, rkc);
                 this.stack[base + a + 1] = rkb;
                 // StkId rb = RB(i);
                 // setobjs2s(L, ra+1, rb);
@@ -1327,7 +1329,7 @@ public class LuaState extends Lua {
 	 */
 	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		t.luaGetTable(this, t, k);
+		pushlvalue( t.luaGetTable(this, t, k) );
 	}
 	
 	/**
@@ -1344,7 +1346,7 @@ public class LuaState extends Lua {
 	 */
 	public void getglobal(String s) {
 		LTable t = this._G;
-		t.luaGetTable(this, t, new LString(s));
+		pushlvalue( t.luaGetTable(this, t, new LString(s)) );
 	}
 	
 	/**
@@ -1385,7 +1387,7 @@ public class LuaState extends Lua {
 		LValue k = poplvalue();
 		// todo: what if this triggers metatable ops
 		// pushlvalue( t.luaGetTable(this, t, k) );
-		t.luaGetTable(this, t, k);
+		pushlvalue( t.luaGetTable(this, t, k) );
 	}
 	
 	/**
@@ -1518,7 +1520,7 @@ public class LuaState extends Lua {
 	 * number (which is always convertible to a string), and 0&nbsp;otherwise.
 	 */
 	public boolean isstring(int index) {
-		return type(index) == Lua.LUA_TSTRING;
+		return topointer(index).isString();
 	}
 
 	/**
@@ -1529,7 +1531,7 @@ public class LuaState extends Lua {
 	 * 0&nbsp;otherwise.
 	 */
 	public boolean istable(int index) {
-		return type(index) == Lua.LUA_TTABLE;
+		return topointer(index).isTable();
 	}
 
 	/**

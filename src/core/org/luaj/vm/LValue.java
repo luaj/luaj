@@ -51,8 +51,9 @@ public class LValue {
 		throw new LuaErrorException( "attempt to compare "+typea+" with "+typeb );
 	}
 
-	private void indexError(LuaState vm, LValue nontable) {
+	private LValue indexError(LuaState vm, LValue nontable) {
 		vm.error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
+		return LNil.NIL;
 	}
 
 	public String id() {
@@ -146,17 +147,17 @@ public class LValue {
 	 * @param vm the calling vm
 	 * @param table the table from which to get the value 
 	 * @param key the key to look up
+	 * @return TODO
 	 */
-	public void luaGetTable(LuaState vm, LValue table, LValue key) {
+	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
 		LTable mt = luaGetMetatable();
 		if ( mt != null ) {
 			LValue event = mt.get( TM_INDEX );
 			if ( event != null && ! event.isNil() ) {
-				event.luaGetTable( vm, table, key );
-				return;
+				return event.luaGetTable( vm, table, key );
 			}
 		}
-		indexError( vm, table );
+		return indexError( vm, table );
 	}
 	
 	/** Get the value as a LString 
@@ -328,5 +329,15 @@ public class LValue {
 	/** Concatenate this value to a ByteArrayOutputStream */
 	public void luaConcatTo(ByteArrayOutputStream baos) {
 		throw new LuaErrorException( "attempt to concat ? (a "+luaGetTypeName()+" value)");
+	}
+
+	/** Return true if this is a LString */
+	public boolean isString() {
+		return false;
+	}
+
+	/** Return true if this is a LTable */
+	public boolean isTable() {
+		return false;
 	}
 }

@@ -37,11 +37,12 @@ public class LFunction extends LValue {
 		vm.call( 3, 0 );
 	}
 
-	public void luaGetTable(LuaState vm, LValue table, LValue key) {
+	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
 		vm.pushlvalue( this );
 		vm.pushlvalue( table );
 		vm.pushlvalue( key );
 		vm.call( 2, 1 );
+		return vm.poplvalue();
 	}
 	
 	public int luaGetType() {
