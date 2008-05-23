@@ -162,7 +162,7 @@ public class LuaState extends Lua {
         checkstack( c.p.maxstacksize );
         if ( ! c.p.is_vararg ) {
             base += 1;
-            adjustTop( base+c.p.numparams );
+            luaV_adjusttop( base+c.p.numparams );
         } else {
             /* vararg function */
             int npar = c.p.numparams;
@@ -175,7 +175,7 @@ public class LuaState extends Lua {
             System.arraycopy(stack, base+1, stack, top+1, nfix);
             base = top + 1;
             top = base + nfix;
-            adjustTop( base + npar );
+            luaV_adjusttop( base + npar );
         }
         final int newcc = cc + 1;
         if ( newcc >= calls.length ) {
@@ -306,7 +306,7 @@ public class LuaState extends Lua {
         // and number of args > 0.  If call completed but 
         // c == 0, leave top to point to end of results
         if (nreturns >= 0)
-            adjustTop(rb + nreturns);
+        	luaV_adjusttop(rb + nreturns);
         
         // restore base
         this.base = oldbase;
@@ -386,7 +386,7 @@ public class LuaState extends Lua {
             // and number of args > 0.  If call completed but 
             // c == 0, leave top to point to end of results
             if (nreturns >= 0)
-                adjustTop(rb + nreturns);
+            	luaV_adjusttop(rb + nreturns);
             
             // restore base
             this.base = oldbase;
@@ -397,7 +397,7 @@ public class LuaState extends Lua {
             this.cc = oldcc;
             closeUpVals(oldtop);  /* close eventual pending closures */
             String s = t.getMessage();
-            settop(0);
+            resettop();
             pushstring( s!=null? s: t.toString() ); 
             return (t instanceof OutOfMemoryError? LUA_ERRMEM: LUA_ERRRUN);
         }
@@ -473,12 +473,6 @@ public class LuaState extends Lua {
         return RKBC(k, GETARG_C(i));
     }
 
-    private void adjustTop(int newTop) {
-        while (top < newTop)
-            this.stack[top++] = LNil.NIL;
-        top = newTop;
-    }
-    
 	private final void stackClear(int startIndex, int endIndex) {
 		for (; startIndex < endIndex; startIndex++) {
 			stack[startIndex] = LNil.NIL;
@@ -560,16 +554,14 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_Bx(i);
                 key = k[b];
                 table = cl.env;    
-                this.top = base + a;
-                luaV_gettable(table, key);
+                this.stack[base + a] = luaV_gettable(table, key);
                 continue;
             }
             case LuaState.OP_GETTABLE: {
                 b = LuaState.GETARG_B(i);
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
-                this.top = base + a;
-                luaV_gettable(table, key);
+                this.stack[base + a] = luaV_gettable(table, key);
                 continue;
             }
             case LuaState.OP_SETGLOBAL: {
@@ -577,7 +569,6 @@ public class LuaState extends Lua {
                 key = k[b];
                 val = this.stack[base + a];
                 table = cl.env;
-                this.top = base + a;
                 luaV_settable(table, key, val);
                 continue;
             }
@@ -590,7 +581,6 @@ public class LuaState extends Lua {
                 key = GETARG_RKB(k, i);
                 val = GETARG_RKC(k, i);
                 table = this.stack[base + a];
-                this.top = base + a;
                 luaV_settable(table, key, val);
                 continue;
             }
@@ -603,8 +593,7 @@ public class LuaState extends Lua {
             case LuaState.OP_SELF: {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
-                this.top = base + a;
-                luaV_gettable(rkb, rkc);
+                this.stack[base + a] = luaV_gettable(rkb, rkc);
                 this.stack[base + a + 1] = rkb;
                 // StkId rb = RB(i);
                 // setobjs2s(L, ra+1, rb);
@@ -686,7 +675,7 @@ public class LuaState extends Lua {
                 // number of args
                 b = LuaState.GETARG_B(i);
                 if (b != 0) // else use previous instruction set top
-                    top = base + b;
+                    luaV_settop_fillabove( base + b );
                 
                 // number of return values we need
                 c = LuaState.GETARG_C(i);
@@ -700,7 +689,7 @@ public class LuaState extends Lua {
                 // and number of args > 0. If call completed but
                 // c == 0, leave top to point to end of results
                 if (c > 0)
-                    adjustTop(base + c - 1);
+                	luaV_adjusttop(base + c - 1);
                 
                 // restore base
                 base = ci.base;
@@ -715,13 +704,15 @@ public class LuaState extends Lua {
 
                 // number of args (including the function)
                 b = LuaState.GETARG_B(i);
-                if (b == 0)
+                if (b != 0) // else use previous instruction set top
+                    luaV_settop_fillabove( base + a + b );
+                else
                     b = top - (base + a);
 
                 // copy call + all args, discard current frame
                 System.arraycopy(stack, base + a, stack, ci.resultbase, b);
                 this.base = ci.resultbase;
-                this.top = base + b;
+                luaV_settop_fillabove( base + b );
                 this.nresults = ci.nresults;
                 --cc;
                 
@@ -742,28 +733,30 @@ public class LuaState extends Lua {
                 // and number of args > 0. If call completed but
                 // c == 0, leave top to point to end of results
                 if (this.nresults >= 0)
-                    adjustTop(base + nresults);
+                	luaV_adjusttop(base + nresults);
 
                 // force restore of base, etc.
                 return;
             }
 
             case LuaState.OP_RETURN: {
+                closeUpVals( base ); 
+
                 // number of return vals to return
                 b = LuaState.GETARG_B(i) - 1; 
-                if (b == -1)
+                if (b >= 0) // else use previous instruction set top
+                    luaV_settop_fillabove( base + a + b );
+                else
                     b = top - (base + a);
-
-                // close open upvals
-                closeUpVals( base ); 
 
                 // number to copy down
                 System.arraycopy(stack, base + a, stack, ci.resultbase, b);
-                top = ci.resultbase + b;
+                debugAssert( ci.resultbase + b <= top );
+                luaV_settop_fillabove( ci.resultbase + b );
 
                 // adjust results to what caller expected
                 if (ci.nresults >= 0)
-                    adjustTop(ci.resultbase + ci.nresults);
+                	luaV_adjusttop(ci.resultbase + ci.nresults);
 
                 // pop the call stack
                 --cc;
@@ -782,7 +775,6 @@ public class LuaState extends Lua {
                 if (body) {
                     this.stack[base + a] = idx;
                     this.stack[base + a + 3] = idx;
-                    top = base + a + 3 + 1;
                     ci.pc += LuaState.GETARG_sBx(i);
                 }
                 continue;
@@ -799,7 +791,7 @@ public class LuaState extends Lua {
             	cb = base + a + 3; /* call base */
             	base = cb;
                 System.arraycopy(this.stack, cb-3, this.stack, cb, 3);
-                top = cb + 3;
+                luaV_settop_fillabove( cb + 3 );
                 
                 // call the iterator
                 c = LuaState.GETARG_C(i);
@@ -807,7 +799,7 @@ public class LuaState extends Lua {
                 if (this.stack[cb].luaStackCall(this))
                     execute();
                 base = ci.base;
-                adjustTop( cb + c );
+                luaV_adjusttop( cb + c );
                 
                 // test for continuation
                 if (!this.stack[cb].isNil() ) { // continue?
@@ -832,7 +824,6 @@ public class LuaState extends Lua {
                 for (int j=1; j<=b; j++) {
                     tbl.put(offset+j, stack[listBase + j]);
                 }
-                top = base + a - 1;
                 continue;
             }
             case LuaState.OP_CLOSE: {
@@ -874,7 +865,7 @@ public class LuaState extends Lua {
                     this.stack[base + a + j] = (j < n ? this.stack[base
                             - n + j - 1]
                             : LNil.NIL);
-                top = base + a + b;
+                luaV_settop_fillabove( base + a + b );
                 continue;
             }            
             }
@@ -920,20 +911,17 @@ public class LuaState extends Lua {
 		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
 	}
     
-    public void luaV_gettable(LValue table, LValue key) {
-    	LTable m;
-    	LValue v,h=LNil.NIL,t=table;
+    public LValue luaV_gettable(LValue table, LValue key) {
+    	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
     		if ( t.isTable() ) {
-    			v = ((LTable) t).get(key);
+    			LValue v = ((LTable) t).get(key);
     			if ( !v.isNil() ) {
-    				pushlvalue( v );
-    				return;
+    				return v;
     			}
     			h = mtget(t, LTable.TM_INDEX);
     			if ( h == null ) {
-    				pushnil();
-    				return;
+    				return v;
     			}
     		} else {
     			h = mtget(t, LTable.TM_INDEX);
@@ -942,20 +930,29 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	    	pushlvalue(h);
-       	    	pushlvalue(table);
-       	    	pushlvalue(key);
-       	    	call(2,1);
-       	    	return;
+       	    	LFunction f = (LFunction) h;
+       	        int oldtop = top;
+       	        int oldbase = base;
+       	        try {
+	       	    	pushlvalue(h);
+	       	    	pushlvalue(table);
+	       	    	pushlvalue(key);
+	       	    	call(2,1);
+	       	    	return poplvalue();
+       	        } finally {
+       	        	resettop();
+       	        	base = oldbase;
+       	        	top = oldtop;
+       	        }
        	    }
        	    t = h;
     	}
       	error("loop in gettable");
+      	return LNil.NIL;
    	}    
     
     public void luaV_settable(LValue table, LValue key, LValue val) {
-    	LTable m;
-    	LValue v,h=LNil.NIL,t=table;
+    	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
     		if ( t.isTable() ) {
     			LTable lt = (LTable) t;
@@ -975,17 +972,42 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	    	pushlvalue(h);
-       	    	pushlvalue(table);
-       	    	pushlvalue(key);
-       	    	pushlvalue(val);
-       	    	call(3,0);
-       	    	return;
+       	    	LFunction f = (LFunction) h;
+       	        int oldtop = top;
+       	        int oldbase = base;
+       	        try {
+	       	    	pushlvalue(h);
+	       	    	pushlvalue(table);
+	       	    	pushlvalue(key);
+	       	    	pushlvalue(val);
+	       	    	call(3,0);
+	       	    	return;
+	   	        } finally {
+	   	        	resettop();
+	   	        	base = oldbase;
+	   	        	top = oldtop;
+	   	        }
        	    }
        	    t = h;
     	}
       	error("loop in settable");
    	}    
+
+    /** Move top, and fill in both directions */
+    private void luaV_adjusttop(int newTop) {
+        while (top < newTop)
+            this.stack[top++] = LNil.NIL;
+        while (top > newTop)
+            this.stack[--top] = LNil.NIL;
+    }
+
+    /** Move top down, filling from above */
+    private void luaV_settop_fillabove(int newTop) {
+        while (top > newTop)
+            this.stack[--top] = LNil.NIL;
+        top = newTop;
+    }
+	
     
     //===============================================================
     //              Lua Java API
@@ -1328,7 +1350,7 @@ public class LuaState extends Lua {
 	 * Otherwise you can use the function <a href="#lua_newtable"><code>lua_newtable</code></a>.
 	 */
 	public void createtable(int narr, int nrec) {
-		stack[top++] = new LTable(narr, nrec);
+		pushlvalue( new LTable(narr, nrec) );
 	}
 	
 	/**
@@ -1408,7 +1430,7 @@ public class LuaState extends Lua {
 	 */
 	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		luaV_gettable(t, k);
+		pushlvalue( luaV_gettable(t, k) );
 	}
 	
 	/**
@@ -1424,7 +1446,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		luaV_gettable(_G, new LString(s));
+		pushlvalue( luaV_gettable(_G, new LString(s)) );
 	}
 	
 	/**
@@ -1463,7 +1485,7 @@ public class LuaState extends Lua {
 	public void gettable(int index) {
 		LValue t = totable(index);
 		LValue k = poplvalue();
-		luaV_gettable(t, k);
+		pushlvalue( luaV_gettable(t, k) );
 	}
 	
 	/**
@@ -1655,7 +1677,7 @@ public class LuaState extends Lua {
 	 * to <code>lua_createtable(L, 0, 0)</code>.
 	 */
 	public void newtable() {
-		stack[top++] = new LTable();
+		pushlvalue( new LTable() );
 	}
 
 	/**
@@ -1700,7 +1722,7 @@ public class LuaState extends Lua {
 	 * userdata is collected again then Lua frees its corresponding memory.
 	 */
 	public void newuserdata(Object o) {
-		stack[top++] = new LUserData(o);
+		pushlvalue( new LUserData(o) );
 	}
 
 	/**
@@ -1762,11 +1784,12 @@ public class LuaState extends Lua {
 	 */
 	public void pop(int n) {
 		for ( int i=0; i<n; i++ )
-			stack[--top] = null;
+			stack[--top] = LNil.NIL;
 	}
+	
 	public LValue poplvalue() {
 		LValue p = stack[--top];
-		stack[top] = null;
+		stack[top] = LNil.NIL;
 		return p;
 		
 	}
@@ -2018,7 +2041,7 @@ public class LuaState extends Lua {
 	public void remove(int index) {
 		int ai = index2adr(index);
 		System.arraycopy(stack, ai+1, stack, ai, top-ai-1);
-		--top;
+		poplvalue();
 	}
 
 	/**
@@ -2290,19 +2313,15 @@ public class LuaState extends Lua {
 		int ant = nt>=0? base+nt: top+nt;
 		if ( ant < base )
 			throw new IllegalArgumentException("index out of bounds: "+ant );
-		while ( top < ant )
-			stack[top++] = LNil.NIL;
-		while ( top > ant )
-			stack[--top] = null;
+		luaV_adjusttop(ant);
 	}
 
+	
 	/** 
 	 * Set the top to the base.  Equivalent to settop(0) 
 	 */
 	public void resettop() {
-		debugAssert( top >= base );
-		while ( top > base )
-			stack[--top] = null;
+        luaV_settop_fillabove( base );
 	}
 	
 	private int index2adr(int index) {
@@ -2420,6 +2439,7 @@ public class LuaState extends Lua {
 		if ( n > 0 ) {
 			to.checkstack(n);
 			LuaState ss = (LuaState)to;
+			ss.checkstack(n);
 			System.arraycopy(stack, top-n, ss.stack, ss.top, n);
 			ss.top += n;
 		}

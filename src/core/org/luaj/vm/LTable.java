@@ -233,8 +233,7 @@ public class LTable extends LValue {
 	}
 	
 	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-		vm.luaV_gettable(table, key);
-		return vm.poplvalue();
+		return vm.luaV_gettable(table, key);
 	}
 	
 	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
