@@ -930,10 +930,11 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	    	LFunction f = (LFunction) h;
        	        int oldtop = top;
        	        int oldbase = base;
        	        try {
+       	        	base = base + this.calls[cc].closure.p.maxstacksize;
+       	        	top = base;
 	       	    	pushlvalue(h);
 	       	    	pushlvalue(table);
 	       	    	pushlvalue(key);
@@ -972,10 +973,11 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	    	LFunction f = (LFunction) h;
        	        int oldtop = top;
        	        int oldbase = base;
        	        try {
+       	        	base = base + this.calls[cc].closure.p.maxstacksize;
+       	        	top = base;
 	       	    	pushlvalue(h);
 	       	    	pushlvalue(table);
 	       	    	pushlvalue(key);
