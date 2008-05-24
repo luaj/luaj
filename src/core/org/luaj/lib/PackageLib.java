@@ -286,7 +286,7 @@ public class PackageLib extends LFunction {
 			vm.pushlvalue( loaded );
 			return;
 		}
-		vm.settop(0);
+		vm.resettop();
 		
 		/* else must load it; iterate over available loaders */
 		LValue val = pckg.luaGetTable(vm, pckg, _LOADERS);
@@ -315,12 +315,11 @@ public class PackageLib extends LFunction {
 		vm.call( 1, 1 ); /* run loaded module */
 		if ( ! vm.isnil(-1) ) /* non-nil return? */
 			LOADED.luaSetTable(vm, LOADED, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
-		LOADED.luaGetTable(vm, LOADED, name);		
-		if ( vm.topointer(-1) == _SENTINEL ) {   /* module did not set a value? */
+		if ( LOADED.luaGetTable(vm, LOADED, name) == _SENTINEL ) {   /* module did not set a value? */
 			LOADED.luaSetTable(vm, LOADED, name, LBoolean.TRUE ); /* _LOADED[name] = true */
 			vm.pushboolean(true);
 		}
-		vm.insert(1);
+		vm.replace(1);
 		vm.settop(1);
 	}
 
