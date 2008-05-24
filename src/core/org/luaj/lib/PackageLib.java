@@ -315,12 +315,12 @@ public class PackageLib extends LFunction {
 		vm.call( 1, 1 ); /* run loaded module */
 		if ( ! vm.isnil(-1) ) /* non-nil return? */
 			LOADED.luaSetTable(vm, LOADED, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
-		if ( LOADED.luaGetTable(vm, LOADED, name) == _SENTINEL ) {   /* module did not set a value? */
-			LOADED.luaSetTable(vm, LOADED, name, LBoolean.TRUE ); /* _LOADED[name] = true */
-			vm.pushboolean(true);
+		LValue result = LOADED.luaGetTable(vm, LOADED, name); 
+		if ( result == _SENTINEL ) {   /* module did not set a value? */
+			LOADED.luaSetTable(vm, LOADED, name, result=LBoolean.TRUE ); /* _LOADED[name] = true */
 		}
-		vm.replace(1);
-		vm.settop(1);
+		vm.resettop();
+		vm.pushlvalue(result);
 	}
 
 	public static void loadlib( LuaState vm ) {
