@@ -899,7 +899,11 @@ public class LuaState extends Lua {
         return calls[cc-callStackDepth];
     }
     
-    private LValue mtget(LValue t, LString tag) {
+    private void indexError(LValue nontable) {
+		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
+	}
+    
+    private LValue luaV_getmetafield(LValue t, LString tag) {
     	LTable mt = t.luaGetMetatable();
     	if ( mt == null )
     		return null;
@@ -907,10 +911,6 @@ public class LuaState extends Lua {
     	return h.isNil()? null: h;
     }
 
-    private void indexError(LValue nontable) {
-		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
-	}
-    
     public LValue luaV_gettable(LValue table, LValue key) {
     	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
@@ -919,12 +919,12 @@ public class LuaState extends Lua {
     			if ( !v.isNil() ) {
     				return v;
     			}
-    			h = mtget(t, LTable.TM_INDEX);
+    			h = luaV_getmetafield(t, LTable.TM_INDEX);
     			if ( h == null ) {
     				return v;
     			}
     		} else {
-    			h = mtget(t, LTable.TM_INDEX);
+    			h = luaV_getmetafield(t, LTable.TM_INDEX);
     			if ( h == null ) {
     				indexError(t);
     			}
@@ -961,13 +961,13 @@ public class LuaState extends Lua {
     				lt.put(key, val);
     				return;
     			}
-    			h = mtget(t, LTable.TM_NEWINDEX);
+    			h = luaV_getmetafield(t, LTable.TM_NEWINDEX);
     			if ( h == null ) {
     				lt.put(key, val);
     				return;
     			}
     		} else {
-    			h = mtget(t, LTable.TM_NEWINDEX);
+    			h = luaV_getmetafield(t, LTable.TM_NEWINDEX);
     			if ( h == null ) {
     				indexError(t);
     			}

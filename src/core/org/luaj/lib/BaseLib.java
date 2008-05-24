@@ -175,8 +175,13 @@ public class BaseLib extends LFunction {
 				vm.resettop();
 				vm.pushnil();
 			} else {
-				vm.insert(1);
+				vm.replace(1);
 				vm.settop(1);
+				vm.getfield(-1,LValue.TM_METATABLE);
+				if ( vm.isnil(-1) )
+					vm.pop(1);
+				else
+					vm.remove(1);
 			}
 			break;
 		}

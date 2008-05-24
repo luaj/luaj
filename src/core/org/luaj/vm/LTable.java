@@ -270,7 +270,7 @@ public class LTable extends LValue {
 	}
 		
 	/** Valid for tables */
-	public org.luaj.vm.LTable luaGetMetatable() {
+	public LTable luaGetMetatable() {
 		return this.m_metatable;
 	}
 
