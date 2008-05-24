@@ -176,9 +176,7 @@ public class TableLib extends LFunction {
 			LTable table = vm.totable(2);
 			int pos = (n>=3? vm.tointeger(3): 0);
 			vm.resettop();
-			LValue v = table.luaRemovePos(pos);
-			if ( ! v.isNil() )
-				vm.pushlvalue( v );
+			vm.pushlvalue( table.luaRemovePos(pos) );
 			break;
 		}
 			
