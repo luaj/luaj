@@ -290,26 +290,28 @@ public class LuaState extends Lua {
     public void call( int nargs, int nreturns ) {
         // save stack state
         int oldbase = base;
-
-        // rb is base of new call frame
-        int rb = this.base = top - 1 - nargs;
-
-        // make or set up the call
-        this.nresults = nreturns;
-        if (this.stack[base].luaStackCall(this)) {
-            // call was set up on the stack, 
-            // we still have to execute it
-            execute();
+        try {
+	
+	        // rb is base of new call frame
+	        int rb = this.base = top - 1 - nargs;
+	
+	        // make or set up the call
+	        this.nresults = nreturns;
+	        if (this.stack[base].luaStackCall(this)) {
+	            // call was set up on the stack, 
+	            // we still have to execute it
+	            execute();
+	        }
+	        
+	        // adjustTop only for case when call was completed
+	        // and number of args > 0.  If call completed but 
+	        // c == 0, leave top to point to end of results
+	        if (nreturns >= 0)
+	        	luaV_adjusttop(rb + nreturns);
+	        
+        } finally {
+        	this.base = oldbase;
         }
-        
-        // adjustTop only for case when call was completed
-        // and number of args > 0.  If call completed but 
-        // c == 0, leave top to point to end of results
-        if (nreturns >= 0)
-        	luaV_adjusttop(rb + nreturns);
-        
-        // restore base
-        this.base = oldbase;
     }
 
 	/**
@@ -554,7 +556,7 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_Bx(i);
                 key = k[b];
                 table = cl.env;
-                val = luaV_gettable(table, key);
+                val = table.luaGetTable(this, key);
                 this.stack[base + a] = val;
                 continue;
             }
@@ -562,7 +564,7 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_B(i);
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
-                val = luaV_gettable(table, key);
+                val = table.luaGetTable(this, key);
                 this.stack[base + a] = val;
                 continue;
             }
@@ -571,7 +573,7 @@ public class LuaState extends Lua {
                 key = k[b];
                 val = this.stack[base + a];
                 table = cl.env;
-                luaV_settable(table, key, val);
+                table.luaSetTable(this, key, val);
                 continue;
             }
             case LuaState.OP_SETUPVAL: {
@@ -583,7 +585,7 @@ public class LuaState extends Lua {
                 key = GETARG_RKB(k, i);
                 val = GETARG_RKC(k, i);
                 table = this.stack[base + a];
-                luaV_settable(table, key, val);
+                table.luaSetTable(this, key, val);
                 continue;
             }
             case LuaState.OP_NEWTABLE: {
@@ -595,7 +597,7 @@ public class LuaState extends Lua {
             case LuaState.OP_SELF: {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
-                val = luaV_gettable(rkb, rkc);
+                val = rkb.luaGetTable(this, rkc);
                 this.stack[base + a] = val;
                 this.stack[base + a + 1] = rkb;
                 continue;
@@ -903,7 +905,7 @@ public class LuaState extends Lua {
 		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
 	}
     
-    private LValue luaV_getmetafield(LValue t, LString tag) {
+    public static LValue luaV_getmetafield(LValue t, LString tag) {
     	LTable mt = t.luaGetMetatable();
     	if ( mt == null )
     		return null;
@@ -911,6 +913,7 @@ public class LuaState extends Lua {
     	return h.isNil()? null: h;
     }
 
+    /** Get a key from a table using full metatable processing */
     public LValue luaV_gettable(LValue table, LValue key) {
     	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
@@ -930,21 +933,7 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	        int oldtop = top;
-       	        int oldbase = base;
-       	        try {
-       	        	base = base + this.calls[cc].closure.p.maxstacksize;
-       	        	top = base;
-	       	    	pushlvalue(h);
-	       	    	pushlvalue(table);
-	       	    	pushlvalue(key);
-	       	    	call(2,1);
-	       	    	return poplvalue();
-       	        } finally {
-       	        	resettop();
-       	        	base = oldbase;
-       	        	top = oldtop;
-       	        }
+       	    	return ((LFunction)h).__index(this, table, key);
        	    }
        	    t = h;
     	}
@@ -952,6 +941,7 @@ public class LuaState extends Lua {
       	return LNil.NIL;
    	}    
     
+    /** Get a key from a table using full metatable processing */
     public void luaV_settable(LValue table, LValue key, LValue val) {
     	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
@@ -973,22 +963,8 @@ public class LuaState extends Lua {
     			}
     		}
        	    if (h.isFunction()) {
-       	        int oldtop = top;
-       	        int oldbase = base;
-       	        try {
-       	        	base = base + this.calls[cc].closure.p.maxstacksize;
-       	        	top = base;
-	       	    	pushlvalue(h);
-	       	    	pushlvalue(table);
-	       	    	pushlvalue(key);
-	       	    	pushlvalue(val);
-	       	    	call(3,0);
-	       	    	return;
-	   	        } finally {
-	   	        	resettop();
-	   	        	base = oldbase;
-	   	        	top = oldtop;
-	   	        }
+       	    	((LFunction)h).__newindex(this, table, key, val);
+       	    	return;
        	    }
        	    t = h;
     	}
@@ -1432,7 +1408,7 @@ public class LuaState extends Lua {
 	 */
 	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		pushlvalue( luaV_gettable(t, k) );
+		pushlvalue( t.luaGetTable(this, k) );
 	}
 	
 	/**
@@ -1448,7 +1424,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		pushlvalue( luaV_gettable(_G, new LString(s)) );
+		pushlvalue( _G.luaGetTable(this, new LString(s)) );
 	}
 	
 	/**
@@ -1487,7 +1463,7 @@ public class LuaState extends Lua {
 	public void gettable(int index) {
 		LValue t = totable(index);
 		LValue k = poplvalue();
-		pushlvalue( luaV_gettable(t, k) );
+		pushlvalue( t.luaGetTable(this, k) );
 	}
 	
 	/**
@@ -2101,7 +2077,7 @@ public class LuaState extends Lua {
 	 */
 	public void setfield(int index, LString k) {
 		LTable t = totable(index);
-		luaV_settable(t, k, poplvalue());
+		t.luaSetTable(this, k, poplvalue());
 	}
 
 	/**
@@ -2118,7 +2094,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void setglobal(String name) {
-		luaV_settable(_G, new LString(name), poplvalue());
+		_G.luaSetTable(this, new LString(name), poplvalue());
 	}
 
 	/**
@@ -2158,7 +2134,7 @@ public class LuaState extends Lua {
 		LTable t = totable(index);
 		LValue v = poplvalue();
 		LValue k = poplvalue();
-		luaV_settable(t, k, v);
+		t.luaSetTable(this, k, v);
 	}
 
 	/**
@@ -2636,5 +2612,85 @@ public class LuaState extends Lua {
 	 */
 	public static void vmerror(String description) {
 		throw new LuaErrorException( "internal error: "+description );
+	}
+	
+	/**  
+	 * Call a function with no arguments and one return value 
+	 * @param function
+	 * @return
+	 */
+	public LValue call(LFunction function) {
+        int oldtop = top;
+        try {
+        	top = base + this.calls[cc].closure.p.maxstacksize;
+   	    	pushlvalue(function);
+   	    	call(0,1);
+   	    	return poplvalue();
+        } finally {
+        	top = oldtop;
+        }
+	}
+
+	/**  
+	 * Call a function with one argument and one return value 
+	 * @param function
+	 * @param arg0
+	 * @return
+	 */
+	public LValue call(LFunction function, LValue arg0) {
+        int oldtop = top;
+        try {
+        	top = base + this.calls[cc].closure.p.maxstacksize;
+   	    	pushlvalue(function);
+   	    	pushlvalue(arg0);
+   	    	call(1,1);
+   	    	return poplvalue();
+        } finally {
+        	top = oldtop;
+        }
+	}
+
+	/**  
+	 * Call a function with two arguments and one return value 
+	 * @param function
+	 * @param arg0
+	 * @param arg1
+	 * @return
+	 */
+	public LValue call(LFunction function, LValue arg0, LValue arg1) {
+        int oldtop = top;
+        try {
+        	top = base + this.calls[cc].closure.p.maxstacksize;
+   	    	pushlvalue(function);
+   	    	pushlvalue(arg0);
+   	    	pushlvalue(arg1);
+   	    	call(2,1);
+   	    	return poplvalue();
+        } finally {
+        	top = oldtop;
+        }
+	}
+
+	/**  
+	 * Call a function with three arguments and one return value 
+	 * @param function
+	 * @param arg0
+	 * @param arg1
+	 * @param arg2
+	 * @return
+	 */
+	public LValue call(LFunction function, LValue arg0, LValue arg1, LValue arg2) {
+        int oldtop = top;
+        try {
+        	top = base + this.calls[cc].closure.p.maxstacksize;
+   	    	pushlvalue(function);
+   	    	pushlvalue(arg0);
+   	    	pushlvalue(arg1);
+   	    	pushlvalue(arg2);
+   	    	call(3,1);
+   	    	return poplvalue();
+        } finally {
+        	top = oldtop;
+        }
 	}
 }

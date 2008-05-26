@@ -667,7 +667,7 @@ public class StringLib extends LFunction {
 				push_onecapture( 0, soffset, end );
 				LValue k = vm.topointer( -1 );
 				vm.pop( 1 );
-				vm.pushlvalue( ((LTable) repl).luaGetTable( vm, repl, k ) );
+				vm.pushlvalue( ((LTable) repl).luaGetTable( vm, k ) );
 			} else {
 				vm.error( "string/function/table expected" );
 				return;

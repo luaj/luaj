@@ -188,14 +188,14 @@ public class PackageLib extends LFunction {
 			module = findtable( vm._G, modname );
 			if ( module == null )
 				vm.error( "name conflict for module '"+modname+"'" );
-			LOADED.luaSetTable(vm, LOADED, modname, module);
+			LOADED.luaSetTable(vm, modname, module);
 		} else {
 			module = (LTable) value;
 		}
 		
 		
 		/* check whether table already has a _NAME field */
-		LValue name = module.luaGetTable(vm, module, _NAME);
+		LValue name = module.luaGetTable(vm, _NAME);
 		if ( name.isNil() ) {
 			modinit( vm, module, modname );
 		}
@@ -244,10 +244,10 @@ public class PackageLib extends LFunction {
 
 	private static void modinit(LuaState vm, LTable module, LString modname) {
 		/* module._M = module */
-		module.luaSetTable(vm, module, _M, module);
+		module.luaSetTable(vm, _M, module);
 		int e = modname.lastIndexOf(_DOT);
-		module.luaSetTable(vm, module, _NAME, modname );
-		module.luaSetTable(vm, module, _PACKAGE, (e<0? _EMPTY: modname.substring(0,e+1)) );
+		module.luaSetTable(vm, _NAME, modname );
+		module.luaSetTable(vm, _PACKAGE, (e<0? _EMPTY: modname.substring(0,e+1)) );
 	}
 
 	/** 
@@ -289,7 +289,7 @@ public class PackageLib extends LFunction {
 		vm.resettop();
 		
 		/* else must load it; iterate over available loaders */
-		LValue val = pckg.luaGetTable(vm, pckg, _LOADERS);
+		LValue val = pckg.luaGetTable(vm, _LOADERS);
 		if ( ! val.isTable() )
 			vm.error( "'package.loaders' must be a table" );
 		vm.pushlvalue(val);
@@ -310,14 +310,14 @@ public class PackageLib extends LFunction {
 		}
 
 		// load the module using the loader
-		LOADED.luaSetTable(vm, LOADED, name, _SENTINEL);
+		LOADED.luaSetTable(vm, name, _SENTINEL);
 		vm.pushlstring( name );  /* pass name as argument to module */
 		vm.call( 1, 1 ); /* run loaded module */
 		if ( ! vm.isnil(-1) ) /* non-nil return? */
-			LOADED.luaSetTable(vm, LOADED, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
-		LValue result = LOADED.luaGetTable(vm, LOADED, name); 
+			LOADED.luaSetTable(vm, name, vm.topointer(-1) ); /* _LOADED[name] = returned value */
+		LValue result = LOADED.luaGetTable(vm, name); 
 		if ( result == _SENTINEL ) {   /* module did not set a value? */
-			LOADED.luaSetTable(vm, LOADED, name, result=LBoolean.TRUE ); /* _LOADED[name] = true */
+			LOADED.luaSetTable(vm, name, result=LBoolean.TRUE ); /* _LOADED[name] = true */
 		}
 		vm.resettop();
 		vm.pushlvalue(result);
@@ -330,10 +330,10 @@ public class PackageLib extends LFunction {
 
 	private void loader_preload( LuaState vm ) {
 		LString name = vm.tolstring(2);
-		LValue preload = pckg.luaGetTable(vm, pckg, _PRELOAD);
+		LValue preload = pckg.luaGetTable(vm, _PRELOAD);
 		if ( ! preload.isTable() )
 			vm.error("package.preload '"+name+"' must be a table");
-		LValue val = preload.luaGetTable(vm, preload, name);
+		LValue val = preload.luaGetTable(vm, name);
 		if ( val.isNil() )
 			vm.pushstring("\n\tno field package.preload['"+name+"']");
 		vm.resettop();
@@ -371,7 +371,7 @@ public class PackageLib extends LFunction {
 
 	private InputStream findfile(LuaState vm, String name, LString pname) {
 		Platform p = Platform.getInstance();
-		LValue pkg = pckg.luaGetTable(vm, pckg, pname);
+		LValue pkg = pckg.luaGetTable(vm, pname);
 		if ( ! pkg.isString() )
 			vm.error("package."+pname+" must be a string");
 		String path = pkg.toJavaString();

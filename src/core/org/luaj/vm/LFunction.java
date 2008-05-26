@@ -65,5 +65,31 @@ public class LFunction extends LValue {
 	public int invoke( LuaState lua ) {
 		return 0;
 	}
+
+	/** 
+	 * Process lua tag method __index when it points to a function.
+	 * Default method calls the function using the vm.
+	 * 
+	 * @param vm
+	 * @param table
+	 * @param key
+	 * @return
+	 */
+	public LValue __index(LuaState vm, LValue table, LValue key) {
+		return vm.call(this, table, key);
+	}
+
+	/**
+	 * Process lua tag method __newindex when it points to a function 
+	 * Default method calls the function using the vm.
+	 * 
+	 * @param vm
+	 * @param table
+	 * @param key
+	 * @param val
+	 */
+	public void __newindex(LuaState vm, LValue table, LValue key, LValue val) {
+		vm.call(this, table, key, val);
+	}
 	
 }

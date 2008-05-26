@@ -39,6 +39,8 @@ public class LValue {
 	/** Metatable tag for setting table mode */
 	public static final LString TM_MODE = new LString("__mode");
 	
+    private static final int MAXTAGLOOP	= 100;
+	
 	protected void conversionError(String target) {
 		throw new LuaErrorException( "bad conversion: "+luaGetTypeName()+" to "+target );
 	}
@@ -124,40 +126,19 @@ public class LValue {
 		return false;
 	}
 	
-	/** set a value in a table
-	 * For non-tables, goes straight to the meta-table.
-	 * @param vm the calling vm
-	 * @param table the table to operate on
-	 * @param the key to set
-	 * @param the value to set
+	/** Dispatch a settable operation.  
+	 * Default method delegates back to the vm for metatable processing.
 	 */
-	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
-		LTable mt = luaGetMetatable();
-		if ( mt != null ) {
-			LValue event = mt.get( TM_NEWINDEX );
-			if ( event != null && ! event.isNil() ) {
-				event.luaSetTable( vm, table, key, val );
-				return;
-			}
-		}
-		indexError( vm, table );
+	public void luaSetTable(LuaState vm, LValue key, LValue val) {
+		vm.luaV_settable(this, key, val);
 	}
 	
-	/** Get a value from a table 
-	 * @param vm the calling vm
-	 * @param table the table from which to get the value 
-	 * @param key the key to look up
-	 * @return TODO
+    
+	/** Dispatch a gettable operation.  
+	 * Default method delegates back to the vm for metatable processing.
 	 */
-	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-		LTable mt = luaGetMetatable();
-		if ( mt != null ) {
-			LValue event = mt.get( TM_INDEX );
-			if ( event != null && ! event.isNil() ) {
-				return event.luaGetTable( vm, table, key );
-			}
-		}
-		return indexError( vm, table );
+	public LValue luaGetTable(LuaState vm, LValue key) {
+		return vm.luaV_gettable(this, key);
 	}
 	
 	/** Get the value as a LString 
