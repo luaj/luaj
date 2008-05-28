@@ -59,7 +59,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion byteCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.toJavaByte();
+				return new Byte( value.toJavaByte() );
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
@@ -71,7 +71,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion charCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.toJavaChar();
+				return new Character( value.toJavaChar() );
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
@@ -83,7 +83,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion shortCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.toJavaShort();
+				return new Short( value.toJavaShort() );
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
@@ -109,7 +109,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion longCoercion = new Coercion() {
 			public Object coerce(LValue value) {
-				return value.toJavaLong();
+				return new Long( value.toJavaLong() );
 			} 
 			public int score(LValue value) {
 				if ( value instanceof LInteger )
