@@ -556,7 +556,7 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_Bx(i);
                 key = k[b];
                 table = cl.env;
-                val = table.luaGetTable(this, key);
+                val = this.luaV_gettable(table, key);
                 this.stack[base + a] = val;
                 continue;
             }
@@ -564,7 +564,7 @@ public class LuaState extends Lua {
                 b = LuaState.GETARG_B(i);
                 key = GETARG_RKC(k, i);
                 table = this.stack[base + b];
-                val = table.luaGetTable(this, key);
+                val = this.luaV_gettable(table, key);
                 this.stack[base + a] = val;
                 continue;
             }
@@ -573,7 +573,7 @@ public class LuaState extends Lua {
                 key = k[b];
                 val = this.stack[base + a];
                 table = cl.env;
-                table.luaSetTable(this, key, val);
+                this.luaV_settable(table, key, val);
                 continue;
             }
             case LuaState.OP_SETUPVAL: {
@@ -585,7 +585,7 @@ public class LuaState extends Lua {
                 key = GETARG_RKB(k, i);
                 val = GETARG_RKC(k, i);
                 table = this.stack[base + a];
-                table.luaSetTable(this, key, val);
+                this.luaV_settable(table, key, val);
                 continue;
             }
             case LuaState.OP_NEWTABLE: {
@@ -597,7 +597,7 @@ public class LuaState extends Lua {
             case LuaState.OP_SELF: {
                 rkb = GETARG_RKB(k, i);
                 rkc = GETARG_RKC(k, i);
-                val = rkb.luaGetTable(this, rkc);
+                val = this.luaV_gettable(rkb, rkc);
                 this.stack[base + a] = val;
                 this.stack[base + a + 1] = rkb;
                 continue;
@@ -1408,7 +1408,7 @@ public class LuaState extends Lua {
 	 */
 	public void getfield(int index, LString k) {
 		LTable t = totable(index);
-		pushlvalue( t.luaGetTable(this, k) );
+		pushlvalue( this.luaV_gettable(t, k) );
 	}
 	
 	/**
@@ -1424,7 +1424,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void getglobal(String s) {
-		pushlvalue( _G.luaGetTable(this, new LString(s)) );
+		pushlvalue( this.luaV_gettable(_G, new LString(s)) );
 	}
 	
 	/**
@@ -1463,7 +1463,7 @@ public class LuaState extends Lua {
 	public void gettable(int index) {
 		LValue t = totable(index);
 		LValue k = poplvalue();
-		pushlvalue( t.luaGetTable(this, k) );
+		pushlvalue( this.luaV_gettable(t, k) );
 	}
 	
 	/**
@@ -2077,7 +2077,7 @@ public class LuaState extends Lua {
 	 */
 	public void setfield(int index, LString k) {
 		LTable t = totable(index);
-		t.luaSetTable(this, k, poplvalue());
+		this.luaV_settable(t, k, poplvalue());
 	}
 
 	/**
@@ -2094,7 +2094,7 @@ public class LuaState extends Lua {
 	 * </pre>
 	 */
 	public void setglobal(String name) {
-		_G.luaSetTable(this, new LString(name), poplvalue());
+		this.luaV_settable(_G, new LString(name), poplvalue());
 	}
 
 	/**
@@ -2134,7 +2134,7 @@ public class LuaState extends Lua {
 		LTable t = totable(index);
 		LValue v = poplvalue();
 		LValue k = poplvalue();
-		t.luaSetTable(this, k, v);
+		this.luaV_settable(t, k, v);
 	}
 
 	/**

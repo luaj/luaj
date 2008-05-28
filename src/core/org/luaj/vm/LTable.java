@@ -202,32 +202,6 @@ public class LTable extends LValue {
 					array[key-1]:
 					hashGet(LInteger.valueOf(key)) );
 	}
-
-	/** Set a table value, including metatable processing.
-	 *   
-	 * As an optimization for the common case, looks directly in the table first
-	 * before delgating to the vm for metatable processing.  
-	 */
-	public void luaSetTable(LuaState vm, LValue key, LValue val) {
-		if ( containsKey(key) || m_metatable == null || ! m_metatable.containsKey(TM_NEWINDEX) )
-			put( key, val );
-		else
-			vm.luaV_settable(this, key, val);
-	}
-	
-    
-	/** Get a table value, including metatable processing.
-	 * 
-	 * As an optimization for the common case, looks directly in the table first
-	 * before delgating to the vm for metatable processing.  
-	 */
-	public LValue luaGetTable(LuaState vm, LValue key) {
-		LValue val = get(key);
-		return ! val.isNil() || m_metatable == null || ! m_metatable.containsKey(TM_INDEX)? 
-				val: 
-				vm.luaV_gettable(this, key);
-	}
-	
 	
 	/** Check for null, and convert to nilor leave alone
 	 */
