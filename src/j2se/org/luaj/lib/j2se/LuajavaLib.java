@@ -28,7 +28,9 @@ package org.luaj.lib.j2se;
  */
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -83,7 +85,7 @@ public final class LuajavaLib extends LFunction {
 	}
 	
 	// perform a lua call
-	public boolean luaStackCall(LuaState vm) {
+	public boolean luaStackCall(final LuaState vm) {
 		String className;
 		switch ( id ) {
 		case INIT:
@@ -121,6 +123,38 @@ public final class LuajavaLib extends LFunction {
 			}
 			break;
 		case CREATEPROXY:
+			final int ninterfaces = Math.max(0,vm.gettop()-2);
+			if ( ninterfaces <= 0 )
+				throw new LuaErrorException("no interfaces");
+			final LValue function = vm.tojavafunction(-1);
+			try {
+				// get the interfaces
+				final Class[] ifaces = new Class[ninterfaces];
+				for ( int i=0; i<ninterfaces; i++ ) 
+					ifaces[i] = Class.forName(vm.tostring(i+2));
+				
+				// create the invocation handler
+				InvocationHandler handler = new InvocationHandler() {
+					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+						vm.pushlvalue(function);
+						int n = args.length;
+						for ( int i=0; i<n; i++ )
+							vm.pushlvalue( CoerceJavaToLua.coerce(args[i]) );
+						vm.call(n, 1);
+						return CoerceLuaToJava.coerceArg(vm.poplvalue(), method.getReturnType());
+					}
+				};
+				
+				// create the proxy object
+				Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), ifaces, handler);
+				
+				// return the proxy
+				vm.resettop();
+				vm.pushuserdata(proxy);				
+				
+			} catch (Exception e) {
+				throw new LuaErrorException(e);
+			}
 			break;
 		case LOADLIB:
 			try {
