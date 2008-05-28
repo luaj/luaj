@@ -53,6 +53,12 @@ public class CoerceJavaToLua {
 				return LInteger.valueOf( n.intValue() );
 			} 
 		} ;
+		Coercion charCoercion = new Coercion() {
+			public LValue coerce( Object javaValue ) {
+				Character c = (Character) javaValue;
+				return LInteger.valueOf( c.charValue() );
+			} 
+		} ;
 		Coercion doubleCoercion = new Coercion() {
 			public LValue coerce( Object javaValue ) {
 				Number n = (Number) javaValue;
@@ -66,6 +72,7 @@ public class CoerceJavaToLua {
 		} ;
 		COERCIONS.put( Boolean.class, boolCoercion );
 		COERCIONS.put( Byte.class, intCoercion );
+		COERCIONS.put( Character.class, charCoercion );
 		COERCIONS.put( Short.class, intCoercion );
 		COERCIONS.put( Integer.class, intCoercion );
 		COERCIONS.put( Float.class, doubleCoercion );

@@ -57,6 +57,42 @@ public class CoerceLuaToJava {
 				return 4;
 			}
 		};
+		Coercion byteCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return value.toJavaByte();
+			} 
+			public int score(LValue value) {
+				if ( value instanceof LInteger )
+					return 1;
+				if ( value instanceof LNumber )
+					return 2;
+				return 4;
+			}
+		};
+		Coercion charCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return value.toJavaChar();
+			} 
+			public int score(LValue value) {
+				if ( value instanceof LInteger )
+					return 1;
+				if ( value instanceof LNumber )
+					return 2;
+				return 4;
+			}
+		};
+		Coercion shortCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return value.toJavaShort();
+			} 
+			public int score(LValue value) {
+				if ( value instanceof LInteger )
+					return 1;
+				if ( value instanceof LNumber )
+					return 2;
+				return 4;
+			}
+		};
 		Coercion intCoercion = new Coercion() {
 			public Object coerce(LValue value) {
 				return new Integer( value.toJavaInt() );
@@ -71,6 +107,18 @@ public class CoerceLuaToJava {
 				return 4;
 			}
 		};
+		Coercion longCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return value.toJavaLong();
+			} 
+			public int score(LValue value) {
+				if ( value instanceof LInteger )
+					return 1;
+				if ( value instanceof LNumber )
+					return 2;
+				return 4;
+			}
+		};
 		Coercion doubleCoercion = new Coercion() {
 			public Object coerce(LValue value) {
 				return new Double( value.toJavaDouble() );
@@ -80,7 +128,7 @@ public class CoerceLuaToJava {
 					return 0;
 				if ( value instanceof LNumber )
 					return 1;
-				if ( value instanceof LBoolean || value.isNil() )
+				if ( value instanceof LBoolean )
 					return 2;
 				return 4;
 			}
@@ -119,14 +167,16 @@ public class CoerceLuaToJava {
 		};
 		COERCIONS.put( Boolean.TYPE, boolCoercion );
 		COERCIONS.put( Boolean.class, boolCoercion );
-		COERCIONS.put( Byte.TYPE, intCoercion );
-		COERCIONS.put( Byte.class, intCoercion );
-		COERCIONS.put( Short.TYPE, intCoercion );
-		COERCIONS.put( Short.class, intCoercion );
+		COERCIONS.put( Byte.TYPE, byteCoercion );
+		COERCIONS.put( Byte.class, byteCoercion );
+		COERCIONS.put( Character.TYPE, charCoercion );
+		COERCIONS.put( Character.class, charCoercion );
+		COERCIONS.put( Short.TYPE, shortCoercion );
+		COERCIONS.put( Short.class, shortCoercion );
 		COERCIONS.put( Integer.TYPE, intCoercion );
 		COERCIONS.put( Integer.class, intCoercion );
-		COERCIONS.put( Long.TYPE, intCoercion );
-		COERCIONS.put( Long.class, intCoercion );
+		COERCIONS.put( Long.TYPE, longCoercion );
+		COERCIONS.put( Long.class, longCoercion );
 		COERCIONS.put( Double.TYPE, doubleCoercion );
 		COERCIONS.put( Double.class, doubleCoercion );
 		COERCIONS.put( String.class, stringCoercion );

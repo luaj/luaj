@@ -52,15 +52,17 @@ public final class LuajavaLib extends LFunction {
 		globals.put( "luajava", luajava );
 	}
 
-	private static final int NEWINSTANCE  = 0;
-	private static final int BINDCLASS    = 1;
-	private static final int NEW          = 2;
-	private static final int CREATEPROXY  = 3;
-	private static final int LOADLIB      = 4;
+	private static final int INIT			= 0;
+	private static final int BINDCLASS		= 1;
+	private static final int NEWINSTANCE	= 2;
+	private static final int NEW			= 3;
+	private static final int CREATEPROXY	= 4;
+	private static final int LOADLIB		= 5;
 	
-	private static final String[] NAMES = { 
-		"newInstance", 
+	private static final String[] NAMES = {
+		"luajava",
 		"bindClass", 
+		"newInstance", 
 		"new", 
 		"createProxy", 
 		"loadLib" };
@@ -68,6 +70,10 @@ public final class LuajavaLib extends LFunction {
 	private static final Map classMetatables = new HashMap(); 
 	
 	private int id;
+
+	public LuajavaLib() {		
+	}
+	
 	private LuajavaLib( int id ) {			
 		this.id = id;
 	}
@@ -80,6 +86,9 @@ public final class LuajavaLib extends LFunction {
 	public boolean luaStackCall(LuaState vm) {
 		String className;
 		switch ( id ) {
+		case INIT:
+			install(vm._G);
+			break;
 		case BINDCLASS:
 			className = vm.tostring(2);
 			try {
@@ -91,10 +100,11 @@ public final class LuajavaLib extends LFunction {
 			}
 			break;
 		case NEWINSTANCE:
-			className = vm.tostring(2);
+		case NEW:
 			try {
 				// get constructor
-				Class clazz = Class.forName(className);
+				LValue c = vm.topointer(2); 
+				Class clazz = (id==NEWINSTANCE? Class.forName(c.toJavaString()): (Class) c.toJavaInstance());
 				ParamsList params = new ParamsList( vm );
 				Constructor con = resolveConstructor( clazz, params );
 
@@ -110,6 +120,28 @@ public final class LuajavaLib extends LFunction {
 				throw new LuaErrorException(e);
 			}
 			break;
+		case CREATEPROXY:
+			break;
+		case LOADLIB:
+			try {
+				// get constructor
+				String classname = vm.tostring(2);
+				String methodname = vm.tostring(3);
+				Class clazz = Class.forName(classname);
+				Method method = clazz.getMethod(methodname, new Class[] { LuaState.class });
+				Object result = method.invoke(clazz, new Object[] { vm });
+				if ( result instanceof Integer ) {
+					int nresults = ((Integer)result).intValue();
+					int nremove = vm.gettop() - nresults;
+					for ( int i=0; i<nremove; i++ )
+						vm.remove(1);
+				} else {
+					vm.resettop();
+				}
+			} catch (Exception e) {
+				throw new LuaErrorException(e);
+			}
+			break;
 		default:
 			throw new LuaErrorException("not yet supported: "+this);
 		}
@@ -121,7 +153,7 @@ public final class LuajavaLib extends LFunction {
 		public final Class[] classes;
 		public int hash;
 		ParamsList( LuaState vm ) {
-			int n = vm.gettop()-2;
+			int n = Math.max(vm.gettop()-2,0);
 			values = new LValue[n];
 			classes = new Class[n];
 			for ( int i=0; i<n; i++ ) {
@@ -140,21 +172,22 @@ public final class LuajavaLib extends LFunction {
 		}
 	}
 		
-	static LUserData toUserdata(final Object instance, final Class clazz) {
+	static LUserData toUserdata(Object instance, final Class clazz) {
 		LTable mt = (LTable) classMetatables.get(clazz);
 		if ( mt == null ) {
 			mt = new LTable();
 			mt.put( LValue.TM_INDEX, new LFunction() {
 				public boolean luaStackCall(LuaState vm) {
+					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
 					final String s = key.toJavaString();
 					vm.resettop();
 					try {
 						Field f = clazz.getField(s);
-						Object o = f.get(instance);
+						Object o = f.get(table.toJavaInstance());
 						vm.pushlvalue( CoerceJavaToLua.coerce( o ) );
 					} catch (NoSuchFieldException nsfe) {
-						vm.pushlvalue( new LMethod(instance,clazz,s) );
+						vm.pushlvalue( new LMethod(clazz,s) );
 					} catch (Exception e) {
 						throw new LuaErrorException(e);
 					}
@@ -163,13 +196,14 @@ public final class LuajavaLib extends LFunction {
 			});
 			mt.put( LValue.TM_NEWINDEX, new LFunction() {
 				public boolean luaStackCall(LuaState vm) {
+					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
 					LValue val = vm.topointer(4);
 					String s = key.toJavaString();
 					try {
 						Field f = clazz.getField(s);
 						Object v = CoerceLuaToJava.coerceArg(val, f.getType());
-						f.set(instance,v);
+						f.set(table.toJavaInstance(),v);
 						vm.resettop();
 					} catch (Exception e) {
 						throw new LuaErrorException(e);
@@ -183,11 +217,9 @@ public final class LuajavaLib extends LFunction {
 	}
 	
 	private static final class LMethod extends LFunction {
-		private final Object instance;
 		private final Class clazz;
 		private final String s;
-		private LMethod(Object instance, Class clazz, String s) {
-			this.instance = instance;
+		private LMethod(Class clazz, String s) {
 			this.clazz = clazz;
 			this.s = s;
 		}
@@ -197,6 +229,7 @@ public final class LuajavaLib extends LFunction {
 		public boolean luaStackCall(LuaState vm) {
 			try {
 				// find the method 
+				Object instance = vm.touserdata(2);
 				ParamsList params = new ParamsList( vm );
 				Method meth = resolveMethod( clazz, s, params );
 
