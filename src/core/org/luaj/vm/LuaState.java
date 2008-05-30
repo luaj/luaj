@@ -2604,7 +2604,64 @@ public class LuaState extends Lua {
 		return topointer(index).toJavaBoxedLong();
 	}
 
+    // ================= Error Reporting Functions =================
 
+    /**
+     * Report an error with an argument.
+     * 
+     * @param narg
+     *            Stack index of the bad argument
+     * @param extramsg
+     *            String to include in error message
+     */
+    public void argerror(int narg, String extramsg) {
+        // TODO: port ldebug.c and provide mode useful error messages.
+        error("bad argument #" + (narg - 1) + " (" + extramsg + ")");
+    }
+
+    /**
+     * Report a type error.
+     * 
+     * @param narg
+     *            Stack index of the bad argument
+     * @param typename
+     *            Name of the type that was expected
+     */
+    public void typerror(int narg, String typename) {
+        argerror(narg, typename + " expected, got " + typename(narg));
+    }
+
+    /**
+     * Report a type error.
+     * 
+     * @param narg
+     *            Stack index of the bad argument
+     * @param typenum
+     *            Constant value specifying the type of argument that was
+     *            expected (i.e. LUA_TSTRING).
+     */
+    public void typerror(int narg, int typenum) {
+        typerror(narg, TYPE_NAMES[typenum]);
+    }
+
+    /**
+     * Check that the type of userdata on the stack matches the required type,
+     * and if so, return the Java Object the userdata value points to.
+     * 
+     * @param ud
+     *            Stack index of the argument to check
+     * @param expected
+     *            Class that the userdata is expected to have an instance of.
+     */
+    public Object checkudata(int ud, Class expected) {
+        Object p = touserdata(ud);
+        if (expected.isInstance(p)) {
+            return p;
+        }
+        typerror(ud, expected.getName());
+        return null;
+    }
+	
 	/**
 	 * Method to indicate a vm internal error has occurred. 
 	 * Generally, this is not recoverable, so we convert to 
