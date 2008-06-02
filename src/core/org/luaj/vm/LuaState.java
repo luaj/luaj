@@ -1022,8 +1022,8 @@ public class LuaState extends Lua {
      * @return the current program counter for the given call frame.
      */
     protected int getCurrentPc(CallInfo ci) {
-        int pc = (ci != calls[cc] ? ci.pc - 1 : ci.pc);
-        return pc;
+        int pc = ci.pc;
+        return pc > 0 ? pc - 1 : 0;
     }
 
     protected String getSourceFileName(LString source) {
