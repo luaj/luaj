@@ -68,3 +68,12 @@ t( 'abc' )
 t( 'ab' )
 t( 'a' )
 t( '' )
+
+print(string.len("Hello, world"))
+print(#"Hello, world")
+print(string.len("\0\0\0"))
+print(#"\0\0\0")
+print(string.len("\0\1\2\3"))
+print(#"\0\1\2\3")
+local s = "\194\161Hola!"
+print(s, string.len(s), #s)

@@ -395,7 +395,7 @@ public class StringLib extends LFunction {
 	 * Embedded zeros are counted, so "a\000bc\000" has length 5. 
 	 */
 	static void len( LuaState vm ) {
-		int l = vm.tostring(2).length();
+		int l = vm.tolstring(2).length();
 		vm.resettop();
 		vm.pushinteger( l );
 	}
