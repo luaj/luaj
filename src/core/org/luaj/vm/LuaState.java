@@ -22,6 +22,7 @@
 package org.luaj.vm;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Stack;
 
@@ -1752,9 +1753,15 @@ public class LuaState extends Lua {
 	 * is&nbsp;0.
 	 */
 	public int objlen(int index) {
-		return tostring(index).length();
+		LValue p = topointer( index );
+		switch ( p.luaGetType() ) {
+		case LUA_TTABLE:
+		case LUA_TSTRING:
+			return p.luaLength();
+		default:
+			return 0;
+		}
 	}
-
 
 	/**
 	 * Pops <code>n</code> elements from the stack. <span class="apii">[-n,
