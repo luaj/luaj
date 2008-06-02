@@ -17,7 +17,6 @@ function binops( a, b )
 	return '--' 
 end
 print( pcall( binops, 2, 0 ) )
-print( pcall( binops, -2, 0 ) )
 print( pcall( binops, 2.5, 0 ) )
 print( pcall( binops, -2.5, 0 ) )
 print( pcall( binops, 2, 1 ) )
@@ -41,9 +40,10 @@ print( pcall( binops, 2.25, 0 ) )
 print( pcall( binops, 2.25, 2 ) )
 print( pcall( binops, 2.25, .5 ) )
 print( pcall( binops, 2.25, 2.5 ) )
-
+print( pcall( binops, -2, 0 ) )
 
 -- random tests
+print("Random tests")
 print( math.random(5,10) )
 print( math.random(5,10) )
 print( math.random(5,10) )

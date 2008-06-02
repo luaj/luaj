@@ -35,14 +35,23 @@ public class LDouble extends LNumber {
 	}
     
 	public int hashCode() {
-		return (int) m_value;
+		if ( m_value == 0 ) {
+			return 0;
+		} else {
+			long bits = Double.doubleToLongBits( m_value );
+			return ( (int) bits >> 32 ) + ( (int) bits );
+		}
 	}
-
+	
 	public String toJavaString() {
 		if ( Double.isNaN(m_value) )
-			return "-1.#IND";
+			return "nan";
 		if ( Double.isInfinite(m_value) )
-			return (m_value>0? "1.#INF": "-1.#INF");		
+			return (m_value>0? "inf": "-inf");
+		if ( m_value == 0.0 ) {
+			long bits = Double.doubleToLongBits( m_value );
+			return ( bits >> 63 == 0 ) ? "0" : "-0";
+		}
 		long l = (long) m_value;
 		if ( (m_value == (double) l) && (m_value <= Long.MAX_VALUE) && (m_value >= Long.MIN_VALUE) ) {
 			return Long.toString( l );
