@@ -22,9 +22,9 @@
 package org.luaj.lib;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 import org.luaj.vm.LFunction;
+import org.luaj.vm.LNil;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
@@ -171,12 +171,14 @@ public class TableLib extends LFunction {
 		 * Returns the value of the removed element. The default value for pos is n, where n is the length of the table, 
 		 * so that a call table.remove(t) removes the last element of table t.
 		 */ 
-		case REMOVE: { 
+		case REMOVE: {
 			int n = vm.gettop();
 			LTable table = vm.totable(2);
 			int pos = (n>=3? vm.tointeger(3): 0);
 			vm.resettop();
-			vm.pushlvalue( table.luaRemovePos(pos) );
+			LValue removed = table.luaRemovePos( pos );
+			if ( removed != LNil.NIL )
+				vm.pushlvalue( removed );
 			break;
 		}
 			

@@ -343,9 +343,12 @@ public class LTable extends LValue {
 	 * @param pos position to remove, or 0 to remove last element
 	 */
 	public LValue luaRemovePos(int ikey) {
+		int n = luaLength();
 		if ( ikey == 0 )
-			if ( (ikey = luaLength()) <= 0 )
-				return LNil.NIL;
+			ikey = n;
+		if ( ikey <= 0 || ikey > n )
+			return LNil.NIL;
+		
 		LValue removed = get(ikey);
 		LValue replaced;
 		do {
