@@ -1,0 +1,102 @@
+<project default="all" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	
+	<property name="classes.dir" value="build/classes" />
+	<property name="instrumented.dir" value="build/instrumented" />
+	<property name="reports.dir" value="reports" />
+	<property name="reports.xml.dir" value="${reports.dir}/junit-xml" />
+	<property name="reports.html.dir" value="${reports.dir}/junit-html" />
+	<property name="coverage.xml.dir" value="${reports.dir}/coverage-xml" />
+	<property name="coverage.html.dir" value="${reports.dir}/coverage-html" />
+
+	<artifact:dependencies filesetId="cobutura.fileset">
+		<dependency groupId="cobertura" artifactId="cobertura" version="1.8"/>
+		<dependency groupId="junit" artifactId="junit" version="3.8.1"/>
+	</artifact:dependencies>
+	
+	<path id="cobertura.classpath">
+		<fileset refid="cobutura.fileset" />
+	</path>
+	
+	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
+
+	<target name="clean" description="Remove all files created by the build/test process.">
+		  <delete includeemptydirs="true" failonerror="false">
+		    <fileset dir="build" includes="**/*"/>
+		    <fileset dir="reports" includes="**/*"/>
+		 </delete>
+		<delete file="cobertura.log" />
+		<delete file="cobertura.ser" />
+	</target>
+
+	<target name="init">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${instrumented.dir}" />
+		<mkdir dir="${reports.xml.dir}" />
+		<mkdir dir="${reports.html.dir}" />
+		<mkdir dir="${coverage.xml.dir}" />
+		<mkdir dir="${coverage.html.dir}" />
+	</target>
+
+	<target name="compile" depends="init">
+		<javac destdir="${classes.dir}" debug="yes" target="1.5">
+			<classpath refid="cobertura.classpath" />
+		    <src path="src/core"/>
+		    <src path="src/debug"/>
+		    <src path="src/j2se"/>
+		    <src path="src/script"/>
+		    <src path="src/sample"/>
+		    <src path="src/test/java"/>
+		</javac>
+	</target>
+
+	<target name="instrument" depends="compile">
+		<delete file="cobertura.ser"/>
+		<delete dir="${instrumented.dir}" failonerror="no"/>
+		<cobertura-instrument todir="${instrumented.dir}">
+			<ignore regex="org.apache.log4j.*" />
+			<fileset dir="${classes.dir}">
+				<include name="org/luaj/vm/*.class" />
+				<include name="org/luaj/lib/*.class" />
+				<include name="org/luaj/compiler/*.class" />
+				<exclude name="**/*Test*.class" />
+				<exclude name="org/luaj/vm/require/*.class" />
+			</fileset>
+		</cobertura-instrument>
+	</target>
+
+	<target name="test" depends="instrument">
+		<junit fork="yes" forkmode="once" showoutput="no">
+			<classpath location="${instrumented.dir}" />
+			<classpath location="${classes.dir}" />
+			<classpath location="src/test/res" />
+			<classpath refid="cobertura.classpath" />
+			<formatter type="xml" />
+			<batchtest todir="${reports.xml.dir}">
+				<fileset dir="src/test/java">
+					<include name="org/luaj/compiler/*.java" />
+					<include name="org/luaj/vm/*.java" />
+					<exclude name="**/Abstract*.java" />
+					<exclude name="**/StandardTest.java" />
+				</fileset>
+			</batchtest>
+		</junit>
+		
+		<junitreport todir="${reports.xml.dir}">
+			<fileset dir="${reports.xml.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${reports.html.dir}" />
+		</junitreport>
+	</target>
+
+	<target name="coverage" depends="test">
+		<cobertura-report srcdir="src/core" destdir="${coverage.xml.dir}" format="xml" /> 
+		<cobertura-report srcdir="src/core" destdir="${coverage.html.dir}" />
+	</target>
+
+	<target name="all" 
+		depends="clean,init,compile,instrument,test,coverage" 
+		description="Compile, instrument ourself, run the tests and generate JUnit and coverage reports."
+	/>
+	
+</project>
