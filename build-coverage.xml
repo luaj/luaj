@@ -1,12 +1,14 @@
 <project default="all" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
-	
+	<!-- 
+	Run code coverage for unit tests on the luaj vm and libraries.
+	-->
+
 	<property name="classes.dir" value="build/classes" />
 	<property name="instrumented.dir" value="build/instrumented" />
-	<property name="reports.dir" value="reports" />
-	<property name="reports.xml.dir" value="${reports.dir}/junit-xml" />
-	<property name="reports.html.dir" value="${reports.dir}/junit-html" />
-	<property name="coverage.xml.dir" value="${reports.dir}/coverage-xml" />
-	<property name="coverage.html.dir" value="${reports.dir}/coverage-html" />
+	<property name="reports.xml.dir" value="build/reports-junit-xml" />
+	<property name="reports.html.dir" value="build/reports-junit-html" />
+	<property name="coverage.xml.dir" value="build/reports-coverage-xml" />
+	<property name="coverage.html.dir" value="build/reports-coverage-html" />
 
 	<artifact:dependencies filesetId="cobutura.fileset">
 		<dependency groupId="cobertura" artifactId="cobertura" version="1.8"/>
@@ -20,10 +22,7 @@
 	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
 
 	<target name="clean" description="Remove all files created by the build/test process.">
-		  <delete includeemptydirs="true" failonerror="false">
-		    <fileset dir="build" includes="**/*"/>
-		    <fileset dir="reports" includes="**/*"/>
-		 </delete>
+		<delete dir="build" failonerror="no"/>
 		<delete file="cobertura.log" />
 		<delete file="cobertura.ser" />
 	</target>
@@ -94,9 +93,6 @@
 		<cobertura-report srcdir="src/core" destdir="${coverage.html.dir}" />
 	</target>
 
-	<target name="all" 
-		depends="clean,init,compile,instrument,test,coverage" 
-		description="Compile, instrument ourself, run the tests and generate JUnit and coverage reports."
-	/>
+	<target name="all" depends="clean,init,compile,instrument,test,coverage" />
 	
 </project>
