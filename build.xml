@@ -38,7 +38,7 @@
 			<classpath path="build/core/classes"/>
 			<src path="src/j2se"/>
 		</javac>
-		<javac destdir="build/script/classes" encoding="utf-8" source="1.6" target="1.6">
+		<javac destdir="build/script/classes" encoding="utf-8" source="1.6" target="1.5">
 			<classpath>
 		        <pathelement location="build/core/classes/"/>
 		        <pathelement location="build/j2se/classes/"/>
