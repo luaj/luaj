@@ -77,3 +77,17 @@ print(string.len("\0\1\2\3"))
 print(#"\0\1\2\3")
 local s = "\194\161Hola!"
 print(s, string.len(s), #s)
+
+local function strtests(name,func,...)
+	print(name, 'good', pcall( func, ... ) )
+	print(name, 'empty', pcall( func ) )
+	print(name, 'table', pcall( func, {} ) )
+	print(name, 'nil', pcall( func, nil ) )
+end
+
+strtests('lower', string.lower, s )
+strtests('upper', string.upper, s )
+strtests('reverse', string.reverse, s )
+strtests('char', string.char, 92, 60, 61, 93 )
+strtests('dump', string.dump, function() print('hello, world') end )
+
