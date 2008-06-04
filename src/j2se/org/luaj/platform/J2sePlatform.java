@@ -17,10 +17,15 @@ import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 public class J2sePlatform extends Platform {
+	
+	public String getName() {
+		return "j2se";
+	}
+	
     public Reader createReader(InputStream inputStream) {
         return new InputStreamReader(inputStream);
-    }
-
+    }    
+    
     public DebugNetSupport getDebugSupport() throws IOException {
         DebugNetSupport debugNetSupport = new DebugSupportImpl(getDebugPort());
         return debugNetSupport;

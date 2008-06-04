@@ -100,6 +100,10 @@ abstract public class Platform {
         
         return vm;
     }
+
+    /** Get the name of the platform 
+     */
+    abstract public String getName();
     
     /**
      * Return an InputStream or null if not found for a particular file name.

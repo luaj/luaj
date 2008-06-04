@@ -16,6 +16,10 @@ import org.luaj.vm.Platform;
 public class J2meMidp10Cldc10Platform extends Platform {
     protected MIDlet midlet;
     
+	public String getName() {
+		return "j2me";
+	}
+	
     public J2meMidp10Cldc10Platform(MIDlet midlet) {
         this.midlet = midlet;
     }
