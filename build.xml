@@ -3,7 +3,6 @@
 
 	<property name="jar.name.j2me" value="luaj-j2me-${version}.jar"/>
 	<property name="jar.name.j2se" value="luaj-j2se-${version}.jar"/>
-	<property name="jar.name.script" value="luaj-script-${version}.jar"/>
 	
 	<target name="clean">
 		<delete dir="build"/>
@@ -17,7 +16,6 @@
 		<mkdir dir="build/core/classes"/>
 		<mkdir dir="build/j2me/classes"/>
 		<mkdir dir="build/j2se/classes"/>
-		<mkdir dir="build/script/classes"/>
 		<copy todir="build/core/src">
 			<fileset dir="src/core"/>
 			<filterchain>
@@ -34,15 +32,9 @@
 			<classpath path="build/core/classes"/>
 			<src path="src/j2me"/>
 		</javac>
-		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.3" target="1.1">
+		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.5" target="1.5">
 			<classpath path="build/core/classes"/>
 			<src path="src/j2se"/>
-		</javac>
-		<javac destdir="build/script/classes" encoding="utf-8" source="1.6" target="1.5">
-			<classpath>
-		        <pathelement location="build/core/classes/"/>
-		        <pathelement location="build/j2se/classes/"/>
-			</classpath>
 			<src path="src/script"/>
 		</javac>
 	</target>
@@ -58,16 +50,6 @@
 		<jar destfile="${jar.name.j2se}">
 			<fileset dir="build/core/classes"/>
 			<fileset dir="build/j2me/classes"/>
-			<fileset dir="build/j2se/classes"/>
-		</jar>
-	</target>
-	
-	<target name="jar-script" depends="compile">
-		<jar destfile="${jar.name.script}">
-			<fileset dir="build/core/classes"/>
-			<fileset dir="build/j2me/classes"/>
-			<fileset dir="build/j2se/classes"/>
-			<fileset dir="build/script/classes"/>
 		    <fileset dir="src/script">
 				<include name="META-INF/**"/>
 		    </fileset>		
@@ -120,5 +102,5 @@
 			basedir="build" includes="luaj-${version}/**"/>
 	</target>
 	
-	<target name="all" depends="clean,jar-j2me,jar-j2se,jar-script"/>
+	<target name="all" depends="clean,jar-j2me,jar-j2se"/>
 </project>
