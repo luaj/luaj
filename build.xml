@@ -50,6 +50,7 @@
 		<jar destfile="${jar.name.j2se}">
 			<fileset dir="build/core/classes"/>
 			<fileset dir="build/j2me/classes"/>
+			<fileset dir="build/j2se/classes"/>
 		    <fileset dir="src/script">
 				<include name="META-INF/**"/>
 		    </fileset>		
