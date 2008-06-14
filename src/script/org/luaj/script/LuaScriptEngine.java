@@ -21,13 +21,19 @@
 ******************************************************************************/
 package org.luaj.script;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.LineNumberInputStream;
 import java.io.Reader;
-import java.io.StringWriter;
+import java.io.StringReader;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -41,6 +47,7 @@ import org.luaj.vm.LClosure;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
+import org.luaj.vm.LNil;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
@@ -53,12 +60,12 @@ import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 /**
-*
-* @author jim_roseborough
-*/
-public class LuaScriptEngine extends LFunction implements ScriptEngine {
+ * 
+ * @author jim_roseborough
+ */
+public class LuaScriptEngine extends LFunction implements ScriptEngine, Compilable {
     
-    private static final String __ENGINE_VERSION__   = "V0.28";
+	private static final String __ENGINE_VERSION__   = "V0.39";
     private static final String __NAME__             = "Luaj";
     private static final String __SHORT_NAME__       = "Luaj";
     private static final String __LANGUAGE__         = "lua";
@@ -74,11 +81,14 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
     private static final ScriptEngineFactory myFactory = new LuaScriptEngineFactory();
     
     private ScriptContext defaultContext;
-    
+
     private final LuaState luaState;
-    
+
     public LuaScriptEngine() {
+    	
+    	// set up context
         setContext(new SimpleScriptContext());
+        
         // set special values
         put(LANGUAGE_VERSION, __LANGUAGE_VERSION__);
         put(LANGUAGE, __LANGUAGE__);
@@ -89,7 +99,7 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
         put(NAME, __SHORT_NAME__);
         put("THREADING", null);
 
-        // set lua state
+        // create lua state
         luaState = Platform.getInstance().newLuaState();
 
         // connect up to bindings
@@ -98,50 +108,35 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
         metatable.put("__newindex", this);
         luaState._G.luaSetMetatable(metatable);
     }
-
+    
     
     public Object eval(String script) throws ScriptException {
-        return eval(script, getContext());
+        return eval(new StringReader(script));
     }
     
     public Object eval(String script, ScriptContext context) throws ScriptException {
-		try {
-			byte[] bytes = script.getBytes("UTF-8");
-			ByteArrayInputStream bais = new ByteArrayInputStream( bytes );
-	    	LineNumberInputStream is = new LineNumberInputStream( bais );
-	    	try {
-				LPrototype p = LoadState.undump(luaState, is, "script");
-				LClosure c = p.newClosure( luaState._G );
-				luaState.doCall( c, new LValue[0] );
-				return luaState.topointer(1);
-			} catch ( LuaErrorException lee ) {
-				throw new ScriptException(lee.getMessage(), "script", is.getLineNumber() );
-			} finally { 
-				is.close();
-			}
-		} catch ( Throwable t ) {
-			throw new ScriptException("eval threw "+t.toString());
-		}
+    	return eval(new StringReader(script), context);
     }
     
     public Object eval(String script, Bindings bindings) throws ScriptException {
-        Bindings current = getContext().getBindings(ScriptContext.ENGINE_SCOPE);
-        getContext().setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-        Object result = eval(script);
-        getContext().setBindings(current, ScriptContext.ENGINE_SCOPE);
-        return result;
+        return eval(new StringReader(script), bindings);
     }
     
     public Object eval(Reader reader) throws ScriptException {
-        return eval(getScriptFromReader(reader));
+        return eval(reader, getContext());
     }
     
     public Object eval(Reader reader, ScriptContext scriptContext) throws ScriptException {
-        return eval(getScriptFromReader(reader), scriptContext);
+    	return compile(reader).eval(scriptContext);
     }
     
     public Object eval(Reader reader, Bindings bindings) throws ScriptException {
-        return eval(getScriptFromReader(reader), bindings);
+    	ScriptContext c = getContext();
+        Bindings current = c.getBindings(ScriptContext.ENGINE_SCOPE);
+        c.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        Object result = eval(reader);
+        c.setBindings(current, ScriptContext.ENGINE_SCOPE);
+        return result;
     }
     
     public void put(String key, Object value) {
@@ -176,20 +171,20 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
         return o;
     }
     
-	public void luaSetTable(LuaState vm, LValue table, LValue key, LValue val) {
+	public LValue __index(LuaState vm, LValue table, LValue key) {
+		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
+		String k = key.toJavaString();
+		Object v = b.get(k);
+		return (LValue) v;
+	}
+
+	public void __newindex(LuaState vm, LValue table, LValue key, LValue val) {
 		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
 		String k = key.toJavaString();
 		Object v = (val.isNil()? null: val);
         b.put(k,v);
 	}
 
-	public LValue luaGetTable(LuaState vm, LValue table, LValue key) {
-		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
-		String k = key.toJavaString();
-		Object v = b.get(k);
-		return (LValue) v;
-	}
-    
     public Bindings getBindings(int scope) {
         return getContext().getBindings(scope);
     }
@@ -213,22 +208,61 @@ public class LuaScriptEngine extends LFunction implements ScriptEngine {
     public ScriptEngineFactory getFactory() {
         return myFactory;
     }
-    
-    /*
-     * private methods
-     */
-    
-    private static String getScriptFromReader(Reader reader) {
-        try {
-            StringWriter script = new StringWriter();
-            int data;
-            while ((data = reader.read()) != -1) {
-                script.write(data);
-            }
-            script.flush();
-            return script.toString();
-        } catch (IOException ex) {
-        }
-        return null;
-    }
+
+	public CompiledScript compile(String script) throws ScriptException {
+		return compile(new StringReader(script));
+	}
+
+	public CompiledScript compile(Reader reader) throws ScriptException {
+		try {
+	    	InputStream ris = new Utf8Encoder(reader);
+	    	LineNumberInputStream is = new LineNumberInputStream( ris);
+	    	try {
+				final LPrototype p = LoadState.undump(luaState, is, "script");
+				return new CompiledScript() {
+					public Object eval(ScriptContext context) throws ScriptException {
+						LClosure c = p.newClosure( luaState._G );
+						luaState.doCall( c, new LValue[0] );
+						return luaState.topointer(1);
+					}
+					public ScriptEngine getEngine() {
+						return LuaScriptEngine.this;
+					}
+				};
+			} catch ( LuaErrorException lee ) {
+				throw new ScriptException(lee.getMessage(), "script", is.getLineNumber() );
+			} finally { 
+				is.close();
+			}
+		} catch ( Throwable t ) {
+			throw new ScriptException("eval threw "+t.toString());
+		}
+	}
+
+    private final class Utf8Encoder extends InputStream {
+		private final Reader r;
+		private final int[] buf = new int[2];
+		private int n;
+
+		private Utf8Encoder(Reader r) {
+			this.r = r;
+		}
+
+		public int read() throws IOException {
+			if ( n > 0 )
+				return buf[--n];
+			int c = r.read();
+			if ( c < 0x80 )
+				return c;
+			n = 0;
+			if ( c < 0x800 ) {
+				buf[n++] = (0x80 | ( c      & 0x3f));				
+				return     (0xC0 | ((c>>6)  & 0x1f));
+			} else {
+				buf[n++] = (0x80 | ( c      & 0x3f));				
+				buf[n++] = (0x80 | ((c>>6)  & 0x3f));
+				return     (0xE0 | ((c>>12) & 0x0f));
+			}
+		}
+	}
 }
