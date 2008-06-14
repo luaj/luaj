@@ -735,8 +735,8 @@ public class LuaState extends Lua {
                 // adjustTop only for case when call was completed
                 // and number of args > 0. If call completed but
                 // c == 0, leave top to point to end of results
-                if (this.nresults >= 0)
-                	luaV_adjusttop(base + nresults);
+                if (ci.nresults >= 0)
+                	luaV_adjusttop(base + ci.nresults);
 
                 // force restore of base, etc.
                 return;
