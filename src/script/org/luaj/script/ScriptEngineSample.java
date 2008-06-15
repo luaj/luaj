@@ -21,6 +21,9 @@
 ******************************************************************************/
 package org.luaj.script;
 
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -32,14 +35,10 @@ public class ScriptEngineSample {
         ScriptEngineManager sem = new ScriptEngineManager();
         ScriptEngine e = sem.getEngineByExtension(".lua");
         ScriptEngineFactory f = e.getFactory();
-        String engineName = f.getEngineName();
-        String engineVersion = f.getEngineVersion();
-        String langName = f.getLanguageName();
-        String langVersion = f.getLanguageVersion();
-        System.out.println(engineName + " " +
-                engineVersion + " " +
-                langName + " " +
-                langVersion);
+        System.out.println( "Engine name: " +f.getEngineName() );
+        System.out.println( "Engine Version: " +f.getEngineVersion() );
+        System.out.println( "LanguageName: " +f.getLanguageName() );
+        System.out.println( "Language Version: " +f.getLanguageVersion() );
         String statement = f.getOutputStatement("\"hello, world\"");
         System.out.println(statement);
         try {
@@ -52,6 +51,12 @@ public class ScriptEngineSample {
             e.put("x", 2);
             e.eval("y = math.sqrt(x)");
             System.out.println( "y="+e.get("y") );
+            
+            CompiledScript cs = ((Compilable)e).compile("y = math.sqrt(x); return y");
+            Bindings b = e.createBindings();
+            b.put("x", 3);
+            System.out.println( "eval: "+cs.eval(b) );
+            System.out.println( "y="+b.get("y") );
             
             e.eval("\n\nbogus example\n\n");
         } catch (ScriptException ex) {
