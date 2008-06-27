@@ -2206,7 +2206,8 @@ public class LuaState extends Lua {
 	 * way.
 	 */
 	public int tointeger(int index) {
-		return topointer(index).toJavaInt();
+		LValue v = tolnumber(index);
+		return v.isNil()? 0: v.toJavaInt();
 	}
 
 	/**
@@ -2270,7 +2271,8 @@ public class LuaState extends Lua {
 	 * 
 	 */
 	public double tonumber(int index) {
-		return topointer(index).toJavaDouble();
+		LValue v = tolnumber(index);
+		return v.isNil()? 0: v.toJavaDouble();
 	}
 
 	/**
