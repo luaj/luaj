@@ -27,11 +27,90 @@ public class LuaJitBasicTest extends TestCase {
     	stringTest( "print( 'hello, world' )" );
     }
 
-    public void testForLoop() throws IOException {
-    	stringTest( "print 'starting'\n" +
-				"for i=1,3 do\n" +
-				"	print( 'i', i )\n" +
-				"end");
+    public void testForInDoEnd() throws IOException {    	
+    }
+        
+    public void testForIEqualsDoEnd() throws IOException {    	
+    	stringTest( 
+			"print 'starting'\n" +
+			"for i=1,5,2 do\n" +
+			"	print( 'i', i )\n" +
+			"end");
+    }
+        
+    public void testRepeatUntil() throws IOException {
+    	stringTest( 
+       		"local i=7" +
+    		"repeat\n"+
+	        "	print(i)\n"+
+	        "until i\n");
+    }
+        
+    public void testWhileDoEnd() throws IOException {    	
+    	stringTest( 
+    		"local i=4" +
+    		"while i>0 do\n"+
+	        "	print( i )\n"+
+	        "	i = i-1\n"+
+	        "end\n");
+    }
+        
+    public void testForIEqualsDoBreakEnd() throws IOException {    	
+    	stringTest( 
+			"print 'starting'\n" +
+			"for i=1,5,2 do\n" +
+			"	print( 'i', i )\n" +
+			"	break\n" +
+			"end");
+    }
+        
+    public void testRepeatUntilBreak() throws IOException {    	
+    	stringTest( 
+	   		"local i=7" +
+			"repeat\n"+
+	        "	print(i)\n"+
+			"	break\n"+
+	        "until i\n");
+    }
+        
+    public void testWhileDoBreak() throws IOException {    	
+    	stringTest( 
+    		"local i=4" +
+    		"while i>0 do\n"+
+	        "	print( i )\n"+
+			"	break\n"+
+	        "	i = i-1\n"+
+	        "end\n");
+    }
+        
+    public void testIfThenEnd() throws IOException {    	
+    	stringTest(
+    		"if a then\n" +
+    		"	print(1)\n" +
+    		"end\n" +
+    		"print(2)\n" );
+    }
+        
+    public void testIfThenElseEnd() throws IOException {    	
+    	stringTest(
+    		"if a then\n" +
+    		"	print(1)\n" +
+    		"else\n" +
+    		"	print(2)\n" +
+    		"end\n" +
+    		"print(3)\n" );
+    }
+        
+    public void testIfThenElseifElseEnd() throws IOException {    	
+    	stringTest(
+        		"if a then\n" +
+        		"	print(1)\n" +
+        		"elseif b then \n" +
+        		"	print(2)\n" +
+        		"else\n" +
+        		"	print(3)\n" +
+        		"end\n" +
+        		"print(4)\n" );
     }
         
 	private void stringTest(String program) throws IOException {		
