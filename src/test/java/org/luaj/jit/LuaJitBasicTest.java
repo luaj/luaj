@@ -1,12 +1,14 @@
 package org.luaj.jit;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
 
 import org.luaj.compiler.LuaC;
+import org.luaj.lib.BaseLib;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
@@ -116,17 +118,21 @@ public class LuaJitBasicTest extends TestCase {
 	private void stringTest(String program) throws IOException {		
 		InputStream is = new ByteArrayInputStream(program.getBytes());
 		LPrototype p = LuaC.compile(is, "program");
-		run( p );
+		String expected = run( p );
 		LPrototype q = LuaJit.jitCompile( p );
 		assertTrue(p!=q);
-		run( q );
+		String actual = run( q );
+		assertEquals( expected, actual );
 	}
 	
-	private static void run(LPrototype p) {
+	private static String run(LPrototype p) {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		BaseLib.redirectOutput(outputStream);
 		LuaState vm = Platform.newLuaState();
 		LClosure c = p.newClosure(vm._G);
 		vm.pushlvalue(c);
 		vm.call(0, 0);
+		return outputStream.toString();
 	}
     
 }
