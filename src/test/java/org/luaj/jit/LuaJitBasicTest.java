@@ -85,8 +85,8 @@ public class LuaJitBasicTest extends TestCase {
     		"local i=4\n" +
     		"while i>0 do\n"+
 	        "	print( i )\n"+
-			"	break\n"+
 	        "	i = i-1\n"+
+			"	break\n"+
 	        "end\n");
     }
         

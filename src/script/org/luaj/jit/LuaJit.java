@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -118,15 +120,37 @@ public class LuaJit extends Lua implements LuaCompiler {
         return RKBC_jit(GETARG_C(i));
     }
 
-    private static boolean istest(int i) {
-    	int o = Lua.GET_OPCODE(i);
-    	return (o==OP_TEST);
+    private static Set<Integer> TESTS = new HashSet<Integer>();
+    static {
+    	TESTS.add( OP_TEST );
+    	TESTS.add( OP_EQ );
+    	TESTS.add( OP_LT );
+    	TESTS.add( OP_LE );
     }
     
-    private static boolean isjump(int i) {
-    	return Lua.GET_OPCODE(i) == OP_JMP;
+    private static boolean istest(int instr) {
+    	int opcode = Lua.GET_OPCODE(instr);
+    	return TESTS.contains(opcode);
     }
-
+    
+    private static boolean isjump(int instr) {
+    	if ( OP_JMP != Lua.GET_OPCODE(instr) )
+    		return false;
+		return true;
+    }
+    
+    private static boolean isbackwardjump(int instr) {
+		return isjump(instr) && (LuaState.GETARG_sBx(instr) < 0);
+    }
+    
+    private static boolean isforwardjump(int instr) {
+		return isjump(instr) && (LuaState.GETARG_sBx(instr) > 0);
+    }
+    
+    private static boolean isloopbottom(int instr) {
+		return isbackwardjump(instr) || OP_FORLOOP == Lua.GET_OPCODE(instr);
+    }
+    
     private static String append( String s, String t ) {
     	return (s==null? t: t==null? s: s+t);
     }
@@ -135,67 +159,68 @@ public class LuaJit extends Lua implements LuaCompiler {
     	if ( ! b )
     		throw new RuntimeException("assert failed"); 
     }
-    
+
     private static String[] extractControlFlow( int[] code ) {
     	int n = code.length;
     	String[] s = new String[n];
-    	int jmp,i2;
     	
     	for ( int pc=0; pc<n; pc++ ) {
     		int i = code[pc];
-    		switch ( Lua.GET_OPCODE(i) ) {
-    		case OP_JMP:
-				jmp = LuaState.GETARG_sBx(i);
-				if ( jmp < 0 ) {
-    				s[pc+jmp+1] = append( s[pc+jmp+1], "while (true) { /* WHILETOP */ " );
-        			s[pc] = append( "} /* LOOPBOT */ ", s[pc] );
-        			i2 = code[pc-1];
-    				if ( istest(i2) ) {
-            			s[pc] = append( "break; /* UNTIL */", s[pc] );
-    				}
-    				else if ( Lua.GET_OPCODE(i2) == OP_TFORLOOP ) {
-        				int a = LuaState.GETARG_A(i2);
-        				int c = LuaState.GETARG_C(i2);
-        				assertTrue(c==2);
-        				s[pc+jmp+1] = append( s[pc+jmp+1], 
-        					"\n\t\tvm.stack[base+"+(a+3)+"] = s"+(a+0)+";"+ // iterator
-        					"\n\t\tvm.stack[base+"+(a+4)+"] = s"+(a+1)+";"+ // table
-        					"\n\t\tvm.stack[base+"+(a+5)+"] = s"+(a+2)+";"+ // key
-        					"\n\t\tvm.top = base+"+(a+6)+";"+
-        					"\n\t\tvm.call(2,2);"+
-	    					"\n\t\ts"+(a+3)+" = vm.stack[base+"+(a+3)+"];"+ // next key
-	    					"\n\t\ts"+(a+4)+" = vm.stack[base+"+(a+4)+"];"+ // next value
-        					"\n\t\tif ( s"+(a+3)+".isNil() )"+
-        					"\n\t\t\tbreak;"+
-        					"\n\t\ts"+(a+2)+" = s"+(a+3)+";" ); // save next key        				
-        			}
-        			break;
-    			} else {
-    				// forward jump to end of loop is a break
-    				i2 = code[pc+jmp-1];
-    				if ( Lua.GET_OPCODE(i2) == OP_JMP && LuaState.GETARG_sBx(i2) < 0 ) {
-            			s[pc] = append( s[pc], "break " );
-            			break;
-    				} 
-    				
-    				// forward jump preceded by test is "if" block
-    				if ( istest(code[pc-1]) ) {
-            			s[pc] = append( s[pc], "{ /* IF */ " );
-        				s[pc+jmp+1] = append( "} /* ENDIF */ ", s[pc+jmp+1]  );
 
-        				// end of block preceded by forward jump is else clause
-        				i2 = code[pc+jmp];
-        				int op2 = Lua.GET_OPCODE(i2); 
-        				int jmp2 = LuaState.GETARG_sBx(i2);
-        				if ( op2 == OP_JMP && jmp2 > 0 ) {
-            				s[pc+jmp+1] = append( s[pc+jmp+1], "else { /* ELSE */ "  );
-            				s[pc+jmp+jmp2+1] = append( "}  /* ENDELSE */ ", s[pc+jmp+jmp2+1] );
-        				}
-    				}
-    				
+    		// any backward jump is a loop bottom
+    		if ( isbackwardjump(i) ) {
+				int jmp = LuaState.GETARG_sBx(i);
+				s[pc+jmp+1] = append( s[pc+jmp+1], "while (true) { /* WHILETOP */ " );
+    			s[pc] = append( "} /* LOOPBOT */ ", s[pc] );
+    			int i2 = code[pc-1];
+				if ( istest(i2) ) {
+        			s[pc] = append( "break; /* UNTIL */", s[pc] );
+				}
+
+				// TFORLOOP test is at top in Java, not bottom
+				else if ( Lua.GET_OPCODE(i2) == OP_TFORLOOP ) {
+    				int a = LuaState.GETARG_A(i2);
+    				int c = LuaState.GETARG_C(i2);
+    				assertTrue(c==2);
+    				s[pc+jmp+1] = append( s[pc+jmp+1], 
+    					"\n\t\tvm.stack[base+"+(a+3)+"] = s"+(a+0)+";"+ // iterator
+    					"\n\t\tvm.stack[base+"+(a+4)+"] = s"+(a+1)+";"+ // table
+    					"\n\t\tvm.stack[base+"+(a+5)+"] = s"+(a+2)+";"+ // key
+    					"\n\t\tvm.top = base+"+(a+6)+";"+
+    					"\n\t\tvm.call(2,2);"+
+    					"\n\t\ts"+(a+3)+" = vm.stack[base+"+(a+3)+"];"+ // next key
+    					"\n\t\ts"+(a+4)+" = vm.stack[base+"+(a+4)+"];"+ // next value
+    					"\n\t\tif ( s"+(a+3)+".isNil() )"+
+    					"\n\t\t\tbreak;"+
+    					"\n\t\ts"+(a+2)+" = s"+(a+3)+";" ); // save next key        				
     			}
-    			break;
-    		}
+   			} 
+    		
+    		else if ( isforwardjump(i) ) {
+    			
+				// forward jump to loop bottom is a break
+				int jmp = LuaState.GETARG_sBx(i);
+   				if ( isloopbottom(code[pc+jmp]) ) {
+        			s[pc] = append( s[pc], "if(true)break;" );
+				} 
+				
+				// forward jump preceded by test is "if" block
+				else if ( istest(code[pc-1]) ) {
+        			s[pc] = append( s[pc], "{ /* IF */ " );
+    				s[pc+jmp+1] = append( "} /* ENDIF */ ", s[pc+jmp+1]  );
+
+    				// end of block preceded by forward jump is else clause
+    				if ( isforwardjump(code[pc+jmp]) ) {
+        				int jmp2 = LuaState.GETARG_sBx(code[pc+jmp]);
+        				
+    					// unless that jump is a break!
+           				if ( ! isloopbottom(code[pc+jmp+jmp2]) ) {
+	        				s[pc+jmp+1] = append( s[pc+jmp+1], "else { /* ELSE */ "  );
+	        				s[pc+jmp+jmp2+1] = append( "}  /* ENDELSE */ ", s[pc+jmp+jmp2+1] );
+           				}
+    				}
+				}				
+			}
     	}
     	
 		
@@ -286,13 +311,11 @@ public class LuaJit extends Lua implements LuaCompiler {
             	break;
             case LuaState.OP_MOVE: {
                 b = LuaState.GETARG_B(i);
-                // this.stack[base + a] = this.stack[base + b];
                 ps.println( "\t\ts"+a+" = s"+b+";" );
                 continue;
             }
             case LuaState.OP_LOADK: {
                 b = LuaState.GETARG_Bx(i);
-                // this.stack[base + a] = k[b];
                 ps.println( "\t\ts"+a+" = k"+b+";" );
                 continue;
             }
@@ -367,10 +390,6 @@ public class LuaJit extends Lua implements LuaCompiler {
             case LuaState.OP_DIV:
             case LuaState.OP_MOD:
             case LuaState.OP_POW: {
-				//rkb = GETARG_RKB(k, i);
-				//rkc = GETARG_RKC(k, i);
-				//this.stack[base + a] = rkc.luaBinOpUnknown(o, rkb);
-				//continue;
 				bs = GETARG_RKB_jit(i);
 				cs = GETARG_RKC_jit(i);
 				ps.println("\t\ts"+a+" = "+cs+".luaBinOpUnknown("+o+","+bs+");");
@@ -390,45 +409,27 @@ public class LuaJit extends Lua implements LuaCompiler {
 				ps.println("\t\ts"+a+" = LInteger.valueOf("+bs+".luaLength());");
             }
             case LuaState.OP_CONCAT: {
-				//b = LuaState.GETARG_B(i);
-				//c = LuaState.GETARG_C(i);
-				//int numValues = c - b + 1;
-				//ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				//for (int j = b, l = 0; j <= c; j++, l++) {
-				//    this.stack[base + j].luaConcatTo( baos );
-				//}
-				//this.stack[base + a] = new LString( baos.toByteArray() );
-				//continue;
 				b = LuaState.GETARG_B(i);
 				c = LuaState.GETARG_C(i);
 				ps.println("\t\tbaos = new ByteArrayOutputStream();");
 				for (int j = b; j <= c; j++)
 				    ps.println("\t\ts"+j+".luaConcatTo( baos );");
 			    ps.println("\t\ts"+a+" = new LString( baos.toByteArray() );");
+				ps.println("\t\tbaos = null;");
             	break;
             }
             case LuaState.OP_JMP: {
-				//ci.pc += LuaState.GETARG_sBx(i);
-				//continue;
             	break;
             }
-            /*
             case LuaState.OP_EQ:
             case LuaState.OP_LT:
             case LuaState.OP_LE: {
-                rkb = GETARG_RKB(k, i);
-                rkc = GETARG_RKC(k, i);
-                boolean test = rkc.luaBinCmpUnknown(o, rkb);
-                if (test == (a == 0))
-                    ci.pc++;
-                continue;
+				bs = GETARG_RKB_jit(i);
+				cs = GETARG_RKC_jit(i);
+				ps.println( "\t\tif ( "+(a==0?"!":"")+" "+cs+".luaBinCmpUnknown("+o+", "+bs+") )" );
+            	break;
             }
-            */
             case LuaState.OP_TEST: {
-				//c = LuaState.GETARG_C(i);
-				//if (this.stack[base + a].toJavaBoolean() != (c != 0))
-				//    ci.pc++;
-				//continue;
 				c = LuaState.GETARG_C(i);
 				ps.println( "\t\tif ( "+(c!=0?"!":"")+" s"+a+".toJavaBoolean() )" );
             	break;
@@ -596,26 +597,6 @@ public class LuaJit extends Lua implements LuaCompiler {
             	break;
             }
             case LuaState.OP_TFORLOOP: {
-				//cb = base + a + 3; // call base 
-				//base = cb;
-				//adjustTop( cb + 3 );
-				//System.arraycopy(this.stack, cb-3, this.stack, cb, 3);
-				//
-				//// call the iterator
-				//c = LuaState.GETARG_C(i);
-				//this.nresults = c;
-				//if (this.stack[cb].luaStackCall(this))
-				//    execute();
-				//base = ci.base;
-				//adjustTop( cb + c );
-				//
-				//// test for continuation
-				//if (!this.stack[cb].isNil() ) { // continue?
-				//    this.stack[cb-1] = this.stack[cb]; // save control variable
-				//} else {
-				//    ci.pc++; // skip over jump
-				//}
-				//continue;
 				break;
             }
             case LuaState.OP_SETLIST: {
