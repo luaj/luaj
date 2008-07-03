@@ -30,6 +30,11 @@ public class LuaJitBasicTest extends TestCase {
     }
 
     public void testForInDoEnd() throws IOException {    	
+    	stringTest( 
+			"local t = {abc=123,def=456}\n" +
+			"for k,v in pairs(t) do\n" +
+			"	print( 'k,v', k, v )\n" +
+			"end");
     }
         
     public void testForIEqualsDoEnd() throws IOException {    	
@@ -42,7 +47,7 @@ public class LuaJitBasicTest extends TestCase {
         
     public void testRepeatUntil() throws IOException {
     	stringTest( 
-       		"local i=7" +
+       		"local i=7\n" +
     		"repeat\n"+
 	        "	print(i)\n"+
 	        "until i\n");
@@ -50,7 +55,7 @@ public class LuaJitBasicTest extends TestCase {
         
     public void testWhileDoEnd() throws IOException {    	
     	stringTest( 
-    		"local i=4" +
+    		"local i=4\n" +
     		"while i>0 do\n"+
 	        "	print( i )\n"+
 	        "	i = i-1\n"+
@@ -68,7 +73,7 @@ public class LuaJitBasicTest extends TestCase {
         
     public void testRepeatUntilBreak() throws IOException {    	
     	stringTest( 
-	   		"local i=7" +
+	   		"local i=7\n" +
 			"repeat\n"+
 	        "	print(i)\n"+
 			"	break\n"+
@@ -77,7 +82,7 @@ public class LuaJitBasicTest extends TestCase {
         
     public void testWhileDoBreak() throws IOException {    	
     	stringTest( 
-    		"local i=4" +
+    		"local i=4\n" +
     		"while i>0 do\n"+
 	        "	print( i )\n"+
 			"	break\n"+
@@ -105,14 +110,14 @@ public class LuaJitBasicTest extends TestCase {
         
     public void testIfThenElseifElseEnd() throws IOException {    	
     	stringTest(
-        		"if a then\n" +
-        		"	print(1)\n" +
-        		"elseif b then \n" +
-        		"	print(2)\n" +
-        		"else\n" +
-        		"	print(3)\n" +
-        		"end\n" +
-        		"print(4)\n" );
+    		"if a then\n" +
+    		"	print(1)\n" +
+    		"elseif b then \n" +
+    		"	print(2)\n" +
+    		"else\n" +
+    		"	print(3)\n" +
+    		"end\n" +
+    		"print(4)\n" );
     }
         
 	private void stringTest(String program) throws IOException {		
