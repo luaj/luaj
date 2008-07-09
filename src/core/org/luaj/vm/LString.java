@@ -102,27 +102,21 @@ public class LString extends LValue {
 	 * Convert to Java string using UTF-8 encoding
 	 */
 	public String toJavaString() {
-		char[] c = new char[m_length];
-		int n=0, p=0;
-		int b;
-		for ( int i=0; i<m_length; i++ ) {
-			switch ( (b = m_bytes[m_offset+i]) & 0xe0 ) {
-			default:
-				if ( b == 0 )
-					return new String( c, 0, n );
-				c[p=n++] = (char) (0xff & b);
-				break;
-			case 0x80:
-			case 0xa0:
-				c[p] = (char) ((c[p] << 6) | ( b & 0x3f ));
-				break;
-			case 0xc0:
-				c[p=n++] = (char) (b & 0x1f);
-				break;
-			case 0xe0:
-				c[p=n++] = (char) (b & 0xf);
-				break;
-			}			
+		char[] c=new char[m_length];
+		int i, b, n=0;
+		for ( i=0; i<m_length; ) {
+			if ((b = m_bytes[m_offset+(i++)]) == 0)
+				return new String(c,0,n);
+			c[n++] = (char) (
+				(b>=0||i>=m_length)?
+					b:
+				(b<-32||i+1>=m_length)? 
+					(((b&0x3f) << 6) 
+						| (m_bytes[m_offset+(i++)]&0x3f)):
+					(((b&0xf) << 12) 
+						| ((m_bytes[m_offset+(i++)]&0x3f)<<6)
+						|  (m_bytes[m_offset+(i++)]&0x3f))
+				);
 		}
 		return new String( c, 0, n );
 	}
