@@ -103,22 +103,22 @@ public class LString extends LValue {
 	 */
 	public String toJavaString() {
 		char[] c=new char[m_length];
-		int i, b, n=0;
-		for ( i=0; i<m_length; ) {
-			if ((b = m_bytes[m_offset+(i++)]) == 0)
+		int i, j, b, n=0;
+		for ( i=m_offset, j=m_offset+m_length; i<j; ) {
+			if ((b = m_bytes[i++]) == 0)
 				return new String(c,0,n);
 			c[n++] = (char) (
-				(b>=0||i>=m_length)?
+				(b>=0||i>=j)?
 					b:
-				(b<-32||i+1>=m_length)? 
+				(b<-32||i+1>=j)? 
 					(((b&0x3f) << 6) 
-						| (m_bytes[m_offset+(i++)]&0x3f)):
+						| (m_bytes[i++]&0x3f)):
 					(((b&0xf) << 12) 
-						| ((m_bytes[m_offset+(i++)]&0x3f)<<6)
-						|  (m_bytes[m_offset+(i++)]&0x3f))
+						| ((m_bytes[i++]&0x3f)<<6)
+						|  (m_bytes[i++]&0x3f))
 				);
 		}
-		return new String( c, 0, n );
+		return new String(c,0,n);
 	}
 	
 	/**
