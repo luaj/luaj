@@ -1408,8 +1408,7 @@ public class LuaState extends Lua {
 	 * 
 	 */
 	public void getfield(int index, LString k) {
-		LTable t = totable(index);
-		pushlvalue( this.luaV_gettable(t, k) );
+		pushlvalue( this.luaV_gettable(topointer(index), k) );
 	}
 	
 	/**
