@@ -2,6 +2,7 @@ package org.luaj.vm;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import org.luaj.vm.LString;
 
@@ -77,6 +78,19 @@ public class LStringTest extends TestCase {
 		
 	}
 
+	public void testSpotCheckUtf8() throws UnsupportedEncodingException {
+		byte[] bytes = {(byte)194,(byte)160,(byte)194,(byte)161,(byte)194,(byte)162,(byte)194,(byte)163,(byte)194,(byte)164};
+		String expected = new String(bytes, "UTF8");
+		String actual = new LString(bytes).toJavaString();
+		char[] d = actual.toCharArray();
+		assertEquals(160, d[0]);
+		assertEquals(161, d[1]);
+		assertEquals(162, d[2]);
+		assertEquals(163, d[3]);
+		assertEquals(164, d[4]);
+		
+	}
+	
 	public void testNullTerminated() {		
 		char[] c = { 'a', 'b', 'c', '\0', 'd', 'e', 'f' };
 		String before = new String(c);
