@@ -20,6 +20,13 @@ print( string.match( "abbaaababaabaaabaa", "b(a*)()b", 12 ) )
 
 print( string.byte("hi", -3) )
 
+print( string.gsub("ABC", "@(%x+)", function(s) return "|abcd" end) )
+print( string.gsub("@123", "@(%x+)", function(s) return "|abcd" end) )
+print( string.gsub("ABC@123", "@(%x+)", function(s) return "|abcd" end) )
+print( string.gsub("ABC@123@def", "@(%x+)", function(s) return "|abcd" end) )
+print( string.gsub("ABC@123@qrs@def@tuv", "@(%x+)", function(s) return "|abcd" end) )
+print( string.gsub("ABC@123@qrs@def@tuv", "@(%x+)", function(s) return "@ab" end) )
+
 print( tostring(1234567890123) )
 print( tostring(1234567890124) )
 print( tostring(1234567890125) )
