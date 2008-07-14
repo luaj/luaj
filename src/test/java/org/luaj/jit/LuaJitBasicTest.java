@@ -29,6 +29,17 @@ public class LuaJitBasicTest extends TestCase {
     	stringTest( "print( 'hello, world' )" );
     }
 
+    public void testArgPassing() throws IOException {
+    	stringTest( 
+    		"local function f(a,b)\n" +
+    		"	print('a',a,'b',b)\n" +
+    		"	return 'c','d'\n" +
+    		"end\n" +
+    		"print( 'f1', f(123) )\n" +
+			"print( 'f2', f(456,789) )\n" +
+    		"print( 'f3', f(12,34,56) )\n" );
+    }
+
     public void testForInDoEnd() throws IOException {    	
     	stringTest( 
 			"local t = {abc=123,def=456}\n" +
