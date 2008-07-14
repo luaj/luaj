@@ -63,7 +63,7 @@ public class LoadStateTest extends TestCase {
 		}
 	}
 	
-	public void testLongBitsToLuaNumberSpeed() {
+	public void testLongBitsToLuaNumberSpeed() throws InterruptedException {
 		long[] BITS = new long[ 500000 ];
 		Random r = new Random();
 		
@@ -74,21 +74,55 @@ public class LoadStateTest extends TestCase {
 			BITS[i  ] = r.nextLong();
 			BITS[i+1] = Double.doubleToLongBits( r.nextDouble() );
 		}
+
 		
-		long startTime = System.currentTimeMillis();
-		for ( int j = 0; j < BITS.length; ++j ) {
-			LoadState.longBitsToLuaNumber( BITS[j] );
+		long simpleConversionCount = 0;
+		long complexConversionCount = 0;
+			
+		collectGarbage();
+		long startTime = leadingEdgeTime();
+		long endTime = startTime + 1000;
+		int count = 0;
+		int n = BITS.length;
+		for ( ; currentTime()<endTime; count++ ) {
+			for ( int j=0; j<n; j++ )
+				simpleBitsToLuaNumber( BITS[j] );
 		}
-		long endTime = System.currentTimeMillis();
-		long complexConversionTime = endTime - startTime;
+		simpleConversionCount += count;
 		
-		startTime = System.currentTimeMillis();
-		for ( int j = 0; j < BITS.length; ++j ) {
-			simpleBitsToLuaNumber( BITS[j] );
+		collectGarbage();
+		startTime = leadingEdgeTime();
+		endTime = startTime + 1000;
+		count = 0;
+		for ( ; currentTime()<endTime; count++ ) {
+			for ( int j=0; j<n; j++ )
+				LoadState.longBitsToLuaNumber( BITS[j] );
 		}
-		endTime = System.currentTimeMillis();
-		long simpleConversionTime = endTime - startTime;
+		complexConversionCount += count;
 		
-		assertTrue( complexConversionTime < simpleConversionTime );
+		System.out.println("conversion counts: simple,complex="
+				+simpleConversionCount+","+complexConversionCount);
+
+		assertTrue( complexConversionCount >= simpleConversionCount );
 	}
+
+	private void collectGarbage() throws InterruptedException {
+		Runtime rt = Runtime.getRuntime();
+		rt.gc();
+		Thread.sleep(20);
+		rt.gc();
+		Thread.sleep(20);
+	}
+
+	private static long leadingEdgeTime() {
+		long s,e = currentTime();
+		for ( s=currentTime(); s==(e=currentTime()); )
+			;
+		return e;
+	}
+
+	private static long currentTime() {
+		return System.currentTimeMillis();
+	}
+
 }
