@@ -1,5 +1,5 @@
 local function fixhash(msg)
-  return string.gsub(msg, "@(%x+)", function(s) return "@"..(string.rep("x", 6)) end)
+  return (string.gsub(msg, "@(%x+)", function(s) return "@"..(string.rep("x", 6)) end))
 end
 
 obj = luajava.newInstance("java.lang.Object")
