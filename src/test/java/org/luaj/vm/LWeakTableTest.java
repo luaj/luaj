@@ -19,6 +19,15 @@ public class LWeakTableTest extends LTableTest {
 	Random random = new Random(0);
 	Runtime rt = Runtime.getRuntime();
 	
+	protected void setUp() throws Exception {
+		super.setUp();
+		Runtime rt = Runtime.getRuntime();
+		rt.gc();
+		Thread.sleep(20);
+		rt.gc();
+		Thread.sleep(20);
+	}
+
 	private void runTest(int n,int i0,int i1,int di) {
 		System.out.println("------- testing "+n+" keys up to "+i1+" bytes each ("+(n*i1)+" bytes total)");
 		LTable t = new LWeakTable();
