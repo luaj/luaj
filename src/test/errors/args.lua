@@ -53,16 +53,19 @@ notatable    = except(sometable)
 notafunction = except(somefunction)
 notanil      = except(somenil)
 
+local structtypes = { 
+	['table']='<table>',
+	['function']='<function>',
+	['thread']='<thread>',
+	['userdata']='<userdata>',
+}
+
 local function signature(name,arglist)
 	local t = {}
 	for i=1,#arglist do
-		if type(arglist[i]) == 'table' then 
-			t[i] = 'table'
-		elseif type(arglist[i]) == 'function' then
-			t[i] = 'function'
-		else
-			t[i] = tostring(arglist[i])
-		end 
+		local ai = arglist[i]
+		local ti = type(ai)
+		t[i] = structtypes[ti] or tostring(ai)
 	end
 	return name..'('..table.concat(t,',')..')'
 end
