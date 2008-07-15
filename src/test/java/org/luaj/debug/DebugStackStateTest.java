@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.debug;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -33,13 +34,12 @@ import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
-import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 public class DebugStackStateTest extends TestCase {
 
 	public void testDebugStackState() throws InterruptedException, IOException {
-		String script = "/test6.lua";
+		String script = "src/test/res/test6.lua";
 		
 		// set up the vm
 		System.setProperty(Platform.PROPERTY_LUAJ_DEBUG, "true");
@@ -51,7 +51,7 @@ public class DebugStackStateTest extends TestCase {
 
 		final DebugLuaState state = (DebugLuaState) Platform.newLuaState();
                 LuaC.install();
-		InputStream is = getClass().getResourceAsStream( script );
+		InputStream is = new FileInputStream( script );
 		LPrototype p = LoadState.undump(state, is, script);
 		
 		// create closure and execute

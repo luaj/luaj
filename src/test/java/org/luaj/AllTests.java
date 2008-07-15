@@ -10,13 +10,14 @@ public class AllTests {
 		
 		// debug tests
 		TestSuite vm = new TestSuite("VM");
+		vm.addTestSuite(org.luaj.vm.CompatibiltyTest.class);
+		vm.addTestSuite(org.luaj.vm.ErrorMessageTest.class);
 		vm.addTestSuite(org.luaj.vm.LuaStateTest.class);
 		vm.addTestSuite(org.luaj.vm.LoadStateTest.class);
 		vm.addTestSuite(org.luaj.vm.LStringTest.class);
 		vm.addTestSuite(org.luaj.vm.MathLibTest.class);
 		vm.addTestSuite(org.luaj.vm.LTableTest.class);
 		vm.addTestSuite(org.luaj.vm.LWeakTableTest.class);
-		vm.addTestSuite(org.luaj.vm.LuaJTest.class);
 		suite.addTest(vm);
 		
 		// compiler tests

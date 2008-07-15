@@ -6,7 +6,6 @@
 	<classpathentry kind="src" path="src/j2se"/>
 	<classpathentry kind="src" path="src/script"/>
 	<classpathentry kind="src" path="src/test/java"/>
-	<classpathentry kind="src" path="src/test/res"/>
 	<classpathentry kind="src" path="src/sample"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3.8.1"/>
