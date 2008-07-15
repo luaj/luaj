@@ -1,10 +1,12 @@
 -- utilities to check that args of various types pass or fail 
 -- argument type checking
 
+akey      = 'aa'
 astring   = 'abc'
+astrnum   = '789'
 anumber   = 1.23
 aboolean  = true
-atable    = {aa=11,bb=22}
+atable    = {[akey]=456}
 afunction = function() end
 anil      = nil
 
@@ -12,11 +14,13 @@ anylua = { anil, astring, anumber, aboolean, atable, afunction }
 
 somestring   = { astring }
 somenumber   = { anumber }
-somestrnum   = { astring, anumber }
+somestrnum   = { anumber, astrnum }
 someboolean  = { aboolean }
 sometable    = { atable }
 somefunction = { afunction }
 somenil      = { anil }
+somekey      = { akey }
+notakey      = { astring, anumber, aboolean, atable, afunction }
 
 local function contains(set,val)
 	local m = #set
@@ -177,18 +181,6 @@ function checkallfail( name, typesets )
 		else
 			print( needcheck, sig, e )
 		end
-	end
-end
-
-function checkfail( name, ... )
-	subbanner('checkfail')
-	local v = {...}
-	local sig = signature(name,v)
-	local s,e = invoke( name, v )
-	if not s then 
-		print( ok, sig )
-	else
-		print( needcheck, sig, e )
 	end
 end
 
