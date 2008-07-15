@@ -16,7 +16,12 @@ public class ErrorMessageTest extends ScriptDrivenTest {
 	public void testBaseLibArgs() throws IOException, InterruptedException {
 		runTest("baselibargs");
 	}
-
 	
+	public void testCoroutineLibArgs() throws IOException, InterruptedException {
+		runTest("coroutinelibargs");
+	}
 
+	public void testModuleLibArgs() throws IOException, InterruptedException {
+		runTest("modulelibargs");
+	}
 }
