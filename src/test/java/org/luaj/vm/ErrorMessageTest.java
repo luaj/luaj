@@ -12,7 +12,7 @@ public class ErrorMessageTest extends ScriptDrivenTest {
 	public ErrorMessageTest() {
 		super(dir);
 	}
-	
+
 	public void testBaseLibArgs() throws IOException, InterruptedException {
 		runTest("baselibargs");
 	}
@@ -24,4 +24,17 @@ public class ErrorMessageTest extends ScriptDrivenTest {
 	public void testModuleLibArgs() throws IOException, InterruptedException {
 		runTest("modulelibargs");
 	}
+
+	public void testStringLibArgs() throws IOException, InterruptedException {
+		runTest("stringlibargs");
+	}
+	
+	public void testTableLibArgs() throws IOException, InterruptedException {
+		runTest("tablelibargs");
+	}
+	
+	public void testMathLibArgs() throws IOException, InterruptedException {
+		runTest("mathlibargs");
+	}
+	
 }
