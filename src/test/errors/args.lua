@@ -198,7 +198,7 @@ function checkallerrors( name, typesets, template )
 		local sig = signature(name,v)
 		local s,e = invoke( name, v )
 		if not s then
-			if string.match(e, template) then
+			if string.find(e, template, 1, true) then
 				print( ok, sig, '...'..template..'...' )
 			else
 				print( badmsg, sig, "template='"..template.."' actual='"..e.."'" )
