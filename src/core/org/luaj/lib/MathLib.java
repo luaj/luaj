@@ -88,37 +88,64 @@ public class MathLib extends LFunction {
 		vm.pushlvalue( value );
 	}
 	
+	private static void setResult( LuaState vm, double d ) {
+		vm.resettop();
+		vm.pushlvalue( LDouble.valueOf(d) );
+	}
+	
+	private static void setResult( LuaState vm, int i ) {
+		vm.resettop();
+		vm.pushlvalue( LInteger.valueOf(i) );
+	}
+	
 	public boolean luaStackCall( LuaState vm ) {
+		double x;
 		switch ( id ) {
 		case INSTALL:
 			install( vm._G );
 			break;
 		case ABS:
-			setResult( vm, abs( vm.topointer( 2 ) ) );
+			setResult( vm, Math.abs (  vm.checkdouble(2) ) );
 			break;
 		case COS:
-			setResult( vm, new LDouble( Math.cos ( vm.tonumber(2) ) ) );
+			setResult( vm, Math.cos ( vm.checkdouble(2) ) );
 			break;
-		case MAX:
-			setResult( vm, max( vm.topointer(2), vm.topointer(3) ) );
+		case MAX: {
+			int n = vm.gettop();
+			x = vm.checkdouble(2);
+			for ( int i=3; i<=n; i++ )
+				x = Math.max(x, vm.checkdouble(i));
+			setResult( vm, x );
 			break;
-		case MIN:
-			setResult( vm, min( vm.topointer(2), vm.topointer(3) ) );
+		}
+		case MIN: {
+			int n = vm.gettop();
+			x = vm.checkdouble(2);
+			for ( int i=3; i<=n; i++ )
+				x = Math.min(x, vm.checkdouble(i));
+			setResult(vm,x);
 			break;
-		case MODF:
-			modf( vm );
+		}
+		case MODF: {
+			double v = vm.checkdouble(2);
+			double intPart = ( v > 0 ) ? Math.floor( v ) : Math.ceil( v );
+			double fracPart = v - intPart;
+			vm.resettop();
+			vm.pushnumber( intPart );
+			vm.pushnumber( fracPart );
 			break;
+		}
 		case SIN:
-			setResult( vm, new LDouble( Math.sin( vm.tonumber(2) ) ) );
+			setResult( vm, Math.sin( vm.checkdouble(2) ) );
 			break;
 		case SQRT:
-			setResult( vm, new LDouble( Math.sqrt( vm.tonumber(2) ) ) );
+			setResult( vm, Math.sqrt( vm.checkdouble(2) ) );
 			break;
 		case CEIL:
-			setResult( vm, LInteger.valueOf( (int) Math.ceil( vm.tonumber(2) ) ) );
+			setResult( vm, (int) Math.ceil( vm.checkdouble(2) ) );
 			break;
 		case FLOOR:
-			setResult( vm, LInteger.valueOf( (int) Math.floor( vm.tonumber(2) ) ) );
+			setResult( vm, (int) Math.floor( vm.checkdouble(2) ) );
 			break;
 		case RANDOM: {
 			if ( random == null )
@@ -129,14 +156,16 @@ public class MathLib extends LFunction {
 				vm.pushnumber(random.nextDouble());
 				break;
 			case 2: {
-				int m = vm.tointeger(2);
+				int m = vm.checkint(2);
+				vm.argcheck(1<=m, 1, "interval is empty");
 				vm.resettop();
 				vm.pushinteger(1+random.nextInt(m));
 				break;
 			}
 			default: {
-				int m = vm.tointeger(2);
-				int n = vm.tointeger(3);
+				int m = vm.checkint(2);
+				int n = vm.checkint(3);
+				vm.argcheck(m<=n, 2, "interval is empty");
 				vm.resettop();
 				vm.pushinteger(m+random.nextInt(n+1-m));
 				break;
@@ -145,35 +174,13 @@ public class MathLib extends LFunction {
 			break;
 		}
 		case RANDOMSEED:
-			random = new Random( vm.tointeger(2) );
+			random = new Random( vm.checkint(2) );
 			vm.resettop();
 			break;
 		default:
 			LuaState.vmerror( "bad math id" );
 		}
 		return false;
-	}
-	private LValue abs( final LValue v ) {
-		LValue nv = v.luaUnaryMinus();
-		return max( v, nv );
-	}
-	
-	private LValue max( LValue lhs, LValue rhs ) {
-		return rhs.luaBinCmpUnknown( Lua.OP_LT, lhs ) ? rhs: lhs;
-	}
-	
-	private LValue min( LValue lhs, LValue rhs ) {
-		return rhs.luaBinCmpUnknown( Lua.OP_LT, lhs ) ? lhs: rhs;
-	}
-	
-	private void modf( LuaState vm ) {
-		LValue arg = vm.topointer(2);
-		double v = arg.toJavaDouble();
-		double intPart = ( v > 0 ) ? Math.floor( v ) : Math.ceil( v );
-		double fracPart = v - intPart;
-		vm.resettop();
-		vm.pushnumber( intPart );
-		vm.pushnumber( fracPart );
 	}
 	
 }

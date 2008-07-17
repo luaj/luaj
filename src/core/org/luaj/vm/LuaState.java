@@ -2617,23 +2617,30 @@ public class LuaState extends Lua {
 	/**
 	 * Report an error with an argument.
 	 * 
-	 * @param narg
-	 *            Stack index of the bad argument
-	 * @param extramsg
-	 *            String to include in error message
+	 * @param narg Stack index of the bad argument
+	 * @param extramsg String to include in error message
 	 */
     public void argerror(int narg, String extramsg) {
-        // TODO: port ldebug.c and provide mode useful error messages.
         error("bad argument #" + (narg - 1) + " (" + extramsg + ")");
     }
 
-    /**
+	/**
+	 * Conditionally report an error with an argument.
+	 * 
+	 * @param cond boolean condition that generates an error when false
+	 * @param narg Stack index of the bad argument
+	 * @param extramsg String to include in error message
+	 */
+	public void argcheck(boolean cond, int narg, String extramsg) {
+		if ( ! cond )
+			argerror(narg,extramsg);		
+	}
+	
+	/**
      * Report a type error.
      * 
-     * @param narg
-     *            Stack index of the bad argument
-     * @param typename
-     *            Name of the type that was expected
+     * @param narg Stack index of the bad argument
+     * @param typename Name of the type that was expected, such as "string"
      */
     public void typerror(int narg, String typename) {
         argerror(narg, typename + " expected, got " + typename(narg));
@@ -2642,11 +2649,8 @@ public class LuaState extends Lua {
     /**
      * Report a type error.
      * 
-     * @param narg
-     *            Stack index of the bad argument
-     * @param typenum
-     *            Constant value specifying the type of argument that was
-     *            expected (i.e. LUA_TSTRING).
+     * @param narg Stack index of the bad argument
+     * @param typenum Constant value specifying the type of argument that was expected (i.e. LUA_TSTRING).
      */
     public void typerror(int narg, int typenum) {
         typerror(narg, TYPE_NAMES[typenum]);
@@ -2712,7 +2716,18 @@ public class LuaState extends Lua {
 	public long checklong(int narg) {
 		return checknumber(narg).toJavaLong();
 	}
-
+	
+	/**
+	 * Checks whether the function argument <code>narg</code> is a number and
+	 * returns this number cast to a <code>double</code>.
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to a double
+	 * @return long value if the argument is a number or can be converted to double
+	 */
+	public double checkdouble(int narg) {
+		return checknumber(narg).toJavaDouble();
+	}
+	
 	/**
 	 * Checks whether the function argument <code>narg</code> is a number and
 	 * returns this number.
