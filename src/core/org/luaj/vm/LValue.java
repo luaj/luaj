@@ -309,7 +309,8 @@ public class LValue {
 
 	/** Concatenate this value to a ByteArrayOutputStream */
 	public void luaConcatTo(ByteArrayOutputStream baos) {
-		throw new LuaErrorException( "attempt to concat ? (a "+luaGetTypeName()+" value)");
+		byte[] b = toJavaString().getBytes();
+		baos.write(b,0,b.length);
 	}
 
 	/** Return true if this is a LString */

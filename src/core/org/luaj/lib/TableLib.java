@@ -97,12 +97,16 @@ public class TableLib extends LFunction {
 		case CONCAT: { 
 			int n = vm.gettop();
 			LTable table = vm.checktable(2);
-			LString sep = (n>=3? vm.checklstring(3): null);
-			int i = (n>=4? vm.checkint(4): 1);
-			int j = (n>=5? vm.checkint(5): table.luaLength());
+			LString sep = vm.optlstring(3,null);
+			int i = vm.optint(4,1);
+			int j = vm.optint(5,-1);
+			if ( j == -1 )
+				j = table.luaLength();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			for ( int k=i; k<=j; k++ ) {
 				LValue v = table.get(k);
+				if ( ! v.isString() )
+					vm.argerror(2, "table contains non-strings");
 				v.luaConcatTo(baos);
 				if ( k<j && sep!=null )
 					sep.luaConcatTo( baos );
@@ -144,12 +148,19 @@ public class TableLib extends LFunction {
 		 * The default value for pos is n+1, where n is the length of the table (see §2.5.5), so that a call 
 		 * table.insert(t,x) inserts x at the end of table t.
 		 */ 
-		case INSERT: { 
-			int n = vm.gettop();
+		case INSERT: {
 			LTable table = vm.checktable(2);
-			int pos = (n>=4? vm.checkint(3): 0);
-			LValue value = vm.topointer(-1);
-			table.luaInsertPos( pos, value );
+			int pos = 0;
+			switch ( vm.gettop() ) {
+		    case 3: 
+		    	break;
+		    case 4:
+		    	pos = vm.checkint(3);
+		    	break;
+		    default:
+		    	vm.error( "wrong number of arguments to 'insert'" );
+		    }
+			table.luaInsertPos( pos, vm.topointer(-1) );
 			vm.resettop();
 			break;
 		}
@@ -175,7 +186,7 @@ public class TableLib extends LFunction {
 		case REMOVE: {
 			int n = vm.gettop();
 			LTable table = vm.checktable(2);
-			int pos = (n>=3? vm.checkint(3): 0);
+			int pos = vm.optint(3,0);
 			vm.resettop();
 			LValue removed = table.luaRemovePos( pos );
 			if ( removed != LNil.NIL )
@@ -194,7 +205,7 @@ public class TableLib extends LFunction {
 		 */ 
 		case SORT: { 
 			LTable table = vm.checktable(2);
-			LValue compare = vm.checkfunction(3);
+			LValue compare = (vm.isnoneornil(3)? LNil.NIL: vm.checkfunction(3));
 			table.luaSort( vm, compare );
 			vm.resettop();
 			break;

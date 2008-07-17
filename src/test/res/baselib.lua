@@ -196,6 +196,9 @@ print( 'pcall(tonumber,false)', pcall(tonumber,false) )
 print( 'pcall(tonumber,tonumber)', pcall(tonumber,tonumber) )
 print( 'pcall(tonumber,function() end)', pcall(tonumber,function() end) )
 print( 'pcall(tonumber,{"one","two",a="aa",b="bb"})', pcall(tonumber,{"one","two",a="aa",b="bb"}) )
+print( 'pcall(tonumber,"123.456")', pcall(tonumber,"123.456") )
+print( 'pcall(tonumber," 123.456")', pcall(tonumber," 123.456") )
+print( 'pcall(tonumber," 234qwer")', pcall(tonumber," 234qwer") )
 
 -- tostring
 print( 'pcall(tostring)', pcall(tostring) )

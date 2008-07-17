@@ -2685,7 +2685,7 @@ public class LuaState extends Lua {
 	 */
 	public int checkint(int narg) {
 		LValue v = tolnumber(narg);
-		if ( ! v.isInteger() )
+		if ( v.isNil() )
 			typerror(narg, Lua.LUA_TNUMBER);
 		return v.toJavaInt();
 	}
@@ -2722,7 +2722,10 @@ public class LuaState extends Lua {
 	 * @return LNumber value if the argument is a number or can be converted to one
 	 */
 	public LNumber checknumber(int narg) {
-		return (LNumber) checktype(narg, Lua.LUA_TTABLE);
+		LValue v = topointer(narg).luaToNumber();
+		if ( v.isNil() )
+			typerror(narg, Lua.LUA_TNUMBER);
+		return (LNumber) v;
 	}
 	
 	/**
@@ -2799,11 +2802,101 @@ public class LuaState extends Lua {
         typerror(ud, expected.getName());
         return null;
     }
+
+	/**
+	 * If the function argument <code>narg</code> is a number, returns this
+	 * number cast to an <code>int</code>. If this argument is absent or is
+	 * <b>nil</b>, returns <code>d</code>. Otherwise, raises an error.
+	 * @param narg the argument number
+	 * @param d the default value when the argument is nil or not supplied 
+	 * @throws LuaErrorException if the value cannot be converted to an int
+	 * @return int value if the argument is an int, or d
+	 */
+    public int optint(int narg, int d) { 
+		LNumber n = optnumber(narg,null);
+		return (n==null? d: n.toJavaInt());
+    }
+    
+	/**
+	 * If the function argument <code>narg</code> is a number, returns this
+	 * number cast to a <a href="#lua_Integer"><code>lua_Integer</code></a>.
+	 * If this argument is absent or is <b>nil</b>, returns <code>d</code>.
+	 * Otherwise, raises an error.
+	 * @param narg the argument number
+	 * @param d the default value when the argument is nil or not supplied 
+	 * @throws LuaErrorException if the value cannot be converted to an int
+	 * @return int value if the argument is an int, or d
+	 */
+	public LInteger optinteger(int narg, int d) {
+		return LInteger.valueOf(optint(narg,d));
+	}
+    
+	/**
+	 * If the function argument <code>narg</code> is a number, returns this
+	 * number cast to a <code>long</code>. If this argument is absent or is
+	 * <b>nil</b>, returns <code>d</code>. Otherwise, raises an error.
+	 * @param narg the argument number
+	 * @param d the default value when the argument is nil or not supplied 
+	 * @throws LuaErrorException if the value cannot be converted to an number
+	 * @return int value if the argument is an number, or d
+	 */
+	public long optlong(int narg, long d) {
+		LNumber n = optnumber(narg,null);
+		return (n==null? d: n.toJavaLong());
+	}
 	
 	/**
-	 * Method to indicate a vm internal error has occurred. 
-	 * Generally, this is not recoverable, so we convert to 
-	 * a lua error during production so that the code may recover.
+	 * If the function argument <code>narg</code> is a number, returns this
+	 * number. If this argument is absent or is <b>nil</b>, returns
+	 * <code>d</code>. Otherwise, raises an error.
+	 * @param narg the argument number
+	 * @param d the default value when the argument is nil or not supplied 
+	 * @throws LuaErrorException if the value cannot be converted to an number
+	 * @return int value if the argument is an number, or d
+	 */
+	public LNumber optnumber(int narg, LNumber d) {
+		LValue v = topointer(narg);
+		if ( v.isNil() )
+			return d;
+		v = v.luaToNumber();
+		if ( v.isNil() )
+			typerror(narg, Lua.LUA_TNUMBER);
+		return (LNumber) v;
+		
+	}
+	
+	/**
+	 * If the function argument <code>narg</code> is a string, returns this
+	 * string. If this argument is absent or is <b>nil</b>, returns
+	 * <code>d</code>. Otherwise, raises an error.
+	 */
+	public LString optlstring(int narg, LString d) {
+		LValue v = topointer(narg);
+		if ( v.isNil() )
+			return d;
+		if ( ! v.isString() )
+			typerror(narg, Lua.LUA_TSTRING);
+		return v.luaAsString();
+	}
+	
+	/**
+	 * If the function argument <code>narg</code> is a string, returns this
+	 * string. If this argument is absent or is <b>nil</b>, returns
+	 * <code>d</code>. Otherwise, raises an error.
+	 */
+	public String optstring(int narg, String d) {
+		LValue v = topointer(narg);
+		if ( v.isNil() )
+			return d;
+		if ( ! v.isString() )
+			typerror(narg, Lua.LUA_TSTRING);
+		return v.toJavaString();
+	}
+    
+	/**
+	 * Method to indicate a vm internal error has occurred. Generally, this is
+	 * not recoverable, so we convert to a lua error during production so that
+	 * the code may recover.
 	 */
 	public static void vmerror(String description) {
 		throw new LuaErrorException( "internal error: "+description );
