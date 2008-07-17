@@ -3,7 +3,7 @@ require 'args'
 
 -- arg type tests for math library functions
 local somenumber = {23,45.67,'-12','-345.678'}
-local notanumber = {nil,astring,aboolean,afunction,atable}
+local notanumber = {nil,astring,aboolean,afunction,atable,athread}
 local nonnumber = {astring,aboolean,afunction,atable}
 
 local singleargfunctions = { 

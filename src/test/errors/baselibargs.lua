@@ -3,136 +3,138 @@ require 'args'
 
 
 -- arg types for basic library functions
-local somestrnumnil={anil,astring,anumber}
-local notastrnumnil={aboolean,atable,afunction}
 
 -- assert
 banner('assert')
 checkallpass('assert',{{true,123},anylua})
-checkallfail('assert',{{nil,false},{nil,'message'}})
 checkallerrors('assert',{{nil,false},{nil}},'assertion failed')
 checkallerrors('assert',{{nil,false},{'message'}},'message')
 
 -- collectgarbage
 banner('collectgarbage')
 checkallpass('collectgarbage',{{'collect','count'}})
-checkallerrors('collectgarbage',{notanil},'bad argument')
+checkallerrors('collectgarbage',{notanil},'bad argument #1')
 
--- dofila
+-- dofile
 banner('dofile')
-checkallpass('dofile', {{nil,'src/test/errors/args.lua','args.lua'}})
-checkallerrors('dofile', {notastrnumnil}, 'bad argument')
+checkallpass('dofile', {{nil,'src/test/errors/args.lua'}})
+checkallerrors('dofile', {{'args.lua'}}, 'cannot open args.lua')
+checkallerrors('dofile', {nonstring}, 'bad argument #1')
 
 -- error
 banner('error')
-checkallfail('error', {anylua,{nil,0,1,2}})
-checkallerrors('dofile', {{'message'},{nil,0,1,2}}, 'message')
-checkallerrors('dofile', {{123},{nil,1,2}}, 123)
+checkallerrors('error', {{'message'},{nil,0,1,2}}, 'message')
+checkallerrors('error', {{123},{nil,1,2}}, 123)
 
 -- getfenv
 banner('getfenv')
 checkallpass('getfenv', {{nil,print,function()end,0,1,2}})
-checkallerrors('getfenv', {{true,{},'abc'}}, 'bad argument')
+checkallerrors('getfenv', {{true,{},'abc'}}, 'bad argument #1')
 
 -- getmetatable
 banner('getmetatable')
 checkallpass('getmetatable', {notanil})
-checkallerrors('getmetatable',{},'bad argument')
+checkallerrors('getmetatable',{},'bad argument #1')
 
 -- ipairs
 banner('ipairs')
 checkallpass('ipairs', {sometable})
-checkallerrors('ipairs', {notatable}, 'bad argument')
+checkallerrors('ipairs', {notatable}, 'bad argument #1')
 
 -- load
 banner('load')
-checkallpass('load', {somefunction,{anil,astring}})
-checkallerrors('load', {notafunction,{anil,astring,anumber}}, 'bad argument')
-checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument')
+checkallpass('load', {somefunction,{nil,astring}})
+checkallerrors('load', {notafunction,{nil,astring,anumber}}, 'bad argument #1')
+checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument #2')
 
 -- loadfile
 banner('loadfile')
-checkallerrors('loadfile', {notastring}, 'bad argument')
+checkallpass('loadfile', {})
+checkallerrors('loadfile', {nonstring}, 'bad argument #1')
 
 -- loadstring
 banner('loadstring')
-checkallpass('loadstring', {{'return'},{anil,astring}})
-checkallerrors('loadstring', {notastring,{anil,astring,anumber}}, 'bad argument')
-checkallerrors('loadstring', {{'return'},{afunction,atable}}, 'bad argument')
+checkallpass('loadstring', {{'return'},{nil,astring}})
+checkallerrors('loadstring', {notastring,{nil,astring,anumber}}, 'bad argument #1')
+checkallerrors('loadstring', {{'return'},{afunction,atable}}, 'bad argument #2')
 
 -- next
 banner('next')
--- checkallpass('next', {{{aa=11}},{nil,'aa'}})
 checkallpass('next', {sometable,somekey})
-checkallerrors('next', {notatable,{nil,1}}, 'bad argument')
-checkallerrors('next', {sometable,notakey}, 'invalid key')
+checkallerrors('next', {notatable,{nil,1}}, 'bad argument #1')
+checkallerrors('next', {sometable,nonkey}, 'invalid key')
 
 -- pairs
 banner('pairs')
 checkallpass('pairs', {sometable})
-checkallerrors('pairs', {notatable}, 'bad argument')
+checkallerrors('pairs', {notatable}, 'bad argument #1')
 
 -- pcall
 banner('pcall')
 checkallpass('pcall', {notanil,anylua})
-checkallerrors('pcall',{},'bad argument')
+checkallerrors('pcall',{},'bad argument #1')
 
 -- print
 banner('print')
 checkallpass('print', {}) 
-checkallpass('print', {{anil,astring,anumber,aboolean}}) 
+checkallpass('print', {{nil,astring,anumber,aboolean}}) 
 
 -- rawequal
 banner('rawequal')
 checkallpass('rawequal', {notanil,notanil})
-checkallerrors('rawequal', {notanil}, 'bad argument')
-checkallerrors('rawequal', {}, 'bad argument')
+checkallerrors('rawequal', {}, 'bad argument #1')
+checkallerrors('rawequal', {notanil}, 'bad argument #2')
 
 -- rawget
 banner('rawget')
 checkallpass('rawget', {sometable,somekey})
-checkallpass('rawget', {sometable,notakey})
-checkallerrors('rawget', {notatable,notakey}, 'bad argument')
-checkallerrors('rawget', {}, 'bad argument')
+checkallpass('rawget', {sometable,nonkey})
+checkallerrors('rawget', {sometable,somenil},'bad argument #2')
+checkallerrors('rawget', {notatable,notakey}, 'bad argument #1')
+checkallerrors('rawget', {}, 'bad argument #1')
 
 -- rawset
 banner('rawset')
 checkallpass('rawset', {sometable,somekey,notanil})
-checkallpass('rawset', {sometable,notakey,notanil})
-checkallerrors('rawset', {sometable,somekey}, 'bad argument')
-checkallerrors('rawset', {notatable,somestring,somestring}, 'bad argument')
-checkallerrors('rawset', {}, 'bad argument')
+checkallpass('rawset', {sometable,nonkey,notanil})
+checkallerrors('rawset', {sometable,somenil},'table index is nil')
+checkallerrors('rawset', {}, 'bad argument #1')
+checkallerrors('rawset', {notatable,somestring,somestring}, 'bad argument #1')
+checkallerrors('rawset', {sometable,somekey}, 'bad argument #3')
 
 -- select
 banner('select')
 checkallpass('select', {{anumber,'#'},anylua})
-checkallerrors('select', {notanumber}, 'bad argument')
+checkallerrors('select', {notanumber}, 'bad argument #1')
 
 -- setfenv
 banner('setfenv')
 checkallpass('setfenv', {{function()end},sometable})
-checkallerrors('setfenv', {{function()end}}, 'bad argument')
-checkallerrors('setfenv', {{function()end},notatable}, 'bad argument')
+checkallerrors('setfenv', {{1.23, '1.33'},{getfenv()}}, 'cannot change environment of given object')
+checkallerrors('setfenv', {{atable,athread,aboolean,astring},sometable}, 'bad argument #1')
+checkallerrors('setfenv', {notafunction}, 'bad argument #2')
+checkallerrors('setfenv', {anylua}, 'bad argument #2')
+checkallerrors('setfenv', {{function()end},notatable}, 'bad argument #2')
 
 -- setmetatable
 banner('setmetatable')
 checkallpass('setmetatable', {sometable,sometable})
-checkallpass('setmetatable', {sometable,{anil,atable},{'anchor'}})
-checkallerrors('setmetatable',{notatable,sometable},'bad argument')
-checkallerrors('setmetatable',{sometable,notatable},'bad argument')
+checkallpass('setmetatable', {sometable,{nil,atable},{'anchor'}})
+checkallerrors('setmetatable',{notatable,sometable},'bad argument #1')
+checkallerrors('setmetatable',{sometable,notatable},'bad argument #2')
 
 -- tonumber
 banner('tonumber')
-checkallpass('tonumber',{somestrnum,{nil,2,10,36}})
-checkallpass('tonumber',{notastrnum,{nil,10}})
-checkallerrors('tonumber',{notastrnum,{2,9,11,36}},'bad argument')
-checkallerrors('tonumber',{somestrnum,{1,37,atable,afunction,aboolean}},'bad argument')
+checkallpass('tonumber',{somenumber,{nil,2,10,36}})
+checkallpass('tonumber',{notanil,{nil,10}})
+checkallerrors('tonumber',{{nil,afunction,atable},{2,9,11,36}},'bad argument #1')
+checkallerrors('tonumber',{somenumber,{1,37,atable,afunction,aboolean}},'bad argument #2')
 
 -- tostring
 banner('tostring')
 checkallpass('tostring',{notanil})
 checkallpass('tostring',{anylua,{'anchor'}})
-checkallerrors('tostring',{},'bad argument')
+checkallerrors('tostring',{},'bad argument #1')
 
 -- type
 banner('type')
@@ -142,12 +144,16 @@ checkallerrors('type',{},'bad argument')
 
 -- unpack
 banner('unpack')
-checkallpass('unpack',{sometable,{nil,anumber,astrnum},{nil,anumber,astrnum}})
-checkallerrors('unpack',{notatable,{nil,anumber,astrnum},{nil,anumber,astrnum}},'bad argument')
+checkallpass('unpack',{sometable})
+checkallpass('unpack',{sometable,somenumber})
+checkallpass('unpack',{sometable,somenumber,somenumber})
+checkallerrors('unpack',{notatable,somenumber,somenumber},'bad argument #1')
+checkallerrors('unpack',{sometable,nonnumber,somenumber},'bad argument #2')
+checkallerrors('unpack',{sometable,somenumber,nonnumber},'bad argument #3')
 
 -- xpcall
 banner('xpcall')
 checkallpass('xpcall', {notanil,notanil})
-checkallerrors('xpcall',{},'bad argument')
+checkallerrors('xpcall',{anylua},'bad argument #2')
 
 

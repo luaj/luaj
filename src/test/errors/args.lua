@@ -1,5 +1,10 @@
 -- utilities to check that args of various types pass or fail 
 -- argument type checking
+local ok = '-\t'
+local fail = 'fail '
+local needcheck = 'needcheck '
+local badmsg = 'badmsg '
+
 
 akey      = 'aa'
 astring   = 'abc'
@@ -11,12 +16,12 @@ aboolean  = true
 atable    = {[akey]=456}
 afunction = function() end
 anil      = nil
+athread   = coroutine.create(afunction)
 
-anylua = { anil, astring, anumber, aboolean, atable, afunction }
+anylua = { nil, astring, anumber, aboolean, atable, afunction, athread }
 
-somestring   = { astring }
-somenumber   = { anumber }
-somestrnum   = { anumber, astrnum }
+somestring   = { astring, anumber }
+somenumber   = { anumber, astrnum }
 someboolean  = { aboolean }
 sometable    = { atable }
 somefunction = { afunction }
@@ -24,36 +29,21 @@ somenil      = { anil }
 somekey      = { akey }
 notakey      = { astring, anumber, aboolean, atable, afunction }
 
-local function contains(set,val)
-	local m = #set
-	for i=1,m do
-		if set[i] == val then 
-			return true 
-		end		
-	end
-	return val == nil
-end
-	
-local function except(some)
-	local n = #anylua
-	local z = {}
-	local j = 1
-	for i=1,n do
-		if not contains(some, anylua[i]) then
-			z[j] = anylua[i]
-			j = j + 1
-		end
-	end
-	return z
-end
+notastring   = { nil, aboolean, atable, afunction, athread }
+notanumber   = { nil, astring, aboolean, atable, afunction, athread }
+notaboolean  = { nil, astring, anumber, atable, afunction, athread }
+notatable    = { nil, astring, anumber, aboolean, afunction, athread }
+notafunction = { nil, astring, anumber, aboolean, atable, athread }
+notathread   = { nil, astring, anumber, aboolean, atable, afunction }
+notanil      = { astring, anumber, aboolean, atable, afunction, athread }
 
-notastring   = except(somestring)
-notanumber   = except(somenumber)
-notastrnum   = except(somestrnum)
-notaboolean  = except(someboolean)
-notatable    = except(sometable)
-notafunction = except(somefunction)
-notanil      = except(somenil)
+nonstring   = { aboolean, atable, afunction, athread }
+nonnumber   = { astring, aboolean, atable, afunction, athread }
+nonboolean  = { astring, anumber, atable, afunction, athread }
+nontable    = { astring, anumber, aboolean, afunction, athread }
+nonfunction = { astring, anumber, aboolean, atable, athread }
+nonthread   = { astring, anumber, aboolean, atable, afunction }
+nonkey      = { astring, anumber, aboolean, atable, afunction }
 
 local structtypes = { 
 	['table']='<table>',
@@ -108,33 +98,6 @@ local function arglists(typesets)
 	return ipairs(argsets)	
 end
 
---[[
-local function expand(arglists,fixed,varying,...)
-	for i=1,#varying do
-		local f = dup(fixed)
-		
-	end
-end
-
-local function arglists(typesets)
-	local argsets = {}
-	local args={}
-	local n = typesets and #typesets or 0
-	if n == 0 then
-		table.insert( argsets, args )
-	end
-	for i=1,n do
-		local t = typesets[i]
-		for j=1,#t do
-			args[i] = t[j]
-			if i == n then 
-				table.insert( argsets, duptable(args) )
-			end
-		end
-	end
-	return ipairs(argsets)	
-end
---]]
 
 local function lookup( name ) 
 	return loadstring('return '..name)()
@@ -155,11 +118,6 @@ local function subbanner(name)
 	print( '--- '..tostring(name) )
 end
 
-local ok = 'ok '
-local fail = 'fail '
-local needcheck = 'needcheck '
-local badmsg = 'badmsg '
-
 -- check that all combinations of arguments pass
 function checkallpass( name, typesets )
 	subbanner('checkallpass')
@@ -170,21 +128,6 @@ function checkallpass( name, typesets )
 			print( ok, sig )
 		else
 			print( fail, sig, e )
-		end
-	end
-end
-
--- check that all combinations of arguments fail in some way, 
--- ignore error messages
-function checkallfail( name, typesets )
-	subbanner('checkallfail')
-	for i,v in arglists(typesets) do
-		local sig = signature(name,v)
-		local s,e = invoke( name, v )
-		if not s then 
-			print( ok, sig )
-		else
-			print( needcheck, sig, e )
 		end
 	end
 end
