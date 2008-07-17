@@ -45,6 +45,13 @@ public class LNumber extends LValue {
 	 */
 	public abstract boolean isInteger();
 	
+	/** 
+	 * In lua all numbers are strings !
+	 */
+	public boolean isString() {
+		return true;
+	}
+
 	/** Convert to a Byte value */
 	public Byte toJavaBoxedByte() {
 		return new Byte(toJavaByte());

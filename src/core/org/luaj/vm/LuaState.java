@@ -2614,14 +2614,14 @@ public class LuaState extends Lua {
 
     // ================= Error Reporting Functions =================
 
-    /**
-     * Report an error with an argument.
-     * 
-     * @param narg
-     *            Stack index of the bad argument
-     * @param extramsg
-     *            String to include in error message
-     */
+	/**
+	 * Report an error with an argument.
+	 * 
+	 * @param narg
+	 *            Stack index of the bad argument
+	 * @param extramsg
+	 *            String to include in error message
+	 */
     public void argerror(int narg, String extramsg) {
         // TODO: port ldebug.c and provide mode useful error messages.
         error("bad argument #" + (narg - 1) + " (" + extramsg + ")");
@@ -2651,6 +2651,136 @@ public class LuaState extends Lua {
     public void typerror(int narg, int typenum) {
         typerror(narg, TYPE_NAMES[typenum]);
     }
+    
+
+	/**
+	 * Checks whether the function has an argument of any type (including <b>nil</b>)
+	 * at position <code>narg</code>.
+	 * @param narg the argument number
+	 * @throws LuaErrorException if there is no argument at position narg
+	 */
+	public void checkany(int narg) {
+		if ( gettop() < narg )
+			argerror(narg, "value expected");
+	}
+
+	/**
+	 * Checks whether the function argument <code>narg</code> is a function and
+	 * returns this function.
+	 * @see LFunction
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value is not a function
+	 * @return LFunction value if the argument is a function
+	 */
+	public LFunction checkfunction(int narg) {
+		return (LFunction) checktype(narg, Lua.LUA_TFUNCTION);
+	}
+	
+	/**
+	 * Checks whether the function argument <code>narg</code> is a number and
+	 * returns this number cast to an <code>int</code>.
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the number cannot be converted to an int
+	 * @return int value if the argument is an int or can be converted to one
+	 */
+	public int checkint(int narg) {
+		LValue v = tolnumber(narg);
+		if ( ! v.isInteger() )
+			typerror(narg, Lua.LUA_TNUMBER);
+		return v.toJavaInt();
+	}
+
+	/**
+	 * Checks whether the function argument <code>narg</code> is a number and
+	 * returns this number cast to a <code>LInteger</code></a>.
+	 * @see LInteger
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to an int
+	 * @return LInteger value if the argument is an int or can be converted to one
+	 */
+	public LInteger checkinteger(int narg) {
+		return LInteger.valueOf(checkint(narg));
+	}
+	
+	/**
+	 * Checks whether the function argument <code>narg</code> is a number and
+	 * returns this number cast to a <code>long</code>.
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to a long
+	 * @return long value if the argument is a number or can be converted to long
+	 */
+	public long checklong(int narg) {
+		return checknumber(narg).toJavaLong();
+	}
+
+	/**
+	 * Checks whether the function argument <code>narg</code> is a number and
+	 * returns this number.
+	 * @see LNumber
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to a number
+	 * @return LNumber value if the argument is a number or can be converted to one
+	 */
+	public LNumber checknumber(int narg) {
+		return (LNumber) checktype(narg, Lua.LUA_TTABLE);
+	}
+	
+	/**
+	 * Checks whether the function argument <code>narg</code> is a string and
+	 * returns this string as a lua string.
+	 * @see LString
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to a string
+	 * @return LString value if the argument is a string or can be converted to one
+	 */
+	public LString checklstring(int narg) {
+		LValue v = topointer(narg);
+		if ( ! v.isString() )
+			typerror(narg, Lua.LUA_TSTRING);
+		return v.luaAsString();
+	}
+
+	/**
+	 * Checks whether the function argument <code>narg</code> is a string and
+	 * returns this string as a Java String.
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value cannot be converted to a string
+	 * @return String value if the argument is a string or can be converted to one
+	 */
+	public String checkstring(int narg) {
+		LValue v = topointer(narg);
+		if ( ! v.isString() )
+			typerror(narg, Lua.LUA_TSTRING);
+		return v.toJavaString();
+	}
+
+	/**
+	 * Checks whether the function argument <code>narg</code> is a table and
+	 * returns this table.
+	 * @see LTable
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value is not a table
+	 * @return LTable value if the argument is a table
+	 */
+	public LTable checktable(int narg) {
+		return (LTable) checktype(narg, Lua.LUA_TTABLE);
+	}
+	
+	/**
+	 * Checks whether the function argument <code>narg</code> has type
+	 * <code>t</code> and return it as an LValue.
+	 * @param narg the argument number
+	 * @param t the type number to check against
+	 * @return the lua value
+	 * @throws LuaErrorException if the value is not of type t
+	 */
+	public LValue checktype(int narg, int t) {
+		LValue v = topointer(narg);
+		if ( v.luaGetType() != t )
+			typerror(narg, t);
+		return v;
+	}
+
 
     /**
      * Check that the type of userdata on the stack matches the required type,

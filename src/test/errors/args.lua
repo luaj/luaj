@@ -52,14 +52,40 @@ local structtypes = {
 	['userdata']='<userdata>',
 }
 
-local function signature(name,arglist)
+local function bracket(v)
+	return "<"..type(v)..">"
+end
+
+local function quote(v)
+	return "'"..v.."'"
+end
+	
+local function ellipses(v)
+	local s = tostring(v)
+	return #s <= 8 and s or string.sub(s,8)..'...'
+end
+	
+local pretty = {
+	['table']=bracket,
+	['function']=bracket,
+	['thread']=bracket,
+	['userdata']=bracket,
+	['string']= quote,
+	['number']= ellipses,
+}
+
+local function values(list)
 	local t = {}
-	for i=1,#arglist do
-		local ai = arglist[i]
-		local ti = type(ai)
-		t[i] = structtypes[ti] or tostring(ai)
+	for i=1,#list do
+		local ai = list[i]
+		local fi = pretty[type(ai)]
+		t[i] = fi and fi(ai) or tostring(ai)
 	end
-	return name..'('..table.concat(t,',')..')'
+	return table.concat(t,',')
+end
+
+local function signature(name,arglist)
+	return name..'('..values(arglist)..')'
 end
 
 local function dup(t)
@@ -123,11 +149,12 @@ function checkallpass( name, typesets )
 	subbanner('checkallpass')
 	for i,v in arglists(typesets) do
 		local sig = signature(name,v)
-		local s,e = invoke( name, v )
+		local r = { invoke( name, v ) }
+		local s = table.remove( r, 1 )
 		if s then 
-			print( ok, sig )
+			print( ok, sig, values(r) )
 		else
-			print( fail, sig, e )
+			print( fail, sig, values(r) )
 		end
 	end
 end

@@ -96,10 +96,10 @@ public class TableLib extends LFunction {
 		 */
 		case CONCAT: { 
 			int n = vm.gettop();
-			LTable table = vm.totable(2);
-			LString sep = (n>=3? vm.tolstring(3): null);
-			int i = (n>=4? vm.tointeger(4): 1);
-			int j = (n>=5? vm.tointeger(5): table.luaLength());
+			LTable table = vm.checktable(2);
+			LString sep = (n>=3? vm.checklstring(3): null);
+			int i = (n>=4? vm.checkint(4): 1);
+			int j = (n>=5? vm.checkint(5): table.luaLength());
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			for ( int k=i; k<=j; k++ ) {
 				LValue v = table.get(k);
@@ -119,8 +119,8 @@ public class TableLib extends LFunction {
 		case FOREACH: 
 		case FOREACHI: 
 		{ 
-			LTable table = vm.totable(2);
-			LFunction function = vm.tojavafunction(3);
+			LTable table = vm.checktable(2);
+			LFunction function = vm.checkfunction(3);
 			LValue result = table.foreach( vm, function, id==FOREACHI );
 			vm.resettop();
 			vm.pushlvalue( result );
@@ -132,7 +132,7 @@ public class TableLib extends LFunction {
 		 * Get length of table t.
 		 */ 
 		case GETN: { 
-			LTable table = vm.totable(2);
+			LTable table = vm.checktable(2);
 			vm.resettop();
 			vm.pushinteger(table.luaLength());
 			break;
@@ -146,10 +146,11 @@ public class TableLib extends LFunction {
 		 */ 
 		case INSERT: { 
 			int n = vm.gettop();
-			LTable table = vm.totable(2);
-			int pos = (n>=4? vm.tointeger(3): 0);
+			LTable table = vm.checktable(2);
+			int pos = (n>=4? vm.checkint(3): 0);
 			LValue value = vm.topointer(-1);
 			table.luaInsertPos( pos, value );
+			vm.resettop();
 			break;
 		}
 
@@ -159,7 +160,7 @@ public class TableLib extends LFunction {
 		 * indices. (To do its job this function does a linear traversal of the whole table.)
 		 */ 
 		case MAXN: { 
-			LTable table = vm.totable(2);
+			LTable table = vm.checktable(2);
 			vm.resettop();
 			vm.pushlvalue( table.luaMaxN() );
 			break;
@@ -173,8 +174,8 @@ public class TableLib extends LFunction {
 		 */ 
 		case REMOVE: {
 			int n = vm.gettop();
-			LTable table = vm.totable(2);
-			int pos = (n>=3? vm.tointeger(3): 0);
+			LTable table = vm.checktable(2);
+			int pos = (n>=3? vm.checkint(3): 0);
 			vm.resettop();
 			LValue removed = table.luaRemovePos( pos );
 			if ( removed != LNil.NIL )
@@ -192,8 +193,8 @@ public class TableLib extends LFunction {
 		 * The sort algorithm is not stable; that is, elements considered equal by the given order may have their relative positions changed by the sort.
 		 */ 
 		case SORT: { 
-			LTable table = vm.totable(2);
-			LValue compare = vm.topointer(3);
+			LTable table = vm.checktable(2);
+			LValue compare = vm.checkfunction(3);
 			table.luaSort( vm, compare );
 			vm.resettop();
 			break;
