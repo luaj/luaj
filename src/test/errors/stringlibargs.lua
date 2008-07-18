@@ -5,7 +5,9 @@ require 'args'
 
 -- string.byte
 banner('string.byte')
-checkallpass('string.byte',{somestring,{nil,ainteger},{nil,ainteger}})
+checkallpass('string.byte',{somestring})
+checkallpass('string.byte',{somestring,somenumber})
+checkallpass('string.byte',{somestring,somenumber,somenumber})
 checkallerrors('string.byte',{somestring,{astring,afunction,atable}},'bad argument')
 checkallerrors('string.byte',{notastring,{nil,111}},'bad argument')
 
@@ -53,9 +55,9 @@ local somerepl = {astring,atable,afunction}
 local notarepl = {nil,aboolean}
 banner('string.gsub')
 checkallpass('string.gsub',{somestring,somestring,somerepl,{nil,-1}})
-checkallerrors('string.gsub',{notastring,somestring,somerepl},'bad argument #1')
-checkallerrors('string.gsub',{somestring,notastring,somerepl},'bad argument #2')
-checkallerrors('string.gsub',{{astring},{astring},notarepl},'bad argument #3')
+checkallerrors('string.gsub',{nonstring,somestring,somerepl},'bad argument #1')
+checkallerrors('string.gsub',{somestring,nonstring,somerepl},'bad argument #2')
+checkallerrors('string.gsub',{{astring},{astring},notarepl},'bad argument')
 checkallerrors('string.gsub',{{astring},{astring},somerepl,nonnumber},'bad argument #4')
 
 -- string.len
@@ -72,8 +74,10 @@ checkallerrors('string.lower',{notastring},'bad argument #1')
 banner('string.match')
 checkallpass('string.match',{somestring,somestring})
 checkallpass('string.match',{somestring,somestring,{nil,-3,3}})
-checkallerrors('string.match',{notastring,somestring},'bad argument #1')
-checkallerrors('string.match',{somestring,notastring},'bad argument #2')
+checkallerrors('string.match',{},'bad argument #1')
+checkallerrors('string.match',{nonstring,somestring},'bad argument #1')
+checkallerrors('string.match',{somestring},'bad argument #2')
+checkallerrors('string.match',{somestring,nonstring},'bad argument #2')
 checkallerrors('string.match',{somestring,somestring,notanumber},'bad argument #3')
 
 -- string.reverse
@@ -89,9 +93,12 @@ checkallerrors('string.rep',{somestring,notanumber},'bad argument #2')
 
 -- string.sub
 banner('string.sub')
+checkallpass('string.sub',{somestring,somenumber})
 checkallpass('string.sub',{somestring,somenumber,somenumber})
-checkallerrors('string.sub',{notastring,somenumber,somenumber},'bad argument #1')
-checkallerrors('string.sub',{somestring,notanumber,somenumber},'bad argument #2')
+checkallerrors('string.sub',{},'bad argument #1')
+checkallerrors('string.sub',{nonstring,somenumber,somenumber},'bad argument #1')
+checkallerrors('string.sub',{somestring},'bad argument #2')
+checkallerrors('string.sub',{somestring,nonnumber,somenumber},'bad argument #2')
 checkallerrors('string.sub',{somestring,somenumber,nonnumber},'bad argument #3')
 
 -- string.upper
