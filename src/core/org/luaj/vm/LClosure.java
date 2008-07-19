@@ -53,4 +53,10 @@ public class LClosure extends LFunction {
 		this.env = t;
 		return 1;
 	}
+
+	/** Get the enviroment for this closure */
+	public LTable luaGetEnv(LTable d) {
+		return env;
+	}
+
 }

@@ -2681,6 +2681,18 @@ public class LuaState extends Lua {
 	}
 	
 	/**
+	 * Checks whether the function argument <code>narg</code> is a thread and
+	 * returns this thread.
+	 * @see LThread
+	 * @param narg the argument number
+	 * @throws LuaErrorException if the value is not a thread
+	 * @return LThread value if the argument is a thread
+	 */
+	public LThread checkthread(int narg) {
+		return (LThread) checktype(narg, Lua.LUA_TTHREAD);
+	}
+	
+	/**
 	 * Checks whether the function argument <code>narg</code> is a number and
 	 * returns this number cast to an <code>int</code>.
 	 * @param narg the argument number

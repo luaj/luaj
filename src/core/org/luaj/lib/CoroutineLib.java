@@ -85,12 +85,12 @@ public class CoroutineLib extends LFunction {
 				break;
 			}
 			case CREATE: {
-				LClosure c = (LClosure) vm.topointer(2);
-				vm.pushlvalue( new LThread(c) );
+				LFunction c = vm.checkfunction(2);
+				vm.pushlvalue( new LThread( c, c.luaGetEnv(vm._G) ) );
 				break;
 			}
 			case RESUME: {
-				LThread t = (LThread) vm.topointer(2);
+				LThread t = vm.checkthread(2);
 				t.resumeFrom( vm, vm.gettop()-2 );
 				return false;
 			}
@@ -104,12 +104,12 @@ public class CoroutineLib extends LFunction {
 				break;
 			}
 			case STATUS: {
-				vm.pushstring( ((LThread) vm.topointer(2)).getStatus() );
+				vm.pushstring( vm.checkthread(2).getStatus() );
 				break;
 			}
 			case WRAP: {
-				LClosure c = (LClosure) vm.topointer(2);
-				vm.pushlvalue( new CoroutineLib(WRAPPED,new LThread(c)) );
+				LFunction c = vm.checkfunction(2);
+				vm.pushlvalue( new CoroutineLib(WRAPPED,new LThread(c, c.luaGetEnv(vm._G))) );
 				break;
 			}
 			case YIELD: {

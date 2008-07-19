@@ -38,6 +38,18 @@ public class LFunction extends LValue {
 	}
 
 	/**
+	 * Get the environment of the object if it is a closure, or d if not a closure.
+	 * 
+	 * @param d global environment 
+	 * @return environment for this object, or d if it is not an LClosure
+	 * @see LClosure
+	 * @see LTable
+	 */
+	public LTable luaGetEnv(LTable d) {
+		return d;
+	}
+	
+	/**
 	 * Set up a Java invocation, and leave the results on the stack 
 	 * starting at base.  The default implementation for LFunction
 	 * delegates to the VM which provides convenience. 
@@ -91,5 +103,6 @@ public class LFunction extends LValue {
 	public void __newindex(LuaState vm, LValue table, LValue key, LValue val) {
 		vm.call(this, table, key, val);
 	}
+
 	
 }

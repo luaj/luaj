@@ -126,9 +126,7 @@ public class PackageLib extends LFunction {
 			loadlib(vm);
 			break;
 		case SEEALL: { 
-			if ( ! vm.istable(2) )
-				vm.error( "table expected, got "+vm.typename(2) );
-			LTable t = vm.totable(2);
+			LTable t = vm.checktable(2);
 			LTable m = t.luaGetMetatable();
 			if ( m == null )
 				t.luaSetMetatable(m = new LTable());
@@ -178,7 +176,7 @@ public class PackageLib extends LFunction {
 	 * each option is a function to be applied over the module.
 	 */
 	public static void module(LuaState vm) {
-		LString modname = vm.tolstring(2);
+		LString modname = vm.checklstring(2);
 		int n = vm.gettop();
 		LValue value = LOADED.get(modname);
 		LTable module;
@@ -277,7 +275,7 @@ public class PackageLib extends LFunction {
 	 * the module, then require signals an error.
 	 */	
 	public void require( LuaState vm ) {
-		LString name = vm.tolstring(2);
+		LString name = vm.checklstring(2);
 		LValue loaded = LOADED.get(name);
 		if ( loaded.toJavaBoolean() ) {
 			if ( loaded == _SENTINEL )

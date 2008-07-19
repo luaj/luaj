@@ -46,8 +46,8 @@ public class LThread extends LValue implements Runnable {
 	static LThread running;
 	
 	
-	public LThread(LClosure c) {
-		threadVm = new LuaState(c.env);
+	public LThread(LFunction c, LTable env) {
+		threadVm = new LuaState(env);
 		threadVm.pushlvalue(c);
 	}
 
