@@ -116,27 +116,6 @@ public class BaseLib extends LFunction {
 		vm.pushnil();
 		vm.pushstring( message );
 	}
-
-	private void checkargexists(LuaState vm, int index, int type) {
-		if ( vm.gettop() < index )
-			vm.error("bad argument #"+(index-1)+" to '?' ("+
-					(type == Lua.LUA_TVALUE? 
-						"value expected)":
-						Lua.TYPE_NAMES[type]+" expected, got no value)") );
-	}
-
-	private void checkargtype
-	(LuaState vm, int index, int type) {		
-		checkargexists( vm, index, type );
-		int t = vm.type(index);
-		if ( t != type ) {
-			if ( type == Lua.LUA_TNUMBER && t == Lua.LUA_TSTRING && vm.isnumber(index) )
-				return;
-			vm.error("bad argument #"+(index-1)+" to '?' ("+
-					Lua.TYPE_NAMES[type]+" expected, got "+vm.typename(index)+")");
-		}
-	}
-
 	public boolean luaStackCall(LuaState vm) {
 		switch ( id ) {
 		case PRINT: {
@@ -152,8 +131,7 @@ public class BaseLib extends LFunction {
 		}
 		case IPAIRS:
 		case PAIRS: {			
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			LTable t = vm.totable(2);
+			LTable t = vm.checktable(2);
 			vm.resettop();
 			vm.pushjavafunction( (id==IPAIRS)? inext: next );
 			vm.pushlvalue( t );
@@ -162,15 +140,14 @@ public class BaseLib extends LFunction {
 		}
 		case INEXT:
 		case NEXT: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			LTable t = vm.totable(2);
+			LTable t = vm.checktable(2);
 			LValue v = vm.topointer(3);
 			vm.resettop();
 			t.next(vm,v,(id==INEXT));
 			break;
 		}
 		case GETMETATABLE: {
-			checkargexists(vm,2,Lua.LUA_TVALUE);
+			vm.checkany(2);
 			if ( ! vm.getmetatable(2) ) {
 				vm.resettop();
 				vm.pushnil();
@@ -186,24 +163,21 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SETMETATABLE: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			if ( vm.gettop()<3 || ! (vm.isnil(3) || vm.istable(3)) )
-				vm.error( "bad argument #2 to '?' (nil or table expected)" );
+			vm.checktable(2);
 			vm.setmetatable(2);
 			vm.remove(1);
 			vm.settop(1);
 			break;
 		}		
 		case TYPE: {
-			// TODO: generalize, compute location insofar as possible
-			if ( vm.gettop() < 2 ) 
-				vm.error("bad argument #1 to '?' (value expected)");
+			vm.checkany(2);
 			LValue v = vm.topointer(2);
 			vm.resettop();
 			vm.pushlstring( v.luaGetTypeName() );
 			break;
 		}
 		case PCALL: {
+			vm.checkany(2);
 			int n = vm.gettop();
 			int s = vm.pcall( n-2, Lua.LUA_MULTRET, 0 );
 			if ( s == 0 ) { // success, results are on stack above the pcall
@@ -217,22 +191,22 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case ERROR: {
-			vm.error(vm.tostring(2), vm.gettop()>=3? vm.tointeger(3): 1);
+			vm.error(vm.checkstring(2), vm.optint(3,1));
 			break;
 		}
 		case ASSERT: {
 			if ( ! vm.toboolean(2) )
-				vm.error( vm.gettop()>2? vm.tostring(3): "assertion failed!" );
-			vm.remove(1);
+				vm.error( vm.optstring(3,"assertion failed!") );
+			vm.resettop();
 			break;
 		}
 		
 		case LOADFILE:
-			loadfile(vm, vm.tostring(2));
+			loadfile(vm, vm.optstring(2,""));
 			break;
 			
 		case TONUMBER: {
-			checkargexists(vm,2,Lua.LUA_TVALUE);
+			vm.checkany(2);
 			switch ( vm.type(2) ) {
 			case Lua.LUA_TNUMBER:
 				break;
@@ -255,18 +229,16 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case RAWGET: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			checkargexists(vm,3,Lua.LUA_TVALUE);
-			LTable t = vm.totable(2);
+			vm.checkany(3);
+			LTable t = vm.checktable(2);
 			LValue k = vm.topointer(3);
 			vm.resettop();
 			vm.pushlvalue( t.get( k ) );
 		}	break;
 		case RAWSET: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			checkargexists(vm,3,Lua.LUA_TVALUE);
-			checkargexists(vm,4,Lua.LUA_TVALUE);
-			LTable t = vm.totable(2);
+			vm.checkany(3);
+			vm.checkany(4);
+			LTable t = vm.checktable(2);
 			LValue k = vm.topointer(3);
 			LValue v = vm.topointer(4);
 			t.put( k, v );
@@ -277,7 +249,7 @@ public class BaseLib extends LFunction {
 			if ( vm.isfunction(2) ) {
 				vm.getfenv(-1);
 			} else {
-				int i = (vm.isnil(2)? 1: vm.tointeger(2));
+				int i = vm.optint(2,1);
 				if ( i <= 0 )
 					vm.pushlvalue(vm._G);
 				else if ( i-1 <= vm.cc )
@@ -290,7 +262,8 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SETFENV: {
-			LTable t = vm.totable(-1);
+			LTable t = vm.checktable(-1);
+			LFunction f = vm.checkfunction(2);
 			if ( vm.setfenv(2) != 0 ) {
 				vm.remove(1);
 				break;
@@ -308,7 +281,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SELECT: {
-			checkargexists(vm,2,Lua.LUA_TNUMBER);
+			vm.checkany(2);
 			int n = vm.gettop();			
 			if ( vm.isnumber(2) ) {
 				int index = vm.tolnumber(2).toJavaInt();
@@ -322,16 +295,14 @@ public class BaseLib extends LFunction {
 					for ( int i=0; i<=index; i++ )
 						vm.remove(1);
 				}					
-			} else if ( vm.tostring(2).equals( "#" ) ) {
+			} else if ( vm.checkstring(2).equals( "#" ) ) {
 				vm.resettop();
 				vm.pushnumber( n - 2 );
-			} else {
-				vm.error( "bad argument #1 to '?' (number expected, got "+vm.typename(2)+")" );
 			}
 			break;
 		}
 		case COLLECTGARBAGE: {
-			String s = vm.tostring(2);
+			String s = vm.checkstring(2);
 			int result = 0;
 			vm.resettop();
 			if ( "collect".equals(s) )
@@ -351,27 +322,22 @@ public class BaseLib extends LFunction {
 			loadstring(vm, vm.topointer(2), vm.tostring(3));
 			break;
 		case LOAD:
-			load(vm, vm.topointer(2), vm.tostring(3));
+			load(vm);
 			break;
 		case TOSTRING: {
-			checkargexists(vm,2,Lua.LUA_TVALUE);
+			vm.checkany(2);
 			LValue v = vm.topointer(2);
 			vm.resettop();
 			vm.pushlvalue( v.luaAsString() );			
 			break;
 		}
 		case UNPACK: {
-			checkargtype(vm,2,Lua.LUA_TTABLE);
-			LTable list = vm.totable(2);
+			LTable list = vm.checktable(2);
 			int n = vm.gettop();
-			int i=1,j;
-			if ( n >= 3 ) {
-				checkargtype(vm,3,Lua.LUA_TNUMBER);
-				i = vm.tolnumber(3).toJavaInt();
-			}
+			int i = vm.optint(3,1);
+			int j;
 			if ( n >= 4 ) {
-				checkargtype(vm,4,Lua.LUA_TNUMBER);
-				j = vm.tolnumber(4).toJavaInt();
+				j = vm.checkint(4);
 			} else {
 				j = list.luaLength();
 			}
@@ -454,7 +420,7 @@ public class BaseLib extends LFunction {
 	
 	// if load succeeds, return 0 for success, 1 for error (as per lua spec)
 	private void dofile( LuaState vm ) {
-		String filename = vm.tostring(2);
+		String filename = vm.checkstring(2);
 		if ( loadfile( vm, filename ) ) {
 			int s = vm.pcall(1, 0, 0);
 			setResult( vm, LInteger.valueOf( s!=0? 1: 0 ) );
@@ -471,10 +437,9 @@ public class BaseLib extends LFunction {
 	}
 
 	// return true if loaded, false if error put onto stack
-	private boolean load(LuaState vm, LValue chunkPartLoader, String chunkname) {
-		if ( ! (chunkPartLoader instanceof LClosure) ) {
-			vm.error("not a closure: "+chunkPartLoader);
-		}
+	private boolean load(LuaState vm) {
+		LFunction chunkPartLoader = vm.checkfunction(2);
+		String chunkname = vm.optstring(3,"=(load)");
 		
 		// load all the parts
 		LClosure c = (LClosure) chunkPartLoader;
@@ -494,9 +459,7 @@ public class BaseLib extends LFunction {
 			}
 
 			// load the chunk
-			return loadis( vm, 
-					new ByteArrayInputStream( baos.toByteArray() ), 
-					("".equals(chunkname)? "=(load)": chunkname) );
+			return loadis( vm, new ByteArrayInputStream( baos.toByteArray() ), chunkname );
 			
 		} catch (IOException ioe) {
 			setErrorResult(vm, ioe.getMessage());
