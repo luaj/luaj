@@ -87,35 +87,10 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return new LDouble( lhs * rhs );
 		case Lua.OP_DIV: return new LDouble( lhs / rhs );
 		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
-		case Lua.OP_POW: {
-			// allow platform to override math.pow()
-			LValue result = Platform.getInstance().mathPow(lhs, rhs);
-			return (result != null?
-					result:
-					new LDouble( dpow( lhs, rhs ) ));
-		}
+		case Lua.OP_POW: return Platform.getInstance().mathPow(lhs, rhs);
 		}
 		LuaState.vmerror( "bad bin opcode" );
 		return null;
-	}
-
-	public static double dpow(double a, double b) {
-		if ( b < 0 )
-			return 1 / dpow( a, -b );
-		double p = 1;
-		int whole = (int) b;
-		for ( double v=a; whole > 0; whole>>=1, v*=v )
-			if ( (whole & 1) != 0 )
-				p *= v;
-		if ( (b -= whole) > 0 ) {
-			int frac = (int) (0x10000 * b);
-			for ( ; (frac&0xffff)!=0; frac<<=1 ) {
-				a = Math.sqrt(a);
-				if ( (frac & 0x8000) != 0 )
-					p *= a;
-			}
-		}
-		return p;
 	}
 
 	public int toJavaInt() {

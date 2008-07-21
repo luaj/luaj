@@ -5,7 +5,6 @@ local fail = 'fail '
 local needcheck = 'needcheck '
 local badmsg = 'badmsg '
 
-
 akey      = 'aa'
 astring   = 'abc'
 astrnum   = '789'
@@ -62,7 +61,7 @@ end
 	
 local function ellipses(v)
 	local s = tostring(v)
-	return #s <= 8 and s or string.sub(s,8)..'...'
+	return #s <= 8 and s or (string.sub(s,1,8)..'...')
 end
 	
 local pretty = {
@@ -84,6 +83,15 @@ local function values(list)
 	return table.concat(t,',')
 end
 
+local function types(list)
+	local t = {}
+	for i=1,#list do
+		local ai = list[i]
+		t[i] = type(ai)
+	end
+	return table.concat(t,',')
+end
+	
 local function signature(name,arglist)
 	return name..'('..values(arglist)..')'
 end
@@ -145,14 +153,18 @@ local function subbanner(name)
 end
 
 -- check that all combinations of arguments pass
-function checkallpass( name, typesets )
+function checkallpass( name, typesets, typesonly )
 	subbanner('checkallpass')
 	for i,v in arglists(typesets) do
 		local sig = signature(name,v)
 		local r = { invoke( name, v ) }
 		local s = table.remove( r, 1 )
 		if s then 
-			print( ok, sig, values(r) )
+			if typesonly then 
+				print( ok, sig, types(r) )
+			else
+				print( ok, sig, values(r) )
+			end
 		else
 			print( fail, sig, values(r) )
 		end

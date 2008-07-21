@@ -477,19 +477,19 @@ public class StringLib extends LFunction {
 	 */
 	static void sub( LuaState vm ) {
 		final LString s = vm.checklstring(2);
-		final int len = s.length();
+		final int l = s.length();
 		
-		int i = posrelat( vm.checkint( 3 ), len );
-		int j = posrelat( vm.optint( 4, -1 ), len );
+		int start = posrelat( vm.checkint( 3 ), l );
+		int end = posrelat( vm.optint( 4, -1 ), l );
 		
-		if ( i < 1 )
-			i = 1;
-		if ( j > len )
-			j = len;
+		if ( start < 1 )
+			start = 1;
+		if ( end > l )
+			end = l;
 		
 		vm.resettop();
-		if ( i <= j ) {
-			LString result = s.substring( i - 1 , j );
+		if ( start <= end ) {
+			LString result = s.substring( start-1 , end );
 			vm.pushlstring( result );
 		} else {
 			vm.pushstring( "" );

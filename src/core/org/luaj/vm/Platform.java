@@ -47,6 +47,7 @@ abstract public class Platform {
     
     private static Platform instance;
 
+    
     /**
      * Singleton to be used for platform operations.
      * 
@@ -177,4 +178,23 @@ abstract public class Platform {
         }
         return port;
     }
+
+    /**
+     * Compute a math operation that takes a single double argument and returns a double
+     * @param id the math op, from MathLib constants
+     * @param x the arugment
+     * @return the value
+     * @throws LuaErrorException if the id is not supported by this platform.
+     */
+	abstract public double mathop(int id, double x);
+
+    /**
+     * Compute a math operation that takes a two double arguments and returns a double
+     * @param id the math op, from MathLib constants
+     * @param x the first arugment
+     * @param y the second arugment
+     * @return the value
+     * @throws LuaErrorException if the id is not supported by this platform.
+     */
+	abstract public double mathop(int id, double x, double y);
 }
