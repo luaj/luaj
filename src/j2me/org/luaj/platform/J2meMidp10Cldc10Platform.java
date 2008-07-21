@@ -58,9 +58,11 @@ public class J2meMidp10Cldc10Platform extends Platform {
 
 	public double mathop(int id, double a, double b) {
 		switch ( id ) {
-		case MathLib.ATAN2: return a==0? (b>0? Math.PI/2: b>0? -Math.PI/2: 0): Math.atan(b/a);
+		case MathLib.ATAN2: return
+			b>0? Math.atan(a/b):
+			b<0? (a>=0? Math.PI-Math.atan(a/-b): -Math.PI-Math.atan(a/-b)):
+			(a>0? Math.PI/2: a<0? -Math.PI/2: 0);
 		case MathLib.FMOD: return a - (b * ((int)(a/b)));
-		case MathLib.LDEXP: return a * dpow(2, b);
 		case MathLib.POW: return dpow(a, b);
 		}
     	throw new LuaErrorException( "unsupported math op" );

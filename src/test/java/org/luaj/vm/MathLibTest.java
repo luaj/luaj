@@ -2,9 +2,19 @@ package org.luaj.vm;
 
 import junit.framework.TestCase;
 
+import org.luaj.lib.MathLib;
 import org.luaj.platform.J2meMidp10Cldc10Platform;
+import org.luaj.platform.J2sePlatform;
 
 public class MathLibTest extends TestCase {
+
+	private Platform j2se;
+	private Platform j2me;
+	
+	protected void setUp() throws Exception {
+		j2se = new J2sePlatform();
+		j2me = new org.luaj.platform.J2meMidp10Cldc10Platform(null);
+	}
 
 	public void testMathDPow() {
 		assertEquals( 1, J2meMidp10Cldc10Platform.dpow(2, 0), 0 );
@@ -28,4 +38,181 @@ public class MathLibTest extends TestCase {
 		assertEquals(1, J2meMidp10Cldc10Platform.dpow(0.0625, 0), 0 );
 		assertEquals(0.00048828125, J2meMidp10Cldc10Platform.dpow(0.0625, 2.75), 0 );
 	}
+	
+	public void testAbs() {
+		tryMathOp( MathLib.ABS, 23.45 ); 
+		tryMathOp( MathLib.ABS, -23.45 ); 
+	}
+
+	public void testCos() {
+		tryTrigOps( MathLib.COS );
+	}
+	
+	public void testCosh() {
+		tryTrigOps( MathLib.COSH );
+	}
+	
+	public void testDeg() {
+		tryTrigOps( MathLib.DEG );
+	}
+	
+	public void testExp() {
+		tryMathOp( MathLib.EXP, 0 ); 
+		tryMathOp( MathLib.EXP, 0.1 ); 
+		tryMathOp( MathLib.EXP, .9 ); 
+		tryMathOp( MathLib.EXP, 1. ); 
+		tryMathOp( MathLib.EXP, 9 ); 
+		tryMathOp( MathLib.EXP, -.1 ); 
+		tryMathOp( MathLib.EXP, -.9 ); 
+		tryMathOp( MathLib.EXP, -1. ); 
+		tryMathOp( MathLib.EXP, -9 ); 
+	}
+	
+	public void testLog() {
+		tryMathOp( MathLib.LOG, 0.1 ); 
+		tryMathOp( MathLib.LOG, .9 ); 
+		tryMathOp( MathLib.LOG, 1. ); 
+		tryMathOp( MathLib.LOG, 9 ); 
+		tryMathOp( MathLib.LOG, -.1 ); 
+		tryMathOp( MathLib.LOG, -.9 ); 
+		tryMathOp( MathLib.LOG, -1. ); 
+		tryMathOp( MathLib.LOG, -9 ); 
+	}
+	
+	public void testLog10() {
+		tryMathOp( MathLib.LOG10, 0.1 ); 
+		tryMathOp( MathLib.LOG10, .9 ); 
+		tryMathOp( MathLib.LOG10, 1. ); 
+		tryMathOp( MathLib.LOG10, 9 ); 
+		tryMathOp( MathLib.LOG10, 10 ); 
+		tryMathOp( MathLib.LOG10, 100 ); 
+		tryMathOp( MathLib.LOG10, -.1 ); 
+		tryMathOp( MathLib.LOG10, -.9 ); 
+		tryMathOp( MathLib.LOG10, -1. ); 
+		tryMathOp( MathLib.LOG10, -9 ); 
+		tryMathOp( MathLib.LOG10, -10 ); 
+		tryMathOp( MathLib.LOG10, -100 ); 
+	}
+	
+	public void testRad() {
+		tryMathOp( MathLib.RAD, 0 ); 
+		tryMathOp( MathLib.RAD, 0.1 ); 
+		tryMathOp( MathLib.RAD, .9 ); 
+		tryMathOp( MathLib.RAD, 1. ); 
+		tryMathOp( MathLib.RAD, 9 ); 
+		tryMathOp( MathLib.RAD, 10 ); 
+		tryMathOp( MathLib.RAD, 100 ); 
+		tryMathOp( MathLib.RAD, -.1 ); 
+		tryMathOp( MathLib.RAD, -.9 ); 
+		tryMathOp( MathLib.RAD, -1. ); 
+		tryMathOp( MathLib.RAD, -9 ); 
+		tryMathOp( MathLib.RAD, -10 ); 
+		tryMathOp( MathLib.RAD, -100 ); 
+	}
+	
+	public void testSin() {
+		tryTrigOps( MathLib.SIN );
+	}
+	
+	public void testSinh() {
+		tryTrigOps( MathLib.SINH );
+	}
+	
+	public void testSqrt() {
+		tryMathOp( MathLib.SQRT, 0 ); 
+		tryMathOp( MathLib.SQRT, 0.1 ); 
+		tryMathOp( MathLib.SQRT, .9 ); 
+		tryMathOp( MathLib.SQRT, 1. ); 
+		tryMathOp( MathLib.SQRT, 9 ); 
+		tryMathOp( MathLib.SQRT, 10 ); 
+		tryMathOp( MathLib.SQRT, 100 );
+	}
+	public void testTan() {
+		tryTrigOps( MathLib.TAN );
+	}
+	
+	public void testTanh() {
+		tryTrigOps( MathLib.TANH );
+	}
+	
+	public void testAtan2() {
+		tryDoubleOps( MathLib.ATAN2, false );
+	}
+	
+	public void testFmod() {
+		tryDoubleOps( MathLib.FMOD, false );
+	}
+	
+	public void testPow() {
+		tryDoubleOps( MathLib.POW, true );
+	}
+	
+	private void tryDoubleOps( int id, boolean positiveOnly ) {
+		// y>0, x>0
+		tryMathOp( id, 0.1, 4.0 ); 
+		tryMathOp( id, .9, 4.0 ); 
+		tryMathOp( id, 1., 4.0 ); 
+		tryMathOp( id, 9, 4.0 ); 
+		tryMathOp( id, 10, 4.0 ); 
+		tryMathOp( id, 100, 4.0 );
+		
+		// y>0, x<0
+		tryMathOp( id, 0.1, -4.0 ); 
+		tryMathOp( id, .9, -4.0 ); 
+		tryMathOp( id, 1., -4.0 ); 
+		tryMathOp( id, 9, -4.0 ); 
+		tryMathOp( id, 10, -4.0 ); 
+		tryMathOp( id, 100, -4.0 );
+		
+		if ( ! positiveOnly ) {
+			// y<0, x>0
+			tryMathOp( id, -0.1, 4.0 ); 
+			tryMathOp( id, -.9, 4.0 ); 
+			tryMathOp( id, -1., 4.0 ); 
+			tryMathOp( id, -9, 4.0 ); 
+			tryMathOp( id, -10, 4.0 ); 
+			tryMathOp( id, -100, 4.0 );
+			
+			// y<0, x<0
+			tryMathOp( id, -0.1, -4.0 ); 
+			tryMathOp( id, -.9, -4.0 ); 
+			tryMathOp( id, -1., -4.0 ); 
+			tryMathOp( id, -9, -4.0 ); 
+			tryMathOp( id, -10, -4.0 ); 
+			tryMathOp( id, -100, -4.0 );
+		}
+		
+		// degenerate cases
+		tryMathOp( id, 0, 1 ); 
+		tryMathOp( id, 1, 0 ); 
+		tryMathOp( id, -1, 0 ); 
+		tryMathOp( id, 0, -1 ); 
+		tryMathOp( id, 0, 0 ); 
+	}
+	
+	private void tryTrigOps(int id) {
+		tryMathOp( id, 0 ); 
+		tryMathOp( id, Math.PI/8 ); 
+		tryMathOp( id, Math.PI*7/8 ); 
+		tryMathOp( id, Math.PI*8/8 ); 
+		tryMathOp( id, Math.PI*9/8 ); 
+		tryMathOp( id, -Math.PI/8 ); 
+		tryMathOp( id, -Math.PI*7/8 ); 
+		tryMathOp( id, -Math.PI*8/8 ); 
+		tryMathOp( id, -Math.PI*9/8 ); 
+	}
+	
+	private void tryMathOp(int id, double x) {
+		double expected = j2se.mathop(id, x);
+		double actual = j2me.mathop(id, x);
+		assertEquals( expected, actual, 1.e-5 );
+	}
+	
+	
+	private void tryMathOp(int id, double a, double b) {
+		double expected = j2se.mathop(id, a, b);
+		double actual = j2me.mathop(id, a, b);
+		assertEquals( expected, actual, 1.e-5 );
+	}
+	
 }

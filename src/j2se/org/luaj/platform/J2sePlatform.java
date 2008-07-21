@@ -61,7 +61,6 @@ public class J2sePlatform extends Platform {
 		switch ( id ) {
 		case MathLib.ATAN2: return Math.atan2(a, b);
 		case MathLib.FMOD: return a - (b * ((int)(a/b)));
-		case MathLib.LDEXP: return a * Math.pow(2, b);
 		case MathLib.POW: return Math.pow(a, b);
 		}
     	throw new LuaErrorException( "unsupported math op" );
