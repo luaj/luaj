@@ -49,9 +49,9 @@ public class LClosure extends LFunction {
 	}
 	
 	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
-	public int luaSetEnv(LTable t) {
+	public boolean luaSetEnv(LTable t) {
 		this.env = t;
-		return 1;
+		return true;
 	}
 
 	/** Get the enviroment for this closure */

@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
@@ -43,6 +44,7 @@ public class BaseLib extends LFunction {
 		"assert",
 		"loadfile",
 		"tonumber",
+		"rawequal",
 		"rawget",
 		"rawset",
 		"getfenv",
@@ -71,20 +73,21 @@ public class BaseLib extends LFunction {
 	private static final int ASSERT         = 9;
 	private static final int LOADFILE       = 10;
 	private static final int TONUMBER       = 11;
-	private static final int RAWGET         = 12;
-	private static final int RAWSET         = 13;
-	private static final int GETFENV        = 14;
-	private static final int SETFENV        = 15;
-	private static final int SELECT         = 16;
-	private static final int COLLECTGARBAGE = 17;
-	private static final int DOFILE         = 18;
-	private static final int LOADSTRING     = 19;
-	private static final int LOAD           = 20;
-	private static final int TOSTRING       = 21;
-	private static final int UNPACK         = 22;
-	private static final int XPCALL         = 23;
-	private static final int NEXT           = 24;
-	private static final int INEXT          = 25;
+	private static final int RAWEQUAL       = 12;
+	private static final int RAWGET         = 13;
+	private static final int RAWSET         = 14;
+	private static final int GETFENV        = 15;
+	private static final int SETFENV        = 16;
+	private static final int SELECT         = 17;
+	private static final int COLLECTGARBAGE = 18;
+	private static final int DOFILE         = 19;
+	private static final int LOADSTRING     = 20;
+	private static final int LOAD           = 21;
+	private static final int TOSTRING       = 22;
+	private static final int UNPACK         = 23;
+	private static final int XPCALL         = 24;
+	private static final int NEXT           = 25;
+	private static final int INEXT          = 26;
 
 	private static LFunction next;
 	private static LFunction inext;
@@ -165,15 +168,16 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case SETMETATABLE: {
-			vm.checktable(2);
-			vm.setmetatable(2);
-			vm.remove(1);
-			vm.settop(1);
+			LTable t = vm.checktable(2);
+			LValue v = vm.checkany(3);
+			vm.argcheck(v.isTable() || v.isNil(), 3, "table or nil expected");
+			t.luaSetMetatable(v);
+			vm.resettop();
+			vm.pushlvalue(t);
 			break;
 		}		
 		case TYPE: {
-			vm.checkany(2);
-			LValue v = vm.topointer(2);
+			LValue v = vm.checkany(2);
 			vm.resettop();
 			vm.pushlstring( v.luaGetTypeName() );
 			break;
@@ -193,8 +197,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case XPCALL: {
-			vm.checkany(3);
-			LValue errfun = vm.topointer(3);
+			LValue errfun = vm.checkany(3);
 			vm.settop(2);
 			int s = vm.pcall( 0, Lua.LUA_MULTRET, 0 );
 			if ( s == 0 ) { // success, results are on stack above the xpcall
@@ -247,56 +250,45 @@ public class BaseLib extends LFunction {
 			}
 			break;
 		}
+		case RAWEQUAL: {
+			LValue a = vm.checkany(2);
+			LValue b = vm.checkany(3);
+			vm.resettop();
+			vm.pushboolean(a == b);
+			break;
+		}	
 		case RAWGET: {
-			vm.checkany(3);
 			LTable t = vm.checktable(2);
-			LValue k = vm.topointer(3);
+			LValue k = vm.checkany(3);
 			vm.resettop();
 			vm.pushlvalue( t.get( k ) );
-		}	break;
+			break;
+		}
 		case RAWSET: {
-			vm.checkany(3);
-			vm.checkany(4);
 			LTable t = vm.checktable(2);
-			LValue k = vm.topointer(3);
-			LValue v = vm.topointer(4);
+			LValue k = vm.checkany(3);
+			LValue v = vm.checkany(4);
 			t.put( k, v );
 			vm.resettop();
 			vm.pushlvalue(t);
-		}	break;
+			break;
+		}
 		case GETFENV: {
-			if ( vm.isfunction(2) ) {
-				vm.getfenv(-1);
-			} else {
-				int i = vm.optint(2,1);
-				if ( i <= 0 )
-					vm.pushlvalue(vm._G);
-				else if ( i-1 <= vm.cc )
-					vm.pushlvalue( vm.getStackFrame(i-1).closure.env );
-				else
-					vm.pushnil();
-			}
-			vm.insert(1);
-			vm.settop(1);
+			LValue f = getfunc(vm, true);
+			vm.resettop();
+			vm.pushlvalue(f.luaGetEnv(vm._G));
 			break;
 		}
 		case SETFENV: {
-			LTable t = vm.checktable(-1);
-			LFunction f = vm.checkfunction(2);
-			if ( vm.setfenv(2) != 0 ) {
-				vm.remove(1);
-				break;
-			}
-			int i = vm.tointeger(2);
-			if ( i == 0 ) {
+			LTable t = vm.checktable(3);
+			LValue f = getfunc(vm, false);
+			if ( vm.isnumber(2) && vm.tointeger(2) == 0 ) {
 				vm._G = t;
-				vm.resettop();
-			} else {
-				LClosure c = vm.getStackFrame(i-1).closure;
-				c.luaSetEnv(t);
-				vm.resettop();
-				vm.pushlvalue(c);
+			} else if ( (!(f instanceof LClosure)) || ! f.luaSetEnv(t) ) {
+				vm.error( "'setfenv' cannot change environment of given object" );
 			}
+			vm.resettop();
+			vm.pushlvalue(f);
 			break;
 		}
 		case SELECT: {
@@ -307,7 +299,7 @@ public class BaseLib extends LFunction {
 				if ( index < 0 )
 					index += n-1;
 				if ( index <= 0 )
-					vm.error( "bad argument #1 to '?' (index out of range)" );
+					vm.typerror( 2, "index out of range" );
 				if ( index >= n )
 					vm.resettop();
 				else {
@@ -317,6 +309,8 @@ public class BaseLib extends LFunction {
 			} else if ( vm.checkstring(2).equals( "#" ) ) {
 				vm.resettop();
 				vm.pushnumber( n - 2 );
+			} else {
+				vm.typerror(2,"expected number or '#'");
 			}
 			break;
 		}
@@ -346,8 +340,7 @@ public class BaseLib extends LFunction {
 			load(vm);
 			break;
 		case TOSTRING: {
-			vm.checkany(2);
-			LValue v = vm.topointer(2);
+			LValue v = vm.checkany(2);
 			vm.resettop();
 			vm.pushlvalue( v.luaAsString() );			
 			break;
@@ -373,6 +366,21 @@ public class BaseLib extends LFunction {
 		}
 		return false;
 	}
+	
+	private static LValue getfunc (LuaState vm, boolean opt) {
+		if ( vm.isfunction(2) )
+			return vm.tojavafunction(2);
+		else {
+			int level = opt? vm.optint(2, 1): vm.checkint(2);
+		    vm.argcheck(level >= 0, 2, "level must be non-negative");
+		    vm.argcheck(level-1 <= vm.cc, 2, "invalid level");
+		    CallInfo ci = vm.getStackFrame(level-1);
+		    if ( ci == null || ci.closure == null )
+		    	return LNil.NIL;
+		    return ci.closure;
+		}
+	}
+
 	
 	public static void redirectOutput( OutputStream newStdOut ) {
 		STDOUT = new PrintStream( newStdOut );

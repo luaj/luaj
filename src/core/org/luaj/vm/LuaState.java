@@ -1248,9 +1248,9 @@ public class LuaState extends Lua {
 	 * Pops a table from the stack and sets it as the new environment for the
 	 * value at the given index. If the value at the given index is neither a
 	 * function nor a thread nor a userdata, <a href="#lua_setfenv"><code>lua_setfenv</code></a>
-	 * returns 0. Otherwise it returns 1.
+	 * returns false. Otherwise it returns true.
 	 */
-	public int setfenv(int index) {
+	public boolean setfenv(int index) {
 		LTable t = totable(-1);
 		LValue f = topointer(index);
 		pop(1);
@@ -2661,11 +2661,13 @@ public class LuaState extends Lua {
 	 * Checks whether the function has an argument of any type (including <b>nil</b>)
 	 * at position <code>narg</code>.
 	 * @param narg the argument number
+	 * @return the value at the index
 	 * @throws LuaErrorException if there is no argument at position narg
 	 */
-	public void checkany(int narg) {
+	public LValue checkany(int narg) {
 		if ( gettop() < narg )
 			argerror(narg, "value expected");
+		return topointer(narg);
 	}
 
 	/**

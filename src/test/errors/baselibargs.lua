@@ -71,7 +71,7 @@ checkallerrors('pairs', {notatable}, 'bad argument #1')
 
 -- pcall
 banner('pcall')
-checkallpass('pcall', {notanil,anylua})
+checkallpass('pcall', {notanil,anylua}, true)
 checkallerrors('pcall',{},'bad argument #1')
 
 -- print
@@ -109,9 +109,12 @@ checkallerrors('select', {notanumber}, 'bad argument #1')
 
 -- setfenv
 banner('setfenv')
+local g = _G
 checkallpass('setfenv', {{function()end},sometable})
-checkallerrors('setfenv', {{1.23, '1.33'},{getfenv()}}, 'cannot change environment of given object')
-checkallerrors('setfenv', {{atable,athread,aboolean,astring},sometable}, 'bad argument #1')
+checkallerrors('setfenv', {{-1, '-2'},{g}}, 'level must be non-negative')
+checkallerrors('setfenv', {{10, '11'},{g}}, 'invalid level')
+checkallerrors('setfenv', {{rawset},{g}}, 'cannot change environment of given object')
+checkallerrors('setfenv', {{atable,athread,aboolean,astring},{g}}, 'bad argument #1')
 checkallerrors('setfenv', {notafunction}, 'bad argument #2')
 checkallerrors('setfenv', {anylua}, 'bad argument #2')
 checkallerrors('setfenv', {{function()end},notatable}, 'bad argument #2')
@@ -119,7 +122,7 @@ checkallerrors('setfenv', {{function()end},notatable}, 'bad argument #2')
 -- setmetatable
 banner('setmetatable')
 checkallpass('setmetatable', {sometable,sometable})
-checkallpass('setmetatable', {sometable,{nil,atable},{'anchor'}})
+checkallpass('setmetatable', {sometable,{}})
 checkallerrors('setmetatable',{notatable,sometable},'bad argument #1')
 checkallerrors('setmetatable',{sometable,notatable},'bad argument #2')
 

@@ -292,10 +292,18 @@ public class LValue {
 		return null;
 	}
 
-	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
-	public int luaSetEnv(LTable t) {
-		return 0;
+	/** Set the environment if a thread, or closure, and return true, otherwise return false */
+	public boolean luaSetEnv(LTable t) {
+		return false;
 	}
+	
+	/** Get the environment of the object if it is a closure, or d if not a closure.
+	 * @param d global environment to return if this is not a closure 
+	 */
+	public LTable luaGetEnv(LTable d) {
+		return d;
+	}
+	
 
 	/** Convert to a number if possible, or nil otherwise */
 	public LValue luaToNumber() {
