@@ -86,7 +86,8 @@ package.loaders = { function(...)
 end }
 pcall( g, 'require-sample-chunk-error' )
 
--- good, and bad java samples
+-- good, and bad java samples 
+--[[ (needs to be moved to different test suite)
 package.loaders = pl 
 function g(name)
 	print( name, pcall(f,name) )
@@ -97,3 +98,4 @@ pcall( g, 'org.luaj.vm.require.RequireSampleLoadLuaError')
 pcall( g, 'org.luaj.vm.require.RequireSampleLoadRuntimeExcep')
 pcall( g, 'org.luaj.vm.require.RequireSampleSuccess')
 pcall( g, 'org.luaj.vm.require.RequireSampleSuccess')
+--]]

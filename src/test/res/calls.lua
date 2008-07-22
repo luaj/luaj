@@ -19,6 +19,10 @@ local result1 = factorial(5)
 print(result1)
 print(factorial(5))
 
+local function truncate(x)
+	local s = tostring(x)
+	return (#s<6 and s) or string.sub(s,1,6)..'...'
+end
 local result2 = f(math.pi)
-print(result2)
-print(f(math.pi))
+print(truncate(result2))
+print(truncate(f(math.pi)))

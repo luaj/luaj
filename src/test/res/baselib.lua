@@ -2,11 +2,19 @@
 package.path = "?.lua;src/test/res/?.lua"
 require 'ids'
 
+-- wrap pcall to return one result
+-- error message are tested elsewhere
+local pc = pcall
+local pcall = function(...)
+	local s,e = pc(...)
+	if s then return e end
+	return false, type(e)
+end
+
 -- print
 print()
 print(11)
 print("abc",123,nil,"pqr")
-
 
 -- assert
 print( 'assert(true)', assert(true) )
@@ -19,9 +27,9 @@ print( 'pcall(assert,nil,"msg")', pcall(assert,nil,"msg") )
 print( 'pcall(assert,false,"msg","msg2")', pcall(assert,false,"msg","msg2") )
 
 -- collectgarbage (not supported)
-print( 'collectgarbage("count")', id(collectgarbage("count")))
-print( 'collectgarbage("collect")', collectgarbage("collect"))
-print( 'collectgarbage("count")', id(collectgarbage("count")))
+print( 'collectgarbage("count")', type(collectgarbage("count")))
+print( 'collectgarbage("collect")', type(collectgarbage("collect")))
+print( 'collectgarbage("count")', type(collectgarbage("count")))
 
 -- dofile (not supported)
 -- ipairs
@@ -39,9 +47,9 @@ for k,v in ipairs({[30]='30',[20]='20'}) do print('ipairs5',k,v)end
 -- loadfile
 -- loadstring
 local lst = "print(3+4); return 8"
-local lss,lsv = pcall( loadstring, lst )
-print( 'loadstring("'..lst..'")', lss, id(lsv) )
-print(  'loadstring("'..lst..'")()', pcall( lsv ) ) 
+local chunk, err = loadstring( lst )
+print( 'loadstring("'..lst..'")', id(chunk), err )
+print( 'loadstring("'..lst..'")()', chunk() ) 
 
 -- pairs
 print( 'pcall(pairs)', pcall(pairs) )
@@ -52,7 +60,7 @@ for k,v in pairs({}) do print('pairs1',k,v)end
 for k,v in pairs({'one','two'}) do print('pairs2',k,v)end
 for k,v in pairs({aa='aaa',bb='bbb'}) do print('pairs3',k,v)end
 for k,v in pairs({aa='aaa',bb='bbb','one','two'}) do print('pairs4',k,v)end
-for k,v in pairs({[30]='30',[20]='20'}) do print('pairs5',k,v)end
+for k,v in pairs({[20]='30',[30]='20'}) do print('pairs5',k,v)end
 
 -- _G
 print( '_G["abc"] (before)', _G["abc"] )
@@ -208,9 +216,9 @@ print( 'pcall(tostring,"abc","def")', pcall(tostring,"abc","def") )
 print( 'pcall(tostring,123)', pcall(tostring,123) )
 print( 'pcall(tostring,true)', pcall(tostring,true) )
 print( 'pcall(tostring,false)', pcall(tostring,false) )
-print( 'tostring(tostring)', id(tostring(tostring)) )
-print( 'tostring(function() end)', id(tostring(function() end)) )
-print( 'tostring({"one","two",a="aa",b="bb"})', id(tostring({"one","two",a="aa",b="bb"})) )
+print( 'tostring(tostring)', type(tostring(tostring)) )
+print( 'tostring(function() end)', type(tostring(function() end)) )
+print( 'tostring({"one","two",a="aa",b="bb"})', type(tostring({"one","two",a="aa",b="bb"})) )
 
 -- unpack
 print( 'pcall(unpack)', pcall(unpack) );
@@ -258,4 +266,4 @@ print( 'pcall(unpack,t,"a")', pcall(unpack,t,"a") );
 print( 'pcall(unpack,t,function() end)', pcall(unpack,t,function() end) );
 
 -- _VERSION
-print( '_VERSION', _VERSION )
+print( '_VERSION', type(_VERSION) )

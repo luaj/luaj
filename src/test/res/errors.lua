@@ -5,7 +5,7 @@ require 'ids'
 -- test of common types of errors
 local function c(f,...) return f(...) end
 local function b(...) return c(...) end
-local function a(...) return pcall(b,...) end
+local function a(...) return (pcall(b,...)) end
 s = 'some string'
 local t = {}
 -- error message tests
@@ -78,11 +78,11 @@ local function concatsuite(comparefunc)
 	print( '3.5.."b"', comparefunc(3.5,"b") )
 end
 local function strconcat(a,b)
-	return pcall( function() return a..b end ) 
+	return (pcall( function() return a..b end) ) 
 end
 local function tblconcat(a,b) 
 	local t={a,b}
-	return pcall( function() return table.concat(t,'-') end )
+	return (pcall( function() return table.concat(t,'-') end ))
 end
 -- concatsuite(strconcat)
 concatsuite(tblconcat)

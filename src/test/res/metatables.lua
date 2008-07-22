@@ -9,8 +9,8 @@ print(s:sub(2,4))
 
 local t = {}
 function op(name,...)
-	a,b,c,d = pcall( setmetatable, t, ... )
-	print( name, id(t), id(getmetatable(t)), id(a), id(b), id(c), id(d) )
+	local a,b = pcall( setmetatable, t, ... )
+	print( name, id(t), id(getmetatable(t)), id(a), a and id(b) or type(b) )
 end
 op('set{}  ',{})
 op('set-nil',nil)
