@@ -12,7 +12,7 @@ checkallerrors('assert',{{nil,false},{'message'}},'message')
 
 -- collectgarbage
 banner('collectgarbage')
-checkallpass('collectgarbage',{{'collect','count'}})
+checkallpass('collectgarbage',{{'collect','count'}},true)
 checkallerrors('collectgarbage',{notanil},'bad argument #1')
 
 -- dofile
@@ -132,8 +132,10 @@ checkallerrors('tonumber',{somenumber,{1,37,atable,afunction,aboolean}},'bad arg
 
 -- tostring
 banner('tostring')
-checkallpass('tostring',{notanil})
-checkallpass('tostring',{anylua,{'anchor'}})
+checkallpass('tostring',{{astring,anumber,aboolean}})
+checkallpass('tostring',{{atable,afunction,athread}},true)
+checkallpass('tostring',{{astring,anumber,aboolean},{'anchor'}})
+checkallpass('tostring',{{atable,afunction,athread},{'anchor'}},true)
 checkallerrors('tostring',{},'bad argument #1')
 
 -- type
@@ -153,7 +155,8 @@ checkallerrors('unpack',{sometable,somenumber,nonnumber},'bad argument #3')
 
 -- xpcall
 banner('xpcall')
-checkallpass('xpcall', {notanil,notanil})
+checkallpass('xpcall', {notanil,nonfunction})
+checkallpass('xpcall', {notanil,{function(...)return 'aaa', 'bbb', #{...} end}})
 checkallerrors('xpcall',{anylua},'bad argument #2')
 
 

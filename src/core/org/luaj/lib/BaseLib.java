@@ -54,6 +54,7 @@ public class BaseLib extends LFunction {
 		"load",
 		"tostring",
 		"unpack",
+		"xpcall",
 		"next",
 		"_inext", // not public
 		};
@@ -81,8 +82,9 @@ public class BaseLib extends LFunction {
 	private static final int LOAD           = 20;
 	private static final int TOSTRING       = 21;
 	private static final int UNPACK         = 22;
-	private static final int NEXT           = 23;
-	private static final int INEXT          = 24;
+	private static final int XPCALL         = 23;
+	private static final int NEXT           = 24;
+	private static final int INEXT          = 25;
 
 	private static LFunction next;
 	private static LFunction inext;
@@ -190,6 +192,29 @@ public class BaseLib extends LFunction {
 			}
 			break;
 		}
+		case XPCALL: {
+			vm.checkany(3);
+			LValue errfun = vm.topointer(3);
+			vm.settop(2);
+			int s = vm.pcall( 0, Lua.LUA_MULTRET, 0 );
+			if ( s == 0 ) { // success, results are on stack above the xpcall
+				vm.pushboolean( true );
+				vm.replace( 1 );
+			} else { // error, error message is on the stack
+				vm.pushlvalue( errfun );
+				vm.insert( 1 );
+				s = vm.pcall( vm.gettop()-1, 1, 0 );
+				if ( s == 0 ) {
+					vm.pushboolean( false );
+					vm.insert( 1 );
+				} else { // error in error handler
+					vm.resettop();
+					vm.pushboolean(false);
+					vm.pushstring("error in error handling");					
+				}
+			}
+			break;
+		}
 		case ERROR: {
 			vm.error(vm.checkstring(2), vm.optint(3,1));
 			break;
@@ -197,7 +222,7 @@ public class BaseLib extends LFunction {
 		case ASSERT: {
 			if ( ! vm.toboolean(2) )
 				vm.error( vm.optstring(3,"assertion failed!") );
-			vm.resettop();
+			vm.remove(1);
 			break;
 		}
 		
@@ -206,26 +231,20 @@ public class BaseLib extends LFunction {
 			break;
 			
 		case TONUMBER: {
-			vm.checkany(2);
-			switch ( vm.type(2) ) {
-			case Lua.LUA_TNUMBER:
-				break;
-			case Lua.LUA_TSTRING:
-				LString s = vm.tolstring(2);
-				int base = 10;
-				if ( vm.isnumber(3) ) {
-					base = vm.tolnumber(3).toJavaInt();
-					if ( base < 2 || base > 36 )
-						vm.error("bad argument #2 to '?' (base out of range)");
-				}
+			int base = vm.optint(3, 10);
+			if (base == 10) {  /* standard conversion */
+				vm.checkany(2);
+				LValue v = vm.tolnumber(2);
+				vm.resettop();
+				if ( ! v.isNil() )
+					vm.pushlvalue(v);
+			} else {
+				if ( base < 2 || base > 36 )
+					vm.typerror(3, "base out of range");				
+				LString s = vm.checklstring(2);
+				vm.resettop();
 				vm.pushlvalue( s.luaToNumber(base) );
-				break;
-			default:
-				vm.pushnil();
-				break;
 			}
-			vm.insert(1);
-			vm.settop(1);
 			break;
 		}
 		case RAWGET: {
@@ -307,10 +326,12 @@ public class BaseLib extends LFunction {
 			vm.resettop();
 			if ( "collect".equals(s) )
 				System.gc();
-			else {
+			else if ( "count".equals(s) ) {
 				Runtime rt = Runtime.getRuntime();
 				long used = rt.totalMemory() - rt.freeMemory();
 				result = (int) (used >> 10);
+			} else {
+				vm.typerror(2,"gc op");
 			}
 			vm.pushnumber(result);
 			break;
@@ -319,7 +340,7 @@ public class BaseLib extends LFunction {
 			dofile(vm);
 			break;
 		case LOADSTRING:
-			loadstring(vm, vm.topointer(2), vm.tostring(3));
+			loadstring(vm, vm.checklstring(2), vm.optstring(3,"(string)"));
 			break;
 		case LOAD:
 			load(vm);
@@ -430,10 +451,8 @@ public class BaseLib extends LFunction {
 	}
 
 	// return true if loaded, false if error put onto stack
-	private boolean loadstring(LuaState vm,  LValue string, String chunkname) {
-		return loadis( vm, 
-				string.luaAsString().toInputStream(), 
-				("".equals(chunkname)? "(string)": chunkname) );
+	private boolean loadstring(LuaState vm,  LString string, String chunkname) {
+		return loadis( vm, string.toInputStream(), chunkname );
 	}
 
 	// return true if loaded, false if error put onto stack
