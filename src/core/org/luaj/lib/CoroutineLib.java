@@ -54,6 +54,7 @@ public class CoroutineLib extends LFunction {
 		for ( int i=1; i<=YIELD; i++ )
 			lib.put(NAMES[i], new CoroutineLib(i));
 		globals.put("coroutine",lib);
+		PackageLib.setIsLoaded("coroutine", lib);
 	}
 	
 	private final int id;

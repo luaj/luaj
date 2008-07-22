@@ -141,10 +141,10 @@ public class LuaState extends Lua {
 	 * BaseLib, CoroutineLib, MathLib, PackageLib, TableLib, StringLib
 	 */
 	public void installStandardLibs() {
+        PackageLib.install(_G);
 		BaseLib.install(_G);
         CoroutineLib.install(_G);
         MathLib.install(_G);
-        PackageLib.install(_G);
         TableLib.install(_G);
         StringLib.install(_G);	
 	}

@@ -60,6 +60,7 @@ public class TableLib extends LFunction {
 		for ( int i=1; i<NAMES.length; i++ )
 			table.put( NAMES[i], new TableLib(i) );
 		globals.put( "table", table );
+		PackageLib.setIsLoaded("table", table);
 	}
 
 	private final int id;

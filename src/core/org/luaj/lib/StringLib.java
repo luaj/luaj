@@ -71,6 +71,7 @@ public class StringLib extends LFunction {
 		for ( int i=1; i<NAMES.length; i++ )
 			string.put(NAMES[i], new StringLib(i));
 		globals.put( "string", string );
+		PackageLib.setIsLoaded("string", string);
 	}
 
 	private final int id;

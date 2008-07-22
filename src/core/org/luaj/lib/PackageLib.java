@@ -95,6 +95,12 @@ public class PackageLib extends LFunction {
 		pckg.put( "loaders", loaders );
 		pckg.put( _PATH, _LUA_PATH );
 		globals.put( "package", pckg );
+		setIsLoaded( "package", pckg );
+	}
+
+	/** Allow packages to mark themselves as loaded */
+	public static void setIsLoaded(String name, LTable value) {
+		LOADED.put(name, value);
 	}
 
 	public static void setLuaPath( String newLuaPath ) {
@@ -180,7 +186,7 @@ public class PackageLib extends LFunction {
 		int n = vm.gettop();
 		LValue value = LOADED.get(modname);
 		LTable module;
-		if ( value.luaGetType() != Lua.LUA_TTABLE ) { /* not found? */
+		if ( ! value.isTable() ) { /* not found? */
 			
 		    /* try global variable (and create one if it does not exist) */
 			module = findtable( vm._G, modname );
@@ -322,7 +328,11 @@ public class PackageLib extends LFunction {
 	}
 
 	public static void loadlib( LuaState vm ) {
-		vm.error( "loadlib not implemented" );
+		vm.checkstring(2);
+		vm.resettop();
+		vm.pushnil();
+		vm.pushstring("dynamic libraries not enabled");
+		vm.pushstring("absent");
 	}
 
 

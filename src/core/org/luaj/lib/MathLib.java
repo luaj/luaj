@@ -120,7 +120,9 @@ public class MathLib extends LFunction {
 		math.put( "huge", new LDouble( Double.MAX_VALUE ) );
 		math.put( "pi", new LDouble( Math.PI ) );		
 		globals.put( "math", math );
+		PackageLib.setIsLoaded("math", math);
 		platform = Platform.getInstance();
+		
 	}
 
 	private static Random random = null;
