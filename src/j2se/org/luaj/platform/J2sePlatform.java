@@ -52,39 +52,45 @@ public class J2sePlatform extends Platform {
         }
     }
     
-    public LNumber mathPow(double lhs, double rhs) {
-        double d = Math.pow(lhs, rhs);
-        return LDouble.valueOf(d);
+    public LNumber mathPow(LNumber base, LNumber exp) {
+        return LDouble.numberOf(Math.pow(base.toJavaDouble(),exp.toJavaDouble()));
     }
 
-	public double mathop(int id, double a, double b) {
+	public LNumber mathop(int id, LNumber la, LNumber lb) {
+		double a = la.toJavaDouble();
+		double b = lb.toJavaDouble();
+		double z = 0;
 		switch ( id ) {
-		case MathLib.ATAN2: return Math.atan2(a, b);
-		case MathLib.FMOD: return a - (b * ((int)(a/b)));
-		case MathLib.POW: return Math.pow(a, b);
+		default: return unsupportedMathOp();
+		case MathLib.ATAN2: z = Math.atan2(a, b); break;
+		case MathLib.FMOD: z = a - (b * ((int)(a/b))); break;
+		case MathLib.POW: z = Math.pow(a, b); break;
 		}
-    	throw new LuaErrorException( "unsupported math op" );
+		return LDouble.numberOf(z);
 	}
 	
-	public double mathop(int id, double x) {
+	public LNumber mathop(int id, LNumber lx) {
+		double x = lx.toJavaDouble();
+		double z = 0;
 		switch ( id ) {
-		case MathLib.ABS: return Math.abs(x);
-		case MathLib.ACOS: return Math.acos(x);
-		case MathLib.ASIN: return Math.asin(x);
-		case MathLib.ATAN: return Math.atan(x);
-		case MathLib.COS: return Math.cos(x);
-		case MathLib.COSH: return Math.cosh(x);
-		case MathLib.DEG: return Math.toDegrees(x);
-		case MathLib.EXP: return Math.exp(x);
-		case MathLib.LOG: return Math.log(x);
-		case MathLib.LOG10: return Math.log10(x);
-		case MathLib.RAD: return Math.toRadians(x);
-		case MathLib.SIN: return Math.sin(x);
-		case MathLib.SINH: return Math.sinh(x);
-		case MathLib.SQRT: return Math.sqrt(x);
-		case MathLib.TAN: return Math.tan(x);
-		case MathLib.TANH: return Math.tanh(x);
+		default: return unsupportedMathOp();
+		case MathLib.ABS: z = Math.abs(x); break;
+		case MathLib.ACOS: z = Math.acos(x); break;
+		case MathLib.ASIN: z = Math.asin(x); break;
+		case MathLib.ATAN: z = Math.atan(x); break;
+		case MathLib.COS: z = Math.cos(x); break;
+		case MathLib.COSH: z = Math.cosh(x); break;
+		case MathLib.DEG: z = Math.toDegrees(x); break;
+		case MathLib.EXP: z = Math.exp(x); break;
+		case MathLib.LOG: z = Math.log(x); break;
+		case MathLib.LOG10: z = Math.log10(x); break;
+		case MathLib.RAD: z = Math.toRadians(x); break;
+		case MathLib.SIN: z = Math.sin(x); break;
+		case MathLib.SINH: z = Math.sinh(x); break;
+		case MathLib.SQRT: z = Math.sqrt(x); break;
+		case MathLib.TAN: z = Math.tan(x); break;
+		case MathLib.TANH: z = Math.tanh(x); break;
 		}
-		throw new LuaErrorException( "unsupported math op" );
+		return LDouble.numberOf(z);
 	}
 }

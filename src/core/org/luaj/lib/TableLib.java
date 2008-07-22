@@ -205,7 +205,7 @@ public class TableLib extends LFunction {
 		 */ 
 		case SORT: { 
 			LTable table = vm.checktable(2);
-			LValue compare = (vm.isnoneornil(3)? LNil.NIL: vm.checkfunction(3));
+			LValue compare = (vm.isnoneornil(3)? (LValue) LNil.NIL: (LValue) vm.checkfunction(3));
 			table.luaSort( vm, compare );
 			vm.resettop();
 			break;

@@ -29,6 +29,12 @@ public class LDouble extends LNumber {
 	public static LDouble valueOf(double value) {
 		return new LDouble(value);
 	}
+
+	/** Convert to LNumber, using LInteger if possible */
+	public static LNumber numberOf(double z) {
+		int iz = (int) z;
+		return (z==iz? (LNumber) LInteger.valueOf(iz): (LNumber) new LDouble(z));
+	}
 	
 	public LDouble(double value) {
 		this.m_value = value;
@@ -82,12 +88,12 @@ public class LDouble extends LNumber {
 	
 	public static LValue luaBinOpDoubleDouble( int opcode, double lhs, double rhs ) {
 		switch ( opcode ) {
-		case Lua.OP_ADD: return new LDouble( lhs + rhs );
-		case Lua.OP_SUB: return new LDouble( lhs - rhs );
-		case Lua.OP_MUL: return new LDouble( lhs * rhs );
-		case Lua.OP_DIV: return new LDouble( lhs / rhs );
-		case Lua.OP_MOD: return new LDouble( lhs - Math.floor(lhs/rhs) * rhs );
-		case Lua.OP_POW: return Platform.getInstance().mathPow(lhs, rhs);
+		case Lua.OP_ADD: return LDouble.numberOf( lhs + rhs );
+		case Lua.OP_SUB: return LDouble.numberOf( lhs - rhs );
+		case Lua.OP_MUL: return LDouble.numberOf( lhs * rhs );
+		case Lua.OP_DIV: return LDouble.numberOf( lhs / rhs );
+		case Lua.OP_MOD: return LDouble.numberOf( lhs - Math.floor(lhs/rhs) * rhs );
+		case Lua.OP_POW: return Platform.getInstance().mathPow( LDouble.valueOf(lhs), LDouble.valueOf(rhs));
 		}
 		LuaState.vmerror( "bad bin opcode" );
 		return null;
@@ -131,5 +137,4 @@ public class LDouble extends LNumber {
 	public LValue luaUnaryMinus() {
 		return new LDouble( -m_value );
 	}
-	
 }

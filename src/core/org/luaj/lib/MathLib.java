@@ -26,6 +26,7 @@ import java.util.Random;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
+import org.luaj.vm.LNumber;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
@@ -143,12 +144,17 @@ public class MathLib extends LFunction {
 		vm.resettop();
 		vm.pushlvalue( LInteger.valueOf(i) );
 	}
+
+	private static void setResult(LuaState vm, LNumber mathop) {
+		vm.resettop();
+		vm.pushlvalue( mathop );
+	}
 	
 	public boolean luaStackCall( LuaState vm ) {
 		if ( id > LAST_DOUBLE_ARG ) {
-			setResult( vm, platform.mathop(id, vm.checkdouble(2) ) );
+			setResult( vm, platform.mathop(id, vm.checknumber(2) ) );
 		} else if ( id > LAST_IRREGULAR ) {
-			setResult( vm, platform.mathop(id, vm.checkdouble(2), vm.checkdouble(3) ) );
+			setResult( vm, platform.mathop(id, vm.checknumber(2), vm.checknumber(3) ) );
 		} else {
 			switch ( id ) {
 			case INSTALL:
@@ -235,5 +241,4 @@ public class MathLib extends LFunction {
 		}
 		return false;
 	}
-	
 }

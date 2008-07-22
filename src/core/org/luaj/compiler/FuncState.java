@@ -842,7 +842,7 @@ public class FuncState extends LuaC {
 			r = (LNumber) v2.luaBinOpUnknown(op, v1);
 			break;
 		case OP_POW:
-			r = Platform.getInstance().mathPow( v1.toJavaDouble(), v2.toJavaDouble() );
+			r = Platform.getInstance().mathPow( v1, v2 );
 			break;
 		case OP_UNM:
 			r = (LNumber) v1.luaUnaryMinus();

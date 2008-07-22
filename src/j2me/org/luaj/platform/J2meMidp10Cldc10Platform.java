@@ -51,65 +51,16 @@ public class J2meMidp10Cldc10Platform extends Platform {
     protected void installOptionalLibs(LuaState vm) {
         vm.installStandardLibs();
     }
-    
-    public LNumber mathPow(double lhs, double rhs) {
-    	return LDouble.valueOf(dpow(lhs,rhs));
-    }
 
-	public double mathop(int id, double a, double b) {
-		switch ( id ) {
-		case MathLib.ATAN2: return
-			b>0? Math.atan(a/b):
-			b<0? (a>=0? Math.PI-Math.atan(a/-b): -Math.PI-Math.atan(a/-b)):
-			(a>0? Math.PI/2: a<0? -Math.PI/2: 0);
-		case MathLib.FMOD: return a - (b * ((int)(a/b)));
-		case MathLib.POW: return dpow(a, b);
-		}
-    	throw new LuaErrorException( "unsupported math op" );
+	public LNumber mathPow(LNumber base, LNumber exponent) {
+		return unsupportedMathOp();
 	}
 	
-	public double mathop(int id, double x) {
-		switch ( id ) {
-		case MathLib.ABS: return Math.abs(x);
-		//case MathLib.ACOS: return Math.acos(x);
-		//case MathLib.ASIN: return Math.asin(x);
-		//case MathLib.ATAN: return Math.atan(x);
-		case MathLib.COS: return Math.cos(x);
-		case MathLib.COSH: return (Math.exp(x) + Math.exp(-x)) / 2;
-		case MathLib.DEG: return Math.toDegrees(x);
-		case MathLib.EXP: return Math.exp(x);
-		case MathLib.LOG: return Math.log(x);
-		case MathLib.LOG10: return Math.log10(x);
-		case MathLib.RAD: return Math.toRadians(x);
-		case MathLib.SIN: return Math.sin(x);
-		case MathLib.SINH: return (Math.exp(x) - Math.exp(-x)) / 2;
-		case MathLib.SQRT: return Math.sqrt(x);
-		case MathLib.TAN: return Math.tan(x);
-		case MathLib.TANH: {
-			double e = Math.exp(2*x);
-			return (e-1) / (e+1);
-		}
-		}
-		throw new LuaErrorException( "unsupported math op" );
+	public LNumber mathop(int id, LNumber x, LNumber y) {
+		return unsupportedMathOp();
 	}
-	
-	public static double dpow(double a, double b) {
-		if ( b < 0 )
-			return 1 / dpow( a, -b );
-		double p = 1;
-		int whole = (int) b;
-		for ( double v=a; whole > 0; whole>>=1, v*=v )
-			if ( (whole & 1) != 0 )
-				p *= v;
-		if ( (b -= whole) > 0 ) {
-			int frac = (int) (0x10000 * b);
-			for ( ; (frac&0xffff)!=0; frac<<=1 ) {
-				a = Math.sqrt(a);
-				if ( (frac & 0x8000) != 0 )
-					p *= a;
-			}
-		}
-		return p;
+
+	public LNumber mathop(int id, LNumber x) {
+		return unsupportedMathOp();
 	}
-	
 }

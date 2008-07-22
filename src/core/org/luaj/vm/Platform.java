@@ -146,14 +146,6 @@ abstract public class Platform {
      */
     abstract protected void installOptionalLibs(LuaState vm);
     
-    /** 
-     * Compute math.pow() for two numbers using double math when available. 
-     * @param lhs LNumber base
-     * @param rhs LNumber exponent
-     * @return base ^ exponent as a LNumber, throw RuntimeException if not implemented
-     */
-    abstract public LNumber mathPow(double lhs, double rhs);
-
     /**
      * Convenience method for the subclasses to figure out the debug host.
      * @return the debug host property. If it is not present, null is returned.
@@ -179,22 +171,37 @@ abstract public class Platform {
         return port;
     }
 
+    /** 
+     * Compute math.pow() for two numbers using double math when available. 
+     * @param lhs LNumber base
+     * @param rhs LNumber exponent
+     * @return base ^ exponent as a LNumber, throw RuntimeException if not implemented
+     */
+    abstract public LNumber mathPow(LNumber base, LNumber exponent);
+
     /**
      * Compute a math operation that takes a single double argument and returns a double
      * @param id the math op, from MathLib constants
-     * @param x the arugment
-     * @return the value
+     * @param x the argument
+     * @return the value as an LNumber
      * @throws LuaErrorException if the id is not supported by this platform.
      */
-	abstract public double mathop(int id, double x);
+	abstract public LNumber mathop(int id, LNumber x);
 
     /**
      * Compute a math operation that takes a two double arguments and returns a double
      * @param id the math op, from MathLib constants
-     * @param x the first arugment
-     * @param y the second arugment
-     * @return the value
+     * @param x the first argument as an LNumber
+     * @param y the second arugment as an LNumber
+     * @return the value as an LNumber
      * @throws LuaErrorException if the id is not supported by this platform.
      */
-	abstract public double mathop(int id, double x, double y);
+	abstract public LNumber mathop(int id, LNumber x, LNumber y);
+	
+
+	/** Throw an error indicating the math operation is not accepted */
+	public LNumber unsupportedMathOp() {
+		throw new LuaErrorException("math op not supported on "+getName());
+	}
+	
 }
