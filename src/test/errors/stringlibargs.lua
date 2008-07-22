@@ -12,17 +12,27 @@ checkallerrors('string.byte',{somestring,{astring,afunction,atable}},'bad argume
 checkallerrors('string.byte',{notastring,{nil,111}},'bad argument')
 
 -- string.char
-banner('string.char')
-checkallpass('string.char',{{nil,0,1,40,127,128,255,'0','1','255','1.2',1.2}})
-checkallpass('string.char',{{0,127,255},{0,127,255}})
-checkallpass('string.char',{})
-checkallerrors('string.char',{{-1,256}},'bad argument #1')
-checkallerrors('string.char',{notanumber,{23,'45',6.7}},'bad argument #1')
-checkallerrors('string.char',{{23,'45',6.7},nonnumber},'bad argument #2')
+function string_char(...)
+	return string.byte( string.char( ... ) )
+end
+banner('string_char')
+checkallpass('string.char',{{60}})
+checkallpass('string.char',{{60},{70}})
+checkallpass('string.char',{{60},{70},{80}})
+checkallpass('string_char',{{nil,0,9,40,127,128,255,'0','9','255','9.2',9.2}})
+checkallpass('string_char',{{0,127,255},{0,127,255}})
+checkallpass('string_char',{})
+checkallerrors('string_char',{},'bad argument #1')
+checkallerrors('string_char',{{-1,256}},'bad argument #1')
+checkallerrors('string_char',{notanumber,{23,'45',6.7}},'bad argument #1')
+checkallerrors('string_char',{{23,'45',6.7},nonnumber},'bad argument #2')
 
 -- string.dump
 banner('string.dump')
-checkallpass('string.dump',{{afunction}})
+local someupval = 435
+local function funcwithupvals() return someupval end
+checkallpass('string.dump',{{function() return 123 end}})
+checkallpass('string.dump',{{funcwithupvals}})
 checkallerrors('string.dump',{notafunction},'bad argument')
 
 -- string.find

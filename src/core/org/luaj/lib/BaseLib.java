@@ -13,14 +13,11 @@ import java.io.PrintStream;
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
-import org.luaj.vm.LInteger;
 import org.luaj.vm.LNil;
-import org.luaj.vm.LNumber;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -134,21 +131,38 @@ public class BaseLib extends LFunction {
 			vm.resettop();
 			break;
 		}
-		case IPAIRS:
-		case PAIRS: {			
+		case IPAIRS: {			
 			LTable t = vm.checktable(2);
 			vm.resettop();
-			vm.pushjavafunction( (id==IPAIRS)? inext: next );
+			vm.pushjavafunction( inext );
+			vm.pushlvalue( t );
+			vm.pushinteger( 0 );
+			break;
+		}
+		case PAIRS: {
+			LTable t = vm.checktable(2);
+			vm.resettop();
+			vm.pushjavafunction( next );
 			vm.pushlvalue( t );
 			vm.pushnil();
 			break;
 		}
-		case INEXT:
+		case INEXT: {
+			  int i = vm.checkint(3) + 1;
+			  LTable t = vm.checktable(2);
+			  LValue v = t.get(i);
+			  vm.resettop();
+			  if ( !v.isNil() ) {
+				  vm.pushinteger(i);
+				  vm.pushlvalue(v);
+			  }
+			  break;
+		}
 		case NEXT: {
 			LTable t = vm.checktable(2);
-			LValue v = vm.topointer(3);
+			LValue k = vm.topointer(3);
 			vm.resettop();
-			t.next(vm,v,(id==INEXT));
+			t.next(vm,k,false);
 			break;
 		}
 		case GETMETATABLE: {
@@ -230,7 +244,7 @@ public class BaseLib extends LFunction {
 		}
 		
 		case LOADFILE:
-			loadfile(vm, vm.optstring(2,""));
+			loadfile(vm, vm.optstring(2,null));
 			break;
 			
 		case TONUMBER: {
@@ -411,6 +425,13 @@ public class BaseLib extends LFunction {
 	}
 
 	// return true if loaded, false if error put onto the stack
+	/** Load a chunk from an input stream, leaving it on the stack if successful,
+	 * then close the input stream if it is not STDIN
+	 * 
+	 * @param vm LuaState to load into
+	 * @param is input stream to load from 
+	 * @return true if loaded and only item on stack, false if nil+error put onto stack
+	 */
 	static boolean loadis(LuaState vm, InputStream is, String chunkname ) {
 		try {
 			vm.resettop();
@@ -426,12 +447,17 @@ public class BaseLib extends LFunction {
 	}
 	
 
-	// return true if loaded, false if error put onto stack
-	public static boolean loadfile( LuaState vm, String fileName ) {
+	/** Load a file into a chunk given a filename, leaving it on the stack if successful
+	 * 
+	 * @param vm LuaState to load into
+	 * @param fileName file to load, or null to use STDIN
+	 * @return true if loaded and only item on stack, false if nil+error put onto stack
+	 */
+	private static boolean loadfile( LuaState vm, String fileName ) {
 		InputStream is;
 		
 		String script;
-		if ( ! "".equals(fileName) ) {
+		if ( fileName != null ) {
 			script = fileName;
 			is = Platform.getInstance().openFile(fileName);
 			if ( is == null ) {
@@ -439,8 +465,8 @@ public class BaseLib extends LFunction {
 				return false;
 			}
 		} else {
-			is = STDIN;
-			script = "-";
+			is = STDIN != null? STDIN: new ByteArrayInputStream(new byte[0]);
+			script = "-";			
 		}
 		
 		// use vm to load the script
@@ -449,12 +475,11 @@ public class BaseLib extends LFunction {
 	
 	// if load succeeds, return 0 for success, 1 for error (as per lua spec)
 	private void dofile( LuaState vm ) {
-		String filename = vm.checkstring(2);
+		String filename = vm.optstring(2,null);
 		if ( loadfile( vm, filename ) ) {
-			int s = vm.pcall(1, 0, 0);
-			setResult( vm, LInteger.valueOf( s!=0? 1: 0 ) );
+			vm.call(0, 0);
 		} else {
-			vm.error("cannot open "+filename);
+			vm.error( vm.tostring(-1) );
 		}
 	}
 

@@ -27,11 +27,7 @@ public class ScriptDrivenTest extends TestCase {
 			InterruptedException {
 
 		// set platform relative to directory
-		Platform.setInstance(new J2sePlatform() {
-			public InputStream openFile(String fileName) {
-				return super.openFile(basedir+"/"+fileName);
-			}			
-		});
+		Platform.setInstance(new J2sePlatform());
 		
 		// new lua state
 		LuaState state = Platform.newLuaState();

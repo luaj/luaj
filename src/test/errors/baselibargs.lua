@@ -1,7 +1,6 @@
 package.path = "?.lua;src/test/errors/?.lua"
 require 'args'
 
-
 -- arg types for basic library functions
 
 -- assert
@@ -17,7 +16,8 @@ checkallerrors('collectgarbage',{notanil},'bad argument #1')
 
 -- dofile
 banner('dofile')
-checkallpass('dofile', {{nil,'src/test/errors/args.lua'}})
+checkallpass('dofile', {})
+checkallpass('dofile', {{'src/test/errors/args.lua'}})
 checkallerrors('dofile', {{'args.lua'}}, 'cannot open args.lua')
 checkallerrors('dofile', {nonstring}, 'bad argument #1')
 
@@ -50,11 +50,17 @@ checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument #2')
 -- loadfile
 banner('loadfile')
 checkallpass('loadfile', {})
+checkallpass('loadfile', {{'bogus'}})
+checkallpass('loadfile', {{'src/test/errors/args.lua'}})
+checkallpass('loadfile', {{'args.lua'}})
 checkallerrors('loadfile', {nonstring}, 'bad argument #1')
 
 -- loadstring
 banner('loadstring')
-checkallpass('loadstring', {{'return'},{nil,astring}})
+checkallpass('loadstring', {{'return'}})
+checkallpass('loadstring', {{'return'},{'mychunk'}})
+checkallpass('loadstring', {{'return a ... b'},{'mychunk'}})
+checkallerrors('loadstring', {{'return a ... b'},{'mychunk'}},'hello')
 checkallerrors('loadstring', {notastring,{nil,astring,anumber}}, 'bad argument #1')
 checkallerrors('loadstring', {{'return'},{afunction,atable}}, 'bad argument #2')
 

@@ -21,12 +21,16 @@
 ******************************************************************************/
 package org.luaj.lib;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import org.luaj.compiler.DumpState;
+import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LNumber;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
-import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
 
 
@@ -204,7 +208,15 @@ public class StringLib extends LFunction {
 	 * TODO: port dumping code as optional add-on
 	 */
 	static void dump( LuaState vm ) {
-		vm.error("dump() not supported");
+		LFunction f = vm.checkfunction(2);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			DumpState.dump( ((LClosure)f).p, baos, true );
+			vm.resettop();
+			vm.pushlstring(baos.toByteArray());
+		} catch (IOException e) {
+			vm.error( e.getMessage() );
+		}
 	}
 
 	/** 
