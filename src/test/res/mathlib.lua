@@ -4,6 +4,8 @@ print( math.sqrt( 9.0 ) )
 print( math.modf( 5.25 ) )
 
 local aliases = {
+	['0']='<zero>',
+	['-0']='<zero>',
 	['nan']='<nan>',
 	['inf']='<pos-inf>',
 	['-inf']='<neg-inf>',

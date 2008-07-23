@@ -74,7 +74,7 @@ public class LuaErrorException extends RuntimeException {
 	 * @return
 	 */
 	private static String addLineInfo(LuaState vm, String message, int level) {
-		if ( level < 1 )
+		if ( level < 1 || message == null )
 			return message;
 		if ( vm == null ) {
 			if ( LThread.running != null )

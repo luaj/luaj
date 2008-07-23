@@ -20,6 +20,13 @@ local function ct(f,a,b,c)
 	return f(a,b,c)
 end
 
+-- wrap pcall to be more useful in testing
+local pc = pcall
+local pcall = function(...)
+	local s,c = pc(...)
+	return s, type(c)
+end
+
 -- lua calls
 print( 'lc(22,33,44)', lc(22,33,44) )
 print( 'pcall(lc,22,33,44)', pcall(lc,22,33,44) )
@@ -50,3 +57,4 @@ for i = 0,4 do
 	print( 'pcall(le,i)', i, pcall(le,i) )
 	print( 'pcall(ge,i)', i, pcall(ge,i) )
 end
+

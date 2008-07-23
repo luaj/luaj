@@ -8,20 +8,20 @@ local notanumber = {nil,astring,aboolean,afunction,atable,athread}
 local nonnumber = {astring,aboolean,afunction,atable}
 
 local singleargfunctions = { 
-		'abs', 'acos', 'asin', 'atan', 'ceil', 'cos', 'cosh', 'deg', 'exp', 'floor',
+		'abs', 'acos', 'asin', 'atan', 'cos', 'cosh', 'deg', 'exp', 'floor',
 		'rad', 'randomseed', 'sin', 'sinh', 'tan', 'tanh',  'frexp', 
 	}
 		
 local singleargposdomain = { 		 
-		'log', 'log10', 'sqrt', 
+		'log', 'log10', 'sqrt', 'ceil', 
 	}
 		
 local twoargfunctions = { 
-		'atan2', 'fmod', 
+		'atan2', 
 	}
 	
 local twoargsposdomain = { 
-	'pow', 
+	'pow', 'fmod', 
 }
 
 -- single argument tests

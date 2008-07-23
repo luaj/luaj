@@ -1,3 +1,5 @@
+
+
 -- unit tests for module() function
 local ids = {}
 local function id(obj)
@@ -72,3 +74,17 @@ f()
 print( a )
 print( getfenv(f)['a'] )
 print( a )
+
+-- do metatables work with package.loaded and require? 
+print( 'setting metatable for package.loaded' )
+print( 'package.loaded.mypreload', package.loaded.mypreload )
+print( 'setmetatable') 
+pcall( setmetatable, package.loaded, { __index={mypreload=12345}})
+print( 'package.loaded.mypreload', package.loaded.mypreload )
+print( "require, 'mypreload'", pcall( require, 'mypreload' ) )
+print( 'package.loaded.mypreload', package.loaded.mypreload )
+print( 'resetting metatable for package.loaded' )
+print( 'setmetatable') 
+pcall( setmetatable, package.loaded, nil )
+print( "require, 'mypreload'", (pcall( require, 'mypreload' )) )
+print( 'package.loaded.mypreload', package.loaded.mypreload )

@@ -401,7 +401,10 @@ public class LuaState extends Lua {
             closeUpVals(oldtop);  /* close eventual pending closures */
             String s = t.getMessage();
             resettop();
-            pushstring( s!=null? s: t.toString() ); 
+            if ( s != null )
+            	pushstring( s );
+            else
+            	pushnil();
             return (t instanceof OutOfMemoryError? LUA_ERRMEM: LUA_ERRRUN);
         }
     }

@@ -18,6 +18,7 @@ import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -118,6 +119,7 @@ public class BaseLib extends LFunction {
 		vm.pushnil();
 		vm.pushstring( message );
 	}
+	
 	public boolean luaStackCall(LuaState vm) {
 		switch ( id ) {
 		case PRINT: {
@@ -240,7 +242,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case ERROR: {
-			vm.error(vm.checkstring(2), vm.optint(3,1));
+			vm.error(vm.optstring(2,null), vm.optint(3,1));
 			break;
 		}
 		case ASSERT: {

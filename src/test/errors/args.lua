@@ -152,13 +152,16 @@ local function subbanner(name)
 	print( '--- '..tostring(name) )
 end
 
+local function pack(s,...) 
+	return s,{...}
+end
+
 -- check that all combinations of arguments pass
 function checkallpass( name, typesets, typesonly )
 	subbanner('checkallpass')
 	for i,v in arglists(typesets) do
 		local sig = signature(name,v)
-		local r = { invoke( name, v ) }
-		local s = table.remove( r, 1 )
+		local s,r = pack( invoke( name, v ) )
 		if s then 
 			if typesonly then 
 				print( ok, sig, types(r) )
