@@ -1,7 +1,21 @@
+-- object ids
+package.path = "?.lua;src/test/res/?.lua"
+require 'ids'
+
+local id = id
+local setfenv = setfenv
+local print = print
+local pcall = pcall
+local create = coroutine.create
+local resume = coroutine.resume
+local seeall = package.seeall
+
 -- unit tests for getfenv, setfenv
 local function f3(level,value)
 	if value then
-		setfenv( level, {setfenv=setfenv, abc=value} )
+		local t = {abc=value}
+		seeall(t)
+		setfenv( level, t )
 	end
 	return abc         
 end
@@ -11,30 +25,37 @@ local function f2(...)
 end
 local function f1(...)
 	local r,s = f2(...)
+	print( ' ....... f1 returning ',abc,r,s )
 	return abc,r,s
 end
-print( 'getfenv,setfenv - before')
-print( 'getfenv(f1)["abc"]', getfenv(f1)["abc"] ) 
-print( 'getfenv(f2)["abc"]', getfenv(f2)["abc"] ) 
-print( 'getfenv(f3)["abc"]', getfenv(f3)["abc"] ) 
-print( 'getfenv()["abc"]', getfenv()["abc"] ) 
-print( 'abc,f1()', abc,f1() )
-setfenv(f1,{setfenv=setfenv, abc='ghi'})
-setfenv(f2,{setfenv=setfenv, abc='jkl'})
-setfenv(f3,{setfenv=setfenv, abc='mno'})
-print( 'getfenv,setfenv - after')
-print( 'getfenv(f1)["abc"]', getfenv(f1)["abc"] ) 
-print( 'getfenv(f2)["abc"]', getfenv(f2)["abc"] ) 
-print( 'getfenv(f3)["abc"]', getfenv(f3)["abc"] ) 
-print( 'getfenv()["abc"]', getfenv()["abc"] ) 
-print( 'abc,f1()', abc,f1() )
+local function survey(msg)
+	print('-------',msg)
+	print( '   _G,f1,f2,f3', id(_G),id(f1),id(f2),id(f3) )
+ 	print( '   envs._G,f1,f2,f3', id(getfenv()),id(getfenv(f1)),id(getfenv(f2)),id(getfenv(f3)) )
+	print( '   vals._G,f1,f2,f3', abc,getfenv(f1).abc, getfenv(f2).abc, getfenv(f3).abc )
+	print( '   pcall(f1)', pcall(f1) )
+end
+
+survey( 'before')
+setfenv(f1,{abc='ghi'})
+setfenv(f2,{abc='jkl'})
+setfenv(f3,{abc='mno'})
+survey( 'after')
 print( 'abc,f1(1,"pqr")', abc,f1(1,"pqr") )
 print( 'abc,f1(2,"stu")', abc,f1(2,"stu") )
 print( 'abc,f1(3,"vwx")', abc,f1(3,"vwx") )
-print( 'abc', abc )
-local c = coroutine.create( function()
-	print( 'pcall(f1,0,"abc")', pcall(f1,0,"234") )
+survey( 'via f1()' )
+
+local c = create( function()
+	survey( 'coroutine-thread-before')
+	print( 'f1(3,"abc")', f1(3,"567") )
+	survey( 'coroutine-thread-1')
+	print( 'f1(2,"abc")', f1(2,"456") )
+	survey( 'coroutine-thread-2')
+	print( 'f1(1,"abc")', f1(1,"345") )
+	survey( 'coroutine-thread-3')
+	print( 'f1(0,"abc")', f1(0,"234") )
+	survey( 'coroutine-thread-after')
 end )
-print( 'resume', coroutine.resume(c) )
-print( 'abc,pcall(f1)', abc,pcall(f1) )
-print( 'abc (out)', abc )
+print( 'resume', resume(c) )
+survey( 'post-resume')
