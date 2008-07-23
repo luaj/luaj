@@ -79,15 +79,16 @@ public class ScriptDrivenTest extends TestCase {
 	private String getExpectedOutput(final String name) throws IOException,
 			InterruptedException {
 		String expectedOutputName = basedir+"/"+name+"-expected.out";
-		InputStream is = getClass().getResourceAsStream(expectedOutputName);
-		if (is != null) {
+		File file = new File( expectedOutputName );
+		if ( file.exists() ) {
+			InputStream is = new FileInputStream(file);
 			try {
 				return readString(is);
 			} finally {
 				is.close();
 			}
 		} else {
-			File file = new File(basedir+"/"+name+".lua");
+			file = new File(basedir+"/"+name+".lua");
 			if ( !file.exists() )
 				fail("Could not load script for test case: " + name);
 			InputStream script = new FileInputStream(file);
