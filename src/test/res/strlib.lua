@@ -82,14 +82,18 @@ print(string.len("\0\0\0"))
 print(#"\0\0\0")
 print(string.len("\0\1\2\3"))
 print(#"\0\1\2\3")
-local s = "\194\161Hola!"
+local s = "My JaCk-O-lAnTeRn CaSe TeXt"
 print(s, string.len(s), #s)
 
+local function pc(...)
+	local s,e = pcall(...)
+	return s and e or 'false-'..type(e)
+end
 local function strtests(name,func,...)
-	print(name, 'good', pcall( func, ... ) )
-	print(name, 'empty', pcall( func ) )
-	print(name, 'table', pcall( func, {} ) )
-	print(name, 'nil', pcall( func, nil ) )
+	print(name, 'good', pc( func, ... ) )
+	print(name, 'empty', pc( func ) )
+	print(name, 'table', pc( func, {} ) )
+	print(name, 'nil', pc( func, nil ) )
 end
 
 strtests('lower', string.lower, s )
