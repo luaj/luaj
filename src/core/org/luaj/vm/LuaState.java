@@ -824,6 +824,7 @@ public class LuaState extends Lua {
                 }
                 int offset = (c-1) * LFIELDS_PER_FLUSH;
                 LTable tbl = (LTable) this.stack[base + a];
+                tbl.arrayPresize( offset + b );
                 for (int j=1; j<=b; j++) {
                     tbl.put(offset+j, stack[listBase + j]);
                 }

@@ -142,3 +142,21 @@ t[6] = 'six'
 testbothpairs(t)
 t[4] = nil
 testbothpairs(t)
+
+-- tests of setlist table constructors
+local function a(...) return ... end
+print('-',unpack({a()}))
+print('a',unpack({a('a')}))
+print('.',unpack({a(nil)}))
+print('ab',unpack({a('a', 'b')}))
+print('.b',unpack({a(nil, 'a')}))
+print('a.',unpack({a('a', nil)}))
+print('abc',unpack({a('a', 'b', 'c')}))
+print('.ab',unpack({a(nil, 'a', 'b')}))
+print('a.b',unpack({a('a', nil, 'b')}))
+print('ab.',unpack({a('a', 'b', nil)}))
+print('..b',unpack({a(nil, nil, 'b')}))
+print('a..',unpack({a('a', nil, nil)}))
+print('.b.',unpack({a(nil, 'b', nil)}))
+print('...',unpack({a(nil, nil, nil)}))
+

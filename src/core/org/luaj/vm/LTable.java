@@ -568,6 +568,11 @@ public class LTable extends LValue {
 		array = v;
 	}
 
+	public void arrayPresize(int minSize) {
+		if ( array.length < minSize )
+			arrayExpand(minSize);
+	}
+
 	// ============= Hashtable ================
 	
 	public void hashSet(LValue key, Object value) {
