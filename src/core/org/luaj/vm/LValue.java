@@ -321,7 +321,10 @@ public class LValue {
 		baos.write(b,0,b.length);
 	}
 
-	/** Return true if this is a LString */
+	/** Return true if this is a lua string, meaning it is 
+	 * either a LString or LNumber,since all numbers are 
+	 * convertible to strings in lua
+	 */
 	public boolean isString() {
 		return false;
 	}

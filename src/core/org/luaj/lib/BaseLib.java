@@ -122,10 +122,17 @@ public class BaseLib extends LFunction {
 		switch ( id ) {
 		case PRINT: {
 			int n = vm.gettop();
+			vm.getglobal("tostring");			
 			for ( int i=2; i<=n; i++ ) {
+				vm.pushvalue(-1);
+				vm.pushvalue(i);
+				vm.call(1, 1);
+				if ( vm.type(-1) != Lua.LUA_TSTRING )
+					vm.error( "'tostring' must return a string to 'print'" );				
 				if ( i > 2 )
 					STDOUT.print( "\t" );
-				STDOUT.print( vm.tostring(i) );
+				STDOUT.print( vm.tostring(-1) );
+				vm.poplvalue();
 			}
 			STDOUT.println();
 			vm.resettop();

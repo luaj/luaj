@@ -112,6 +112,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("pcalls");
 	}
 
+	public void testPrint() throws IOException, InterruptedException {
+		runTest("print");
+	}
+
 	public void testRequire() throws IOException, InterruptedException {
 		runTest("require");
 	}
