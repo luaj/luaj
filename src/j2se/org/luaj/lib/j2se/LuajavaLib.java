@@ -126,7 +126,7 @@ public final class LuajavaLib extends LFunction {
 			final int ninterfaces = Math.max(0,vm.gettop()-2);
 			if ( ninterfaces <= 0 )
 				throw new LuaErrorException("no interfaces");
-			final LValue function = vm.tojavafunction(-1);
+			final LValue function = vm.tofunction(-1);
 			try {
 				// get the interfaces
 				final Class[] ifaces = new Class[ninterfaces];

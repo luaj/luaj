@@ -143,7 +143,7 @@ public class BaseLib extends LFunction {
 		case IPAIRS: {			
 			LTable t = vm.checktable(2);
 			vm.resettop();
-			vm.pushjavafunction( inext );
+			vm.pushfunction( inext );
 			vm.pushlvalue( t );
 			vm.pushinteger( 0 );
 			break;
@@ -151,7 +151,7 @@ public class BaseLib extends LFunction {
 		case PAIRS: {
 			LTable t = vm.checktable(2);
 			vm.resettop();
-			vm.pushjavafunction( next );
+			vm.pushfunction( next );
 			vm.pushlvalue( t );
 			vm.pushnil();
 			break;
@@ -392,7 +392,7 @@ public class BaseLib extends LFunction {
 	
 	private static LValue getfunc (LuaState vm, boolean opt) {
 		if ( vm.isfunction(2) )
-			return vm.tojavafunction(2);
+			return vm.tofunction(2);
 		else {
 			int level = opt? vm.optint(2, 1): vm.checkint(2);
 		    vm.argcheck(level >= 0, 2, "level must be non-negative");

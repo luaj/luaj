@@ -25,7 +25,7 @@ public class LuaStateTest extends TestCase {
 	
 	public void testFuncCall() throws IOException {
 		vm.pushstring("bogus");
-		vm.pushjavafunction(new SomeFunc( "arg" ));
+		vm.pushfunction(new SomeFunc( "arg" ));
 		vm.pushstring("arg");
 		vm.call(1, 1);
 		assertEquals( 2, vm.gettop() );
@@ -36,7 +36,7 @@ public class LuaStateTest extends TestCase {
 		
 	public void testFuncCall2() throws IOException {
 		vm.pushstring("bogus");
-		vm.pushjavafunction(new SomeFunc( "nil" ));
+		vm.pushfunction(new SomeFunc( "nil" ));
 		vm.call(0, 1);
 		assertEquals( 2, vm.gettop() );
 		assertEquals( "bogus", vm.tostring(1) );

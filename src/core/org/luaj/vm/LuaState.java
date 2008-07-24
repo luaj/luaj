@@ -996,31 +996,6 @@ public class LuaState extends Lua {
     //              Lua Java API
     //===============================================================
     
-	private void notImplemented() {
-		throw new LuaErrorException("AbstractStack: not yet implemented");
-	}
-	
-	/**
-	 * Sets a new panic function and returns the old one. <span
-	 * class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * 
-	 * <p>
-	 * If an error happens outside any protected environment, Lua calls a
-	 * <em>panic function</em> and then calls <code>exit(EXIT_FAILURE)</code>,
-	 * thus exiting the host application. Your panic function may avoid this
-	 * exit by never returning (e.g., doing a long jump).
-	 * 
-	 * 
-	 * <p>
-	 * The panic function can access the error message at the top of the stack.
-	 */
-	public LFunction atpanic(LFunction panicf) {
-		LFunction f = panic;
-		panic = panicf;
-		return f;
-	}
-	
     /**
      * Returns the current program counter for the given call frame.
      * @param ci -- A call frame
@@ -1092,176 +1067,12 @@ public class LuaState extends Lua {
     }
     
 	/**
-	 * Raises an error with the default level.   
+	 * Raises an error with the default level.
 	 */
     public void error(String message) {
     	throw new LuaErrorException( this, message, 1 );
     }
-    
-	/**
-	 * Generates a Lua error. <span class="apii">[-1, +0, <em>v</em>]</span>
-	 * 
-	 * <p>
-	 * The error message (which can actually be a Lua value of any type) must be
-	 * on the stack top. This function does a long jump, and therefore never
-	 * returns. (see <a href="#luaL_error"><code>luaL_error</code></a>).
-	 * 
-	 */
-	public void error() {
-		throw new LuaErrorException( this, tostring(-1), 0);
-	}
-	
-	/**
-	 * Dumps a function as a binary chunk. <span class="apii">[-0, +0,
-	 * <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Receives a Lua function on the top of the stack and produces a binary
-	 * chunk that, if loaded again, results in a function equivalent to the one
-	 * dumped. As it produces parts of the chunk, <a href="#lua_dump"><code>lua_dump</code></a>
-	 * calls function <code>writer</code> (see <a href="#lua_Writer"><code>lua_Writer</code></a>)
-	 * with the given <code>data</code> to write them.
-	 * <p>
-	 * The value returned is the error code returned by the last call to the
-	 * writer; 0&nbsp;means no errors.
-	 * 
-	 * 
-	 * <p>
-	 * This function does not pop the Lua function from the stack.
-	 * 
-	 */
-	public void dump() {
-		notImplemented();
-	}
-	
 
-	/**
-	 * Pushes a new C&nbsp;closure onto the stack. <span class="apii">[-n, +1,
-	 * <em>m</em>]</span>
-	 * 
-	 * 
-	 * <p>
-	 * When a Java&nbsp;function is created, it is possible to associate some
-	 * values with it, thus creating a C&nbsp;closure (see <a
-	 * href="#3.4">&sect;3.4</a>); these values are then accessible to the
-	 * function whenever it is called. To associate values with a
-	 * C&nbsp;function, first these values should be pushed onto the stack (when
-	 * there are multiple values, the first value is pushed first). Then <a
-	 * href="#lua_pushcclosure"><code>lua_pushcclosure</code></a> is called
-	 * to create and push the C&nbsp;function onto the stack, with the argument
-	 * <code>n</code> telling how many values should be associated with the
-	 * function. <a href="#lua_pushcclosure"><code>lua_pushcclosure</code></a>
-	 * also pops these values from the stack.
-	 */
-	public void pushclosure(LFunction fn, int n) {
-		notImplemented();
-	}
-
-	/**
-	 * Calls the C&nbsp;function <code>func</code> in protected mode. <span
-	 * class="apii">[-0, +(0|1), <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * <code>func</code> starts with only one element in its stack, a light
-	 * userdata containing <code>ud</code>. In case of errors, <a
-	 * href="#lua_cpcall"><code>lua_cpcall</code></a> returns the same error
-	 * codes as <a href="#lua_pcall"><code>lua_pcall</code></a>, plus the
-	 * error object on the top of the stack; otherwise, it returns zero, and
-	 * does not change the stack. All values returned by <code>func</code> are
-	 * discarded.
-	 */
-	public int javapcall(LFunction func, Object ud) {
-		this.pushjavafunction(func);
-		this.pushlightuserdata(ud);
-		return this.pcall(1, 0, 0);
-	}
-
-	/**
-	 * Format and push a string. <span class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Pushes onto the stack a formatted string and returns a pointer to this
-	 * string. It is similar to the C&nbsp;function <code>sprintf</code>, but
-	 * has some important differences:
-	 * 
-	 * <ul>
-	 * 
-	 * <li> You do not have to allocate space for the result: the result is a
-	 * Lua string and Lua takes care of memory allocation (and deallocation,
-	 * through garbage collection). </li>
-	 * 
-	 * <li> The conversion specifiers are quite restricted. There are no flags,
-	 * widths, or precisions. The conversion specifiers can only be '<code>%%</code>'
-	 * (inserts a '<code>%</code>' in the string), '<code>%s</code>'
-	 * (inserts a zero-terminated string, with no size restrictions), '<code>%f</code>'
-	 * (inserts a <a href="#lua_Number"><code>lua_Number</code></a>), '<code>%p</code>'
-	 * (inserts a pointer as a hexadecimal numeral), '<code>%d</code>'
-	 * (inserts an <code>int</code>), and '<code>%c</code>' (inserts an
-	 * <code>int</code> as a character). </li>
-	 * 
-	 * </ul>
-	 */
-	public String pushfstring(String fmt, Object[] args) {
-		notImplemented();
-		return null;
-	}
-	
-	/**
-	 * Format and push a string. <span class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Equivalent to <a href="#lua_pushfstring"><code>lua_pushfstring</code></a>,
-	 * except that it receives a <code>va_list</code> instead of a variable
-	 * number of arguments.
-	 */
-	public void pushvfstring(String format, Object[] args) {
-		notImplemented();
-	}
-
-	/**
-	 * Test if two objects are the same object. <span class="apii">[-0, +0,
-	 * <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the two values in acceptable indices <code>index1</code>
-	 * and <code>index2</code> are primitively equal (that is, without calling
-	 * metamethods). Otherwise returns&nbsp;0. Also returns&nbsp;0 if any of the
-	 * indices are non valid.
-	 */
-	public void rawequal(int index1, int index2) {
-		notImplemented();
-	}
-
-	/**
-	 * Pushes a value's environment table. <span class="apii">[-0, +1,
-	 * <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Pushes onto the stack the environment table of the value at the given
-	 * index.
-	 */
-	public void getfenv(int index) {
-		LValue f = topointer(index);
-		pushlvalue( ((LClosure) f).env );
-	}
-	
-	/**
-	 * Set the environment for a value. <span class="apii">[-1, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Pops a table from the stack and sets it as the new environment for the
-	 * value at the given index. If the value at the given index is neither a
-	 * function nor a thread nor a userdata, <a href="#lua_setfenv"><code>lua_setfenv</code></a>
-	 * returns false. Otherwise it returns true.
-	 */
-	public boolean setfenv(int index) {
-		LTable t = totable(-1);
-		LValue f = topointer(index);
-		pop(1);
-		return f.luaSetEnv(t);
-	}
-
-	
 	/**
 	 * 
 	 * Ensures that there are at least <code>extra</code> free stack slots in
@@ -1280,125 +1091,6 @@ public class LuaState extends Lua {
 			System.arraycopy(stack, 0, s, 0, stack.length);
 			stack = s;			
 		}
-	}
-	
-
-	/**
-	 * Closes the given Lua state. <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Destroys all objects in the given Lua state (calling the corresponding
-	 * garbage-collection metamethods, if any) and frees all dynamic memory used
-	 * by this state. On several platforms, you may not need to call this
-	 * function, because all resources are naturally released when the host
-	 * program ends. On the other hand, long-running programs, such as a daemon
-	 * or a web server, might need to release states as soon as they are not
-	 * needed, to avoid growing too large.
-	 */
-	public void close() {
-		stack = new LValue[20];
-		base = top = 0;
-	}
-	
-	/**
-	 * Concatenates the <code>n</code> values at the top of the stack. <span
-	 * class="apii">[-n, +1, <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Concatenates the <code>n</code> values at the top of the stack, pops
-	 * them, and leaves the result at the top. If <code>n</code>&nbsp;is&nbsp;1,
-	 * the result is the single value on the stack (that is, the function does
-	 * nothing); if <code>n</code> is 0, the result is the empty string.
-	 * Concatenation is performed following the usual semantics of Lua (see <a
-	 * href="#2.5.4">&sect;2.5.4</a>).
-	 */
-	public void concat(int n) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for ( int i=-n; i<0; i++ ) {
-			LString ls = tolstring(i);
-			baos.write(ls.m_bytes, ls.m_offset, ls.m_length);
-		}
-		pop(n);
-		pushlvalue( new LString(baos.toByteArray()));
-	}
-	
-	/**
-	 * Creates a new empty table and pushes it onto the stack. <span
-	 * class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * The new table has space pre-allocated for <code>narr</code> array
-	 * elements and <code>nrec</code> non-array elements. This pre-allocation
-	 * is useful when you know exactly how many elements the table will have.
-	 * Otherwise you can use the function <a href="#lua_newtable"><code>lua_newtable</code></a>.
-	 */
-	public void createtable(int narr, int nrec) {
-		pushlvalue( new LTable(narr, nrec) );
-	}
-	
-	/**
-	 * Tests if two items on the stack are equal. <span class="apii">[-0, +0,
-	 * <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the two values in acceptable indices <code>index1</code>
-	 * and <code>index2</code> are equal, following the semantics of the Lua
-	 * <code>==</code> operator (that is, may call metamethods). Otherwise
-	 * returns&nbsp;0. Also returns&nbsp;0 if any of the indices is non valid.
-	 * 
-	 * 
-	 */
-	public boolean equal(int index1, int index2) {
-		return topointer(index2).luaBinOpUnknown(Lua.OP_EQ,
-				topointer(index1)).toJavaBoolean();
-	}
-	
-	/**
-	 * Controls the garbage collector. <span class="apii">[-0, +0, <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * This function performs several tasks, according to the value of the
-	 * parameter <code>what</code>:
-	 * 
-	 * <ul>
-	 * 
-	 * <li><b><code>LUA_GCSTOP</code>:</b> stops the garbage collector.
-	 * </li>
-	 * 
-	 * <li><b><code>LUA_GCRESTART</code>:</b> restarts the garbage
-	 * collector. </li>
-	 * 
-	 * <li><b><code>LUA_GCCOLLECT</code>:</b> performs a full
-	 * garbage-collection cycle. </li>
-	 * 
-	 * <li><b><code>LUA_GCCOUNT</code>:</b> returns the current amount of
-	 * memory (in Kbytes) in use by Lua. </li>
-	 * 
-	 * <li><b><code>LUA_GCCOUNTB</code>:</b> returns the remainder of
-	 * dividing the current amount of bytes of memory in use by Lua by 1024.
-	 * </li>
-	 * 
-	 * <li><b><code>LUA_GCSTEP</code>:</b> performs an incremental step of
-	 * garbage collection. The step "size" is controlled by <code>data</code>
-	 * (larger values mean more steps) in a non-specified way. If you want to
-	 * control the step size you must experimentally tune the value of
-	 * <code>data</code>. The function returns 1 if the step finished a
-	 * garbage-collection cycle. </li>
-	 * 
-	 * <li><b><code>LUA_GCSETPAUSE</code>:</b> sets <code>data</code>/100
-	 * as the new value for the <em>pause</em> of the collector (see <a
-	 * href="#2.10">&sect;2.10</a>). The function returns the previous value of
-	 * the pause. </li>
-	 * 
-	 * <li><b><code>LUA_GCSETSTEPMUL</code>:</b> sets <code>data</code>/100
-	 * as the new value for the <em>step multiplier</em> of the collector (see
-	 * <a href="#2.10">&sect;2.10</a>). The function returns the previous value
-	 * of the step multiplier. </li>
-	 * 
-	 * </ul>
-	 */
-	public void gc(int what, int data) {
-		notImplemented();
 	}
 	
 	/**
@@ -1451,26 +1143,6 @@ public class LuaState extends Lua {
 	}
 	
 	/**
-	 * Dereference a table's list element. <span class="apii">[-1, +1,
-	 * <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Pushes onto the stack the value <code>t[k]</code>, where
-	 * <code>t</code> is the value at the given valid index and <code>k</code>
-	 * is the value at the top of the stack.
-	 * 
-	 * <p>
-	 * This function pops the key from the stack (putting the resulting value in
-	 * its place). As in Lua, this function may trigger a metamethod for the
-	 * "index" event (see <a href="#2.8">&sect;2.8</a>).
-	 */
-	public void gettable(int index) {
-		LValue t = totable(index);
-		LValue k = poplvalue();
-		pushlvalue( this.luaV_gettable(t, k) );
-	}
-	
-	/**
 	 * Insert the top item somewhere in the stack. <span class="apii">[-1, +1,
 	 * <em>-</em>]</span>
 	 * 
@@ -1512,29 +1184,6 @@ public class LuaState extends Lua {
 	}
 
 	/**
-	 * Test if a value is a JavaFunction. <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the value at the given acceptable index is a
-	 * C&nbsp;function, and 0&nbsp;otherwise.
-	 * 
-	 */
-	public boolean isjavafunction(int index) {
-		return topointer(index) instanceof LFunction;
-	}
-
-	/**
-	 * Test if a value is light user data <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the value at the given acceptable index is a light userdata,
-	 * and 0&nbsp;otherwise.
-	 */
-	public boolean islightuserdata(int index) {
-		return false;
-	}
-
-	/**
 	 * Test if a value is nil <span class="apii">[-0, +0, <em>-</em>]</span>
 	 * 
 	 * <p>
@@ -1543,17 +1192,6 @@ public class LuaState extends Lua {
 	 */
 	public boolean isnil(int index) {
 		return topointer(index).isNil();
-	}
-
-	/**
-	 * Test if a value is not valid <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the the given acceptable index is not valid (that is, it
-	 * refers to an element outside the current stack), and 0&nbsp;otherwise.
-	 */
-	public boolean isnone(int index) {
-		return topointer(index) == null;
 	}
 
 	/**
@@ -1637,136 +1275,6 @@ public class LuaState extends Lua {
 	}
 
 	/**
-	 * Compare two values <span class="apii">[-0, +0, <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Returns 1 if the value at acceptable index <code>index1</code> is
-	 * smaller than the value at acceptable index <code>index2</code>,
-	 * following the semantics of the Lua <code>&lt;</code> operator (that is,
-	 * may call metamethods). Otherwise returns&nbsp;0. Also returns&nbsp;0 if
-	 * any of the indices is non valid.
-	 */
-	public boolean lessthan(int index1, int index2) {
-		return topointer(index2).luaBinOpUnknown(Lua.OP_LT,
-				topointer(index1)).toJavaBoolean();
-	}
-
-	/**
-	 * Create a table <span class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Creates a new empty table and pushes it onto the stack. It is equivalent
-	 * to <code>lua_createtable(L, 0, 0)</code>.
-	 */
-	public void newtable() {
-		pushlvalue( new LTable() );
-	}
-
-	/**
-	 * Create a thread <span class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Creates a new thread, pushes it on the stack, and returns a pointer to a
-	 * <a href="#lua_State"><code>lua_State</code></a> that represents this
-	 * new thread. The new state returned by this function shares with the
-	 * original state all global objects (such as tables), but has an
-	 * independent execution stack.
-	 * 
-	 * 
-	 * <p>
-	 * There is no explicit function to close or to destroy a thread. Threads
-	 * are subject to garbage collection, like any Lua object.
-	 */
-	public void newthread() {
-		notImplemented();
-	}
-
-	/**
-	 * Create a userdata <span class="apii">[-0, +1, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * This function allocates a new block of memory with the given size, pushes
-	 * onto the stack a new full userdata with the block address, and returns
-	 * this address.
-	 * 
-	 * 
-	 * <p>
-	 * Userdata represent C&nbsp;values in Lua. A <em>full userdata</em>
-	 * represents a block of memory. It is an object (like a table): you must
-	 * create it, it can have its own metatable, and you can detect when it is
-	 * being collected. A full userdata is only equal to itself (under raw
-	 * equality).
-	 * 
-	 * 
-	 * <p>
-	 * When Lua collects a full userdata with a <code>gc</code> metamethod,
-	 * Lua calls the metamethod and marks the userdata as finalized. When this
-	 * userdata is collected again then Lua frees its corresponding memory.
-	 */
-	public void newuserdata(Object o) {
-		pushlvalue( new LUserData(o) );
-	}
-
-	/**
-	 * Traverse to the next table item. <span class="apii">[-1, +(2|0),
-	 * <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Pops a key from the stack, and pushes a key-value pair from the table at
-	 * the given index (the "next" pair after the given key). If there are no
-	 * more elements in the table, then <a href="#lua_next"><code>lua_next</code></a>
-	 * returns 0 (and pushes nothing).
-	 * 
-	 * 
-	 * <p>
-	 * A typical traversal looks like this:
-	 * 
-	 * <pre>
-	 * // table is in the stack at index 't' 
-	 * lua_pushnil(L); // first key 
-	 * while (lua_next(L, t) != 0) {
-	 * 	// uses 'key' (at index -2) and 'value' (at index -1) 
-	 * 	printf(&quot;%s - %s\n&quot;, lua_typename(L, lua_type(L, -2)), lua_typename(L,
-	 * 			lua_type(L, -1)));
-	 * 	// removes 'value'; keeps 'key' for next iteration 
-	 * 	lua_pop(L, 1);
-	 * }
-	 * </pre>
-	 * 
-	 * <p>
-	 * While traversing a table, do not call <a href="#lua_tolstring"><code>lua_tolstring</code></a>
-	 * directly on a key, unless you know that the key is actually a string.
-	 * Recall that <a href="#lua_tolstring"><code>lua_tolstring</code></a>
-	 * <em>changes</em> the value at the given index; this confuses the next
-	 * call to <a href="#lua_next"><code>lua_next</code></a>.
-	 */
-	public int next(int index) {
-		notImplemented();
-		return 0;
-	}
-
-	/**
-	 * Get the length of an object <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Returns the "length" of the value at the given acceptable index: for
-	 * strings, this is the string length; for tables, this is the result of the
-	 * length operator ('<code>#</code>'); for userdata, this is the size of
-	 * the block of memory allocated for the userdata; for other values, it
-	 * is&nbsp;0.
-	 */
-	public int objlen(int index) {
-		LValue p = topointer( index );
-		switch ( p.luaGetType() ) {
-		case LUA_TTABLE:
-		case LUA_TSTRING:
-			return p.luaLength();
-		default:
-			return 0;
-		}
-	}
-
-	/**
 	 * Pops <code>n</code> elements from the stack. <span class="apii">[-n,
 	 * +0, <em>-</em>]</span>
 	 */
@@ -1817,39 +1325,22 @@ public class LuaState extends Lua {
 	}
 
 	/**
-	 * Pushes a Java&nbsp;function onto the stack. <span class="apii">[-0, +1,
+	 * Pushes a function onto the stack. <span class="apii">[-0, +1,
 	 * <em>m</em>]</span>
 	 * 
 	 * <p>
-	 * This function receives a pointer to a C function and pushes onto the
+	 * This function receives an LFunction and pushes onto the
 	 * stack a Lua value of type <code>function</code> that, when called,
-	 * invokes the corresponding C&nbsp;function.
+	 * invokes the corresponding function.
 	 * 
 	 * 
 	 * <p>
 	 * Any function to be registered in Lua must follow the correct protocol to
-	 * receive its parameters and return its results (see <a
-	 * href="#lua_CFunction"><code>lua_CFunction</code></a>).
-	 * 
+	 * receive its parameters and return its results 
+	 * @see LFunction
 	 */
-	public void pushjavafunction(LFunction f) {
+	public void pushfunction(LFunction f) {
 		pushlvalue( f );
-	}
-
-	/**
-	 * Pushes a light userdata onto the stack. <span class="apii">[-0, +1,
-	 * <em>-</em>]</span>
-	 * 
-	 * 
-	 * <p>
-	 * Userdata represent C&nbsp;values in Lua. A <em>light userdata</em>
-	 * represents a pointer. It is a value (like a number): you do not create
-	 * it, it has no individual metatable, and it is not collected (as it was
-	 * never created). A light userdata is equal to "any" light userdata with
-	 * the same C&nbsp;address.
-	 */
-	public void pushlightuserdata(Object p) {
-		notImplemented();
 	}
 
 
@@ -1917,16 +1408,6 @@ public class LuaState extends Lua {
 		else
 			pushlstring( LString.valueOf(s) );
 	}
-	
-	/**
-	 * Push a thread onto the stack. <span class="apii">[-0, +1, <em>-</em>]</span>
-	 * 
-	 * Pushes the thread represented by <code>L</code> onto the stack. Returns
-	 * 1 if this thread is the main thread of its state.
-	 */
-	public void pushthread() {
-		notImplemented();
-	}
 
 	/**
 	 * Push a value from the stack onto the stack. <span class="apii">[-0, +1,
@@ -1940,18 +1421,6 @@ public class LuaState extends Lua {
 	}
 
 	/**
-	 * Do a table get without metadata calls. <span class="apii">[-1, +1,
-	 * <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Similar to <a href="#lua_gettable"><code>lua_gettable</code></a>, but
-	 * does a raw access (i.e., without metamethods).
-	 */
-	public void rawget(int index) {
-		pushlvalue( totable(index).get(poplvalue()) );
-	}
-
-	/**
 	 * Do a integer-key table get without metadata calls. <span
 	 * class="apii">[-0, +1, <em>-</em>]</span>
 	 * 
@@ -1959,63 +1428,10 @@ public class LuaState extends Lua {
 	 * Pushes onto the stack the value <code>t[n]</code>, where
 	 * <code>t</code> is the value at the given valid index. The access is
 	 * raw; that is, it does not invoke metamethods.
+	 * @deprecated should get the table and do a raw get instead
 	 */
 	public void rawgeti(int index, int n) {
 		pushlvalue( totable(index).get(n) );
-	}
-
-	/**
-	 * Do a table set without metadata calls. <span class="apii">[-2, +0,
-	 * <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Similar to <a href="#lua_settable"><code>lua_settable</code></a>, but
-	 * does a raw assignment (i.e., without metamethods).
-	 */
-	public void rawset(int index) {
-		LTable t = totable(index);
-		LValue v = poplvalue();
-		LValue k = poplvalue();
-		t.put(k,v);
-	}
-
-	/**
-	 * Do a integer-key table set without metadata calls. <span
-	 * class="apii">[-1, +0, <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Does the equivalent of <code>t[n] = v</code>, where <code>t</code>
-	 * is the value at the given valid index and <code>v</code> is the value
-	 * at the top of the stack.
-	 * 
-	 * 
-	 * <p>
-	 * This function pops the value from the stack. The assignment is raw; that
-	 * is, it does not invoke metamethods.
-	 */
-	public void rawseti(int index, int n) {
-		LTable t = totable(index);
-		LValue v = poplvalue();
-		t.put(n,v);
-	}
-
-	/**
-	 * Register a LFunction with a specific name. <span class="apii">[-0, +0,
-	 * <em>m</em>]</span>
-	 * 
-	 * <p>
-	 * Sets the function <code>f</code> as the new value of global
-	 * <code>name</code>. It is defined as a macro:
-	 * 
-	 * <pre>
-	 * 	 #define lua_register(L,n,f) \
-	 * 	 (lua_pushcfunction(L, f), lua_setglobal(L, n))
-	 * 	
-	 * </pre>
-	 */
-	public void register(String name, LFunction f) {
-		pushjavafunction(f);
-		setglobal(name);
 	}
 
 	/**
@@ -2043,32 +1459,6 @@ public class LuaState extends Lua {
 	public void replace(int index) {
 		int ai = index2adr(index);
 		stack[ai] = poplvalue();
-	}
-
-	/**
-	 * Starts and resumes a coroutine in a given thread. <span class="apii">[-?,
-	 * +?, <em>-</em>]</span>
-	 * 
-	 * 
-	 * <p>
-	 * To start a coroutine, you first create a new thread (see <a
-	 * href="#lua_newthread"><code>lua_newthread</code></a>); then you push
-	 * onto its stack the main function plus any arguments; then you call <a
-	 * href="#lua_resume"><code>lua_resume</code></a>, with
-	 * <code>narg</code> being the number of arguments. This call returns when
-	 * the coroutine suspends or finishes its execution. When it returns, the
-	 * stack contains all values passed to <a href="#lua_yield"><code>lua_yield</code></a>,
-	 * or all values returned by the body function. <a href="#lua_resume"><code>lua_resume</code></a>
-	 * returns <a href="#pdf-LUA_YIELD"><code>LUA_YIELD</code></a> if the
-	 * coroutine yields, 0 if the coroutine finishes its execution without
-	 * errors, or an error code in case of errors (see <a href="#lua_pcall"><code>lua_pcall</code></a>).
-	 * In case of errors, the stack is not unwound, so you can use the debug API
-	 * over it. The error message is on the top of the stack. To restart a
-	 * coroutine, you put on its stack only the values to be passed as results
-	 * from <code>yield</code>, and then call <a href="#lua_resume"><code>lua_resume</code></a>.
-	 */
-	public void resume(int narg) {
-		notImplemented();
 	}
 
 	/**
@@ -2105,75 +1495,6 @@ public class LuaState extends Lua {
 	 */
 	public void setglobal(String name) {
 		this.luaV_settable(_G, new LString(name), poplvalue());
-	}
-
-	/**
-	 * Set the metatable of a value. <span class="apii">[-1, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Pops a table from the stack and sets it as the new metatable for the
-	 * value at the given acceptable index.
-	 */
-	public void setmetatable(int index) {
-		LTable t = totable(index);
-		LValue v = poplvalue();
-		LValue n = t.luaSetMetatable(v);
-		if ( n != null ) {
-			pushlvalue(n);
-			replace(index);
-		}
-	}
-
-	/**
-	 * Set the value of a table for a key. <span class="apii">[-2, +0,
-	 * <em>e</em>]</span>
-	 * 
-	 * <p>
-	 * Does the equivalent to <code>t[k] = v</code>, where <code>t</code>
-	 * is the value at the given valid index, <code>v</code> is the value at
-	 * the top of the stack, and <code>k</code> is the value just below the
-	 * top.
-	 * 
-	 * 
-	 * <p>
-	 * This function pops both the key and the value from the stack. As in Lua,
-	 * this function may trigger a metamethod for the "newindex" event (see <a
-	 * href="#2.8">&sect;2.8</a>).
-	 */
-	public void settable(int index) {
-		LTable t = totable(index);
-		LValue v = poplvalue();
-		LValue k = poplvalue();
-		this.luaV_settable(t, k, v);
-	}
-
-	/**
-	 * Returns the status of the thread <code>L</code>. <span
-	 * class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * 
-	 * 
-	 * <p>
-	 * The status can be 0 for a normal thread, an error code if the thread
-	 * finished its execution with an error, or <a name="pdf-LUA_YIELD"><code>LUA_YIELD</code></a>
-	 * if the thread is suspended.
-	 * 
-	 */
-	public void status() {
-		notImplemented();
-	}
-
-	/**
-	 * Get a thread value from the stack. <span class="apii">[-0, +0, <em>-</em>]</span>
-	 * 
-	 * <p>
-	 * Converts the value at the given acceptable index to a Lua thread
-	 * (represented as <code>lua_State*</code>). This value must be a thread;
-	 * otherwise, the function returns <code>NULL</code>.
-	 */
-	public LuaState tothread(int index) {
-		notImplemented();
-		return null;
 	}
 
 	/**
@@ -2214,22 +1535,23 @@ public class LuaState extends Lua {
 	}
 
 	/**
-	 * Get a value as a JavaFunction.
+	 * Get a value as a LFunction.
 	 * <hr>
-	 * <h3><a name="lua_tocfunction"><code>lua_tocfunction</code></a></h3>
+	 * <h3><a name="tofunction"><code>tofunction</code></a></h3>
 	 * <p>
 	 * <span class="apii">[-0, +0, <em>-</em>]</span>
 	 * 
 	 * <pre>
-	 * lua_CFunction lua_tocfunction (lua_State *L, int index);
+	 * LFunction tofunction (lua_State *L, int index);
 	 * </pre>
 	 * 
 	 * <p>
 	 * Converts a value at the given acceptable index to a C&nbsp;function. That
-	 * value must be a C&nbsp;function; otherwise, returns <code>NULL</code>.
+	 * value must be a function; otherwise, returns <code>NULL</code>.
 	 */
-	public LFunction tojavafunction(int index) {
-		return (LFunction) topointer(index);
+	public LValue tofunction(int index) {
+		LValue v = topointer(index);
+		return v.isFunction()? v: LNil.NIL;
 	}
 
 	/**
@@ -2434,31 +1756,6 @@ public class LuaState extends Lua {
 			ss.top += n;
 		}
 	}
-
-	/**
-	 * Yields a coroutine. <span class="apii">[-?, +?, <em>-</em>]</span>
-	 * 
-	 * 
-	 * <p>
-	 * This function should only be called as the return expression of a
-	 * C&nbsp;function, as follows:
-	 * 
-	 * <pre>
-	 * return lua_yield(L, nresults);
-	 * </pre>
-	 * 
-	 * <p>
-	 * When a C&nbsp;function calls <a href="#lua_yield"><code>lua_yield</code></a>
-	 * in that way, the running coroutine suspends its execution, and the call
-	 * to <a href="#lua_resume"><code>lua_resume</code></a> that started
-	 * this coroutine returns. The parameter <code>nresults</code> is the
-	 * number of values from the stack that are passed as results to <a
-	 * href="#lua_resume"><code>lua_resume</code></a>.
-	 * 
-	 */
-	public void yield(int nresults) {
-		notImplemented();
-	}
 	
 	// ============================= conversion to and from Java boxed types ====================
 
@@ -2558,7 +1855,7 @@ public class LuaState extends Lua {
 		if ( o == null )
 			pushnil();
 		else
-			newuserdata( o );
+			pushlvalue( new LUserData(o) );
 	}
 
 
