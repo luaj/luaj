@@ -142,10 +142,11 @@ public class LThread extends LValue implements Runnable {
 				
 				// copy return values from yielding stack state
 				vm.resettop();
-				vm.pushboolean(true);
 				if ( threadVm.cc >= 0 ) { 
+					vm.pushboolean(status != STATUS_DEAD);
 					threadVm.xmove(vm, threadVm.gettop() - 1);
 				} else {
+					vm.pushboolean(true);
 					threadVm.base = 0;
 					threadVm.xmove(vm, threadVm.gettop());
 				}

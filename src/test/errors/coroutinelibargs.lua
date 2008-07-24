@@ -32,12 +32,16 @@ checkallerrors('coroutine.wrap',{notafunction},'bad argument #1')
 banner('coroutine.yield')
 local function f() 
 	print( 'yield', coroutine.yield() )
-	print( 'yield', coroutine.yield(astring) )
-	print( 'yield', coroutine.yield(anumber) )
-	print( 'yield', coroutine.yield(aboolean) )
+	print( 'yield', coroutine.yield(astring,anumber,aboolean) )
+	error('error within coroutine thread')
 end
 local co = coroutine.create( f )
-repeat 
-	print( 'resume', coroutine.resume(co,astring,anumber) )
-until coroutine.status(co) ~= 'suspended'
+print( 'status', coroutine.status(co) )
+print( coroutine.resume(co,astring,anumber) )
+print( 'status', coroutine.status(co) )
+print( coroutine.resume(co,astring,anumber) )
+print( 'status', coroutine.status(co) )
+local s,e = coroutine.resume(co,astring,anumber)
+print( s, string.match(e,'error within coroutine thread') or 'bad message: '..tostring(e) )
+print( 'status', coroutine.status(co) )
 
