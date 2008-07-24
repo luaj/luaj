@@ -1,5 +1,4 @@
 
-
 -- normalized printing
 function eles(t,f)
 	f = f or pairs

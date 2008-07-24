@@ -194,7 +194,7 @@ public class BaseLib extends LFunction {
 			LTable t = vm.checktable(2);
 			LValue v = vm.checkany(3);
 			vm.argcheck(v.isTable() || v.isNil(), 3, "table or nil expected");
-			t.luaSetMetatable(v);
+			t = t.luaSetMetatable(v);
 			vm.resettop();
 			vm.pushlvalue(t);
 			break;

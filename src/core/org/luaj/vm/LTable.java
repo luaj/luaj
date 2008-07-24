@@ -267,7 +267,7 @@ public class LTable extends LValue {
 	}
 
 	/** Valid for tables */
-	public LValue luaSetMetatable(LValue metatable) {
+	public LTable luaSetMetatable(LValue metatable) {
 		if ( m_metatable != null && m_metatable.containsKey(TM_METATABLE) )
 			throw new LuaErrorException("cannot change a protected metatable");
 		if ( metatable == null || metatable.isNil() )
@@ -279,10 +279,10 @@ public class LTable extends LValue {
 				return new LWeakTable(this);
 			}
 			this.m_metatable = t;
-		} 
-		else
-			throw new LuaErrorException("nil or table expected, got "+metatable.luaGetTypeName());
-		return null;
+		} else {
+			throw new LuaErrorException("not a table: "+metatable.luaGetTypeName());
+		}
+		return this;
 	}
 
 	public String toJavaString() {

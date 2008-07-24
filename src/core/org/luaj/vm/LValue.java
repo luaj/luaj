@@ -177,9 +177,11 @@ public class LValue {
 	}
 
 	/** Valid for tables 
-	 * @return TODO*/
-	public LValue luaSetMetatable(LValue metatable) {
-		throw new LuaErrorException( "bad argument #1 to 'setmetatable' (table expected, got "+metatable.luaGetTypeName()+")");
+	 * @param the new LTable, or null or LNil.NIL to reset the metatable to none
+	 * @return this if unchanged, or new LTable if copied using weak table 
+	 */
+	public LTable luaSetMetatable(LValue metatable) {
+		throw new LuaErrorException( "cannot set metatable for "+metatable.luaGetTypeName());
 	}
 
 	/** Valid for all types: return the int value identifying the type of this value */
