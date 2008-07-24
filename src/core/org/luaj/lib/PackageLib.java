@@ -184,7 +184,7 @@ public class PackageLib extends LFunction {
 	public static void module(LuaState vm) {
 		LString modname = vm.checklstring(2);
 		int n = vm.gettop();
-		LValue value = LOADED.get(modname);
+		LValue value = LOADED.luaGetTable(vm, modname);
 		LTable module;
 		if ( ! value.isTable() ) { /* not found? */
 			

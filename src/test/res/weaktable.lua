@@ -23,8 +23,9 @@ function new(a)
 end
 
 -- basic weak-reference table test
-local weak = newtable{ new('one'), new('two'), new('three'), new('four'), a=new('aaa'), b=new('bbb'), c=new('ccc'), d=new('ddd') }
-local strong = { weak[1], weak[3], a=weak.a, c=weak.c }
+local strong = { new('one'), new('two'), a=new('aaa'), c=new('ccc') }
+local weak = newtable{ strong[1], new('three'), strong[2], new('four'), 
+	a=new('aaa'), b=new('bbb'), c=new('ccc'), d=new('ddd') }
 print( 'before, weak:', eles(weak) )
 print( 'before, strong:', eles(strong) )
 print( 'gc', pcall( collectgarbage, "collect" ) )

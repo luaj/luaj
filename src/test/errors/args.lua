@@ -140,16 +140,24 @@ end
 local function invoke( name, arglist )
 	local s,c = pcall(lookup, name)
 	if not s then return s,c end
-	return pcall(c, unpack(arglist)) 
+	local f = function(...)
+		local u = unpack
+		local t = { c(...) }
+		return u(t)
+	end
+	return pcall(f, unpack(arglist))
 end
 
 -- messages, banners
+local _print = print
+local _tostring = tostring
+local _find = string.find
 function banner(name)
-	print( '====== '..tostring(name)..' ======' )
+	_print( '====== '.._tostring(name)..' ======' )
 end
 
 local function subbanner(name)
-	print( '--- '..tostring(name) )
+	_print( '--- '.._tostring(name) )
 end
 
 local function pack(s,...) 
@@ -164,12 +172,12 @@ function checkallpass( name, typesets, typesonly )
 		local s,r = pack( invoke( name, v ) )
 		if s then 
 			if typesonly then 
-				print( ok, sig, types(r) )
+				_print( ok, sig, types(r) )
 			else
-				print( ok, sig, values(r) )
+				_print( ok, sig, values(r) )
 			end
 		else
-			print( fail, sig, values(r) )
+			_print( fail, sig, values(r) )
 		end
 	end
 end
@@ -178,18 +186,18 @@ end
 -- ignore error messages
 function checkallerrors( name, typesets, template )
 	subbanner('checkallerrors')
-	template = tostring(template)
+	template = _tostring(template)
 	for i,v in arglists(typesets) do
 		local sig = signature(name,v)
 		local s,e = invoke( name, v )
 		if not s then
-			if string.find(e, template, 1, true) then
-				print( ok, sig, '...'..template..'...' )
+			if _find(e, template, 1, true) then
+				_print( ok, sig, '...'..template..'...' )
 			else
-				print( badmsg, sig, "template='"..template.."' actual='"..e.."'" )
+				_print( badmsg, sig, "template='"..template.."' actual='"..e.."'" )
 			end
 		else
-			print( needcheck, sig, e )
+			_print( needcheck, sig, e )
 		end
 	end
 end
