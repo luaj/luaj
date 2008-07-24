@@ -27,6 +27,8 @@ package org.luaj.vm;
  * Implementation of lua coroutines using Java Threads
  */
 public class LThread extends LValue implements Runnable {
+	
+	private static final boolean USE_JAVA_THREADS = true;
 
 	private static final int STATUS_SUSPENDED     = 0;
 	private static final int STATUS_RUNNING       = 1;
@@ -41,11 +43,9 @@ public class LThread extends LValue implements Runnable {
 	private int status = STATUS_SUSPENDED;
 	
 	LuaState threadVm;
-	Thread thread;
+	private Thread thread;
 	
 	static LThread running;
-	
-	
 	public LThread(LFunction c, LTable env) {
 		threadVm = new LuaState(env);
 		threadVm.pushlvalue(c);
@@ -59,7 +59,7 @@ public class LThread extends LValue implements Runnable {
 		return "thread: "+hashCode();
 	}
 
-	/** Set the environment if a thread, or closure, and return 1, otherwise return 0 */
+	// Set the environment if a thread, or closure, and return 1, otherwise return 0
 	public boolean luaSetEnv(LTable t) {
 		threadVm._G = t;
 		return true;
@@ -72,7 +72,7 @@ public class LThread extends LValue implements Runnable {
 	public static LThread getRunning() {
 		return running;
 	}
-	
+
 	public void run() {
 		synchronized ( this ) {
 			try {
@@ -89,23 +89,25 @@ public class LThread extends LValue implements Runnable {
 			if ( status != STATUS_RUNNING )
 				threadVm.error(this+" not running");
 			status = STATUS_SUSPENDED;
-			this.notify();
-			try {
-				this.wait();
-				status = STATUS_RUNNING;
-			} catch ( InterruptedException e ) {
-				status = STATUS_DEAD;
-				threadVm.error(this+" "+e);
+			if ( USE_JAVA_THREADS ) {
+				this.notify();
+				try {
+					this.wait();
+					status = STATUS_RUNNING;
+				} catch ( InterruptedException e ) {
+					status = STATUS_DEAD;
+					threadVm.error(this+" "+e);
+				}
 			}
 			return false;
 		}
 	}
 	
-	/** This needs to leave any values returned by yield in the coroutine 
-	 * on the calling vm stack
-	 * @param vm
-	 * @param nargs 
-	 */
+	// This needs to leave any values returned by yield in the coroutine 
+	// on the calling vm stack
+	// @param vm
+	// @param nargs 
+	//
 	public void resumeFrom(LuaState vm, int nargs) {
 
 		synchronized ( this ) {
@@ -126,19 +128,30 @@ public class LThread extends LValue implements Runnable {
 				status = STATUS_RUNNING;
 				
 				// copy args in
-				if ( thread == null ) {
+				if (threadVm.cc < 0) {
 					vm.xmove(threadVm, nargs);
 					threadVm.prepStackCall();
-					thread = new Thread(this);
-					thread.start();
 				} else {
 					threadVm.resettop();
 					vm.xmove(threadVm, nargs);
 				}
-	
-				// run this vm until it yields
-				this.notify();
-				this.wait();
+
+				// execute in the other thread
+				if ( USE_JAVA_THREADS ) {
+					// start the thread
+					if ( thread == null ) { 
+						thread = new Thread(this);
+						thread.start();
+					}
+					
+					// run this vm until it yields
+					this.notify();
+					this.wait();
+				} else {
+					// run this vm until it yields
+					while (threadVm.cc >= 0 && status == STATUS_RUNNING)
+						threadVm.exec();
+				}
 				
 				// copy return values from yielding stack state
 				vm.resettop();
@@ -156,7 +169,9 @@ public class LThread extends LValue implements Runnable {
 				vm.resettop();
 				vm.pushboolean(false);
 				vm.pushstring("thread: "+t);
-				this.notify();
+				if ( USE_JAVA_THREADS ) {
+					this.notify();
+				}
 				
 			} finally {
 				// previous thread is now running again
@@ -165,5 +180,4 @@ public class LThread extends LValue implements Runnable {
 		}
 		
 	}
-
 }
