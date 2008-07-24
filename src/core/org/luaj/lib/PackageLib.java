@@ -282,7 +282,7 @@ public class PackageLib extends LFunction {
 	 */	
 	public void require( LuaState vm ) {
 		LString name = vm.checklstring(2);
-		LValue loaded = LOADED.get(name);
+		LValue loaded = LOADED.luaGetTable(vm, name);
 		if ( loaded.toJavaBoolean() ) {
 			if ( loaded == _SENTINEL )
 				vm.error("loop or previous error loading module '"+name+"'");
