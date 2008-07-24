@@ -45,6 +45,13 @@ public class LBuffer {
 		length += alen;
 	}
 	
+	public void append( String str ) {
+		final int alen = LString.lengthAsUtf8( str );
+		ensureCapacity( length + alen );
+		LString.encodeToUtf8( str, bytes, length );
+		length += alen;
+	}
+	
 	public void setLength( int length ) {
 		ensureCapacity( length );
 		this.length = length;

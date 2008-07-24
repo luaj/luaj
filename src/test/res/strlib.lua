@@ -85,10 +85,36 @@ print(#"\0\1\2\3")
 local s = "My JaCk-O-lAnTeRn CaSe TeXt"
 print(s, string.len(s), #s)
 
+-- string.format
+print(string.format("(%.0d) (%.0d) (%.0d)", 0, -5, 9))
+print(string.format("(%.1d) (%.1d) (%.1d)", 0, -5, 9))
+print(string.format("(%.2d) (%.2d) (%.2d)", 0, -5, 9))
+
+print(string.format("(%+.0d) (%+.0d) (%+.0d)", 0, -5, 9))
+print(string.format("(%+.1d) (%+.1d) (%+.1d)", 0, -5, 9))
+print(string.format("(%+.2d) (%+.2d) (%+.2d)", 0, -5, 9))
+
+print(string.format("(%+3d) (% 3d) (%+ 3d)", 55, 55, 55))
+
+print(string.format("(%-1d) (%-1d) (%-1d)", 1, 12, -12))
+print(string.format("(%-2d) (%-2d) (%-2d)", 1, 12, -12))
+print(string.format("(%-3d) (%-3d) (%-3d)", 1, 12, -12))
+
+print(string.format("(%8x) (%8d) (%8o)", 255, 255, 255))
+print(string.format("(%08x) (%08d) (%08o)", 255, 255, 255))
+
+print(string.format("simple%ssimple", " simple "))
+
+specials = "\"specials\": %% \000 \r \n"
+print(string.format("%s\n%q\n", specials, specials))
+print(string.format("%%"))
+print(string.format("this is a %s long string", string.rep("really, ", 30)))
+
 local function pc(...)
 	local s,e = pcall(...)
 	return s and e or 'false-'..type(e)
 end
+
 local function strtests(name,func,...)
 	print(name, 'good', pc( func, ... ) )
 	print(name, 'empty', pc( func ) )

@@ -27,10 +27,10 @@ import java.io.IOException;
 import org.luaj.compiler.DumpState;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
-import org.luaj.vm.LNumber;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
+import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
 
 
@@ -263,10 +263,247 @@ public class StringLib extends LFunction {
 	 * except as arguments to the q option. 
 	 */
 	static void format( LuaState vm ) {
+		LString fmt = vm.checklstring( 2 );
+		final int n = fmt.length();
+		LBuffer result = new LBuffer(n);
+		int arg = 2;
+		
+		for ( int i = 0; i < n; ) {
+			int c = fmt.luaByte( i++ );
+			if ( c != L_ESC ) {
+				result.append( (byte) c );
+			} else if ( i < n ) {
+				if ( ( c = fmt.luaByte( i ) ) == L_ESC ) {
+					++i;
+					result.append( (byte)L_ESC );
+				} else {
+					arg++;
+					FormatDesc fdsc = new FormatDesc(vm, fmt, i );
+					i += fdsc.length;
+					switch ( fdsc.conversion ) {
+					case 'c':
+						fdsc.format( result, (byte)vm.checkint( arg ) );
+						break;
+					case 'i':
+					case 'd':
+						fdsc.format( result, vm.checkint( arg ) );
+						break;
+					case 'o':
+					case 'u':
+					case 'x':
+					case 'X':
+						fdsc.format( result, vm.checklong( arg ) );
+						break;
+					case 'e':
+					case 'E':
+					case 'f':
+					case 'g':
+					case 'G':
+						fdsc.format( result, vm.checkdouble( arg ) );
+						break;
+					case 'q':
+						addquoted( result, vm.checklstring( arg ) );
+						break;
+					case 's': {
+						LString s = vm.checklstring( arg );
+						if ( fdsc.precision == -1 && s.length() >= 100 ) {
+							result.append( s );
+						} else {
+							fdsc.format( result, s );
+						}
+					}	break;
+					default:
+						vm.error("invalid option '%"+(char)fdsc.conversion+"' to 'format'");
+						break;
+					}
+				}
+			}
+		}
+		
 		vm.resettop();
-		vm.pushstring( "" );
+		vm.pushlstring( result.toLuaString() );
 	}
-
+	
+	private static void addquoted(LBuffer buf, LString s) {
+		int c;
+		buf.append( (byte) '"' );
+		for ( int i = 0, n = s.length(); i < n; i++ ) {
+			switch ( c = s.luaByte( i ) ) {
+			case '"': case '\\': case '\n':
+				buf.append( (byte)'\\' );
+				buf.append( (byte)c );
+				break;
+			case '\r':
+				buf.append( "\\r" );
+				break;
+			case '\0':
+				buf.append( "\\000" );
+				break;
+			default:
+				buf.append( (byte) c );
+			break;
+			}
+		}
+		buf.append( (byte) '"' );
+	}
+	
+	private static final String FLAGS = "-+ #0";
+	
+	private static class FormatDesc {
+		
+		private boolean leftAdjust;
+		private boolean zeroPad;
+		private boolean explicitPlus;
+		private boolean space;
+		private boolean alternateForm;
+		private static final int MAX_FLAGS = 5;
+		
+		private int width;
+		private int precision;
+		
+		public final int conversion;
+		public final int length;
+		
+		public FormatDesc(LuaState vm, LString strfrmt, final int start) {
+			int p = start, n = strfrmt.length();
+			int c = 0;
+			
+			boolean moreFlags = true;
+			while ( moreFlags ) {
+				switch ( c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 ) ) {
+				case '-': leftAdjust = true; break;
+				case '+': explicitPlus = true; break;
+				case ' ': space = true; break;
+				case '#': alternateForm = true; break;
+				case '0': zeroPad = true; break;
+				default: moreFlags = false; break;
+				}
+			}
+			if ( p - start > MAX_FLAGS )
+				vm.error("invalid format (repeated flags)");
+			
+			width = -1;
+			if ( Character.isDigit( (char)c ) ) {
+				width = c - '0';
+				c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 );
+				if ( Character.isDigit( (char) c ) ) {
+					width = width * 10 + (c - '0');
+					c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 );
+				}
+			}
+			
+			precision = -1;
+			if ( c == '.' ) {
+				c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 );
+				if ( Character.isDigit( (char) c ) ) {
+					precision = c - '0';
+					c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 );
+					if ( Character.isDigit( (char) c ) ) {
+						precision = precision * 10 + (c - '0');
+						c = ( (p < n) ? strfrmt.luaByte( p++ ) : 0 );
+					}
+				}
+			}
+			
+			if ( Character.isDigit( (char) c ) )
+				vm.error("invalid format (width or precision too long)");
+			
+			zeroPad &= !leftAdjust; // '-' overrides '0'
+			conversion = c;
+			length = p - start;
+		}
+		
+		public void format(LBuffer buf, byte c) {
+			// TODO: not clear that any of width, precision, or flags apply here.
+			buf.append(c);
+		}
+		
+		public void format(LBuffer buf, long number) {
+			String digits;
+			
+			if ( number == 0 && precision == 0 ) {
+				digits = "";
+			} else {
+				int radix;
+				switch ( conversion ) {
+				case 'x':
+				case 'X':
+					radix = 16;
+					break;
+				case 'o':
+					radix = 8;
+					break;
+				default:
+					radix = 10;
+					break;
+				}
+				digits = Long.toString( number, radix );
+				if ( conversion == 'X' )
+					digits = digits.toUpperCase();
+			}
+			
+			int minwidth = digits.length();
+			int ndigits = minwidth;
+			int nzeros;
+			
+			if ( number < 0 ) {
+				ndigits--;
+			} else if ( explicitPlus || space ) {
+				minwidth++;
+			}
+			
+			if ( precision > ndigits )
+				nzeros = precision - ndigits;
+			else if ( precision == -1 && zeroPad && width > minwidth )
+				nzeros = width - minwidth;
+			else
+				nzeros = 0;
+			
+			minwidth += nzeros;
+			int nspaces = width > minwidth ? width - minwidth : 0;
+			
+			if ( !leftAdjust )
+				pad( buf, ' ', nspaces );
+			
+			if ( number < 0 ) {
+				if ( nzeros > 0 ) {
+					buf.append( (byte)'-' );
+					digits = digits.substring( 1 );
+				}
+			} else if ( explicitPlus ) {
+				buf.append( (byte)'+' );
+			} else if ( space ) {
+				buf.append( (byte)' ' );
+			}
+			
+			if ( nzeros > 0 )
+				pad( buf, '0', nzeros );
+			
+			buf.append( digits );
+			
+			if ( leftAdjust )
+				pad( buf, ' ', nspaces );
+		}
+		
+		public void format(LBuffer buf, double x) {
+			// TODO
+			buf.append( String.valueOf( x ) );
+		}
+		
+		public void format(LBuffer buf, LString s) {
+			int nullindex = s.indexOf( (byte)'\0', 0 );
+			if ( nullindex != -1 )
+				s = s.substring( 0, nullindex );
+			buf.append(s);
+		}
+		
+		public static final void pad(LBuffer buf, char c, int n) {
+			byte b = (byte)c;
+			while ( n-- > 0 )
+				buf.append(b);
+		}
+	}
+	
 	/** 
 	 * string.gmatch (s, pattern)
 	 * 
@@ -671,20 +908,27 @@ public class StringLib extends LFunction {
 		}
 		
 		public void add_value( LBuffer lbuf, int soffset, int end, LValue repl ) {
-			if ( repl instanceof LString || repl instanceof LNumber ) {
+			switch ( repl.luaGetType() ) {
+			case Lua.LUA_TSTRING:
+			case Lua.LUA_TNUMBER:
 				add_s( lbuf, repl.luaAsString(), soffset, end );
 				return;
-			} else if ( repl instanceof LFunction ) {
+				
+			case Lua.LUA_TFUNCTION:
 				vm.pushlvalue( repl );
 				int n = push_captures( true, soffset, end );
 				vm.call( n, 1 );
-			} else if ( repl instanceof LTable ) {
+				break;
+				
+			case Lua.LUA_TTABLE:
 				// Need to call push_onecapture here for the error checking
 				push_onecapture( 0, soffset, end );
 				LValue k = vm.topointer( -1 );
 				vm.pop( 1 );
 				vm.pushlvalue( ((LTable) repl).luaGetTable( vm, k ) );
-			} else {
+				break;
+				
+			default:
 				vm.error( "bad argument: string/function/table expected" );
 				return;
 			}
@@ -692,7 +936,7 @@ public class StringLib extends LFunction {
 			repl = vm.topointer( -1 );
 			if ( !repl.toJavaBoolean() ) {
 				repl = s.substring( soffset, end );
-			} else if ( ! ( repl instanceof LString || repl instanceof LNumber ) ) {
+			} else if ( ! repl.isString() ) {
 				vm.error( "invalid replacement value (a "+repl.luaGetTypeName()+")" );
 			}
 			vm.pop( 1 );

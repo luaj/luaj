@@ -47,12 +47,14 @@ checkallerrors('string.find',{somestring,somestring,nonnumber},'bad argument #3'
 -- string.format
 local numfmts = {'%c','%d','%E','%e','%f','%g','%G','%i','%o','%u','%X','%x'}
 local strfmts = {'%q','%s'}
+local badfmts = {'%w'}
 banner('string.format')
 checkallpass('string.format',{somestring,anylua})
 checkallpass('string.format',{numfmts,somenumber})
 checkallpass('string.format',{strfmts,somestring})
 checkallerrors('string.format',{numfmts,notanumber},'bad argument #2')
 checkallerrors('string.format',{strfmts,notastring},'bad argument #2')
+checkallerrors('string.format',{badfmts,somestring},"invalid option '%w'")
 
 -- string.gmatch
 banner('string.gmatch')

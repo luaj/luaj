@@ -66,38 +66,16 @@ public class LString extends LValue {
 	 * Characters are encoded using UTF-8.
 	 */
 	public LString(String string) {
-		
 		// measure bytes required to encode
-		int n = string.length();
-		int b = n;
-		char c;
-		for ( int i=0; i<n; i++ ) {
-			if ( (c = string.charAt(i)) >= 0x80 ) {
-				++b;
-				if ( c >= 0x800 )
-					++b;
-			}
-		}		
+		int b = lengthAsUtf8( string );
 		byte[] bytes = new byte[b];
-		int j = 0;
-		for ( int i=0; i<n; i++ ) {
-			if ( (c = string.charAt(i)) < 0x80 ) {
-				bytes[j++] = (byte) c;
-			} else if ( c < 0x800 ) {
-				bytes[j++] = (byte) (0xC0 | ((c>>6)  & 0x1f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
-			} else {
-				bytes[j++] = (byte) (0xE0 | ((c>>12) & 0x0f));
-				bytes[j++] = (byte) (0x80 | ((c>>6)  & 0x3f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
-			}
-		}
+		encodeToUtf8( string, bytes, 0 );
 		this.m_bytes = bytes;
 		this.m_offset = 0;
 		this.m_length = b;
 		this.m_hash = hashBytes( bytes, 0, b );
 	}
-
+	
 	/**
 	 * Convert to Java string using UTF-8 encoding
 	 */
@@ -157,7 +135,46 @@ public class LString extends LValue {
 	public static LString newStringNoCopy(byte[] buf, int off, int len) {
 		return new LString( buf, off, len );
 	}
-
+	
+	/**
+	 * Count the number of bytes required to encode the string as UTF-8.
+	 */
+	public static int lengthAsUtf8(String string) {
+		int n = string.length();
+		int b = n;
+		char c;
+		for ( int i=0; i<n; i++ ) {
+			if ( (c = string.charAt(i)) >= 0x80 ) {
+				++b;
+				if ( c >= 0x800 )
+					++b;
+			}
+		}
+		return b;
+	}
+	
+	/**
+	 * Encode the given Java string as UTF-8 bytes, writing the result to bytes
+	 * starting at offset. The string should be measured first with lengthAsUtf8
+	 * to make sure the given byte array is large enough.
+	 */
+	public static void encodeToUtf8(String string, byte[] bytes, final int startOffset) {
+		final int n = string.length();
+		for ( int i=0, j=startOffset; i<n; i++ ) {
+			int c;
+			if ( (c = string.charAt(i)) < 0x80 ) {
+				bytes[j++] = (byte) c;
+			} else if ( c < 0x800 ) {
+				bytes[j++] = (byte) (0xC0 | ((c>>6)  & 0x1f));
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+			} else {
+				bytes[j++] = (byte) (0xE0 | ((c>>12) & 0x0f));
+				bytes[j++] = (byte) (0x80 | ((c>>6)  & 0x3f));
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+			}
+		}
+	}
+	
 	public boolean isString() {
 		return true;
 	}
@@ -223,6 +240,14 @@ public class LString extends LValue {
 					return i - m_offset;
 				}
 			}
+		}
+		return -1;
+	}
+	
+	public int indexOf( byte b, int start ) {
+		for ( int i = m_offset + start; i < m_length; ++i ) {
+			if ( m_bytes[i] == b )
+				return i;
 		}
 		return -1;
 	}
