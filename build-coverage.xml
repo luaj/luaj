@@ -20,7 +20,9 @@
 	</path>
 	
 	<taskdef classpathref="cobertura.classpath" resource="tasks.properties" />
-
+	
+	<import file="wtk.xml"/>
+	
 	<target name="clean" description="Remove all files created by the build/test process.">
 		<delete dir="build" failonerror="no"/>
 		<delete file="cobertura.log" />
@@ -36,9 +38,10 @@
 		<mkdir dir="${coverage.html.dir}" />
 	</target>
 
-	<target name="compile" depends="init">
+	<target name="compile" depends="init,wtk-or-fail">
 		<javac destdir="${classes.dir}" debug="yes" target="1.5">
 			<classpath refid="cobertura.classpath" />
+		    <classpath refid="wtk-libs" />
 		    <src path="src/core"/>
 		    <src path="src/debug"/>
 		    <src path="src/j2me"/>
