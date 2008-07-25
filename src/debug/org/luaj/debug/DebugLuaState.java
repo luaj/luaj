@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import org.luaj.compiler.LexState;
 import org.luaj.debug.event.DebugEventBreakpoint;
 import org.luaj.debug.event.DebugEventError;
 import org.luaj.debug.net.DebugNetSupportBase;
@@ -39,6 +38,7 @@ import org.luaj.vm.CallInfo;
 import org.luaj.vm.DebugNetSupport;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
+import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LocVars;
@@ -154,7 +154,7 @@ import org.luaj.vm.Platform;
  */
 public class DebugLuaState extends LuaState implements DebugRequestListener {   
     private static final boolean TRACE = (null != System.getProperty("TRACE"));
-
+    
     // stepping constants and stepping state
     protected static final int STEP_NONE = 0;
     protected static final int STEP_OVER = 1;
@@ -173,6 +173,9 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected DebugNetSupportBase debugSupport;
     protected LuaErrorException lastError;
 
+    final String uparrow = "^";
+    final String rtarrow = "~";
+    
     /**
      * Creates an instance of DebugLuaState.
      * 
@@ -285,7 +288,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             throw new AbortException("aborted by debug client");
         }
 
-/*
+//*
         if (TRACE) {
             System.out.println("entered debugHook on pc=" + pc + "...Line: " + getFileLine(cc));
             for (int j = 0; j <= cc; j++) {
@@ -293,7 +296,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
                 dumpStack(j);                    
             }
         }
-*/
+//*/
         synchronized (this) {
             while (bSuspendOnStart) {
                 try {
@@ -620,22 +623,44 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
      * @return the visible local variables on the given stack frame.
      */
     public Variable[] getStack(int index) {
-        if (index < 0 || index >= calls.length) {
+        if (index < 0 || index > cc) {
             throw new RuntimeException("invalid stack index");
         }
 
+        
+        CallInfo callInfo = calls[index];
+        LClosure closure = callInfo.closure;
+        LPrototype prototype = closure.p;
+        LocVars[] localVariables = prototype.locvars;
+
         Vector variables = new Vector();
-        Hashtable variablesSeen = new Hashtable();
-        LPrototype p = calls[index].closure.p;
-        for (int i = index; i >= 0; i--) {
-            if (i == index || isInScope(p, calls[i])) {
-                addVariables(variables, variablesSeen, i);
+        
+        int pc = getCurrentPc(callInfo);
+
+        // add upvalues
+    	for ( int i=0; i<prototype.nups; i++ ) {
+        	if ( closure.upVals[i] != null ) {
+        		LString[] ups = prototype.upvalues;
+        		String upstate = (closure.upVals[i].isClosed()? rtarrow: uparrow);
+        		String name = (ups!=null && ups.length>i? String.valueOf(ups[i]): "?"); 
+        		LValue value = closure.upVals[i].getValue();
+                addVariable( variables, upstate+name, value );
+        	}
+        }
+        
+        // add locals
+        for (int i = 0; i < localVariables.length; i++) {
+            if (isActiveVariable(pc, localVariables[i])) {
+            	String name = localVariables[i].varname.toJavaString();
+            	LValue value = stack[callInfo.base+i];
+                addVariable(variables, name, value);
             }
         }
+        
+        
+        // convert to array
         Variable[] result = new Variable[variables.size()];
-        for (int i = 0; i < variables.size(); i++) {
-            result[i] = (Variable) variables.elementAt(i);
-        }
+        variables.copyInto(result);
 
         return result;
     }
@@ -690,7 +715,9 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
         CallInfo callInfo = calls[index];
         LPrototype prototype = callInfo.closure.p;
         LocVars[] localVariables = prototype.locvars;
-        System.out.println("Stack Frame: " + index + " [" + base + "," + top + "], # of localvars: " + localVariables.length + ", pc=" + callInfo.pc);
+        System.out.println("Stack Frame: " + index + " [" + base + "," + top + "]," +
+        		" # of localvars: " + localVariables.length + ", pc=" + callInfo.pc + 
+        		" # upvals: " + prototype.nups );
         
         int pc = getCurrentPc(callInfo);
         for (int i = 0; i < localVariables.length; i++) {
@@ -707,32 +734,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
             System.out.println("stack[" + i + "]=" + stack[i]);
         }
     }
-    
-    /**
-     * Returns the name of the Nth variable in scope of the call info. 
-     * @param callInfo Call info
-     * @param index Index of the variable
-     * @return the name of the Nth variable in scope of the call info. If the 
-     * variable for the given index is not found, null is returned.
-     */
-    private String getVariable(CallInfo callInfo, int index) {
-        int count = -1;
-        LocVars[] localVariables = callInfo.closure.p.locvars;
-        int pc = getCurrentPc(callInfo);
-        for (int i = 0; i < localVariables.length; i++) {
-            if (!isActiveVariable(pc, localVariables[i])) {
-                continue;
-            } else {
-                count++;
-                if (count == index) {
-                    return localVariables[i].varname.toJavaString();
-                }
-            }
-        }
-        
-        return null;
-    }
-
+  
     /**
      * Check if a variable is in scope.
      * @param pc -- Current program counter.
@@ -745,71 +747,43 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
     
     /**
-     * Adds the active variables for the given call frame to the list of variables.
+     * Adds an active variable for the given call frame to the list of variables.
      * @param variables -- the list of active variables.
-     * @param variablesSeen -- variables already seen so far
-     * @param index -- index of the call frame
+     * @param varName -- the name of the variable
+     * @param index -- the value of the variable
      */
-    private void addVariables(Vector variables, Hashtable variablesSeen, int index) {
-        CallInfo callInfo = calls[index];
-        int base = callInfo.base;
-        int top = callInfo.top < callInfo.base ? callInfo.base+1 : callInfo.top;
+	private void addVariable(Vector variables, String varName, LValue value) {
 
-        if (TRACE) {
-            dumpStack(index);
-        }
-        
-        int selectedVariableCount = 0;
-        for (int i = base; i < top; i++) {
-            String varName = getVariable(callInfo, i-base);
-            if (varName == null) {
-                // we don't care about the temporary variables and constants 
-                // on the stack
-                continue;
-            }
-            
-            if(TRACE) {
-                System.out.print("\tVariable: " + varName); 
-                System.out.print("\tValue: " + stack[i]);
-            }
-            if (!variablesSeen.contains(varName) &&
-                !LexState.isReservedKeyword(varName)) {
-                variablesSeen.put(varName, varName);
-                LValue value = stack[i];              
-                if (value != null) {
-                    int type = value.luaGetType();
-                    if (TRACE)
-                        System.out.print("\tType: " + Lua.TYPE_NAMES[type]);
-                    if (type == Lua.LUA_TTABLE) {
-                        if (TRACE)
-                            System.out.print(" (selected)");
-                        variables.addElement(
-                                new TableVariable(selectedVariableCount++, 
-                                             varName, 
-                                             type, 
-                                             (LTable) value));                        
-                    } else if (type == LUA_TTHREAD) {
-                        // coroutines
-                    } else if (type != LUA_TFUNCTION) {
-                        if (TRACE)
-                            System.out.print(" (selected)");
-                        variables.addElement(
-                                new Variable(selectedVariableCount++, 
-                                             varName, 
-                                             type, 
-                                             value.toString()));
-                    }
-                }
-            }
-            
-            if (TRACE)
-                System.out.print("");            
-        }
-    }
+        int selectedVariableCount = variables.size();
+		if (TRACE) {
+			System.out.print("\tVariable: " + varName);
+			System.out.print("\tValue: " + value);
+			System.out.print("\tN: "+selectedVariableCount);
+		}
 
-    /**
-     * step over to next line
-     */
+		if (value != null) {
+			int type = value.luaGetType();
+			if (TRACE)
+				System.out.print("\tType: " + value.luaGetTypeName());
+			if (type == Lua.LUA_TTABLE) {
+				variables.addElement(new TableVariable( selectedVariableCount, varName, type, (LTable) value));
+			} else if (type == LUA_TNUMBER || type == LUA_TBOOLEAN || type == LUA_TNIL) {
+				variables.addElement(new Variable(selectedVariableCount, varName, type, value.toString()));
+			} else if (type == LUA_TSTRING) {
+				variables.addElement(new Variable(selectedVariableCount, varName, type, "'"+value.toString()+"'"));
+			} else { // thread, userdata, function
+				variables.addElement(new Variable(selectedVariableCount, varName, type, "<"+value.luaGetTypeName().toJavaString()+">"));
+			}
+		}
+
+		if (TRACE)
+			System.out.print("");
+	}
+
+
+	/**
+	 * step over to next line
+	 */
     public synchronized void stepOver() {
         suspended = false;
         stepping = STEP_OVER;
@@ -818,8 +792,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     }
 
     /**
-     * step to the next statement
-     */
+	 * step to the next statement
+	 */
     public synchronized void stepInto() {
         suspended = false;
         stepping = STEP_INTO;

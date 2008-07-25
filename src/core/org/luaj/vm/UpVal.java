@@ -60,4 +60,8 @@ public class UpVal {
 			return false;
 		}
 	}
+	
+	public boolean isClosed() {
+		return state == null;
+	}
 }

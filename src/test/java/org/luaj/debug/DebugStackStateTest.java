@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.debug;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,19 +39,79 @@ import org.luaj.vm.Platform;
 
 public class DebugStackStateTest extends TestCase {
 
-	public void testDebugStackState() throws InterruptedException, IOException {
-		String script = "src/test/res/test6.lua";
-		
-		// set up the vm
+	protected void setUp() throws Exception {
 		System.setProperty(Platform.PROPERTY_LUAJ_DEBUG, "true");
 		Platform.setInstance(new TestPlatform() {
 		    public DebugNetSupport getDebugSupport() throws IOException {
 		        return null;
 		    }
 		});
+		LuaC.install();
+	}
+
+	
+	public void testStackStateUpvalues() throws Exception {
+		tryScript(
+				"print( 'aaa' ); local a = 3;\n"+
+				"print( 'bbb' ); local f = function()\n"+
+				"	print('in f'); local b = 4; a=33\n"+
+				"	print( 'bbb' ); local g = function()\n"+
+				"		print('in g'); local c = 6; b=444; a=333\n" +
+				"		return c, b, a\n"+
+				"	end; print( 'calling g' ); g(); return b, a\n"+
+				"end\n"+
+				"print('calling f'); f()\n"+
+				"print( 'returned from f' ); local d = 6\n"+
+				"return 123, a, b, c, d\n" );
+	}
+	
+	public void testStackStateLocals() throws Exception {
+		tryScript(
+				"print('hello, world')\n"+
+				"print('aaa'); local a = 3; print('aaa')\n"+
+				"print('bbb'); local b = 4; print('bbb')\n"+
+				"print('ccc'); local c = 5; print('ccc')\n"+
+				"print('ddd'); local d = 6; print('ddd')\n"+
+				"print( a,b,c,d )\n"+
+				"return 123\n" );
+	}
+	
+	private void tryScript(String script) throws Exception {
+
+		// set up closure
+		final DebugLuaState vm = (DebugLuaState) Platform.newLuaState();
+		final InputStream is = new ByteArrayInputStream(script.getBytes());
+		final LPrototype p = LoadState.undump(vm, is, "script");
+		final LClosure c = p.newClosure( vm._G );
+
+		// suspend the vm right away
+		vm.suspend();
+		
+		// start the call processing in its own thread
+		Thread t = new Thread() {
+			public void run() {
+				try {
+					vm.doCall( c, new LValue[0] );
+				} catch ( Throwable e ) {
+					System.out.println(e.toString());
+				}
+			}
+		};
+		t.start();		
+
+		for ( int i=0; i<20; i++ ) {
+			vm.stepInto();
+			printStackState(vm);
+			Thread.sleep(100);
+		}
+		vm.stop();
+	}
+	
+	
+	public void testDebugStackState() throws InterruptedException, IOException {
+		String script = "src/test/res/test6.lua";
 
 		final DebugLuaState state = (DebugLuaState) Platform.newLuaState();
-                LuaC.install();
 		InputStream is = new FileInputStream( script );
 		LPrototype p = LoadState.undump(state, is, script);
 		
@@ -88,4 +149,23 @@ public class DebugStackStateTest extends TestCase {
 		Thread.sleep(500);
 		System.out.println("--- callgraph="+state.getCallgraph() );
 	}
+	
+
+	
+	private void printStackState(DebugLuaState vm) {
+		int n = vm.getCallgraph().length;
+		System.out.println("stacks: "+n);		
+		for ( int j=0; j<n; j++ ) {
+			try {
+				Variable[] v = vm.getStack(j);
+				for ( int i=0; i<v.length; i++ )
+					System.out.println("v["+j+","+i+"]= index="+v[i].index+" "+v[i].name+"="+v[i].value+" type="+v[i].type);
+			} catch ( Throwable t ) {
+				System.out.println(t.toString());
+				return;
+			}
+		}
+	}
+
+
 }
