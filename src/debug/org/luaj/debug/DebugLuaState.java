@@ -173,8 +173,8 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     protected DebugNetSupportBase debugSupport;
     protected LuaErrorException lastError;
 
-    final String uparrow = "^";
-    final String rtarrow = "~";
+    final String openUpVal = "+";
+    final String closedUpVal = "-";
     
     /**
      * Creates an instance of DebugLuaState.
@@ -641,7 +641,7 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
     	for ( int i=0; i<prototype.nups; i++ ) {
         	if ( closure.upVals[i] != null ) {
         		LString[] ups = prototype.upvalues;
-        		String upstate = (closure.upVals[i].isClosed()? rtarrow: uparrow);
+        		String upstate = (closure.upVals[i].isClosed()? closedUpVal: openUpVal);
         		String name = (ups!=null && ups.length>i? String.valueOf(ups[i]): "?"); 
         		LValue value = closure.upVals[i].getValue();
                 addVariable( variables, upstate+name, value );
@@ -767,12 +767,10 @@ public class DebugLuaState extends LuaState implements DebugRequestListener {
 				System.out.print("\tType: " + value.luaGetTypeName());
 			if (type == Lua.LUA_TTABLE) {
 				variables.addElement(new TableVariable( selectedVariableCount, varName, type, (LTable) value));
-			} else if (type == LUA_TNUMBER || type == LUA_TBOOLEAN || type == LUA_TNIL) {
-				variables.addElement(new Variable(selectedVariableCount, varName, type, value.toString()));
 			} else if (type == LUA_TSTRING) {
 				variables.addElement(new Variable(selectedVariableCount, varName, type, "'"+value.toString()+"'"));
-			} else { // thread, userdata, function
-				variables.addElement(new Variable(selectedVariableCount, varName, type, "<"+value.luaGetTypeName().toJavaString()+">"));
+			} else { 
+				variables.addElement(new Variable(selectedVariableCount, varName, type, value.toString()));
 			}
 		}
 

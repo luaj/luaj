@@ -51,7 +51,7 @@ public class TableVariable extends Variable {
             
             keyList.addElement(keyValues[i].toString());
             if (value instanceof LTable) {
-            	valueList.addElement(new TableVariable(i, "element[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
+            	valueList.addElement(new TableVariable(i, "[" + keyValues[i].toString() + "]", Lua.LUA_TTABLE, (LTable)value));
             } else {
                 valueList.addElement(value.toString());
             }            	
