@@ -21,7 +21,6 @@
  ******************************************************************************/
 package org.luaj.vm;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
@@ -37,14 +36,17 @@ import java.io.Reader;
  */
 abstract public class Platform {
 
-    public static String DEBUG_CLASS_NAME = "org.luaj.debug.DebugLuaState";
-    
-    public static final String PROPERTY_LUAJ_DEBUG = "Luaj-Debug"; 
-    public static final String PROPERTY_LUAJ_DEBUG_SUSPEND_AT_START = "Luaj-Debug-SuspendAtStart";
-    public static final String PROPERTY_LUAJ_DEBUG_HOST = "Luaj-Debug-Host";
-    public static final String PROPERTY_LUAJ_DEBUG_PORT = "Luaj-Debug-Port";
-    public static final String PROPERTY_LUAJ_DEBUG_CLASS = "Luaj-Debug-Class"; 
-    
+	/**
+	 * When non-null, name of a Java Class that implements LuaState 
+	 * and has a default constructor which will be used to construct 
+	 * a new lua state using Platform.newLuaState()
+	 * @see newLuaState 
+	 */
+    public static String LUA_STATE_CLASS_NAME = null;
+
+    /** 
+     * The singleton Platform instance in use by this JVM
+     */
     private static Platform instance;
 
     
@@ -73,21 +75,30 @@ abstract public class Platform {
     }
 
     /**
-     * Creates a new instance of LuaState. If debug properties are present,
-     * DebugLuaState (a LuaState with debugging capabilities) will be created.
+     * Creates a new instance of LuaState. 
      * 
-     * @return a new instance of LuaState
+     * If Platform.LUA_STATE_CLASS_NAME is not null, this method 
+     * will attempt to create an instance using a construction such as 
+     * 	(LuaState) Class.forName(Platform.LUA_STATE_CLASS_NAME).newInstance()
+     * 
+     * If Platform.LUA_STATE_CLASS_NAME is null or the specified class cannot 
+     * be instantiated for some reason, a new instance of LuaState
+     * will be created and used.
+     * 
+     * In either case, the method LuaState.init() will be invoked, followed by
+     * Platform.installOptionalProperties(LuaState) on the new instance. 
+     * 
+     * @return a new instance of LuaState initialized via init() and installOptionalProperties()
+     * 
+     * @see LUA_STATE_CLASS_NAME
+     * @see LuaState
      */
     public static LuaState newLuaState() {
         Platform p = Platform.getInstance();
-        String isDebugStr = p.getProperty(PROPERTY_LUAJ_DEBUG);
-        boolean isDebug = (isDebugStr != null && "true".equalsIgnoreCase(isDebugStr));
-
         LuaState vm = null;
-        if (isDebug) {
+        if (LUA_STATE_CLASS_NAME != null) {
             try {
-            	String c = p.getProperty(PROPERTY_LUAJ_DEBUG_CLASS);
-                vm = (LuaState) Class.forName(c!=null? c: DEBUG_CLASS_NAME).newInstance();
+                vm = (LuaState) Class.forName(LUA_STATE_CLASS_NAME).newInstance();
             } catch (Exception e) {
                 System.out.println("Warning: no debug support, " + e);
             }
@@ -134,43 +145,11 @@ abstract public class Platform {
     abstract public String getProperty(String propertyName);
 
     /**
-     * Returns an platform dependent DebugSupport instance.
-     * 
-     * @return an platform dependent DebugSupport instance.
-     */
-    abstract public DebugNetSupport getDebugSupport() throws IOException;
-
-    /**
      * Install optional libraries on the LuaState.
      * @param vm LuaState instance
      */
     abstract protected void installOptionalLibs(LuaState vm);
     
-    /**
-     * Convenience method for the subclasses to figure out the debug host.
-     * @return the debug host property. If it is not present, null is returned.
-     */
-    protected String getDebugHost() {
-        String host = getProperty(PROPERTY_LUAJ_DEBUG_HOST);
-        return host;
-    }
-
-    /**
-     * Convenience method for the subclasses to figure out the debug port.
-     * @return -1 if the port is not found in the platform properties; the port
-     * as an integer if it is present in the platform properties and valid. 
-     */
-    protected int getDebugPort() {
-        String portStr = getProperty(PROPERTY_LUAJ_DEBUG_PORT);
-        int port = -1;
-        if (portStr != null) {
-            try {
-                port = Integer.parseInt(portStr);
-            } catch (NumberFormatException e) {}
-        }
-        return port;
-    }
-
     /** 
      * Compute math.pow() for two numbers using double math when available. 
      * @param lhs LNumber base

@@ -1,18 +1,12 @@
 package org.luaj.platform;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
 import javax.microedition.midlet.MIDlet;
 
-import org.luaj.debug.net.j2me.DebugSupportImpl;
-import org.luaj.lib.MathLib;
-import org.luaj.vm.DebugNetSupport;
-import org.luaj.vm.LDouble;
 import org.luaj.vm.LNumber;
-import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -37,13 +31,6 @@ public class J2meMidp10Cldc10Platform extends Platform {
         InputStream is = this.getClass().getResourceAsStream(fileName);
         return is;
     }
-
-    public DebugNetSupport getDebugSupport() throws IOException {
-        String host = getDebugHost();
-        int port = getDebugPort();
-        return new DebugSupportImpl(host, port);
-    }
-    
     public String getProperty(String key) {
         return midlet.getAppProperty(key);
     }

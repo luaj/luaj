@@ -43,7 +43,6 @@
 			<classpath refid="cobertura.classpath" />
 		    <classpath refid="wtk-libs" />
 		    <src path="src/core"/>
-		    <src path="src/debug"/>
 		    <src path="src/j2me"/>
 		    <src path="src/j2se"/>
 		    <src path="src/script"/>

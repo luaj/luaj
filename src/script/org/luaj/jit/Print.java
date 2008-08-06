@@ -1,4 +1,4 @@
-package org.luaj.debug;
+package org.luaj.jit;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

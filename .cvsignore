@@ -3,3 +3,4 @@ target
 build
 luaj*.jar
 jit
+*.ser

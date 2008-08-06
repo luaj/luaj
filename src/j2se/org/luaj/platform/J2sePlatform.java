@@ -3,19 +3,14 @@ package org.luaj.platform;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import org.luaj.debug.net.j2se.DebugSupportImpl;
 import org.luaj.lib.MathLib;
 import org.luaj.lib.j2se.LuajavaLib;
-import org.luaj.vm.DebugNetSupport;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LNumber;
-import org.luaj.vm.LValue;
-import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -29,11 +24,6 @@ public class J2sePlatform extends Platform {
         return new InputStreamReader(inputStream);
     }    
     
-    public DebugNetSupport getDebugSupport() throws IOException {
-        DebugNetSupport debugNetSupport = new DebugSupportImpl(getDebugPort());
-        return debugNetSupport;
-    }
-
     public String getProperty(String propertyName) {
         return System.getProperty(propertyName);
     }

@@ -27,19 +27,6 @@ public class AllTests {
 		compiler.addTestSuite(org.luaj.compiler.CompilerUnitTests.class);
 		suite.addTest(compiler);
 		
-		// debug tests
-		TestSuite debug = new TestSuite("Debug");
-		debug.addTestSuite(org.luaj.debug.DebugEventTest.class);
-		debug.addTestSuite(org.luaj.debug.DebugRequestTest.class);
-		debug.addTestSuite(org.luaj.debug.DebugResponseTest.class);
-		debug.addTestSuite(org.luaj.debug.DebugStackStateTest.class);
-		debug.addTestSuite(org.luaj.debug.EnumTypeTest.class);
-		debug.addTestSuite(org.luaj.debug.StackFrameTest.class);
-		debug.addTestSuite(org.luaj.debug.TableVariableTest.class);
-		debug.addTestSuite(org.luaj.debug.VariableTest.class);
-		debug.addTestSuite(org.luaj.debug.j2se.LuaJVMTest.class);
-		suite.addTest(debug);
-		
 		return suite;
 	}
 

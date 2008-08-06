@@ -6,7 +6,7 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.luaj.TestPlatform;
-import org.luaj.debug.Print;
+import org.luaj.jit.Print;
 import org.luaj.lib.BaseLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
