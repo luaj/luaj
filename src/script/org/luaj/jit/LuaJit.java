@@ -43,6 +43,7 @@ import org.luaj.vm.LValue;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.Print;
 import org.luaj.vm.LoadState.LuaCompiler;
 
 public class LuaJit extends Lua implements LuaCompiler {

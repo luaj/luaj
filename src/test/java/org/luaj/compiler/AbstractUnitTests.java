@@ -10,11 +10,11 @@ import java.net.URL;
 import junit.framework.TestCase;
 
 import org.luaj.TestPlatform;
-import org.luaj.jit.Print;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LoadState;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
+import org.luaj.vm.Print;
 
 abstract public class AbstractUnitTests extends TestCase {
 

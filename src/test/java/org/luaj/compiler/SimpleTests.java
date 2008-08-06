@@ -6,13 +6,13 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.luaj.TestPlatform;
-import org.luaj.jit.Print;
 import org.luaj.lib.BaseLib;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
+import org.luaj.vm.Print;
 
 public class SimpleTests extends TestCase {
 

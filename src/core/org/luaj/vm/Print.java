@@ -1,17 +1,8 @@
-package org.luaj.jit;
+package org.luaj.vm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.luaj.vm.LClosure;
-import org.luaj.vm.LDouble;
-import org.luaj.vm.LFunction;
-import org.luaj.vm.LInteger;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LString;
-import org.luaj.vm.LValue;
-import org.luaj.vm.Lua;
-import org.luaj.vm.LuaState;
 
 
 
