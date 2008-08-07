@@ -160,3 +160,10 @@ print('a..',unpack({a('a', nil, nil)}))
 print('.b.',unpack({a(nil, 'b', nil)}))
 print('...',unpack({a(nil, nil, nil)}))
 
+-- misc tests
+print( # { 'abc', 'def', 'ghi', nil } ) -- should be 3 ! 
+print( # { 'abc', 'def', 'ghi', false } ) -- should be 4 ! 
+print( # { 'abc', 'def', 'ghi', 0 } ) -- should be 4 ! 
+print( nil and 'T' or 'F' ) -- should be 'F'
+print( false and 'T' or 'F' ) -- should be 'F'
+print( 0 and 'T' or 'F' ) -- should be 'T'
