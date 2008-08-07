@@ -85,6 +85,7 @@ print(#"\0\1\2\3")
 local s = "My JaCk-O-lAnTeRn CaSe TeXt"
 print(s, string.len(s), #s)
 
+
 -- string.format
 print(string.format("(%.0d) (%.0d) (%.0d)", 0, -5, 9))
 print(string.format("(%.1d) (%.1d) (%.1d)", 0, -5, 9))
@@ -100,6 +101,7 @@ print(string.format("(%-1d) (%-1d) (%-1d)", 1, 12, -12))
 print(string.format("(%-2d) (%-2d) (%-2d)", 1, 12, -12))
 print(string.format("(%-3d) (%-3d) (%-3d)", 1, 12, -12))
 
+
 print(string.format("(%8x) (%8d) (%8o)", 255, 255, 255))
 print(string.format("(%08x) (%08d) (%08o)", 255, 255, 255))
 
@@ -109,7 +111,7 @@ specials = "\"specials\": %% \000 \r \n"
 print(string.format("%s\n%q\n", specials, specials))
 print(string.format("%%"))
 print(string.format("this is a %s long string", string.rep("really, ", 30)))
-
+	
 local function pc(...)
 	local s,e = pcall(...)
 	return s and e or 'false-'..type(e)
@@ -128,3 +130,25 @@ strtests('reverse', string.reverse, s )
 strtests('char', string.char, 92, 60, 61, 93 )
 strtests('dump', string.dump, function() print('hello, world') end )
 
+
+-- floating point formats (not supported yet)
+--[[
+local prefixes = {'','+','-'}
+local lengths = {'7','2','0','1',''}
+local letters = {'f','e','g'}
+local fmt, spec, desc
+for i,letter in ipairs(letters) do 
+	for k,before in ipairs(lengths) do
+		for j,prefix in ipairs(prefixes) do
+			spec = '(%'..prefix..before..letter..')'
+			fmt = spec..'\t'..spec..'\t'..spec..'\t'..spec..'\t'..spec..'\t'..spec
+			print(spec, string.format(fmt, 12.34, -12.34, 1/11, -1/11, 300/11, -300/11) )
+			for l,after in ipairs(lengths) do
+				spec = '(%'..prefix..before..'.'..after..letter..')'
+				fmt = spec..' '..spec..' '..spec..' '..spec..' '..spec..' '..spec
+				print(spec, string.format(fmt, 12.34, -12.34, 1/11, -1/11, 300/11, -300/11) )
+			end
+		end
+	end
+end
+--]]
