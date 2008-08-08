@@ -209,7 +209,7 @@ public class MathLib extends LFunction {
 			}
 			case RANDOM: {
 				if ( random == null )
-					random = new Random();
+					random = new Random(1);
 				switch ( vm.gettop() ) {
 				case 1:
 					vm.resettop();
