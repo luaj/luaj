@@ -58,6 +58,18 @@ public class LInteger extends LNumber {
 		return m_value;
 	}
 	
+	public long toJavaLong() {
+		return m_value;
+	}
+
+	public float toJavaFloat() {
+		return m_value;
+	}
+
+	public double toJavaDouble() {
+		return m_value;
+	}
+	
 	public LString luaAsString() {
 		return LString.valueOf(m_value);
 	}

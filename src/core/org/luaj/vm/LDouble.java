@@ -103,10 +103,18 @@ public class LDouble extends LNumber {
 		return (int) m_value;
 	}
 
+	public long toJavaLong() {
+		return (long) m_value;
+	}
+
+	public float toJavaFloat() {
+		return (float) m_value;
+	}
+
 	public double toJavaDouble() {
 		return m_value;
 	}
-
+	
 	// binary compares on integers, first dispatch
 	public boolean luaBinCmpUnknown(int opcode, LValue lhs) {
 		return lhs.luaBinCmpDouble( opcode, this.m_value );

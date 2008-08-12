@@ -206,22 +206,26 @@ public class LValue {
 	
 	/** Return value as a byte */
 	public byte toJavaByte() {
-		return (byte) toJavaInt();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Return value as a char */
 	public char toJavaChar() {
-		return (char) toJavaInt();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Return value as a double */
 	public double toJavaDouble() {
-		return toJavaInt();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Return value as a float */
 	public float toJavaFloat() {
-		return (float) toJavaDouble();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Return value as an integer */
@@ -232,12 +236,14 @@ public class LValue {
 
 	/** Return value as a long */
 	public long toJavaLong() {
-		return (long) toJavaDouble();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Return value as a double */
 	public short toJavaShort() {
-		return (short) toJavaInt();
+		conversionError("number");
+		return 0;
 	}
 
 	/** Convert to a Boolean value */
