@@ -71,11 +71,11 @@ import org.luaj.lib.TableLib;
  */
 public class LuaState extends Lua {
     /* thread status; 0 is OK */
-    private static final int LUA_YIELD  = 1;
-    private static final int LUA_ERRRUN = 2;
-    private static final int LUA_ERRSYNTAX  = 3;
-    private static final int LUA_ERRMEM = 4;
-    private static final int LUA_ERRERR = 5;
+    public static final int LUA_YIELD  = 1;
+    public static final int LUA_ERRRUN = 2;
+    public static final int LUA_ERRSYNTAX  = 3;
+    public static final int LUA_ERRMEM = 4;
+    public static final int LUA_ERRERR = 5;
 
     private static final int LUA_MINSTACK = 20;
     private static final int LUA_MINCALLS = 10;    
