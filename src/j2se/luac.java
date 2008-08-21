@@ -51,7 +51,7 @@ public class luac {
 		"  -p       parse only\n" +
 		"  -s       strip debug information\n" +
 		"  -e       little endian format for numbers\n" +
-		"  -i       int32 format for all numbers\n" +
+		"  -i<n>    number format 'n', (n=0,1 or 4, default="+DumpState.NUMBER_FORMAT_DEFAULT+")\n" +
 		"  -v       show version information\n" +
 		"  --       stop handling options\n";
 	
@@ -65,7 +65,7 @@ public class luac {
 	private boolean parseonly = false;
 	private boolean stripdebug = false;
 	private boolean littleendian = false;
-	private boolean intsonly = false;
+	private int numberformat = DumpState.NUMBER_FORMAT_DEFAULT;
 	private boolean versioninfo = false;
 	private boolean processing = true;
 
@@ -107,7 +107,9 @@ public class luac {
 						littleendian = true;
 						break;
 					case 'i':
-						intsonly = true;
+						if ( args[i].length() <= 2 )
+							usageExit();
+						numberformat = Integer.parseInt(args[i].substring(2));
 						break;
 					case 'v':
 						versioninfo = true;
@@ -171,7 +173,7 @@ public class luac {
 
 	        // write out the chunk
 	        if (!parseonly) {
-	            DumpState.dump(chunk, out, stripdebug, intsonly, littleendian);
+	            DumpState.dump(chunk, out, stripdebug, numberformat, littleendian);
 	        }
 	        
 		} catch ( Throwable t ) {

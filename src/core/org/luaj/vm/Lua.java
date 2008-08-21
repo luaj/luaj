@@ -327,6 +327,7 @@ public class Lua {
 	
 	// type constants
 	
+	public static final int LUA_TINT            = (-2);
 	public static final int LUA_TNONE			= (-1);
 	public static final int LUA_TNIL			= 0;
 	public static final int LUA_TBOOLEAN		= 1;

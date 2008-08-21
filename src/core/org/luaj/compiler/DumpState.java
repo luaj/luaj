@@ -25,13 +25,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.luaj.vm.LBoolean;
-import org.luaj.vm.LNil;
 import org.luaj.vm.LNumber;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LocVars;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LPrototype;
 
 
 public class DumpState {
@@ -54,9 +53,21 @@ public class DumpState {
 	/** set true to allow integer compilation */
 	public static boolean ALLOW_INTEGER_CASTING = false;
 	
+	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
+	public static final int NUMBER_FORMAT_FLOATS_OR_DOUBLES    = 0;
+
+	/** format corresponding to non-number-patched lua, all numbers are ints */
+	public static final int NUMBER_FORMAT_INTS_ONLY            = 1;
+	
+	/** format corresponding to number-patched lua, all numbers are 32-bit (4 byte) ints */
+	public static final int NUMBER_FORMAT_NUM_PATCH_INT32      = 4;
+	
+	/** default number format */
+	public static final int NUMBER_FORMAT_DEFAULT = NUMBER_FORMAT_FLOATS_OR_DOUBLES;
+
 	// header fields
 	private boolean IS_LITTLE_ENDIAN = false;
-	private boolean IS_NUMBER_INTEGRAL = false;
+	private int NUMBER_FORMAT = NUMBER_FORMAT_DEFAULT;
 	private int SIZEOF_LUA_NUMBER = 8;
 	private static final int SIZEOF_INT = 4;
 	private static final int SIZEOF_SIZET = 4;
@@ -98,49 +109,69 @@ public class DumpState {
 		writer.write( 0 );
 	}
 	
-	void dumpNumber(double d) throws IOException {
-		if ( IS_NUMBER_INTEGRAL ) {
-			int i = (int) d;
-			if ( (! ALLOW_INTEGER_CASTING) && (i != d) )
-				throw new java.lang.IllegalArgumentException("not an integer: "+d);
-			dumpInt( i );
+	void dumpDouble(double d) throws IOException {
+		long l = Double.doubleToLongBits(d);
+		if ( IS_LITTLE_ENDIAN ) {
+			dumpInt( (int) l );
+			dumpInt( (int) (l>>32) );
 		} else {
-			long l = Double.doubleToLongBits(d);
-			if ( IS_LITTLE_ENDIAN ) {
-				dumpInt( (int) l );
-				dumpInt( (int) (l>>32) );
-			} else {
-				writer.writeLong(l);
-			}
+			writer.writeLong(l);
 		}
 	}
 
 	void dumpCode( final LPrototype f ) throws IOException {
-		int n = f.code.length;
+		final int[] code = f.code;
+		int n = code.length;
 		dumpInt( n );
 		for ( int i=0; i<n; i++ )
-			dumpInt( f.code[i] );
+			dumpInt( code[i] );
 	}
 	
 	void dumpConstants(final LPrototype f) throws IOException {
-		int i, n = f.k.length;
+		final LValue[] k = f.k;
+		int i, n = k.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++) {
-			final LValue o = f.k[i];
-			if (o.isNil()) {
+			final LValue o = k[i];
+			switch ( o.luaGetType() ) {
+			case Lua.LUA_TNIL:
 				writer.write(Lua.LUA_TNIL);
-				// do nothing more
-			} else if (o instanceof LBoolean) {
+				break;
+			case Lua.LUA_TBOOLEAN:
 				writer.write(Lua.LUA_TBOOLEAN);
 				dumpChar(o.toJavaBoolean() ? 1 : 0);
-			} else if (o instanceof LNumber) {
-				writer.write(Lua.LUA_TNUMBER);
-				dumpNumber(o.toJavaDouble());
-			} else if (o instanceof LString) {
+				break;
+			case Lua.LUA_TNUMBER:
+				switch (NUMBER_FORMAT) {
+				case NUMBER_FORMAT_FLOATS_OR_DOUBLES:
+					writer.write(Lua.LUA_TNUMBER);
+					dumpDouble(o.toJavaDouble());
+					break;
+				case NUMBER_FORMAT_INTS_ONLY:
+					if ( ! ALLOW_INTEGER_CASTING && ! o.isInteger() )
+						throw new java.lang.IllegalArgumentException("not an integer: "+o);
+					writer.write(Lua.LUA_TNUMBER);
+					dumpInt(o.toJavaInt());
+					break;
+				case NUMBER_FORMAT_NUM_PATCH_INT32:
+					if ( o.isInteger() ) {
+						writer.write(Lua.LUA_TINT);
+						dumpInt(o.toJavaInt());
+					} else {
+						writer.write(Lua.LUA_TNUMBER);
+						dumpDouble(o.toJavaDouble());
+					}
+					break;
+				default:
+					throw new IllegalArgumentException("number format not supported: "+NUMBER_FORMAT);
+				}
+				break;
+			case Lua.LUA_TSTRING:
 				writer.write(Lua.LUA_TSTRING);
-				dumpString((LString) o);
-			} else {
-				throw new IllegalArgumentException("bad type for " + o);
+				dumpString(o.luaAsString());
+				break;
+			default:
+				throw new IllegalArgumentException("bad type for " + o);			
 			}
 		}
 		n = f.p.length;
@@ -158,9 +189,10 @@ public class DumpState {
 		n = (strip) ? 0 : f.locvars.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++) {
-			dumpString(f.locvars[i].varname);
-			dumpInt(f.locvars[i].startpc);
-			dumpInt(f.locvars[i].endpc);
+			LocVars lvi = f.locvars[i];
+			dumpString(lvi.varname);
+			dumpInt(lvi.startpc);
+			dumpInt(lvi.endpc);
 		}
 		n = (strip) ? 0 : f.upvalues.length;
 		dumpInt(n);
@@ -193,7 +225,7 @@ public class DumpState {
 		writer.write( SIZEOF_SIZET );
 		writer.write( SIZEOF_INSTRUCTION );
 		writer.write( SIZEOF_LUA_NUMBER );
-		writer.write( IS_NUMBER_INTEGRAL? 1: 0 );
+		writer.write( NUMBER_FORMAT );
 	}
 
 	/*
@@ -206,11 +238,30 @@ public class DumpState {
 		return D.status;
 	}
 
-	public static int dump(LPrototype f, OutputStream w, boolean strip, boolean intonly, boolean littleendian) throws IOException {
-		DumpState D = new DumpState(w,strip);
+	/**
+	 * 
+	 * @param f the function to dump
+	 * @param w the output stream to dump to
+	 * @param stripDebug true to strip debugging info, false otherwise
+	 * @param numberFormat one of NUMBER_FORMAT_FLOATS_OR_DOUBLES, NUMBER_FORMAT_INTS_ONLY, NUMBER_FORMAT_NUM_PATCH_INT32
+	 * @param littleendian true to use little endian for numbers, false for big endian
+	 * @return 0 if dump succeeds
+	 * @throws IOException
+	 * @throws IllegalArgumentException if the number format it not supported
+	 */
+	public static int dump(LPrototype f, OutputStream w, boolean stripDebug, int numberFormat, boolean littleendian) throws IOException {
+		switch ( numberFormat ) {
+		case NUMBER_FORMAT_FLOATS_OR_DOUBLES:
+		case NUMBER_FORMAT_INTS_ONLY:
+		case NUMBER_FORMAT_NUM_PATCH_INT32:
+			break;
+		default:
+			throw new IllegalArgumentException("number format not supported: "+numberFormat);
+		}
+		DumpState D = new DumpState(w,stripDebug);
 		D.IS_LITTLE_ENDIAN = littleendian;
-		D.IS_NUMBER_INTEGRAL = intonly;
-		D.SIZEOF_LUA_NUMBER = (intonly? 4: 8);
+		D.NUMBER_FORMAT = numberFormat;
+		D.SIZEOF_LUA_NUMBER = (numberFormat==NUMBER_FORMAT_INTS_ONLY? 4: 8);
 		D.dumpHeader();
 		D.dumpFunction(f,null);
 		return D.status;

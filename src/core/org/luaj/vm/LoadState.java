@@ -25,6 +25,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.luaj.compiler.DumpState;
+
 
 
 
@@ -65,7 +67,7 @@ public class LoadState {
 	private int     luacSizeofSizeT;
 	private int     luacSizeofInstruction;
 	private int     luacSizeofLuaNumber;
-	private boolean luacIsNumberIntegral;
+	private int 	luacNumberFormat;
 
 	/** input stream from which we are loading */
 	private DataInputStream is;
@@ -151,9 +153,8 @@ public class LoadState {
 	}
 	
 	LNumber loadNumber() throws IOException {
-		if ( this.luacIsNumberIntegral ) {
-			int value = loadInt();
-			return LInteger.valueOf( value );
+		if ( luacNumberFormat == DumpState.NUMBER_FORMAT_INTS_ONLY ) {
+			return LInteger.valueOf( loadInt() );
 		} else {
 			return longBitsToLuaNumber( loadInt64() );
 		}
@@ -163,12 +164,15 @@ public class LoadState {
 		int n = loadInt();
 		LValue[] values = new LValue[n];
 		for ( int i=0; i<n; i++ ) {
-			switch ( is.readUnsignedByte() ) {
+			switch ( is.readByte() ) {
 			case Lua.LUA_TNIL:
 				values[i] = LNil.NIL;
 				break;
 			case Lua.LUA_TBOOLEAN:
 				values[i] = (0 != is.readUnsignedByte()? LBoolean.TRUE: LBoolean.FALSE);
+				break;
+			case Lua.LUA_TINT:
+				values[i] = LInteger.valueOf( loadInt() );
 				break;
 			case Lua.LUA_TNUMBER:
 				values[i] = loadNumber();
@@ -239,7 +243,7 @@ public class LoadState {
 		luacSizeofSizeT = is.readByte();
 		luacSizeofInstruction = is.readByte();
 		luacSizeofLuaNumber = is.readByte();
-		luacIsNumberIntegral = (0 != is.readByte());
+		luacNumberFormat = is.readByte();
 	}
 	
 	public static LPrototype undump( LuaState L, InputStream stream, String name ) throws IOException {
@@ -262,6 +266,17 @@ public class LoadState {
 		String sname = getSourceName(name);
 		LoadState s = new LoadState( L, stream, sname );
 		s.loadHeader();
+
+		// check format
+		switch ( s.luacNumberFormat ) {
+		case DumpState.NUMBER_FORMAT_FLOATS_OR_DOUBLES:
+		case DumpState.NUMBER_FORMAT_INTS_ONLY:
+		case DumpState.NUMBER_FORMAT_NUM_PATCH_INT32:
+			break;
+		default:
+			L.error("unsupported int size");
+		}
+		
 		return s.loadFunction( LString.valueOf(sname) );
 	}
 
