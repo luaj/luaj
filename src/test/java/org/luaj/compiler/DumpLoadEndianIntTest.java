@@ -2,6 +2,7 @@ package org.luaj.compiler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -62,9 +63,9 @@ public class DumpLoadEndianIntTest extends TestCase {
             
             // dump into bytes
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DumpState.dump(p, baos, false, intNumbers, littleEndian);
+            DumpState.dump(p, baos, stripDebug, intNumbers, littleEndian);
             byte[] dumped = baos.toByteArray();
-
+            
             // load again using compiler
             is = new ByteArrayInputStream(dumped);
             vm.load(is, "dumped");
@@ -72,6 +73,18 @@ public class DumpLoadEndianIntTest extends TestCase {
             actual = vm.poplvalue().toJavaString();
             assertEquals( expected, actual );
 
+            // write test chunk
+            if ( System.getProperty("SAVECHUNKS") != null ) {
+	            String filename = "test-"
+	            	+(littleEndian? "little-": "big-")
+	            	+(intNumbers? "int-": "double-")
+	            	+(stripDebug? "nodebug-": "debug-")
+	            	+"bin.lua";
+	            FileOutputStream fos = new FileOutputStream(filename);
+	            fos.write( dumped );
+	            fos.close();
+            }
+            
         } catch (IOException e) {
             fail(e.toString());
         }
