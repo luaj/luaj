@@ -51,6 +51,9 @@ public class DumpState {
 	/** expected lua header bytes */
 	private static final byte[] LUAC_HEADER_SIGNATURE = { '\033', 'L', 'u', 'a' };
 
+	/** set true to allow integer compilation */
+	public static boolean ALLOW_INTEGER_CASTING = false;
+	
 	// header fields
 	private boolean IS_LITTLE_ENDIAN = false;
 	private boolean IS_NUMBER_INTEGRAL = false;
@@ -98,12 +101,17 @@ public class DumpState {
 	void dumpNumber(double d) throws IOException {
 		if ( IS_NUMBER_INTEGRAL ) {
 			int i = (int) d;
-			if ( i != d )
+			if ( (! ALLOW_INTEGER_CASTING) && (i != d) )
 				throw new java.lang.IllegalArgumentException("not an integer: "+d);
 			dumpInt( i );
 		} else {
 			long l = Double.doubleToLongBits(d);
-			writer.writeLong(l);
+			if ( IS_LITTLE_ENDIAN ) {
+				dumpInt( (int) l );
+				dumpInt( (int) (l>>32) );
+			} else {
+				writer.writeLong(l);
+			}
 		}
 	}
 

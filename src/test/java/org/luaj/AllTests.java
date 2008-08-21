@@ -25,6 +25,7 @@ public class AllTests {
 		compiler.addTestSuite(org.luaj.compiler.SimpleTests.class);
 		compiler.addTestSuite(org.luaj.compiler.RegressionTests.class);
 		compiler.addTestSuite(org.luaj.compiler.CompilerUnitTests.class);
+		compiler.addTestSuite(org.luaj.compiler.DumpLoadEndianIntTest.class);
 		suite.addTest(compiler);
 		
 		return suite;
