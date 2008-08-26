@@ -202,7 +202,7 @@ public class LString extends LValue {
 			return 0;
 		
 		while ( i < imax && j < jmax ) {
-			if ( a[i] != b[i] ) {
+			if ( a[i] != b[j] ) {
 				return ( ( (int)a[i] ) & 0x0FF ) - ( ( (int)b[j] ) & 0x0FF );
 			}
 			i++;
