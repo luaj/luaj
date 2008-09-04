@@ -152,3 +152,17 @@ for i,letter in ipairs(letters) do
 	end
 end
 --]]
+
+local function fmterr(...)
+	local r, s = pcall(...)
+	if r then
+		return s
+	else
+		s = string.gsub(s, "stdin:%d+:%s*", "")
+		return s
+	end
+end
+
+print(fmterr(string.find, "ab%c)0(", "%"))
+print(fmterr(string.find, "ab%c)0(", "("))
+print(pcall(string.find, "ab%c)0(", ")"))

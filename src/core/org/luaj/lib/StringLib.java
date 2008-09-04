@@ -661,7 +661,7 @@ public class StringLib extends LFunction {
 	 * changed to lowercase. All other characters are left unchanged. 
 	 * The definition of what an uppercase letter is depends on the current locale.
 	 */
-	static void lower( LuaState vm ) {	
+	static void lower( LuaState vm ) {
 		String s = vm.checkstring(2).toLowerCase();
 		vm.resettop();
 		vm.pushstring( s );
@@ -1084,7 +1084,9 @@ public class StringLib extends LFunction {
 				case ')':
 					return end_capture( soffset, poffset + 1 );
 				case L_ESC:
-					switch ( p.luaByte( poffset+1 ) ) {
+					if ( poffset + 1 == p.length() )
+						vm.error("malformed pattern (ends with '%')");
+					switch ( p.luaByte( poffset + 1 ) ) {
 					case 'b':
 						soffset = matchbalance( soffset, poffset + 2 );
 						if ( soffset == -1 ) return -1;

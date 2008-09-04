@@ -262,8 +262,7 @@ public class BaseLib extends LFunction {
 				vm.checkany(2);
 				LValue v = vm.tolnumber(2);
 				vm.resettop();
-				if ( ! v.isNil() )
-					vm.pushlvalue(v);
+				vm.pushlvalue(v);
 			} else {
 				if ( base < 2 || base > 36 )
 					vm.typerror(3, "base out of range");				
@@ -338,7 +337,7 @@ public class BaseLib extends LFunction {
 			break;
 		}
 		case COLLECTGARBAGE: {
-			String s = vm.checkstring(2);
+			String s = vm.optstring(2, "collect");
 			int result = 0;
 			vm.resettop();
 			if ( "collect".equals(s) )
