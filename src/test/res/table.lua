@@ -5,7 +5,6 @@ table.insert(t,4,'eight');
 table.insert(t,7,'nine');
 table.insert(t,10,'ten');  print( #t )
 
-
 -- concat
 print( '-- concat tests' )
 function tryconcat(t)
@@ -167,3 +166,47 @@ print( # { 'abc', 'def', 'ghi', 0 } ) -- should be 4 !
 print( nil and 'T' or 'F' ) -- should be 'F'
 print( false and 'T' or 'F' ) -- should be 'F'
 print( 0 and 'T' or 'F' ) -- should be 'T'
+
+
+-- basic table operation tests
+local dummyfunc = function(t,...) 
+	print( 'metatable call args', type(t), ...)
+	return 'dummy' 
+end
+local makeloud = function(t)
+	return setmetatable(t,{
+		__index=function(t,k)
+			print( '__index', type(t), k )
+			return rawset(t,k)
+		end,
+		__newindex=function(t,k,v)
+			print( '__newindex', type(t), k, v )
+			rawset(t,k,v)
+		end})
+end
+local tests = {
+	{'basic table', {}},
+	{'function metatable on __index', setmetatable({},{__index=dummyfunc})},
+ 	{'function metatable on __newindex', setmetatable({},{__newindex=dummyfunc})},
+	{'plain metatable on __index', setmetatable({},makeloud({}))},
+	{'plain metatable on __newindex', setmetatable({},makeloud({}))},
+}
+for i,test in ipairs(tests) do
+	local testname = test[1]
+	local testtable = test[2]
+	print( '------ basic table tests on '..testname..' '..type(testtable) )
+	print( 't[1]=2',     pcall( function() testtable[1]=2 end ) )
+	print( 't[1]',       pcall( function() return testtable[1] end ) )
+	print( 't[1]=nil',   pcall( function() testtable[1]=nil end ) )
+	print( 't[1]',       pcall( function() return testtable[1] end ) )
+	print( 't["a"]="b"', pcall( function() testtable["a"]="b" end ) )
+	print( 't["a"],t.a', pcall( function() return testtable["a"],testtable.a end ) )
+	print( 't.a="c"',    pcall( function() testtable.a="c" end ) )
+	print( 't["a"],t.a', pcall( function() return testtable["a"],testtable.a end ) )
+	print( 't.a=nil',    pcall( function() testtable.a=nil end ) )
+	print( 't["a"],t.a', pcall( function() return testtable["a"],testtable.a end ) )
+	print( 't[nil]="d"', pcall( function() testtable[nil]="d" end ) )
+	print( 't[nil]',     pcall( function() return testtable[nil] end ) )
+	print( 't[nil]=nil', pcall( function() testtable[nil]=nil end ) )
+	print( 't[nil]',     pcall( function() return testtable[nil] end ) )
+end

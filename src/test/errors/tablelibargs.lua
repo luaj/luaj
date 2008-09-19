@@ -50,3 +50,17 @@ checkallpass('table.sort',{somestringstable,somecomp})
 checkallerrors('table.sort',{sometable},'attempt to compare')
 checkallerrors('table.sort',{notatable,somecomp},'bad argument #1')
 checkallerrors('table.sort',{sometable,notacomp},'bad argument #2')
+
+-- table get
+banner('table_get - tbl[key]')
+function table_get(tbl,key) return tbl[key] end
+checkallpass('table_get',{sometable,anylua})
+
+-- table set
+banner('table_set - tbl[key]=val')
+function table_set(tbl,key,val) tbl[key]=val end
+function table_set_nil_key(tbl,val) tbl[nil]=val end
+checkallpass('table_set',{sometable,notanil,anylua})
+checkallerrors('table_set_nil_key',{sometable,anylua},'table index is nil')
+
+

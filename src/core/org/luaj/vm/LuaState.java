@@ -948,6 +948,8 @@ public class LuaState extends Lua {
     
     /** Get a key from a table using full metatable processing */
     public void luaV_settable(LValue table, LValue key, LValue val) {
+        if ( key.isNil() )
+        	this.error("table index is nil");
     	LValue h=LNil.NIL,t=table;
     	for ( int loop=0; loop<MAXTAGLOOP; loop++ ) {
     		if ( t.isTable() ) {
