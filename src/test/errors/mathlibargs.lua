@@ -45,8 +45,8 @@ for i,v in ipairs(twoargfunctions) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somenumber,somenumber})
-	checkallerrors(funcname,{},'bad argument #1')
-	checkallerrors(funcname,{notanumber},'bad argument #1')
+	checkallerrors(funcname,{},'bad argument #')
+	checkallerrors(funcname,{notanumber},'bad argument #')
 	checkallerrors(funcname,{notanumber,somenumber},'bad argument #1')
 	checkallerrors(funcname,{somenumber},'bad argument #2')
 	checkallerrors(funcname,{somenumber,notanumber},'bad argument #2')
@@ -57,8 +57,8 @@ for i,v in ipairs(twoargsposdomain) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somepositive,somenumber})
-	checkallerrors(funcname,{},'bad argument #1')
-	checkallerrors(funcname,{notanumber},'bad argument #1')
+	checkallerrors(funcname,{},'bad argument #')
+	checkallerrors(funcname,{notanumber},'bad argument #')
 	checkallerrors(funcname,{notanumber,somenumber},'bad argument #1')
 	checkallerrors(funcname,{somenumber},'bad argument #2')
 	checkallerrors(funcname,{somenumber,notanumber},'bad argument #2')
