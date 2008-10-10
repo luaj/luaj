@@ -366,8 +366,16 @@ public class LString extends LValue {
 	public LValue luaToNumber( int base ) {
 		if ( base >= 2 && base <= 36 ) {
 			String str = toJavaString().trim();
+			if ( ( base == 10 || base == 16 ) && ( str.startsWith("0x") || str.startsWith("0X") ) ) {
+				base = 16;
+				str = str.substring(2);
+			}
 			try {
-				return LInteger.valueOf( Integer.parseInt( str, base ) );
+				long x = Long.parseLong(str, base);
+				if (x < Integer.MIN_VALUE || x > Integer.MAX_VALUE)
+					return new LDouble((double) x);
+				else
+					return LInteger.valueOf((int) x);
 			} catch ( NumberFormatException nfe ) {
 				if ( base == 10 ) {
 					try {

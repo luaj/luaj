@@ -207,6 +207,17 @@ print( 'pcall(tonumber,{"one","two",a="aa",b="bb"})', pcall(tonumber,{"one","two
 print( 'pcall(tonumber,"123.456")', pcall(tonumber,"123.456") )
 print( 'pcall(tonumber," 123.456")', pcall(tonumber," 123.456") )
 print( 'pcall(tonumber," 234qwer")', pcall(tonumber," 234qwer") )
+print( 'pcall(tonumber,"0x20")', pcall(tonumber,"0x20") )
+print( 'pcall(tonumber," 0x20")', pcall(tonumber," 0x20") )
+print( 'pcall(tonumber,"0x20 ")', pcall(tonumber,"0x20 ") )
+print( 'pcall(tonumber," 0x20 ")', pcall(tonumber," 0x20 ") )
+print( 'pcall(tonumber,"0X20")', pcall(tonumber,"0X20") )
+print( 'pcall(tonumber," 0X20")', pcall(tonumber," 0X20") )
+print( 'pcall(tonumber,"0X20 ")', pcall(tonumber,"0X20 ") )
+print( 'pcall(tonumber," 0X20 ")', pcall(tonumber," 0X20 ") )
+print( 'pcall(tonumber,"0x20",10)', pcall(tonumber,"0x20",10) )
+print( 'pcall(tonumber,"0x20",16)', pcall(tonumber,"0x20",16) )
+print( 'pcall(tonumber,"0x20",8)', pcall(tonumber,"0x20",8) )
 
 -- tostring
 print( 'pcall(tostring)', pcall(tostring) )
