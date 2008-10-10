@@ -45,7 +45,8 @@ checkallerrors('string.find',{somestring,notastring},'bad argument #2')
 checkallerrors('string.find',{somestring,somestring,nonnumber},'bad argument #3')
 
 -- string.format
-local numfmts = {'%c','%d','%E','%e','%f','%g','%G','%i','%o','%u','%X','%x'}
+--local numfmts = {'%c','%d','%E','%e','%f','%g','%G','%i','%o','%u','%X','%x'}
+local numfmts = {'%c','%d','%i','%o','%u','%X','%x'}
 local strfmts = {'%q','%s'}
 local badfmts = {'%w'}
 banner('string.format')
