@@ -94,7 +94,10 @@ public class ScriptDrivenTest extends TestCase {
 			InputStream script = new FileInputStream(file);
 			// }
 			try {
-				return collectProcessOutput(new String[] { "lua", "-" }, script);
+			    String luaCommand = System.getProperty("LUA_COMMAND");
+			    if ( luaCommand == null )
+			        luaCommand = "lua";
+				return collectProcessOutput(new String[] { luaCommand, "-" }, script);
 			} finally {
 				script.close();
 			}
