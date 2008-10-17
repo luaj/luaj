@@ -66,4 +66,8 @@ public class LUserData extends LValue {
 			return lhs.equals( this );
 		return super.luaBinCmpUnknown( opcode, lhs );
 	}
+	
+	public boolean isUserData() {
+		return true;
+	}
 }

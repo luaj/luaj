@@ -51,7 +51,7 @@ public class LTable extends LValue {
 
 	protected Object[] array;
 	protected LValue[] hashKeys;
-	private Object[] hashValues;
+	protected Object[] hashValues;
 	private int hashEntries;
 	private LTable m_metatable;
 	
@@ -625,7 +625,7 @@ public class LTable extends LValue {
 		}
 	}
 	
-	private void hashClearSlot( int i ) {
+	protected void hashClearSlot( int i ) {
 		if ( hashKeys[ i ] != null ) {
 			
 			int j = i;
@@ -651,14 +651,14 @@ public class LTable extends LValue {
 		}
 	}
 
-	private boolean checkLoadFactor() {
+	protected boolean checkLoadFactor() {
 		// Using a load factor of 2/3 because that is easy to compute without
 		// overflow or division.
 		final int hashCapacity = hashKeys.length;
 		return ( hashCapacity >> 1 ) >= ( hashCapacity - hashEntries );
 	}
 	
-	private void rehash() {
+	protected void rehash() {
 		final int oldCapacity = hashKeys.length;
 		final int newCapacity = ( oldCapacity > 0 ) ? 2 * oldCapacity : MIN_HASH_CAPACITY;
 		

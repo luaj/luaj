@@ -346,4 +346,9 @@ public class LValue {
 	public boolean isFunction() {
 		return false;
 	}
+	
+	/** Returns true if this is an LUserData */
+	public boolean isUserData() {
+		return false;
+	}
 }

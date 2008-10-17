@@ -48,15 +48,30 @@ public class LWeakTable extends LTable {
 	}
 
 	protected LValue normalizeGet(Object val) {
-		if ( val != null ) 
+		if ( val instanceof WeakReference )
 			val = ((WeakReference)val).get();
+		else if ( val != null ) {
+			LUserData ud = (LUserData) val;
+			Object o = ((WeakReference) ud.m_instance).get();
+			if ( o != null )
+				val = new LUserData(o, ud.m_metatable);
+			else
+				val = LNil.NIL;
+		}
 		return val==null? LNil.NIL: (LValue) val;
 	}
 
 	protected Object normalizePut(LValue val) {
-		return val==LNil.NIL? null: new WeakReference(val);
+		if ( val.isNil() ) {
+			return null;
+		} else if ( val.isUserData() ) {
+			LUserData ud = (LUserData) val;
+			return new LUserData(new WeakReference(ud.m_instance), ud.m_metatable);
+		} else {
+			return new WeakReference(val);
+		}
 	}
-	
+
 	public boolean next(LuaState vm, LValue key, boolean indexedonly) {
 		while ( super.next(vm, key, indexedonly) ) {
 			if ( ! vm.isnil(-1) )
@@ -65,6 +80,33 @@ public class LWeakTable extends LTable {
 			key = vm.poplvalue();
 		}
 		return false;
+	}
+
+	protected void rehash() {
+		final LValue[] keys = this.hashKeys;
+		final Object[] values = this.hashValues;
+		final int n = hashKeys.length;
+		
+		for ( int i = 0; i < n; ++i ) {
+			if ( keys[i] != null && normalizeGet(values[i]).isNil() ) {
+				// key has dropped out, clear the slot
+				// It's necessary to call hashClearSlot instead of just nulling
+				// out the slot because the table must be left in a consistent
+				// state if an OutOfMemoryError occurs later in the rehash
+				// process.
+				hashClearSlot(i);
+				// If number of hash entries gets to zero, hashClearSlot will
+				// set hashKeys back to an empty array. Check for that so we
+				// don't have an out-of-bounds index operation.
+				if ( hashKeys != keys )
+					break;
+			}
+		}
+		
+		// check load factor again since rehash might not be required if enough
+		// entries dropped out.
+		if ( checkLoadFactor() )
+			super.rehash();
 	}
 	
 }
