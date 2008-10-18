@@ -69,4 +69,40 @@ public class LWeakTableTest extends LTableTest {
 		runTest(100,0,2000,200);
 	}
 	
+	public void testWeakTableRehashToEmpty() {
+		LTable t = new_LTable();
+		
+		Object obj = new Object();
+		LTable tableValue = new LTable();
+		LString stringValue = LString.valueOf("this is a test");
+		
+		t.put("table", tableValue);
+		t.put("userdata", new LUserData(obj, null));
+		t.put("string", stringValue);
+		t.put("string2", LString.valueOf("another string"));
+		assertTrue("table must have at least 4 elements", t.hashKeys.length > 4);
+		
+		System.gc();
+		
+		assertTrue("table must have at least 4 elements", t.hashKeys.length > 4);
+		assertEquals(tableValue, t.get(LString.valueOf("table")));
+		assertEquals(stringValue, t.get(LString.valueOf("string")));
+		assertEquals(obj, t.get(LString.valueOf("userdata")).toJavaInstance());
+		
+		obj = null;
+		tableValue = null;
+		stringValue = null;
+		
+		// Garbage collection should cause weak entries to be dropped.
+		System.gc();
+		
+		// Add a new key to cause a rehash - note that this causes the test to
+		// be dependent on the load factor, which is an implementation detail.
+		t.put("newkey1", 1);
+		
+		// Removing the new key should leave the table empty since first set of values fell out
+		t.put("newkey1", LNil.NIL);
+		
+		assertTrue("weak table must be empty", t.hashKeys.length == 0);
+	}
 }

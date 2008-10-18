@@ -50,7 +50,7 @@ public class LWeakTable extends LTable {
 	protected LValue normalizeGet(Object val) {
 		if ( val instanceof WeakReference )
 			val = ((WeakReference)val).get();
-		else if ( val != null ) {
+		else if ( val instanceof LUserData ) {
 			LUserData ud = (LUserData) val;
 			Object o = ((WeakReference) ud.m_instance).get();
 			if ( o != null )
