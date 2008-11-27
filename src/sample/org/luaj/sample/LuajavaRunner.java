@@ -24,6 +24,7 @@ package org.luaj.sample;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.luaj.compiler.LuaC;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LClosure;
@@ -45,12 +46,13 @@ public class LuajavaRunner {
 	public static void main( String[] args ) throws IOException {
 
 	        Platform.setInstance(new J2sePlatform());
-	        
+	        LuaC.install();
+			
 		// new lua state 
 		LuaState state = Platform.newLuaState();
 		
 		// get script name
-		String script = (args.length>0? args[0]: "/swingapp.luac");
+		String script = (args.length>0? args[0]: "/swingapp.lua");
 		System.out.println("loading '"+script+"'");
 		
 		// load the file

@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.luaj.vm.LFunction;
+import org.luaj.vm.LNil;
+import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LUserData;
 import org.luaj.vm.LValue;
@@ -126,7 +128,7 @@ public final class LuajavaLib extends LFunction {
 			final int ninterfaces = Math.max(0,vm.gettop()-2);
 			if ( ninterfaces <= 0 )
 				throw new LuaErrorException("no interfaces");
-			final LValue function = vm.tofunction(-1);
+			final LValue lobj = vm.totable(-1);
 			try {
 				// get the interfaces
 				final Class[] ifaces = new Class[ninterfaces];
@@ -136,12 +138,18 @@ public final class LuajavaLib extends LFunction {
 				// create the invocation handler
 				InvocationHandler handler = new InvocationHandler() {
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-						vm.pushlvalue(function);
-						int n = args.length;
-						for ( int i=0; i<n; i++ )
-							vm.pushlvalue( CoerceJavaToLua.coerce(args[i]) );
-						vm.call(n, 1);
-						return CoerceLuaToJava.coerceArg(vm.poplvalue(), method.getReturnType());
+						vm.pushlvalue(lobj);
+						vm.getfield( -1, LString.valueOf(method.getName()) );
+						vm.remove( -2 );
+						LValue result;
+						if ( !vm.isnil( -1 ) ) {
+							int n = args.length;
+							for ( int i=0; i<n; i++ )
+								vm.pushlvalue( CoerceJavaToLua.coerce(args[i]) );
+							vm.call(n, 1);
+						}
+						result = vm.poplvalue();
+						return CoerceLuaToJava.coerceArg(result, method.getReturnType());
 					}
 				};
 				

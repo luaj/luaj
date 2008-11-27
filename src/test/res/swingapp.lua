@@ -18,3 +18,12 @@ jframe = luajava.bindClass( "javax.swing.JFrame" )
 frame:setDefaultCloseOperation(jframe.EXIT_ON_CLOSE)
 frame:pack()
 frame:setVisible(true)
+
+local listener = luajava.createProxy("java.awt.event.MouseListener",
+					{
+						mouseClicked = function(me)
+							print("clicked!", me)
+						end
+					})
+
+frame:addMouseListener(listener)
