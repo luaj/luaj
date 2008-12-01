@@ -73,7 +73,9 @@
 		<copy todir="build/luaj-${version}">
 		    <fileset dir=".">
 				<include name="build.xml"/>
+				<include name="build-coverage.xml"/>
 				<include name="version.properties"/>
+				<include name="wtk.xml"/>
 		    </fileset>		
 		</copy>
 		<zip destfile="luaj-${version}.zip" 
