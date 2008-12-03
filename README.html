@@ -14,7 +14,6 @@
 <h1>
 <a href="README.html"><img src="http://sourceforge.net/dbimage.php?id=196139" alt="" border="0"></a>
 
-Add Multimedia Data
 Getting Started with LuaJ
 
 </h1>
@@ -76,8 +75,9 @@ The following pattern is used within J2SE
 	import org.luaj.vm.*;
 
 	String script = "main.lua";
-	Platform.setPlatform( new J2sePlatform() );
+	Platform.setInstance( new J2sePlatform() );
 	LuaState vm = Platform.newLuaState();
+	org.luaj.compiler.LuaC.install();
 	vm.getglobal( "dofile" );
 	vm.pushstring( script );
 	vm.call( 1, 0 );
@@ -85,6 +85,12 @@ The following pattern is used within J2SE
 
 <p>
 You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
+
+<p>
+A working example may be found in
+<pre>
+	src/sample/SampleJ2seMain.java
+</pre>
 
 <p>
 Additional usage may be found in
@@ -102,8 +108,9 @@ The following pattern is used within MIDlets:
 	import org.luaj.vm.*;
 
 	String script = "main.lua";
-	Platform.setPlatform( new J2mePlatform() );
+	Platform.setInstance( new J2meMidp20Cldc11Platform( midlet ) );
 	LuaState vm = Platform.newLuaState();
+	org.luaj.compiler.LuaC.install();
 	vm.getglobal( "dofile" );
 	vm.pushstring( script );
 	vm.call( 1, 0 );
@@ -127,6 +134,9 @@ but before the script is executed:
 <pre>
 	org.luaj.compiler.LuaC.install();
 </pre>
+
+<p>
+To omit the compiler, omit this line from your startup code. 
 
 <h2>Run a script using JSR-233 Dynamic Scripting</h2>
 
