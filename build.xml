@@ -57,6 +57,26 @@
 		    </fileset>		
 		</jar>
 	</target>
+
+	<target name="doc">
+		<delete dir="docs/api"/>
+		<mkdir dir="docs/api"/>
+		<javadoc packagenames="org.luaj.vm.*"
+				sourcepath="src/core"
+				defaultexcludes="yes"
+				destdir="docs/api"
+				author="true"
+				version="true"
+				use="true"
+				windowtitle="Luaj API">
+			<doctitle><![CDATA[<h1>Luaj API</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; 2007-2008 Luaj.org. All Rights Reserved.</i>]]></bottom>
+			<tag name="todo" scope="all" description="To do:"/>
+			<group title="Core VM" packages="org.luaj.vm.*"/>
+			<link offline="true" href="http://sourceforge.net/projects/luaj/" packagelistLoc="C:\tmp"/>
+			<link href="http://sourceforge.net/projects/luaj/"/>
+		</javadoc>
+	</target>
 	
 	<target name="dist">
 		<delete dir="build/luaj-${version}"/>
