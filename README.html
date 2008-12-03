@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<title>Getting Started with LuaJ</title>
+<link rel="stylesheet" type="text/css" href="http://sourceforge.net/dbimage.php?id=196140">
+<link rel="stylesheet" type="text/css" href="http://sourceforge.net/dbimage.php?id=196141">
+<META HTTP-EQUIV="content-type" CONTENT="text/html; charset=iso-8859-1">
+</head>
+
+<body>
+
+<hr>
+<h1>
+<a href="README.html"><img src="http://sourceforge.net/dbimage.php?id=196139" alt="" border="0"></a>
+
+Add Multimedia Data
+Getting Started with LuaJ
+
+</h1>
+
+by James Roseborough, Ian Farmer
+<p>
+<small>
+Copyright &copy; 2007-2008 Luaj.org.
+Freely available under the terms of the
+<a href="http://sourceforge.net/dbimage.php?id=196142">Luaj license</a>.
+</small>
+<hr>
+<p>
+
+<a href="#1">examples</a>
+&middot;
+<a href="#2">concepts</a>
+
+<!-- ====================================================================== -->
+<p>
+
+<h1>1 - <a name="1">Simple Examples</a></h1>
+
+<h2>Run a script in J2SE</h2>
+
+<p>
+From the main distribution directory line type:
+
+<pre>
+	java -cp luaj-j2se-${VERS}.jar lua src/test/res/test4.lua
+</pre>
+
+<p>
+You should see the following output:
+<pre>
+	40
+</pre>
+
+<h2>Compile a script in J2SE</h2>
+
+<p>
+From the main distribution directory line type:
+
+<pre>
+	java -cp luaj-j2se-${VER}.jar luac src/test/res/test4.lua
+	java -cp luaj-j2se-${VER}.jar lua luac.out
+</pre>
+
+<p>
+The compiled output should run and produce the same result.
+
+<h2>Run a script in a Java Application</h2>
+
+<p>
+The following pattern is used within J2SE
+
+<pre>
+	import org.luaj.platform.*;
+	import org.luaj.vm.*;
+
+	String script = "main.lua";
+	Platform.setPlatform( new J2sePlatform() );
+	LuaState vm = Platform.newLuaState();
+	vm.getglobal( "dofile" );
+	vm.pushstring( script );
+	vm.call( 1, 0 );
+</pre>
+
+<p>
+You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
+
+<p>
+Additional usage may be found in
+<pre>
+	src/sample/LuaRunner.java
+</pre>
+
+<h2>Run a script in a MIDlet</h2>
+
+<p>
+The following pattern is used within MIDlets:
+
+<pre>
+	import org.luaj.platform.*;
+	import org.luaj.vm.*;
+
+	String script = "main.lua";
+	Platform.setPlatform( new J2mePlatform() );
+	LuaState vm = Platform.newLuaState();
+	vm.getglobal( "dofile" );
+	vm.pushstring( script );
+	vm.call( 1, 0 );
+</pre>
+
+<p>
+The file must be a resource within within the midlet jar for <em>dofile()</em> to find it.
+Any files included via <em>require()</em> must also be part of the midlet resources.
+
+<p>
+You must include the library <b>lib/luaj-j2me-${VER}.jar</b> in your midlet jar.
+They can be obfuscated if desired.
+
+<h2>Including the compiler</h2>
+
+By default, the compiler is not included to minimize footprint.
+
+<p>
+To include it, include the following after the Platform is created,
+but before the script is executed:
+<pre>
+	org.luaj.compiler.LuaC.install();
+</pre>
+
+<h2>Run a script using JSR-233 Dynamic Scripting</h2>
+
+<p>
+The standard use of JSR-233 scripting engines may be used:
+
+<pre>
+	ScriptEngineManager mgr = new ScriptEngineManager();
+	ScriptEngine e = mgr.getEngineByExtension(".lua");
+	e.put("x", 25);
+	e.eval("y = math.sqrt(x)");
+	System.out.println( "y="+e.get("y") );
+</pre>
+
+<p>
+All standard aspects of script engines including compiled statements should be supported.
+
+<p>
+You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
+
+<p>
+A working example may be found in
+<pre>
+	src/script/ScriptEngineSample.java
+</pre>
+
+
+<h2>Include and use the luajava library</h2>
+
+<p>
+To include the <em>luajava</em> library, include a line in your script such as:
+
+<pre>
+	require( "org.luaj.lib.j2se.Luajava" )
+</pre>
+
+<p>
+or include the following line in your startup code:
+
+<pre>
+	org.luaj.lib.j2se.Luajava.init( vm._G );
+</pre>
+
+<p>
+See the following example for more details:
+<pre>
+	src/sample/LuajavaRunner.java
+</pre>
+
+<p>
+Because reflection is required by the implementation, this is only usable from the J2SE platform.
+
+<p>
+You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
+
+<p>
+You can try sample code that creates a simple Swing UI using:
+<pre>
+	java -cp luaj-j2se-${VERS}.jar lua src/test/res/swingapp.lua
+</pre>
+
+
+<h1>2 - <a name="2">Concepts</a></h1>
+
+<h2>Platforms</h2>
+A Platform is required to set up basic filesystem behavior as well as
+contolling mappings to underlying math functions.
+
+<h3>J2sePlatform</h3>
+
+This platform is used to set up the basic environment for a J2SE application.
+The default search path is the current directory,
+and the math operations include all those supported by J2SE.
+
+<h3>J2mePlatform</h3>
+
+This platform is used to set up the basic environment for a J2ME application.
+The default search path is limited to the jar resources,
+and the math operations are limited to those supported by J2ME.
+
+<h2>Standard Libraries</h2>
+<p>
+The following libraries are loaded by default:
+<pre>
+	base
+	coroutine
+	math
+	package
+	string
+	table
+</pre>
+
+See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for details on the library API's
+
+<h2>Optional Libraries</h2>
+A java library may be loaded dynamically if created properly. Currently, there is one such library, <em>luajava.</em>
+
+<h3>LuaJava</h3>
+The luajava library is used to easily bind to Java classes via reflection.
+It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
+
+<h2>Unimplemented Libraries</h2>
+The following libraries are not yet implemented:
+<pre>
+	debug
+	io
+</pre>
+
+<h2>Building the jars</h2>
+An ant file is included in the root directory which builds the libraries by default.
+
+<p>
+Other targets exist for creating distribution file an measuring code coverage of unit tests.
+
+<h2>Unit tests</h2>
+
+<p>
+A large array of test scripts may be found in
+<pre>
+	src/test/res/*.lua
+</pre>
+
+<p>
+A large set of JUnit tests are invoked by the JUnit 3 suite:
+<pre>
+	src/test/java/AllTests.lua
+</pre>
+
+<p>
+These tests are used for to produce code coverage statistics using build-coverage.xml.

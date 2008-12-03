@@ -76,6 +76,7 @@
 				<include name="build-coverage.xml"/>
 				<include name="version.properties"/>
 				<include name="wtk.xml"/>
+				<include name="README.html"/>
 		    </fileset>		
 		</copy>
 		<zip destfile="luaj-${version}.zip" 
