@@ -160,7 +160,7 @@ public class lua {
 				if ( args != null )
 					for ( int i=offset; i<args.length; i++ )
 						vm.pushstring(args[i]);
-				vm.pcall(vm.gettop()-1, 0, 0);
+				vm.call(vm.gettop()-1, 0);
 				break;
 			case LuaState.LUA_ERRMEM:
 				System.out.println("out of memory during chunk load");
