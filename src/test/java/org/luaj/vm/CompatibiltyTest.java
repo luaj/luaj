@@ -84,6 +84,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("hugetable");
 	}
 
+	public void testIoLib() throws IOException, InterruptedException {
+		runTest("iolib");
+	}
+
 	public void testLoops() throws IOException, InterruptedException {
 		runTest("loops");
 	}

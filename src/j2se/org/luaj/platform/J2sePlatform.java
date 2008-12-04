@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import org.luaj.lib.MathLib;
+import org.luaj.lib.j2se.J2seIoLib;
 import org.luaj.lib.j2se.LuajavaLib;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LNumber;
@@ -30,6 +31,7 @@ public class J2sePlatform extends Platform {
 
     protected void installOptionalLibs(LuaState vm) {
         vm.installStandardLibs();
+		J2seIoLib.install(vm._G);
         LuajavaLib.install(vm._G);
     }
 
