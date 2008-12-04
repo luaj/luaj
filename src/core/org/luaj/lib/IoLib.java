@@ -24,9 +24,11 @@ package org.luaj.lib;
 import java.io.IOException;
 
 import org.luaj.vm.LFunction;
+import org.luaj.vm.LNil;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LUserData;
+import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
 
 
@@ -40,10 +42,10 @@ public class IoLib extends LFunction {
 		public boolean isclosed();
 		/** returns new position */
 		public int seek(String option, int bytecount) throws IOException;
-		public byte[] readBytes(int count) throws IOException;
+		public LValue readBytes(int count) throws IOException;
 		public Double readNumber() throws IOException;
-		public LString readLine() throws IOException;
-		public LString readFile() throws IOException;
+		public LValue readLine() throws IOException;
+		public LValue readFile() throws IOException;
 	}
 
 
@@ -64,6 +66,7 @@ public class IoLib extends LFunction {
 	
 	public static final String[] NAMES = {
 		"io",
+		"__index",
 		"close",
 		"flush",
 		"input",
@@ -85,51 +88,51 @@ public class IoLib extends LFunction {
 	};
 	
 	private static final int INSTALL      = 0;
-	private static final int IO_CLOSE     = 1;
-	private static final int IO_FLUSH     = 2;
-	private static final int IO_INPUT     = 3;
-	private static final int IO_LINES     = 4;
-	private static final int IO_OPEN      = 5;
-	private static final int IO_OUTPUT    = 6;
-	private static final int IO_POPEN     = 7;
-	private static final int IO_READ      = 8;
-	private static final int IO_TMPFILE   = 9;
-	private static final int IO_TYPE      = 10;
-	private static final int IO_WRITE     = 11;
-	private static final int FILE_CLOSE   = 12;
-	private static final int FILE_FLUSH   = 13;
-	private static final int FILE_LINES   = 14;
-	private static final int FILE_READ    = 15;
-	private static final int FILE_SEEK    = 16;
-	private static final int FILE_SETVBUF = 17;
-	private static final int FILE_WRITE   = 18;
+	private static final int IO_INDEX     = 1;
+	private static final int IO_CLOSE     = 2;
+	private static final int IO_FLUSH     = 3;
+	private static final int IO_INPUT     = 4;
+	private static final int IO_LINES     = 5;
+	private static final int IO_OPEN      = 6;
+	private static final int IO_OUTPUT    = 7;
+	private static final int IO_POPEN     = 8;
+	private static final int IO_READ      = 9;
+	private static final int IO_TMPFILE   = 10;
+	private static final int IO_TYPE      = 11;
+	private static final int IO_WRITE     = 12;
+	private static final int FILE_CLOSE   = 13;
+	private static final int FILE_FLUSH   = 14;
+	private static final int FILE_LINES   = 15;
+	private static final int FILE_READ    = 16;
+	private static final int FILE_SEEK    = 17;
+	private static final int FILE_SETVBUF = 18;
+	private static final int FILE_WRITE   = 19;
 
 	private static File INPUT  = null;
 	private static File OUTPUT = null;
 	private static File ERROR  = null;
 	
-	private static final LTable FILE_MT = new LTable();
+	private static LTable FILE_MT;
 
 	protected void initialize( LTable globals ) {
-		try {
-			LTable io = new LTable();
-			for ( int i=IO_CLOSE; i<=IO_WRITE; i++ )
-				io.put(NAMES[i], newInstance(i));
-			INPUT = openFile("-", "r");
-			OUTPUT = openFile("-", "w");
-			ERROR = OUTPUT;
-			io.put("stdin", new LUserData(INPUT));
-			io.put("stdout", new LUserData(OUTPUT));
-			io.put("stderr", new LUserData(ERROR));
-			for ( int i=FILE_CLOSE; i<=FILE_WRITE; i++ )
-				FILE_MT.put(NAMES[i], newInstance(i));
-			FILE_MT.put("__index", FILE_MT);
-			globals.put( "io", io );
-			PackageLib.setIsLoaded("io", io);
-		} catch ( IOException ioe ) {
-			throw new RuntimeException("io error: "+ioe.getMessage());
-		}
+		LTable io = new LTable();
+		for ( int i=IO_INDEX; i<=IO_WRITE; i++ )
+			io.put(NAMES[i], newInstance(i));
+		io.luaSetMetatable(io);
+		FILE_MT = new LTable();
+		for ( int i=FILE_CLOSE; i<=FILE_WRITE; i++ )
+			FILE_MT.put(NAMES[i], newInstance(i));
+		FILE_MT.put("__index", FILE_MT);
+		INPUT = null;
+		OUTPUT = null;
+		ERROR = null;
+		globals.put( "io", io );
+		PackageLib.setIsLoaded("io", io);
 	}
+
+	private static final char DEFVAL_NONE  =  0;
+	private static final char DEFVAL_STDIN = 'r';
+	private static final char DEFVAL_STDOUT= 'w';
 	
 	private final int id;
 
@@ -141,14 +144,46 @@ public class IoLib extends LFunction {
 		this.id = id;
 	}
 
+	public LString luaAsString() {
+		return new LString(toJavaString());
+	}
+	
+	public String toJavaString() {
+		return "io."+toString();
+	}
+
 	public String toString() {
 		return NAMES[id]+"()";
 	}
-		
+
+	private File input(LuaState vm) {
+		return INPUT!=null? INPUT: (INPUT=ioopenfile(vm,"-","r"));
+	}
+	
+	private File output(LuaState vm) {
+		return OUTPUT!=null? OUTPUT: (OUTPUT=ioopenfile(vm,"-","w"));
+	}
+	
+	private File error(LuaState vm) {
+		return ERROR!=null? ERROR: (ERROR=ioopenfile(vm,"-","w"));
+	}
+	
+	public LValue __index(LuaState vm, LValue table, LValue key) {
+		String k = key.toJavaString();		
+		if ( "stdout".equals(k) )
+			return touserdata(output(vm));
+		else if ( "stdin".equals(k) )
+			return touserdata(input(vm));
+		else if ( "stderr".equals(k) )
+			return touserdata(error(vm));
+		else 
+			return LNil.NIL;
+	}
+
 	public boolean luaStackCall( LuaState vm ) {
 		File f;
 		String s;
-		int i,n;
+		int n;
 		try {
 		switch ( id ) {
 			/* Load the table library dynamically */
@@ -156,12 +191,12 @@ public class IoLib extends LFunction {
 				initialize(vm._G);
 				break;
 			case IO_CLOSE:
-				optfile(vm, 2, OUTPUT).close();
+				optfile(vm,2,DEFVAL_STDOUT).close();
 				vm.resettop();
 				vm.pushboolean(true);
 				break;
 			case IO_FLUSH:
-				checkopen(vm,OUTPUT);
+				checkopen(vm,output(vm));
 				OUTPUT.flush();
 				vm.resettop();
 				vm.pushboolean(true);
@@ -169,10 +204,15 @@ public class IoLib extends LFunction {
 			case IO_INPUT:
 				INPUT = ((s = vm.optstring(1, null)) != null)? 
 						ioopenfile(vm,s,"r"):
-						optfile(vm,1,INPUT);
+						optfile(vm,2,DEFVAL_STDIN);
 				setresult(vm, INPUT);
 				break;
 			case IO_LINES:
+				INPUT = ((s = vm.optstring(1, null)) != null)? 
+						ioopenfile(vm,s,"r"):
+						optfile(vm,2,DEFVAL_STDIN);
+				vm.resettop();
+				vm.pushlvalue(lines(INPUT));
 				break;
 			case IO_OPEN:
 				setresult(vm, openFile(vm.checkstring(2), vm.optstring(3,"r")));
@@ -180,7 +220,7 @@ public class IoLib extends LFunction {
 			case IO_OUTPUT:
 				OUTPUT = ((s = vm.optstring(2, null)) != null)? 
 						ioopenfile(vm,s,"w"):
-						optfile(vm,1,OUTPUT);
+						optfile(vm,2,DEFVAL_STDOUT);
 				setresult(vm, OUTPUT);
 				break;
 			case IO_POPEN:
@@ -191,7 +231,7 @@ public class IoLib extends LFunction {
 			case IO_TMPFILE:
 				break;
 			case IO_TYPE:
-				f = optfile(vm,2,null);
+				f = optfile(vm,2,DEFVAL_NONE);
 				vm.resettop();
 				if ( f != null )
 					vm.pushstring(f.isclosed()? "closed file": "file");
@@ -212,6 +252,9 @@ public class IoLib extends LFunction {
 				vm.pushboolean(true);
 				break;
 			case FILE_LINES:
+				f = checkfile(vm,2);
+				vm.resettop();
+				vm.pushlvalue(lines(f));
 				break;
 			case FILE_READ:
 				f = checkfile(vm,2);
@@ -224,6 +267,7 @@ public class IoLib extends LFunction {
 				vm.pushinteger(n);
 				break;
 			case FILE_SETVBUF:
+				vm.resettop();
 				break;
 			case FILE_WRITE:
 				f = checkfile(vm,2);
@@ -241,6 +285,21 @@ public class IoLib extends LFunction {
 		return false;
 	}
 	
+	private LValue lines(final File f) {
+		return new LFunction() {
+			public boolean luaStackCall(LuaState vm) {
+				vm.resettop();
+				try {
+					vm.pushlvalue(f.readLine());
+				} catch (IOException e) {
+					vm.pushnil();
+					vm.pushstring("io error: "+e);
+				}
+				return false;
+			}
+		};
+	}
+
 	private static void iowrite(LuaState vm, File f) throws IOException {
 		checkopen(vm,f);
 		for ( int i=2, n=vm.gettop(); i<=n; i++ )
@@ -254,15 +313,15 @@ public class IoLib extends LFunction {
 		int i,n=vm.gettop();
 		for ( i=2; i<=n; i++ ) {
 			if ( vm.isnumber(i) ) {
-				vm.pushlstring(f.readBytes(vm.tointeger(i)));
+				vm.pushlvalue(f.readBytes(vm.tointeger(i)));
 			} else {
 				String format = vm.checkstring(i);
 				if ( "*n".equals(format) ) 
 					vm.pushnumber(f.readNumber());
 				else if ( "*a".equals(format) ) 
-					vm.pushlstring(f.readFile());
+					vm.pushlvalue(f.readFile());
 				else if ( "*l".equals(format) )
-					vm.pushlstring(f.readLine());
+					vm.pushlvalue(f.readLine());
 				else
 					vm.typerror( i, "(invalid format)" );
 			}
@@ -275,9 +334,12 @@ public class IoLib extends LFunction {
 		return (File) vm.checkudata(index, File.class);
 	}
 	
-	private static File optfile(LuaState vm, int index, File defval) {
+	private File optfile(LuaState vm, int index, char defval) {
 		Object u = vm.touserdata(index);
-		return (u instanceof File? (File) u: defval);
+		return (u instanceof File? (File) u: 
+			defval==DEFVAL_STDOUT? output(vm):
+			defval==DEFVAL_STDIN? input(vm):
+			null);
 	}
 	
 	private static void checkopen(LuaState vm, File file) {
@@ -287,13 +349,16 @@ public class IoLib extends LFunction {
 	
 	private static void setresult(LuaState vm, File file) {
 		vm.settop(0);
-		vm.pushlvalue(new LUserData(file, FILE_MT));
+		vm.pushlvalue(touserdata(file));
+	}
+	
+	private static LUserData touserdata(File file) {
+		return new LUserData(file, FILE_MT);		
 	}
 
 	private File ioopenfile(LuaState vm, String filename, String mode) {
 		try {
 			File f = openFile( filename, mode );
-			setresult( vm, f );
 			return f;
 		} catch ( Exception e ) {
 			vm.error("io error: "+e.getMessage());

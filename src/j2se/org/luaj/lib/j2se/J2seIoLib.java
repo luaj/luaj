@@ -22,16 +22,22 @@
 package org.luaj.lib.j2se;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.Closeable;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 import org.luaj.lib.BaseLib;
 import org.luaj.lib.IoLib;
+import org.luaj.vm.LNil;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
+import org.luaj.vm.LValue;
 
 
 public class J2seIoLib extends IoLib {
@@ -53,143 +59,153 @@ public class J2seIoLib extends IoLib {
 	}
 	
 	protected File openFile(String filename, String mode) throws IOException {
-		return ( mode == null || mode.startsWith("r") )? 
-			new InputFileImpl(
-					"-".equals(filename)? 
-							System.in:
-							new FileInputStream(filename) ):
-			new OutputFileImpl(
-					"-".equals(filename)?
-							System.out:
-							new FileOutputStream(filename,  mode.endsWith("+")) );
+		boolean isstdfile = "-".equals(filename);
+		boolean isreadmode = mode.startsWith("r");
+		if ( isstdfile ) 
+			return isreadmode? 
+					new FileImpl(BaseLib.STDIN != null? BaseLib.STDIN: System.in): 
+					new FileImpl(BaseLib.STDOUT != null? BaseLib.STDOUT: System.out);
+		boolean isappend = mode.startsWith("a");
+		// TODO: handle update mode 
+		// boolean isupdate = mode.endsWith("+");
+		RandomAccessFile f = new RandomAccessFile(filename,isreadmode? "r": "rw");
+		if ( isappend ) 
+			f.seek(f.length());
+		return new FileImpl( f );
 	}
 
 	private static void notimplemented() {
 		throw new RuntimeException("not implemented");
 	}
 	
-	private static final class InputFileImpl implements File {
+	private static final class FileImpl implements File {
+		private final RandomAccessFile file;
 		private final InputStream is;
+		private final OutputStream os;
+		private final Closeable closer;
+		private final DataInput din;
+		private final DataOutput dout;
 		private boolean closed = false;
-		private InputFileImpl( InputStream is ) {
-			this.is = is.markSupported()? is: new BufferedInputStream(is);
+		private FileImpl( RandomAccessFile file, InputStream is, OutputStream os, DataInput din, DataOutput dout, Closeable closer ) {
+			this.file = file;
+			this.is = is!=null? is.markSupported()? is: new BufferedInputStream(is): null;
+			this.os = os;
+			this.din = din;
+			this.dout = dout;
+			this.closer = closer;
+		}
+		private FileImpl( RandomAccessFile f ) {
+			this( f, null, null, f, f, f );
+		}
+		private FileImpl( InputStream i ) {
+			this( null, i, null, new DataInputStream(i), null, i );
+		}
+		private FileImpl( OutputStream o ) {
+			this( null, null, o, null, new DataOutputStream(o), o );
+		}
+		public String toString() {
+			return "file ("+this.hashCode()+")";
 		}
 		public void close() throws IOException  {
 			closed = true;
-			is.close();
+			closer.close();
 		}
-		public void flush() {
-			notimplemented();
+		public void flush() throws IOException {
+			if ( os != null )
+				os.flush();
 		}
-		public void write(LString string) {
-			notimplemented();
+		public void write(LString s) throws IOException {
+			if ( dout != null )
+				dout.write( s.m_bytes, s.m_offset, s.m_length );
+			else
+				notimplemented();
 		}
 		public boolean isclosed() {
 			return closed;
 		}
-		public int seek(String option, int bytecount) throws IOException {
+		public int seek(String option, int pos) throws IOException {
+			if ( file != null ) {
+				if ( "set".equals(option) )
+					file.seek(pos);
+				else if ( "end".equals(option) )
+					file.seek(file.length()+pos);
+				else
+					file.seek(file.getFilePointer()+pos);
+				return (int) file.getFilePointer();
+			}
 			notimplemented();
 			return 0;
 		}
-		public byte[] readBytes(int count) throws IOException {
-			byte[] b = new byte[count];
-			int n;
-			for ( int i=0; i<count; ) {
-				n = is.read(b,i,count-i);
-				if ( n < 0 )
-					throw new java.io.EOFException("eof");
-				i += n;
+		public LValue readBytes(int count) throws IOException {
+			if ( din != null ) {
+				byte[] b = new byte[count];
+				din.readFully(b);
+				return new LString(b);
 			}
-			return b;
+			notimplemented();
+			return LNil.NIL;
 		}
-		public LString readLine() throws IOException {
+		public LValue readLine() throws IOException {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			int c;
 			while ( true ) { 
-				int c = is.read();
+				if ( is != null ) {
+					c = is.read();
+				} else {
+					c = file.read();
+				}
 				if ( c < 0 || c == '\n' )
 					break;
 				baos.write(c);
 			}
-			return new LString(baos.toByteArray());
+			return ( c < 0 && baos.size() == 0 )? 
+				LNil.NIL:
+				new LString(baos.toByteArray());
 		}
-		public LString readFile() throws IOException {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			while ( true ) { 
-				int c = is.read();
-				if ( c < 0 )
-					break;
-				baos.write(c);
-			}
-			return new LString(baos.toByteArray());
+		public LValue readFile() throws IOException {
+			if ( file != null ) {
+				return readBytes((int) (file.length() - file.getFilePointer()));
+			} 
+			notimplemented();
+			return null;
 		}
 		public Double readNumber() throws IOException {
+			if ( is == null && file == null )
+				notimplemented();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			readChars(" \t\r\n",null);
+			readChars("-+",baos);
+			//readChars("0",baos);
+			//readChars("xX",baos);
+			readChars("0123456789",baos);
+			readChars(".",baos);
+			readChars("0123456789",baos);
+			//readChars("eEfFgG",baos);
+			// readChars("+-",baos);
+			//readChars("0123456789",baos);
+			String s = baos.toString();
+			return s.length()>0? Double.valueOf(s): null;
+		}
+		private void readChars(String chars, ByteArrayOutputStream baos) throws IOException {
 			int c;
 			while ( true ) {
-				c = is.read();
-				if (  c < 0 )
-					return null;
-				if ( "\t\r\n ".indexOf(c) < 0 )
-					break;
-			}
-			if ( (c < '0' || c > '9') && c != '-' && c != '.' )
-				return null;
-			baos.write(c);
-			while ( true ) { 
-				is.mark(1);
-				c = is.read();
-				if ( c < 0 )
-					break;
-				if ( (c < '0' || c > '9') && c != '-' && c != '.' ) {
-					is.reset();
-					break;
+				if ( is != null ) {
+					is.mark(1);
+					c = is.read();
 				} else {
-					baos.write( c );
+					c = file.read();
 				}
+				if ( chars.indexOf(c) < 0 ) {
+					if ( is != null )
+						is.reset();
+					else if ( file != null )
+						file.seek(file.getFilePointer()-1);
+					return;
+				}
+				if ( baos != null )
+					baos.write( c );
 			}
-			return Double.valueOf(baos.toString());
 		}		
-	}
-
-	private static final class OutputFileImpl implements File {
-		private final OutputStream os;
-		private boolean closed = false;
-		private OutputFileImpl( OutputStream os ) {
-			this.os = os;
-		}
-		public void close() throws IOException {
-			closed = true;
-			os.close();
-		}
-		public void flush() throws IOException {
-			os.flush();
-		}
-		public void write(LString s) throws IOException {
-			os.write(s.m_bytes, s.m_offset, s.m_length);
-		}
-		public boolean isclosed() {
-			return closed;
-		}		
-		public int seek(String option, int bytecount) throws IOException {
-			notimplemented();
-			return 0;
-		}		
-		public byte[] readBytes(int count) throws IOException {
-			notimplemented();
-			return null;
-		}
-		public LString readLine() throws IOException {
-			notimplemented();
-			return null;
-		}
-		public Double readNumber() throws IOException {
-			notimplemented();
-			return null;
-		}		
-		public LString readFile() throws IOException {
-			notimplemented();
-			return null;
-		}
 	}
 	
 }

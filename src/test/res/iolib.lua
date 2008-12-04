@@ -1,5 +1,6 @@
 -- simple io-library tests
 print( io ~= nil )
+print( io.open ~= nil )
 print( io.stdin ~= nil )
 print( io.stdout ~= nil )
 print( io.stderr ~= nil )
