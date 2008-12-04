@@ -28,7 +28,6 @@ import java.util.Vector;
 import org.luaj.vm.CallInfo;
 import org.luaj.vm.LBoolean;
 import org.luaj.vm.LFunction;
-import org.luaj.vm.LNil;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
@@ -39,7 +38,7 @@ import org.luaj.vm.Platform;
 
 public class PackageLib extends LFunction {
 
-	public static final String DEFAULT_LUA_PATH = "?.luac;?.lua";
+	public static final String DEFAULT_LUA_PATH = "?.lua";
 	
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
