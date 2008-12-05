@@ -82,6 +82,7 @@ public class J2seIoLib extends IoLib {
 		private final InputStream is;
 		private final OutputStream os;
 		private boolean closed = false;
+		private boolean nobuffer = false;
 		private FileImpl( RandomAccessFile file, InputStream is, OutputStream os ) {
 			this.file = file;
 			this.is = is!=null? is.markSupported()? is: new BufferedInputStream(is): null;
@@ -99,14 +100,14 @@ public class J2seIoLib extends IoLib {
 		public String toString() {
 			return "file ("+this.hashCode()+")";
 		}
+		public boolean isstdfile() {
+			return file == null;
+		}
 		public void close() throws IOException  {
 			closed = true;
-			if ( file != null )
+			if ( file != null ) {
 				file.close();
-			else if ( os != null )
-				os.close();
-			else if ( is != null )
-				is.close();
+			}
 		}
 		public void flush() throws IOException {
 			if ( os != null )
@@ -119,6 +120,8 @@ public class J2seIoLib extends IoLib {
 				file.write( s.m_bytes, s.m_offset, s.m_length );
 			else
 				notimplemented();
+			if ( nobuffer )
+				flush();
 		}
 		public boolean isclosed() {
 			return closed;
@@ -138,6 +141,9 @@ public class J2seIoLib extends IoLib {
 			}
 			notimplemented();
 			return 0;
+		}
+		public void setvbuf(String mode, int size) {
+			nobuffer = "no".equals(mode);
 		}
 		public LValue readBytes(int count) throws IOException {
 			if ( file != null ) {
@@ -216,5 +222,11 @@ public class J2seIoLib extends IoLib {
 		return "w".equals(mode)? 
 				new FileImpl( p.getOutputStream() ):  
 				new FileImpl( p.getInputStream() ); 
+	}
+
+	protected File tmpFile() throws IOException {
+		java.io.File f = java.io.File.createTempFile(".luaj","bin");
+		f.deleteOnExit();
+		return new FileImpl( new RandomAccessFile(f,"rw") );
 	}
 }

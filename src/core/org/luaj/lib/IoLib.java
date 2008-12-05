@@ -38,6 +38,7 @@ public class IoLib extends LFunction {
 	protected interface File {
 		public void write( LString string ) throws IOException;
 		public void flush() throws IOException;
+		public boolean isstdfile();
 		public void close() throws IOException;
 		public boolean isclosed();
 		/** returns new position */
@@ -46,6 +47,7 @@ public class IoLib extends LFunction {
 		public Double readNumber() throws IOException;
 		public LValue readLine() throws IOException;
 		public LValue readFile() throws IOException;
+		public void setvbuf(String mode, int size);
 	}
 
 
@@ -62,6 +64,13 @@ public class IoLib extends LFunction {
 	 * @throws IOException if could not be opened
 	 */
 	abstract protected File openFile(String filename, String mode) throws IOException;
+
+	/**
+	 * Open a temporary file. 
+	 * @return File object if successful
+	 * @throws IOException if could not be opened
+	 */
+	abstract protected File tmpFile() throws IOException;
 
 	/**
 	 * Start a new process and return a file for input or output
@@ -198,9 +207,8 @@ public class IoLib extends LFunction {
 				f = vm.isnoneornil(2)? 
 						output(vm):
 						checkfile(vm,2);
-				f.close();
-				vm.resettop();
-				vm.pushboolean(true);
+				checkopen(vm, f);
+				ioclose(vm,f);
 				break;
 			case IO_FLUSH:
 				checkopen(vm,output(vm));
@@ -220,8 +228,9 @@ public class IoLib extends LFunction {
 				INPUT = vm.isnoneornil(2)?  
 						input(vm):
 						ioopenfile(vm,vm.checkstring(2),"r");
+				checkopen(vm, INPUT);
 				vm.resettop();
-				vm.pushlvalue(lines(INPUT));
+				vm.pushlvalue(lines(vm,INPUT));
 				break;
 			case IO_OPEN:
 				setresult(vm, openFile(vm.checkstring(2), vm.optstring(3,"r")));
@@ -238,9 +247,11 @@ public class IoLib extends LFunction {
 				setresult(vm, openProgram(vm.checkstring(2),vm.optstring(3, "r")));				
 				break;
 			case IO_READ:
+				checkopen(vm, INPUT);
 				ioread( vm, INPUT );
 				break;
 			case IO_TMPFILE:
+				setresult(vm, tmpFile());
 				break;
 			case IO_TYPE:
 				f = optfile(vm,2);
@@ -251,22 +262,23 @@ public class IoLib extends LFunction {
 					vm.pushnil();
 				break;
 			case IO_WRITE:
+				checkopen(vm, output(vm));
 				iowrite( vm, OUTPUT );
 				break;
 			case FILE_CLOSE:
-				checkfile(vm,2).close();
-				vm.resettop();
-				vm.pushboolean(true);
+				f = checkfile(vm,2);
+				ioclose(vm, f);
 				break;
 			case FILE_FLUSH:
-				checkfile(vm,2).flush();
+				f = checkfile(vm,2);
+				f.flush();
 				vm.resettop();
 				vm.pushboolean(true);
 				break;
 			case FILE_LINES:
 				f = checkfile(vm,2);
 				vm.resettop();
-				vm.pushlvalue(lines(f));
+				vm.pushlvalue(lines(vm,f));
 				break;
 			case FILE_READ:
 				f = checkfile(vm,2);
@@ -281,7 +293,11 @@ public class IoLib extends LFunction {
 				vm.pushinteger(n);
 				break;
 			case FILE_SETVBUF:
+				f = checkfile(vm,2);
+				vm.remove(2);
+				f.setvbuf(vm.checkstring(2),vm.optint(3, 1024));
 				vm.resettop();
+				vm.pushboolean(true);
 				break;
 			case FILE_WRITE:
 				f = checkfile(vm,2);
@@ -292,22 +308,44 @@ public class IoLib extends LFunction {
 				LuaState.vmerror( "bad io id" );
 			}
 		} catch ( IOException ioe ) {
-			vm.resettop();
-			vm.pushnil();
-			vm.pushstring("io error: "+ioe.getMessage());
+			seterrorresult(vm,ioe);
 		}
 		return false;
 	}
 	
-	private LValue lines(final File f) {
+	private static void ioclose(LuaState vm, File f) throws IOException {
+		if ( f.isstdfile() )
+			seterrorresult(vm,"cannot close standard file");
+		else {
+			f.close();
+			setsuccessresult(vm);
+		}
+	}
+
+	private static void setsuccessresult(LuaState vm) {
+		vm.resettop();
+		vm.pushboolean(true);
+	}
+
+	private static void seterrorresult(LuaState vm, IOException ioe) {
+		String s = ioe.getMessage();		
+		seterrorresult(vm, "io error: "+(s!=null? s: ioe.toString()));
+	}
+	
+	private static void seterrorresult(LuaState vm, String errortext) {
+		vm.resettop();
+		vm.pushnil();
+		vm.pushstring(errortext);
+	}
+
+	private LValue lines(LuaState vm, final File f) {
 		return new LFunction() {
 			public boolean luaStackCall(LuaState vm) {
 				vm.resettop();
 				try {
 					vm.pushlvalue(f.readLine());
 				} catch (IOException e) {
-					vm.pushnil();
-					vm.pushstring("io error: "+e);
+					seterrorresult(vm,e);
 				}
 				return false;
 			}
@@ -315,7 +353,6 @@ public class IoLib extends LFunction {
 	}
 
 	private static void iowrite(LuaState vm, File f) throws IOException {
-		checkopen(vm,f);
 		for ( int i=2, n=vm.gettop(); i<=n; i++ )
 			f.write( vm.checklstring(i) );
 		vm.resettop();
@@ -323,7 +360,6 @@ public class IoLib extends LFunction {
 	}
 
 	private static void ioread(LuaState vm, File f) throws IOException {
-		checkopen( vm, f );
 		int i,n=vm.gettop();
 		for ( i=2; i<=n; i++ ) {
 			if ( vm.isnumber(i) ) {
@@ -345,7 +381,9 @@ public class IoLib extends LFunction {
 	}
 
 	private static File checkfile(LuaState vm, int index) {
-		return (File) vm.checkudata(index, File.class);
+		File f = (File) vm.checkudata(index, File.class);
+		checkopen( vm, f );
+		return f;
 	}
 	
 	private File optfile(LuaState vm, int index) {
@@ -353,9 +391,10 @@ public class IoLib extends LFunction {
 		return (u instanceof File? (File) u: null); 
 	}
 	
-	private static void checkopen(LuaState vm, File file) {
+	private static File checkopen(LuaState vm, File file) {
 		if ( file.isclosed() )
 			vm.error("attempt to use a closed file");
+		return file;
 	}
 	
 	private static void setresult(LuaState vm, File file) {

@@ -66,3 +66,10 @@ checkallerrors('file.seek',{},'bad argument #1')
 checkallerrors('file.seek',{{file},nonstring},'bad argument #1')
 checkallerrors('file.seek',{{file},{"set","cur","end"},nonnumber},'bad argument #2')
 
+-- file:setvbuf (mode [, size])
+checkallpass('file.setvbuf',{{file},{"no","full","line"}})
+checkallpass('file.setvbuf',{{file},{"full"},{1024,"512"}})
+checkallerrors('file.setvbuf',{},'bad argument #1')
+checkallerrors('file.setvbuf',{{file},notastring},'bad argument #1')
+checkallerrors('file.setvbuf',{{file},{"full"},nonnumber},'bad argument #2')
+

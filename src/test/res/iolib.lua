@@ -61,3 +61,49 @@ for l in io.lines() do
 	print( string.format('%q',l) )
 end
 
+local a = io.tmpfile()
+local b = io.tmpfile()
+print( io.type(a) )
+print( io.type(b) )
+print( "a:write", a:write('aaaaaaa') )
+print( "b:write", b:write('bbbbbbb') )
+print( "a:setvbuf", a:setvbuf("no") )
+print( "a:setvbuf", a:setvbuf("full",1024) )
+print( "a:setvbuf", a:setvbuf("line") )
+print( "a:write", a:write('ccccc') )
+print( "b:write", b:write('ddddd') )
+print( "a:flush", a:flush() )
+print( "b:flush", b:flush() )
+--[[
+print( "a:read", a:read(7) )
+print( "b:read", b:read(7) )
+print( "a:seek", a:seek("cur",-4) )
+print( "b:seek", b:seek("cur",-4) )
+print( "a:write", a:read(7) )
+print( "b:write", b:read(7) )
+--]]
+
+local pcall = function(...)	return ( pcall(...) )end
+
+print( 'a:close', pcall( a.close, a ) )
+print( 'a:write', pcall( a.write, a, 'eee') )
+print( 'a:flush', pcall( a.flush, a) )
+print( 'a:read', pcall( a.read, a, 5) )
+print( 'a:lines', pcall( a.lines, a) )
+print( 'a:seek', pcall( a.seek, a, "cur", -2) )
+print( 'a:setvbuf', pcall( a.setvbuf, a, "no") )
+print( 'a:close', pcall( a.close, a ) )
+print( 'io.type(a)', pcall( io.type, a ) )
+
+print( 'io.close()', pcall( io.close ) ) 
+print( 'io.close(io.output())', pcall( io.close, io.output() ) ) 
+
+io.output('abc.txt')
+print( 'io.close()', pcall( io.close ) ) 
+print( 'io.write', pcall( io.write, 'eee') )
+print( 'io.flush', pcall( io.flush) )
+print( 'io.close', pcall( io.close ) )
+io.input('abc.txt'):close()
+print( 'io.read', pcall( io.read, 5) )
+print( 'io.lines', pcall( io.lines) )
+
