@@ -22,11 +22,6 @@
 package org.luaj.lib.j2se;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,8 +64,12 @@ public class J2seIoLib extends IoLib {
 		// TODO: handle update mode 
 		// boolean isupdate = mode.endsWith("+");
 		RandomAccessFile f = new RandomAccessFile(filename,isreadmode? "r": "rw");
-		if ( isappend ) 
+		if ( isappend ) {
 			f.seek(f.length());
+		} else {
+			if ( ! isreadmode )
+				f.setLength(0);
+		}
 		return new FileImpl( f );
 	}
 
@@ -82,41 +81,42 @@ public class J2seIoLib extends IoLib {
 		private final RandomAccessFile file;
 		private final InputStream is;
 		private final OutputStream os;
-		private final Closeable closer;
-		private final DataInput din;
-		private final DataOutput dout;
 		private boolean closed = false;
-		private FileImpl( RandomAccessFile file, InputStream is, OutputStream os, DataInput din, DataOutput dout, Closeable closer ) {
+		private FileImpl( RandomAccessFile file, InputStream is, OutputStream os ) {
 			this.file = file;
 			this.is = is!=null? is.markSupported()? is: new BufferedInputStream(is): null;
 			this.os = os;
-			this.din = din;
-			this.dout = dout;
-			this.closer = closer;
 		}
 		private FileImpl( RandomAccessFile f ) {
-			this( f, null, null, f, f, f );
+			this( f, null, null );
 		}
 		private FileImpl( InputStream i ) {
-			this( null, i, null, new DataInputStream(i), null, i );
+			this( null, i, null );
 		}
 		private FileImpl( OutputStream o ) {
-			this( null, null, o, null, new DataOutputStream(o), o );
+			this( null, null, o );
 		}
 		public String toString() {
 			return "file ("+this.hashCode()+")";
 		}
 		public void close() throws IOException  {
 			closed = true;
-			closer.close();
+			if ( file != null )
+				file.close();
+			else if ( os != null )
+				os.close();
+			else if ( is != null )
+				is.close();
 		}
 		public void flush() throws IOException {
 			if ( os != null )
 				os.flush();
 		}
 		public void write(LString s) throws IOException {
-			if ( dout != null )
-				dout.write( s.m_bytes, s.m_offset, s.m_length );
+			if ( os != null )
+				os.write( s.m_bytes, s.m_offset, s.m_length );
+			else if ( file != null )
+				file.write( s.m_bytes, s.m_offset, s.m_length );
 			else
 				notimplemented();
 		}
@@ -125,21 +125,24 @@ public class J2seIoLib extends IoLib {
 		}
 		public int seek(String option, int pos) throws IOException {
 			if ( file != null ) {
-				if ( "set".equals(option) )
+				if ( "set".equals(option) ) {
 					file.seek(pos);
-				else if ( "end".equals(option) )
-					file.seek(file.length()+pos);
-				else
+					return (int) file.getFilePointer();
+				} else if ( "end".equals(option) ) {
+					file.seek(file.length()+1+pos);
+					return (int) file.length()+1;
+				} else {
 					file.seek(file.getFilePointer()+pos);
-				return (int) file.getFilePointer();
+					return (int) file.getFilePointer();
+				}
 			}
 			notimplemented();
 			return 0;
 		}
 		public LValue readBytes(int count) throws IOException {
-			if ( din != null ) {
+			if ( file != null ) {
 				byte[] b = new byte[count];
-				din.readFully(b);
+				file.readFully(b);
 				return new LString(b);
 			}
 			notimplemented();
@@ -208,4 +211,10 @@ public class J2seIoLib extends IoLib {
 		}		
 	}
 	
+	protected File openProgram(String prog, String mode) throws IOException {
+		final Process p = Runtime.getRuntime().exec(prog);
+		return "w".equals(mode)? 
+				new FileImpl( p.getOutputStream() ):  
+				new FileImpl( p.getInputStream() ); 
+	}
 }

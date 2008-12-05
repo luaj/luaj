@@ -24,3 +24,40 @@ for i,v in ipairs(t) do
 	print( string.format("%q",tostring(v)), type(v))
 end
 
+local h = io.open("abc.txt", "a")
+print( 'h', io.type(h) )
+print( 'write', h:write('\nmore text\neven more text\n') )
+print( 'close', h:close() )
+
+local j = io.open( "abc.txt", "r" )
+print( 'j', io.type(j) )
+print( 'seek', j:seek("set", 3) )
+print( 'read', j:read(4), j:read(3) )
+print( 'seek', j:seek("set", 2) )
+print( 'read', j:read(4), j:read(3) )
+print( 'seek', j:seek("cur", -8 ) )
+print( 'read', j:read(4), j:read(3) )
+print( 'seek(cur,0)', j:seek("cur",0) )
+print( 'seek(cur,20)', j:seek("cur",20) )
+print( 'seek(end,-5)', j:seek("end", -5) )
+print( 'read(4)', string.format("%q", tostring(j:read(4))) )
+print( 'read(4)', string.format("%q", tostring(j:read(4))) )
+print( 'read(4)', string.format("%q", tostring(j:read(4))) )
+
+for l in io.lines("abc.txt") do
+	print( string.format('%q',l) )
+end
+io.input("abc.txt")
+for l in io.lines() do
+	print( string.format('%q',l) )
+end
+io.input(io.open("abc.txt","r"))
+for l in io.lines() do
+	print( string.format('%q',l) )
+end
+io.input("abc.txt")
+io.input(io.input())
+for l in io.lines() do
+	print( string.format('%q',l) )
+end
+
