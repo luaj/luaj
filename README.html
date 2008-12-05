@@ -84,19 +84,13 @@ The following pattern is used within J2SE
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
-
-<p>
-A working example may be found in
+A simple example may be found in
 <pre>
 	src/sample/SampleJ2seMain.java
 </pre>
 
 <p>
-Additional usage may be found in
-<pre>
-	src/sample/LuaRunner.java
-</pre>
+You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
 
 <h2>Run a script in a MIDlet</h2>
 
@@ -119,6 +113,12 @@ The following pattern is used within MIDlets:
 <p>
 The file must be a resource within within the midlet jar for <em>dofile()</em> to find it.
 Any files included via <em>require()</em> must also be part of the midlet resources.
+
+<p>
+A simple example may be found in
+<pre>
+	src/sample/SampleMIDlet.java
+</pre>
 
 <p>
 You must include the library <b>lib/luaj-j2me-${VER}.jar</b> in your midlet jar.
@@ -219,7 +219,7 @@ and the math operations are limited to those supported by J2ME.
 
 <h2>Standard Libraries</h2>
 <p>
-The following libraries are loaded by default:
+The following libraries are loaded by default in J2ME and J2SE platforms:
 <pre>
 	base
 	coroutine
@@ -229,20 +229,37 @@ The following libraries are loaded by default:
 	table
 </pre>
 
+In addition, J2SE contains these two libraries:
+<pre>
+	io
+	luajava
+</pre>
+
 See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for details on the library API's
 
-<h2>Optional Libraries</h2>
-A java library may be loaded dynamically if created properly. Currently, there is one such library, <em>luajava.</em>
+<p>
+There is a partial implementation of the <em>io</em> for J2ME in 
+<pre>
+	src/j2me/org/luaj/lib/j2me/Cldc10IoLib.java
+</pre>
+See the sample midlet to see how it is added to a platform. 
+
+<h2>The Luajava Library</h2>
+The <em>luajava</em> library implements a few functions which allow access to most classes 
+within the host J2SE runtime.  They are included as part of the standard J2SE platform.
 
 <h3>LuaJava</h3>
 The luajava library is used to easily bind to Java classes via reflection.
 It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
 
+Because J2ME does not contain a reflection API, this library cannot be made to work on J2ME, 
+and is not included by default.
+
 <h2>Unimplemented Libraries</h2>
 The following libraries are not yet implemented:
 <pre>
+	os
 	debug
-	io
 </pre>
 
 <h2>Building the jars</h2>

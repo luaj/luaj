@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.lib;
 
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 import org.luaj.vm.LFunction;
@@ -41,13 +43,17 @@ public class IoLib extends LFunction {
 		public boolean isstdfile();
 		public void close() throws IOException;
 		public boolean isclosed();
-		/** returns new position */
+		// returns new position
 		public int seek(String option, int bytecount) throws IOException;
-		public LValue readBytes(int count) throws IOException;
-		public Double readNumber() throws IOException;
-		public LValue readLine() throws IOException;
-		public LValue readFile() throws IOException;
-		public void setvbuf(String mode, int size);
+		public void setvbuf(String mode, int size);		
+		// get length remaining to read
+		public int remaining() throws IOException;		
+		// peek ahead one character
+		public int peek() throws IOException, EOFException;		
+		// return char if read, -1 if eof, throw IOException on other exception 
+		public int read() throws IOException, EOFException;
+		// return length if fully read, false if eof, throw IOException on other exception
+		public int readFully(byte[] bytes, int offset, int length) throws IOException;
 	}
 
 
@@ -56,6 +62,20 @@ public class IoLib extends LFunction {
 	 */
 	abstract protected IoLib newInstance( int index );
 
+	/** 
+	 * Wrap the standard input. 
+	 * @return File 
+	 * @throws IOException
+	 */
+	abstract protected File wrapStdin() throws IOException;
+
+	/** 
+	 * Wrap the standard output. 
+	 * @return File 
+	 * @throws IOException
+	 */
+	abstract protected File wrapStdout() throws IOException;
+	
 	/**
 	 * Open a file in a particular mode. 
 	 * @param filename
@@ -63,7 +83,7 @@ public class IoLib extends LFunction {
 	 * @return File object if successful
 	 * @throws IOException if could not be opened
 	 */
-	abstract protected File openFile(String filename, String mode) throws IOException;
+	abstract protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException;
 
 	/**
 	 * Open a temporary file. 
@@ -233,7 +253,7 @@ public class IoLib extends LFunction {
 				vm.pushlvalue(lines(vm,INPUT));
 				break;
 			case IO_OPEN:
-				setresult(vm, openFile(vm.checkstring(2), vm.optstring(3,"r")));
+				setresult(vm, rawopenfile(vm.checkstring(2), vm.optstring(3,"r")));
 				break;
 			case IO_OUTPUT:
 				OUTPUT = vm.isnoneornil(2)? 
@@ -343,7 +363,7 @@ public class IoLib extends LFunction {
 			public boolean luaStackCall(LuaState vm) {
 				vm.resettop();
 				try {
-					vm.pushlvalue(f.readLine());
+					vm.pushlvalue(freadline(f));
 				} catch (IOException e) {
 					seterrorresult(vm,e);
 				}
@@ -363,15 +383,15 @@ public class IoLib extends LFunction {
 		int i,n=vm.gettop();
 		for ( i=2; i<=n; i++ ) {
 			if ( vm.isnumber(i) ) {
-				vm.pushlvalue(f.readBytes(vm.tointeger(i)));
+				vm.pushlvalue(freadbytes(f,vm.tointeger(i)));
 			} else {
 				String format = vm.checkstring(i);
 				if ( "*n".equals(format) ) 
-					vm.pushnumber(f.readNumber());
+					vm.pushnumber(freadnumber(f));
 				else if ( "*a".equals(format) ) 
-					vm.pushlvalue(f.readFile());
+					vm.pushlvalue(freadall(f));
 				else if ( "*l".equals(format) )
-					vm.pushlvalue(f.readLine());
+					vm.pushlvalue(freadline(f));
 				else
 					vm.typerror( i, "(invalid format)" );
 			}
@@ -408,12 +428,92 @@ public class IoLib extends LFunction {
 
 	private File ioopenfile(LuaState vm, String filename, String mode) {
 		try {
-			File f = openFile( filename, mode );
-			return f;
+			return rawopenfile(filename, mode);
 		} catch ( Exception e ) {
 			vm.error("io error: "+e.getMessage());
 			return null;
 		}
 	}
+
+	private File rawopenfile(String filename, String mode) throws IOException {
+		boolean isstdfile = "-".equals(filename);
+		boolean isreadmode = mode.startsWith("r");
+		if ( isstdfile ) {
+			return isreadmode? 
+				wrapStdin():
+				wrapStdout();
+		}
+		boolean isappend = mode.startsWith("a");
+		boolean isupdate = mode.indexOf("+") > 0;
+		boolean isbinary = mode.endsWith("b");
+		return openFile( filename, isreadmode, isappend, isupdate, isbinary );
+	}
+
+
+	// ------------- file reading utilitied ------------------
+	
+	public static LValue freadbytes(File f, int count) throws IOException {
+		byte[] b = new byte[count];
+		if ( f.readFully(b,0,b.length) < 0 )
+			return LNil.NIL;
+		return new LString(b);
+	}
+	public static LValue freaduntil(File f,int delim) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		int c;
+		try {
+			while ( true ) { 
+				c = f.read();
+				if ( c < 0 || c == delim )
+					break;
+				baos.write(c);
+			}
+		} catch ( EOFException e ) {
+			c = -1;
+		}
+		return ( c < 0 && baos.size() == 0 )? 
+			(LValue) LNil.NIL:
+			(LValue) new LString(baos.toByteArray());
+	}
+	public static LValue freadline(File f) throws IOException {
+		return freaduntil(f,'\n');
+	}
+	public static LValue freadall(File f) throws IOException {
+		int n = f.remaining();
+		if ( n >= 0 ) {
+			return freadbytes(f, n);
+		} else {
+			return freaduntil(f,-1);
+		}
+	}
+	public static Double freadnumber(File f) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		freadchars(f," \t\r\n",null);
+		freadchars(f,"-+",baos);
+		//freadchars(f,"0",baos);
+		//freadchars(f,"xX",baos);
+		freadchars(f,"0123456789",baos);
+		freadchars(f,".",baos);
+		freadchars(f,"0123456789",baos);
+		//freadchars(f,"eEfFgG",baos);
+		// freadchars(f,"+-",baos);
+		//freadchars(f,"0123456789",baos);
+		String s = baos.toString();
+		return s.length()>0? Double.valueOf(s): null;
+	}
+	private static void freadchars(File f, String chars, ByteArrayOutputStream baos) throws IOException {
+		int c;
+		while ( true ) {
+			c = f.peek();
+			if ( chars.indexOf(c) < 0 ) {
+				return;
+			}
+			f.read();
+			if ( baos != null )
+				baos.write( c );
+		}
+	}		
+	
+	
 	
 }

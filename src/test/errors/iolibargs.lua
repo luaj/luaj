@@ -11,6 +11,7 @@ checkallpass('io.close',{{f}})
 checkallerrors('io.close',{notanil},'bad argument #1')
 
 -- io.input ([file])
+f = io.open("abc.txt","r")
 checkallpass('io.input',{{nil,f,"abc.txt"}})
 checkallerrors('io.input',{nonstring},'bad argument #1')
 

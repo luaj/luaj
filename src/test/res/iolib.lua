@@ -24,8 +24,8 @@ for i,v in ipairs(t) do
 	print( string.format("%q",tostring(v)), type(v))
 end
 
-local h = io.open("abc.txt", "a")
-print( 'h', io.type(h) )
+local h,s = io.open("abc.txt", "a")
+print( 'h', io.type(h), s )
 print( 'write', h:write('\nmore text\neven more text\n') )
 print( 'close', h:close() )
 
@@ -59,6 +59,12 @@ io.input("abc.txt")
 io.input(io.input())
 for l in io.lines() do
 	print( string.format('%q',l) )
+end
+
+local count = 0
+io.tmpfile = function()
+	count = count + 1 
+	return io.open("tmp"..count..".out","w")
 end
 
 local a = io.tmpfile()
