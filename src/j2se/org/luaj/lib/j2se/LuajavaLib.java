@@ -143,7 +143,7 @@ public final class LuajavaLib extends LFunction {
 						vm.remove( -2 );
 						LValue result;
 						if ( !vm.isnil( -1 ) ) {
-							int n = args.length;
+							int n = ( args != null ) ? args.length : 0;
 							for ( int i=0; i<n; i++ )
 								vm.pushlvalue( CoerceJavaToLua.coerce(args[i]) );
 							vm.call(n, 1);
