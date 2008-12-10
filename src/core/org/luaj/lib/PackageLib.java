@@ -38,7 +38,7 @@ import org.luaj.vm.Platform;
 
 public class PackageLib extends LFunction {
 
-	public static final String DEFAULT_LUA_PATH = "?.lua";
+	public static String DEFAULT_LUA_PATH = "?.lua";
 	
 	public static InputStream STDIN = null;
 	public static PrintStream STDOUT = System.out;
@@ -54,7 +54,6 @@ public class PackageLib extends LFunction {
 	private static final LString _PRELOAD = new LString("preload");
 	private static final LString _PATH = new LString("path");
 	private static final LValue  _SENTINEL = _EMPTY;
-	private static final LString _LUA_PATH = new LString(DEFAULT_LUA_PATH);
 	
 	private static final String[] NAMES = {
 		"package",
@@ -92,7 +91,7 @@ public class PackageLib extends LFunction {
 		for ( int i=PRELOAD_LOADER; i<=JAVA_LOADER; i++ )
 			loaders.luaInsertPos(0, new PackageLib(i) );
 		pckg.put( "loaders", loaders );
-		pckg.put( _PATH, _LUA_PATH );
+		pckg.put( _PATH, new LString(DEFAULT_LUA_PATH) );
 		globals.put( "package", pckg );
 		setIsLoaded( "package", pckg );
 	}
