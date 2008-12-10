@@ -78,7 +78,7 @@
 		</javadoc>
 	</target>
 	
-	<target name="dist">
+	<target name="dist" depends="all">
 		<delete dir="build/luaj-${version}"/>
 		<mkdir dir="build/luaj-${version}/src"/>
 		<mkdir dir="build/luaj-${version}/lib"/>
