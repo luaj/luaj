@@ -119,6 +119,18 @@ public class CoerceLuaToJava {
 				return 4;
 			}
 		};
+		Coercion floatCoercion = new Coercion() {
+			public Object coerce(LValue value) {
+				return new Float( value.toJavaFloat() );
+			}
+			public int score( LValue value ) {
+				if ( value instanceof LNumber )
+					return 1;
+				if ( value instanceof LBoolean )
+					return 2;
+				return 4;
+			}
+		};
 		Coercion doubleCoercion = new Coercion() {
 			public Object coerce(LValue value) {
 				return new Double( value.toJavaDouble() );
@@ -177,6 +189,8 @@ public class CoerceLuaToJava {
 		COERCIONS.put( Integer.class, intCoercion );
 		COERCIONS.put( Long.TYPE, longCoercion );
 		COERCIONS.put( Long.class, longCoercion );
+		COERCIONS.put( Float.TYPE, floatCoercion );
+		COERCIONS.put( Float.class, floatCoercion );
 		COERCIONS.put( Double.TYPE, doubleCoercion );
 		COERCIONS.put( Double.class, doubleCoercion );
 		COERCIONS.put( String.class, stringCoercion );
