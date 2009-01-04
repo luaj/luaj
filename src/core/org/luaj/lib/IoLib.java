@@ -52,8 +52,8 @@ public class IoLib extends LFunction {
 		public int peek() throws IOException, EOFException;		
 		// return char if read, -1 if eof, throw IOException on other exception 
 		public int read() throws IOException, EOFException;
-		// return length if fully read, false if eof, throw IOException on other exception
-		public int readFully(byte[] bytes, int offset, int length) throws IOException;
+		// return number of bytes read if positive, false if eof, throw IOException on other exception
+		public int read(byte[] bytes, int offset, int length) throws IOException;
 	}
 
 
@@ -454,9 +454,10 @@ public class IoLib extends LFunction {
 	
 	public static LValue freadbytes(File f, int count) throws IOException {
 		byte[] b = new byte[count];
-		if ( f.readFully(b,0,b.length) < 0 )
+		int r;
+		if ( ( r = f.read(b,0,b.length) ) < 0 )
 			return LNil.NIL;
-		return new LString(b);
+		return new LString(b, 0, r);
 	}
 	public static LValue freaduntil(File f,int delim) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -142,14 +142,12 @@ public class J2seIoLib extends IoLib {
 			if ( file != null ) {
 				if ( "set".equals(option) ) {
 					file.seek(pos);
-					return (int) file.getFilePointer();
 				} else if ( "end".equals(option) ) {
-					file.seek(file.length()+1+pos);
-					return (int) file.length()+1;
+					file.seek(file.length()+pos);
 				} else {
 					file.seek(file.getFilePointer()+pos);
-					return (int) file.getFilePointer();
 				}
+				return (int) file.getFilePointer();
 			}
 			notimplemented();
 			return 0;
@@ -190,17 +188,12 @@ public class J2seIoLib extends IoLib {
 			return 0;
 		}
 
-		// return length if fully read, -1 if eof, throws IOException
-		public int readFully(byte[] bytes, int offset, int length) throws IOException {
+		// return number of bytes read if positive, -1 if eof, throws IOException
+		public int read(byte[] bytes, int offset, int length) throws IOException {
 			if (file!=null) {
-				file.readFully(bytes, offset, length);
+				return file.read(bytes, offset, length);
 			} else if (is!=null) {
-				for ( int i=0; i<length; i++, offset++ ) {
-					int c = is.read();
-					if ( c < 0 )
-						return -1;
-					bytes[offset++] = (byte) c;
-				}
+				return is.read(bytes, offset, length);
 			} else {
 				notimplemented();
 			}

@@ -187,8 +187,8 @@ public class Cldc10IoLib extends IoLib {
 			return 0;
 		}
 
-		// return length if fully read, -1 if eof, throws IOException
-		public int readFully(byte[] bytes, int offset, int length) throws IOException {
+		// return number of bytes read if positive, -1 if eof, throws IOException
+		public int read(byte[] bytes, int offset, int length) throws IOException {
 			int n,i=0;
 			if (is!=null) {
 				if ( length > 0 && lookahead >= 0 ) {
@@ -196,10 +196,10 @@ public class Cldc10IoLib extends IoLib {
 					lookahead = -1;
 					i += 1;
 				}
-				for ( ; i<length;  ) {
+				for ( ; i<length; ) {
 					n = is.read(bytes, offset+i, length-i);
 					if ( n < 0 )
-						return -1;
+						return ( i > 0 ? i : -1 );
 					i += n;
 				}
 			} else {
