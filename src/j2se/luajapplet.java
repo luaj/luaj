@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 LuaJ. All rights reserved.
+* Copyright (c) 2008 LuaJ. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,6 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 ******************************************************************************/
-package org.luaj.sample;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -36,7 +35,7 @@ import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
 /**
- * Sample JApplet that runs a lua script in the init phase, and calls
+ * JApplet that runs a lua script in the init phase, and calls
  * global functions for applet lifecycle events.
  * 
  * The script(s) should be located relative to the document root in order 
@@ -45,12 +44,12 @@ import org.luaj.vm.Platform;
  * The functions init(), start(), stop() and destroy() and the script itself 
  * are called with the applet as the first argument, so that the 
  * lua script can perform whatever operations it needs to using the applet 
- * as the main context.  
+ * as the main context and making use of the luajava api.  
  * 
- * The applet looks runs the script identified by the applet parameter 'script' 
- * or 'main.lua' if there is no value for 'script' provided.
+ * The applet runs the script identified by the applet parameter 'script' 
+ * or 'main.lua' if applet parameter 'script' is not provided.
  */
-public class SampleApplet extends JApplet {
+public class luajapplet extends JApplet {
 	private static final long serialVersionUID = 1L;
 
 	// the script will be loaded as a resource 
@@ -74,7 +73,8 @@ public class SampleApplet extends JApplet {
 			System.out.println("script: "+script);
 			System.out.println("base: "+base);
 	
-			// set up the j2me platform.  files will be loaded as resources
+			// set up the j2me platform.  
+			// files will be loaded relative to "base"
 			Platform.setInstance( new J2sePlatform() {
 				public InputStream openFile(String fileName) {
 					// System.out.println("openFile('"+fileName+"')");
@@ -129,7 +129,7 @@ public class SampleApplet extends JApplet {
 				return true;
 			}
 		} catch ( Throwable t ) {
-			System.out.println(name+"():");
+			System.err.println(name+"():");
 			t.printStackTrace( System.err );
 			return true;
 		}
