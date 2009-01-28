@@ -276,7 +276,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 		// parameters
 		int ns = p.maxstacksize;
 		int is = 0;
-		if ( ! p.is_vararg ) {
+		if ( p.is_vararg == 0 ) {
 			ps.println( "\t\tvm.checkstack("+(p.maxstacksize+1)+");" );
 			ps.println( "\t\tvm.settop("+(p.numparams+1)+");");
 			ps.println( "\t\tint base = vm.base + 1;" );
@@ -291,7 +291,7 @@ public class LuaJit extends Lua implements LuaCompiler {
 		ps.println();
 
 		// save var args
-		if ( p.is_vararg ) {
+		if ( p.is_vararg != 0 ) {
 			ps.println( "\t\tint ncopy, ntotal;" );
 			ps.println( "\t\tint nvarargs = vm.top - vm.base - 1;" );
 			ps.println( "\t\tint base = vm.base + 1 + nvarargs;" );
@@ -584,7 +584,7 @@ public class LuaJit extends Lua implements LuaCompiler {
             	if ( Lua.GET_OPCODE(code[pc-1]) == Lua.OP_RETURN )
             		break;
 
-            	if ( p.is_vararg )
+            	if ( p.is_vararg != 0 )
         			ps.println( "\t\tbase -= nvarargs;" );
             	else 
         			ps.println( "\t\tbase -= 1;" );

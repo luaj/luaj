@@ -221,7 +221,7 @@ public class LoadState {
 		f.lastlinedefined = loadInt();
 		f.nups = is.readUnsignedByte();
 		f.numparams = is.readUnsignedByte();
-		f.is_vararg = (0 != is.readUnsignedByte());
+		f.is_vararg = is.readUnsignedByte();
 		f.maxstacksize = is.readUnsignedByte();
 		f.code = loadIntArray();
 		loadConstants(f);

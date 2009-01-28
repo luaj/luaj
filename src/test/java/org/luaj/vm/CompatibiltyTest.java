@@ -176,6 +176,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("upvalues3");
 	}
 
+	public void testVarargs() throws IOException, InterruptedException {
+		runTest("varargs");
+	}
+
 	public void testWeakTable() throws IOException, InterruptedException {
 		runTest("weaktable");
 	}

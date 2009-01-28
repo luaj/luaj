@@ -69,7 +69,6 @@ public class LexState {
 	private static final String LUA_QS(String s) { return "'"+s+"'"; }
 	private static final String LUA_QL(Object o) { return LUA_QS(String.valueOf(o)); }
 	
-	
 	private static final int     LUA_COMPAT_LSTR   =    1; // 1 for compatibility, 2 for old behavior
 	private static final boolean LUA_COMPAT_VARARG = true;	
     
@@ -917,7 +916,6 @@ public class LexState {
 		  f.maxstacksize = 2;  /* registers 0/1 are always valid */
 		  //fs.h = new LTable();
 		  fs.htable = new Hashtable();
-		  fs.varargflags = 0;
 	}
 
 	void close_func() {
@@ -1076,7 +1074,7 @@ public class LexState {
 	  FuncState fs = this.fs;
 	  LPrototype f = fs.f;
 	  int nparams = 0;
-	  f.is_vararg = false;
+	  f.is_vararg = 0;
 	  if (this.t.token != ')') {  /* is `parlist' not empty? */
 	    do {
 	      switch (this.t.token) {
@@ -1089,20 +1087,17 @@ public class LexState {
 	          if (LUA_COMPAT_VARARG) {
 		          /* use `arg' as default name */
 		          this.new_localvarliteral("arg", nparams++);
-		          // f.is_vararg = VARARG_HASARG | VARARG_NEEDSARG;
-		          fs.varargflags = LuaC.VARARG_HASARG | LuaC.VARARG_NEEDSARG;
+		          f.is_vararg = LuaC.VARARG_HASARG | LuaC.VARARG_NEEDSARG;
 	          } 
-	          // f.is_vararg |= VARARG_ISVARARG;
-	          fs.varargflags |= LuaC.VARARG_ISVARARG;
-	          f.is_vararg = true;
+	          f.is_vararg |= LuaC.VARARG_ISVARARG;
 	          break;
 	        }
 	        default: this.syntaxerror("<name> or " + LUA_QL("...") + " expected");
 	      }
-	    } while (!f.is_vararg && this.testnext(','));
+	    } while ((f.is_vararg==0) && this.testnext(','));
 	  }
 	  this.adjustlocalvars(nparams);
-	  f.numparams = (fs.nactvar - (fs.varargflags & LuaC.VARARG_HASARG));
+	  f.numparams = (fs.nactvar - (f.is_vararg & LuaC.VARARG_HASARG));
 	  fs.reserveregs(fs.nactvar);  /* reserve register for parameters */
 	}
 
@@ -1288,11 +1283,9 @@ public class LexState {
 		}
 		case TK_DOTS: { /* vararg */
 			FuncState fs = this.fs;
-			this.check_condition(fs.f.is_vararg, "cannot use " + LUA_QL("...")
+			this.check_condition(fs.f.is_vararg!=0, "cannot use " + LUA_QL("...")
 					+ " outside a vararg function");
-			// fs.f.is_vararg &= ~VARARG_NEEDSARG; /* don't need 'arg' */
-			fs.varargflags &= ~LuaC.VARARG_NEEDSARG; /* don't need 'arg' */
-			fs.f.is_vararg = (fs.varargflags != 0);
+			fs.f.is_vararg &= ~LuaC.VARARG_NEEDSARG; /* don't need 'arg' */
 			v.init(VVARARG, fs.codeABC(Lua.OP_VARARG, 0, 1, 0));
 			break;
 		}

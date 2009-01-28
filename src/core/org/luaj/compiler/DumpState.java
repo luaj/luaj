@@ -209,7 +209,7 @@ public class DumpState {
 		dumpInt(f.lastlinedefined);
 		dumpChar(f.nups);
 		dumpChar(f.numparams);
-		dumpChar(f.is_vararg? 1: 0);
+		dumpChar(f.is_vararg);
 		dumpChar(f.maxstacksize);
 		dumpCode(f);
 		dumpConstants(f);

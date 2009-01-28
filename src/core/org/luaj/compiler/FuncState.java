@@ -69,7 +69,6 @@ public class FuncState extends LuaC {
 	short nactvar;  /* number of active local variables */
 	upvaldesc upvalues[] = new upvaldesc[LUAI_MAXUPVALUES];  /* upvalues */
 	short actvar[] = new short[LUAI_MAXVARS];  /* declared-variable stack */
-	int varargflags; /* whether varargs are needed */
 	
 	FuncState() {
 	}

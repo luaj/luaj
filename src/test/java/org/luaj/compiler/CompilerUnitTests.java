@@ -8,7 +8,7 @@ public class CompilerUnitTests extends AbstractUnitTests {
         super("src/test/compile/lua5.1-tests.zip", "lua5.1-tests");
     }
 
-    public void testAll()        { doTest("all.lua"); }
+     public void testAll()        { doTest("all.lua"); }
 	public void testApi()        { doTest("api.lua"); }
 	public void testAttrib()     { doTest("attrib.lua"); }
 	public void testBig()        { doTest("big.lua"); }

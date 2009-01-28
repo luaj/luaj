@@ -161,7 +161,7 @@ public class LuaState extends Lua {
         int resultbase = base;
         // Expand the stack if necessary
         checkstack( c.p.maxstacksize );
-        if ( ! c.p.is_vararg ) {
+        if ( c.p.is_vararg == 0 ) {
             base += 1;
             luaV_adjusttop( base+c.p.numparams );
         } else {

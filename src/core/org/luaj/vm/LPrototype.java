@@ -49,7 +49,7 @@ public class LPrototype {
 	public int linedefined;
 	public int lastlinedefined;
 	public int numparams;
-	public boolean is_vararg;
+	public int is_vararg;
 	public int maxstacksize;
 
 }
