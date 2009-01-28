@@ -29,3 +29,20 @@ op('set-nil',nil)
 op('set{__}',{__metatable='abc'})
 op('set{}  ',{})
 op('set-nil',nil)
+
+
+local i = 1234
+local t = setmetatable( {}, {
+   	__mode="v",
+   	__index=function(t,k)
+   	local v = i
+   	i = i + 1
+   	rawset(t,k,v)
+   	return v
+   end,
+} )
+
+local l = { 'a', 'b', 'a', 'b', 'c', 'a', 'b', 'c', 'd' }
+for i,key in ipairs(l) do
+	print( 't.'..key, t[key] )
+end
