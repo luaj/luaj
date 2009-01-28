@@ -276,7 +276,9 @@ public class LTable extends LValue {
 			org.luaj.vm.LTable t = (org.luaj.vm.LTable) metatable;
 			LValue m = t.get(TM_MODE);
 			if ( m.isString() && m.toJavaString().indexOf('v')>=0 ) {
-				return new LWeakTable(this);
+				LTable w = new LWeakTable(this);
+				w.m_metatable = t;
+				return w;
 			}
 			this.m_metatable = t;
 		} else {
