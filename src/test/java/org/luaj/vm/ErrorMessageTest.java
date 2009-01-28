@@ -25,6 +25,10 @@ public class ErrorMessageTest extends ScriptDrivenTest {
 		runTest("modulelibargs");
 	}
 
+	public void testOperators() throws IOException, InterruptedException {
+		runTest("operators");
+	}
+	
 	public void testStringLibArgs() throws IOException, InterruptedException {
 		runTest("stringlibargs");
 	}
