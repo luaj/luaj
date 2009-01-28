@@ -325,8 +325,7 @@ public class LValue {
 
 	/** Concatenate this value to a ByteArrayOutputStream */
 	public void luaConcatTo(ByteArrayOutputStream baos) {
-		byte[] b = toJavaString().getBytes();
-		baos.write(b,0,b.length);
+		throw new LuaErrorException( "attempt to concatenate "+luaGetTypeName() );
 	}
 
 	/** Return true if this is a lua string, meaning it is 
