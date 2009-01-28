@@ -23,6 +23,12 @@ notop = function(a) return not a end
 checkallpass('notop',{somenumber})
 checkallerrors('notop',{notanumber},'attempt to perform arithmetic on')
 
+-- function call
+banner( '()' )
+funcop = function(a) return a() end
+checkallpass('funcop',{somefunction})
+checkallerrors('funcop',{notafunction},'attempt to call')
+
 -- ========= binary ops: .. + - * / % ^ == ~= <= >= < > [] . and or
 banner( '..' )
 concatop = function(a,b) return a..b end
@@ -139,7 +145,6 @@ checkallpass('andop',{anylua,anylua})
 banner( 'or' )
 orop = function(a,b) return clean(a or b) end
 checkallpass('orop',{anylua,anylua})
-
 
 -- ========= for x in y
 banner( 'for x=a,b,c' )
