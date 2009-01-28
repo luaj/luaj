@@ -786,9 +786,15 @@ public class LuaState extends Lua {
                 continue;
             }
             case LuaState.OP_FORPREP: {
-                init = this.stack[base + a];
-                step = this.stack[base + a + 2];
+                init = this.stack[base + a].luaToNumber();
+                limit = this.stack[base + a + 1].luaToNumber();
+                step = this.stack[base + a + 2].luaToNumber();
+                if ( init.isNil() ) error("'for' initial value must be a number");
+                if ( limit.isNil() ) error("'for' limit must be a number");
+                if ( step.isNil() ) error("'for' step must be a number");
                 this.stack[base + a] = step.luaBinOpUnknown(Lua.OP_SUB, init);
+                this.stack[base + a + 1] = limit;
+                this.stack[base + a + 2] = step;
                 b = LuaState.GETARG_sBx(i);
                 ci.pc += b;
                 continue;
