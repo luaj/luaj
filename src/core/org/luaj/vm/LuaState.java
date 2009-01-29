@@ -181,7 +181,7 @@ public class LuaState extends Lua {
             
             // add 'arg' compatibility variable
             if ( (c.p.is_vararg & VARARG_NEEDSARG) != 0 ) {
-            	LTable arg = new LTable();
+            	LTable arg = new LTable(nvar,1);
             	for ( int i=1,j=base-nvar-1; i<=nvar; i++, j++ )
             		arg.put(i, stack[j]);
             	arg.put("n", nvar);
