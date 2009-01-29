@@ -28,6 +28,9 @@ function t(a,...)
 	print("...,a",...,a)
 	print("a,...",a,...)
 end
+function u(arg)
+	print( 'arg', arg )
+end
 arg = { "global-1", "global-2", "global-3" }
 function tryall(f,name)
 	print( '---- function '..name..'()' )
@@ -45,3 +48,4 @@ tryall(q,'q')
 tryall(r,'r')
 tryall(s,'s')
 tryall(t,'t')
+tryall(u,'u')
