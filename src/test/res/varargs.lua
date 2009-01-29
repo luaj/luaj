@@ -5,18 +5,16 @@ function p(a,...)
 	print("...,a",...,a)
 	print("a,...",a,...)
 end
---[[ -- these have semantics that depend on compatibity flags
 function q(a,...)
-	print("a,arg[1],arg[2],arg[3]",a,arg[1],arg[2],arg[3])
+	print("a,arg[1],arg[2],arg[3]",a,arg.n,arg[1],arg[2],arg[3])
 end
 function r(a,...)
-	print("a,arg[1],arg[2],arg[3]",a,arg[1],arg[2],arg[3])
+	print("a,arg",a,arg)
 	print("a",a)
 	print("...",...)
 	print("...,a",...,a)
 	print("a,...",a,...)
 end
---]]
 function s(a)
 	local arg = { '1', '2', '3' }	
 	print("a,arg[1],arg[2],arg[3]",a,arg[1],arg[2],arg[3])
@@ -43,7 +41,7 @@ function tryall(f,name)
 	print( ' ->', pcall( f, "q", "r", "s" ) )
 end
 tryall(p,'p')
--- tryall(q,'q')
--- tryall(r,'r')
+tryall(q,'q')
+tryall(r,'r')
 tryall(s,'s')
 tryall(t,'t')

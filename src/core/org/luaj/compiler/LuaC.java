@@ -58,11 +58,6 @@ public class LuaC extends Lua implements LuaCompiler {
 	static final int LUAI_MAXVARS = 200;
 	static final int NO_REG		 = MAXARG_A;
 	
-	/* masks for new-style vararg */
-	static final int     VARARG_HASARG		= 1;
-	static final int     VARARG_ISVARARG	= 2;
-	static final int     VARARG_NEEDSARG	= 4;
-
 
 	/* OpMode - basic instruction format */
 	static final int 

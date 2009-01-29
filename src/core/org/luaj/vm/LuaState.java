@@ -171,12 +171,22 @@ public class LuaState extends Lua {
             int nfix = Math.min(narg, npar);
             int nvar = Math.max(0, narg-nfix);
             
+            
             // must copy args into position, add number parameter
             stack[top] = LInteger.valueOf(nvar);
             System.arraycopy(stack, base+1, stack, top+1, nfix);
             base = top + 1;
             top = base + nfix;
             luaV_adjusttop( base + npar );
+            
+            // add 'arg' compatibility variable
+            if ( (c.p.is_vararg & VARARG_NEEDSARG) != 0 ) {
+            	LTable arg = new LTable();
+            	for ( int i=1,j=base-nvar-1; i<=nvar; i++, j++ )
+            		arg.put(i, stack[j]);
+            	arg.put("n", nvar);
+            	pushlvalue( arg );
+            }
         }
         final int newcc = cc + 1;
         if ( newcc >= calls.length ) {
