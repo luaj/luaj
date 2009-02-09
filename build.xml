@@ -33,9 +33,12 @@
 			<classpath path="build/core/classes"/>
 			<src path="src/j2me"/>
 		</javac>
-		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.5" target="1.5">
+		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.3" target="1.3">
 			<classpath path="build/core/classes"/>
 			<src path="src/j2se"/>
+		</javac>
+		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.5" target="1.5">
+			<classpath path="build/core/classes"/>
 			<src path="src/script"/>
 		</javac>
 	</target>
