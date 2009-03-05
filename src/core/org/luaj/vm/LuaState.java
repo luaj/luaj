@@ -22,7 +22,6 @@
 package org.luaj.vm;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Stack;
 
@@ -775,7 +774,7 @@ public class LuaState extends Lua {
                 	luaV_adjusttop(ci.resultbase + ci.nresults);
 
                 // pop the call stack
-                --cc;
+                calls[cc--] = null;
                 
                 // force a reload of the calling context
                 return;
