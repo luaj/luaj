@@ -76,7 +76,7 @@ public class LFunction extends LValue {
 	 * @return
 	 */
 	public LValue __index(LuaState vm, LValue table, LValue key) {
-		return vm.call(this, table, key);
+		return vm.luaV_call_index(this, table, key);
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class LFunction extends LValue {
 	 * @param val
 	 */
 	public void __newindex(LuaState vm, LValue table, LValue key, LValue val) {
-		vm.call(this, table, key, val);
+		vm.luaV_call_newindex(this, table, key, val);
 	}
 
 	

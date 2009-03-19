@@ -2250,55 +2250,47 @@ public class LuaState extends Lua {
 	}
 	
 	/**  
-	 * Call a function with no arguments and one return value 
+	 * Call a function with no arguments and one return value.
+	 * This may change values in the current stack frame. 
 	 * @param function
 	 * @return
 	 */
 	public LValue call(LFunction function) {
-        int oldtop = top;
-        try {
-        	top = base + this.calls[cc].closure.p.maxstacksize;
-   	    	pushlvalue(function);
-   	    	call(0,1);
-   	    	return poplvalue();
-        } finally {
-        	top = oldtop;
-        }
+    	pushlvalue(function);
+    	call(0,1);
+    	return poplvalue();
 	}
 
 	/**  
 	 * Call a function with one argument and one return value 
+	 * This may change values in the current stack frame. 
 	 * @param function
 	 * @param arg0
 	 * @return
 	 */
 	public LValue call(LFunction function, LValue arg0) {
-        int oldtop = top;
-        try {
-        	top = base + this.calls[cc].closure.p.maxstacksize;
-   	    	pushlvalue(function);
-   	    	pushlvalue(arg0);
-   	    	call(1,1);
-   	    	return poplvalue();
-        } finally {
-        	top = oldtop;
-        }
+    	pushlvalue(function);
+    	pushlvalue(arg0);
+    	call(1,1);
+    	return poplvalue();
 	}
 
 	/**  
-	 * Call a function with two arguments and one return value 
-	 * @param function
-	 * @param arg0
-	 * @param arg1
-	 * @return
+	 * Call an index function with two arguments and one return value 
+	 * Values in the current stack frame will be preserved.  
+	 * @param function the __index function to call
+	 * @param table the table on which the metadata operation is taking place
+	 * @param key the key used in the index operation
+	 * @return the value that results from the metatable operation
 	 */
-	public LValue call(LFunction function, LValue arg0, LValue arg1) {
+	public LValue luaV_call_index(LFunction function, LValue table, LValue key) {
         int oldtop = top;
         try {
-        	top = base + this.calls[cc].closure.p.maxstacksize;
+        	if ( cc >= 0 )
+        		top = base + this.calls[cc].closure.p.maxstacksize;
    	    	pushlvalue(function);
-   	    	pushlvalue(arg0);
-   	    	pushlvalue(arg1);
+   	    	pushlvalue(table);
+   	    	pushlvalue(key);
    	    	call(2,1);
    	    	return poplvalue();
         } finally {
@@ -2307,21 +2299,23 @@ public class LuaState extends Lua {
 	}
 
 	/**  
-	 * Call a function with three arguments and one return value 
-	 * @param function
-	 * @param arg0
-	 * @param arg1
-	 * @param arg2
-	 * @return
+	 * Call a newindex function with three arguments and one return value 
+	 * Values in the current stack frame will be preserved.  
+	 * @param function the __newindex function to call
+	 * @param table the table on which the metadata operation is taking place
+	 * @param key the key used in the newindex operation
+	 * @param value the value beting set in the newindex operation
+	 * @return the value that results from the metatable operation
 	 */
-	public LValue call(LFunction function, LValue arg0, LValue arg1, LValue arg2) {
+	public LValue luaV_call_newindex(LFunction function, LValue table, LValue key, LValue value) {
         int oldtop = top;
         try {
-        	top = base + this.calls[cc].closure.p.maxstacksize;
+        	if ( cc >= 0 )
+        		top = base + this.calls[cc].closure.p.maxstacksize;
    	    	pushlvalue(function);
-   	    	pushlvalue(arg0);
-   	    	pushlvalue(arg1);
-   	    	pushlvalue(arg2);
+   	    	pushlvalue(table);
+   	    	pushlvalue(key);
+   	    	pushlvalue(value);
    	    	call(3,1);
    	    	return poplvalue();
         } finally {
