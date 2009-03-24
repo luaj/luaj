@@ -69,6 +69,7 @@ import org.luaj.lib.TableLib;
  * 
  */
 public class LuaState extends Lua {
+	
     /* thread status; 0 is OK */
     public static final int LUA_YIELD  = 1;
     public static final int LUA_ERRRUN = 2;
@@ -80,6 +81,16 @@ public class LuaState extends Lua {
     private static final int LUA_MINCALLS = 10;    
     private static final int MAXTAGLOOP	= 100;
 
+	// hook function values 
+	private static final int LUA_HOOKCALL = 0;
+	private static final int LUA_HOOKRET = 1;
+	private static final int LUA_HOOKLINE = 2;
+	private static final int LUA_HOOKCOUNT = 3;
+	private static final int LUA_HOOKTAILRET = 4;
+	public static final int LUA_MASKCALL = (1 << LUA_HOOKCALL);
+	public static final int LUA_MASKRET = (1 << LUA_HOOKRET);
+	public static final int LUA_MASKLINE = (1 << LUA_HOOKLINE);
+    
     public int base = 0;
     public int top = 0;
     protected int nresults = -1;
@@ -92,12 +103,16 @@ public class LuaState extends Lua {
 	static LuaState mainState;
     public LTable _G;
 
-    // main debug hook, overridden by DebugStackState
-    protected void debugHooks(int pc) {
-    }
-    protected void debugAssert(boolean b) {
-    }
+    // debug hooks - these MUST NOT be initialized, 
+	// so that a later obfuscation step can decide to remove them.
+	private boolean hooksenabled;
+    private int hookmask;
+    private int hookcount;
+    private LFunction hookfunc;
+    private int hookincr;
+    private int hookline;
     
+    protected void debugAssert(boolean b) {}
     
     // ------------------- constructors ---------------------
 	/**
@@ -525,7 +540,9 @@ public class LuaState extends Lua {
             ci.top = top;
         	
             // allow debug hooks a chance to operate
-            debugHooks( ci.pc );
+            if ( hooksenabled ) {
+            	debugBytecodeHooks( ci.pc );
+            }
             
             // advance program counter
             i = code[ci.pc++];
@@ -695,6 +712,11 @@ public class LuaState extends Lua {
                 // number of return values we need
                 c = LuaState.GETARG_C(i);
 
+                // call hook
+                if ( hooksenabled ) {
+                	debugCallHooks( ci.pc-1 );
+                }
+                
                 // make or set up the call
                 this.nresults = c - 1;
                 if (this.stack[base].luaStackCall(this))
@@ -713,6 +735,12 @@ public class LuaState extends Lua {
             }
             
             case LuaState.OP_TAILCALL: {
+                // return hook
+                if ( hooksenabled ) {
+                	debugTailReturnHooks( ci.pc-1 );
+                }
+
+                // close up values
                 closeUpVals(base);
 
                 // copy down the frame before calling!
@@ -755,6 +783,12 @@ public class LuaState extends Lua {
             }
 
             case LuaState.OP_RETURN: {
+                // return hook
+                if ( hooksenabled ) {
+                	debugReturnHooks( ci.pc-1 );
+                }
+
+                // close up values
                 closeUpVals( base ); 
 
                 // number of return vals to return
@@ -2325,5 +2359,120 @@ public class LuaState extends Lua {
         } finally {
         	top = oldtop;
         }
+	}
+
+	
+	// ===========================================================================
+	// Debug hooks.  
+	// These should be obfuscated out when sethook is never called 
+	// cannot be called from the application.
+	// 
+
+	/**
+	 * Set the hook function.    
+	 *   
+	 * @param func LFunction to call on the hook event
+	 * @param mask combination of LuaState.LUA_MASKLINE, LuaState.LUA_MASKCALL, and LuaState.LUA_MASKRET
+	 * @param count 0, or number of bytecodes between count events.
+	 */
+	public void sethook( LFunction func, int mask, int count ) {
+		hooksenabled = (mask != 0);
+		hookfunc = func;
+		hookmask = mask;
+		hookcount = count;
+	}
+	
+	/**
+	 *  Get the current hook function, if any. 
+	 * 
+	 * @return LFunction that is set as the current hook function, or null if not set.
+	 */
+	public LFunction gethook() {
+		return hookfunc;
+	}
+	
+	/**
+	 *  Get the current hook count. 
+	 * 
+	 * @return current count, which is # of bytecodes between "count" hook calls 
+	 */
+	public int gethookcount() {
+		return hookcount;
+	}
+	
+	/**
+	 *  Get the current hook mask. 
+	 * 
+	 * @return current mask as a combination of 
+	 * LuaState.LUA_MASKLINE, LuaState.LUA_MASKCALL, and LuaState.LUA_MASKRET
+	 */
+	public int gethookmask() {
+		return hookmask;
+	}
+	
+    // line number and count hooks
+    private void debugBytecodeHooks(int pc) {
+    	if ( hookfunc != null && (hookmask & LUA_MASKLINE) != 0 ) {
+        	int line = debugGetLineNumber(calls[cc]);
+        	if ( line != hookline ) {
+        		hookline = line;
+        		debugCallHook(LUA_HOOKLINE, line);
+        	}
+			if (hookcount != 0) {
+				if ( --hookincr <= 0 ) {
+					hookincr = hookcount;
+					debugCallHook(LUA_HOOKCOUNT, -1);
+				}
+			}
+		}
+    }
+    
+    private void debugCallHooks(int pc) {
+    	if ( hookfunc != null && ((hookmask & LUA_MASKCALL) != 0) ) {
+    		debugCallHook(LUA_HOOKCALL, debugGetLineNumber(calls[cc]));
+    		hookline = -1;
+    	}
+    }
+    
+    private void debugReturnHooks(int pc) {
+    	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
+    		debugCallHook(LUA_HOOKRET, debugGetLineNumber(calls[cc]));
+    		hookline = -1;
+    	}
+    }
+    
+    private void debugTailReturnHooks(int pc) {
+    	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
+    		debugCallHook(LUA_HOOKTAILRET, debugGetLineNumber(calls[cc]));
+    		hookline = -1;
+    	}
+    }
+    
+    private int debugGetLineNumber(CallInfo ci) {
+        int[] lineNumbers = ci.closure.p.lineinfo;
+        int pc = getCurrentPc(ci);
+        int line = (lineNumbers != null && lineNumbers.length > pc ? 
+                    lineNumbers[pc] :
+                    -1);
+        return line;
+    }
+		
+    private void debugCallHook(int mask, int newline) {
+    	int prevmask = hookmask;
+    	try {
+	    	hookmask = 0;
+	    	this.pushfunction(hookfunc);
+	    	switch ( mask ) {
+	    	default:              this.pushstring("line"); break;
+	    	case LUA_HOOKCOUNT:   this.pushstring("count"); break;
+	    	case LUA_HOOKCALL:    this.pushstring("call"); break;
+	    	case LUA_HOOKRET:     this.pushstring("return"); break;
+	    	case LUA_HOOKTAILRET: this.pushstring("tail return"); break;
+	    	}
+	    	this.pushinteger(newline);
+	    	this.pcall(2, 0, 0);
+    	} finally {
+    		hookmask = prevmask;
+    	}
 	}
 }

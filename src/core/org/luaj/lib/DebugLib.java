@@ -56,25 +56,23 @@ public class DebugLib extends LFunction {
 	private static final int DEBUG        	= 1;
 	private static final int GETFENV        = 2;
 	private static final int GETHOOK        = 3;
-	private static final int GETHOOKCOUNT   = 4;
-	private static final int GETHOOKMASK    = 5;
-	private static final int GETINFO        = 6;
-	private static final int GETLOCAL       = 7;
-	private static final int GETMETATABLE 	= 8;
-	private static final int GETREGISTRY    = 9;
-	private static final int GETUPVALUE    	= 10;
-	private static final int SETFENV        = 11;
-	private static final int SETHOOK        = 12;
-	private static final int SETLOCAL 		= 13;
-	private static final int SETMETATABLE   = 14;
-	private static final int SETUPVALUE    	= 15;
-	private static final int TRACEBACK    	= 16;
+	private static final int GETINFO        = 4;
+	private static final int GETLOCAL       = 5;
+	private static final int GETMETATABLE 	= 6;
+	private static final int GETREGISTRY    = 7;
+	private static final int GETUPVALUE    	= 8;
+	private static final int SETFENV        = 9;
+	private static final int SETHOOK        = 10;
+	private static final int SETLOCAL 		= 11;
+	private static final int SETMETATABLE   = 12;
+	private static final int SETUPVALUE    	= 13;
+	private static final int TRACEBACK    	= 14;
 	
-	public static void install( LTable globals ) {
+	public static void install( LuaState vm ) {
 		LTable debug = new LTable();
 		for (int i = 0; i < NAMES.length; i++)
 			debug.put(NAMES[i], new DebugLib(i + 1));
-		globals.put("debug", debug);
+		vm._G.put("debug", debug);
 		PackageLib.setIsLoaded("debug", debug);
 	}
 
@@ -91,7 +89,7 @@ public class DebugLib extends LFunction {
 	public boolean luaStackCall( LuaState vm ) {
 		switch ( id ) {
 		case INSTALL:
-			install(vm._G);
+			install(vm);
 			break;
 		case DEBUG: 
 			debug(vm);
@@ -101,12 +99,6 @@ public class DebugLib extends LFunction {
 			break;
 		case GETHOOK: 
 			gethook(vm);
-			break;
-		case GETHOOKCOUNT: 
-			gethookcount(vm);
-			break;
-		case GETHOOKMASK: 
-			gethookmask(vm);
 			break;
 		case GETINFO: 
 			getinfo(vm);
@@ -148,29 +140,37 @@ public class DebugLib extends LFunction {
 	}
 
 	private void debug(LuaState vm) {
-		// TODO Auto-generated method stub
+		// TODO: interactive console impl
 		vm.resettop();
 	}
 	
 	private void gethook(LuaState vm) {
-		// TODO Auto-generated method stub
+		LuaState threadVm = vm;
+		if ( vm.gettop() >= 2 )
+			threadVm = vm.checkthread(2).vm;
 		vm.resettop();
-	}
-
-	private void gethookcount(LuaState vm) {
-		// TODO Auto-generated method stub
-		vm.resettop();
-		vm.pushinteger(0);
-	}
-
-	private void gethookmask(LuaState vm) {
-		// TODO Auto-generated method stub
-		vm.resettop();
-		vm.pushinteger(0);
+		vm.pushlvalue(threadVm.gethook());
+		vm.pushinteger(threadVm.gethookmask());
+		vm.pushinteger(threadVm.gethookcount());
 	}
 
 	private void sethook(LuaState vm) {
-		// TODO Auto-generated method stub
+		LuaState threadVm = vm;
+		if ( vm.gettop() >= 4 ) {
+			threadVm = vm.checkthread(2).vm;
+			vm.remove(2);
+		}
+		LFunction func = vm.checkfunction(2);
+		LString str    = vm.checklstring(3);
+		int count      = vm.optint(4,0);
+		int mask       = 0;
+		for ( int i=0; i<str.m_length; i++ )
+			switch ( str.m_bytes[str.m_offset+i] ) {
+				case 'c': mask |= LuaState.LUA_MASKCALL; break;
+				case 'l': mask |= LuaState.LUA_MASKLINE; break;
+				case 'r': mask |= LuaState.LUA_MASKRET; break;
+			}
+		threadVm.sethook(func, mask, count);
 		vm.resettop();
 	}
 
@@ -213,7 +213,8 @@ public class DebugLib extends LFunction {
 		for (int i = 0, n = what.length(); i < n; i++) {
 			switch (what.charAt(i)) {
 				case 'S': {
-					info.put("source", (closure!=null? closure.p.source: new LString("?")));
+					info.put("source", (closure!=null? closure.p.source: new LString("@?")));
+					info.put("short_src", (closure!=null? closure.p.source.substring(1, closure.p.source.m_length-1): new LString("?")));
 					info.put("linedefined", (closure!=null? closure.p.linedefined: 0));
 					info.put("lastlinedefined", (closure!=null? closure.p.lastlinedefined: 0));
 					info.put("what", new LString(what));
@@ -235,12 +236,13 @@ public class DebugLib extends LFunction {
 					break;
 				}
 				case 'f': {
-					vm.pushlvalue( func!=null? func: LNil.NIL );
+					if ( func != null )
+						info.put( "func", func );
 					break;
 				}
 				case 'L': {
 					LTable lines = new LTable();
-					vm.pushlvalue(lines);
+					info.put("activelines", lines);
 					if ( closure != null )
 						for ( int j=0, k=1; j<closure.p.lineinfo.length; j++, k++ )
 							lines.put(k, LInteger.valueOf(closure.p.lineinfo[j]));

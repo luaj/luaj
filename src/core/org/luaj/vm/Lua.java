@@ -356,6 +356,5 @@ public class Lua {
 		"thread",
 		"value",
 	};
-
 	
 }
