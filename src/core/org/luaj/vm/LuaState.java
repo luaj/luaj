@@ -1062,8 +1062,12 @@ public class LuaState extends Lua {
     }
     
     public String getStackTrace() {
-        StringBuffer buffer = new StringBuffer("Stack Trace:\n");
-        for (int i = cc; i >= 0; i--) {
+    	return "Stack Trace:\n"+getStackTrace(0);
+    }
+    
+    public String getStackTrace(int level) {
+        StringBuffer buffer = new StringBuffer();
+        for (int i = cc-level; i >= 0; i--) {
             buffer.append("   ");
             buffer.append(getFileLine(i));
             buffer.append("\n");

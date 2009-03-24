@@ -42,13 +42,13 @@ public class LThread extends LValue implements Runnable {
 	
 	private int status = STATUS_SUSPENDED;
 	
-	LuaState threadVm;
+	public final LuaState vm;
 	private Thread thread;
 	
 	static LThread running;
 	public LThread(LFunction c, LTable env) {
-		threadVm = new LuaState(env);
-		threadVm.pushlvalue(c);
+		vm = new LuaState(env);
+		vm.pushlvalue(c);
 	}
 
 	public int luaGetType() {
@@ -61,7 +61,7 @@ public class LThread extends LValue implements Runnable {
 
 	// Set the environment if a thread, or closure, and return 1, otherwise return 0
 	public boolean luaSetEnv(LTable t) {
-		threadVm._G = t;
+		vm._G = t;
 		return true;
 	}
 
@@ -76,7 +76,7 @@ public class LThread extends LValue implements Runnable {
 	public void run() {
 		synchronized ( this ) {
 			try {
-				threadVm.execute();
+				vm.execute();
 			} finally {
 				status = STATUS_DEAD;
 				this.notify();
@@ -87,7 +87,7 @@ public class LThread extends LValue implements Runnable {
 	public boolean yield() {
 		synchronized ( this ) {
 			if ( status != STATUS_RUNNING )
-				threadVm.error(this+" not running");
+				vm.error(this+" not running");
 			status = STATUS_SUSPENDED;
 			if ( USE_JAVA_THREADS ) {
 				this.notify();
@@ -96,7 +96,7 @@ public class LThread extends LValue implements Runnable {
 					status = STATUS_RUNNING;
 				} catch ( InterruptedException e ) {
 					status = STATUS_DEAD;
-					threadVm.error(this+" "+e);
+					vm.error(this+" "+e);
 				}
 			}
 			return false;
@@ -128,12 +128,12 @@ public class LThread extends LValue implements Runnable {
 				status = STATUS_RUNNING;
 				
 				// copy args in
-				if (threadVm.cc < 0) {
-					vm.xmove(threadVm, nargs);
-					threadVm.prepStackCall();
+				if (this.vm.cc < 0) {
+					vm.xmove(this.vm, nargs);
+					this.vm.prepStackCall();
 				} else {
-					threadVm.resettop();
-					vm.xmove(threadVm, nargs);
+					this.vm.resettop();
+					vm.xmove(this.vm, nargs);
 				}
 
 				// execute in the other thread
@@ -149,19 +149,19 @@ public class LThread extends LValue implements Runnable {
 					this.wait();
 				} else {
 					// run this vm until it yields
-					while (threadVm.cc >= 0 && status == STATUS_RUNNING)
-						threadVm.exec();
+					while (this.vm.cc >= 0 && status == STATUS_RUNNING)
+						this.vm.exec();
 				}
 				
 				// copy return values from yielding stack state
 				vm.resettop();
-				if ( threadVm.cc >= 0 ) { 
+				if ( this.vm.cc >= 0 ) { 
 					vm.pushboolean(status != STATUS_DEAD);
-					threadVm.xmove(vm, threadVm.gettop() - 1);
+					this.vm.xmove(vm, this.vm.gettop() - 1);
 				} else {
 					vm.pushboolean(true);
-					threadVm.base = 0;
-					threadVm.xmove(vm, threadVm.gettop());
+					this.vm.base = 0;
+					this.vm.xmove(vm, this.vm.gettop());
 				}
 	
 			} catch ( Throwable t ) {

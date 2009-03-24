@@ -78,7 +78,7 @@ public class LuaErrorException extends RuntimeException {
 			return message;
 		if ( vm == null ) {
 			if ( LThread.running != null )
-				vm = LThread.running.threadVm;
+				vm = LThread.running.vm;
 			else
 				vm = LuaState.mainState;
 		}
