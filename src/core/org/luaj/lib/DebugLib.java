@@ -31,7 +31,7 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
-import org.luaj.vm.LocVars;
+import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
 public class DebugLib extends LFunction {
@@ -348,20 +348,42 @@ public class DebugLib extends LFunction {
 	private void getmetatable(LuaState vm) {
 		LValue object = vm.topointer(2);
 		vm.resettop();
-		vm.pushlvalue( object.luaGetMetatable() );
+		LValue mt = object.luaGetMetatable();
+		if ( mt != null )
+			vm.pushlvalue( object.luaGetMetatable() );
+		else
+			vm.pushnil();
 	}
 
 	private void setmetatable(LuaState vm) {
 		LValue object = vm.topointer(2);
-		LValue table  = vm.totable(3);
-		object.luaSetMetatable(table);
-		vm.resettop();
-		vm.pushlvalue( object );
+		try {
+			if ( ! vm.isnoneornil(3) )
+				object.luaSetMetatable(vm.checktable(3));
+			else
+				object.luaSetMetatable(null);
+			vm.resettop();
+			vm.pushboolean(true);
+		} catch ( LuaErrorException e ) {
+			vm.resettop();
+			vm.pushboolean(false);
+			vm.pushstring(e.toString());
+		}
 	}
 
 	private void getregistry(LuaState vm) {
 		vm.resettop();
 		vm.pushlvalue( new LTable() );
+	}
+
+	private LString findupvalue(LClosure c, int up) {
+		if ( c.upVals != null && up > 0 && up <= c.upVals.length ) {
+			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
+				return c.p.upvalues[up-1];
+			else
+				return new LString( "."+up+"" );
+		}
+		return null;
 	}
 
 	private void getupvalue(LuaState vm) {
@@ -370,8 +392,10 @@ public class DebugLib extends LFunction {
 		vm.resettop();
 		if ( func instanceof LClosure ) {
 			LClosure c = (LClosure) func;
-			if ( c.upVals != null && up > 0 && up < c.upVals.length ) {
-				vm.pushlvalue(c.upVals[up].getValue());
+			LString name = findupvalue(c, up);
+			if ( name != null ) {
+				vm.pushlstring(name);
+				vm.pushlvalue(c.upVals[up-1].getValue());
 				return;
 			}
 		}
@@ -385,12 +409,10 @@ public class DebugLib extends LFunction {
 		vm.resettop();
 		if ( func instanceof LClosure ) {
 			LClosure c = (LClosure) func;
-			if ( c.upVals != null && up > 0 && up < c.upVals.length ) {
-				c.upVals[up].setValue(value);
-				if ( c.p.upvalues != null && up < c.p.upvalues.length )
-					vm.pushlvalue( c.p.upvalues[up] );
-				else
-					vm.pushstring( "."+up+"" );
+			LString name = findupvalue(c, up);
+			if ( name != null ) {
+				c.upVals[up-1].setValue(value);
+				vm.pushlstring(name);
 				return;
 			}
 		}

@@ -181,7 +181,7 @@ public class LValue {
 	 * @return this if unchanged, or new LTable if copied using weak table 
 	 */
 	public LTable luaSetMetatable(LValue metatable) {
-		throw new LuaErrorException( "cannot set metatable for "+metatable.luaGetTypeName());
+		throw new LuaErrorException( "cannot set metatable for "+this.luaGetTypeName());
 	}
 
 	/** Valid for all types: return the int value identifying the type of this value */
