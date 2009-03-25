@@ -2,8 +2,8 @@
 local print,tostring,_G = print,tostring,_G
 local e,f,g,h,s
 print( 'has debug', debug~=nil )
+if not debug then error( 'no debug' ) end
 
--- debug.getfenv, debug.setfenv
 print( '----- debug.getfenv, debug.setfenv' )
 f = function(a)
 	return 'f:'..tostring(a)..'|'..tostring(b)
@@ -19,11 +19,13 @@ print( s, type(e), type(g), (e==G), pcall( f, 'abc' ) )
 print( '----- debug.getlocal, debug.setlocal' )
 h = function(v,i,n)
 	s = 'h-'..v..'-'..i
-	local x = debug.getlocal(v,i)
-	local y = debug.setlocal(v,i,n)
+	local x1,y1 = debug.getlocal(v,i)
+	local x2,y2 = debug.setlocal(v,i,n)
+	local x3,y3 = debug.getlocal(v,i)
 	return s..' -> '..v..'-'..i..' '.. 
-		'old='..tostring(x)..'('..tostring(y)..')'..' '.. 
-		'new='..tostring(n) 
+		'get='..tostring(x1)..','..tostring(y1)..' '.. 
+		'set='..tostring(x2)..','..tostring(y2)..' '.. 
+		'get='..tostring(x3)..','..tostring(y3)..' ' 
 end
 g = function(...)
 	local p,q,r=7,8,9
@@ -36,7 +38,12 @@ f = function(a,b,c)
 	local t = g(a,b,c)
 	return t..'\tf locals='..','..a..','..b..','..c..','..d..','..e..','..f
 end
-for lvl=1,3 do
+do lvl=1,1
+	for lcl=3,7 do
+		print( pcall( f, lvl, lcl, '#' ) ) 
+	end
+end
+do lvl=2,3
 	for lcl=0,7 do
 		print( pcall( f, lvl, lcl, '#' ) ) 
 	end

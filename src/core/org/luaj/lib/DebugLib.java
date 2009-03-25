@@ -27,6 +27,7 @@ import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
 import org.luaj.vm.LNil;
+import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
@@ -68,6 +69,8 @@ public class DebugLib extends LFunction {
 	private static final int SETMETATABLE   = 12;
 	private static final int SETUPVALUE    	= 13;
 	private static final int TRACEBACK    	= 14;
+	
+	private static final LString TEMPORARY = new LString("(*temporary)");
 	
 	public static void install( LuaState vm ) {
 		LTable debug = new LTable();
@@ -259,6 +262,43 @@ public class DebugLib extends LFunction {
 		}
 	}
 
+	private LString getlocalname (LPrototype f, int local_number, int pc) {
+	  int i;
+	  for (i = 0; i<f.locvars.length && f.locvars[i].startpc <= pc; i++) {
+	    if (pc < f.locvars[i].endpc) {  /* is variable active? */
+	      local_number--;
+	      if (local_number == 0)
+	        return f.locvars[i].varname;
+	    }
+	  }
+	  return null;  /* not found */
+	}
+
+	private LString findlocal(LuaState vm, int cc, int n) {
+		CallInfo ci = vm.calls[cc];
+		LString name;
+		LPrototype fp = ci.closure.p;
+		if ( fp!=null && (name = getlocalname(fp, n, ci.pc-1)) != null)
+			return name;
+		return null;
+	}
+
+	/** pushes the value onto the stack, returns the name or null */
+	private LString getlocal(LuaState vm, int cc, int n) {
+		LString name = findlocal(vm, cc, n);
+		if ( name != null )
+			vm.pushlvalue( vm.stack[vm.calls[cc].base+(n-1)] );
+		return name;
+	}
+
+	/** pops the value onto the stack, sets it to the local, return name or null */
+	private LString setlocal(LuaState vm, int cc, int n) {
+		LString name = findlocal(vm, cc, n);
+		if ( name != null )
+			vm.stack[vm.calls[cc].base+(n-1)] = vm.poplvalue();
+		return name;
+	}
+	
 	private void getlocal(LuaState vm) {
 		LuaState threadVm = vm;
 		if ( vm.gettop() >= 4 ) {
@@ -267,18 +307,16 @@ public class DebugLib extends LFunction {
 		}
 		int level = vm.checkint(2);
 		int local = vm.checkint(3);
-		CallInfo ci = getcallinfo(vm, threadVm, level);
-		LValue value = LNil.NIL;
-		LValue name = LNil.NIL;
-		LocVars[] vars = ci.closure.p.locvars;
-		if ( local > 0 && local <= ci.top-ci.base ) {
-			value = threadVm.stack[ ci.base + local - 1 ];
-			if ( vars != null && local > 0 && local <= vars.length )
-				name = vars[local-1].varname;
+		LString name = getlocal(threadVm, threadVm.cc-(level-1), local);
+		if ( name != null ) {
+			LValue value = vm.poplvalue();
+			vm.resettop();
+			vm.pushlvalue(name);
+			vm.pushlvalue(value);
+		} else {
+			vm.resettop();
+			vm.pushnil();
 		}
-		vm.resettop();
-		vm.pushlvalue( name );
-		vm.pushlvalue( value );
 	}
 
 	private void setlocal(LuaState vm) {
@@ -289,17 +327,14 @@ public class DebugLib extends LFunction {
 		}
 		int level = vm.checkint(2);
 		int local = vm.checkint(3);
-		LValue value = vm.topointer(4);
-		CallInfo ci = getcallinfo(vm, threadVm, level);
-		LValue name = LNil.NIL;
-		LocVars[] vars = ci.closure.p.locvars;
-		if ( local > 0 && local <= ci.top-ci.base ) {
-			threadVm.stack[ ci.base + local - 1 ] = value;
-			if ( vars != null && local > 0 && local <= vars.length )
-				name = vars[local-1].varname;
-		}
+		vm.settop(4);
+		LString name = setlocal(threadVm, threadVm.cc-(level-1), local);
 		vm.resettop();
-		vm.pushlvalue( name );
+		if ( name != null ) {
+			vm.pushlvalue(name);
+		} else {
+			vm.pushnil();
+		}
 	}
 
 	private CallInfo getcallinfo(LuaState vm, LuaState threadVm, int level) {
