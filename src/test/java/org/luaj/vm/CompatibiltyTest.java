@@ -76,6 +76,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("compare");
 	}
 
+	public void testDebugLib() throws IOException, InterruptedException {
+		runTest("debuglib");
+	}
+
 	public void testErrors() throws IOException, InterruptedException {
 		runTest("errors");
 	}

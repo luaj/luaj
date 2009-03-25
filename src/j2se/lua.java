@@ -121,6 +121,9 @@ public class lua {
 					break;
 				} else {
 					switch ( args[i].charAt(1) ) {
+					case 'l':
+						++i;
+						break;
 					case 'e':
 						++i;
 						processScript( vm, new ByteArrayInputStream(args[i].getBytes()), args[i], null, 0 );

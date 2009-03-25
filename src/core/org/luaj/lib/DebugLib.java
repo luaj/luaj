@@ -36,6 +36,7 @@ import org.luaj.vm.LuaState;
 public class DebugLib extends LFunction {
 
 	private static final String[] NAMES = {
+		"debuglib",
 		"debug",
 		"getfenv",
 		"gethook",
@@ -70,13 +71,17 @@ public class DebugLib extends LFunction {
 	
 	public static void install( LuaState vm ) {
 		LTable debug = new LTable();
-		for (int i = 0; i < NAMES.length; i++)
-			debug.put(NAMES[i], new DebugLib(i + 1));
+		for (int i = 1; i < NAMES.length; i++)
+			debug.put(NAMES[i], new DebugLib(i));
 		vm._G.put("debug", debug);
 		PackageLib.setIsLoaded("debug", debug);
 	}
 
 	private final int id;
+	
+	public DebugLib() {
+		this.id = INSTALL;
+	}
 	
 	private DebugLib( int id ) {
 		this.id = id;
@@ -177,6 +182,7 @@ public class DebugLib extends LFunction {
 	private void getfenv(LuaState vm) {
 		LValue object = vm.topointer(2);
 		LValue env = object.luaGetEnv(null);
+		vm.resettop();
 		vm.pushlvalue(env!=null? env: LNil.NIL);
 	}
 
@@ -184,6 +190,7 @@ public class DebugLib extends LFunction {
 		LValue object = vm.topointer(2);
 		LTable table = vm.checktable(3);
 		object.luaSetEnv(table);
+		vm.settop(1);
 	}
 
 	private void getinfo(LuaState vm) {
@@ -263,11 +270,11 @@ public class DebugLib extends LFunction {
 		CallInfo ci = getcallinfo(vm, threadVm, level);
 		LValue value = LNil.NIL;
 		LValue name = LNil.NIL;
-		if ( local >= 0 && local < ci.top-ci.base ) {
-			value = threadVm.stack[ ci.base + local ];
-			LocVars[] vars = ci.closure.p.locvars;
-			if ( vars != null && local >= 0 && local < vars.length )
-				name = vars[local].varname;
+		LocVars[] vars = ci.closure.p.locvars;
+		if ( local > 0 && local <= ci.top-ci.base ) {
+			value = threadVm.stack[ ci.base + local - 1 ];
+			if ( vars != null && local > 0 && local <= vars.length )
+				name = vars[local-1].varname;
 		}
 		vm.resettop();
 		vm.pushlvalue( name );
@@ -276,7 +283,7 @@ public class DebugLib extends LFunction {
 
 	private void setlocal(LuaState vm) {
 		LuaState threadVm = vm;
-		if ( vm.gettop() >= 4 ) {
+		if ( vm.gettop() >= 5 ) {
 			threadVm = vm.checkthread(2).vm;
 			vm.remove(2);
 		}
@@ -285,20 +292,21 @@ public class DebugLib extends LFunction {
 		LValue value = vm.topointer(4);
 		CallInfo ci = getcallinfo(vm, threadVm, level);
 		LValue name = LNil.NIL;
-		if ( local >= 0 && local < ci.top-ci.base ) {
-			threadVm.stack[ ci.base + local ] = value;
-			LocVars[] vars = ci.closure.p.locvars;
-			if ( vars != null && local >= 0 && local < vars.length )
-				name = vars[local].varname;
+		LocVars[] vars = ci.closure.p.locvars;
+		if ( local > 0 && local <= ci.top-ci.base ) {
+			threadVm.stack[ ci.base + local - 1 ] = value;
+			if ( vars != null && local > 0 && local <= vars.length )
+				name = vars[local-1].varname;
 		}
 		vm.resettop();
 		vm.pushlvalue( name );
 	}
 
 	private CallInfo getcallinfo(LuaState vm, LuaState threadVm, int level) {
-		if ( level <= 0 || level > threadVm.cc )
+		--level ; // level 0 is the debug function itself
+		if ( level < 0 || level > threadVm.cc )
 			vm.error("level out of range");
-		int cc = threadVm.cc-(level-1);
+		int cc = threadVm.cc-level;
 		return threadVm.calls[cc];
 	}
 

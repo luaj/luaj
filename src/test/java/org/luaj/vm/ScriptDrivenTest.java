@@ -11,6 +11,7 @@ import junit.framework.TestCase;
 
 import org.luaj.compiler.LuaC;
 import org.luaj.lib.BaseLib;
+import org.luaj.lib.DebugLib;
 import org.luaj.platform.J2sePlatform;
 
 abstract
@@ -35,6 +36,9 @@ public class ScriptDrivenTest extends TestCase {
 		// install the compiler
 		LuaC.install();
 
+		// install debug lib
+		DebugLib.install( state );
+		
 		// load the file
 		LPrototype p = loadScript(state, testName);
 		p.source = LString.valueOf("stdin");
