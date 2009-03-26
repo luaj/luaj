@@ -117,29 +117,32 @@ print( pcall( debug.getmetatable, 1 ) )
 -- print( pcall( debug.setmetatable, 1, {} ) )
 -- print( pcall( debug.setmetatable, 1, nil ) )
 
-
---[[
-local f = function(a)
-	return 'f:'..tostring(a)..'|'..tostring(b)
+print( '----- debug.getinfo' )
+local printfield = function(tbl, field)
+	local x = tbl[field]
+	if x == nil then return end
+	local typ = type(x)
+	if typ=='table' then
+		x = '{'..table.concat(x,',')..'}'
+	elseif typ=='function' then
+		x = typ
+	end
+	print( '    '..field..': '..tostring(x) )
 end
-local s,e
-
-
+local fields = { 'source', 'short_src', 'what', 
+	'currentline', 'linedefined', 'lastlinedefined', 
+	'nups', 'func', 'activelines' } 
 local printinfo = function(...)
 	for i,a in ipairs(arg) do
 		if type(a) == 'table' then
-			print( '   source: '..tostring(a.source) )
-			print( '   short_src: '..tostring(a.short_src) )
-			print( '   what: '..tostring(a.what) )
-			print( '   currentline: '..tostring(a.currentline) )
-			print( '   linedefined: '..tostring(a.linedefined) )
-			print( '   lastlinedefined: '..tostring(a.lastlinedefined) )
+			for j,field in ipairs(fields) do
+				printfield( a, field)
+			end
 		else
 			print( tostring(a) )
 		end
 	end
 end
-
 function test()
 	local x = 5
 	function f()
@@ -148,6 +151,20 @@ function test()
 	end
 	function g()
 		x = x - 1
+		print( '---' )
+		printinfo( 'debug.getinfo(1)', debug.getinfo(1) ) 
+		printinfo( 'debug.getinfo(1,"l")', debug.getinfo(1, "l") ) 
+		printinfo( 'debug.getinfo(1,"fL")', debug.getinfo(1, "fL") ) 
+		printinfo( 'debug.getinfo(2)', debug.getinfo(2) ) 
+		printinfo( 'debug.getinfo(2,"l")', debug.getinfo(2, "l") ) 
+		printinfo( 'debug.getinfo(2,"fL")', debug.getinfo(2, "fL") )
+		--[[
+		for i=1,3 do
+			printinfo( 'debug.traceback("msg")', debug.traceback('msg') )
+			printinfo( 'debug.traceback("another",'..i..')', debug.traceback('another',i) )
+		end 
+		--]]
+		print( '---' )
 		return x
 	end
 	print(f())
@@ -155,10 +172,53 @@ function test()
 	return f, g
 end
 
+local options = "nSlufL"
 local e,f,g = pcall( test )
 print( 'e,f,g', e, type(f), type(g) )
+printinfo( 'debug.getinfo(f)', pcall(debug.getinfo, f) )
+printinfo( 'debug.getinfo(f,"'..options..'")', pcall(debug.getinfo, f, options) )
+for j=1,6 do
+	local opts = options:sub(j,j)
+	printinfo( 'debug.getinfo(f,"'..opts..'")', pcall(debug.getinfo, f, opts) )
+end 
+printinfo( 'debug.getinfo(g)', pcall(debug.getinfo, g) ) 
+printinfo( 'debug.getinfo(test)', pcall(debug.getinfo, test) )
 
-printinfo( 'debug.getinfo(f,"Sl")', pcall(debug.getinfo, f, "Sl") ) 
-printinfo( 'debug.getinfo(g,"Sl")', pcall(debug.getinfo, g, "Sl") ) 
-printinfo( 'debug.getinfo(test,"Sl")', pcall(debug.getinfo, test, "Sl") )
+print( '----- debug.sethook, debug.gethook' )
+f = function(x)
+	g = function(y)
+		return math.min(x,h)
+	end
+	local a = g(x)
+	return a + a
+end
+local hook = function(...)
+	print( '   ... in hook', ... )
+end
+local tryfunc = function(hook,mask,func,arg)
+	local x,f,h,m
+	pcall( function()
+		debug.sethook(hook,mask)
+		x = func(arg)
+		f,h,m = debug.gethook()
+	end )
+	debug.sethook()
+	return x,f,h,m
+end
+
+local tryhooks = function(mask)
+	local s1,a1,b1,c1,d1 = pcall( tryfunc, hook, mask, f, 333 )
+	print( 'hook = '..mask..' -> '.. 
+		'result='..tostring(s1)..','..tostring(a1)..','..
+			type(b1)..','..type(c1)..','..
+			tostring(b1==f)..','..tostring(c1==hook)..','..
+			tostring(d1)..' ' ) 
+end
+--[[
+tryhooks("c")
+tryhooks("r")
+tryhooks("l")
+tryhooks("crl")
 --]]
+
+ 

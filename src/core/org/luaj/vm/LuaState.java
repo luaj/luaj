@@ -110,7 +110,7 @@ public class LuaState extends Lua {
     private int hookcount;
     private LFunction hookfunc;
     private int hookincr;
-    private int hookline;
+    private int hookline,hookcc;
     
     protected void debugAssert(boolean b) {}
     
@@ -714,7 +714,7 @@ public class LuaState extends Lua {
 
                 // call hook
                 if ( hooksenabled ) {
-                	debugCallHooks( ci.pc-1 );
+                	debugCallHooks( );
                 }
                 
                 // make or set up the call
@@ -737,7 +737,7 @@ public class LuaState extends Lua {
             case LuaState.OP_TAILCALL: {
                 // return hook
                 if ( hooksenabled ) {
-                	debugTailReturnHooks( ci.pc-1 );
+                	debugTailReturnHooks( );
                 }
 
                 // close up values
@@ -785,7 +785,7 @@ public class LuaState extends Lua {
             case LuaState.OP_RETURN: {
                 // return hook
                 if ( hooksenabled ) {
-                	debugReturnHooks( ci.pc-1 );
+                	debugReturnHooks( );
                 }
 
                 // close up values
@@ -2414,8 +2414,9 @@ public class LuaState extends Lua {
     private void debugBytecodeHooks(int pc) {
     	if ( hookfunc != null && (hookmask & LUA_MASKLINE) != 0 ) {
         	int line = debugGetLineNumber(calls[cc]);
-        	if ( line != hookline ) {
+        	if ( (line != hookline || cc != hookcc) && line >= 0 ) {
         		hookline = line;
+        		hookcc = cc;
         		debugCallHook(LUA_HOOKLINE, line);
         	}
 			if (hookcount != 0) {
@@ -2427,52 +2428,56 @@ public class LuaState extends Lua {
 		}
     }
     
-    private void debugCallHooks(int pc) {
+    private void debugCallHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKCALL) != 0) ) {
     		debugCallHook(LUA_HOOKCALL, debugGetLineNumber(calls[cc]));
-    		hookline = -1;
     	}
     }
     
-    private void debugReturnHooks(int pc) {
+    private void debugReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
     		debugCallHook(LUA_HOOKRET, debugGetLineNumber(calls[cc]));
-    		hookline = -1;
     	}
     }
     
-    private void debugTailReturnHooks(int pc) {
+    private void debugTailReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
     		debugCallHook(LUA_HOOKTAILRET, debugGetLineNumber(calls[cc]));
-    		hookline = -1;
     	}
     }
     
-    private int debugGetLineNumber(CallInfo ci) {
-        int[] lineNumbers = ci.closure.p.lineinfo;
-        int pc = getCurrentPc(ci);
-        int line = (lineNumbers != null && lineNumbers.length > pc ? 
-                    lineNumbers[pc] :
-                    -1);
-        return line;
+    public int debugGetLineNumber(CallInfo ci) {
+		int[] li = ci.closure.p.lineinfo;
+		int pc = ci.pc - 1;
+		if ( li != null && pc >= 0 && pc < li.length )
+			return li[pc];
+		return -1;
     }
 		
-    private void debugCallHook(int mask, int newline) {
+    private void debugCallHook(int mask, int line) {
     	int prevmask = hookmask;
+        int oldtop = top;
+        LValue lineval = LNil.NIL;
     	try {
+        	if ( cc >= 0 )
+        		top = base + this.calls[cc].closure.p.maxstacksize;
 	    	hookmask = 0;
 	    	this.pushfunction(hookfunc);
 	    	switch ( mask ) {
-	    	default:              this.pushstring("line"); break;
 	    	case LUA_HOOKCOUNT:   this.pushstring("count"); break;
 	    	case LUA_HOOKCALL:    this.pushstring("call"); break;
 	    	case LUA_HOOKRET:     this.pushstring("return"); break;
-	    	case LUA_HOOKTAILRET: this.pushstring("tail return"); break;
+	    	case LUA_HOOKTAILRET: this.pushstring("return"); break;
+	    	default:
+	    		lineval = LInteger.valueOf(line);
+	    		this.pushstring("line"); 
+	    	break;
 	    	}
-	    	this.pushinteger(newline);
+	    	this.pushlvalue(lineval);
 	    	this.pcall(2, 0, 0);
     	} finally {
     		hookmask = prevmask;
+    		top = oldtop;
     	}
 	}
 }

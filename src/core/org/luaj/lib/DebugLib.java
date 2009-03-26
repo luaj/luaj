@@ -168,12 +168,12 @@ public class DebugLib extends LFunction {
 			threadVm = vm.checkthread(2).vm;
 			vm.remove(2);
 		}
-		LFunction func = vm.checkfunction(2);
-		LString str    = vm.checklstring(3);
+		LFunction func = vm.isnoneornil(2)? null: vm.checkfunction(2);
+		String str    =  vm.optstring(3,"");
 		int count      = vm.optint(4,0);
 		int mask       = 0;
-		for ( int i=0; i<str.m_length; i++ )
-			switch ( str.m_bytes[str.m_offset+i] ) {
+		for ( int i=0; i<str.length(); i++ )
+			switch ( str.charAt(i) ) {
 				case 'c': mask |= LuaState.LUA_MASKCALL; break;
 				case 'l': mask |= LuaState.LUA_MASKLINE; break;
 				case 'r': mask |= LuaState.LUA_MASKRET; break;
@@ -201,14 +201,11 @@ public class DebugLib extends LFunction {
 		CallInfo ci = null;
 		LFunction func = null;
 		LClosure closure = null;
-		String what = "";
 		if ( vm.gettop() >= 4 ) {
 			threadVm = vm.checkthread(2).vm;
 			vm.remove(2);			
 		}
-		if ( vm.gettop() >= 3 ) {
-			what = vm.tostring(3);
-		}
+		String what = vm.optstring(3, "nSluf");
 		if ( vm.isnumber(2) ) {
 			ci = this.getcallinfo(vm, threadVm, vm.tointeger(2));
 			closure = ci.closure;
@@ -223,20 +220,20 @@ public class DebugLib extends LFunction {
 		for (int i = 0, n = what.length(); i < n; i++) {
 			switch (what.charAt(i)) {
 				case 'S': {
-					info.put("source", (closure!=null? closure.p.source: new LString("@?")));
-					info.put("short_src", (closure!=null? closure.p.source.substring(1, closure.p.source.m_length-1): new LString("?")));
+					String s = (closure!=null? closure.p.source.toJavaString(): "=?");
+					info.put("source", new LString(s.replace('@','=')));
+					info.put("short_src", new LString(s.substring(1)));
 					info.put("linedefined", (closure!=null? closure.p.linedefined: 0));
 					info.put("lastlinedefined", (closure!=null? closure.p.lastlinedefined: 0));
-					info.put("what", new LString(what));
+					info.put("what", new LString("Lua"));
 					break;
 				}
 				case 'l': {
-					info.put( "currentline", (ci!=null? ci.pc: 0) );
+					info.put( "currentline", currentline(threadVm, ci, func) );
 					break;
 				}
 				case 'u': {
 					info.put("nups", (closure!=null? closure.p.nups: 0));
-					info.put("what", new LString(what));
 					break;
 				}
 				case 'n': {
@@ -246,20 +243,38 @@ public class DebugLib extends LFunction {
 					break;
 				}
 				case 'f': {
-					if ( func != null )
-						info.put( "func", func );
+					info.put( "func", closure );
 					break;
 				}
 				case 'L': {
 					LTable lines = new LTable();
 					info.put("activelines", lines);
-					if ( closure != null )
-						for ( int j=0, k=1; j<closure.p.lineinfo.length; j++, k++ )
-							lines.put(k, LInteger.valueOf(closure.p.lineinfo[j]));
+					for ( int j=threadVm.cc, k=1; j>=0; --j )
+						if ( threadVm.calls[j].closure == func ) {
+							int line = threadVm.debugGetLineNumber(ci);
+							if ( line >= 0 )
+								lines.put(k++, LInteger.valueOf(line));
+						}
 					break;
 				}
 			}
 		}
+	}
+
+	private int currentline(LuaState vm, CallInfo ci, LFunction func) {
+		if ( ci == null ) {
+			ci = findcallinfo(vm, func);
+			if ( ci == null )
+				return -1;
+		}
+		return vm.debugGetLineNumber(ci);
+	}
+
+	private CallInfo findcallinfo(LuaState vm, LFunction func) {
+		for ( int i=vm.cc; i>=0; --i )
+			if ( vm.calls[i].closure == func )
+				return vm.calls[i];
+		return null;
 	}
 
 	private LString getlocalname (LPrototype f, int local_number, int pc) {
@@ -423,7 +438,6 @@ public class DebugLib extends LFunction {
 		LuaState threadVm = vm;
 		int level = 1;
 		String message = "";
-		StringBuffer sb = new StringBuffer();
 		if ( vm.gettop() >= 4 ) {
 			threadVm = vm.checkthread(2).vm;
 			vm.remove(2);			
@@ -432,8 +446,10 @@ public class DebugLib extends LFunction {
 			level = vm.optint(3,1);
 		if ( vm.gettop() >= 2 )
 			message = vm.tostring(2)+"\n";
-		message += threadVm.getStackTrace(level); 
+		String trace = threadVm.getStackTrace(level-1);
+		if ( trace.endsWith("\n") )
+			trace = trace.substring(0,trace.length()-1);
 		vm.resettop();
-		vm.pushstring(sb.toString());
+		vm.pushstring(message+trace);
 	}
 }
