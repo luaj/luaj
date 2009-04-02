@@ -208,6 +208,10 @@ public class DebugLib extends LFunction {
 		String what = vm.optstring(3, "nSluf");
 		if ( vm.isnumber(2) ) {
 			ci = this.getcallinfo(vm, threadVm, vm.tointeger(2));
+			if ( ci == null ) {
+				vm.resettop();
+				return;
+			}
 			closure = ci.closure;
 		} else {
 			func = vm.checkfunction(2);
@@ -354,8 +358,10 @@ public class DebugLib extends LFunction {
 
 	private CallInfo getcallinfo(LuaState vm, LuaState threadVm, int level) {
 		--level ; // level 0 is the debug function itself
-		if ( level < 0 || level > threadVm.cc )
-			vm.error("level out of range");
+		if ( level > threadVm.cc ) 
+			return null;
+		if ( level < 0 )
+			level = 0;
 		int cc = threadVm.cc-level;
 		return threadVm.calls[cc];
 	}

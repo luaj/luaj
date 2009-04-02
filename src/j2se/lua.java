@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.luaj.compiler.LuaC;
+import org.luaj.lib.DebugLib;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.Lua;
@@ -62,6 +63,7 @@ public class lua {
 		Platform.setInstance(new J2sePlatform());
 		LuaC.install();		
 		LuaState vm = Platform.newLuaState();
+		DebugLib.install(vm);
 		
 		// process args
 		boolean interactive = (args.length == 0);

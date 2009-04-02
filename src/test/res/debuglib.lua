@@ -74,7 +74,7 @@ end
 print( 'h', h() )
 local funs = { f, g, h }
 local names = { 'f', 'g', 'h' }
-for i=1,3 do
+for i=1,3  do
 	local fun,name = funs[i],names[i]	
 	for index=0,10 do
 		local s1,x1,y1 = pcall( debug.getupvalue, fun, index )
@@ -153,11 +153,14 @@ function test()
 		x = x - 1
 		print( '---' )
 		printinfo( 'debug.getinfo(1)', debug.getinfo(1) ) 
+		printinfo( 'debug.getinfo(1,"")', debug.getinfo(1, "") ) 
 		printinfo( 'debug.getinfo(1,"l")', debug.getinfo(1, "l") ) 
 		printinfo( 'debug.getinfo(1,"fL")', debug.getinfo(1, "fL") ) 
 		printinfo( 'debug.getinfo(2)', debug.getinfo(2) ) 
 		printinfo( 'debug.getinfo(2,"l")', debug.getinfo(2, "l") ) 
 		printinfo( 'debug.getinfo(2,"fL")', debug.getinfo(2, "fL") )
+		printinfo( 'debug.getinfo(10,"")', pcall( debug.getinfo, 10, "" ) )
+		printinfo( 'debug.getinfo(-10,"")', pcall( debug.getinfo, -10, "" ) )
 		--[[
 		for i=1,3 do
 			printinfo( 'debug.traceback("msg")', debug.traceback('msg') )
