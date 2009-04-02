@@ -112,6 +112,7 @@ public class LuaState extends Lua {
     private int hookincr;
     private int hookline,hookcc;
     
+    protected void debugHooks(int pc) {}
     protected void debugAssert(boolean b) {}
     
     // ------------------- constructors ---------------------
@@ -541,6 +542,7 @@ public class LuaState extends Lua {
         	
             // allow debug hooks a chance to operate
             if ( hooksenabled ) {
+            	debugHooks( ci.pc );
             	debugBytecodeHooks( ci.pc );
             }
             
