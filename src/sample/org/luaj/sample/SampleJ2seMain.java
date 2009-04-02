@@ -8,6 +8,8 @@ public class SampleJ2seMain {
 		String script = (args.length>0? args[0]: "src/test/res/swingapp.lua");
 		Platform.setInstance( new J2sePlatform() );
 		LuaState vm = Platform.newLuaState();
+		// uncomment to install the debug library
+		// org.luaj.lib.DebugLib.install(vm);
 		org.luaj.compiler.LuaC.install();
 		vm.getglobal( "dofile" );
 		vm.pushstring( script );

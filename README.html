@@ -31,6 +31,10 @@ Freely available under the terms of the
 <a href="#1">examples</a>
 &middot;
 <a href="#2">concepts</a>
+&middot;
+<a href="#3">libraries</a>
+&middot;
+<a href="#4">building</a>
 
 <!-- ====================================================================== -->
 <p>
@@ -164,41 +168,6 @@ A working example may be found in
 </pre>
 
 
-<h2>Include and use the luajava library</h2>
-
-<p>
-To include the <em>luajava</em> library, include a line in your script such as:
-
-<pre>
-	require( "org.luaj.lib.j2se.Luajava" )
-</pre>
-
-<p>
-or include the following line in your startup code:
-
-<pre>
-	org.luaj.lib.j2se.Luajava.init( vm._G );
-</pre>
-
-<p>
-See the following example for more details:
-<pre>
-	src/sample/LuajavaRunner.java
-</pre>
-
-<p>
-Because reflection is required by the implementation, this is only usable from the J2SE platform.
-
-<p>
-You must include the library <b>lib/luaj-j2se-${VER}.jar</b> in your class path.
-
-<p>
-You can try sample code that creates a simple Swing UI using:
-<pre>
-	java -cp luaj-j2se-${VERS}.jar lua src/test/res/swingapp.lua
-</pre>
-
-
 <h1>2 - <a name="2">Concepts</a></h1>
 
 <h2>Platforms</h2>
@@ -217,7 +186,14 @@ This platform is used to set up the basic environment for a J2ME application.
 The default search path is limited to the jar resources,
 and the math operations are limited to those supported by J2ME.
 
+
+<h1>3 - <a name="3">Libraries</a></h1>
+
 <h2>Standard Libraries</h2>
+
+Libraries are coded to closely match the behavior specified in 
+See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for details on the library API's
+
 <p>
 The following libraries are loaded by default in J2ME and J2SE platforms:
 <pre>
@@ -229,38 +205,83 @@ The following libraries are loaded by default in J2ME and J2SE platforms:
 	table
 </pre>
 
-In addition, J2SE contains these two libraries:
-<pre>
+<p>
+The following libraries are optional, but preconfigured for some platforms and tools:
+<pre>           
 	io
-	luajava
+	debug     
+	luajava 
 </pre>
 
-See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for details on the library API's
+The following is not yet implemented:
+<pre>
+	os
+</pre>
+
+<h2>Optional  Libraries</h2>
+
+<h3>I/O Library</h3>
+The J2SE platform contains the <em>io</em> library by default.
 
 <p>
-There is a partial implementation of the <em>io</em> for J2ME in 
+The J2ME platform has an optional, partial implementation of the <em>io</em> in 
 <pre>
 	src/j2me/org/luaj/lib/j2me/Cldc10IoLib.java
 </pre>
-See the sample midlet to see how it is added to a platform. 
 
-<h2>The Luajava Library</h2>
-The <em>luajava</em> library implements a few functions which allow access to most classes 
-within the host J2SE runtime.  They are included as part of the standard J2SE platform.
-
-<h3>LuaJava</h3>
-The luajava library is used to easily bind to Java classes via reflection.
-It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
-
-Because J2ME does not contain a reflection API, this library cannot be made to work on J2ME, 
-and is not included by default.
-
-<h2>Unimplemented Libraries</h2>
-The following libraries are not yet implemented:
+To install into your vm instance use (j2me only):
 <pre>
-	os
+	LuaState vm = Platform.newLuaState();
+	org.luaj.lib.j2me.Cldc10IoLib.install(vm._G);
+</pre>
+
+<p>
+See the sample midlet int <em>src/sample/SampleMIDlet</em> for an example.
+
+<h3>Debug Library</h3>
+The following library is optional:
+<pre>
 	debug
 </pre>
+
+Install from Java using:
+<pre>
+	LuaState vm = Platform.newLuaState();
+	org.luaj.lib.DebugLib.install(vm);
+</pre>
+
+or install from lua using</em>:
+<pre>
+	require 'org.luaj.lib.DebugLib'
+</pre>
+
+The <em>lua</em> command line utility includes the debug library by default.
+
+
+<h3>The Luajava Library</h3>
+The J2SE platform includes the <em>luajava</em> library, which simplifies binding to Java classes and methods.  
+It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
+
+<p>
+The following lua script will open a swiing frame on J2SE:
+<pre>
+	jframe = luajava.bindClass( "javax.swing.JFrame" )
+	frame = luajava.newInstance( "javax.swing.JFrame", "Texts" );
+	frame:setDefaultCloseOperation(jframe.EXIT_ON_CLOSE)
+	frame:setSize(300,400)
+	frame:setVisible(true)
+</pre>
+
+<p>
+See a longer sample in <em>src/test/res/swingapp.lua</em> for details, or try running it using: 
+<pre>
+	java -cp luaj-j2se-${VERS}.jar lua src/test/res/swingapp.lua
+</pre>
+
+<p>
+The J2ME platform does not include this library, and it cannot be made to work because of the lack of a reflection API in J2SE. 
+
+<h1>4 - <a name="4">Building and Testing</a></h1>
 
 <h2>Building the jars</h2>
 An ant file is included in the root directory which builds the libraries by default.
