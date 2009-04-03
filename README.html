@@ -209,13 +209,9 @@ The following libraries are loaded by default in J2ME and J2SE platforms:
 The following libraries are optional, but preconfigured for some platforms and tools:
 <pre>           
 	io
+	os
 	debug     
 	luajava 
-</pre>
-
-The following is not yet implemented:
-<pre>
-	os
 </pre>
 
 <h2>Optional  Libraries</h2>
@@ -237,6 +233,21 @@ To install into your vm instance use (j2me only):
 
 <p>
 See the sample midlet int <em>src/sample/SampleMIDlet</em> for an example.
+
+<h3>OS Library</h3>
+A basic os library implementation for either J2ME or J2SE is provided ins 
+<pre>
+	src/core/org/luaj/lib/OsLib.java
+</pre>
+
+A slightly more complete version for J2SE is in: 
+<pre>
+	src/j2se/org/luaj/lib/j2se/J2seOsLib.java
+</pre>
+
+Time is a represented as number of milliseconds since the epoch, 
+and most time and date formatting, locales, and other features 
+are not implemented.
 
 <h3>Debug Library</h3>
 The following library is optional:
