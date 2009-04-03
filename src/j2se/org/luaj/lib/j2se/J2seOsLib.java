@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.luaj.lib.OsLib;
+import org.luaj.vm.LTable;
 
 /**
  * Implementation of the lua os library for J2se    
@@ -32,6 +33,13 @@ public class J2seOsLib extends OsLib {
 	public static int EXEC_IOEXCEPTION = -1;
 	public static int EXEC_INTERRUPTED = -2;
 	public static int EXEC_ERROR       = -3;
+	
+	/** 
+	 * Install the os library using the J2seOsLib class as a factory 
+	 */
+	public static void install(LTable globals) {
+		OsLib.install(globals, new J2seOsLib());
+	}
 	
 	public J2seOsLib() {
 		super();
