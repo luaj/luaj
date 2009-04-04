@@ -314,6 +314,7 @@ public class LuaState extends Lua {
 	 * its original configuration. This is considered good programming practice.
 	 */
     public void call( int nargs, int nreturns ) {
+        
         // save stack state
         int oldbase = base;
         try {
@@ -323,8 +324,15 @@ public class LuaState extends Lua {
 	
 	        // make or set up the call
 	        this.nresults = nreturns;
-	        if (this.stack[base].luaStackCall(this)) {
-	            // call was set up on the stack, 
+	        
+	        if (this.stack[base].luaStackCall(this)) {                	
+	        	
+                // call hook
+                if ( hooksenabled ) {
+                	debugCallHooks( );
+                }
+
+	        	// call was set up on the stack, 
 	            // we still have to execute it
 	            execute();
 	        }
@@ -405,6 +413,12 @@ public class LuaState extends Lua {
             // make or set up the call
             this.nresults = nreturns;
             if (this.stack[base].luaStackCall(this)) {
+            	
+                // call hook
+                if ( hooksenabled ) {
+                	debugCallHooks( );
+                }
+            	
                 // call was set up on the stack, 
                 // we still have to execute it
                 execute();
@@ -714,15 +728,17 @@ public class LuaState extends Lua {
                 // number of return values we need
                 c = LuaState.GETARG_C(i);
 
-                // call hook
-                if ( hooksenabled ) {
-                	debugCallHooks( );
-                }
-                
                 // make or set up the call
                 this.nresults = c - 1;
-                if (this.stack[base].luaStackCall(this))
+                if (this.stack[base].luaStackCall(this)) {
+                	
+                    // call hook
+                    if ( hooksenabled ) {
+                    	debugCallHooks( );
+                    }
+                    
                     return;
+                }
                 
                 // adjustTop only for case when call was completed
                 // and number of args > 0. If call completed but
@@ -732,6 +748,12 @@ public class LuaState extends Lua {
                 
                 // restore base
                 base = ci.base;
+                
+            	
+                // call hook
+                if ( hooksenabled ) {
+                	debugReturnHooks( );
+                }
                 
                 continue;
             }
@@ -764,6 +786,12 @@ public class LuaState extends Lua {
                 // make or set up the call
                 try {
                     if (this.stack[base].luaStackCall(this)) {
+                    	
+                        // call hook
+                        if ( hooksenabled ) {
+                        	debugCallHooks( );
+                        }
+                        
                         return;
                     }
                 } catch (LuaErrorException e) {
@@ -1103,10 +1131,24 @@ public class LuaState extends Lua {
     
     public String getStackTrace(int level) {
         StringBuffer buffer = new StringBuffer();
-        for (int i = cc-level; i >= 0; i--) {
-            buffer.append("   ");
-            buffer.append(getFileLine(i));
-            buffer.append("\n");
+        String between = "   ";
+        for (int i=cc; i>=0; --i) {
+			CallInfo ci = calls[i];
+			int pc = ci.pc>0? ci.pc-1: 0;
+			int instr = ci.closure.p.code[pc];
+			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
+				LValue f = stack[ci.base + Lua.GETARG_A(instr)];
+				if ( f.isFunction() && ! (f instanceof LClosure) ) {
+					if ( (level--) <= 0 ) {
+						buffer.append(between+"[Java]: in function "+f.toString());
+						between = "\n   ";
+					}
+				}
+			}
+			if ( (level--) <= 0 ) {
+				buffer.append(between+getFileLine(i));
+				between = "\n   ";
+			}
         }
         return buffer.toString();
     }
@@ -2450,8 +2492,8 @@ public class LuaState extends Lua {
     
     public int debugGetLineNumber(CallInfo ci) {
 		int[] li = ci.closure.p.lineinfo;
-		int pc = ci.pc - 1;
-		if ( li != null && pc >= 0 && pc < li.length )
+		int pc = ci.pc>0? ci.pc-1: 0;
+		if ( li != null && pc < li.length )
 			return li[pc];
 		return -1;
     }

@@ -31,6 +31,7 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
+import org.luaj.vm.Lua;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 
@@ -206,30 +207,46 @@ public class DebugLib extends LFunction {
 			vm.remove(2);			
 		}
 		String what = vm.optstring(3, "nSluf");
+		
+		// find the closure or function
 		if ( vm.isnumber(2) ) {
-			ci = this.getcallinfo(vm, threadVm, vm.tointeger(2));
-			if ( ci == null ) {
+			Object o = getcallinfoorfunction(threadVm, vm.tointeger(2));
+			if ( o == null ) {
 				vm.resettop();
 				return;
 			}
-			closure = ci.closure;
+			if ( o instanceof CallInfo ) {
+				ci = (CallInfo) o;
+				closure = ci.closure;
+			} else {
+				func = (LFunction) o;
+			}
 		} else {
 			func = vm.checkfunction(2);
 			if ( func instanceof LClosure )
 				closure = (LClosure) func;
 		}
 		vm.resettop();
+		
+		// look up info
 		LTable info = new LTable();
 		vm.pushlvalue(info);
 		for (int i = 0, n = what.length(); i < n; i++) {
 			switch (what.charAt(i)) {
 				case 'S': {
-					String s = (closure!=null? closure.p.source.toJavaString(): "=?");
-					info.put("source", new LString(s.replace('@','=')));
-					info.put("short_src", new LString(s.substring(1)));
-					info.put("linedefined", (closure!=null? closure.p.linedefined: 0));
-					info.put("lastlinedefined", (closure!=null? closure.p.lastlinedefined: 0));
-					info.put("what", new LString("Lua"));
+					if ( closure != null ) {
+						String s = closure.p.source.toJavaString();
+						info.put("what", new LString("Lua"));
+						info.put("source", new LString(s.replace('@','=')));
+						info.put("short_src", new LString(s.substring(1)));
+						info.put("linedefined", closure.p.linedefined);
+						info.put("lastlinedefined", closure.p.lastlinedefined);
+					} else {
+						info.put("what", new LString("Java"));
+						info.put("source", new LString("[Java]"));
+						info.put("short_src", new LString("[Java]"));
+						info.put("linedefined", -1);
+					}
 					break;
 				}
 				case 'l': {
@@ -242,8 +259,8 @@ public class DebugLib extends LFunction {
 				}
 				case 'n': {
 					// TODO: name
-					info.put("name", new LString("?"));
-					info.put("namewhat", new LString("?"));
+					info.put("name", (new LString(closure!=null? "?": func.toString())));
+					info.put("namewhat", new LString(""));
 					break;
 				}
 				case 'f': {
@@ -356,14 +373,25 @@ public class DebugLib extends LFunction {
 		}
 	}
 
-	private CallInfo getcallinfo(LuaState vm, LuaState threadVm, int level) {
-		--level ; // level 0 is the debug function itself
-		if ( level > threadVm.cc ) 
+	// return callinfo if level is a lua call, LFunction if a java call
+	private Object getcallinfoorfunction(LuaState vm, int level) {
+		if ( level < 0 ) 
 			return null;
-		if ( level < 0 )
-			level = 0;
-		int cc = threadVm.cc-level;
-		return threadVm.calls[cc];
+		for ( int i=vm.cc; i>=0; --i ) {
+			CallInfo ci = vm.calls[i];
+			int pc = ci.pc>0? ci.pc-1: 0;
+			int instr = ci.closure.p.code[pc];
+			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
+				LValue f = vm.stack[ci.base + Lua.GETARG_A(instr)];
+				if ( f.isFunction() && ! (f instanceof LClosure) ) {
+					if ( (level--) <= 0 )
+						return f;
+				}
+			}
+			if ( (level--) <= 0 )
+				return ci;
+		}
+		return null;
 	}
 
 	private void getmetatable(LuaState vm) {
@@ -452,9 +480,7 @@ public class DebugLib extends LFunction {
 			level = vm.optint(3,1);
 		if ( vm.gettop() >= 2 )
 			message = vm.tostring(2)+"\n";
-		String trace = threadVm.getStackTrace(level-1);
-		if ( trace.endsWith("\n") )
-			trace = trace.substring(0,trace.length()-1);
+		String trace = threadVm.getStackTrace(level);
 		vm.resettop();
 		vm.pushstring(message+trace);
 	}
