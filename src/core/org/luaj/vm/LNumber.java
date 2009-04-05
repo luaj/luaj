@@ -96,5 +96,9 @@ public class LNumber extends LValue {
 	public void luaConcatTo(ByteArrayOutputStream baos) {
 		luaAsString().luaConcatTo( baos );
 	}
-
+	
+	/** Returns true if this is or can be made into a number */
+	public boolean isNumber() {
+		return true;
+	}
 }

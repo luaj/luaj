@@ -350,4 +350,14 @@ public class LValue {
 	public boolean isUserData() {
 		return false;
 	}
+
+	/** Returns true if this is or can be made into a number */
+	public boolean isNumber() {
+		return false;
+	}
+	
+	/** Returns true if this is a lua closure, false otherwise */
+	public boolean isClosure() {
+		return false;
+	}
 }

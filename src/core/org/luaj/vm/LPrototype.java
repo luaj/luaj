@@ -52,4 +52,21 @@ public class LPrototype {
 	public int is_vararg;
 	public int maxstacksize;
 
+	/** Get the name of a local variable.
+	 * 
+	 * @param number the local variable number to look up
+	 * @param pc the program counter
+	 * @return the name, or null if not found
+	 */
+	public LString getlocalname(int number, int pc) {
+	  int i;
+	  for (i = 0; i<locvars.length && locvars[i].startpc <= pc; i++) {
+	    if (pc < locvars[i].endpc) {  /* is variable active? */
+	    	number--;
+	      if (number == 0)
+	        return locvars[i].varname;
+	    }
+	  }
+	  return null;  /* not found */
+	}
 }

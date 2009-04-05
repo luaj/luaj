@@ -40,4 +40,8 @@ public class CallInfo {
         this.pc = 0;
     }
 
+	public boolean isLua() {
+		return true;
+	}
+
 }

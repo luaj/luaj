@@ -455,5 +455,11 @@ public class LString extends LValue {
 	public void luaConcatTo(ByteArrayOutputStream baos) {
 		baos.write( m_bytes, m_offset, m_length );
 	}
+	
+	/** Returns true if this is or can be made into a number */
+	public boolean isNumber() {
+		return ! this.luaToNumber().isNil();
+	}
+
 
 }

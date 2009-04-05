@@ -298,23 +298,11 @@ public class DebugLib extends LFunction {
 		return null;
 	}
 
-	private LString getlocalname (LPrototype f, int local_number, int pc) {
-	  int i;
-	  for (i = 0; i<f.locvars.length && f.locvars[i].startpc <= pc; i++) {
-	    if (pc < f.locvars[i].endpc) {  /* is variable active? */
-	      local_number--;
-	      if (local_number == 0)
-	        return f.locvars[i].varname;
-	    }
-	  }
-	  return null;  /* not found */
-	}
-
 	private LString findlocal(LuaState vm, int cc, int n) {
 		CallInfo ci = vm.calls[cc];
 		LString name;
 		LPrototype fp = ci.closure.p;
-		if ( fp!=null && (name = getlocalname(fp, n, ci.pc-1)) != null)
+		if ( fp!=null && (name = fp.getlocalname(n, ci.pc-1)) != null)
 			return name;
 		return null;
 	}

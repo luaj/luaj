@@ -59,4 +59,9 @@ public class LClosure extends LFunction {
 		return env;
 	}
 
+	/** Returns true if this is a lua closure, false otherwise */
+	public boolean isClosure() {
+		return true;
+	}
+
 }
