@@ -44,7 +44,7 @@ public class LoadState {
 	public static LuaCompiler compiler = null;
 
 	/** Signature byte indicating the file is a compiled binary chunk */
-	private static final byte[] LUA_SIGNATURE	= "\033Lua".getBytes();
+	private static final byte[] LUA_SIGNATURE	= { '\033', 'L', 'u', 'a' };
 
 	/** Name for compiled chunks */
 	public static final String SOURCE_BINARY_STRING = "binary string";

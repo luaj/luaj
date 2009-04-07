@@ -44,4 +44,18 @@ public class CallInfo {
 		return true;
 	}
 
+	/**
+	 * @return current line number, or -1 if no line info found
+	 */
+	public int currentline() {
+		int[] li = closure.p.lineinfo;
+		if ( li != null && pc <= li.length )
+			return li[pc>0? pc-1: pc];
+		return -1;
+	}
+
+	public String sourcename() {
+        return LoadState.getSourceName(closure.p.source.toJavaString());
+	}
+
 }

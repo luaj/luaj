@@ -1077,80 +1077,32 @@ public class LuaState extends Lua {
     //              Lua Java API
     //===============================================================
     
-    /**
-     * Returns the current program counter for the given call frame.
-     * @param ci -- A call frame
-     * @return the current program counter for the given call frame.
-     */
-    protected int getCurrentPc(CallInfo ci) {
-        int pc = ci.pc;
-        return pc > 0 ? pc - 1 : 0;
-    }
 
-    protected String getSourceFileName(LString source) {
-        String sourceStr = LoadState.getSourceName(source.toJavaString());
-        return getSourceFileName(sourceStr);
-    }
-
-    protected String getSourceFileName(String sourceStr) {
-        if (!LoadState.SOURCE_BINARY_STRING.equals(sourceStr)) {
-            sourceStr = sourceStr.replace('\\', '/');
-        }
-
-        int index = sourceStr.lastIndexOf('/');
-        if (index != -1) {
-            sourceStr = sourceStr.substring(index + 1);
-        }
-
-        return sourceStr;
-    }
-    
     /** 
      * Get the file line number info for a particular call frame.
      * @param cindex index into call stack
      * @return
      */
-    protected String getFileLine(int cindex) {
-        String source = "?";
-        String line = "";
-        if (cindex >= 0 && cindex <= cc) {
-            CallInfo call = this.calls[cindex];
-            LPrototype p = call.closure.p;
-            if (p != null && p.source != null)
-                source = getSourceFileName(p.source);
-            int pc = getCurrentPc(call);
-            if (p.lineinfo != null && p.lineinfo.length > pc)
-                line = ":" + String.valueOf(p.lineinfo[pc]);
-        }
-        return source + line;
-    }
-    
-    public String getStackTrace() {
-    	return "Stack Trace:\n"+getStackTrace(0);
-    }
-    
-    public String getStackTrace(int level) {
-        StringBuffer buffer = new StringBuffer();
-        String between = "   ";
-        for (int i=cc; i>=0; --i) {
-			CallInfo ci = calls[i];
-			int pc = ci.pc>0? ci.pc-1: 0;
-			int instr = ci.closure.p.code[pc];
+    protected String getFileLine(int level) {
+        for (int j=cc; j>=0; --j) {
+			CallInfo ci = calls[j];
+			int instr = ci.closure.p.code[ci.pc>0? ci.pc-1: 0];
 			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
-				LValue f = stack[ci.base + Lua.GETARG_A(instr)];
-				if ( f.isFunction() && ! (f instanceof LClosure) ) {
+				int a = Lua.GETARG_A(instr);
+				LValue f = stack[ci.base + a];
+				if ( f.isFunction() ) {
+					if ( ! f.isClosure() ) {
+						if ( (level--) <= 0 ) {
+							return "[Java]: "+f.toString();
+						}
+					}
 					if ( (level--) <= 0 ) {
-						buffer.append(between+"[Java]: in function "+f.toString());
-						between = "\n   ";
+						return ci.sourcename()+":"+ci.currentline();
 					}
 				}
 			}
-			if ( (level--) <= 0 ) {
-				buffer.append(between+getFileLine(i));
-				between = "\n   ";
-			}
-        }
-        return buffer.toString();
+		}
+        return "";
     }
     
     /**
@@ -2490,12 +2442,11 @@ public class LuaState extends Lua {
     	}
     }
     
-    public int debugGetLineNumber(CallInfo ci) {
-		int[] li = ci.closure.p.lineinfo;
-		int pc = ci.pc>0? ci.pc-1: 0;
-		if ( li != null && pc < li.length )
-			return li[pc];
-		return -1;
+    /** 
+     * @deprecated use CallInfo.currentline() instead
+     */
+    public static int debugGetLineNumber(CallInfo ci) {
+    	return ci.currentline();
     }
 		
     private void debugCallHook(int mask, int line) {
