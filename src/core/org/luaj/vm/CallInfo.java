@@ -54,8 +54,4 @@ public class CallInfo {
 		return -1;
 	}
 
-	public String sourcename() {
-        return LoadState.getSourceName(closure.p.source.toJavaString());
-	}
-
 }

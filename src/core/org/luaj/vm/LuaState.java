@@ -1097,7 +1097,7 @@ public class LuaState extends Lua {
 						}
 					}
 					if ( (level--) <= 0 ) {
-						return ci.sourcename()+":"+ci.currentline();
+						return ci.closure.p.sourceshort()+":"+ci.currentline();
 					}
 				}
 			}

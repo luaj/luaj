@@ -69,5 +69,9 @@ public class LPrototype {
 	  }
 	  return null;  /* not found */
 	}
+
+	public String sourceshort() {
+        return LoadState.getSourceName(source.toJavaString());
+	}
 	
 }
