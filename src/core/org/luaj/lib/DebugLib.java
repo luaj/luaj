@@ -31,6 +31,7 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LoadState;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
@@ -83,10 +84,7 @@ public class DebugLib extends LFunction {
 	private static final LString METHOD    = new LString("method");  
 	private static final LString UPVALUE   = new LString("upvalue");  
 	private static final LString FIELD     = new LString("field");
-	private static final LString MAINCHUNK = new LString("main chunk");
 	private static final LString NOSTRING  = new LString("");  
-	
-
 	
 	public static void install( LuaState vm ) {
 		LTable debug = new LTable();
@@ -239,16 +237,17 @@ public class DebugLib extends LFunction {
 		// look up info
 		LTable info = new LTable();
 		vm.pushlvalue(info);
+		LClosure c = si.closure();
 		for (int i = 0, n = what.length(); i < n; i++) {
 			switch (what.charAt(i)) {
 				case 'S': {
-					if ( si.luainfo != null ) {
-						LClosure c = si.luainfo.closure;
+					if ( c != null ) {
+						LPrototype p = c.p;
 						info.put("what", LUA);
-						info.put("source", c.p.source);
-						info.put("short_src", new LString(si.luainfo.sourcename()));
-						info.put("linedefined", c.p.linedefined);
-						info.put("lastlinedefined", c.p.lastlinedefined);
+						info.put("source", p.source);
+						info.put("short_src", new LString(p.sourceshort()));
+						info.put("linedefined", p.linedefined);
+						info.put("lastlinedefined", p.lastlinedefined);
 					} else {
 						info.put("what", JAVA);
 						info.put("source", JAVASRC);
@@ -264,7 +263,7 @@ public class DebugLib extends LFunction {
 					break;
 				}
 				case 'u': {
-					info.put("nups", (si.luainfo!=null? si.luainfo.closure.p.nups: 0));
+					info.put("nups", (c!=null? c.p.nups: 0));
 					break;
 				}
 				case 'n': {
@@ -274,14 +273,14 @@ public class DebugLib extends LFunction {
 					break;
 				}
 				case 'f': {
-					info.put( "func", si.luainfo!=null? si.luainfo.closure: si.javafunc );
+					info.put( "func", si.func );
 					break;
 				}
 				case 'L': {
 					LTable lines = new LTable();
 					info.put("activelines", lines);
 					if ( si.luainfo != null ) {
-						int line = threadVm.debugGetLineNumber(si.luainfo);
+						int line = si.luainfo.currentline();
 						if ( line >= 0 )
 							lines.put(1, LInteger.valueOf(line));
 					}
@@ -436,13 +435,18 @@ public class DebugLib extends LFunction {
 		private CallInfo caller; // or null if first item on stack
 		private int stackpos; // offset into stack
 		private CallInfo luainfo; // or null if a java function 
-		private LValue javafunc; // or null if a lua call
-		public StackInfo(LuaState vm, CallInfo caller, int stackpos, CallInfo luainfo, LValue javafunc) {
+		private LValue func; // or null if a lua call
+		public StackInfo(LuaState vm, CallInfo caller, int stackpos, CallInfo luainfo, LFunction func) {
 			this.vm = vm;
 			this.caller = caller;
 			this.stackpos = stackpos;
 			this.luainfo = luainfo;
-			this.javafunc = javafunc;
+			this.func = func!=null? func: luainfo!=null? luainfo.closure: null;
+		}
+		public LClosure closure() {
+			return luainfo!=null? luainfo.closure:
+				func!=null&&func.isClosure()? (LClosure)func:
+				null;
 		}
 		public String sourceline() {
 			if ( luainfo != null ) {
@@ -462,8 +466,8 @@ public class DebugLib extends LFunction {
 		public String tracename() {
 			if ( caller == null )
 				return "main chunk";
-			if ( javafunc != null )
-				return javafunc.toString();
+			if ( func != null )
+				return func.toString();
 			LString[] kind = getfunckind();
 			if ( kind == null )
 				return "function ?";
@@ -506,7 +510,7 @@ public class DebugLib extends LFunction {
 					// is there also a java call? 
 					if ( ! f.isClosure() ) {
 						if ( (level--) <= 0 ) {
-							si[i++] = new StackInfo( vm, ci, a, null, f);
+							si[i++] = new StackInfo( vm, ci, a, null, (LFunction) f);
 							if ( i >= countlevels )
 								return si;
 						}
