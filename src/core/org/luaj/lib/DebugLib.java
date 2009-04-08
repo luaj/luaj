@@ -483,47 +483,35 @@ public class DebugLib extends LFunction {
 	private static StackInfo[] getstackinfo(LuaState vm, int level, int countlevels) {
 		StackInfo[] si = new StackInfo[countlevels];
 		int i = 0;
+		LClosure prevclosure = null;
         for (int j=vm.cc; j>=0; --j) {
 			
 			CallInfo ci = vm.calls[j];
-			int instr = ci.closure.p.code[ci.pc>0? ci.pc-1: 0];
-			
-			// java function? 
-			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
-				int a = Lua.GETARG_A(instr);
-				LValue f = vm.stack[ci.base + a];
-				if ( f.isFunction() ) {
+			LFunction f = ci.currentfunc(vm);
 
-					// add the lua closure
-					if ( j < vm.cc ) {
-						if ( (level--) <= 0 ) {
-							CallInfo ci1 = vm.calls[j+1];
-							LValue f1 = vm.calls[j+1].closure;
-							if ( f != f1 )
-								a = ci1.resultbase-ci.base;
-							si[i++] = new StackInfo( vm, ci, a, ci1, null);
-							if ( i >= countlevels )
-								return si;
-						}
-					}
-					
-					// is there also a java call? 
-					if ( ! f.isClosure() ) {
-						if ( (level--) <= 0 ) {
-							si[i++] = new StackInfo( vm, ci, a, null, (LFunction) f);
-							if ( i >= countlevels )
-								return si;
-						}
-					}
-					
-					// TODO: tail calls, for loops 
+			// java, or tailcall? 
+			if ( f != null && (! f.isClosure() || f!=prevclosure) ) {
+				if ( (level--) <= 0 ) {
+					si[i++] = new StackInfo( vm, ci, ci.currentfunca(vm), null, f);
+					if ( i >= countlevels )
+						return si;
 				}
 			}
+					
+			// add the lua closure
+			if ( (level--) <= 0 ) {
+				if (j>0 && vm.calls[j-1].currentfunc(vm) == ci.closure) {
+					CallInfo caller = vm.calls[j-1];
+					int callera = caller.currentfunca(vm);
+					si[i++] = new StackInfo( vm, caller, callera, ci, ci.closure);
+				} else {
+					si[i++] = new StackInfo( vm, null, -1, ci, ci.closure);
+				}
+				if ( i >= countlevels )
+					return si;
+			}
+			prevclosure = ci.closure;
 		}
-			
-		// first call is a plain call with no enclosing frame
-		if ( (level--) <= 0 )
-			si[i++] = new StackInfo(vm, null, -1, vm.calls[0], null);
 		
 		return si;
 	}

@@ -1080,26 +1080,22 @@ public class LuaState extends Lua {
 
     /** 
      * Get the file line number info for a particular call frame.
-     * @param cindex index into call stack
+     * @param cindex index into call stack, or -1 to get first lua location
      * @return
      */
     protected String getFileLine(int level) {
+    	LClosure c = null;
         for (int j=cc; j>=0; --j) {
 			CallInfo ci = calls[j];
-			int instr = ci.closure.p.code[ci.pc>0? ci.pc-1: 0];
-			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
-				int a = Lua.GETARG_A(instr);
-				LValue f = stack[ci.base + a];
-				if ( f.isFunction() ) {
-					if ( ! f.isClosure() ) {
-						if ( (level--) <= 0 ) {
-							return "[Java]: "+f.toString();
-						}
-					}
-					if ( (level--) <= 0 ) {
-						return ci.closure.p.sourceshort()+":"+ci.currentline();
-					}
+			LFunction f = ci.currentfunc(this);
+			if ( f != null && (!f.isClosure() || f!=c) ) {
+				if ( level != -1 && (level--) <= 0 ) {
+					return "[Java]: "+f.toString();
 				}
+			}
+			c = ci.closure;
+			if ( (level--) <= 0 ) {
+				return c.p.sourceshort()+":"+ci.currentline();
 			}
 		}
         return "";
@@ -1121,7 +1117,7 @@ public class LuaState extends Lua {
 	 * Raises an error with the default level.
 	 */
     public void error(String message) {
-    	throw new LuaErrorException( this, message, 1 );
+    	throw new LuaErrorException( this, message, -1 );
     }
 
 	/**
@@ -2462,7 +2458,7 @@ public class LuaState extends Lua {
 	    	case LUA_HOOKCOUNT:   this.pushstring("count"); break;
 	    	case LUA_HOOKCALL:    this.pushstring("call"); break;
 	    	case LUA_HOOKRET:     this.pushstring("return"); break;
-	    	case LUA_HOOKTAILRET: this.pushstring("return"); break;
+	    	case LUA_HOOKTAILRET: this.pushstring("tail return"); break;
 	    	default:
 	    		lineval = LInteger.valueOf(line);
 	    		this.pushstring("line"); 

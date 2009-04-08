@@ -53,14 +53,14 @@ public class LuaErrorException extends RuntimeException {
 	 * @param message message to supply
 	 */
 	public LuaErrorException(String message) {
-		this(null, message, 1);
+		this(null, message, -1);
 	}
 
 	/**
 	 * Construct the message around a specific vm and with a particular level of debug info
 	 * @param vm
 	 * @param message
-	 * @param level
+	 * @param level 0 for no message, >=1 for current call or above, -1 for most recent lua call
 	 */
 	public LuaErrorException(LuaState vm, String message, int level) {
 		super( addLineInfo( vm, message, level ) );
@@ -74,7 +74,7 @@ public class LuaErrorException extends RuntimeException {
 	 * @return
 	 */
 	private static String addLineInfo(LuaState vm, String message, int level) {
-		if ( level < 1 || message == null )
+		if ( level == 0 || message == null )
 			return message;
 		if ( vm == null ) {
 			if ( LThread.running != null )

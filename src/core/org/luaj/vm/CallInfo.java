@@ -54,4 +54,30 @@ public class CallInfo {
 		return -1;
 	}
 
+	/**
+	 * @param vm
+	 * @return current function executing, or null
+	 */
+	public LFunction currentfunc(LuaState vm) {
+		int a = currentfunca(vm);
+		if ( a >= 0 ) {
+			LValue v = vm.stack[base + a]; 
+			if ( v.isFunction() )
+				return (LFunction) v;
+		}
+		return null;
+	}
+
+	/**
+	 * @param vm
+	 * @return register of the current function executing, or null
+	 */
+	public int currentfunca(LuaState vm) {
+		int i = closure.p.code[pc>0? pc-1: 0];
+		int op = Lua.GET_OPCODE(i);
+		if ( op == Lua.OP_CALL || op == Lua.OP_TAILCALL )
+			return Lua.GETARG_A(i);
+		return -1;
+	}
+
 }
