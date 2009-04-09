@@ -25,10 +25,7 @@ import java.util.Random;
 
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LFunction;
-import org.luaj.vm.LInteger;
-import org.luaj.vm.LNumber;
 import org.luaj.vm.LTable;
-import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
@@ -142,105 +139,89 @@ public class MathLib extends LFunction {
 		vm.pushlvalue( LDouble.valueOf(d) );
 	}
 	
-	private static void setResult( LuaState vm, int i ) {
-		vm.resettop();
-		vm.pushlvalue( LInteger.valueOf(i) );
-	}
-
-	private static void setResult(LuaState vm, LNumber mathop) {
-		vm.resettop();
-		vm.pushlvalue( mathop );
-	}
-	
-	public boolean luaStackCall( LuaState vm ) {
+	public int invoke(LuaState vm) {
 		if ( id > LAST_DOUBLE_ARG ) {
-			setResult( vm, platform.mathop(id, vm.checknumber(2) ) );
+			vm.pushlvalue( platform.mathop(id, vm.checknumber(1) ) );
+			return 1;
 		} else if ( id > LAST_IRREGULAR ) {
-			setResult( vm, platform.mathop(id, vm.checknumber(2), vm.checknumber(3) ) );
+			vm.pushlvalue( platform.mathop(id, vm.checknumber(1), vm.checknumber(2) ) );
+			return 1;
 		} else {
 			switch ( id ) {
 			case INSTALL:
 				install( vm._G );
-				break;
+				return 0;
 			case MAX: {
 				int n = vm.gettop();
-				double x = vm.checkdouble(2);
-				for ( int i=3; i<=n; i++ )
+				double x = vm.checkdouble(1);
+				for ( int i=2; i<=n; i++ )
 					x = Math.max(x, vm.checkdouble(i));
-				setResult( vm, x );
-				break;
+				vm.pushnumber( x );
+				return 1;
 			}
 			case MIN: {
 				int n = vm.gettop();
-				double x = vm.checkdouble(2);
-				for ( int i=3; i<=n; i++ )
+				double x = vm.checkdouble(1);
+				for ( int i=2; i<=n; i++ )
 					x = Math.min(x, vm.checkdouble(i));
-				setResult(vm,x);
-				break;
+				vm.pushnumber( x );
+				return 1;
 			}
 			case MODF: {
-				double x = vm.checkdouble(2);
+				double x = vm.checkdouble(1);
 				double intPart = ( x > 0 ) ? Math.floor( x ) : Math.ceil( x );
 				double fracPart = x - intPart;
-				vm.resettop();
 				vm.pushnumber( intPart );
 				vm.pushnumber( fracPart );
-				break;
+				return 2;
 			}
 			case CEIL:
-				setResult( vm, (int) Math.ceil( vm.checkdouble(2) ) );
-				break;
+				vm.pushnumber( Math.ceil( vm.checkdouble(1) ) );
+				return 1;
 			case FLOOR:
-				setResult( vm, (int) Math.floor( vm.checkdouble(2) ) );
-				break;
+				vm.pushnumber( Math.floor( vm.checkdouble(1) ) );
+				return 1;
 			case FREXP: {
-				long bits = Double.doubleToLongBits( vm.checkdouble(2) );
-				vm.resettop();
+				long bits = Double.doubleToLongBits( vm.checkdouble(1) );
 				vm.pushnumber( ((bits & (~(-1L<<52))) + (1L<<52)) * ((bits >= 0)? (.5 / (1L<<52)): (-.5 / (1L<<52))) );
 				vm.pushinteger( (((int) (bits >> 52)) & 0x7ff) - 1022 );
-				break;
+				return 2;
 			}
 			case LDEXP: {
-				double m = vm.checkdouble(2);
-				int e = vm.checkint(3);
-				vm.resettop();
+				double m = vm.checkdouble(1);
+				int e = vm.checkint(2);
 				vm.pushnumber( m * Double.longBitsToDouble(((long)(e+1023)) << 52) );
-				break;
+				return 1;
 			}
 			case RANDOM: {
 				if ( random == null )
 					random = new Random(1);
 				switch ( vm.gettop() ) {
-				case 1:
-					vm.resettop();
+				case 0:
 					vm.pushnumber(random.nextDouble());
-					break;
-				case 2: {
-					int m = vm.checkint(2);
+					return 1;
+				case 1: {
+					int m = vm.checkint(1);
 					vm.argcheck(1<=m, 1, "interval is empty");
-					vm.resettop();
 					vm.pushinteger(1+random.nextInt(m));
-					break;
+					return 1;
 				}
 				default: {
-					int m = vm.checkint(2);
-					int n = vm.checkint(3);
+					int m = vm.checkint(1);
+					int n = vm.checkint(2);
 					vm.argcheck(m<=n, 2, "interval is empty");
-					vm.resettop();
 					vm.pushinteger(m+random.nextInt(n+1-m));
-					break;
+					return 1;
 				}
 				}
-				break;
 			}
 			case RSEED:
-				random = new Random( vm.checkint(2) );
-				vm.resettop();
-				break;		
+				random = new Random( vm.checkint(1) );
+				return 0;		
 			default:
 				LuaState.vmerror( "bad math id" );
+				return 0;
 			}
 		}
-		return false;
 	}
 }

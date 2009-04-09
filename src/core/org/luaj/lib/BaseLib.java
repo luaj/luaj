@@ -120,112 +120,104 @@ public class BaseLib extends LFunction {
 		vm.pushstring( message );
 	}
 	
-	public boolean luaStackCall(LuaState vm) {
+	public int invoke(LuaState vm) {
 		switch ( id ) {
 		case PRINT: {
 			int n = vm.gettop();
 			vm.getglobal("tostring");			
-			for ( int i=2; i<=n; i++ ) {
+			for ( int i=1; i<=n; i++ ) {
 				vm.pushvalue(-1);
 				vm.pushvalue(i);
 				vm.call(1, 1);
 				if ( vm.type(-1) != Lua.LUA_TSTRING )
 					vm.error( "'tostring' must return a string to 'print'" );				
-				if ( i > 2 )
+				if ( i > 1 )
 					STDOUT.print( "\t" );
 				STDOUT.print( vm.tostring(-1) );
 				vm.poplvalue();
 			}
 			STDOUT.println();
-			vm.resettop();
-			break;
+			return 0;
 		}
 		case IPAIRS: {			
-			LTable t = vm.checktable(2);
-			vm.resettop();
+			LTable t = vm.checktable(1);
 			vm.pushfunction( inext );
 			vm.pushlvalue( t );
 			vm.pushinteger( 0 );
-			break;
+			return 3;
 		}
 		case PAIRS: {
-			LTable t = vm.checktable(2);
-			vm.resettop();
+			LTable t = vm.checktable(1);
 			vm.pushfunction( next );
 			vm.pushlvalue( t );
 			vm.pushnil();
-			break;
+			return 3;
 		}
 		case INEXT: {
-			  int i = vm.checkint(3) + 1;
-			  LTable t = vm.checktable(2);
+			  int i = vm.checkint(2) + 1;
+			  LTable t = vm.checktable(1);
 			  LValue v = t.get(i);
-			  vm.resettop();
 			  if ( !v.isNil() ) {
 				  vm.pushinteger(i);
 				  vm.pushlvalue(v);
+				  return 2;
 			  }
-			  break;
+			  return 0;
 		}
 		case NEXT: {
-			LTable t = vm.checktable(2);
-			LValue k = vm.topointer(3);
+			LTable t = vm.checktable(1);
+			LValue k = vm.topointer(2);
 			vm.resettop();
 			t.next(vm,k,false);
-			break;
+			return -1;
 		}
 		case GETMETATABLE: {
-			vm.checkany(2);
-			if ( ! vm.getmetatable(2) ) {
-				vm.resettop();
+			vm.checkany(1);
+			if ( ! vm.getmetatable(1) ) {
 				vm.pushnil();
+				return 1;
 			} else {
-				vm.replace(1);
-				vm.settop(1);
 				vm.getfield(-1,LValue.TM_METATABLE);
 				if ( vm.isnil(-1) )
 					vm.pop(1);
-				else
-					vm.remove(1);
 			}
-			break;
+			return 1;
 		}
 		case SETMETATABLE: {
-			LTable t = vm.checktable(2);
-			LValue v = vm.checkany(3);
-			vm.argcheck(v.isTable() || v.isNil(), 3, "table or nil expected");
+			LTable t = vm.checktable(1);
+			LValue v = vm.checkany(2);
+			vm.argcheck(v.isTable() || v.isNil(), 2, "table or nil expected");
 			t = t.luaSetMetatable(v);
-			vm.resettop();
 			vm.pushlvalue(t);
-			break;
+			return 1;
 		}		
 		case TYPE: {
-			LValue v = vm.checkany(2);
-			vm.resettop();
+			LValue v = vm.checkany(1);
 			vm.pushlstring( v.luaGetTypeName() );
-			break;
+			return 1;
 		}
 		case PCALL: {
-			vm.checkany(2);
+			vm.checkany(1);
 			int n = vm.gettop();
-			int s = vm.pcall( n-2, Lua.LUA_MULTRET, 0 );
-			if ( s == 0 ) { // success, results are on stack above the pcall
-				vm.remove( 1 );
+			int s = vm.pcall( n-1, Lua.LUA_MULTRET, 0 );
+			if ( s == 0 ) { // success, results are on stack
 				vm.pushboolean( true );
 				vm.insert( 1 );
+				return -1;
 			} else { // error, error message is on the stack
 				vm.pushboolean( false );
-				vm.insert( 1 );
+				vm.insert( -2 );
+				return 2;
 			}
-			break;
 		}
 		case XPCALL: {
 			LValue errfun = vm.checkany(3);
-			vm.settop(2);
+			vm.settop(1);
 			int s = vm.pcall( 0, Lua.LUA_MULTRET, 0 );
-			if ( s == 0 ) { // success, results are on stack above the xpcall
+			if ( s == 0 ) { // success, results are on stack
 				vm.pushboolean( true );
-				vm.replace( 1 );
+				vm.insert( 1 );
+				return -1;
 			} else { // error, error message is on the stack
 				vm.pushlvalue( errfun );
 				vm.insert( 1 );
@@ -233,113 +225,105 @@ public class BaseLib extends LFunction {
 				if ( s == 0 ) {
 					vm.pushboolean( false );
 					vm.insert( 1 );
+					return -1;
 				} else { // error in error handler
-					vm.resettop();
 					vm.pushboolean(false);
-					vm.pushstring("error in error handling");					
+					vm.pushstring("error in error handling");
+					return 2;
 				}
 			}
-			break;
 		}
 		case ERROR: {
-			vm.error(vm.optstring(2,null), vm.optint(3,1));
-			break;
+			vm.error(vm.optstring(1,null), vm.optint(2,1));
+			return 0;
 		}
 		case ASSERT: {
-			if ( ! vm.toboolean(2) )
-				vm.error( vm.optstring(3,"assertion failed!") );
-			vm.remove(1);
-			break;
+			if ( ! vm.toboolean(1) )
+				vm.error( vm.optstring(2,"assertion failed!") );
+			return -1;
 		}
 		
 		case LOADFILE:
-			loadfile(vm, vm.optstring(2,null));
-			break;
+			loadfile(vm, vm.optstring(1,null));
+			return -1;
 			
 		case TONUMBER: {
-			int base = vm.optint(3, 10);
+			int base = vm.optint(2, 10);
 			if (base == 10) {  /* standard conversion */
-				vm.checkany(2);
-				LValue v = vm.tolnumber(2);
-				vm.resettop();
+				vm.checkany(1);
+				LValue v = vm.tolnumber(1);
 				vm.pushlvalue(v);
+				return 1;
 			} else {
 				if ( base < 2 || base > 36 )
-					vm.typerror(3, "base out of range");				
-				LString s = vm.checklstring(2);
-				vm.resettop();
+					vm.argerror(2, "base out of range");				
+				LString s = vm.checklstring(1);
 				vm.pushlvalue( s.luaToNumber(base) );
+				return 1;
 			}
-			break;
 		}
 		case RAWEQUAL: {
-			LValue a = vm.checkany(2);
-			LValue b = vm.checkany(3);
-			vm.resettop();
+			LValue a = vm.checkany(1);
+			LValue b = vm.checkany(2);
 			vm.pushboolean(a == b);
-			break;
+			return 1;
 		}	
 		case RAWGET: {
-			LTable t = vm.checktable(2);
-			LValue k = vm.checkany(3);
-			vm.resettop();
+			LTable t = vm.checktable(1);
+			LValue k = vm.checkany(2);
 			vm.pushlvalue( t.get( k ) );
-			break;
+			return 1;
 		}
 		case RAWSET: {
-			LTable t = vm.checktable(2);
-			LValue k = vm.checkany(3);
-			LValue v = vm.checkany(4);
+			LTable t = vm.checktable(1);
+			LValue k = vm.checkany(2);
+			LValue v = vm.checkany(3);
 			t.put( k, v );
-			vm.resettop();
 			vm.pushlvalue(t);
-			break;
+			return 1;
 		}
 		case GETFENV: {
 			LValue f = getfunc(vm, true);
-			vm.resettop();
 			vm.pushlvalue(f.luaGetEnv(vm._G));
-			break;
+			return 1;
 		}
 		case SETFENV: {
-			LTable t = vm.checktable(3);
-			LValue f = getfunc(vm, false);
-			if ( vm.isnumber(2) && vm.tointeger(2) == 0 ) {
+			LTable t = vm.checktable(2);
+			if ( vm.isnumber(1) && vm.tointeger(1) == 0 ) {
 				vm._G = t;
-			} else if ( (!(f instanceof LClosure)) || ! f.luaSetEnv(t) ) {
-				vm.error( "'setfenv' cannot change environment of given object" );
+			} else { 
+				LValue f = getfunc(vm, false);
+				if ( (!(f instanceof LClosure)) || ! f.luaSetEnv(t) )
+					vm.error( "'setfenv' cannot change environment of given object" );
+				vm.pushlvalue(f);
+				return 1;
 			}
-			vm.resettop();
-			vm.pushlvalue(f);
-			break;
 		}
 		case SELECT: {
-			vm.checkany(2);
+			vm.checkany(1);
 			int n = vm.gettop();			
-			if ( vm.isnumber(2) ) {
-				int index = vm.tolnumber(2).toJavaInt();
+			if ( vm.isnumber(1) ) {
+				int index = vm.tolnumber(1).toJavaInt();
 				if ( index < 0 )
-					index += n-1;
+					index += n;
 				if ( index <= 0 )
-					vm.typerror( 2, "index out of range" );
+					vm.argerror( 1, "index out of range" );
 				if ( index >= n )
-					vm.resettop();
+					return 0;
 				else {
-					for ( int i=0; i<=index; i++ )
-						vm.remove(1);
+					return n-index;
 				}					
-			} else if ( vm.checkstring(2).equals( "#" ) ) {
-				vm.resettop();
-				vm.pushnumber( n - 2 );
+			} else if ( vm.checkstring(1).equals( "#" ) ) {
+				vm.pushnumber( n - 1 );
+				return 1;
 			} else {
-				vm.typerror(2,"expected number or '#'");
+				vm.typerror(1,"expected number or '#'");
+				return 0;
 			}
-			break;
 		}
 		case COLLECTGARBAGE: {
-			String s = vm.optstring(2, "collect");
+			String s = vm.optstring(1, "collect");
 			int result = 0;
-			vm.resettop();
 			if ( "collect".equals(s) )
 				System.gc();
 			else if ( "count".equals(s) ) {
@@ -347,33 +331,32 @@ public class BaseLib extends LFunction {
 				long used = rt.totalMemory() - rt.freeMemory();
 				result = (int) (used >> 10);
 			} else {
-				vm.typerror(2,"gc op");
+				vm.argerror(2,"gc op");
 			}
 			vm.pushnumber(result);
-			break;
+			return 1;
 		}
 		case DOFILE:
 			dofile(vm);
-			break;
+			return -1;
 		case LOADSTRING:
-			loadstring(vm, vm.checklstring(2), vm.optstring(3,"(string)"));
-			break;
+			loadstring(vm, vm.checklstring(1), vm.optstring(2,"(string)"));
+			return -1;
 		case LOAD:
 			load(vm);
-			break;
+			return -1;
 		case TOSTRING: {
-			LValue v = vm.checkany(2);
-			vm.resettop();
+			LValue v = vm.checkany(1);
 			vm.pushlvalue( v.luaAsString() );			
-			break;
+			return 1;
 		}
 		case UNPACK: {
-			LTable list = vm.checktable(2);
+			LTable list = vm.checktable(1);
 			int n = vm.gettop();
-			int i = vm.optint(3,1);
+			int i = vm.optint(2,1);
 			int j;
-			if ( n >= 4 ) {
-				j = vm.checkint(4);
+			if ( n >= 3 ) {
+				j = vm.checkint(3);
 			} else {
 				j = list.luaLength();
 			}
@@ -381,21 +364,21 @@ public class BaseLib extends LFunction {
 			vm.checkstack(j+1-i);
 			for ( int k=i; k<=j; k++ )
 				vm.pushlvalue(list.get(k));
-			break;
+			return -1;
 		}
 		default:
 			LuaState.vmerror( "bad base id" );
+			return 0;
 		}
-		return false;
 	}
 	
 	private static LValue getfunc (LuaState vm, boolean opt) {
-		if ( vm.isfunction(2) )
-			return vm.tofunction(2);
+		if ( vm.isfunction(1) )
+			return vm.tofunction(1);
 		else {
-			int level = opt? vm.optint(2, 1): vm.checkint(2);
-		    vm.argcheck(level >= 0, 2, "level must be non-negative");
-		    vm.argcheck(level-1 <= vm.cc, 2, "invalid level");
+			int level = opt? vm.optint(1, 1): vm.checkint(1);
+		    vm.argcheck(level >= 0, 1, "level must be non-negative");
+		    vm.argcheck(level-1 <= vm.cc, 1, "invalid level");
 		    CallInfo ci = vm.getStackFrame(level-1);
 		    if ( ci == null || ci.closure == null )
 		    	return LNil.NIL;
@@ -483,7 +466,7 @@ public class BaseLib extends LFunction {
 	
 	// if load succeeds, return 0 for success, 1 for error (as per lua spec)
 	private void dofile( LuaState vm ) {
-		String filename = vm.optstring(2,null);
+		String filename = vm.optstring(1,null);
 		if ( loadfile( vm, filename ) ) {
 			vm.call(0, 0);
 		} else {

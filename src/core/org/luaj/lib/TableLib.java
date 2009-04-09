@@ -79,14 +79,14 @@ public class TableLib extends LFunction {
 		return NAMES[id]+"()";
 	}
 		
-	public boolean luaStackCall( LuaState vm ) {
+	public int invoke( LuaState vm ) {
 		switch ( id ) {
 
 		/* Load the table library dynamically 
 		 */
 		case INSTALL:
 			install(vm._G);
-			break;
+			return 0;
 			
 			
 		/* table.concat (table [, sep [, i [, j]]])
@@ -96,25 +96,24 @@ public class TableLib extends LFunction {
 		 * If i is greater than j, returns the empty string.
 		 */
 		case CONCAT: { 
-			int n = vm.gettop();
-			LTable table = vm.checktable(2);
-			LString sep = vm.optlstring(3,null);
-			int i = vm.optint(4,1);
-			int j = vm.optint(5,-1);
+			// int n = vm.gettop();
+			LTable table = vm.checktable(1);
+			LString sep = vm.optlstring(2,null);
+			int i = vm.optint(3,1);
+			int j = vm.optint(4,-1);
 			if ( j == -1 )
 				j = table.luaLength();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			for ( int k=i; k<=j; k++ ) {
 				LValue v = table.get(k);
 				if ( ! v.isString() )
-					vm.argerror(2, "table contains non-strings");
+					vm.argerror(1, "table contains non-strings");
 				v.luaConcatTo(baos);
 				if ( k<j && sep!=null )
 					sep.luaConcatTo( baos );
 			}
-			vm.resettop();
 			vm.pushlstring( baos.toByteArray() );
-			break;
+			return 1;
 		}
 		
 		/* table.getn (table)
@@ -124,12 +123,10 @@ public class TableLib extends LFunction {
 		case FOREACH: 
 		case FOREACHI: 
 		{ 
-			LTable table = vm.checktable(2);
-			LFunction function = vm.checkfunction(3);
-			LValue result = table.foreach( vm, function, id==FOREACHI );
-			vm.resettop();
-			vm.pushlvalue( result );
-			break;
+			LTable table = vm.checktable(1);
+			LFunction function = vm.checkfunction(2);
+			vm.pushlvalue( table.foreach( vm, function, id==FOREACHI ) );
+			return 1;
 		}
 		
 		/* table.getn (table)
@@ -137,10 +134,9 @@ public class TableLib extends LFunction {
 		 * Get length of table t.
 		 */ 
 		case GETN: { 
-			LTable table = vm.checktable(2);
-			vm.resettop();
+			LTable table = vm.checktable(1);
 			vm.pushinteger(table.luaLength());
-			break;
+			return 1;
 		}
 		
 		/* table.insert (table, [pos,] value)
@@ -150,20 +146,19 @@ public class TableLib extends LFunction {
 		 * table.insert(t,x) inserts x at the end of table t.
 		 */ 
 		case INSERT: {
-			LTable table = vm.checktable(2);
+			LTable table = vm.checktable(1);
 			int pos = 0;
 			switch ( vm.gettop() ) {
-		    case 3: 
+		    case 2: 
 		    	break;
-		    case 4:
-		    	pos = vm.checkint(3);
+		    case 3:
+		    	pos = vm.checkint(2);
 		    	break;
 		    default:
 		    	vm.error( "wrong number of arguments to 'insert'" );
 		    }
 			table.luaInsertPos( pos, vm.topointer(-1) );
-			vm.resettop();
-			break;
+			return 0;
 		}
 
 		/* table.maxn (table)
@@ -172,10 +167,9 @@ public class TableLib extends LFunction {
 		 * indices. (To do its job this function does a linear traversal of the whole table.)
 		 */ 
 		case MAXN: { 
-			LTable table = vm.checktable(2);
-			vm.resettop();
+			LTable table = vm.checktable(1);
 			vm.pushlvalue( table.luaMaxN() );
-			break;
+			return 1;
 		}
 			
 		/* table.remove (table [, pos])
@@ -185,14 +179,11 @@ public class TableLib extends LFunction {
 		 * so that a call table.remove(t) removes the last element of table t.
 		 */ 
 		case REMOVE: {
-			int n = vm.gettop();
-			LTable table = vm.checktable(2);
-			int pos = vm.optint(3,0);
-			vm.resettop();
-			LValue removed = table.luaRemovePos( pos );
-			if ( removed != LNil.NIL )
-				vm.pushlvalue( removed );
-			break;
+			LTable table = vm.checktable(1);
+			int pos = vm.optint(2,0);
+			LValue v = table.luaRemovePos( pos );
+			vm.pushlvalue( v );
+			return v.isNil()? 0: 1;
 		}
 			
 		/* table.sort (table [, comp])
@@ -205,16 +196,15 @@ public class TableLib extends LFunction {
 		 * The sort algorithm is not stable; that is, elements considered equal by the given order may have their relative positions changed by the sort.
 		 */ 
 		case SORT: { 
-			LTable table = vm.checktable(2);
-			LValue compare = (vm.isnoneornil(3)? (LValue) LNil.NIL: (LValue) vm.checkfunction(3));
+			LTable table = vm.checktable(1);
+			LValue compare = (vm.isnoneornil(2)? (LValue) LNil.NIL: (LValue) vm.checkfunction(2));
 			table.luaSort( vm, compare );
-			vm.resettop();
-			break;
+			return 0;
 		}
 
 		default:
 			LuaState.vmerror( "bad table id" );
+			return 0;
 		}
-		return false;
 	}
 }

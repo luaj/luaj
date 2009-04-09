@@ -84,7 +84,7 @@ public class LThread extends LValue implements Runnable {
 		}
 	}
 	
-	public boolean yield() {
+	public void yield() {
 		synchronized ( this ) {
 			if ( status != STATUS_RUNNING )
 				vm.error(this+" not running");
@@ -99,7 +99,6 @@ public class LThread extends LValue implements Runnable {
 					vm.error(this+" "+e);
 				}
 			}
-			return false;
 		}
 	}
 	
@@ -157,7 +156,7 @@ public class LThread extends LValue implements Runnable {
 				vm.resettop();
 				if ( this.vm.cc >= 0 ) { 
 					vm.pushboolean(status != STATUS_DEAD);
-					this.vm.xmove(vm, this.vm.gettop() - 1);
+					this.vm.xmove(vm, this.vm.gettop());
 				} else {
 					vm.pushboolean(true);
 					this.vm.base = 0;

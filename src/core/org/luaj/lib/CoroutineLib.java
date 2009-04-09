@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.lib;
 
-import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LThread;
@@ -79,21 +78,21 @@ public class CoroutineLib extends LFunction {
 		this.thread = thread;
 	}
 	
-	public boolean luaStackCall( LuaState vm ) {
+	public int invoke( LuaState vm ) {
 		switch ( id ) {
 			case INSTALL: {
 				install(vm._G);
-				break;
+				return 0;
 			}
 			case CREATE: {
-				LFunction c = vm.checkfunction(2);
+				LFunction c = vm.checkfunction(1);
 				vm.pushlvalue( new LThread( c, c.luaGetEnv(vm._G) ) );
-				break;
+				return 1;
 			}
 			case RESUME: {
-				LThread t = vm.checkthread(2);
-				t.resumeFrom( vm, vm.gettop()-2 );
-				return false;
+				LThread t = vm.checkthread(1);
+				t.resumeFrom( vm, vm.gettop()-1 );
+				return -1;
 			}
 			case RUNNING: {
 				LThread r = LThread.getRunning();
@@ -102,39 +101,41 @@ public class CoroutineLib extends LFunction {
 				} else {
 					vm.pushnil();					
 				}
-				break;
+				return 1;
 			}
 			case STATUS: {
-				vm.pushstring( vm.checkthread(2).getStatus() );
-				break;
+				vm.pushstring( vm.checkthread(1).getStatus() );
+				return 1;
 			}
 			case WRAP: {
-				LFunction c = vm.checkfunction(2);
+				LFunction c = vm.checkfunction(1);
 				vm.pushlvalue( new CoroutineLib(WRAPPED,new LThread(c, c.luaGetEnv(vm._G))) );
-				break;
+				return 1;
 			}
 			case YIELD: {
 				LThread r = LThread.getRunning();
-				if ( r == null )
+				if ( r == null ) {
 					vm.error("main thread can't yield");
-				else {
-					return r.yield();
+					return 0;
 				}
+				r.yield(); 
+				return -1;
 			}
 			case WRAPPED: {
 				LThread t = this.thread;
-				t.resumeFrom( vm, vm.gettop()-1 );
-				if ( vm.toboolean(1) )
+				t.resumeFrom( vm, vm.gettop() );
+				if ( vm.toboolean(1) ) {
 					vm.remove(1);
-				else
+					return -1;
+				} else {
 					vm.error( vm.tostring(2) );
-				return false;
+					return 0;
+				}
+			}
+			default: {
+				LuaState.vmerror( "bad coroutine id" );
+				return 0;
 			}
 		}
-		vm.insert(1);
-		vm.settop(1);
-		return false;
 	}
-	
-	
 }

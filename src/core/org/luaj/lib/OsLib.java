@@ -122,7 +122,7 @@ public class OsLib extends LFunction {
 		return NAMES[id]+"()";
 	}
 
-	public boolean luaStackCall( LuaState vm ) {
+	public int invoke( LuaState vm ) {
 		LValue v;
 		long t,t2;
 		int c;
@@ -131,72 +131,62 @@ public class OsLib extends LFunction {
 			switch ( id ) {
 				case INSTALL:
 					install(vm._G, this);
-					break;
+					return 0;
 				case CLOCK:
-					vm.resettop();
 					vm.pushnumber(clock());
-					break;
+					return 1;
 				case DATE:
-					s = vm.optstring(2, null);
-					t = vm.optlong(3,-1);
-					vm.resettop();
+					s = vm.optstring(1, null);
+					t = vm.optlong(2,-1);
 					vm.pushlvalue( date(s, t==-1? System.currentTimeMillis(): t) );
-					break;
+					return 1;
 				case DIFFTIME:
-					t2 = vm.checklong(2);
-					t = vm.checklong(3);
-					vm.resettop();
+					t2 = vm.checklong(1);
+					t = vm.checklong(2);
 					vm.pushnumber(difftime(t2,t));
-					break;
+					return 1;
 				case EXECUTE:
-					c = execute(vm.optstring(2, null));
-					vm.resettop();
+					c = execute(vm.optstring(1, null));
 					vm.pushinteger(c);
-					break;
+					return 1;
 				case EXIT:
-					exit(vm.optint(2, 0));
-					break;
+					exit(vm.optint(1, 0));
+					return 0;
 				case GETENV:
-					s = getenv(vm.checkstring(2));
-					vm.resettop();
+					s = getenv(vm.checkstring(1));
 					vm.pushstring(s);
-					break;
+					return 1;
 				case REMOVE:
-					remove(vm.checkstring(2));
-					vm.resettop();
+					remove(vm.checkstring(1));
 					vm.pushboolean(true);
-					break;
+					return 1;
 				case RENAME:
-					rename(vm.checkstring(2), vm.checkstring(3));
-					vm.resettop();
+					rename(vm.checkstring(1), vm.checkstring(2));
 					vm.pushboolean(true);
-					break;
+					return 1;
 				case SETLOCALE:
-					s = setlocale(vm.optstring(2,null), vm.optstring(3, "all"));
-					vm.resettop();
+					s = setlocale(vm.optstring(1,null), vm.optstring(2, "all"));
 					if ( s != null )
 						vm.pushstring(s);
 					else
 						vm.pushnil();
-					break;
+					return 1;
 				case TIME:
-					t = time(vm.isnoneornil(2)? null: vm.checktable(2));
-					vm.resettop();
+					t = time(vm.isnoneornil(1)? null: vm.checktable(1));
 					vm.pushnumber(t);
-					break;
+					return 1;
 				case TMPNAME:
-					vm.resettop();
 					vm.pushstring(tmpname());
-					break;
+					return 1;
 				default:
 					LuaState.vmerror( "bad os id" );
+					return 0;
 			}
 		} catch ( IOException e ) {
-			vm.resettop();
 			vm.pushnil();
 			vm.pushstring(e.getMessage());
+			return 2;
 		}
-		return false;
 	}
 
 	/**

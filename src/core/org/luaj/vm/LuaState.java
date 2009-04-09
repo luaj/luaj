@@ -247,16 +247,12 @@ public class LuaState extends Lua {
 	 * @param javaFunction
 	 */
 	public void invokeJavaFunction(LFunction javaFunction) {
-		int resultbase = base;
-		int resultsneeded = nresults;
 		++base;
 		int nactual = javaFunction.invoke(this);
-		debugAssert(nactual>=0);
-		debugAssert(top-nactual>=base);
-		System.arraycopy(stack, top-nactual, stack, base=resultbase, nactual);
-		settop( nactual );
-		if ( resultsneeded >= 0 )
-			settop( resultsneeded );
+		if (nactual < 0)
+			nactual = top - base;
+		System.arraycopy(stack, top-nactual, stack, --base, nactual);
+		luaV_settop_fillabove( base+nactual );
 	}
 	
     // ================== error processing =================
@@ -1969,7 +1965,7 @@ public class LuaState extends Lua {
 	 * @param extramsg String to include in error message
 	 */
     public void argerror(int narg, String extramsg) {
-        error("bad argument #" + (narg - 1) + " (" + extramsg + ")");
+        error("bad argument #" + (narg) + " (" + extramsg + ")");
     }
 
 	/**

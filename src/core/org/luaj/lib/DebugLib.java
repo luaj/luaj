@@ -108,88 +108,74 @@ public class DebugLib extends LFunction {
 		return NAMES[id]+"()";
 	}
 	
-	public boolean luaStackCall( LuaState vm ) {
+	public int invoke( LuaState vm ) {
 		switch ( id ) {
 		case INSTALL:
 			install(vm);
-			break;
+			return 0;
 		case DEBUG: 
-			debug(vm);
-			break;
+			return debug(vm);
 		case GETFENV:
-			getfenv(vm);
-			break;
+			return getfenv(vm);
 		case GETHOOK: 
-			gethook(vm);
-			break;
+			return gethook(vm);
 		case GETINFO: 
-			getinfo(vm);
-			break;
+			return getinfo(vm);
 		case GETLOCAL:
-			getlocal(vm);
-			break;
+			return getlocal(vm);
 		case GETMETATABLE:
-			getmetatable(vm);
-			break;
+			return getmetatable(vm);
 		case GETREGISTRY:
-			getregistry(vm);
-			break;
+			return getregistry(vm);
 		case GETUPVALUE:
-			getupvalue(vm);
-			break;
+			return getupvalue(vm);
 		case SETFENV:
-			setfenv(vm);
-			break;
+			return setfenv(vm);
 		case SETHOOK:
-			sethook(vm);
-			break;
+			return sethook(vm);
 		case SETLOCAL:
-			setlocal(vm);
-			break;
+			return setlocal(vm);
 		case SETMETATABLE:
-			setmetatable(vm);
-			break;
+			return setmetatable(vm);
 		case SETUPVALUE:
-			setupvalue(vm);
-			break;
+			return setupvalue(vm);
 		case TRACEBACK:
-			traceback(vm);
-			break;
+			return traceback(vm);
 		default:
 			LuaState.vmerror( "bad package id" );
+			return 0;
 		}
-		return false;
 	}
 
 	// j2se subclass may wish to override and provide actual console here. 
 	// j2me platform has not System.in to provide console.
-	protected void debug(LuaState vm) {
-		vm.resettop();
+	protected int debug(LuaState vm) {
+		return 0;
 	}
 	
-	protected void gethook(LuaState vm) {
+	protected int gethook(LuaState vm) {
 		LuaState threadVm = vm;
 		if ( vm.gettop() >= 2 )
-			threadVm = vm.checkthread(2).vm;
-		vm.resettop();
+			threadVm = vm.checkthread(1).vm;
 		vm.pushlvalue(threadVm.gethook());
 		vm.pushinteger(threadVm.gethookmask());
 		vm.pushinteger(threadVm.gethookcount());
+		return 3;
 	}
 
 	protected LuaState optthreadvm(LuaState vm, int index) {
-		if ( ! vm.isthread(2) )
+		if ( ! vm.isthread(index) )
 			return vm;
-		LuaState threadVm = vm.checkthread(2).vm;
-		vm.remove(2);
+		LuaState threadVm = vm.checkthread(index).vm;
+		vm.remove(index);
 		return threadVm;
 	}
 	
-	protected void sethook(LuaState vm) {
-		LuaState threadVm = optthreadvm(vm, 2);
-		LFunction func = vm.isnoneornil(2)? null: vm.checkfunction(2);
-		String str    =  vm.optstring(3,"");
-		int count      = vm.optint(4,0);
+	protected int sethook(LuaState vm) {
+		LuaState threadVm = optthreadvm(vm, 1);
+		LFunction func = vm.isnoneornil(1)? null: vm.checkfunction(2);
+		String str    =  vm.optstring(2,"");
+		int count      = vm.optint(3,0);
 		int mask       = 0;
 		for ( int i=0; i<str.length(); i++ )
 			switch ( str.charAt(i) ) {
@@ -198,41 +184,40 @@ public class DebugLib extends LFunction {
 				case 'r': mask |= LuaState.LUA_MASKRET; break;
 			}
 		threadVm.sethook(func, mask, count);
-		vm.resettop();
+		return 0;
 	}
 
-	protected void getfenv(LuaState vm) {
-		LValue object = vm.topointer(2);
+	protected int getfenv(LuaState vm) {
+		LValue object = vm.topointer(1);
 		LValue env = object.luaGetEnv(null);
-		vm.resettop();
 		vm.pushlvalue(env!=null? env: LNil.NIL);
+		return 1;
 	}
 
-	protected void setfenv(LuaState vm) {
-		LValue object = vm.topointer(2);
-		LTable table = vm.checktable(3);
+	protected int setfenv(LuaState vm) {
+		LValue object = vm.topointer(1);
+		LTable table = vm.checktable(2);
 		object.luaSetEnv(table);
 		vm.settop(1);
+		return 1;
 	}
 	
-	protected void getinfo(LuaState vm) {
-		LuaState threadVm = optthreadvm(vm, 2);
-		String what = vm.optstring(3, "nSluf");
+	protected int getinfo(LuaState vm) {
+		LuaState threadVm = optthreadvm(vm, 1);
+		String what = vm.optstring(2, "nSluf");
 		
 		// find the stack info
 		StackInfo si;
-		if ( vm.isnumber(2) ) {
-			int level = vm.tointeger(2);
+		if ( vm.isnumber(1) ) {
+			int level = vm.tointeger(1);
 			si = getstackinfo(threadVm, level, 1)[0];
 			if ( si == null ) {
-				vm.resettop();
-				return;
+				return 0;
 			}
 		} else {			
-			LFunction func = vm.checkfunction(2);
+			LFunction func = vm.checkfunction(1);
 			si = findstackinfo(threadVm, func);
 		}
-		vm.resettop();
 
 		// look up info
 		LTable info = new LTable();
@@ -288,75 +273,75 @@ public class DebugLib extends LFunction {
 				}
 			}
 		}
+		return 1;
 	}
 	
-	protected void getlocal(LuaState vm) {
-		LuaState threadVm = optthreadvm(vm, 2);
-		int level = vm.checkint(2);
-		int local = vm.checkint(3);
+	protected int getlocal(LuaState vm) {
+		LuaState threadVm = optthreadvm(vm, 1);
+		int level = vm.checkint(1);
+		int local = vm.checkint(2);
 		StackInfo si = getstackinfo(threadVm, level, 1)[0];
 		CallInfo ci = (si!=null? si.luainfo: null);
 		LPrototype p = (ci!=null? ci.closure.p: null);
 		LString name = (p!=null? p.getlocalname(local, ci.pc>0? ci.pc-1: 0): null);
 		if ( name != null ) {
 			LValue value = threadVm.stack[ci.base+(local-1)];
-			vm.resettop();
 			vm.pushlvalue( name );
 			vm.pushlvalue( value );
+			return 2;
 		} else {
-			vm.resettop();
 			vm.pushnil();
+			return 1;
 		}
 	}
 
-	protected void setlocal(LuaState vm) {
-		LuaState threadVm = optthreadvm(vm, 2);
-		int level = vm.checkint(2);
-		int local = vm.checkint(3);
-		LValue value = vm.topointer(4);
+	protected int setlocal(LuaState vm) {
+		LuaState threadVm = optthreadvm(vm, 1);
+		int level = vm.checkint(1);
+		int local = vm.checkint(2);
+		LValue value = vm.topointer(3);
 		StackInfo si = getstackinfo(threadVm, level, 1)[0];
 		CallInfo ci = (si!=null? si.luainfo: null);
 		LPrototype p = (ci!=null? ci.closure.p: null);
 		LString name = (p!=null? p.getlocalname(local, ci.pc>0? ci.pc-1: 0): null);
 		if ( name != null ) {
 			threadVm.stack[ci.base+(local-1)] = value;
-			vm.resettop();
 			vm.pushlvalue(name);
 		} else {
-			vm.resettop();
 			vm.pushnil();
 		}
+		return 1;
 	}
 
-	protected void getmetatable(LuaState vm) {
-		LValue object = vm.topointer(2);
-		vm.resettop();
+	protected int getmetatable(LuaState vm) {
+		LValue object = vm.topointer(1);
 		LValue mt = object.luaGetMetatable();
 		if ( mt != null )
 			vm.pushlvalue( object.luaGetMetatable() );
 		else
 			vm.pushnil();
+		return 1;
 	}
 
-	protected void setmetatable(LuaState vm) {
-		LValue object = vm.topointer(2);
+	protected int setmetatable(LuaState vm) {
+		LValue object = vm.topointer(1);
 		try {
-			if ( ! vm.isnoneornil(3) )
+			if ( ! vm.isnoneornil(2) )
 				object.luaSetMetatable(vm.checktable(3));
 			else
 				object.luaSetMetatable(null);
-			vm.resettop();
 			vm.pushboolean(true);
+			return 1;
 		} catch ( LuaErrorException e ) {
-			vm.resettop();
 			vm.pushboolean(false);
 			vm.pushstring(e.toString());
+			return 2;
 		}
 	}
 
-	protected void getregistry(LuaState vm) {
-		vm.resettop();
+	protected int getregistry(LuaState vm) {
 		vm.pushlvalue( new LTable() );
+		return 1;
 	}
 
 	private LString findupvalue(LClosure c, int up) {
@@ -369,9 +354,9 @@ public class DebugLib extends LFunction {
 		return null;
 	}
 
-	protected void getupvalue(LuaState vm) {
-		LFunction func = vm.checkfunction(2);
-		int up = vm.checkint(3);
+	protected int getupvalue(LuaState vm) {
+		LFunction func = vm.checkfunction(1);
+		int up = vm.checkint(2);
 		vm.resettop();
 		if ( func instanceof LClosure ) {
 			LClosure c = (LClosure) func;
@@ -379,16 +364,17 @@ public class DebugLib extends LFunction {
 			if ( name != null ) {
 				vm.pushlstring(name);
 				vm.pushlvalue(c.upVals[up-1].getValue());
-				return;
+				return 2;
 			}
 		}
 		vm.pushnil();
+		return 1;
 	}
 
-	protected void setupvalue(LuaState vm) {
-		LFunction func = vm.checkfunction(2);
-		int up = vm.checkint(3);
-		LValue value = vm.topointer(4);
+	protected int setupvalue(LuaState vm) {
+		LFunction func = vm.checkfunction(1);
+		int up = vm.checkint(2);
+		LValue value = vm.topointer(3);
 		vm.resettop();
 		if ( func instanceof LClosure ) {
 			LClosure c = (LClosure) func;
@@ -396,18 +382,19 @@ public class DebugLib extends LFunction {
 			if ( name != null ) {
 				c.upVals[up-1].setValue(value);
 				vm.pushlstring(name);
-				return;
+				return 1;
 			}
 		}
 		vm.pushnil();
+		return 1;
 	}
 
-	protected void traceback(LuaState vm) {
-		LuaState threadVm = optthreadvm(vm, 2);
+	protected int traceback(LuaState vm) {
+		LuaState threadVm = optthreadvm(vm, 1);
 		String message = "";
-		int level = vm.optint(3,1);
-		if ( ! vm.isnoneornil(2) )
-			message = vm.checkstring(2)+"\n";
+		int level = vm.optint(2,1);
+		if ( ! vm.isnoneornil(1) )
+			message = vm.checkstring(1)+"\n";
 		StackInfo[] s = getstackinfo(threadVm, level, 10);
 		StringBuffer sb = new StringBuffer("stack traceback:");
 		for ( int i=0; i<s.length; i++ ) {
@@ -419,8 +406,8 @@ public class DebugLib extends LFunction {
 				sb.append( si.tracename() );
 			}
 		}
-		vm.resettop();
 		vm.pushstring(message+sb);
+		return 1;
 	}
 	
 	// =======================================================
