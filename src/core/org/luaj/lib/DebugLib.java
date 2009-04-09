@@ -23,6 +23,7 @@ package org.luaj.lib;
 
 
 import org.luaj.vm.CallInfo;
+import org.luaj.vm.LBoolean;
 import org.luaj.vm.LClosure;
 import org.luaj.vm.LFunction;
 import org.luaj.vm.LInteger;
@@ -31,10 +32,10 @@ import org.luaj.vm.LPrototype;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
-import org.luaj.vm.LoadState;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
+import org.luaj.vm.UpVal;
 
 public class DebugLib extends LFunction {
 
@@ -286,7 +287,7 @@ public class DebugLib extends LFunction {
 		StackInfo si = getstackinfo(threadVm, level, 1)[0];
 		CallInfo ci = (si!=null? si.luainfo: null);
 		LPrototype p = (ci!=null? ci.closure.p: null);
-		LString name = (p!=null? p.getlocalname(local, ci.pc>0? ci.pc-1: 0): null);
+		LString name = (p!=null? p.getlocalname(local, ci.currentpc()): null);
 		if ( name != null ) {
 			LValue value = threadVm.stack[ci.base+(local-1)];
 			vm.pushlvalue( name );
@@ -306,7 +307,7 @@ public class DebugLib extends LFunction {
 		StackInfo si = getstackinfo(threadVm, level, 1)[0];
 		CallInfo ci = (si!=null? si.luainfo: null);
 		LPrototype p = (ci!=null? ci.closure.p: null);
-		LString name = (p!=null? p.getlocalname(local, ci.pc>0? ci.pc-1: 0): null);
+		LString name = (p!=null? p.getlocalname(local, ci.currentpc()): null);
 		if ( name != null ) {
 			threadVm.stack[ci.base+(local-1)] = value;
 			vm.pushlvalue(name);
@@ -347,7 +348,7 @@ public class DebugLib extends LFunction {
 		return 1;
 	}
 
-	private LString findupvalue(LClosure c, int up) {
+	private static LString findupvalue(LClosure c, int up) {
 		if ( c.upVals != null && up > 0 && up <= c.upVals.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
 				return c.p.upvalues[up-1];
@@ -361,7 +362,7 @@ public class DebugLib extends LFunction {
 		LFunction func = vm.checkfunction(1);
 		int up = vm.checkint(2);
 		vm.resettop();
-		if ( func instanceof LClosure ) {
+		if ( func.isClosure() ) {
 			LClosure c = (LClosure) func;
 			LString name = findupvalue(c, up);
 			if ( name != null ) {
@@ -394,18 +395,54 @@ public class DebugLib extends LFunction {
 
 	protected int traceback(LuaState vm) {
 		LuaState threadVm = optthreadvm(vm, 1);
-		String message = "";
+		String message = "stack traceback:\n";
 		int level = vm.optint(2,1);
 		if ( ! vm.isnoneornil(1) )
 			message = vm.checkstring(1)+"\n";
-		String tb = DebugLib.traceback(threadVm, level, message);
-		vm.pushstring(tb);
+		String tb = DebugLib.traceback(threadVm, level);
+		vm.pushstring(message+tb);
 		return 1;
 	}
 	
-	public static String traceback(LuaState vm, int level, String message) {
+	// =================== public utilities ====================
+
+	/** 
+	 * @param callinfo the CallInfo to inspect
+	 * @param up the 1-based index of the local   
+	 * @return { name, value } or null if not found.
+	 */ 
+	public static LValue[] getlocal(LuaState vm, CallInfo ci, int local) {
+		LPrototype p = ci.closure.p;
+		LString name = p.getlocalname(local, ci.currentpc());
+		if ( name != null ) {
+			LValue value = vm.stack[ci.base+(local-1)];
+			return new LValue[] { name, value };
+		} 
+		return null;
+	}
+	
+	/** 
+	 * @param c the LClosure to inspect
+	 * @param up the 1-based index of the upvalue  
+	 * @return { name, value, isclosed } or null if not found.
+	 */ 
+	public static LValue[] getupvalue(LClosure c, int up) {
+		LString name = findupvalue(c, up);
+		if ( name != null ) {
+			UpVal u = c.upVals[up-1];
+			LValue value = u.getValue();
+			boolean isclosed = u.isClosed();
+			return new LValue[] { name, value, LBoolean.valueOf(isclosed) };
+		}
+		return null;
+	}
+	
+	/** 
+	 * Get a traceback as a string for an arbitrary LuaState 
+	 */
+	public static String traceback(LuaState vm, int level) {
 		StackInfo[] s = getstackinfo(vm, level, 10);
-		StringBuffer sb = new StringBuffer(message!=null? "stack traceback:": message);
+		StringBuffer sb = new StringBuffer();
 		for ( int i=0; i<s.length; i++ ) {
 			StackInfo si = s[i];
 			if ( si != null ) {
@@ -415,7 +452,7 @@ public class DebugLib extends LFunction {
 				sb.append( si.tracename() );
 			}
 		}
-		return message+sb;
+		return sb.toString();
 	}
 	
 	// =======================================================
@@ -515,7 +552,7 @@ public class DebugLib extends LFunction {
 	private static StackInfo findstackinfo(LuaState vm, LFunction func) {
 	    for (int j=vm.cc; j>=0; --j) {
 			CallInfo ci = vm.calls[j];
-			int instr = ci.closure.p.code[ci.pc>0? ci.pc-1: 0];
+			int instr = ci.closure.p.code[ci.currentpc()];
 			if ( Lua.GET_OPCODE(instr) == Lua.OP_CALL ) {
 				int a = Lua.GETARG_A(instr);
 				if ( func == vm.stack[ci.base + a] )

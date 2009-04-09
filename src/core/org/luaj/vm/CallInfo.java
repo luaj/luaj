@@ -50,7 +50,7 @@ public class CallInfo {
 	public int currentline() {
 		int[] li = closure.p.lineinfo;
 		if ( li != null && pc <= li.length )
-			return li[pc>0? pc-1: pc];
+			return li[currentpc()];
 		return -1;
 	}
 
@@ -73,11 +73,18 @@ public class CallInfo {
 	 * @return register of the current function executing, or null
 	 */
 	public int currentfunca(LuaState vm) {
-		int i = closure.p.code[pc>0? pc-1: 0];
+		int i = closure.p.code[currentpc()];
 		int op = Lua.GET_OPCODE(i);
 		if ( op == Lua.OP_CALL || op == Lua.OP_TAILCALL )
 			return Lua.GETARG_A(i);
 		return -1;
+	}
+
+	/** 
+	 * Get current program counter or instruction being executed now.
+	 */ 
+	public int currentpc() {
+		return pc>0? pc-1: 0;
 	}
 
 }
