@@ -234,7 +234,7 @@ public class BaseLib extends LFunction {
 			}
 		}
 		case ERROR: {
-			vm.error(vm.optstring(1,null), vm.optint(2,1));
+			vm.error(vm.optstring(1,null), vm.optint(2,-1));
 			return 0;
 		}
 		case ASSERT: {
