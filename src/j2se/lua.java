@@ -148,6 +148,14 @@ public class lua {
 
 	private static void loadLibrary( LuaState vm, String libname ) throws IOException {
 		try {
+			// load via "require"
+			vm.getglobal("require");
+			vm.pushstring(libname);
+			int status = vm.pcall(1, 0, 0);
+			if ( status == 0 )
+				return;
+
+			// load as java class
 			Class c = Class.forName( libname );
 			Object i = c.newInstance();
 			LFunction f = (LFunction) i;
