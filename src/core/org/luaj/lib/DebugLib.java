@@ -398,8 +398,14 @@ public class DebugLib extends LFunction {
 		int level = vm.optint(2,1);
 		if ( ! vm.isnoneornil(1) )
 			message = vm.checkstring(1)+"\n";
-		StackInfo[] s = getstackinfo(threadVm, level, 10);
-		StringBuffer sb = new StringBuffer("stack traceback:");
+		String tb = DebugLib.traceback(threadVm, level, message);
+		vm.pushstring(tb);
+		return 1;
+	}
+	
+	public static String traceback(LuaState vm, int level, String message) {
+		StackInfo[] s = getstackinfo(vm, level, 10);
+		StringBuffer sb = new StringBuffer(message!=null? "stack traceback:": message);
 		for ( int i=0; i<s.length; i++ ) {
 			StackInfo si = s[i];
 			if ( si != null ) {
@@ -409,8 +415,7 @@ public class DebugLib extends LFunction {
 				sb.append( si.tracename() );
 			}
 		}
-		vm.pushstring(message+sb);
-		return 1;
+		return message+sb;
 	}
 	
 	// =======================================================
