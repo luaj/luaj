@@ -116,6 +116,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("next");
 	}
 
+	public void testOsLib() throws IOException, InterruptedException {
+		runTest("oslib");
+	}
+
 	public void testPcalls() throws IOException, InterruptedException {
 		runTest("pcalls");
 	}
