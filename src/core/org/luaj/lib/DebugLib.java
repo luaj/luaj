@@ -173,7 +173,7 @@ public class DebugLib extends LFunction {
 	
 	protected int sethook(LuaState vm) {
 		LuaState threadVm = optthreadvm(vm, 1);
-		LFunction func = vm.isnoneornil(1)? null: vm.checkfunction(2);
+		LFunction func = vm.isnoneornil(1)? null: vm.checkfunction(1);
 		String str    =  vm.optstring(2,"");
 		int count      = vm.optint(3,0);
 		int mask       = 0;

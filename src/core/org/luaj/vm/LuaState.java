@@ -982,7 +982,7 @@ public class LuaState extends Lua {
     }
     
     private void indexError(LValue nontable) {
-		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)", 1 );
+		error( "attempt to index ? (a "+nontable.luaGetTypeName()+" value)" );
 	}
     
     public static LValue luaV_getmetafield(LValue t, LString tag) {
@@ -1072,7 +1072,16 @@ public class LuaState extends Lua {
     //===============================================================
     //              Lua Java API
     //===============================================================
-    
+
+    /** @deprecated: use LPrototype.source or LPrototype.sourceshort() instead */
+    public String getSourceFileName(LString s) {
+        return getSourceFileName(s.toJavaString());
+    }
+
+    /** @deprecated: use LPrototype.source or LPrototype.sourceshort() instead */
+    protected String getSourceFileName(String s) {
+    	return LoadState.getSourceName(s);
+    }
 
     /** 
      * Get the file line number info for a particular call frame.
@@ -2401,7 +2410,7 @@ public class LuaState extends Lua {
     // line number and count hooks
     private void debugBytecodeHooks(int pc) {
     	if ( hookfunc != null && (hookmask & LUA_MASKLINE) != 0 ) {
-        	int line = debugGetLineNumber(calls[cc]);
+        	int line = calls[cc].currentline();
         	if ( (line != hookline || cc != hookcc) && line >= 0 ) {
         		hookline = line;
         		hookcc = cc;
@@ -2418,37 +2427,36 @@ public class LuaState extends Lua {
     
     private void debugCallHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKCALL) != 0) ) {
-    		debugCallHook(LUA_HOOKCALL, debugGetLineNumber(calls[cc]));
+    		debugCallHook(LUA_HOOKCALL, calls[cc].currentline());
     	}
     }
     
     private void debugReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
-    		debugCallHook(LUA_HOOKRET, debugGetLineNumber(calls[cc]));
+    		debugCallHook(LUA_HOOKRET, calls[cc].currentline());
     	}
     }
     
     private void debugTailReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
-    		debugCallHook(LUA_HOOKTAILRET, debugGetLineNumber(calls[cc]));
+    		debugCallHook(LUA_HOOKTAILRET, calls[cc].currentline());
     	}
-    }
-    
-    /** 
-     * @deprecated use CallInfo.currentline() instead
-     */
-    public static int debugGetLineNumber(CallInfo ci) {
-    	return ci.currentline();
     }
 		
     private void debugCallHook(int mask, int line) {
-    	int prevmask = hookmask;
-        int oldtop = top;
-        LValue lineval = LNil.NIL;
+    	int oldmask = hookmask;
+        int oldtop  = top;
+        int oldbase = base;
+        int oldcc   = cc;
+        int oldnresults = nresults;
+        int beyond  = (cc>=0? base+calls[cc].closure.p.maxstacksize: top);
     	try {
-        	if ( cc >= 0 )
-        		top = base + this.calls[cc].closure.p.maxstacksize;
 	    	hookmask = 0;
+
+	    	// adjust base and top to beyond call frame
+	    	top = base = beyond;
+        	
+	    	// push hook function and arguments
 	    	this.pushfunction(hookfunc);
 	    	switch ( mask ) {
 	    	case LUA_HOOKCOUNT:   this.pushstring("count"); break;
@@ -2456,17 +2464,25 @@ public class LuaState extends Lua {
 	    	case LUA_HOOKRET:     this.pushstring("return"); break;
 	    	case LUA_HOOKTAILRET: this.pushstring("tail return"); break;
 	    	default:
-	    		lineval = LInteger.valueOf(line);
-	    		this.pushstring("line"); 
+	    		this.pushstring("line");
+	    		this.pushinteger(line);
 	    	break;
 	    	}
-	    	this.pushlvalue(lineval);
-	    	this.pcall(2, 0, 0);
+
+	        // make or set up the call
+	        this.nresults = 0;
+	        if ( this.stack[base].luaStackCall(this) )
+	            execute();
+	        
+    	} catch ( Throwable t ) {
+    		System.err.println("hook exception: "+t);
     	} finally {
-    		hookmask = prevmask;
-    		top = oldtop;
+	        luaV_settop_fillabove(beyond);
+    		cc       = oldcc;
+    		base     = oldbase;
+    		top      = oldtop;
+    		nresults = oldnresults;
+    		hookmask = oldmask ;
     	}
 	}
-    
-    
 }
