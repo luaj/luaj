@@ -551,8 +551,8 @@ public class LuaState extends Lua {
             ci.top = top;
         	
             // allow debug hooks a chance to operate
+        	debugHooks( ci.pc );
             if ( hooksenabled ) {
-            	debugHooks( ci.pc );
             	debugBytecodeHooks( ci.pc );
             }
             
