@@ -313,6 +313,7 @@ public class LuaState extends Lua {
         
         // save stack state
         int oldbase = base;
+        int oldcc = cc;
         try {
 	
 	        // rb is base of new call frame
@@ -341,6 +342,7 @@ public class LuaState extends Lua {
 	        
         } finally {
         	this.base = oldbase;
+        	this.cc = oldcc;
         }
     }
 
