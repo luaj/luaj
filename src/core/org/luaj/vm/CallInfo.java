@@ -49,8 +49,9 @@ public class CallInfo {
 	 */
 	public int currentline() {
 		int[] li = closure.p.lineinfo;
-		if ( li != null && pc <= li.length )
-			return li[currentpc()];
+		int pc = currentpc();
+		if ( li != null && pc < li.length )
+			return li[pc];
 		return -1;
 	}
 

@@ -244,7 +244,7 @@ public class Print extends Lua {
 	}
 
 	private static int getline(LPrototype f, int pc) {
-		return f.lineinfo[pc];
+		return pc>0 && f.lineinfo!=null && pc<f.lineinfo.length? f.lineinfo[pc]: -1;
 	}
 
 	static void printHeader(LPrototype f) {
