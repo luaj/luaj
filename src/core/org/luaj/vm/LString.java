@@ -45,8 +45,8 @@ import java.io.OutputStream;
  */
 public class LString extends LValue {
 	
-	public final byte[] m_bytes;
-	public final int m_offset;
+	public byte[] m_bytes;
+	public int m_offset;
 	public final int m_length;
 	public final int m_hash;
 	
@@ -178,14 +178,26 @@ public class LString extends LValue {
 	public boolean isString() {
 		return true;
 	}
-
+	
 	public boolean equals(Object o) {
+		if ( this == o )
+			return true;
 		if ( o != null && o instanceof LString ) {
 			LString s = (LString) o;
-			return m_hash == s.m_hash &&
-					m_length == s.m_length &&
-					( ( m_bytes == s.m_bytes && m_offset == s.m_offset ) ||
-					  equals( m_bytes, m_offset, s.m_bytes, s.m_offset, m_length ) );
+			if ( m_hash == s.m_hash && m_length == s.m_length ) {
+				if ( m_bytes == s.m_bytes && m_offset == s.m_offset )
+						return true;
+				if ( equals( m_bytes, m_offset, s.m_bytes, s.m_offset, m_length ) ) {
+					if ( m_bytes.length < s.m_bytes.length )  {
+						s.m_bytes = m_bytes;
+						s.m_offset = m_offset;
+					} else {
+						m_bytes = s.m_bytes;
+						m_offset = s.m_offset;
+					}
+					return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -429,12 +441,9 @@ public class LString extends LValue {
 	public static boolean equals( byte[] a, int i, byte[] b, int j, int n ) {
 		if ( a.length < i + n || b.length < j + n )
 			return false;
-		final int imax = i + n;
-		final int jmax = j + n;
-		while ( i < imax && j < jmax ) {
-			if ( a[i++] != b[j++] )
+		while ( --n>=0 ) 
+			if ( a[i++]!=b[j++] )
 				return false;
-		}
 		return true;
 	}
 	
