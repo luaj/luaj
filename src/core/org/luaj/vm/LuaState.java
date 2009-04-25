@@ -639,7 +639,7 @@ public class LuaState extends Lua {
                 continue;
             }
             case LuaState.OP_SELF: {
-                rkb = GETARG_RKB(k, i);
+                rkb = stack[base + GETARG_B(i)];
                 rkc = GETARG_RKC(k, i);
                 val = this.luaV_gettable(rkb, rkc);
                 this.stack[base + a] = val;
@@ -705,7 +705,7 @@ public class LuaState extends Lua {
                 continue;
             }
             case LuaState.OP_TESTSET: {
-                rkb = GETARG_RKB(k, i);
+            	rkb = stack[base + GETARG_B(i)];
                 c = LuaState.GETARG_C(i);
                 if (rkb.toJavaBoolean() != (c != 0))
                     ci.pc++;
