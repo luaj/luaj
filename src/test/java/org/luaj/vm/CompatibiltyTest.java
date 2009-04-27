@@ -48,6 +48,10 @@ public class CompatibiltyTest extends ScriptDrivenTest {
 		runTest("test8");
 	}
 
+	public void testTest9() throws IOException, InterruptedException {
+		runTest("test9");
+	}
+
 	public void testAutoload() throws IOException, InterruptedException {
 		runTest("autoload");
 	}

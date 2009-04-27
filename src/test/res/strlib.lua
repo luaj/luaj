@@ -1,3 +1,4 @@
+print( string.find("1234567890", ".", 0, true) )
 print( string.find( 'alo alx 123 b\0o b\0o', '(..*) %1' ) )
 print( string.find( 'aloALO', '%l*' ) )
 print( string.find( ' \n isto � assim', '%S%S*' ) )
