@@ -756,7 +756,7 @@ public class StringLib extends LFunction {
 			init = Math.max( 0, s.length() + init );
 		}
 		
-		boolean fastMatch = find && ( vm.toboolean( 5 ) || pat.indexOfAny( SPECIALS ) == -1 );
+		boolean fastMatch = find && ( vm.toboolean( 4 ) || pat.indexOfAny( SPECIALS ) == -1 );
 		
 		if ( fastMatch ) {
 			int result = s.indexOf( pat, init );
