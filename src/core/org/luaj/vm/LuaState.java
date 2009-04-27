@@ -555,6 +555,7 @@ public class LuaState extends Lua {
             // allow debug hooks a chance to operate
         	debugHooks( ci.pc );
             if ( hooksenabled ) {
+            	//Print.printState(this, base, top, base+cl.p.maxstacksize, cl, ci.pc);            
             	debugBytecodeHooks( ci.pc );
             }
             
@@ -941,15 +942,15 @@ public class LuaState extends Lua {
                 n = nvarargs.toJavaInt();
                 if (b == LuaState.LUA_MULTRET) {
                     b = n; // use entire varargs supplied
+                    luaV_settop_fillabove( base + a + b );
                 }
 
                 // copy args up to call stack area
                 checkstack(a+b);
                 for (int j = 0; j < b; j++)
-                    this.stack[base + a + j] = (j < n ? this.stack[base
-                            - n + j - 1]
+                    this.stack[base + a + j] = (j < n ? 
+                    		this.stack[base - n + j - 1]
                             : LNil.NIL);
-                luaV_settop_fillabove( base + a + b );
                 continue;
             }            
             }
