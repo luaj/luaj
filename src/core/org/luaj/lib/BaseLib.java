@@ -18,7 +18,6 @@ import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LValue;
 import org.luaj.vm.Lua;
-import org.luaj.vm.LuaErrorException;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
 
