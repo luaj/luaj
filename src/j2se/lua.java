@@ -31,6 +31,8 @@ import org.luaj.compiler.LuaC;
 import org.luaj.lib.DebugLib;
 import org.luaj.platform.J2sePlatform;
 import org.luaj.vm.LFunction;
+import org.luaj.vm.LString;
+import org.luaj.vm.LTable;
 import org.luaj.vm.Lua;
 import org.luaj.vm.LuaState;
 import org.luaj.vm.Platform;
@@ -40,7 +42,7 @@ import org.luaj.vm.Platform;
  * lua command for use in java se environments.
  */
 public class lua {
-	private static final String version = Lua._VERSION + "Copyright (C) 2008 luaj.org";
+	private static final String version = Lua._VERSION + " Copyright (C) 2009 luaj.org";
 
 	private static final String usage = 
 		"usage: java -cp luaj-j2se.jar lua [options] [script [args]].\n" +
@@ -116,10 +118,16 @@ public class lua {
 			processing = true;
 			for ( int i=0; i<args.length; i++ ) {
 				if ( ! processing || ! args[i].startsWith("-") ) {
-					processScript( vm, new FileInputStream(args[i]), args[i], args, i+1 );
+					LTable arg = new LTable();
+					for ( int j=0; j<args.length; j++ )
+						arg.put( j-i, new LString(args[j]) );
+					arg.put( -i-1, new LString("lua") );
+					arg.put( -i-2, new LString("java") );
+					vm._G.put( "arg", arg ); 
+					processScript( vm, new FileInputStream(args[i]), args[i], args, i );
 					break;
 				} else if ( args[i].length() <= 1 ) {
-					processScript( vm, System.in, "-", args, i+1 );
+					processScript( vm, System.in, "-", args, i );
 					break;
 				} else {
 					switch ( args[i].charAt(1) ) {
@@ -128,7 +136,7 @@ public class lua {
 						break;
 					case 'e':
 						++i;
-						processScript( vm, new ByteArrayInputStream(args[i].getBytes()), args[i], null, 0 );
+						processScript( vm, new ByteArrayInputStream(args[i].getBytes()), args[i], args, i );
 						break;
 					case '-':
 						processing = false;
@@ -169,11 +177,11 @@ public class lua {
 	private static void processScript( LuaState vm, InputStream script, String chunkname, String[] args, int offset ) throws IOException {
 		try {
 			switch ( vm.load(script, chunkname) ) {
-			case 0:
+			case 0:				
 				if ( args != null )
 					for ( int i=offset; i<args.length; i++ )
 						vm.pushstring(args[i]);
-				vm.call(vm.gettop()-1, 0);
+				vm.call(args.length-offset, 0);
 				break;
 			case LuaState.LUA_ERRMEM:
 				System.out.println("out of memory during chunk load");

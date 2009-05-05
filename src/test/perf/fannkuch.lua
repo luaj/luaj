@@ -1,16 +1,15 @@
--- The Computer Language Shootout
+-- The Computer Language Benchmarks Game
 -- http://shootout.alioth.debian.org/
 -- contributed by Mike Pall
--- modified for luaj to remove dependency on io
 
 local function fannkuch(n)
   local p, q, s, odd, check, maxflips = {}, {}, {}, true, 0, 0
-  for i=1,n do p[i] = i; s[i] = i end
+  for i=1,n do p[i] = i; q[i] = i; s[i] = i end
   repeat
     -- Print max. 30 permutations.
     if check < 30 then
       if not p[n] then return maxflips end	-- Catch n = 0, 1, 2.
-      for i=1,n do print(p[i]) end;
+      io.write(unpack(p)); io.write("\n")
       check = check + 1
     end
     -- Copy and flip.
@@ -18,14 +17,16 @@ local function fannkuch(n)
     if p[n] ~= n and q1 ~= 1 then		-- Avoid useless work.
       for i=2,n do q[i] = p[i] end		-- Work on a copy.
       for flips=1,1000000 do			-- Flip ...
-	local j = q1 - 1
-	for i=2,q1/2 do q[i], q[j] = q[j], q[i]; j = j - 1 end
 	local qq = q[q1]
 	if qq == 1 then				-- ... until 1st element is 1.
 	  if flips > maxflips then maxflips = flips end -- New maximum?
 	  break
 	end
 	q[q1] = q1
+	if q1 >= 4 then
+	  local i, j = 2, q1 - 1
+	  repeat q[i], q[j] = q[j], q[i]; i = i + 1; j = j - 1; until i >= j
+	end
 	q1 = qq
       end
     end
@@ -36,7 +37,7 @@ local function fannkuch(n)
       p[2], p[3] = p[3], p[2]; odd = true	-- Rotate 1<-2 and 1<-2<-3.
       for i=3,n do
 	local sx = s[i]
-	if sx ~= 1 then sx = sx - 1; s[i] = sx; break end
+	if sx ~= 1 then s[i] = sx-1; break end
 	if i == n then return maxflips end	-- Out of permutations.
 	s[i] = i
 	-- Rotate 1<-...<-i+1.
@@ -46,6 +47,5 @@ local function fannkuch(n)
   until false
 end
 
-local arg = {...}
-local n = tonumber(arg and arg[1]) or 5
-print("Pfannkuchen("..n..") = "..fannkuch(n))
+local n = tonumber(arg and arg[1]) or 1
+io.write("Pfannkuchen(", n, ") = ", fannkuch(n), "\n")

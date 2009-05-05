@@ -1,7 +1,6 @@
 -- The Great Computer Language Shootout
 -- http://shootout.alioth.debian.org/
 -- contributed by Isaac Gouy, tuned by Mike Pall
--- modified for luaj to remove dependency on io
 
 local sqrt = math.sqrt
 
@@ -114,12 +113,11 @@ local function offsetMomentum(b, nbody)
   b[1].vz = -pz / SOLAR_MASS
 end
 
-local arg = {...}
 local N = tonumber(arg and arg[1]) or 1000
 local bodies = { Sun, Jupiter, Saturn, Uranus, Neptune }
-local nbody = #bodies
+local nbody = table.getn(bodies)
 
 offsetMomentum(bodies, nbody)
-print( tostring(energy(bodies, nbody)))
+io.write( string.format("%0.9f",energy(bodies, nbody)), "\n")
 for i=1,N do advance(bodies, nbody, 0.01) end
-print( tostring(energy(bodies, nbody)))
+io.write( string.format("%0.9f",energy(bodies, nbody)), "\n")
