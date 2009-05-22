@@ -54,13 +54,7 @@ public class LoadStateTest extends TestCase {
 	
 	private LNumber simpleBitsToLuaNumber( long bits ) {
 		double value = Double.longBitsToDouble( bits );
-		int valueAsInt = (int) value;
-		
-		if ( value == (double) valueAsInt ) {
-			return LInteger.valueOf( valueAsInt );
-		} else {
-			return new LDouble( value );
-		}
+		return LDouble.numberOf(value);
 	}
 	
 	public void testLongBitsToLuaNumberSpeed() throws InterruptedException {

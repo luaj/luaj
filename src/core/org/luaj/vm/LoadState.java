@@ -149,7 +149,7 @@ public class LoadState {
 		}
 		
 		double value = Double.longBitsToDouble(bits);
-		return new LDouble( value );
+		return LDouble.numberOf( value );
 	}
 	
 	LNumber loadNumber() throws IOException {

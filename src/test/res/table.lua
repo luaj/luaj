@@ -210,3 +210,15 @@ for i,test in ipairs(tests) do
 	print( 't[nil]=nil', pcall( function() testtable[nil]=nil end ) )
 	print( 't[nil]',     pcall( function() return testtable[nil] end ) )
 end
+
+-- tables with doubles
+local t = { [1]='a', [2]='b', [3.0]='c', [7]='d', [9]='e', [20]='f', [30.0]='g', [12.5]='h' }
+print(#t)
+print(t[1], t[2], t[3], t[7], t[9], t[20], t[30])
+print(t[1.0], t[2.0], t[3.0], t[7.0], t[9.0], t[20.0], t[30.0], t[12.5])
+local i,j,k,l,m,n,o = math.ceil(0.7),math.floor(2.1),math.abs(-3.0),math.sqrt(49.0),math.ceil(8.6),math.floor(20.5),math.max(1.2,30.0)
+print(i, j, k, l, m, n, o)
+print(t[i], t[j], t[k], t[l], t[m], t[n], t[o])
+local half,two = .5,2
+print(t[1.5-half], t[1.5+half], t[6/2], t[3.5*2], t[8.5+half], t[20.5-half], t[60*half], t[13-half])
+print(#t)

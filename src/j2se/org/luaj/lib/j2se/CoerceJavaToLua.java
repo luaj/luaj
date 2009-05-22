@@ -62,7 +62,7 @@ public class CoerceJavaToLua {
 		Coercion doubleCoercion = new Coercion() {
 			public LValue coerce( Object javaValue ) {
 				Number n = (Number) javaValue;
-				return new LDouble( n.doubleValue() );
+				return LDouble.numberOf( n.doubleValue() );
 			} 
 		} ;
 		Coercion stringCoercion = new Coercion() {

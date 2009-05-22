@@ -136,7 +136,7 @@ public class MathLib extends LFunction {
 	
 	private static void setResult( LuaState vm, double d ) {
 		vm.resettop();
-		vm.pushlvalue( LDouble.valueOf(d) );
+		vm.pushlvalue( LDouble.numberOf(d) );
 	}
 	
 	public int invoke(LuaState vm) {

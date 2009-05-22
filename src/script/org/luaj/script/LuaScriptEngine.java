@@ -227,9 +227,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		}
 		private LValue toLua(Object javaValue) {
 			if ( javaValue instanceof Number ) {
-				double d = ((Number)javaValue).doubleValue();
-				int id = (int) d;
-				return (d==id? LInteger.valueOf(id): new LDouble(d));
+				return LDouble.numberOf(((Number)javaValue).doubleValue());
 			} else if ( javaValue instanceof String ) {
 				return LString.valueOf(javaValue.toString());
 			} else if ( javaValue == null ) {

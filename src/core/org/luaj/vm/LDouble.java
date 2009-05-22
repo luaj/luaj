@@ -44,6 +44,8 @@ public class LDouble extends LNumber {
 		if ( m_value == 0 ) {
 			return 0;
 		} else {
+			int iz = (int) m_value;
+			if ( iz == m_value ) return iz;
 			long bits = Double.doubleToLongBits( m_value );
 			return ( (int) bits >> 32 ) + ( (int) bits );
 		}
@@ -93,7 +95,7 @@ public class LDouble extends LNumber {
 		case Lua.OP_MUL: return LDouble.numberOf( lhs * rhs );
 		case Lua.OP_DIV: return LDouble.numberOf( lhs / rhs );
 		case Lua.OP_MOD: return LDouble.numberOf( lhs - Math.floor(lhs/rhs) * rhs );
-		case Lua.OP_POW: return Platform.getInstance().mathPow( LDouble.valueOf(lhs), LDouble.valueOf(rhs));
+		case Lua.OP_POW: return Platform.getInstance().mathPow( LDouble.numberOf(lhs), LDouble.numberOf(rhs));
 		}
 		LuaState.vmerror( "bad bin opcode" );
 		return null;

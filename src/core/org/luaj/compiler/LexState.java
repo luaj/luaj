@@ -350,7 +350,7 @@ public class LexState {
 		}
 		else
 			d = Double.parseDouble(str);
-		seminfo.r = new LDouble(d);
+		seminfo.r = LDouble.numberOf(d);
 		return true;
 	}
 

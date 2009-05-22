@@ -391,7 +391,7 @@ public class LString extends LValue {
 			} catch ( NumberFormatException nfe ) {
 				if ( base == 10 ) {
 					try {
-						return new LDouble( Double.parseDouble( str ) );
+						return LDouble.numberOf( Double.parseDouble( str ) );
 					} catch ( NumberFormatException nfe2 ) {
 					}
 				}

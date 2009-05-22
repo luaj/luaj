@@ -1445,7 +1445,7 @@ public class LuaState extends Lua {
 	 * 
 	 */
 	public void pushnumber(double d) {
-		pushlvalue(new LDouble(d));
+		pushlvalue(LDouble.numberOf(d));
 	}
 
 	/**

@@ -228,8 +228,8 @@ public class MathLibTest extends TestCase {
 	
 	private void tryMathOp(int id, double a, double b) {
 		try {
-			double expected = j2se.mathop(id, LDouble.valueOf(a), LDouble.valueOf(b)).toJavaDouble();
-			double actual = j2me.mathop(id, LDouble.valueOf(a), LDouble.valueOf(b)).toJavaDouble();
+			double expected = j2se.mathop(id, LDouble.numberOf(a), LDouble.numberOf(b)).toJavaDouble();
+			double actual = j2me.mathop(id, LDouble.numberOf(a), LDouble.numberOf(b)).toJavaDouble();
 			if ( supportedOnJ2me )
 				assertEquals( expected, actual, 1.e-5 );
 			else
