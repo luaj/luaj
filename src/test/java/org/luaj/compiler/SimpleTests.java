@@ -8,6 +8,8 @@ import junit.framework.TestCase;
 import org.luaj.TestPlatform;
 import org.luaj.lib.BaseLib;
 import org.luaj.vm.LClosure;
+import org.luaj.vm.LDouble;
+import org.luaj.vm.LInteger;
 import org.luaj.vm.LPrototype;
 import org.luaj.vm.LValue;
 import org.luaj.vm.LuaState;
@@ -84,5 +86,25 @@ public class SimpleTests extends TestCase {
 	public void testEqualsAnd() {
 		String s = "print( 1 == b and b )\n";
 		doTest( s );
+	}
+	
+	private static final int [] samehash = { 0, 1, -1, 2, -2, 4, 8, 16, 32, Integer.MAX_VALUE, Integer.MIN_VALUE };
+	private static final double [] diffhash = { .5, 1, 1.5, 1, .5, 1.5, 1.25, 2.5 };
+	
+	public void testDoubleHashCode() {
+		for ( int i=0; i<samehash.length; i++ ) {
+			LInteger j = LInteger.valueOf(samehash[i]);
+			LDouble d = new LDouble(samehash[i]);
+			int hj = j.hashCode();
+			int hd = d.hashCode();
+			assertEquals(hj, hd);
+		}
+		for ( int i=0; i<diffhash.length; i+=2 ) {
+			LDouble c = new LDouble(diffhash[i+0]);
+			LDouble d = new LDouble(diffhash[i+1]);
+			int hc = c.hashCode();
+			int hd = d.hashCode();
+			assertTrue("hash codes are same: "+hc,hc!=hd);
+		}
 	}
 }

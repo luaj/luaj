@@ -47,7 +47,7 @@ public class LDouble extends LNumber {
 			int iz = (int) m_value;
 			if ( iz == m_value ) return iz;
 			long bits = Double.doubleToLongBits( m_value );
-			return ( (int) bits >> 32 ) + ( (int) bits );
+			return ((int) (bits >> 32)) + ((int)bits);
 		}
 	}
 	
