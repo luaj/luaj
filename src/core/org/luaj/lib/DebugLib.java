@@ -235,12 +235,9 @@ public class DebugLib extends LFunction {
 						info.put("linedefined", p.linedefined);
 						info.put("lastlinedefined", p.lastlinedefined);
 					} else {
-						LString name = (si.func!=null? 
-								new LString("[Java] "+si.func.toString()):
-								JAVASRC);
 						info.put("what", JAVA);
-						info.put("source", name);
-						info.put("short_src", name);
+						info.put("source", (si.func!=null? new LString("[Java] "+si.func.toString()): JAVASRC));
+						info.put("short_src", (si.func!=null? new LString(si.func.toString()): JAVASRC));
 						info.put("linedefined", -1);
 						info.put("lastlinedefined", -1);
 					}
