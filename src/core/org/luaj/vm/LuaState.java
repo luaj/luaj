@@ -98,7 +98,7 @@ public class LuaState extends Lua {
     public int cc = -1;
     public CallInfo[] calls = new CallInfo[LUA_MINCALLS];
     protected Stack upvals = new Stack();
-	protected LFunction panic;
+	protected LValue errfunc;
     
 	static LuaState mainState;
     public LTable _G;
@@ -362,24 +362,6 @@ public class LuaState extends Lua {
 	 * <a href="#lua_pcall"><code>lua_pcall</code></a> always removes the
 	 * function and its arguments from the stack.
 	 * 
-	 * 
-	 * <p>
-	 * If <code>errfunc</code> is 0, then the error message returned on the
-	 * stack is exactly the original error message. Otherwise,
-	 * <code>errfunc</code> is the stack index of an
-	 * <em>error handler function</em>. (In the current implementation, this
-	 * index cannot be a pseudo-index.) In case of runtime errors, this function
-	 * will be called with the error message and its return value will be the
-	 * message returned on the stack by <a href="#lua_pcall"><code>lua_pcall</code></a>.
-	 * 
-	 * 
-	 * <p>
-	 * Typically, the error handler function is used to add more debug
-	 * information to the error message, such as a stack traceback. Such
-	 * information cannot be gathered after the return of <a href="#lua_pcall"><code>lua_pcall</code></a>,
-	 * since by then the stack has unwound.
-	 * 
-	 * 
 	 * <p>
 	 * The <a href="#lua_pcall"><code>lua_pcall</code></a> function returns
 	 * 0 in case of success or one of the following error codes (defined in
@@ -399,7 +381,7 @@ public class LuaState extends Lua {
 	 * 
 	 * </ul>
 	 */
-    public int pcall( int nargs, int nreturns, int errfunc ) {
+    public int pcall( int nargs, int nreturns ) {
         // save stack state
         int oldtop = top;
         int oldbase = base;
@@ -444,6 +426,46 @@ public class LuaState extends Lua {
             	pushnil();
             return (t instanceof OutOfMemoryError? LUA_ERRMEM: LUA_ERRRUN);
         }
+    }
+
+
+	/**
+	 * Calls a function in protected mode with an error function. 
+	 * <span class="apii">[-(nargs + 1), +(nresults|1), <em>-</em>]</span>
+	 * 
+	 * 
+	 * <p>
+	 * Both <code>nargs</code> and <code>nresults</code> have the same
+	 * meaning as in <a href="#lua_call"><code>lua_call</code></a>. If there
+	 * are no errors during the call, <a href="#lua_xpcall"><code>lua_xpcall</code></a>
+	 * behaves exactly like <a href="#lua_call"><code>lua_call</code></a>.
+	 * However, if there is any error, <a href="#lua_xpcall"><code>lua_xpcall</code></a>
+	 * catches it, pushes a single value on the stack (the error message), and
+	 * tries to call the supplied error function. 
+	 * 
+	 * <p>In case of runtime errors, this function
+	 * will be called with the error message and its return value will be the
+	 * message returned on the stack by <a href="#lua_pcall"><code>lua_pcall</code></a>.
+	 * 
+	 * <p>
+	 * Typically, the error handler function is used to add more debug
+	 * information to the error message, such as a stack traceback. Such
+	 * information cannot be gathered after the return of <a href="#lua_pcall"><code>lua_pcall</code></a>,
+	 * since by then the stack has unwound.
+	 * 
+	 * <p>
+	 * The return values for 
+	 * <a href="#lua_xpcall"><code>lua_xpcall</code></a> are the same as those for 
+	 * <a href="#lua_pcall"><code>lua_pcall</code></a>
+	 */
+    public int xpcall( int nargs, int nreturns, LValue errfunc ) {
+    	LValue preverrfunc = this.errfunc;
+    	try {
+    		this.errfunc = errfunc;
+    		return pcall( nargs, nreturns );
+    	} finally {
+    		this.errfunc = preverrfunc;
+    	}
     }
 
 	/**
@@ -2361,6 +2383,40 @@ public class LuaState extends Lua {
         }
 	}
 
+    
+    /** 
+     * Call the error function, if any, to possibly modify the message 
+     */
+	public String luaV_call_errfunc(String message) {
+		
+		// error function is run at most once
+		if ( errfunc == null )
+			return message;
+
+		// run the error function
+		int oldtop = top;
+    	int oldmask = hookmask;
+		LValue olderr = errfunc;
+        try {
+	    	hookmask = 0;
+			errfunc = null;		
+        	if ( cc >= 0 )
+        		top = base + this.calls[cc].closure.p.maxstacksize;
+  	    	pushlvalue(olderr);
+    		pushstring(message);
+   	    	call(1,1);
+        	return poplvalue().toJavaString();
+	        
+    	} catch ( Throwable t ) {
+    		return "error in error handling: "+t.getMessage();
+        	
+        } finally {
+        	top = oldtop;
+    		hookmask = oldmask;
+    		errfunc = olderr;
+        }
+	}
+	
 	
 	// ===========================================================================
 	// Debug hooks.  

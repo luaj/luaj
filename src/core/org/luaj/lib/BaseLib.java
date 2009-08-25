@@ -198,7 +198,7 @@ public class BaseLib extends LFunction {
 		case PCALL: {
 			vm.checkany(1);
 			int n = vm.gettop();
-			int s = vm.pcall( n-1, Lua.LUA_MULTRET, 0 );
+			int s = vm.pcall( n-1, Lua.LUA_MULTRET );
 			if ( s == 0 ) { // success, results are on stack
 				vm.pushboolean( true );
 				vm.insert( 1 );
@@ -210,26 +210,17 @@ public class BaseLib extends LFunction {
 			}
 		}
 		case XPCALL: {
-			LValue errfun = vm.checkany(3);
+			LValue errfun = vm.checkany(2);
 			vm.settop(1);
-			int s = vm.pcall( 0, Lua.LUA_MULTRET, 0 );
+			int s = vm.xpcall( 0, Lua.LUA_MULTRET, errfun );
 			if ( s == 0 ) { // success, results are on stack
 				vm.pushboolean( true );
 				vm.insert( 1 );
 				return -1;
 			} else { // error, error message is on the stack
-				vm.pushlvalue( errfun );
+				vm.pushboolean( false );
 				vm.insert( 1 );
-				s = vm.pcall( vm.gettop()-1, 1, 0 );
-				if ( s == 0 ) {
-					vm.pushboolean( false );
-					vm.insert( 1 );
-					return -1;
-				} else { // error in error handler
-					vm.pushboolean(false);
-					vm.pushstring("error in error handling");
-					return 2;
-				}
+				return 2;
 			}
 		}
 		case ERROR: {
@@ -489,7 +480,7 @@ public class BaseLib extends LFunction {
 		try {
 			while ( true ) {
 				setResult(vm,c);
-				if ( 0 != vm.pcall(0, 1, 0) ) {
+				if ( 0 != vm.pcall(0, 1) ) {
 					setErrorResult(vm, vm.tostring(2));
 					return false;
 				}

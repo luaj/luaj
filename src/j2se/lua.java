@@ -159,7 +159,7 @@ public class lua {
 			// load via "require"
 			vm.getglobal("require");
 			vm.pushstring(libname);
-			int status = vm.pcall(1, 0, 0);
+			int status = vm.pcall(1, 0);
 			if ( status == 0 )
 				return;
 

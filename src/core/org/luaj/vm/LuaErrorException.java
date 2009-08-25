@@ -74,14 +74,18 @@ public class LuaErrorException extends RuntimeException {
 	 * @return
 	 */
 	private static String addLineInfo(LuaState vm, String message, int level) {
-		if ( level == 0 || message == null )
-			return message;
+		// add position information
 		if ( vm == null ) {
 			if ( LThread.running != null )
 				vm = LThread.running.vm;
 			else
 				vm = LuaState.mainState;
+			if ( vm == null )
+				return message;
 		}
-		return vm != null? vm.getFileLine(level) + ": " + message: message;
+		if ( level > 0 ) {
+			message = vm.getFileLine(level);
+		}
+		return vm.luaV_call_errfunc( message );
 	}
 }

@@ -58,3 +58,18 @@ for i = 0,4 do
 	print( 'pcall(ge,i)', i, pcall(ge,i) )
 end
 
+-- xpcall tests
+local function goodfunction()	return 'from good function' end
+local function badfunction()	error( 'from bad function') end
+local function goodhandler(msg)	return '-->'..msg..'<--'    end
+local function badhandler(msg)	error( 'from bad handler' ) end
+print( 'xpcall(error,goodhandler)', ( xpcall(error,goodhandler) ) )
+print( 'xpcall(goodfunction,goodhandler)', ( xpcall(goodfunction,goodhandler) ) )
+print( 'xpcall(badfunction,goodhandler)', ( xpcall(badfunction,goodhandler) ) )
+print( 'xpcall(goodfunction,badhandler)', ( xpcall(goodfunction,badhandler) ) )
+print( 'xpcall(badfunction,badhandler)', ( xpcall(badfunction,badhandler) ) )
+print( 'xpcall(goodfunction,nil)', ( xpcall(goodfunction,nil) ) )
+print( 'xpcall(badfunction,nil)', ( xpcall(badfunction,nil) ) )
+print( 'xpcall(goodfunction)', ( pcall( function() return xpcall(goodfunction) end ) ) )
+print( 'xpcall(badfunction)', ( pcall( function() return xpcall(badfunction) end ) ) )
+
