@@ -74,3 +74,24 @@ print("g", g("x", "y"))
 local s,e = pcall( g, "x", "y" )
 print("g", string.match(e,'cannot resume dead coroutine') or 'badmessage: '..tostring(e))
 
+-- varargs passing
+local echo = function(msg,...)
+	print( msg, ...)
+	return ... 
+end
+local echocr = function(...)
+	echo('(echocr) first args', unpack(arg,1,arg.n)) 
+	local a = arg
+	while true do
+		a = { echo( '(echoch) yield returns', coroutine.yield( unpack(a) ) ) }
+	end
+end
+local c = coroutine.create( echocr )
+local step = function(...)
+	echo( '(main) resume returns', 
+		coroutine.resume(c, echo('(main) sending args', ...)) ) 
+end
+step(111,222,333)
+step()
+step(111)
+step(111,222,333)
