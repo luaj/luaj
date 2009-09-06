@@ -155,12 +155,16 @@ public class DebugLib extends LFunction {
 	}
 	
 	protected int gethook(LuaState vm) {
-		LuaState threadVm = vm;
-		if ( vm.gettop() >= 2 )
-			threadVm = vm.checkthread(1).vm;
-		vm.pushlvalue(threadVm.gethook());
-		vm.pushinteger(threadVm.gethookmask());
-		vm.pushinteger(threadVm.gethookcount());
+		LuaState threadVm = optthreadvm(vm, 1);
+		LValue hook = threadVm.gethook();
+		int mask = threadVm.gethookmask();
+		int count = threadVm.gethookcount();
+		vm.pushlvalue(hook!=null? hook: LNil.NIL);
+		vm.pushstring(""
+				+((mask&LuaState.LUA_MASKCALL)!=0? "c": "")
+				+((mask&LuaState.LUA_MASKRET) !=0? "r": "")
+				+((mask&LuaState.LUA_MASKLINE)!=0? "l": ""));
+		vm.pushinteger(count);
 		return 3;
 	}
 

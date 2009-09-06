@@ -105,7 +105,7 @@ public class LuaState extends Lua {
 
     // debug hooks - these MUST NOT be initialized, 
 	// so that a later obfuscation step can decide to remove them.
-	private boolean hooksenabled;
+	private boolean hooksenabled,inhook;
     private int hookmask;
     private int hookcount;
     private LFunction hookfunc;
@@ -2501,16 +2501,17 @@ public class LuaState extends Lua {
     		debugCallHook(LUA_HOOKTAILRET, calls[cc].currentline());
     	}
     }
-		
+	
     private void debugCallHook(int mask, int line) {
-    	int oldmask = hookmask;
+    	if ( inhook )
+    		return;
         int oldtop  = top;
         int oldbase = base;
         int oldcc   = cc;
         int oldnresults = nresults;
         int beyond  = (cc>=0? base+calls[cc].closure.p.maxstacksize: top);
     	try {
-	    	hookmask = 0;
+    		inhook = true;
 
 	    	// adjust base and top to beyond call frame
 	    	top = base = beyond;
@@ -2541,7 +2542,7 @@ public class LuaState extends Lua {
     		base     = oldbase;
     		top      = oldtop;
     		nresults = oldnresults;
-    		hookmask = oldmask ;
+    		inhook   = false;
     	}
 	}
 }
