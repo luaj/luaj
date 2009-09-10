@@ -85,7 +85,7 @@ public class DebugLib extends LFunction {
 	private static final LString METHOD    = new LString("method");  
 	private static final LString UPVALUE   = new LString("upvalue");  
 	private static final LString FIELD     = new LString("field");
-	private static final LString NOSTRING  = new LString("");  
+	private static final LString NOSTRING  = new LString("");
 	
 	public static void install( LuaState vm ) {
 		LTable debug = new LTable();
@@ -311,7 +311,7 @@ public class DebugLib extends LFunction {
 		LString name = (p!=null? p.getlocalname(local, ci.currentpc()): null);
 		if ( name != null ) {
 			threadVm.stack[ci.base+(local-1)] = value;
-			vm.pushlvalue(name);
+			vm.pushlvalue( name );
 		} else {
 			vm.pushnil();
 		}
@@ -413,13 +413,14 @@ public class DebugLib extends LFunction {
 	 * @return { name, value } or null if not found.
 	 */ 
 	public static LValue[] getlocal(LuaState vm, CallInfo ci, int local) {
-		LPrototype p = ci.closure.p;
-		LString name = p.getlocalname(local, ci.currentpc());
+		LPrototype p = (ci!=null? ci.closure.p: null);
+		LString name = (p!=null? p.getlocalname(local, ci.currentpc()): null);
 		if ( name != null ) {
 			LValue value = vm.stack[ci.base+(local-1)];
 			return new LValue[] { name, value };
-		} 
-		return null;
+		} else {
+			return null;
+		}
 	}
 	
 	/** 

@@ -248,7 +248,20 @@ public class LuaState extends Lua {
 	 */
 	public void invokeJavaFunction(LFunction javaFunction) {
 		++base;
+		
+        // call hook
+        if ( hooksenabled && !inhook ) {
+        	debugCallHooks( );
+        }
+		
 		int nactual = javaFunction.invoke(this);
+		
+        // call hook
+        if ( hooksenabled && !inhook ) {
+        	debugReturnHooks( );
+        }
+        
+		
 		if (nactual < 0)
 			nactual = top - base;
 		System.arraycopy(stack, top-nactual, stack, --base, nactual);
@@ -325,7 +338,7 @@ public class LuaState extends Lua {
 	        if (this.stack[base].luaStackCall(this)) {                	
 	        	
                 // call hook
-                if ( hooksenabled ) {
+                if ( hooksenabled && ! inhook ) {
                 	debugCallHooks( );
                 }
 
@@ -576,7 +589,7 @@ public class LuaState extends Lua {
         	
             // allow debug hooks a chance to operate
         	debugHooks( ci.pc );
-            if ( hooksenabled ) {
+            if ( hooksenabled && ! inhook ) {
             	//Print.printState(this, base, top, base+cl.p.maxstacksize, cl, ci.pc);            
             	debugBytecodeHooks( ci.pc );
             }
@@ -754,7 +767,7 @@ public class LuaState extends Lua {
                 if (this.stack[base].luaStackCall(this)) {
                 	
                     // call hook
-                    if ( hooksenabled ) {
+                    if ( hooksenabled && ! inhook ) {
                     	debugCallHooks( );
                     }
                     
@@ -770,18 +783,12 @@ public class LuaState extends Lua {
                 // restore base
                 base = ci.base;
                 
-            	
-                // call hook
-                if ( hooksenabled ) {
-                	debugReturnHooks( );
-                }
-                
                 continue;
             }
             
             case LuaState.OP_TAILCALL: {
                 // return hook
-                if ( hooksenabled ) {
+                if ( hooksenabled && ! inhook ) {
                 	debugTailReturnHooks( );
                 }
 
@@ -809,7 +816,7 @@ public class LuaState extends Lua {
                     if (this.stack[base].luaStackCall(this)) {
                     	
                         // call hook
-                        if ( hooksenabled ) {
+                        if ( hooksenabled && ! inhook ) {
                         	debugCallHooks( );
                         }
                         
@@ -835,7 +842,7 @@ public class LuaState extends Lua {
 
             case LuaState.OP_RETURN: {
                 // return hook
-                if ( hooksenabled ) {
+                if ( hooksenabled && ! inhook ) {
                 	debugReturnHooks( );
                 }
 
@@ -2389,20 +2396,17 @@ public class LuaState extends Lua {
      */
 	public String luaV_call_errfunc(String message) {
 		
-		// error function is run at most once
-		if ( errfunc == null )
+		// error function runs without hooks
+		if ( inhook || errfunc == null )
 			return message;
 
 		// run the error function
 		int oldtop = top;
-    	int oldmask = hookmask;
-		LValue olderr = errfunc;
         try {
-	    	hookmask = 0;
-			errfunc = null;		
+	    	inhook = true;
         	if ( cc >= 0 )
         		top = base + this.calls[cc].closure.p.maxstacksize;
-  	    	pushlvalue(olderr);
+  	    	pushlvalue(errfunc);
     		pushstring(message);
    	    	call(1,1);
         	return poplvalue().toJavaString();
@@ -2412,8 +2416,7 @@ public class LuaState extends Lua {
         	
         } finally {
         	top = oldtop;
-    		hookmask = oldmask;
-    		errfunc = olderr;
+    		inhook = false;
         }
 	}
 	
@@ -2432,7 +2435,7 @@ public class LuaState extends Lua {
 	 * @param count 0, or number of bytecodes between count events.
 	 */
 	public void sethook( LFunction func, int mask, int count ) {
-		hooksenabled = (mask != 0);
+		hooksenabled = (mask != 0 || count > 0);
 		hookfunc = func;
 		hookmask = mask;
 		hookcount = count;
@@ -2468,41 +2471,43 @@ public class LuaState extends Lua {
 	
     // line number and count hooks
     private void debugBytecodeHooks(int pc) {
-    	if ( hookfunc != null && (hookmask & LUA_MASKLINE) != 0 ) {
-        	int line = calls[cc].currentline();
-        	if ( (line != hookline || cc != hookcc) && line >= 0 ) {
-        		hookline = line;
-        		hookcc = cc;
-        		debugCallHook(LUA_HOOKLINE, line);
-        	}
+    	if ( hookfunc != null ) {
 			if (hookcount != 0) {
 				if ( --hookincr <= 0 ) {
 					hookincr = hookcount;
-					debugCallHook(LUA_HOOKCOUNT, -1);
+					debugInvokeHook(LUA_HOOKCOUNT, -1);
 				}
 			}
+    		if ( (hookmask & LUA_MASKLINE) != 0 ) {
+	        	int line = calls[cc].currentline();
+	        	if ( (line != hookline || cc != hookcc) && line >= 0 ) {
+	        		hookline = line;
+	        		hookcc = cc;
+	        		debugInvokeHook(LUA_HOOKLINE, line);
+	        	}
+    		}
 		}
     }
     
     private void debugCallHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKCALL) != 0) ) {
-    		debugCallHook(LUA_HOOKCALL, calls[cc].currentline());
+    		debugInvokeHook(LUA_HOOKCALL, calls[cc].currentline());
     	}
     }
     
     private void debugReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
-    		debugCallHook(LUA_HOOKRET, calls[cc].currentline());
+    		debugInvokeHook(LUA_HOOKRET, calls[cc].currentline());
     	}
     }
     
     private void debugTailReturnHooks() {
     	if ( hookfunc != null && ((hookmask & LUA_MASKRET) != 0) ) {
-    		debugCallHook(LUA_HOOKTAILRET, calls[cc].currentline());
+    		debugInvokeHook(LUA_HOOKTAILRET, calls[cc].currentline());
     	}
     }
 	
-    private void debugCallHook(int mask, int line) {
+    private void debugInvokeHook(int mask, int line) {
     	if ( inhook )
     		return;
         int oldtop  = top;
