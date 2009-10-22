@@ -21,17 +21,19 @@
 ******************************************************************************/
 package org.luaj.lib.j2se;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.luaj.vm.LBoolean;
 import org.luaj.vm.LDouble;
 import org.luaj.vm.LInteger;
-import org.luaj.vm.LNil;
 import org.luaj.vm.LNumber;
 import org.luaj.vm.LString;
+import org.luaj.vm.LTable;
 import org.luaj.vm.LUserData;
 import org.luaj.vm.LValue;
+import org.luaj.vm.LuaErrorException;
 
 
 public class CoerceLuaToJava {
@@ -196,14 +198,56 @@ public class CoerceLuaToJava {
 		COERCIONS.put( String.class, stringCoercion );
 		COERCIONS.put( Object.class, objectCoercion );
 	}
-	
-	static Object coerceArg(LValue v, Class type) {
-		Coercion co = (Coercion) COERCIONS.get( type );
-		if ( co != null )
-			return co.coerce( v );
-		if ( v instanceof LUserData )
-			return ((LUserData) v).m_instance;
-		return v;
+
+
+	/** Score a single parameter, including array handling */
+	private static int scoreParam(LValue a, Class c) {
+		if ( a instanceof LUserData ) {
+			Object o = ((LUserData) a).m_instance;
+			if ( c.isAssignableFrom(o.getClass()) )
+				return 0;
+		}
+		Coercion co = (Coercion) COERCIONS.get( c );
+		if ( co != null ) {
+			return co.score( a );
+		}
+		if ( c.isArray() ) {
+			Class typ = c.getComponentType();
+			if ( a instanceof LTable ) {
+				return scoreParam( ((LTable)a).get(1), typ );
+			} else {
+				return 0x10 + (scoreParam(a, typ) << 8);
+			}
+		}
+		return 0x1000;
+	}
+
+	/** Do a conversion */
+	public static Object coerceArg(LValue a, Class c) {
+		if ( a instanceof LUserData ) {
+			Object o = ((LUserData) a).m_instance;
+			if ( c.isAssignableFrom(o.getClass()) )
+				return o;
+		}
+		Coercion co = (Coercion) COERCIONS.get( c );
+		if ( co != null ) {
+			return co.coerce( a );
+		}
+		if ( c.isArray() ) {
+			boolean istable = (a instanceof LTable);
+			int n = istable? a.luaLength(): 1;
+			Class typ = c.getComponentType();
+			Object o = Array.newInstance(typ, n);
+			for ( int i=0; i<n; i++ ) {
+				LValue ele = (istable? ((LTable)a).get(i+1): a);
+				if ( ele != null )
+					Array.set(o, i, coerceArg(ele, typ));				
+			}
+			return o;
+		}
+		if ( a.isNil() )
+			return null;
+		throw new LuaErrorException("no coercion found for "+a.getClass()+" to "+c);
 	}
 
 	static Object[] coerceArgs(LValue[] suppliedArgs, Class[] parameterTypes) {
@@ -223,23 +267,15 @@ public class CoerceLuaToJava {
 	 * 3) java has less args
 	 * 4) types coerce well
 	 */
-	static int scoreParamTypes(LValue[] suppliedArgs, Class[] paramTypes) {
+	public static int scoreParamTypes(LValue[] suppliedArgs, Class[] paramTypes) {
 		int nargs = suppliedArgs.length;
 		int njava = paramTypes.length;
 		int score = (njava == nargs? 0: njava > nargs? 0x4000: 0x8000);
 		for ( int i=0; i<nargs && i<njava; i++ ) {
 			LValue a = suppliedArgs[i];
 			Class c = paramTypes[i];
-			Coercion co = (Coercion) COERCIONS.get( c );
-			if ( co != null ) {
-				score += co.score( a );
-			} else if ( a instanceof LUserData ) {
-				Object o = ((LUserData) a).m_instance;
-				if ( ! c.isAssignableFrom(o.getClass()) )
-						score += 0x10000;
-			} else {
-				score += 0x100;
-			}
+			int s = scoreParam( a, c );
+			score += s;
 		}
 		return score;
 	}

@@ -26,6 +26,7 @@ package org.luaj.lib.j2se;
  * 
  * TODO: coerce types on way in and out, pick method base on arg count ant types.
  */
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.luaj.vm.LFunction;
-import org.luaj.vm.LNil;
+import org.luaj.vm.LInteger;
 import org.luaj.vm.LString;
 import org.luaj.vm.LTable;
 import org.luaj.vm.LUserData;
@@ -194,6 +195,7 @@ public final class LuajavaLib extends LFunction {
 		public final LValue[] values;
 		public final Class[] classes;
 		public int hash;
+		public boolean cantcache;
 		ParamsList( LuaState vm ) {
 			int n = Math.max(vm.gettop()-2,0);
 			values = new LValue[n];
@@ -202,6 +204,9 @@ public final class LuajavaLib extends LFunction {
 				values[i] = vm.topointer(i-n);
 				classes[i] = values[i].getClass();
 				hash += classes[i].hashCode();
+				Class c = classes[i];
+				if ( values[i] instanceof LUserData || values[i] instanceof LTable )
+					cantcache = true;
 			}
 		}
 		public int hashCode() {
@@ -213,8 +218,10 @@ public final class LuajavaLib extends LFunction {
 				false;
 		}
 	}
+
+	private static LString LENGTH = LString.valueOf("length");
 		
-	static LUserData toUserdata(Object instance, final Class clazz) {
+	static LUserData toUserdata(final Object instance, final Class clazz) {
 		LTable mt = (LTable) classMetatables.get(clazz);
 		if ( mt == null ) {
 			mt = new LTable();
@@ -222,6 +229,17 @@ public final class LuajavaLib extends LFunction {
 				public boolean luaStackCall(LuaState vm) {
 					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
+					if ( key instanceof LInteger ) {
+						if ( clazz.isArray() ) {
+							vm.resettop();
+							int index = key.toJavaInt()-1;
+							if ( index >= 0 && index < Array.getLength(instance) )
+								vm.pushlvalue( CoerceJavaToLua.coerce( Array.get(instance, index) ) );
+							else 
+								vm.pushnil();
+							return false;
+						}
+					}
 					final String s = key.toJavaString();
 					vm.resettop();
 					try {
@@ -229,7 +247,11 @@ public final class LuajavaLib extends LFunction {
 						Object o = f.get(table.toJavaInstance());
 						vm.pushlvalue( CoerceJavaToLua.coerce( o ) );
 					} catch (NoSuchFieldException nsfe) {
-						vm.pushlvalue( new LMethod(clazz,s) );
+						if ( clazz.isArray() && key.equals(LENGTH) ) {
+							vm.pushinteger( Array.getLength(instance) );
+						} else {
+							vm.pushlvalue( new LMethod(clazz,s) );
+						}
 					} catch (Exception e) {
 						throw new LuaErrorException(e);
 					}
@@ -241,6 +263,19 @@ public final class LuajavaLib extends LFunction {
 					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
 					LValue val = vm.topointer(4);
+					if ( key instanceof LInteger ) {
+						if ( clazz.isArray() ) {
+							vm.resettop();
+							Object v = CoerceLuaToJava.coerceArg(val, clazz.getComponentType());
+							int index = key.toJavaInt()-1;
+							if ( index >= 0 && index < Array.getLength(instance) )
+								Array.set(instance, key.toJavaInt()-1, v);
+							else 
+								throw new LuaErrorException("array bounds exceeded "+index);
+							vm.resettop();
+							return false;
+						}
+					}
 					String s = key.toJavaString();
 					try {
 						Field f = clazz.getField(s);
@@ -342,7 +377,8 @@ public final class LuajavaLib extends LFunction {
 		
 		// put into cache
 		c = (Constructor) list.get(besti);
-		cache.put( params, c );
+		if ( ! params.cantcache )
+			cache.put( params, c );
 		return c;
 	}
 
@@ -396,6 +432,15 @@ public final class LuajavaLib extends LFunction {
 		if ( list == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
 
+		// trivial lists match 
+		if ( list.size() == 1 ) {
+			m = (Method) list.get(0);
+			if ( ! params.cantcache )
+				cache.put( params, m );
+			return m;
+		}
+		
+		
 		// find constructor with best score
 		int bests = Integer.MAX_VALUE;
 		int besti = 0;
@@ -410,7 +455,8 @@ public final class LuajavaLib extends LFunction {
 		
 		// put into cache
 		m = (Method) list.get(besti);
-		cache.put( params, m );
+		if ( ! params.cantcache )
+			cache.put( params, m );
 		return m;
 	}
 	
