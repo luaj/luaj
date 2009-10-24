@@ -221,7 +221,7 @@ public final class LuajavaLib extends LFunction {
 
 	private static LString LENGTH = LString.valueOf("length");
 		
-	static LUserData toUserdata(final Object instance, final Class clazz) {
+	static LUserData toUserdata(Object obj, final Class clazz) {
 		LTable mt = (LTable) classMetatables.get(clazz);
 		if ( mt == null ) {
 			mt = new LTable();
@@ -229,6 +229,7 @@ public final class LuajavaLib extends LFunction {
 				public boolean luaStackCall(LuaState vm) {
 					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
+					Object instance = table.toJavaInstance();
 					if ( key instanceof LInteger ) {
 						if ( clazz.isArray() ) {
 							vm.resettop();
@@ -244,7 +245,7 @@ public final class LuajavaLib extends LFunction {
 					vm.resettop();
 					try {
 						Field f = clazz.getField(s);
-						Object o = f.get(table.toJavaInstance());
+						Object o = f.get(instance);
 						vm.pushlvalue( CoerceJavaToLua.coerce( o ) );
 					} catch (NoSuchFieldException nsfe) {
 						if ( clazz.isArray() && key.equals(LENGTH) ) {
@@ -263,6 +264,8 @@ public final class LuajavaLib extends LFunction {
 					LValue table = vm.topointer(2);
 					LValue key = vm.topointer(3);
 					LValue val = vm.topointer(4);
+					Object instance = table.toJavaInstance();
+					
 					if ( key instanceof LInteger ) {
 						if ( clazz.isArray() ) {
 							vm.resettop();
@@ -280,7 +283,7 @@ public final class LuajavaLib extends LFunction {
 					try {
 						Field f = clazz.getField(s);
 						Object v = CoerceLuaToJava.coerceArg(val, f.getType());
-						f.set(table.toJavaInstance(),v);
+						f.set(instance,v);
 						vm.resettop();
 					} catch (Exception e) {
 						throw new LuaErrorException(e);
@@ -290,7 +293,7 @@ public final class LuajavaLib extends LFunction {
 			});
 			classMetatables.put(clazz, mt);
 		}
-		return new LUserData(instance,mt);
+		return new LUserData(obj,mt);
 	}
 	
 	private static final class LMethod extends LFunction {
