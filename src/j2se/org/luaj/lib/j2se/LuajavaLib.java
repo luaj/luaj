@@ -227,9 +227,8 @@ public final class LuajavaLib extends LFunction {
 			mt = new LTable();
 			mt.put( LValue.TM_INDEX, new LFunction() {
 				public boolean luaStackCall(LuaState vm) {
-					LValue table = vm.topointer(2);
+					Object instance = vm.touserdata(2);
 					LValue key = vm.topointer(3);
-					Object instance = table.toJavaInstance();
 					if ( key instanceof LInteger ) {
 						if ( clazz.isArray() ) {
 							vm.resettop();
@@ -261,11 +260,9 @@ public final class LuajavaLib extends LFunction {
 			});
 			mt.put( LValue.TM_NEWINDEX, new LFunction() {
 				public boolean luaStackCall(LuaState vm) {
-					LValue table = vm.topointer(2);
+					Object instance = vm.touserdata(2);
 					LValue key = vm.topointer(3);
 					LValue val = vm.topointer(4);
-					Object instance = table.toJavaInstance();
-					
 					if ( key instanceof LInteger ) {
 						if ( clazz.isArray() ) {
 							vm.resettop();
