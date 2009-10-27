@@ -105,7 +105,9 @@
 		<mkdir dir="build/luaj-${version}/src"/>
 		<mkdir dir="build/luaj-${version}/lib"/>
 		<copy todir="build/luaj-${version}/src">
-		    <fileset dir="src"/>
+		    <fileset dir="src">
+				<exclude name="src/test/**"/>
+		    </fileset>
 		</copy>
 		<copy todir="build/luaj-${version}/test">
 		    <fileset dir="test"/>

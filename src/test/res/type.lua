@@ -1,8 +1,0 @@
-print(type(5))
-print(type(3.14))
-print(type("hello"))
-print(type(function() return 1 end))
-print(type({}))
-print(type(nil))
-print(type(2 < 5))
-print(type(pairs({})))
