@@ -1,11 +1,20 @@
 <project default="all">
 	<property file="version.properties"/>
-
-	<property name="jar.name.j2me" value="luaj-j2me-${version}.jar"/>
-	<property name="jar.name.j2se" value="luaj-j2se-${version}.jar"/>
 	
+	<property environment="env"/>
+	
+	<property name="jar.name.jme" value="luaj-jme-${version}.jar"/>
+	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
+
 	<import file="wtk.xml"/>
 	
+	<property name="antlr.version"     value="3.1.3"/>
+	<property name="antlr.home"        value="${env.ANTLR_HOME}"/>
+	<property name="antlr.tool.jar"    value="${antlr.home}/lib/antlr-${antlr.version}.jar"/>
+	<property name="antlr.runtime.jar" value="${antlr.home}/lib/antlr-runtime-${antlr.version}.jar"/>
+	<property name="grammar.dir"       value="src/jse/org/luaj/vm2/luajc/antlr"/>	
+	<property name="grammar.name"      value="Lua"/>	
+
 	<target name="clean">
 		<delete dir="build"/>
 		<delete>
@@ -13,11 +22,25 @@
 		</delete>
 	</target>
 	
+	<target name="generate">
+		<fail unless="env.ANTLR_HOME" message="ANTLR_HOME must be set."/>
+	        <available file="${antlr.tool.jar}" property="antlr.tool.exists"/>
+		<fail unless="antlr.tool.exists" message="ANTLR tool not found: ${antlr.tool.jar}"/>
+		<echo>Generating files using ${antlr.tool.jar}</echo>
+		<java classpath="${antlr.tool.jar}" 
+			classname="org.antlr.Tool" 
+			dir="${grammar.dir}" 
+			fork="true"
+			failonerror="true">
+			<arg line="${grammar.name}.g"/>
+		</java>
+	</target>
+		
 	<target name="compile" depends="wtk-or-fail">
 		<mkdir dir="build/core/src"/>
 		<mkdir dir="build/core/classes"/>
-		<mkdir dir="build/j2me/classes"/>
-		<mkdir dir="build/j2se/classes"/>
+		<mkdir dir="build/jme/classes"/>
+		<mkdir dir="build/jse/classes"/>
 		<copy todir="build/core/src">
 			<fileset dir="src/core"/>
 			<filterchain>
@@ -26,36 +49,32 @@
 				</tokenfilter>
 			</filterchain>
 		</copy>
-		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
+		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs">
 			<src path="build/core/src"/>
 		</javac>
-		<javac destdir="build/j2me/classes" encoding="utf-8" source="1.3" target="1.1" bootclasspathref="wtk-libs">
+		<javac destdir="build/jme/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs">
 			<classpath path="build/core/classes"/>
-			<src path="src/j2me"/>
+			<src path="src/jme"/>
 		</javac>
-		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.3" target="1.3">
-			<classpath path="build/core/classes"/>
-			<src path="src/j2se"/>
-		</javac>
-		<javac destdir="build/j2se/classes" encoding="utf-8" source="1.5" target="1.5">
-			<classpath path="build/core/classes"/>
-			<src path="src/script"/>
+		<javac destdir="build/jse/classes" encoding="utf-8" source="1.5" target="1.5">
+			<classpath path="build/core/classes;${antlr.runtime.jar}"/>
+			<src path="src/jse"/>
 		</javac>
 	</target>
 	
-	<target name="jar-j2me" depends="compile">
-		<jar destfile="${jar.name.j2me}">
+	<target name="jar-jme" depends="compile">
+		<jar destfile="${jar.name.jme}">
 			<fileset dir="build/core/classes"/>
-			<fileset dir="build/j2me/classes"/>
+			<fileset dir="build/jme/classes"/>
 		</jar>
 	</target>
 	
-	<target name="jar-j2se" depends="compile">
-		<jar destfile="${jar.name.j2se}">
+	<target name="jar-jse" depends="compile">
+		<jar destfile="${jar.name.jse}">
 			<fileset dir="build/core/classes"/>
-			<fileset dir="build/j2me/classes"/>
-			<fileset dir="build/j2se/classes"/>
-		    <fileset dir="src/script">
+			<fileset dir="build/jme/classes"/>
+			<fileset dir="build/jse/classes"/>
+		    <fileset dir="src/jse/">
 				<include name="META-INF/**"/>
 		    </fileset>		
 		</jar>
@@ -64,7 +83,7 @@
 	<target name="doc">
 		<delete dir="docs/api"/>
 		<mkdir dir="docs/api"/>
-		<javadoc packagenames="org.luaj.vm.*"
+		<javadoc packagenames="org.luaj.vm2.*"
 				sourcepath="src/core"
 				defaultexcludes="yes"
 				destdir="docs/api"
@@ -88,6 +107,12 @@
 		<copy todir="build/luaj-${version}/src">
 		    <fileset dir="src"/>
 		</copy>
+		<copy todir="build/luaj-${version}/test">
+		    <fileset dir="test"/>
+		</copy>
+		<copy todir="build/luaj-${version}/examples">
+		    <fileset dir="examples"/>
+		</copy>
 		<copy todir="build/luaj-${version}/lib">
 		    <fileset dir=".">
 				<include name="*-${version}.jar"/>
@@ -100,11 +125,15 @@
 				<include name="version.properties"/>
 				<include name="wtk.xml"/>
 				<include name="README.html"/>
+				<include name="names.csv"/>
+				<include name=".classpath"/>
+				<include name=".project"/>
 		    </fileset>		
 		</copy>
 		<zip destfile="luaj-${version}.zip" 
 			basedir="build" includes="luaj-${version}/**"/>
 	</target>
 	
-	<target name="all" depends="clean,jar-j2me,jar-j2se"/>
+	<target name="all" depends="clean,jar-jme,jar-jse"/>
+		
 </project>

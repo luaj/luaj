@@ -23,6 +23,12 @@
 	
 	<import file="wtk.xml"/>
 	
+	<property environment="env"/>
+	<property name="antlr.version"     value="3.1.3"/>
+	<property name="antlr.home"        value="${env.ANTLR_HOME}"/>
+	<property name="antlr.tool.jar"    value="${antlr.home}/lib/antlr-${antlr.version}.jar"/>
+	<property name="antlr.runtime.jar" value="${antlr.home}/lib/antlr-runtime-${antlr.version}.jar"/>
+
 	<target name="clean" description="Remove all files created by the build/test process.">
 		<delete dir="build" failonerror="no"/>
 		<delete file="cobertura.log" />
@@ -42,12 +48,11 @@
 		<javac destdir="${classes.dir}" debug="yes" target="1.5">
 			<classpath refid="cobertura.classpath" />
 		    <classpath refid="wtk-libs" />
+			<classpath path="${antlr.runtime.jar}"/>
 		    <src path="src/core"/>
-		    <src path="src/j2me"/>
-		    <src path="src/j2se"/>
-		    <src path="src/script"/>
-		    <src path="src/sample"/>
-		    <src path="src/test/java"/>
+		    <src path="src/jme"/>
+		    <src path="src/jse"/>
+		    <src path="test/junit"/>
 		</javac>
 	</target>
 
@@ -57,11 +62,16 @@
 		<cobertura-instrument todir="${instrumented.dir}">
 			<ignore regex="org.apache.log4j.*" />
 			<fileset dir="${classes.dir}">
-				<include name="org/luaj/vm/*.class" />
-				<include name="org/luaj/lib/*.class" />
-				<include name="org/luaj/compiler/*.class" />
+				<include name="org/luaj/vm2/*.class" />
+				<include name="org/luaj/vm2/lib/*.class" />
+				<include name="org/luaj/vm2/lib/jse/*.class" />
+				<include name="org/luaj/vm2/lib/jme/*.class" />
+				<include name="org/luaj/vm2/compiler/*.class" />
+				<include name="org/luaj/vm2/luajc/*.class" />
+				<include name="org/luaj/vm2/luajc/antlr/*.class" />
+				<include name="org/luaj/vm2/luajc/lst/*.class" />
+				<include name="org/luaj/vm2/script/*.class" />
 				<exclude name="**/*Test*.class" />
-				<exclude name="org/luaj/vm/require/*.class" />
 			</fileset>
 		</cobertura-instrument>
 	</target>
@@ -74,11 +84,8 @@
 			<classpath refid="cobertura.classpath" />
 			<formatter type="xml" />
 			<batchtest todir="${reports.xml.dir}">
-				<fileset dir="src/test/java">
-					<include name="org/luaj/compiler/*.java" />
-					<include name="org/luaj/vm/*.java" />
-					<exclude name="**/Abstract*.java" />
-					<exclude name="**/StandardTest.java" />
+				<fileset dir="test/junit">
+					<include name="org/luaj/vm2/AllTests.java" />
 				</fileset>
 			</batchtest>
 		</junit>
