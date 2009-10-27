@@ -88,6 +88,7 @@ public class DebugLib extends VarArgFunction {
 	private static final LuaString FIELD      = LuaString.valueOf("field");
 	private static final LuaString CALL       = LuaString.valueOf("call");  
 	private static final LuaString LINE       = LuaString.valueOf("line");  
+	private static final LuaString COUNT      = LuaString.valueOf("count");  
 	private static final LuaString RETURN     = LuaString.valueOf("return");  
 	private static final LuaString TAILRETURN = LuaString.valueOf("tail return");
 	
@@ -238,7 +239,7 @@ public class DebugLib extends VarArgFunction {
 		private DebugInfo[] debugInfo = new DebugInfo[LuaThread.MAX_CALLSTACK+1];
 		private LuaValue hookfunc;
 		private boolean hookcall,hookline,hookrtrn,inhook;
-		private int hookcount;
+		private int hookcount,hookcodes;
 		private int line;
 		private DebugState(LuaThread thread) {
 			this.thread = thread;
@@ -360,11 +361,20 @@ public class DebugLib extends VarArgFunction {
 		DebugInfo di = ds.getDebugInfo();
 		if(TRACE)Print.printState(di.closure, pc, di.stack, top, di.varargs);		
 		ds.getDebugInfo().bytecode( pc, extras, top );
+		if ( ds.hookcount > 0 ) {
+			if ( ++ds.hookcodes >= ds.hookcount ) {
+				ds.hookcodes = 0;
+				ds.callHookFunc( ds, COUNT, LuaValue.NIL );
+			}
+		}
 		if ( ds.hookline ) {
 			int newline = di.currentline();
 			if ( newline != ds.line ) {
-				ds.line = newline;
-				ds.callHookFunc( ds, LINE, LuaValue.valueOf(newline) );
+				int c = di.closure.p.code[pc];
+				if ( (c&0x3f) != Lua.OP_JMP || ((c>>>14)-0x1ffff) >= 0 ) {
+					ds.line = newline;
+					ds.callHookFunc( ds, LINE, LuaValue.valueOf(newline) );
+				}
 			}
 		}
 	}
