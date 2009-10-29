@@ -222,8 +222,7 @@ public class BaseLib extends LuaTable implements ResourceFinder {
 				try {
 					LuaValue func = args.checkfunction(1);
 					String chunkname = args.optString(2, "function");
-					Prototype p = LoadState.undump(new StringInputStream(func), chunkname);
-					return new LuaClosure(p,LuaThread.getRunningEnv(env));
+					return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getRunningEnv(env));
 				} catch ( Exception e ) {
 					return varargsOf(NIL, valueOf(e.getMessage()));
 				} 
@@ -240,8 +239,7 @@ public class BaseLib extends LuaTable implements ResourceFinder {
 				try {
 					LuaString script = args.checkstring(1);
 					LuaString chunkname = args.optstring(2, script);
-					Prototype p = LoadState.undump(script.toInputStream(), chunkname.toString());
-					return new LuaClosure(p,LuaThread.getRunningEnv(env));
+					return LoadState.load(script.toInputStream(), chunkname.toString(),LuaThread.getRunningEnv(env));
 				} catch ( Exception e ) {
 					return varargsOf(NIL, valueOf(e.getMessage()));
 				} 
@@ -344,8 +342,7 @@ public class BaseLib extends LuaTable implements ResourceFinder {
 			if ( is == null )
 				return varargsOf(NIL, valueOf("not found: "+filename));
 			try {
-				Prototype p = LoadState.undump(is, filename);
-				return new LuaClosure(p,LuaThread.getRunningEnv(env));
+				return LoadState.load(is, filename, LuaThread.getRunningEnv(env));
 			} finally {
 				is.close();
 			}

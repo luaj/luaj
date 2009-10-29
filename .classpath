@@ -15,5 +15,6 @@
 	<classpathentry kind="var" path="ANTLR_HOME"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/cldcapi11.jar"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/midpapi20.jar"/>
+	<classpathentry kind="var" path="BCEL_LIB"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

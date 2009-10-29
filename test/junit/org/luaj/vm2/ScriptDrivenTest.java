@@ -31,9 +31,7 @@ import java.io.PrintStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.BaseLib;
-import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.luajc.LuaJCompiler;
 
@@ -58,7 +56,6 @@ public class ScriptDrivenTest extends TestCase {
 		try {
 	
 			// create globals
-			LuaC.install();
 			LuaTable _G = null;
 			switch ( platform ) {
 			default:
@@ -120,8 +117,7 @@ public class ScriptDrivenTest extends TestCase {
 				}
 			default:
 				script = new FileInputStream(file);
-				Prototype p = LoadState.undump(script, "stdin");
-				return new LuaClosure(p,_G);
+				return LoadState.load(script, "stdin", _G);
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace();

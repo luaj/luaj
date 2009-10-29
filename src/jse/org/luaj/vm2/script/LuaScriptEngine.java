@@ -43,6 +43,7 @@ import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LuaC;
@@ -165,18 +166,41 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		try {
 	    	InputStream ris = new Utf8Encoder(reader);
 	    	try {
-				final Prototype p = LoadState.undump(ris, "script");
-				return new CompiledScript() {
-					public Object eval(ScriptContext context) throws ScriptException {
-				        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-				        LuaBindings lb = (LuaBindings) b;
-						LuaClosure c = new LuaClosure( p, lb.env );
-						return c.call();
-					}
-					public ScriptEngine getEngine() {
-						return LuaScriptEngine.this;
-					}
-				};
+	    		final LuaFunction f = LoadState.load(ris, "script", null);
+	    		if ( f.isclosure() ) {
+	    			LuaClosure c = f.checkclosure();
+	    			final Prototype p = c.p;
+					return new CompiledScript() {
+						public Object eval(ScriptContext context) throws ScriptException {
+					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
+					        LuaBindings lb = (LuaBindings) b;
+							LuaClosure c = new LuaClosure( p, lb.env );
+							return c.invoke(LuaValue.NONE);
+						}
+						public ScriptEngine getEngine() {
+							return LuaScriptEngine.this;
+						}
+					};
+	    		} else {
+	    			final Class c = f.getClass();
+					return new CompiledScript() {
+						public Object eval(ScriptContext context) throws ScriptException {
+					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
+					        LuaBindings lb = (LuaBindings) b;
+					        LuaFunction lf;
+							try {
+						        lf = (LuaFunction) c.newInstance();
+							} catch (Exception e) {
+								throw new ScriptException("instantiation failed: "+e.toString());
+							}
+					        lf.setfenv(lb.env);
+							return lf.invoke(LuaValue.NONE);
+						}
+						public ScriptEngine getEngine() {
+							return LuaScriptEngine.this;
+						}
+					};	    			
+	    		}
 			} catch ( LuaError lee ) {
 				throw new ScriptException(lee.getMessage() );
 			} finally { 

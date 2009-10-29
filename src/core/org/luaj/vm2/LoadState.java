@@ -39,8 +39,7 @@ public class LoadState {
 	/** format corresponding to number-patched lua, all numbers are 32-bit (4 byte) ints */
 	public static final int NUMBER_FORMAT_NUM_PATCH_INT32      = 4;
 	
-	// type constants
-	
+	// type constants	
 	public static final int LUA_TINT            = (-2);
 	public static final int LUA_TNONE			= (-1);
 	public static final int LUA_TNIL			= 0;
@@ -56,7 +55,10 @@ public class LoadState {
 	
 	/** Interface for the compiler, if it is installed. */
 	public interface LuaCompiler {
+		/** Compile into a prototype, without taking the additional step of create a LuaFunction or LuaClosure */
 		public Prototype compile(int firstByte, InputStream stream, String name) throws IOException;
+		/** Load into a Closure or LuaFunction, with the supplied initial environment */
+		public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException;
 	}
 
 	/** Compiler instance, if installed */
@@ -266,12 +268,11 @@ public class LoadState {
 		luacNumberFormat = is.readByte();
 	}
 	
-	public static Prototype undump( InputStream stream, String name ) throws IOException {
-		// check first byte to see if its a precompiled chunk 
+	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
 		int c = stream.read();
 		if ( c != LUA_SIGNATURE[0] ) {
 			if ( compiler != null )
-				return compiler.compile(c, stream, name);
+				return compiler.load(c, stream, name, env);
 			throw new LuaError("no compiler");
 		}
 
@@ -296,7 +297,8 @@ public class LoadState {
 			throw new LuaError("unsupported int size");
 		}
 		
-		return s.loadFunction( LuaString.valueOf(sname) );
+		Prototype p = s.loadFunction( LuaString.valueOf(sname) );
+		return new LuaClosure( p, env );
 	}
 
     public static String getSourceName(String name) {

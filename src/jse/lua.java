@@ -29,9 +29,8 @@ import java.io.InputStreamReader;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.JsePlatform;
@@ -167,10 +166,9 @@ public class lua {
 	
 	private static void processScript( InputStream script, String chunkname, String[] args, int offset ) throws IOException {
 		try {
-			LuaClosure c;
+			LuaFunction c;
 			try {
-				Prototype p = LoadState.undump(script, chunkname );
-				c = new LuaClosure(p,_G);
+				c = LoadState.load(script, chunkname, _G);
 			} finally {
 				script.close();
 			}

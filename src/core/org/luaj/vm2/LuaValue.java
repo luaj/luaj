@@ -310,6 +310,7 @@ public class LuaValue extends Varargs {
 	
 	// table initializers
 	public static LuaTable tableOf() { return new LuaTable(); }	
+	public static LuaTable tableOf(int narray, int nhash) { return new LuaTable(narray, nhash); }	
 	public static LuaTable listOf(LuaValue[] unnamedValues) { return new LuaTable(null,unnamedValues,null); }
 	public static LuaTable listOf(LuaValue[] unnamedValues,Varargs lastarg) { return new LuaTable(null,unnamedValues,lastarg); }
 	public static LuaTable tableOf(LuaValue[] namedValues) { return new LuaTable(namedValues,null,null); }	

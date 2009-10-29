@@ -27,10 +27,12 @@ import java.util.Hashtable;
 
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.Prototype;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
 
 
@@ -158,8 +160,19 @@ public class LuaC extends Lua implements LuaCompiler {
 
 	/** Utility method to invoke the compiler for an input stream 
 	 */
-	public static Prototype compile(InputStream is, String string) throws IOException {
-		return new LuaC().compile(is.read(), is, string);
+	public static Prototype compile(InputStream is, String name) throws IOException {
+		return new LuaC().compile(is.read(), is, name);
+	}
+	
+	/** Load into a Closure or LuaFunction, with the supplied initial environment */
+	public static LuaFunction load(InputStream is, String name, LuaValue env) throws IOException {
+		return new LuaC().load(is.read(), is, name, env);
+	}
+	
+	/** Load into a Closure or LuaFunction, with the supplied initial environment */
+	public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException {
+		Prototype p = compile(firstByte, stream, name);
+		return new LuaClosure( p, env );
 	}
 
 	/** Compile source bytes into a LPrototype.  

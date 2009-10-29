@@ -57,7 +57,6 @@ public class AllTests {
 		// luajc regression tests
 		TestSuite luajc = new TestSuite("Luajc Tests");
 		luajc.addTestSuite(FragmentsTest.class);
-		luajc.addTest( new TestSuite( LuaJCCompatibilityTest.class, "LuaJC Compatiblity Tests" ) );
 		suite.addTest(luajc);
 		
 		return suite;

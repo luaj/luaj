@@ -24,6 +24,8 @@ package org.luaj.vm2;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.luaj.vm2.luajc.JavaBytecodeCompiler;
+
 /**
  * Compatibility tests for the Luaj VM
  * 
@@ -59,6 +61,8 @@ public class CompatibiltyTest {
 		TestSuite suite = new TestSuite("Compatibility Tests");
 		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
 		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
+		suite.addTest( new TestSuite( JseBytecodeTest.class,        "JSE Bytecode Tests" ) );
+		suite.addTest( new TestSuite( LuaJCCompatibilityTest.class,   "LuaJC Gen Tests" ) );
 		return suite;
 	}
 
@@ -76,8 +80,18 @@ public class CompatibiltyTest {
 			super(ScriptDrivenTest.PlatformType.JSE);
 		}
 		protected void setUp() throws Exception {
-			System.setProperty("JME", "false");
 			super.setUp();
+			System.setProperty("JME", "false");
+		}
+	}
+	public static class JseBytecodeTest extends CompatibiltyTestSuite {
+		public JseBytecodeTest() {
+			super(ScriptDrivenTest.PlatformType.JSE);
+		}
+		protected void setUp() throws Exception {
+			super.setUp();
+			System.setProperty("JME", "false");
+			JavaBytecodeCompiler.install();
 		}
 	}
 	public static class LuaJCCompatibilityTest extends CompatibiltyTestSuite {
@@ -85,8 +99,8 @@ public class CompatibiltyTest {
 			super(ScriptDrivenTest.PlatformType.LUAJIT);
 		}
 		protected void setUp() throws Exception {
-			System.setProperty("JME", "false");
 			super.setUp();
+			System.setProperty("JME", "false");
 		}
 		// skipping - not supported yet
 		public void testDebugLib()      {}	
