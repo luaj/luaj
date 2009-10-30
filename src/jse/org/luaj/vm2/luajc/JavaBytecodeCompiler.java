@@ -63,11 +63,15 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 	}
 
 	/** Compile into class form. */
-	public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException {
-		Prototype p = compile( firstByte, stream, name);
+	public LuaFunction load(int firstByte, InputStream stream, String filename, LuaValue env) throws IOException {
+		Prototype p = compile( firstByte, stream, filename);
 		try {
-			System.out.println("compiling "+name);
-			Class c = gen.toJavaBytecode(p, name);
+			String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
+			classname = classname.replace('/', '.');
+			classname = classname.replace('\\', '.');
+			String sourcename = filename.substring( filename.lastIndexOf('/')+1 );
+			System.out.println("compiling file "+filename+" using sourcename "+sourcename+" and classname "+classname);
+			Class c = gen.toJavaBytecode(p, classname, sourcename);
 			Object o = c.newInstance();
 			System.out.println("instance is: "+o);
 			LuaFunction f = (LuaFunction) o;

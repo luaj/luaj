@@ -34,6 +34,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.luajc.JavaBytecodeCompiler;
 
 
 /**
@@ -49,6 +50,7 @@ public class lua {
 		"  -l name  require library 'name'\n" +
 		"  -i       enter interactive mode after executing 'script'\n" +
 		"  -v       show version information\n" +
+		"  -j      	compile into java bytecode\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -62,9 +64,9 @@ public class lua {
 	public static void main( String[] args ) throws IOException {
 
 		// new lua state
-		LuaC.install();
 		_G = JsePlatform.standardGlobals();
 		DebugLib.install( _G );
+		LuaC.install();
 		
 		// process args
 		boolean interactive = (args.length == 0);
@@ -96,6 +98,9 @@ public class lua {
 						break;
 					case 'v':
 						versioninfo = true;
+						break;
+					case 'j':
+						JavaBytecodeCompiler.install();
 						break;
 					case '-':
 						if ( args[i].length() > 2 )

@@ -91,7 +91,7 @@ public class JavaBytecodeGenerator {
 		
 	private static final Class[] NO_INNER_CLASSES = {};
 	
-	private static String toLegalLocalName(String string) {
+	public static String toLegalJavaName(String string) {
 		String better = string.replaceAll("[^\\w]", "_");
 		return string.equals(better)? string: "$"+better;
 	}
@@ -103,8 +103,8 @@ public class JavaBytecodeGenerator {
 	 * @return Java Class that extends LuaValue that can be instatiated via newInstance
 	 * @throws Exception
 	 */
-	public static Class toJavaBytecode( Prototype p, String classname ) throws Exception {
-		return new JavaBytecodeGenerator().loadPrototype( p, classname );
+	public static Class toJavaBytecode( Prototype p, String classname, String filename ) throws Exception {
+		return new JavaBytecodeGenerator().loadPrototype( p, classname, filename );
 	}
 
 	private final Hashtable prototypes;
@@ -114,35 +114,38 @@ public class JavaBytecodeGenerator {
 		// load the file
 		prototypes = new Hashtable();
 		classLoader = new ClassLoader() {
-	         public Class findClass(String name) throws ClassNotFoundException {
-	        	 Object o = prototypes.get(name);
-	        	 if ( o instanceof Prototype) {
+	         public Class findClass(String classname) throws ClassNotFoundException {
+	        	 Object o = prototypes.get(classname);
+	        	 if ( o instanceof Object[]) {
 					try {
-		        		 byte[] b = generateBytecode( (Prototype) o, name );
-		        		 prototypes.put(name, Boolean.TRUE);
-		        	 	 return defineClass(name, b, 0, b.length);
+						Object[] data = (Object[]) o;
+						Prototype p = (Prototype) data[0];
+						String filename = (String) data[1];
+		        		byte[] b = generateBytecode( p, classname, filename );
+		        		prototypes.put(classname, Boolean.TRUE);
+		        	 	return defineClass(classname, b, 0, b.length);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
 	        	 }
-	        	 return super.findClass(name);
+	        	 return super.findClass(classname);
 	         }
 
 	    };
 	}
 		
-	private Class loadPrototype(Prototype p, String classname) throws ClassNotFoundException {
-		indexPrototype( p, classname );
+	private Class loadPrototype(Prototype p, String classname, String filename) throws ClassNotFoundException {
+		indexPrototype( p, classname, filename );
 		return classLoader.loadClass(classname);
 	}
 		
-	private void indexPrototype(Prototype p, String name) {
-		if ( prototypes.containsKey(name) )
+	private void indexPrototype(Prototype p, String classname, String filename) {
+		if ( prototypes.containsKey(classname) )
 			return;
-		prototypes.put(name, p);
+		prototypes.put(classname, new Object[] { p, filename } );
 		Class[] inners = (p.p!=null && p.p.length>0? new Class[p.p.length]: NO_INNER_CLASSES);
 		for ( int i=0, n=inners.length; i<n; i++ )  
-			indexPrototype( p.p[i], name+"$"+i );
+			indexPrototype( p.p[i], classname+"$"+i, filename );
 	}
 
 	private static final int OP(int i) {
@@ -161,11 +164,11 @@ public class JavaBytecodeGenerator {
 		return (i >> 14) & 0x1ff;
 	}	
 
-	private byte[] generateBytecode(Prototype p, String CLASSNAME)
+	private byte[] generateBytecode(Prototype p, String classname, String filename)
 			throws IOException {
 
 		// compile our class next
-		ClassGen cg = new ClassGen(CLASSNAME, STR_FUNCV, "tryit.lua",
+		ClassGen cg = new ClassGen(classname, STR_FUNCV, filename,
 				Constants.ACC_PUBLIC | Constants.ACC_SUPER, null);
 		ConstantPoolGen cp = cg.getConstantPool(); // cg creates constant pool
 
@@ -197,14 +200,14 @@ public class JavaBytecodeGenerator {
 				case LuaValue.TNIL:
 					il.append(factory.createFieldAccess(STR_LUAVALUE, "NIL",
 							TYPE_LUAVALUE, Constants.GETSTATIC));
-					il.append(factory.createPutStatic(CLASSNAME,
+					il.append(factory.createPutStatic(classname,
 							k[i].getName(), k[i].getType()));
 					break;
 				case LuaValue.TBOOLEAN:
 					String b = ki.toboolean() ? "TRUE" : "FALSE";
 					il.append(factory.createFieldAccess(STR_LUAVALUE, b,
 							TYPE_LUABOOLEAN, Constants.GETSTATIC));
-					il.append(factory.createPutStatic(CLASSNAME,
+					il.append(factory.createPutStatic(classname,
 							k[i].getName(), k[i].getType()));
 					break;
 				case LuaValue.TSTRING:
@@ -212,7 +215,7 @@ public class JavaBytecodeGenerator {
 					il.append(factory.createInvoke(STR_LUASTRING, "valueOf",
 							TYPE_LUASTRING, new Type[] { Type.STRING },
 							Constants.INVOKESTATIC));
-					il.append(factory.createPutStatic(CLASSNAME,
+					il.append(factory.createPutStatic(classname,
 							k[i].getName(), k[i].getType()));
 					break;
 				case LuaValue.TNUMBER:
@@ -223,7 +226,7 @@ public class JavaBytecodeGenerator {
 										TYPE_LUAINTEGER,
 										new Type[] { Type.INT },
 										Constants.INVOKESTATIC));
-						il.append(factory.createPutStatic(CLASSNAME, k[i]
+						il.append(factory.createPutStatic(classname, k[i]
 								.getName(), k[i].getType()));
 					} else {
 						il.append(new PUSH(cp, ki.todouble()));
@@ -231,7 +234,7 @@ public class JavaBytecodeGenerator {
 								"valueOf", TYPE_LUANUMBER,
 								new Type[] { Type.DOUBLE },
 								Constants.INVOKESTATIC));
-						il.append(factory.createPutStatic(CLASSNAME, k[i]
+						il.append(factory.createPutStatic(classname, k[i]
 								.getName(), k[i].getType()));
 					}
 					break;
@@ -301,7 +304,7 @@ public class JavaBytecodeGenerator {
 		for (int j = 0; j < nl; j++) {
 			  
 			String name = j < p.locvars.length && p.locvars[j].varname != null ? 
-					toLegalLocalName(p.locvars[j].varname.toString()):
+					toLegalJavaName(p.locvars[j].varname.toString()):
 					"r" + j;
 
 			locals[j] = mg.addLocalVariable(name, isup[j] ? TYPE_LOCALUPVALUE
@@ -376,7 +379,7 @@ public class JavaBytecodeGenerator {
 					
 				case Lua.OP_LOADK:/*	A Bx	R(A):= Kst(Bx)					*/
 					ih[pc] = 
-					il.append(factory.createFieldAccess(CLASSNAME, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+					il.append(factory.createFieldAccess(classname, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					il_append_new_ASTORE(cp,il, (locals[a]));
 					break;
 					
@@ -405,7 +408,7 @@ public class JavaBytecodeGenerator {
 				case Lua.OP_GETUPVAL: /*	A B	R(A):= UpValue[B]				*/
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(CLASSNAME, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
 					il.append(new PUSH(cp,0));
 					il.append(InstructionConstants.AALOAD);
 					il_append_new_ASTORE(cp,il, (locals[a]));
@@ -414,8 +417,8 @@ public class JavaBytecodeGenerator {
 				case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(CLASSNAME, "env", TYPE_LUAVALUE, Constants.GETFIELD));
-					il.append(factory.createFieldAccess(CLASSNAME, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+					il.append(factory.createFieldAccess(classname, "env", TYPE_LUAVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 	                il.append(factory.createInvoke(STR_LUAVALUE, "get", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
 					il_append_new_ASTORE(cp,il, (locals[a]));
 					break;
@@ -425,7 +428,7 @@ public class JavaBytecodeGenerator {
 					ih[pc] = 
 					il_append_new_ALOAD(cp,il, (locals[B(i)]));
 					if ((c=C(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[c]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, "get", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
@@ -436,8 +439,8 @@ public class JavaBytecodeGenerator {
 	                // env.set(k[Bx(i)], stack[a]);
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(CLASSNAME, "env", TYPE_LUAVALUE, Constants.GETFIELD));
-					il.append(factory.createFieldAccess(CLASSNAME, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+					il.append(factory.createFieldAccess(classname, "env", TYPE_LUAVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, k[Bx(i)].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					il_append_new_ALOAD(cp,il, (locals[a]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, "set", Type.VOID, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
 					break;
@@ -446,7 +449,7 @@ public class JavaBytecodeGenerator {
 					// upValues[B(i)].setValue(stack[a]);
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(CLASSNAME, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
 					il.append(new PUSH(cp,0));
 					il_append_new_ALOAD(cp,il, (locals[a]));
 					il.append(InstructionConstants.AASTORE);
@@ -457,11 +460,11 @@ public class JavaBytecodeGenerator {
 					ih[pc] = 
 					il_append_new_ALOAD(cp,il, (locals[a]));
 					if ((b=B(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[b]));
 					if ((c=C(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[c]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, "set", Type.VOID, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
@@ -483,7 +486,7 @@ public class JavaBytecodeGenerator {
 					il_append_new_ASTORE(cp,il, (locals[a+1]));
 					// stack[a] = o.get((c=C(i))>0xff? k[c&0x0ff]: stack[c]);
 					if ((c=C(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[c]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, "get", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
@@ -510,12 +513,12 @@ public class JavaBytecodeGenerator {
 					// stack[a] = ((b=B(i))>0xff? k[b&0x0ff]: stack[b]).add((c=C(i))>0xff? k[c&0x0ff]: stack[c]);
 					if ((b=B(i))>0xff)
 						ih[pc] = 
-						il.append(factory.createFieldAccess(CLASSNAME, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						ih[pc] = 
 						il_append_new_ALOAD(cp,il, (locals[b]));
 					if ((c=C(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[c]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, op, TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
@@ -594,12 +597,12 @@ public class JavaBytecodeGenerator {
 					}
 					if ((b=B(i))>0xff)
 						ih[pc] = 
-						il.append(factory.createFieldAccess(CLASSNAME, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[b&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						ih[pc] = 
 						il_append_new_ALOAD(cp,il, (locals[b]));
 					if ((c=C(i))>0xff)
-						il.append(factory.createFieldAccess(CLASSNAME, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
+						il.append(factory.createFieldAccess(classname, k[c&0x0ff].getName(), TYPE_LUAVALUE, Constants.GETSTATIC));
 					else
 						il_append_new_ALOAD(cp,il, (locals[c]));
 	                il.append(factory.createInvoke(STR_LUAVALUE, op, Type.BOOLEAN, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
@@ -915,7 +918,7 @@ public class JavaBytecodeGenerator {
 					{
 						b = Bx(i);
 						Prototype newp = p.p[b];
-						String protoname = CLASSNAME+"$"+b;
+						String protoname = classname+"$"+b;
 
 						// instantiate the class
 						ih[pc] = 
@@ -926,7 +929,7 @@ public class JavaBytecodeGenerator {
 						// set the environment
 						il.append(InstructionConstants.DUP);
 						il.append(InstructionConstants.THIS);
-						il.append(factory.createFieldAccess(CLASSNAME, "env", TYPE_LUAVALUE, Constants.GETFIELD));
+						il.append(factory.createFieldAccess(classname, "env", TYPE_LUAVALUE, Constants.GETFIELD));
 						il.append(factory.createInvoke(STR_LUAVALUE, "setfenv", Type.VOID, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
 						
 						// initialize upvalues of new instance
@@ -940,7 +943,7 @@ public class JavaBytecodeGenerator {
 							if ( (i&4) != 0 ) {
 								il.append(InstructionConstants.THIS);
 								String srcname = u[b].getName();
-								il.append(factory.createFieldAccess(CLASSNAME, srcname, TYPE_LOCALUPVALUE, Constants.GETFIELD));
+								il.append(factory.createFieldAccess(classname, srcname, TYPE_LOCALUPVALUE, Constants.GETFIELD));
 							} else {
 								il.append( new ALOAD(locals[b].getIndex()) );
 							}
@@ -979,13 +982,15 @@ public class JavaBytecodeGenerator {
 				branches[pc].setTarget(ih[targets[pc]]);
 			}
 		}
-
-		// return NONE
-		il.append(factory.createFieldAccess(STR_LUAVALUE, "NONE",
-				TYPE_LUAVALUE, Constants.GETSTATIC));
-
-		// complete method
-		il.append(InstructionConstants.ARETURN);
+		
+		// add line numbers
+		if ( p.lineinfo != null && p.lineinfo.length >= nc) {
+			for ( pc=0; pc<nc; pc++ ) {
+				if ( ih[pc] != null )
+					mg.addLineNumber( ih[pc], p.lineinfo[pc] );
+			}
+		}
+		
 		mg.setMaxStack();
 		cg.addMethod(mg.getMethod());
 		il.dispose(); // Allow instruction handles to be reused
@@ -998,7 +1003,7 @@ public class JavaBytecodeGenerator {
 
 		// write the bytes for debugging!
 		if (DUMPCLASSES) {
-			FileOutputStream fos = new FileOutputStream(CLASSNAME + ".class");
+			FileOutputStream fos = new FileOutputStream(classname + ".class");
 			fos.write(bytes);
 			fos.close();
 		}
