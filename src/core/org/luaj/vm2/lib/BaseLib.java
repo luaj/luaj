@@ -238,8 +238,8 @@ public class BaseLib extends LuaTable implements ResourceFinder {
 			case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
 				try {
 					LuaString script = args.checkstring(1);
-					LuaString chunkname = args.optstring(2, script);
-					return LoadState.load(script.toInputStream(), chunkname.toString(),LuaThread.getRunningEnv(env));
+					String chunkname = args.optString(2, "string");
+					return LoadState.load(script.toInputStream(),chunkname,LuaThread.getRunningEnv(env));
 				} catch ( Exception e ) {
 					return varargsOf(NIL, valueOf(e.getMessage()));
 				} 

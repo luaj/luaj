@@ -177,6 +177,7 @@ public class LuaValue extends Varargs {
 	public void rawset( String key, double value ) { rawset(valueOf(key),valueOf(value)); }
 	public void rawset( String key, int value ) { rawset(valueOf(key),valueOf(value)); }
 	public void rawset( String key, String value ) { rawset(valueOf(key),valueOf(value)); }
+	public void rawsetlist( int key0, Varargs values ) { for ( int i=0, n=values.narg(); i<n; i++ ) rawset(key0+i,values.arg(i+1)); }
 	public void presize( int i) { unimplemented("presize"); }
 	public Varargs next(LuaValue index) { unimplemented("next"); return null; }
 	public Varargs inext(LuaValue index) { unimplemented("inext"); return null; }
@@ -286,10 +287,10 @@ public class LuaValue extends Varargs {
 	// for loop helpers
 	/** test numeric for loop */
 	public boolean testfor_b(LuaValue limit, boolean stepgtzero) { return stepgtzero? lteq_b(limit): gteq_b(limit); }
+	/** used in for loop only */
+	public boolean testfor_b(LuaValue limit, LuaValue step) { return step.gt_b(0)? lteq_b(limit): gteq_b(limit); }
 	/** @deprecated - used in samples only */
 	public boolean testfor_b(LuaValue limit) { return lteq(limit).toboolean(); }
-	/** @deprecated - used in samples only */
-	public boolean testfor_b(LuaValue limit, LuaValue step) { return step.gt_b(0)? lteq_b(limit): gteq_b(limit); }
 	/** @deprecated - used in samples only, use add(1) instead */
 	public LuaValue incr() { return add(ONE); }
 	

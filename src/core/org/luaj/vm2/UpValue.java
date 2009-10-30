@@ -23,7 +23,7 @@ package org.luaj.vm2;
 
 
 /** Upvalue used with Closure formulation */
-public class UpValue {
+public final class UpValue {
 
 	LuaValue[] array; // initially the stack, becomes a holder 
 	int index;
@@ -40,15 +40,15 @@ public class UpValue {
 		return (closed? "-": "+") + array[index];
 	}
 	
-	public LuaValue getValue() {
+	public final LuaValue getValue() {
 		return array[index];
 	}
 	
-	public void setValue( LuaValue value ) {
+	public final void setValue( LuaValue value ) {
 		array[index] = value;
 	}
 	
-	public boolean close( int limit ) {
+	public final boolean close( int limit ) {
 		if ( (!closed) && (index>=limit) ) {
 			array = new LuaValue[] { array[index] };
 			index = 0;
@@ -58,7 +58,7 @@ public class UpValue {
 		}
 	}
 	
-	public boolean isClosed() {
+	public final boolean isClosed() {
 		return closed;
 	}
 }
