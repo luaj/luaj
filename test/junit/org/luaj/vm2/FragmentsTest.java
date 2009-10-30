@@ -26,7 +26,8 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.luajc.LuaJCompiler;
+import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.luajc.JavaBytecodeCompiler;
 
 /** 
  * Test compilation of various fragments that have
@@ -40,9 +41,12 @@ public class FragmentsTest extends TestCase {
 			String name = getName();
 			LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
 			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
-			String java = LuaJCompiler.compileToJava(is, name);
-			LuaValue chunk = LuaJCompiler.javaCompile(java, name);
-			chunk.setfenv(_G);
+			LuaValue chunk ;
+			if ( true ) {
+				chunk = JavaBytecodeCompiler.load(is,name,_G);
+			} else {
+				chunk = (new LuaC()).load( is, name, _G );
+			}
 			Varargs actual = chunk.invoke();
 			assertEquals( expected.narg(), actual.narg() );
 			for ( int i=1; i<=actual.narg(); i++ )
@@ -54,13 +58,68 @@ public class FragmentsTest extends TestCase {
 		}		
 	}
 
-	public void testArgParam() {
-		// the name "arg" is treated specially, and ends up masking the argument value in 5.1 
-		runFragment( LuaValue.NIL, 
+	public void testVarVarargsUseArg() {
+		runFragment( LuaValue.varargsOf( new LuaValue[] { 
+				LuaValue.valueOf("a"), 
+				LuaValue.valueOf(2), 
+				LuaValue.valueOf("b"), 
+				LuaValue.valueOf("c"), 
+				LuaValue.NIL }),
+			"function q(a,...)\n" +
+			"	return a,arg.n,arg[1],arg[2],arg[3]\n" +
+			"end\n" +
+			"return q('a','b','c')\n" );
+	}
+
+	public void testVarVarargsUseBoth() {
+		runFragment( LuaValue.varargsOf( new LuaValue[] { 
+				LuaValue.valueOf("a"), 
+				LuaValue.valueOf("nil"), 
+				LuaValue.valueOf("b"), 
+				LuaValue.valueOf("c")}),
+			"function r(a,...)\n" +
+			"	return a,type(arg),...\n" +
+			"end\n" +
+			"return r('a','b','c')\n" );
+	}
+
+	public void testArgVarargsUseBoth() {
+		runFragment( LuaValue.varargsOf( new LuaValue[] { 
+				LuaValue.NIL, 
+				LuaValue.valueOf("b"), 
+				LuaValue.valueOf("c")}),
 			"function v(arg,...)\n" +
-			"	return arg\n" +
+			"	return arg,...\n" +
+			"end\n" +
+			"return v('a','b','c')\n" );
+	}
+	
+	public void testArgParamUseNone() {
+		// the name "arg" is treated specially, and ends up masking the argument value in 5.1 
+		runFragment( LuaValue.valueOf("table"), 
+			"function v(arg,...)\n" +
+			"	return type(arg)\n" +
 			"end\n" +
 			"return v('abc')\n" );		
+	}
+	
+	public void testSetlistVarargs() {
+		runFragment( LuaValue.valueOf("abc"),
+			"local f = function() return 'abc' end\n" +
+			"local g = { f() }\n" +
+			"return g[1]\n" );
+	}
+	
+	public void testSelfOp() {
+		runFragment( LuaValue.valueOf("bcd"), 
+			"local s = 'abcde'\n"+
+			"return s:sub(2,4)\n" );		
+	}
+	
+	public void testSetListWithOffsetAndVarargs() {
+		runFragment( LuaValue.valueOf(1003), 
+			"local bar = {1000, math.sqrt(9)}\n"+
+			"return bar[1]+bar[2]\n" );
 	}
 
 	
@@ -192,7 +251,7 @@ public class FragmentsTest extends TestCase {
 	public void testNoReturnValuesPlainCall() {
 		runFragment( LuaValue.TRUE, 
 			"local testtable = {}\n"+
-			"return pcall( function() testtable[1]=2 end ) )\n" );
+			"return pcall( function() testtable[1]=2 end )\n" );
 	}
 		
 	public void testVarargsInTableConstructor() {

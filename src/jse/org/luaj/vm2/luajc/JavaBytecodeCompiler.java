@@ -27,6 +27,7 @@ import java.io.InputStream;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
@@ -52,14 +53,25 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 		LoadState.compiler = getInstance(); 
 	}
 	
-	private JavaBytecodeCompiler() {
+	public JavaBytecodeCompiler() {
 		luac = new LuaC();
 		gen = new JavaBytecodeGenerator();
 	}
+
+	/** Compile int a prototype */
+	public static Prototype compile(InputStream is, String chunkname) throws IOException {
+		return getInstance().compile(is.read(), is, chunkname);
+	}
+
+	/** Compile and load a chunk 
+	 * @throws IOException */
+	public static LuaValue load(InputStream is, String filename, LuaValue _g) throws IOException {
+		return getInstance().load(is.read(), is, filename, _g);
+	}
 	
 	/** Compile into protoype form. */
-	public Prototype compile(int firstByte, InputStream stream, String name) throws IOException {
-		return luac.compile(firstByte, stream, name);
+	public Prototype compile(int firstByte, InputStream stream, String chunkname) throws IOException {
+		return luac.compile(firstByte, stream, chunkname);
 	}
 
 	/** Compile into class form. */
@@ -70,10 +82,8 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 			classname = classname.replace('/', '.');
 			classname = classname.replace('\\', '.');
 			String sourcename = filename.substring( filename.lastIndexOf('/')+1 );
-			System.out.println("compiling file "+filename+" using sourcename "+sourcename+" and classname "+classname);
 			Class c = gen.toJavaBytecode(p, classname, sourcename);
 			Object o = c.newInstance();
-			System.out.println("instance is: "+o);
 			LuaFunction f = (LuaFunction) o;
 			f.setfenv(env);
 			return f;

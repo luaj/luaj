@@ -284,6 +284,7 @@ public class JavaBytecodeGenerator {
 		int np = p.numparams;
 		int nl = p.maxstacksize;
 		LocalVariableGen[] locals = new LocalVariableGen[nl];
+		
 
 
 		// initialize locals
@@ -292,16 +293,15 @@ public class JavaBytecodeGenerator {
 //		LocalVariableGen regup[] = new LocalVariableGen[nl];
 		boolean isup[] = new boolean[nl];
 		markups(p, isup, code, 0, 0);
-		
+
+		// initialize slotc
+		boolean needsarg = ((p.is_vararg & Lua.VARARG_NEEDSARG) != 0);
 		for (int j = 0; j < nl; j++) {
-			  
-			String name = j < p.locvars.length && p.locvars[j].varname != null ? 
-					toLegalJavaName(p.locvars[j].varname.toString()):
-					"r" + j;
-
-			locals[j] = mg.addLocalVariable(name, isup[j] ? TYPE_LOCALUPVALUE
-					: TYPE_LUAVALUE, null, null);
-
+			// create space
+			LuaString luaname = p.getlocalname(j,0);
+			String name = toLegalJavaName( luaname!=null? luaname.toString(): "r"+j );
+			locals[j] = mg.addLocalVariable(name, isup[j] ? TYPE_LOCALUPVALUE : TYPE_LUAVALUE, null, null);
+			
 			if (isup[j]) { // upvalue storage
 				il.append(new PUSH(cp, 1));
 				il.append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
@@ -314,9 +314,11 @@ public class JavaBytecodeGenerator {
 			if (j < np) {
 				il.append(new ALOAD(1));
 				il.append(new PUSH(cp, j + 1));
-				il.append(factory.createInvoke(STR_VARARGS, "arg",
-						TYPE_LUAVALUE, new Type[] { Type.INT },
-						Constants.INVOKEVIRTUAL));
+				il.append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+			} else if ( (j == np) && needsarg ) {
+				il.append(new ALOAD(1));
+				il.append(new PUSH(cp, np+1));
+				il.append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, new Type[] { TYPE_VARARGS, Type.INT }, Constants.INVOKESTATIC));
 			} else {
 				nil = il_initLocalNil(mg, factory, il, nil);
 				il.append(new ALOAD(nil.getIndex()));
@@ -384,6 +386,7 @@ public class JavaBytecodeGenerator {
 	                    // pc++; /* skip next instruction (if C) */
 	                	branches[pc] = new GOTO(null);
 	                	targets[pc] = pc + 2;
+						il.append(branches[pc]);
 	                }
 	                break;
 	
@@ -475,6 +478,7 @@ public class JavaBytecodeGenerator {
 					// stack[a+1] = (o = stack[B(i)]);
 					ih[pc] = 
 					il_append_new_ALOAD(cp,il, (locals[B(i)]));
+					il.append(InstructionConstants.DUP);
 					il_append_new_ASTORE(cp,il, (locals[a+1]));
 					// stack[a] = o.get((c=C(i))>0xff? k[c&0x0ff]: stack[c]);
 					if ((c=C(i))>0xff)
@@ -880,12 +884,14 @@ public class JavaBytecodeGenerator {
 		                //o = stack[a];
 						il_append_new_ALOAD(cp,il, (locals[a]));		                
 		                if ( (b=B(i)) == 0 ) {
-		                	for ( int j=1; a+j<vbase; j++ ) {
+		                	int j=1;
+		                	for ( ; a+j<vbase; j++ ) {
 								il.append(InstructionConstants.DUP);
 								il.append(new PUSH(cp,offset+j));
 								il_append_new_ALOAD(cp,il, (locals[a+j]));	                
 								il.append(factory.createInvoke(STR_LUAVALUE, "rawset", Type.VOID, new Type[] { Type.INT, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
 		                	}
+							il.append(new PUSH(cp,offset+j));
 							il.append(new ALOAD(v.getIndex()));	                
 							il.append(factory.createInvoke(STR_LUAVALUE, "rawsetlist", Type.VOID, new Type[] { Type.INT, TYPE_VARARGS }, Constants.INVOKEVIRTUAL));
 		                } else {
