@@ -106,6 +106,7 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 		String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
 		classname = classname.replace('/', '.');
 		classname = classname.replace('\\', '.');
+		classname = classname.replaceAll("[^\\w\\.]", "_");
 		return classname;
 	}
 	
