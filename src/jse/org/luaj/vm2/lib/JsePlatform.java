@@ -46,6 +46,7 @@ public class JsePlatform {
 		_G.set( "string",    new org.luaj.vm2.lib.StringLib() );
 		_G.set( "luajava",   new org.luaj.vm2.lib.jse.LuajavaLib() );
 		CoroutineLib.install(_G);
+		DebugLib.install(_G);
 		return _G;		
 	}
 
