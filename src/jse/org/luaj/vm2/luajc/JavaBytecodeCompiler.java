@@ -74,15 +74,17 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 		return luac.compile(firstByte, stream, chunkname);
 	}
 
+	/** Compile and load a chunk 
+	 * @throws IOException */
+	public static byte[] loadClass(InputStream is, String filename) throws IOException {
+		return getInstance().loadClass( is.read(), is, filename );
+	}
+	
 	/** Compile into class form. */
 	public LuaFunction load(int firstByte, InputStream stream, String filename, LuaValue env) throws IOException {
 		Prototype p = compile( firstByte, stream, filename);
 		try {
-			String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
-			classname = classname.replace('/', '.');
-			classname = classname.replace('\\', '.');
-			String sourcename = filename.substring( filename.lastIndexOf('/')+1 );
-			Class c = gen.toJavaBytecode(p, classname, sourcename);
+			Class c = gen.toJavaBytecode(p, toClassname(filename), toSourcename(filename));
 			Object o = c.newInstance();
 			LuaFunction f = (LuaFunction) o;
 			f.setfenv(env);
@@ -91,7 +93,24 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 			t.printStackTrace();
 			return new LuaClosure( p, env );
 		}
+	}
 		
+	/** Compile into a class */
+	private byte[] loadClass(int firstByte, InputStream stream, String filename) throws IOException {
+		Prototype p = compile(firstByte, stream, filename);
+		return gen.generateBytecode(p, toClassname(filename), toSourcename(filename));
+	}
+	
+	/** Convert filename to class name */
+	private static final String toClassname( String filename ) {
+		String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
+		classname = classname.replace('/', '.');
+		classname = classname.replace('\\', '.');
+		return classname;
+	}
+	
+	private static final String toSourcename( String filename ) {
+		return filename.substring( filename.lastIndexOf('/')+1 );
 	}
 
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/core"/>
-	<classpathentry kind="src" path="src/jse"/>
+	<classpathentry excluding="org/luaj/vm2/luajc/antlr/|org/luaj/vm2/luajc/lst/|org/luaj/vm2/luajc/JavaCodeGenerator.java" kind="src" path="src/jse"/>
 	<classpathentry kind="src" path="src/jme"/>
 	<classpathentry kind="src" path="test/java"/>
 	<classpathentry kind="src" path="test/junit"/>

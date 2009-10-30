@@ -28,7 +28,7 @@ import java.io.OutputStream;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.compiler.DumpState;
-import org.luaj.vm2.luajc.antlr.AntlrLuaJCompiler;
+import org.luaj.vm2.luajc.JavaBytecodeCompiler;
 
 
 /**
@@ -41,7 +41,6 @@ public class luajc {
 		"usage: java -cp luaj-jse.jar,antlr-3.1.3.jar luajc [options] [filenames].\n" +
 		"Available options are:\n" +
 		"  -        process stdin\n" +
-		"  -l       list\n" +
 		"  -o name  output to file 'name' (default is \"luac.out\")\n" +
 		"  -p       parse only\n" +
 		"  -s       strip debug information\n" +
@@ -55,7 +54,6 @@ public class luajc {
 		System.exit(-1);		
 	}
 
-	private boolean list = false;
 	private String output = "luacj.out";
 	private boolean parseonly = false;
 	private boolean stripdebug = false;
@@ -80,9 +78,6 @@ public class luajc {
 					// input file - defer to next stage
 				} else {
 					switch ( args[i].charAt(1) ) {
-					case 'l':
-						list = true;
-						break;
 					case 'o':
 						if ( ++i >= args.length )
 							usageExit();
@@ -157,16 +152,12 @@ public class luajc {
 	private void processScript( InputStream script, String chunkname, OutputStream out ) throws IOException {
 		try {
 	        // create the chunk
-	        String source = AntlrLuaJCompiler.compile(script, chunkname);
-
-	        // list the chunk
-	        if (list)
-	        	System.out.println(source);
+			byte[] bytes = JavaBytecodeCompiler.loadClass(script, chunkname);
 
 	        // write out the chunk
 	        if (!parseonly) {
 	        	FileOutputStream fos = new FileOutputStream( chunkname+".java" );
-	        	fos.write( source.getBytes() );
+	        	fos.write( bytes );
 	        	fos.close();
 	        }
 	        

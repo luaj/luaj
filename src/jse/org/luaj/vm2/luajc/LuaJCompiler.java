@@ -35,7 +35,6 @@ import javax.tools.ToolProvider;
 import javax.tools.JavaCompiler.CompilationTask;
 
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.luajc.antlr.AntlrLuaJCompiler;
 
 public class LuaJCompiler {
 
@@ -47,7 +46,8 @@ public class LuaJCompiler {
 	}
 	
 	public static String compileToJava( InputStream luaSource, String chunkName ) throws Exception {
-		return AntlrLuaJCompiler.compile( luaSource, chunkName );
+		// return AntlrLuaJCompiler.compile( luaSource, chunkName );
+		throw new RuntimeException( "not supported" );
 	}
 	
 	

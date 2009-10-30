@@ -23,6 +23,7 @@ package org.luaj.vm2.luajc;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Hashtable;
 
 import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Field;
@@ -59,8 +60,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.VarArgFunction;
-
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
 
 
 public class JavaBytecodeGenerator {
@@ -164,7 +163,7 @@ public class JavaBytecodeGenerator {
 		return (i >> 14) & 0x1ff;
 	}	
 
-	private byte[] generateBytecode(Prototype p, String classname, String filename)
+	byte[] generateBytecode(Prototype p, String classname, String filename)
 			throws IOException {
 
 		// compile our class next
@@ -211,6 +210,7 @@ public class JavaBytecodeGenerator {
 							k[i].getName(), k[i].getType()));
 					break;
 				case LuaValue.TSTRING:
+					// TODO: quote non-utf8 byte sequences
 					il.append(new PUSH(cp, ki.toString()));
 					il.append(factory.createInvoke(STR_LUASTRING, "valueOf",
 							TYPE_LUASTRING, new Type[] { Type.STRING },
