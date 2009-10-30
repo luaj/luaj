@@ -285,22 +285,14 @@ public class JavaBytecodeGenerator {
 		int nl = p.maxstacksize;
 		LocalVariableGen[] locals = new LocalVariableGen[nl];
 
-		// find upvalues
-		boolean isup[] = new boolean[nl];
-		for (pc = 0; pc < nc; pc++) {
-			if (OP(code[pc]) == Lua.OP_CLOSURE) {
-				b = Bx(code[pc]);
-				Prototype newp = p.p[b];
-				for (int j = 0, nup = newp.nups; j < nup; ++j) {
-					i = code[++pc];
-					if ((i & 4) == 0)
-						isup[B(i)] = true;
-				}
-			}
-		}
 
 		// initialize locals
 		LocalVariableGen nil = null;
+//		LocalVariableGen reg[] = new LocalVariableGen[nl];
+//		LocalVariableGen regup[] = new LocalVariableGen[nl];
+		boolean isup[] = new boolean[nl];
+		markups(p, isup, code, 0, 0);
+		
 		for (int j = 0; j < nl; j++) {
 			  
 			String name = j < p.locvars.length && p.locvars[j].varname != null ? 
@@ -912,6 +904,14 @@ public class JavaBytecodeGenerator {
 					break;
 					
 				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
+					for ( int j=nl; --j>=a; ) {
+						if ( isup[j] ) {
+							il.append(new PUSH(cp, 1));
+							il.append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
+							il.append(new ASTORE(locals[j].getIndex()));
+						}
+					}
+					// markups( p, isup, code, pc+1, a );
 					break;
 					
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
@@ -1012,6 +1012,34 @@ public class JavaBytecodeGenerator {
 	}
 
 
+	// find the upvalues implied by the subsequent instructions
+	private void markups(Prototype p, boolean[] isup, int[] code, int startpc, int startregister) {
+		int last = isup.length;
+		for ( int j=startregister; j<last; j++ )
+			isup[j] = false;
+		for ( int pc=startpc; pc<code.length; ++pc ) {
+			switch ( OP(code[pc]) ) {
+			case Lua.OP_CLOSURE:
+				int b = Bx(code[pc]);
+				Prototype newp = p.p[b];
+				for (int j = 0, nup = newp.nups; j < nup; ++j) {
+					int i = code[++pc];
+					if ((i & 4) == 0) 
+						isup[B(i)] = true;
+				}
+				break;
+			case Lua.OP_CLOSE:
+				int a = A(code[pc]);
+				if ( a < last ) {
+					last = a;
+					if ( last <= 0 )
+						return;
+				}
+				break;
+			}
+			
+		}
+	}
 
 	private String getUpvalueName(LuaString[] upvalues, int i) {
 		return upvalues != null && i < upvalues.length && upvalues[i] != null ? 
