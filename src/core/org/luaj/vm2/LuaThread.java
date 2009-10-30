@@ -138,7 +138,7 @@ public class LuaThread extends LuaValue implements Runnable {
 	}
 
 	public static final LuaFunction getCallstackFunction(int level) {
-		return level>=0 || level<running_thread.calls? 
+		return level>0 || level<running_thread.calls? 
 			running_thread.callstack[running_thread.calls-level-1]:
 			null;
 	}
