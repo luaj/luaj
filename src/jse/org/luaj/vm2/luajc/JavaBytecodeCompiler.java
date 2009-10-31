@@ -83,6 +83,17 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 	/** Compile into class form. */
 	public LuaFunction load(int firstByte, InputStream stream, String filename, LuaValue env) throws IOException {
 		Prototype p = compile( firstByte, stream, filename);
+		return load( p, filename, env );
+	}
+		
+	/** Compile into a class */
+	private byte[] loadClass(int firstByte, InputStream stream, String filename) throws IOException {
+		Prototype p = compile(firstByte, stream, filename);
+		return gen.generateBytecode(p, toClassname(filename), toSourcename(filename));
+	}
+
+
+	public LuaFunction load(Prototype p, String filename, LuaValue env) {
 		try {
 			Class c = gen.toJavaBytecode(p, toClassname(filename), toSourcename(filename));
 			Object o = c.newInstance();
@@ -94,12 +105,7 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 			return new LuaClosure( p, env );
 		}
 	}
-		
-	/** Compile into a class */
-	private byte[] loadClass(int firstByte, InputStream stream, String filename) throws IOException {
-		Prototype p = compile(firstByte, stream, filename);
-		return gen.generateBytecode(p, toClassname(filename), toSourcename(filename));
-	}
+	
 	
 	/** Convert filename to class name */
 	private static final String toClassname( String filename ) {

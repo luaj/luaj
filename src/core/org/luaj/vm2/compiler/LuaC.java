@@ -233,4 +233,8 @@ public class LuaC extends Lua implements LuaCompiler {
 		return string;
 	}
 
+	public LuaFunction load(Prototype p, String filename, LuaValue env) {
+		return new LuaClosure( p, env );
+	}
+
 }

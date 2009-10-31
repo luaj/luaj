@@ -251,7 +251,7 @@ public class JavaBytecodeGenerator {
 		}
 
 		// upvalues are fields
-		int nu = p.upvalues.length;
+		int nu = p.nups;
 		Field[] u = new Field[nu];
 		for (int i = 0; i < nu; i++) {
 			String name = getUpvalueName(p.upvalues, i);
@@ -403,7 +403,7 @@ public class JavaBytecodeGenerator {
 				case Lua.OP_GETUPVAL: /*	A B	R(A):= UpValue[B]				*/
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(classname, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, getUpvalueName(p.upvalues, B(i)), TYPE_LOCALUPVALUE, Constants.GETFIELD));
 					il.append(new PUSH(cp,0));
 					il.append(InstructionConstants.AALOAD);
 					il_append_new_ASTORE(cp,il, (locals[a]));
@@ -444,7 +444,7 @@ public class JavaBytecodeGenerator {
 					// upValues[B(i)].setValue(stack[a]);
 					ih[pc] = 
 					il.append(InstructionConstants.THIS);
-					il.append(factory.createFieldAccess(classname, u[B(i)].getName(), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+					il.append(factory.createFieldAccess(classname, getUpvalueName( p.upvalues, B(i)), TYPE_LOCALUPVALUE, Constants.GETFIELD));
 					il.append(new PUSH(cp,0));
 					il_append_new_ALOAD(cp,il, (locals[a]));
 					il.append(InstructionConstants.AASTORE);
@@ -948,7 +948,7 @@ public class JavaBytecodeGenerator {
 							//		findUpValue(stack,b);	
 							if ( (i&4) != 0 ) {
 								il.append(InstructionConstants.THIS);
-								String srcname = u[b].getName();
+								String srcname = getUpvalueName( p.upvalues, b );
 								il.append(factory.createFieldAccess(classname, srcname, TYPE_LOCALUPVALUE, Constants.GETFIELD));
 							} else {
 								il.append( new ALOAD(locals[b].getIndex()) );

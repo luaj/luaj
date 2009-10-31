@@ -55,10 +55,16 @@ public class LoadState {
 	
 	/** Interface for the compiler, if it is installed. */
 	public interface LuaCompiler {
+		
 		/** Compile into a prototype, without taking the additional step of create a LuaFunction or LuaClosure */
 		public Prototype compile(int firstByte, InputStream stream, String name) throws IOException;
+		
 		/** Load into a Closure or LuaFunction, with the supplied initial environment */
 		public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException;
+		
+		/** Load into a LuaFunction given a prototype.  May compile into a class, or return a LuaClosure 
+		 * @param filename TODO*/
+		public LuaFunction load(Prototype p, String filename, LuaValue env);
 	}
 
 	/** Compiler instance, if installed */
@@ -298,7 +304,10 @@ public class LoadState {
 		}
 		
 		Prototype p = s.loadFunction( LuaString.valueOf(sname) );
-		return new LuaClosure( p, env );
+		if ( compiler != null )
+			return compiler.load(p, name, env);
+		else
+			return new LuaClosure( p, env );
 	}
 
     public static String getSourceName(String name) {
