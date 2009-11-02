@@ -24,6 +24,7 @@ package org.luaj.vm2;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.luajc.JavaBytecodeCompiler;
 
 /**
@@ -62,7 +63,6 @@ public class CompatibiltyTest {
 		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
 		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
 		suite.addTest( new TestSuite( JseBytecodeTest.class,        "JSE Bytecode Tests" ) );
-		suite.addTest( new TestSuite( LuaJCCompatibilityTest.class,   "LuaJC Gen Tests" ) );
 		return suite;
 	}
 
@@ -82,6 +82,7 @@ public class CompatibiltyTest {
 		protected void setUp() throws Exception {
 			super.setUp();
 			System.setProperty("JME", "false");
+			LuaC.install();
 		}
 	}
 	public static class JseBytecodeTest extends CompatibiltyTestSuite {
@@ -93,16 +94,7 @@ public class CompatibiltyTest {
 			System.setProperty("JME", "false");
 			JavaBytecodeCompiler.install();
 		}
-	}
-	public static class LuaJCCompatibilityTest extends CompatibiltyTestSuite {
-		public LuaJCCompatibilityTest() {
-			super(ScriptDrivenTest.PlatformType.LUAJIT);
-		}
-		protected void setUp() throws Exception {
-			super.setUp();
-			System.setProperty("JME", "false");
-		}
-		// skipping - not supported yet
+		// not supported on this platform - don't test
 		public void testDebugLib()      {}	
 	}
 }

@@ -56,6 +56,14 @@ public class LuaString extends LuaValue {
 		this.m_length = bytes.length;
 	}
 
+	public static LuaString valueOf(char[] bytes) {
+		int n = bytes.length;
+		byte[] b = new byte[n];
+		for ( int i=0; i<n; i++ )
+			b[i] = (byte) bytes[i];
+		return new LuaString(b, 0, n);
+	}
+	
 	public boolean isstring() {
 		return true; 
 	}
@@ -399,6 +407,23 @@ public class LuaString extends LuaValue {
 				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
 			}
 		}
+	}
+
+	public boolean isValidUtf8() {
+		int i,j,n,b,e=0;
+		for ( i=m_offset,j=m_offset+m_length,n=0; i<j; ++n ) {
+			int c = m_bytes[i++];
+			if ( c >= 0 ) continue;
+			if ( ((c & 0xE0) == 0xC0) 
+					&& i<j 
+					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
+			if ( ((c & 0xF0) == 0xE0) 
+					&& i+1<j 
+					&& (m_bytes[i++] & 0xC0) == 0x80 
+					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
+			return false;
+		}
+		return true;
 	}
 	
 	// --------------------- number conversion -----------------------

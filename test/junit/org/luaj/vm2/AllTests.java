@@ -24,7 +24,6 @@ package org.luaj.vm2;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.luaj.vm2.CompatibiltyTest.LuaJCCompatibilityTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyTableTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
 
