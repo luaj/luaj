@@ -842,6 +842,7 @@ public class JavaBytecodeGenerator {
 						break;
 						
 					case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
+						ih[pc] = il.append(InstructionConstants.NOP); // for branching
 						for ( int j=nl; --j>=a; ) {
 							isinited[j] = true;
 							locals[j] = null;
