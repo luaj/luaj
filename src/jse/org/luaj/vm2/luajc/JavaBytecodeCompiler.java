@@ -94,17 +94,18 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 
 	/** Compile all classes produced by a prototype, and put results in a hashtable */
 	public static Hashtable loadClasses( InputStream stream, String filename ) throws IOException {
+		if ( LoadState.compiler == null )
+			install();
 		Prototype p = LoadState.compile( stream, filename );
 		Hashtable t = new Hashtable();
 		getInstance().genClass(t, p, toClassname(filename), toSourcename(filename));
 		return t;
 	}
 	
-	private void genClass( Hashtable t, Prototype p, String className, String sourceName ) throws IOException {
-		for ( int i=0, n=p.p!=null? p.p.length: 0; i<n; i++ ) {
-			String name = className + "$" + i; 
-			t.put( name, gen.generateBytecode( p.p[i], name, sourceName ) );
-		}
+	private void genClass( Hashtable t, Prototype p, String classname, String sourceName ) throws IOException {
+		t.put( classname, gen.generateBytecode( p, classname, sourceName ) );
+		for ( int i=0, n=p.p!=null? p.p.length: 0; i<n; i++ )
+			genClass( t, p.p[i], classname + "$" + i, sourceName );
 	}
 	
 	public LuaFunction load(Prototype p, String filename, LuaValue env) {

@@ -25,10 +25,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.compiler.DumpState;
 import org.luaj.vm2.luajc.JavaBytecodeCompiler;
+
 
 
 /**
@@ -152,13 +155,20 @@ public class luajc {
 	private void processScript( InputStream script, String chunkname, OutputStream out ) throws IOException {
 		try {
 	        // create the chunk
-			byte[] bytes = JavaBytecodeCompiler.loadClass(script, chunkname);
+			Hashtable t = JavaBytecodeCompiler.loadClasses(script, chunkname);
 
 	        // write out the chunk
 	        if (!parseonly) {
-	        	FileOutputStream fos = new FileOutputStream( chunkname+".java" );
-	        	fos.write( bytes );
-	        	fos.close();
+	        	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
+	        		String key = (String) e.nextElement();
+	        		byte[] bytes = (byte[]) t.get(key);
+	        		String filename = key + ".class";
+	    			if ( versioninfo )
+	    				System.out.println(filename+": "+bytes.length+" bytes");
+		        	FileOutputStream fos = new FileOutputStream( filename );
+		        	fos.write( bytes );
+		        	fos.close();
+	        	}
 	        }
 	        
 		} catch ( Throwable t ) {

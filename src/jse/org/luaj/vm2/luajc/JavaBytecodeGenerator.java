@@ -296,7 +296,7 @@ public class JavaBytecodeGenerator {
 					// pull out instruction
 					i = code[pc];
 					a = A(i);
-					
+
 					// process the op code
 					switch ( OP(i) ) {
 					
@@ -813,6 +813,7 @@ public class JavaBytecodeGenerator {
 			                    c = code[pc++];
 			                int offset = (c-1) * Lua.LFIELDS_PER_FLUSH;
 			                //o = stack[a];
+							ih[pc] = 
 							loadLocal(a);		                
 			                if ( (b=B(i)) == 0 ) {
 			                	int j=1;
@@ -914,9 +915,13 @@ public class JavaBytecodeGenerator {
 					}
 			  }
 	
+			// self-check
+			
 			// resolve branches
 			for (pc = 0; pc < nc; pc++) {
 				if (branches[pc] != null) {
+					if ( ih[targets[pc]] == null )
+						 throw new IllegalArgumentException("no target at "+targets[pc]+" op="+OP(code[targets[pc]]));
 					branches[pc].setTarget(ih[targets[pc]]);
 				}
 			}
