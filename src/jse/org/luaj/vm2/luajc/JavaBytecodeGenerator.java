@@ -65,7 +65,9 @@ import org.luaj.vm2.lib.VarArgFunction;
 
 public class JavaBytecodeGenerator {
 	public static boolean DUMPCLASSES = "true".equals(System.getProperty("DUMPCLASSES"));
-	
+
+	public static boolean gendebuginfo = true;
+
 	private static final String STR_FUNCV = VarArgFunction.class.getName();
 	private static final String STR_VARARGS = Varargs.class.getName();
 	private static final String STR_LUAVALUE = LuaValue.class.getName();
@@ -928,10 +930,12 @@ public class JavaBytecodeGenerator {
 			}
 			
 			// add line numbers
-			if ( p.lineinfo != null && p.lineinfo.length >= nc) {
-				for ( pc=0; pc<nc; pc++ ) {
-					if ( ih[pc] != null )
-						mg.addLineNumber( ih[pc], p.lineinfo[pc] );
+			if ( gendebuginfo ) {
+				if ( p.lineinfo != null && p.lineinfo.length >= nc) {
+					for ( pc=0; pc<nc; pc++ ) {
+						if ( ih[pc] != null )
+							mg.addLineNumber( ih[pc], p.lineinfo[pc] );
+					}
 				}
 			}
 			
@@ -1199,10 +1203,12 @@ public class JavaBytecodeGenerator {
 		
 		private String getlocalname(LocVars[] locvars, int j) {
 			int number = j+1;
-			for (int i = 0; i < locvars.length; i++) {
-				if (pc < locvars[i].endpc) { /* is variable active? */
-					if (--number == 0)
-						return locvars[i].varname.toString();
+			if ( gendebuginfo ) {
+				for (int i = 0; i < locvars.length; i++) {
+					if (pc < locvars[i].endpc) { /* is variable active? */
+						if (--number == 0)
+							return locvars[i].varname.toString();
+					}
 				}
 			}
 			return "$"+j;

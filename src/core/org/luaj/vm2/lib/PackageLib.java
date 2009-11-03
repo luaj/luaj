@@ -354,8 +354,9 @@ public class PackageLib extends LuaTable {
 		Class c = null;
 		LuaValue v = null;
 		try {
-			c = Class.forName(name);
+			c = Class.forName(name.replace('/', '.'));
 			v = (LuaValue) c.newInstance();
+			v.setfenv(_G);
 			return v;
 		} catch ( ClassNotFoundException  cnfe ) {
 			return valueOf("\n\tno class '"+name+"'" );
@@ -363,4 +364,41 @@ public class PackageLib extends LuaTable {
 			return valueOf("\n\tjava load failed on '"+name+"', "+e );
 		}
 	}
+	
+	/** Convert lua filename to valid class name */
+	public static final String toClassname( String filename ) {
+		int n=filename.length();
+		int j=n;
+		if ( filename.endsWith(".lua") )
+			j -= 4;
+		for ( int k=0; k<j; k++ ) {
+			char c = filename.charAt(k);
+			if ( (!isClassnamePart(c)) && (c!='/') && (c!='\\') ) {
+				StringBuffer sb = new StringBuffer(j);
+				for ( int i=0; i<j; i++ ) {
+					c = filename.charAt(k);
+					sb.append( 
+							 (isClassnamePart(c))? c:
+							 ((c=='/') || (c=='\\'))? '.': '_' ); 
+				}
+				return sb.toString();
+			}
+		}
+		return n==j? filename: filename.substring(0,j);
+	}
+	
+	private static final boolean isClassnamePart(char c) {
+		if ( (c>='a'&&c<='z') || (c>='A'&&c<='Z') || (c>='0'&&c<='9') )
+			return true;
+		switch ( c ) {
+		case '.':
+		case '$':
+		case '_':
+			return true;
+		default:
+			return false;
+		}
+	}
+	
+	
 }

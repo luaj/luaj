@@ -274,7 +274,7 @@ public class LoadState {
 		luacSizeofLuaNumber = is.readByte();
 		luacNumberFormat = is.readByte();
 	}
-	
+
 	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
 		Prototype p = compile( stream, name );
 		if ( compiler != null )

@@ -32,6 +32,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.PackageLib;
 
 public class JavaBytecodeCompiler implements LuaCompiler {
 
@@ -89,7 +90,7 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 	/** Compile into a class */
 	private byte[] loadClass(int firstByte, InputStream stream, String filename) throws IOException {
 		Prototype p = compile(firstByte, stream, filename);
-		return gen.generateBytecode(p, toClassname(filename), toSourcename(filename));
+		return gen.generateBytecode(p, PackageLib.toClassname(filename), toSourcename(filename));
 	}
 
 	/** Compile all classes produced by a prototype, and put results in a hashtable */
@@ -98,7 +99,7 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 			install();
 		Prototype p = LoadState.compile( stream, filename );
 		Hashtable t = new Hashtable();
-		getInstance().genClass(t, p, toClassname(filename), toSourcename(filename));
+		getInstance().genClass(t, p, PackageLib.toClassname(filename), toSourcename(filename));
 		return t;
 	}
 	
@@ -110,7 +111,7 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 	
 	public LuaFunction load(Prototype p, String filename, LuaValue env) {
 		try {
-			Class c = gen.toJavaBytecode(p, toClassname(filename), toSourcename(filename));
+			Class c = gen.toJavaBytecode(p, PackageLib.toClassname(filename), toSourcename(filename));
 			Object o = c.newInstance();
 			LuaFunction f = (LuaFunction) o;
 			f.setfenv(env);
@@ -119,16 +120,6 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 			t.printStackTrace();
 			return new LuaClosure( p, env );
 		}
-	}
-	
-	
-	/** Convert filename to class name */
-	private static final String toClassname( String filename ) {
-		String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
-		classname = classname.replace('/', '.');
-		classname = classname.replace('\\', '.');
-		classname = classname.replaceAll("[^\\w\\.]", "_");
-		return classname;
 	}
 	
 	private static final String toSourcename( String filename ) {
