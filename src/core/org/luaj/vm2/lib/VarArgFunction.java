@@ -21,13 +21,11 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 abstract public class VarArgFunction extends LibFunction {
-
-	abstract public Varargs invoke(Varargs args);
-	
 	public VarArgFunction() {
 	}
 	
@@ -54,4 +52,18 @@ abstract public class VarArgFunction extends LibFunction {
 	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 		return invoke(varargsOf(arg1,arg2,arg3)).arg1();
 	}
+
+	public Varargs invoke(Varargs args) {
+		LuaThread.onCall(this);
+		try {
+			return onInvoke(args);
+		} finally {
+			LuaThread.onReturn();
+		}
+	}
+
+	protected Varargs onInvoke(Varargs args) {
+		return NONE;
+	}
+	
 } 

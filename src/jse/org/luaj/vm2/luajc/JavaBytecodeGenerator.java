@@ -254,7 +254,7 @@ public class JavaBytecodeGenerator {
 			nl = p.maxstacksize;
 			locals = new LocalVariableGen[nl];
 			
-			// implement LuaValue.invoke(Varargs args)
+			// implement LuaValue.onInvoke(Varargs args)
 			init = new InstructionList();
 			il = new InstructionList();
 			mg = new MethodGen(
@@ -262,7 +262,7 @@ public class JavaBytecodeGenerator {
 					TYPE_VARARGS, // return type
 					new Type[] { TYPE_VARARGS }, // argument types
 					new String[] { "args" }, // arg names
-					"invoke", STR_LUAVALUE, // method, class
+					"onInvoke", STR_LUAVALUE, // method, class
 					il, cp);
 			factory = new InstructionFactory(cg);
 	

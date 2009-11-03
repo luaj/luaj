@@ -351,17 +351,18 @@ public class PackageLib extends LuaTable {
 	
 	private LuaValue loader_Java( Varargs args ) {
 		String name = args.checkString(1);
+		String classname = toClassname( name );
 		Class c = null;
 		LuaValue v = null;
 		try {
-			c = Class.forName(name.replace('/', '.'));
+			c = Class.forName(classname);
 			v = (LuaValue) c.newInstance();
 			v.setfenv(_G);
 			return v;
 		} catch ( ClassNotFoundException  cnfe ) {
-			return valueOf("\n\tno class '"+name+"'" );
+			return valueOf("\n\tno class '"+classname+"'" );
 		} catch ( Exception e ) {
-			return valueOf("\n\tjava load failed on '"+name+"', "+e );
+			return valueOf("\n\tjava load failed on '"+classname+"', "+e );
 		}
 	}
 	
@@ -373,10 +374,10 @@ public class PackageLib extends LuaTable {
 			j -= 4;
 		for ( int k=0; k<j; k++ ) {
 			char c = filename.charAt(k);
-			if ( (!isClassnamePart(c)) && (c!='/') && (c!='\\') ) {
+			if ( (!isClassnamePart(c)) || (c=='/') || (c=='\\') ) {
 				StringBuffer sb = new StringBuffer(j);
 				for ( int i=0; i<j; i++ ) {
-					c = filename.charAt(k);
+					c = filename.charAt(i);
 					sb.append( 
 							 (isClassnamePart(c))? c:
 							 ((c=='/') || (c=='\\'))? '.': '_' ); 
