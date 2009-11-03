@@ -23,11 +23,11 @@ package org.luaj.vm2.luajc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Hashtable;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
@@ -92,7 +92,21 @@ public class JavaBytecodeCompiler implements LuaCompiler {
 		return gen.generateBytecode(p, toClassname(filename), toSourcename(filename));
 	}
 
-
+	/** Compile all classes produced by a prototype, and put results in a hashtable */
+	public static Hashtable loadClasses( InputStream stream, String filename ) throws IOException {
+		Prototype p = LoadState.compile( stream, filename );
+		Hashtable t = new Hashtable();
+		getInstance().genClass(t, p, toClassname(filename), toSourcename(filename));
+		return t;
+	}
+	
+	private void genClass( Hashtable t, Prototype p, String className, String sourceName ) throws IOException {
+		for ( int i=0, n=p.p!=null? p.p.length: 0; i<n; i++ ) {
+			String name = className + "$" + i; 
+			t.put( name, gen.generateBytecode( p.p[i], name, sourceName ) );
+		}
+	}
+	
 	public LuaFunction load(Prototype p, String filename, LuaValue env) {
 		try {
 			Class c = gen.toJavaBytecode(p, toClassname(filename), toSourcename(filename));

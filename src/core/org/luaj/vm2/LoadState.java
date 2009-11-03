@@ -24,6 +24,7 @@ package org.luaj.vm2;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Hashtable;
 
 /*
 ** Loader to load compiled function prototypes
@@ -275,10 +276,18 @@ public class LoadState {
 	}
 	
 	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
+		Prototype p = compile( stream, name );
+		if ( compiler != null )
+			return compiler.load(p, name, env);
+		else
+			return new LuaClosure( p, env );
+	}
+
+	public static Prototype compile( InputStream stream, String name ) throws IOException {
 		int c = stream.read();
 		if ( c != LUA_SIGNATURE[0] ) {
 			if ( compiler != null )
-				return compiler.load(c, stream, name, env);
+				return compiler.compile(c, stream, name);
 			throw new LuaError("no compiler");
 		}
 
@@ -302,14 +311,9 @@ public class LoadState {
 		default:
 			throw new LuaError("unsupported int size");
 		}
-		
-		Prototype p = s.loadFunction( LuaString.valueOf(sname) );
-		if ( compiler != null )
-			return compiler.load(p, name, env);
-		else
-			return new LuaClosure( p, env );
+		return s.loadFunction( LuaString.valueOf(sname) );
 	}
-
+	
     public static String getSourceName(String name) {
         String sname = name;
         if ( name.startsWith("@") || name.startsWith("=") )
