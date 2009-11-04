@@ -57,6 +57,20 @@ public class FragmentsTest extends TestCase {
 			fail(e.toString());
 		}		
 	}
+	
+	public void testForloopParamUpvalues() {
+		runFragment( LuaValue.varargsOf(new LuaValue[] { 
+				LuaValue.valueOf(77), 
+				LuaValue.valueOf(1) } ),
+			"for n,p in ipairs({77}) do\n"+
+			"	print('n,p',n,p)\n"+
+			"	foo = function()\n"+
+			"		return p,n\n"+
+			"	end\n"+
+			"	return foo()\n"+
+			"end\n");
+		
+	}
 
 	public void testVarVarargsUseArg() {
 		runFragment( LuaValue.varargsOf( new LuaValue[] { 

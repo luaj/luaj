@@ -274,7 +274,7 @@ public class JavaBytecodeGenerator {
 			// initialize locals
 			isup = new boolean[nl];
 			isinited = new boolean[nl];
-			markups(p, isup, code, 0, 0);
+			markups(p, isup, code);
 
 			// find first branch or jump-back-to
 			firstbranch = findfirstbranch();
@@ -847,9 +847,13 @@ public class JavaBytecodeGenerator {
 						ih[pc] = il.append(InstructionConstants.NOP); // for branching
 						for ( int j=nl; --j>=a; ) {
 							isinited[j] = true;
-							locals[j] = null;
+							if ( isup[j] ) {
+								this.initLocal(j, false);
+								il.append(new PUSH(cp, 1));
+								il.append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
+								il.append(new ASTORE(locals[j].getIndex()));
+							}
 						}
-						markups( p, isup, code, pc+1, a );
 						break;
 						
 					case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
@@ -1159,11 +1163,8 @@ public class JavaBytecodeGenerator {
 		}
 
 		// find the upvalues implied by the subsequent instructions
-		private void markups(Prototype p, boolean[] isup, int[] code, int startpc, int startregister) {
-			int last = isup.length;
-			for ( int j=startregister; j<last; j++ )
-				isup[j] = false;
-			for ( int pc=startpc; pc<code.length; ++pc ) {
+		private void markups(Prototype p, boolean[] isup, int[] code) {
+			for ( int pc=0; pc<code.length; ++pc ) {
 				switch ( OP(code[pc]) ) {
 				case Lua.OP_CLOSURE:
 					int b = Bx(code[pc]);
@@ -1172,14 +1173,6 @@ public class JavaBytecodeGenerator {
 						int i = code[++pc];
 						if ((i & 4) == 0) 
 							isup[B(i)] = true;
-					}
-					break;
-				case Lua.OP_CLOSE:
-					int a = A(code[pc]);
-					if ( a < last ) {
-						last = a;
-						if ( last <= 0 )
-							return;
 					}
 					break;
 				}
@@ -1225,7 +1218,7 @@ public class JavaBytecodeGenerator {
 				return;
 			
 			// create variable
-			String name = toLegalJavaName( getlocalname(p.locvars, j) ) + (isup[j]? "$u": "");
+			String name = toLegalJavaName( getlocalname(p.locvars, j) );
 			locals[j] = mg.addLocalVariable(name, isup[j] ? TYPE_LOCALUPVALUE : TYPE_LUAVALUE, null, null);
 
 			// upvalue storage
