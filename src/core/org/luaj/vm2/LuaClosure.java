@@ -30,7 +30,6 @@ public class LuaClosure extends LuaFunction {
 
 	public final Prototype p;
 	public final UpValue[] upValues;
-	private UpValue openUpValues = null;
 	
 	LuaClosure() {
 		p = null;
@@ -41,6 +40,12 @@ public class LuaClosure extends LuaFunction {
 		super( env );
 		this.p = p;
 		this.upValues = p.nups>0? new UpValue[p.nups]: NOUPVALUES;
+	}
+	
+	protected LuaClosure(int nupvalues, LuaValue env) {
+		super( env );
+		this.p = null;
+		this.upValues = nupvalues>0? new UpValue[nupvalues]: NOUPVALUES;
 	}
 	
 	public boolean isclosure() {
@@ -103,13 +108,16 @@ public class LuaClosure extends LuaFunction {
 		return execute(stack,p.is_vararg!=0? varargs.subargs(p.numparams+1): NONE);
 	}
 	
-	private final Varargs execute( LuaValue[] stack, Varargs varargs ) {
+	protected Varargs execute( LuaValue[] stack, Varargs varargs ) {
 		// loop through instructions
 		int i,a,b,c,pc=0,top=0;
 		LuaValue o;
 		Varargs v = NONE;
 		int[] code = p.code;
 		LuaValue[] k = p.k;
+		
+		// upvalues are only possible when closures create closures
+		UpValue[] openups = p.p.length>0? new UpValue[stack.length]: null;
 		
 		// create varargs "arg" table
 		if ( p.is_vararg >= Lua.VARARG_NEEDSARG )
@@ -319,7 +327,6 @@ public class LuaClosure extends LuaFunction {
 					}
 					
 				case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
-					closeUpValues();
 					b = i>>>23;
 					switch ( b ) {
 					case 0: return varargsOf(stack, a, top-v.narg()-a, v); 
@@ -394,7 +401,11 @@ public class LuaClosure extends LuaFunction {
 					continue;
 					
 				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
-					closeUpValues( a );
+					for ( b=openups.length; --b>=a; )
+						if ( openups[b]!=null ) {
+							openups[b].close();
+							openups[b] = null;
+						}
 					continue;
 					
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
@@ -407,7 +418,7 @@ public class LuaClosure extends LuaFunction {
 							b = i>>>23;
 							newcl.upValues[j] = (i&4) != 0? 
 									upValues[b]:
-									findUpValue(stack,b);	
+									openups[b]!=null? openups[b]: (openups[b]=new UpValue(stack,b));
 						}
 						stack[a] = newcl;
 					}
@@ -436,56 +447,20 @@ public class LuaClosure extends LuaFunction {
 			throw le;
 		} finally {
 			LuaThread.onReturn();
-		}
-	}
-	
-	// TODO: inline, optimize when targs come in ascending order? 
-	UpValue findUpValue(LuaValue[] stack, int target) {
-		UpValue prev=null,up=openUpValues;
-		while ( up != null ) {
-			if (up.index == target) {
-				return up;
-			} else if (up.index < target) {
-				break;
-			}
-			up = (prev=up).next;
-		}
-		up = new UpValue(stack, target, up);
-		if ( prev!=null )
-			prev.next = up;
-		else
-			this.openUpValues = up;
-		return up;
-	}
-	
-	// TODO: inline? 
-	void closeUpValues(int limit) {
-		UpValue prev=null,up=openUpValues;
-		while ( up != null ) {
-			UpValue next = up.next;
-			if ( up.close(limit) ) {
-				if ( prev==null )
-					this.openUpValues = up.next;
-				else
-					prev.next = up.next;
-				up.next = null;
-			} else {
-				prev = up;
-			}
-			up = next;
+			if ( openups != null )
+				for ( int u=openups.length; --u>=0; )
+					if ( openups[u] != null )
+						openups[u].close();
 		}
 	}
 
-	// TODO: inline? 
-	void closeUpValues() {
-		UpValue up=openUpValues;
-		while ( up != null ) {
-			UpValue next = up.next;
-			up.close(-1);
-			up.next = null;
-			up = next;
-		}
-		openUpValues = null;
+	protected LuaValue getUpvalue(int i) {
+		return upValues[i].getValue();
 	}
+	
+	protected void setUpvalue(int i, LuaValue v) {
+		upValues[i].setValue(v);
+	}
+	
 
 }

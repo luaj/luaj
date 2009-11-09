@@ -27,17 +27,14 @@ public final class UpValue {
 
 	LuaValue[] array; // initially the stack, becomes a holder 
 	int index;
-	boolean closed;
-	UpValue next = null;
 	
-	public UpValue( LuaValue[] stack, int index, UpValue next ) {
+	public UpValue( LuaValue[] stack, int index) {
 		this.array = stack;
 		this.index = index;
-		this.next = next;
 	}
 	
 	public String toString() {
-		return (closed? "-": "+") + array[index];
+		return array[index].toString();
 	}
 	
 	public final LuaValue getValue() {
@@ -48,17 +45,8 @@ public final class UpValue {
 		array[index] = value;
 	}
 	
-	public final boolean close( int limit ) {
-		if ( (!closed) && (index>=limit) ) {
-			array = new LuaValue[] { array[index] };
-			index = 0;
-			return (closed = true);
-		} else {
-			return false;
-		}
-	}
-	
-	public final boolean isClosed() {
-		return closed;
+	public final void close() {
+		array = new LuaValue[] { array[index] };
+		index = 0;
 	}
 }
