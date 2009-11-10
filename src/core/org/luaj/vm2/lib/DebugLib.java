@@ -39,7 +39,7 @@ public class DebugLib extends VarArgFunction {
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
 	
 	// leave this unset to allow obfuscators to remove it in production builds
-	public static boolean DEBUG_ENABLED = false;
+	public static boolean DEBUG_ENABLED;
 
 	private static final String[] NAMES = {
 		"<debug>",
