@@ -127,7 +127,7 @@ public class luajc {
 				processing = true;
 				for ( int i=0; i<args.length; i++ ) {
 					if ( ! processing || ! args[i].startsWith("-") ) {
-						String chunkname = args[i].substring(0,args[i].length()-4);
+						String chunkname = args[i];
 						processScript( new FileInputStream(args[i]), chunkname, fos );
 					} else if ( args[i].length() <= 1 ) {
 						processScript( System.in, "stdin", fos );
