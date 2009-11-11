@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<project name="sample" default="build" basedir=".">
+
+	<!-- find wtk -->
+	<property environment="env"/>
+	<property name="env.WTK_HOME" value="c:\WTK-2.2" />
+	<property name="wtk.home" value="${env.WTK_HOME}" />
+	<echo level="info">wtk.home: ${wtk.home}</echo>
+	
+	<!-- set wtk parameters -->
+    <property name="wtk.cldc.version" value="1.1"/>
+    <property name="wtk.midp.version" value="2.0"/>
+    <taskdef resource="antenna.properties"/>
+	
+	<target name="clean">
+	    <delete failonerror="false" dir="build"/>
+	</target>
+
+    <target name="build">
+        <mkdir dir="build"/>
+        <mkdir dir="build/classes"/>
+
+        <wtkbuild srcdir="src/core"     destdir="build/classes" preverify="false"/>
+        <wtkbuild srcdir="src/jme"      destdir="build/classes" preverify="false"/>
+		<wtkbuild srcdir="examples/jme" destdir="build/classes" preverify="false"/>
+
+		<wtkjad jadfile="build/sample.jad"
+			manifest="build/MANIFEST.MF"
+			name="LuaJ Sample Midlet"
+			vendor="luaj.org"
+			version="0.1" >
+		    <midlet name="LuaJ Sample Midlet" class="SampleMIDlet"/>
+		</wtkjad>
+    	
+        <wtkpackage jarfile="build/sample.jar"
+                    jadfile="build/sample.jad"
+                    obfuscate="false"
+                    preverify="false"
+                    autoversion="true">
+        	
+            <fileset dir="build/classes"/>
+        </wtkpackage>
+
+        <wtkobfuscate jarfile="build/sample.jar"
+					  jadfile="build/sample.jad">
+			<argument value="-printmapping build/mapping.txt"/>
+			<argument value="-repackageclasses"/>
+			<argument value='""'/>
+   		</wtkobfuscate>
+
+		<wtkpreverify jarfile="build/sample.jar"
+                      jadfile="build/sample.jad"/>
+    	
+    	<wtkrun jadfile="build/sample.jad" device="DefaultColorPhone"/>
+    </target>
+
+</project>
