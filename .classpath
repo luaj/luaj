@@ -11,10 +11,8 @@
 	<classpathentry kind="src" path="examples/lua"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
-	<classpathentry kind="var" path="ANTLR_HOME/lib/antlr-runtime-3.1.3.jar"/>
-	<classpathentry kind="var" path="ANTLR_HOME"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/cldcapi11.jar"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/midpapi20.jar"/>
-	<classpathentry kind="var" path="BCEL_LIB"/>
+	<classpathentry kind="lib" path="lib/bcel-5.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
