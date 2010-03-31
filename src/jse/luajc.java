@@ -41,7 +41,7 @@ public class luajc {
 	private static final String version = Lua._VERSION + "Copyright (C) 2009 luaj.org";
 
 	private static final String usage = 
-		"usage: java -cp luaj-jse.jar,antlr-3.1.3.jar luajc [options] [filenames].\n" +
+		"usage: java -cp luaj-jse.jar,bcel-5.2.jar luajc [options] [filenames].\n" +
 		"Available options are:\n" +
 		"  -        process stdin\n" +
 		"  -o name  output to file 'name' (default is \"luac.out\")\n" +

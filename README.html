@@ -17,7 +17,7 @@
 Getting Started with LuaJ
 
 </h1>
-James Roseborough, Ian Farmer, Version 1.9.50
+James Roseborough, Ian Farmer, Version 1.9.53
 <p>
 <small>
 Copyright &copy; 2007-2009 Luaj.org.
@@ -42,7 +42,7 @@ Freely available under the terms of the
 <!-- ====================================================================== -->
 <p>
 <font color=#800000><em>
-This is a development release for a planned luaj 2.0.  The most recent stable release is 1.0.1
+This is a development release for a planned luaj 2.0.  The most recent stable release is 1.0.2
 </em></font> 
 
 
@@ -54,7 +54,7 @@ This is a development release for a planned luaj 2.0.  The most recent stable re
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-1.9.50.jar lua examples/lua/hello.lua
+	java -cp lib/luaj-jse-1.9.53.jar lua examples/lua/hello.lua
 </pre>
 
 <p>
@@ -99,7 +99,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jse-1.9.50.jar</b> in your class path.
+You must include the library <b>lib/luaj-jse-1.9.53.jar</b> in your class path.
 
 <h2>Run a script in a MIDlet</h2>
 
@@ -128,7 +128,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jme-1.9.50.jar</b> in your midlet jar.
+You must include the library <b>lib/luaj-jme-1.9.53.jar</b> in your midlet jar.
 They can be obfuscated if desired.
 
 <h2>Including the compiler</h2>
@@ -163,13 +163,54 @@ The standard use of JSR-233 scripting engines may be used:
 All standard aspects of script engines including compiled statements should be supported.
 
 <p>
-You must include the library <b>lib/luaj-jse-1.9.50.jar</b> in your class path.
+You must include the library <b>lib/luaj-jse-1.9.53.jar</b> in your class path.
 
 <p>
 A working example may be found in
 <pre>
 	examples/jse/ScriptEngineSample.java
 </pre>
+
+<h2>Compile lua to Java bytecode using luajc</h2>
+
+<p>
+A code generator that compiles lua to java bytecode base on the 
+bcel library is now included.  
+
+<p>
+To use it at runtime, the tool "lua" has an option "-j" to compile into java bytecode. 
+
+<pre>
+	java -cp luaj-jse-1.9.53.jar;lib/bcel-5.2.jar lua -j examples/lua/hello.lua
+</pre>
+
+<p>
+To compile lua files into Java in advance, the tool "luajc" is provided:
+
+<pre>
+	cp examples/lua/hello.lua .
+	java -cp luaj-jse-1.9.53.jar;lib/bcel-5.2.jar luajc hello.lua
+	ls -l hello.class
+</pre>
+
+You should see a class file of 906 bytes or so. A version of the <a href="http://jakarta.apache.org/bcel/">bcel</a> 
+library must be in your class path for code generation to work.
+The ant script contains a target for fetching bcel v 5.2:
+
+<pre>
+	ant bcel-lib
+</pre>
+
+<p>
+Files compiled into java in this way can be run via Java class loading, <em>without</em> the bcel libraries 
+(generated class files must be in your class path): 
+
+<pre>
+	java -cp luaj-jse-1.9.53.jar;. lua -l hello
+</pre>
+
+The current bytecode generator produces a separate class file for each prototype, 
+and generated class files do not work properly with module() or setfenv(). 
 
 
 <h1>2 - <a name="2">Concepts</a></h1>
@@ -283,7 +324,7 @@ The following lua script will open a swiing frame on Java SE:
 <p>
 See a longer sample in <em>src/test/res/swingapp.lua</em> for details, or try running it using: 
 <pre>
-	java -cp lib/luaj-jse-1.9.50.jar lua src/test/res/swingapp.lua
+	java -cp lib/luaj-jse-1.9.53.jar lua src/test/res/swingapp.lua
 </pre>
 
 <p>
@@ -317,7 +358,7 @@ These tests are used for to produce code coverage statistics using build-coverag
 <h1>5 - <a name="5">Downloads</a></h1>
 
 <h2>Downloads and Project Pages</h2>
-Downloads for version 1.0.1 are currently hosted on SourceForge.  
+Downloads for version 1.0.2 are currently hosted on SourceForge.  
 Downloads of built packages for 2.0 are not yet available.
 Sources are available via sourceforge.net    
 <br/>
@@ -336,5 +377,11 @@ and LuaForge:
 
 Main changes by version:
 <table cellspacing="10"><tr><td><table cellspacing="4">
-<tr valign="top"><td>&nbsp;&nbsp;<b>1.9.50</b></td><td>Most interpreter features are working.  Initial port of all libraries has been done.</td></tr>
+<tr valign="top"><td>&nbsp;&nbsp;<b>1.9.53</b></td><td>
+Most interpreter features are working.  Initial port of all libraries has been done.
+</td></tr>
+<tr valign="top"><td>&nbsp;&nbsp;<b>1.9.53</b></td><td>
+All unit tests that have been included in the project pass.  
+Compile-to-Java based on bcel 5.2 is working.  
+</td></tr>
 </table>
