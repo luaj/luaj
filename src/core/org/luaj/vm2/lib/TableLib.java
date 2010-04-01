@@ -25,34 +25,36 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-public class TableLib extends LuaTable {
+public class TableLib extends OneArgFunction {
 
 	public TableLib() {
-		LibFunction.bind( this, new TableFunc1().getClass(), new String[] {
-			"getn", // (table) -> number
-			"maxn", // (table) -> number 
-		} );
-		LibFunction.bind( this, new TableFuncV().getClass(), new String[] {
-			"remove", // (table [, pos]) -> removed-ele
-			"concat", // (table [, sep [, i [, j]]]) -> string
-			"insert", // (table, [pos,] value) -> prev-ele
-			"sort",	  // (table [, comp]) -> void
-			"foreach", // (table, func) -> void
-			"foreachi", // (table, func) -> void			
-		} );
+		name = "table";
+		opcode = -1;
 	}
-	
-	public static class TableFunc1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return arg.checktable().getn();
-			case 1: return valueOf( arg.checktable().maxn());
-			}
-			return NIL;
+
+	public LuaValue call(LuaValue arg) {
+		switch ( opcode ) {
+		case -1: {
+			LuaTable t = new LuaTable();
+			LibFunction.bind( t, this.getClass(), new String[] {
+				"getn", // (table) -> number
+				"maxn", // (table) -> number 
+			} );
+			LibFunction.bind( t, new TableFuncV().getClass(), new String[] {
+				"remove", // (table [, pos]) -> removed-ele
+				"concat", // (table [, sep [, i [, j]]]) -> string
+				"insert", // (table, [pos,] value) -> prev-ele
+				"sort",	  // (table [, comp]) -> void
+				"foreach", // (table, func) -> void
+				"foreachi", // (table, func) -> void			
+			} );
+			return t;
 		}
-		
+		case 0: return arg.checktable().getn();
+		case 1: return valueOf( arg.checktable().maxn());
+		}
+		return NIL;
 	}
-	
 
 	public static class TableFuncV extends VarArgFunction {
 		public Varargs invoke(Varargs args) {

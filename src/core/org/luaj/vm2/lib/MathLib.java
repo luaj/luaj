@@ -35,48 +35,50 @@ import org.luaj.vm2.Varargs;
  * 
  * @see org.luaj.vm2.lib.jse.JseMathLib
  */
-public class MathLib extends LuaTable {
+public class MathLib extends OneArgFunction {
+	
 	public static MathLib MATHLIB = null;
 
-	private Random random;
+	private static final LuaValue RANDOM = valueOf("__random");
 	
 	public MathLib() {
+		name = "math";
+		opcode = -1;
 		MATHLIB = this;
-		this.set( "pi", Math.PI );
-		this.set( "huge", LuaDouble.POSINF );
-		LibFunction.bind( this, new MathFunc1().getClass(), new String[] {
+	}
+
+	protected LuaTable init() {
+		LuaTable t = new LuaTable(0,30);
+		t.set( "pi", Math.PI );
+		t.set( "huge", LuaDouble.POSINF );
+		LibFunction.bind( t, new MathLib().getClass(), new String[] {
 			"abs", "ceil", "cos", "deg", 
 			"exp", "floor", "rad", "sin", 
 			"sqrt", "tan" } );
-		LibFunction.bind( this, new MathFunc2().getClass(), new String[] {
+		LibFunction.bind( t, new MathFunc2().getClass(), new String[] {
 			"fmod", "ldexp", "pow", "random",
 			} );
-		LibFunction.bind( this, new MathFuncV().getClass(), new String[] {
+		LibFunction.bind( t, new MathFuncV().getClass(), new String[] {
 			"frexp", "max", "min", "modf", 
 			"randomseed" } );
-		
+		return t;
 	}
 
-	public String toString() {
-		return "math";
-	}
-	
-	public static class MathFunc1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return valueOf(Math.abs(arg.todouble())); 
-			case 1: return valueOf(Math.ceil(arg.todouble())); 
-			case 2: return valueOf(Math.cos(arg.todouble())); 
-			case 3: return valueOf(Math.toDegrees(arg.todouble())); 
-			case 4: return dpow(Math.E,arg.todouble());
-			case 5: return valueOf(Math.floor(arg.todouble()));
-			case 6: return valueOf(Math.toRadians(arg.todouble())); 
-			case 7: return valueOf(Math.sin(arg.todouble())); 
-			case 8: return valueOf(Math.sqrt(arg.todouble())); 
-			case 9: return valueOf(Math.tan(arg.todouble())); 
-			}
-			return NIL;
+	public LuaValue call(LuaValue arg) {
+		switch ( opcode ) {
+		case -1: return init();
+		case 0: return valueOf(Math.abs(arg.todouble())); 
+		case 1: return valueOf(Math.ceil(arg.todouble())); 
+		case 2: return valueOf(Math.cos(arg.todouble())); 
+		case 3: return valueOf(Math.toDegrees(arg.todouble())); 
+		case 4: return dpow(Math.E,arg.todouble());
+		case 5: return valueOf(Math.floor(arg.todouble()));
+		case 6: return valueOf(Math.toRadians(arg.todouble())); 
+		case 7: return valueOf(Math.sin(arg.todouble())); 
+		case 8: return valueOf(Math.sqrt(arg.todouble())); 
+		case 9: return valueOf(Math.tan(arg.todouble())); 
 		}
+		return NIL;
 	}
 	
 	public static class MathFunc2 extends TwoArgFunction {
@@ -99,16 +101,16 @@ public class MathLib extends LuaTable {
 				return dpow(arg1.todouble(), arg2.todouble());
 			}
 			case 3: { // random
-				MathLib lib = (MathLib) env;
-				if ( lib.random == null )
-					lib.random = new Random();
+				Random random = (Random) env.get(RANDOM).optuserdata(Random.class, null);
+				if ( random == null )
+					env.set(RANDOM,userdataOf(random = new Random()));
 				if ( arg1.isnil() )
-					return valueOf( lib.random.nextDouble() );
+					return valueOf( random.nextDouble() );
 				int m = arg1.toint(); 
 				if ( arg2.isnil() )
-					return valueOf( 1 + lib.random.nextInt(m) );
+					return valueOf( 1 + random.nextInt(m) );
 				else
-					return valueOf( m + lib.random.nextInt(arg2.toint()-m) );
+					return valueOf( m + random.nextInt(arg2.toint()-m) );
 			}
 			}
 			return NIL;
@@ -184,7 +186,7 @@ public class MathLib extends LuaTable {
 			}
 			case 4: { // randomseed 
 				long seed = args.checklong(1);
-				((MathLib) env).random = new Random(seed);
+				env.set(RANDOM,userdataOf(new Random(seed)));
 				return NONE;
 			}
 			}

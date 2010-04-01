@@ -200,7 +200,7 @@ public class LuaTable extends LuaValue {
 		}
 	}
 
-	public Varargs remove(int pos) {
+	public LuaValue remove(int pos) {
 		if ( pos == 0 )
 			pos = length();
 		if ( pos < 1 || pos > array.length )

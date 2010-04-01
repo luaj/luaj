@@ -21,9 +21,9 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.LibFunction;
-import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
 /**
@@ -34,31 +34,33 @@ import org.luaj.vm2.lib.TwoArgFunction;
  */
 public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
-	public JseMathLib() {
-		LibFunction.bind( this, new J2seMathFunc1().getClass(), new String[] {
+	public JseMathLib() {}
+
+	protected LuaTable init() {
+		LuaTable t = super.init();
+		LibFunction.bind( t, this.getClass(), new String[] {
 			"acos", "asin", "atan", "cosh",  
 			"exp", "log", "log10", "sinh",  
 			"tanh" } );
-		LibFunction.bind( this, new J2seMathFunc2().getClass(), new String[] {
+		LibFunction.bind( t, new J2seMathFunc2().getClass(), new String[] {
 			"atan2", "pow", } );
-		
+		return t;
 	}
-	
-	public static class J2seMathFunc1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return valueOf(Math.acos(arg.todouble())); 
-			case 1: return valueOf(Math.asin(arg.todouble())); 
-			case 2: return valueOf(Math.atan(arg.todouble())); 
-			case 3: return valueOf(Math.cosh(arg.todouble())); 
-			case 4: return valueOf(Math.exp(arg.todouble())); 
-			case 5: return valueOf(Math.log(arg.todouble())); 
-			case 6: return valueOf(Math.log10(arg.todouble())); 
-			case 7: return valueOf(Math.sinh(arg.todouble())); 
-			case 8: return valueOf(Math.tanh(arg.todouble())); 
-			}
-			return NIL;
+
+	public LuaValue call(LuaValue arg) {
+		switch ( opcode ) {
+		case -1: return init();
+		case 0: return valueOf(Math.acos(arg.todouble())); 
+		case 1: return valueOf(Math.asin(arg.todouble())); 
+		case 2: return valueOf(Math.atan(arg.todouble())); 
+		case 3: return valueOf(Math.cosh(arg.todouble())); 
+		case 4: return valueOf(Math.exp(arg.todouble())); 
+		case 5: return valueOf(Math.log(arg.todouble())); 
+		case 6: return valueOf(Math.log10(arg.todouble())); 
+		case 7: return valueOf(Math.sinh(arg.todouble())); 
+		case 8: return valueOf(Math.tanh(arg.todouble())); 
 		}
+		return NIL;
 	}
 	
 	public static class J2seMathFunc2 extends TwoArgFunction {

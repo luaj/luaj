@@ -37,12 +37,12 @@ import org.luaj.vm2.Varargs;
 public class DebugLib extends VarArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
-	
-	// leave this unset to allow obfuscators to remove it in production builds
+
+	// leave this unset to allow obfuscators to 
+	// remove it in production builds
 	public static boolean DEBUG_ENABLED;
 
 	private static final String[] NAMES = {
-		"<debug>",
 		"debug",
 		"getfenv",
 		"gethook",
@@ -59,71 +59,65 @@ public class DebugLib extends VarArgFunction {
 		"traceback",
 	};
 	
-	private static final int INSTALL      	= 0;
-	private static final int DEBUG        	= 1;
-	private static final int GETFENV        = 2;
-	private static final int GETHOOK        = 3;
-	private static final int GETINFO        = 4;
-	private static final int GETLOCAL       = 5;
-	private static final int GETMETATABLE 	= 6;
-	private static final int GETREGISTRY    = 7;
-	private static final int GETUPVALUE    	= 8;
-	private static final int SETFENV        = 9;
-	private static final int SETHOOK        = 10;
-	private static final int SETLOCAL 		= 11;
-	private static final int SETMETATABLE   = 12;
-	private static final int SETUPVALUE    	= 13;
-	private static final int TRACEBACK    	= 14;
+	private static final int INIT      	= -1;
+	private static final int DEBUG        	= 0;
+	private static final int GETFENV        = 1;
+	private static final int GETHOOK        = 2;
+	private static final int GETINFO        = 3;
+	private static final int GETLOCAL       = 4;
+	private static final int GETMETATABLE 	= 5;
+	private static final int GETREGISTRY    = 6;
+	private static final int GETUPVALUE    	= 7;
+	private static final int SETFENV        = 8;
+	private static final int SETHOOK        = 9;
+	private static final int SETLOCAL 		= 10;
+	private static final int SETMETATABLE   = 11;
+	private static final int SETUPVALUE    	= 12;
+	private static final int TRACEBACK    	= 13;
 
 	/* maximum stack for a Lua function */
 	private static final int MAXSTACK = 250;
 	
-	private static final LuaString LUA        = LuaString.valueOf("Lua");  
-	private static final LuaString JAVA       = LuaString.valueOf("Java");  
-	private static final LuaString QMARK      = LuaString.valueOf("?");  
-	private static final LuaString GLOBAL     = LuaString.valueOf("global");  
-	private static final LuaString LOCAL      = LuaString.valueOf("local");  
-	private static final LuaString METHOD     = LuaString.valueOf("method");  
-	private static final LuaString UPVALUE    = LuaString.valueOf("upvalue");  
-	private static final LuaString FIELD      = LuaString.valueOf("field");
-	private static final LuaString CALL       = LuaString.valueOf("call");  
-	private static final LuaString LINE       = LuaString.valueOf("line");  
-	private static final LuaString COUNT      = LuaString.valueOf("count");  
-	private static final LuaString RETURN     = LuaString.valueOf("return");  
-	private static final LuaString TAILRETURN = LuaString.valueOf("tail return");
+	private static final LuaString LUA        = valueOf("Lua");  
+	private static final LuaString JAVA       = valueOf("Java");  
+	private static final LuaString QMARK      = valueOf("?");  
+	private static final LuaString GLOBAL     = valueOf("global");  
+	private static final LuaString LOCAL      = valueOf("local");  
+	private static final LuaString METHOD     = valueOf("method");  
+	private static final LuaString UPVALUE    = valueOf("upvalue");  
+	private static final LuaString FIELD      = valueOf("field");
+	private static final LuaString CALL       = valueOf("call");  
+	private static final LuaString LINE       = valueOf("line");  
+	private static final LuaString COUNT      = valueOf("count");  
+	private static final LuaString RETURN     = valueOf("return");  
+	private static final LuaString TAILRETURN = valueOf("tail return");
 	
-	private static final LuaString FUNC            = LuaString.valueOf("func");  
-	private static final LuaString NUPS            = LuaString.valueOf("nups");  
-	private static final LuaString NAME            = LuaString.valueOf("name");  
-	private static final LuaString NAMEWHAT        = LuaString.valueOf("namewhat");  
-	private static final LuaString WHAT            = LuaString.valueOf("what");  
-	private static final LuaString SOURCE          = LuaString.valueOf("source");  
-	private static final LuaString SHORT_SRC       = LuaString.valueOf("short_src");  
-	private static final LuaString LINEDEFINED     = LuaString.valueOf("linedefined");  
-	private static final LuaString LASTLINEDEFINED = LuaString.valueOf("lastlinedefined");  
-	private static final LuaString CURRENTLINE     = LuaString.valueOf("currentline");  
-	private static final LuaString ACTIVELINES     = LuaString.valueOf("activelines");  
+	private static final LuaString FUNC            = valueOf("func");  
+	private static final LuaString NUPS            = valueOf("nups");  
+	private static final LuaString NAME            = valueOf("name");  
+	private static final LuaString NAMEWHAT        = valueOf("namewhat");  
+	private static final LuaString WHAT            = valueOf("what");  
+	private static final LuaString SOURCE          = valueOf("source");  
+	private static final LuaString SHORT_SRC       = valueOf("short_src");  
+	private static final LuaString LINEDEFINED     = valueOf("linedefined");  
+	private static final LuaString LASTLINEDEFINED = valueOf("lastlinedefined");  
+	private static final LuaString CURRENTLINE     = valueOf("currentline");  
+	private static final LuaString ACTIVELINES     = valueOf("activelines");  
 
-	public static void install(LuaValue globals) {
-		globals.set("debug", DebugLib.createInstance() );
+	public DebugLib() {
+		name = "debug";
+		opcode = INIT;
 	}
-
-	public static final LuaValue createInstance() {
-		LuaTable t = new LuaTable();
-		DebugLib f = new DebugLib();
-		LibFunction.bind(t, f.getClass(), NAMES);
-		if ( ! DEBUG_ENABLED ) {
-			DEBUG_ENABLED = true;
-		}
-		return t;
-	}
-	
-	public DebugLib() {}
 
 	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
-		case INSTALL:
-			return createInstance();
+		case INIT: {
+			LuaTable t = new LuaTable(0,20);
+			LibFunction.bind(t, this.getClass(), NAMES);
+			if ( ! DEBUG_ENABLED )
+				DEBUG_ENABLED = true;
+			return t;
+		}
 		case DEBUG: 
 			return _debug(args);
 		case GETFENV:

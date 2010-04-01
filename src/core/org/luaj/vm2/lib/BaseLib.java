@@ -25,13 +25,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 
 /** 

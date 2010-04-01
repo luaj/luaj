@@ -32,33 +32,36 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.DumpState;
 
-public class StringLib extends LuaTable {
+public class StringLib extends OneArgFunction {
 
-	public static StringLib instance;
+	public static LuaTable instance;
 	
 	public StringLib() {
-		LibFunction.bind( this, new StringFunc1().getClass(), new String[] {
-			"dump", "len", "lower", "reverse", 
-			"upper", } );
-		LibFunction.bind( this, new StringFuncV().getClass(), new String[] {
-			"byte", "char", "find", "format", 
-			"gmatch", "gsub", "match", "rep", 
-			"sub"} );
-		instance = this;
+		name = "string";
+		opcode = -1;
 	}
 
-	public static class StringFunc1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return StringLib.dump(arg); // dump (function)
-			case 1: return StringLib.len(arg); // len (function)
-			case 2: return StringLib.lower(arg); // lower (function)
-			case 3: return StringLib.reverse(arg); // reverse (function)
-			case 4: return StringLib.upper(arg); // upper (function)
-			}
-			return NIL;
+	public LuaValue call(LuaValue arg) {
+		switch ( opcode ) {
+		case -1: {
+			LuaTable t = new LuaTable();
+			LibFunction.bind( t, getClass(), new String[] {
+				"dump", "len", "lower", "reverse", "upper", } );
+			LibFunction.bind( t, new StringFuncV().getClass(), new String[] {
+				"byte", "char", "find", "format", 
+				"gmatch", "gsub", "match", "rep", 
+				"sub"} );
+			instance = t;
+			return t;
 		}
-	}
+		case 0: return dump(arg); // dump (function)
+		case 1: return len(arg); // len (function)
+		case 2: return lower(arg); // lower (function)
+		case 3: return reverse(arg); // reverse (function)
+		case 4: return upper(arg); // upper (function)
+		}
+		return NIL;
+		}
 
 	public static class StringFuncV extends VarArgFunction {
 		public Varargs invoke(Varargs args) {

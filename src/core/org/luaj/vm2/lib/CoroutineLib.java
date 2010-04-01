@@ -27,9 +27,8 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 public class CoroutineLib extends VarArgFunction {
-
+	
 	private static final String[] NAMES = {
-		"<coroutine>",
 		"create",
 		"resume",
 		"running",
@@ -39,27 +38,19 @@ public class CoroutineLib extends VarArgFunction {
 		"wrapped"
 	};
 	
-	private static final int INSTALL = 0;
-	private static final int CREATE  = 1;
-	private static final int RESUME  = 2;
-	private static final int RUNNING = 3;
-	private static final int STATUS  = 4;
-	private static final int YIELD   = 5;
-	private static final int WRAP    = 6;
-	private static final int WRAPPED = 7;
-
-	public static void install(LuaValue globals) {
-		globals.set("coroutine", createInstance());
-	}
+	private static final int INIT = -1;
+	private static final int CREATE  = 0;
+	private static final int RESUME  = 1;
+	private static final int RUNNING = 2;
+	private static final int STATUS  = 3;
+	private static final int YIELD   = 4;
+	private static final int WRAP    = 5;
+	private static final int WRAPPED = 6;
 	
-	public static final LuaValue createInstance() {
-		LuaTable t = new LuaTable();
-		CoroutineLib f = new CoroutineLib();
-		LibFunction.bind(t, f.getClass(), NAMES);
-		return t;
+	public CoroutineLib() {
+		name = "coroutine";;
+		opcode = INIT;
 	}
-	
-	public CoroutineLib() {}
 	
 	private CoroutineLib(String name, int opcode, LuaThread thread) {
 		super(name, opcode, thread);
@@ -67,8 +58,11 @@ public class CoroutineLib extends VarArgFunction {
 
 	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
-			case INSTALL:
-				return createInstance();
+			case INIT: {
+				LuaTable t = new LuaTable();
+				LibFunction.bind(t, this.getClass(), NAMES);
+				return t;
+			}
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
 				return new LuaThread(func, func.getfenv() );

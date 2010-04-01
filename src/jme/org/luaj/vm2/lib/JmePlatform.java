@@ -22,6 +22,7 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
 
 public class JmePlatform {
 
@@ -33,13 +34,25 @@ public class JmePlatform {
 	public static LuaTable standardGlobals() {
 		LuaTable _G = new BaseLib();
 		new org.luaj.vm2.lib.PackageLib(_G);
-		_G.set( "io",        new org.luaj.vm2.lib.jme.JseIoLib() );
-		_G.set( "math",      new org.luaj.vm2.lib.MathLib() );
-		_G.set( "os",        new org.luaj.vm2.lib.OsLib() );
-		_G.set( "table",     new org.luaj.vm2.lib.TableLib() );
-		_G.set( "string",    new org.luaj.vm2.lib.StringLib() );
-		CoroutineLib.install( _G );
+		set(_G, "coroutine", new org.luaj.vm2.lib.CoroutineLib() );
+		set(_G, "io",        new org.luaj.vm2.lib.jme.JseIoLib() );
+		set(_G, "math",      new org.luaj.vm2.lib.MathLib() );
+		set(_G, "os",        new org.luaj.vm2.lib.OsLib() );
+		set(_G, "table",     new org.luaj.vm2.lib.TableLib() );
+		set(_G, "string",    new org.luaj.vm2.lib.StringLib() );
 		return _G;		
+	}
+	
+	public static LuaTable debugGlobals() {
+		LuaTable _G = standardGlobals();
+		set(_G, "string",    new org.luaj.vm2.lib.DebugLib() );
+		return _G;
+	}
+
+	private static void set( LuaTable _G, String name, LuaValue chunk ) {
+		chunk.setfenv(_G);
+		LuaValue pkg = chunk.call(LuaValue.valueOf(name));
+		_G.set( name, pkg );
 	}
 
 }

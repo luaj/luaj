@@ -33,7 +33,7 @@ import org.luaj.vm2.Varargs;
 
 
 abstract 
-public class IoLib extends LuaTable {
+public class IoLib extends VarArgFunction {
 
 	abstract 
 	protected class File extends LuaValue{
@@ -56,7 +56,7 @@ public class IoLib extends LuaTable {
 		
 		// delegate method access to file methods table
 		public LuaValue get( LuaValue key ) {
-			return filemethods.get(key);
+			return env.get(FILEMETHODS).get(key);
 		}
 
 		// essentially a userdata instance
@@ -113,11 +113,6 @@ public class IoLib extends LuaTable {
 	 */
 	abstract protected File openProgram(String prog, String mode) throws IOException;
 
-
-	//protected final Table filemt;
-	protected final LuaTable filemethods;
-	private   final LuaValue linesiter;
-	
 	private File infile  = null;
 	private File outfile = null;
 	private File errfile  = null;
@@ -127,128 +122,123 @@ public class IoLib extends LuaTable {
 	private static final LuaValue STDERR      = valueOf("stderr");		
 	private static final LuaValue FILE        = valueOf("file");
 	private static final LuaValue CLOSED_FILE = valueOf("closed file");
+	private static final LuaValue FILEMETHODS = valueOf("__filemethods");
+	private static final LuaValue LINESITER   = valueOf("__linesiter");
 	
-	public IoLib() {
+	public IoLib() {}
+	
+	protected LuaTable init() {
 		
 		// io lib functions
-		set("flush",     new IoFuncV("flush",0));
-		set("tmpfile",   new IoFuncV("tmpfile",1));
-		set("close",     new IoFuncV("close",2));
-		set("input",     new IoFuncV("input",3));
-		set("output",    new IoFuncV("output",4));
-		set("type",      new IoFuncV("type",5));
-		set("popen",     new IoFuncV("popen",6));
-		set("open",      new IoFuncV("open",7));
-		set("lines",     new IoFuncV("lines",8));
-		set("read",      new IoFuncV("read",9));
-		set("write",     new IoFuncV("write",10));
-		setmetatable( tableOf(new LuaValue[] {
-				valueOf("__index"),new IoFuncV("__index",11),
-			}) );
+		LuaTable t = new LuaTable();
+		LibFunction.bind(t, this.getClass(),  new String[] {
+			"flush", "tmpfile", "close", "input", "output", 
+			"type", "popen", "open", "lines", "read", 
+			"write", "__linesiter" }, 1 );
 		
-		// create file metatable
-		filemethods = tableOf(new LuaValue[] {
-			valueOf("close"),   new IoFuncV("close",12),
-			valueOf("flush"),   new IoFuncV("flush",13),
-			valueOf("setvbuf"), new IoFuncV("setvbuf",14),
-			valueOf("lines"),   new IoFuncV("lines",15),
-			valueOf("read"),    new IoFuncV("read",16),
-			valueOf("seek"),    new IoFuncV("seek",17),
-			valueOf("write"),   new IoFuncV("write",18),
-		});
-		//filemt = tableOf(new Value[]{valueOf("__index"),filemethods});
+		// create metatable
+		LuaTable idx = new LuaTable();
+		LibFunction.bind(idx, this.getClass(),  new String[] {
+			"__index", }, 13 );
+		t.setmetatable( idx );
 		
-		// lines iterator
-		linesiter = new IoFuncV("linesiter",19);
+		// create file methods table
+		LuaTable filemethods = new LuaTable();
+		LibFunction.bind(filemethods, this.getClass(),  new String[] {
+			"close", "flush", "setvbuf", "lines", "read", 
+			"seek", "write", }, 14 );
+		t.set(FILEMETHODS, filemethods);
+
+		// return the table
+		return t;
 	}
 	
-	public class IoFuncV extends VarArgFunction {
-		public IoFuncV(String name, int opcode) {
-			super(name,opcode,IoLib.this);
-		}
-		public Varargs invoke(Varargs args) {
-			File f;
-			int n;
-			LuaValue v;
-			try {
-				switch ( opcode ) {
-				case 0: //	io.flush() -> bool 
-					checkopen(output());
-					outfile.flush();
-					return LuaValue.TRUE;
-				case 1: //	io.tmpfile() -> file
-					return tmpFile();
-				case 2: //	io.close([file]) -> void
-					f = args.arg1().isnil()? output(): checkfile(args.arg1());
-					checkopen(f);
-					return ioclose(f);
-				case 3: //	io.input([file]) -> file
-					infile = args.arg1().isnil()? input(): args.arg1().isstring()? 
-							ioopenfile(args.checkString(1),"r"):
-							checkfile(args.arg1());
-					return infile;
-					
-				case 4: // io.output(filename) -> file
-					outfile = args.arg1().isnil()? output(): args.arg1().isstring()? 
-							ioopenfile(args.checkString(1),"w"):
-							checkfile(args.arg1());
-					return outfile;
-				case 5: //	io.type(obj) -> "file" | "closed file" | nil
-					if ( (f=optfile(args.arg1())) != null )
-						return f.isclosed()? CLOSED_FILE: FILE;
-					return NIL;
-				case 6: // io.popen(prog, [mode]) -> file
-					return openProgram(args.checkString(1),args.optString(2,"r"));
-				case 7: //	io.open(filename, [mode]) -> file | nil,err
-					return rawopenfile(args.checkString(1), args.optString(2,"r"));
-				case 8: //	io.lines(filename) -> iterator
-					infile = args.arg1().isnil()? input(): ioopenfile(args.checkString(1),"r");
-					checkopen(infile);
-					return lines(infile);
-				case 9: //	io.read(...) -> (...)
-					checkopen(infile);
-					return ioread(infile,args);
-				case 10: //	io.write(...) -> void
-					checkopen(output());
-					return iowrite(outfile,args);
-				case 11: // __index, returns a field
-					v = args.arg(2);
-					return v.equals(STDOUT)?output():
-						   v.equals(STDIN)?  input():
-						   v.equals(STDERR)? errput(): NIL;
-					
-				// ------------ file metatable operations
+	public Varargs invoke(Varargs args) {
+		File f;
+		int n;
+		LuaValue v;
+		try {
+			switch ( opcode ) {
+			case 0: // init 
+				return init();
+			case 1: //	io.flush() -> bool 
+				checkopen(output());
+				outfile.flush();
+				return LuaValue.TRUE;
+			case 2: //	io.tmpfile() -> file
+				return tmpFile();
+			case 3: //	io.close([file]) -> void
+				f = args.arg1().isnil()? output(): checkfile(args.arg1());
+				checkopen(f);
+				return ioclose(f);
+			case 4: //	io.input([file]) -> file
+				infile = args.arg1().isnil()? input(): args.arg1().isstring()? 
+						ioopenfile(args.checkString(1),"r"):
+						checkfile(args.arg1());
+				return infile;
 				
-				case 12: // file:close() -> void
-					return ioclose(checkfile(args.arg1()));
-				case 13: // file:flush() -> void
-					checkfile(args.arg1()).flush();
-					return LuaValue.TRUE;
-				case 14: // file:setvbuf(mode,[size]) -> void
-					f = checkfile(args.arg1());
-					f.setvbuf(args.checkString(2),args.optint(3, 1024));
-					return LuaValue.TRUE;
-				case 15: // file:lines() -> iterator
-					return lines(checkfile(args.arg1()));
-				case 16: //	file:read(...) -> (...)
-					f = checkfile(args.arg1());
-					return ioread(f,args.subargs(2));
-				case 17: //  file:seek([whence][,offset]) -> pos | nil,error
-					f = checkfile(args.arg1());
-					n = f.seek(args.optString(2,"cur"),args.optint(3,0));
-					return valueOf(n);
-				case 18: //	file:write(...) -> void		
-					f = checkfile(args.arg1());
-					return iowrite(f,args.subargs(2));
-				case 19: //	lines iterator(s,var) -> var'
-					f = checkfile(args.arg1());
-					return freadline(f);
-				}
-			} catch ( IOException ioe ) {
-				return errorresult(ioe);
+			case 5: // io.output(filename) -> file
+				outfile = args.arg1().isnil()? output(): args.arg1().isstring()? 
+						ioopenfile(args.checkString(1),"w"):
+						checkfile(args.arg1());
+				return outfile;
+			case 6: //	io.type(obj) -> "file" | "closed file" | nil
+				if ( (f=optfile(args.arg1())) != null )
+					return f.isclosed()? CLOSED_FILE: FILE;
+				return NIL;
+			case 7: // io.popen(prog, [mode]) -> file
+				return openProgram(args.checkString(1),args.optString(2,"r"));
+			case 8: //	io.open(filename, [mode]) -> file | nil,err
+				return rawopenfile(args.checkString(1), args.optString(2,"r"));
+			case 9: //	io.lines(filename) -> iterator
+				infile = args.arg1().isnil()? input(): ioopenfile(args.checkString(1),"r");
+				checkopen(infile);
+				return lines(infile);
+			case 10: //	io.read(...) -> (...)
+				checkopen(infile);
+				return ioread(infile,args);
+			case 11: //	io.write(...) -> void
+				checkopen(output());
+				return iowrite(outfile,args);
+			case 12: //	lines iterator(s,var) -> var'
+				f = checkfile(args.arg1());
+				return freadline(f);
+
+			// ------------ __index metatable operation
+			case 13: // __index, returns a field
+				v = args.arg(2);
+				return v.equals(STDOUT)?output():
+					   v.equals(STDIN)?  input():
+					   v.equals(STDERR)? errput(): NIL;
+				
+			// ------------ file metatable operations
+			
+			case 14: // file:close() -> void
+				return ioclose(checkfile(args.arg1()));
+			case 15: // file:flush() -> void
+				checkfile(args.arg1()).flush();
+				return LuaValue.TRUE;
+			case 16: // file:setvbuf(mode,[size]) -> void
+				f = checkfile(args.arg1());
+				f.setvbuf(args.checkString(2),args.optint(3, 1024));
+				return LuaValue.TRUE;
+			case 17: // file:lines() -> iterator
+				return lines(checkfile(args.arg1()));
+			case 18: //	file:read(...) -> (...)
+				f = checkfile(args.arg1());
+				return ioread(f,args.subargs(2));
+			case 19: //  file:seek([whence][,offset]) -> pos | nil,error
+				f = checkfile(args.arg1());
+				n = f.seek(args.optString(2,"cur"),args.optint(3,0));
+				return valueOf(n);
+			case 20: //	file:write(...) -> void		
+				f = checkfile(args.arg1());
+				return iowrite(f,args.subargs(2));
 			}
-			return NONE;
+		} catch ( IOException ioe ) {
+			return errorresult(ioe);
 		}
+		return NONE;
 	}
 	
 	private File input() {
@@ -296,6 +286,7 @@ public class IoLib extends LuaTable {
 
 	// TODO: how to close on finalization
 	private Varargs lines(final File f) throws IOException {
+		LuaValue linesiter = env.get(LINESITER);
 		return varargsOf( linesiter, f );
 	}
 

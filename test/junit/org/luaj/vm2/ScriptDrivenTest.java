@@ -64,10 +64,9 @@ public class ScriptDrivenTest extends TestCase {
 				_G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
 				break;
 			case JME:
-				_G = org.luaj.vm2.lib.JmePlatform.standardGlobals();
+				_G = org.luaj.vm2.lib.JmePlatform.debugGlobals();
 				break;
 			}
-			DebugLib.install( _G );
 			
 			// override print()
 			final ByteArrayOutputStream output = new ByteArrayOutputStream();

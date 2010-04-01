@@ -46,10 +46,11 @@ import org.luaj.vm2.Varargs;
  *
  * @see org.luaj.vm2.lib.jse.JseOsLib
  */
-public class OsLib extends LuaTable {
+public class OsLib extends VarArgFunction {
 	public static String TMP_PREFIX    = ".luaj";
 	public static String TMP_SUFFIX    = "tmp";
 
+	private static final int INIT   = -1;
 	private static final int CLOCK     = 0;
 	private static final int DATE      = 1;
 	private static final int DIFFTIME  = 2;
@@ -61,6 +62,20 @@ public class OsLib extends LuaTable {
 	private static final int SETLOCALE = 8;
 	private static final int TIME      = 9;
 	private static final int TMPNAME   = 10;
+
+	private static final String[] NAMES = {
+		"clock",
+		"date",
+		"difftime",
+		"execute",
+		"exit",
+		"getenv",
+		"remove",
+		"rename",
+		"setlocale",
+		"time",
+		"tmpname",
+	};
 	
 	private static final long t0 = System.currentTimeMillis();
 	private static long tmpnames = t0;
@@ -69,71 +84,54 @@ public class OsLib extends LuaTable {
 	 * Create and OsLib instance.   
 	 */
 	public OsLib() {
-		String[] NAMES = {
-			"clock",
-			"date",
-			"difftime",
-			"execute",
-			"exit",
-			"getenv",
-			"remove",
-			"rename",
-			"setlocale",
-			"time",
-			"tmpname",
-		};
-		for ( int i=NAMES.length; --i>=0; )
-			set(NAMES[i], new OsFuncV(NAMES[i], i, this));
+		name = "os";
+		opcode = INIT;
 	}
 
-	public String toString() {
-		return "os";
-	}
-
-	private class OsFuncV extends VarArgFunction {
-		public OsFuncV(String name, int opcode, OsLib lib) {
-			super(name, opcode, lib);
-		}
-		public Varargs invoke(Varargs args) {
-			try {
-				switch ( opcode ) {
-					case CLOCK:
-						return valueOf(clock());
-					case DATE: {
-						String s = args.optString(1, null);
-						long t = args.optlong(2,-1);
-						return valueOf( date(s, t==-1? System.currentTimeMillis(): t) );
-					}
-					case DIFFTIME:
-						return valueOf(difftime(args.checklong(1),args.checklong(2)));
-					case EXECUTE:
-						return valueOf(execute(args.optString(1, null)));
-					case EXIT:
-						exit(args.optint(1, 0));
-						return NONE;
-					case GETENV: {
-						final String val = getenv(args.checkString(1));
-						return val!=null? valueOf(val): NIL;
-					}
-					case REMOVE:
-						remove(args.checkString(1));
-						return LuaValue.TRUE;
-					case RENAME:
-						rename(args.checkString(1), args.checkString(2));
-						return LuaValue.TRUE;
-					case SETLOCALE: {
-						String s = setlocale(args.optString(1,null), args.optString(2, "all"));
-						return s!=null? valueOf(s): NIL;
-					}
-					case TIME:
-						return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
-					case TMPNAME:
-						return valueOf(tmpname());
-				}
-				return NONE;
-			} catch ( IOException e ) {
-				return varargsOf(NIL, valueOf(e.getMessage()));
+	public Varargs invoke(Varargs args) {
+		try {
+			switch ( opcode ) {
+			case INIT: {
+				LuaTable t = new LuaTable();
+				LibFunction.bind(t, getClass(), NAMES);
+				return t;
 			}
+			case CLOCK:
+				return valueOf(clock());
+			case DATE: {
+				String s = args.optString(1, null);
+				long t = args.optlong(2,-1);
+				return valueOf( date(s, t==-1? System.currentTimeMillis(): t) );
+			}
+			case DIFFTIME:
+				return valueOf(difftime(args.checklong(1),args.checklong(2)));
+			case EXECUTE:
+				return valueOf(execute(args.optString(1, null)));
+			case EXIT:
+				exit(args.optint(1, 0));
+				return NONE;
+			case GETENV: {
+				final String val = getenv(args.checkString(1));
+				return val!=null? valueOf(val): NIL;
+			}
+			case REMOVE:
+				remove(args.checkString(1));
+				return LuaValue.TRUE;
+			case RENAME:
+				rename(args.checkString(1), args.checkString(2));
+				return LuaValue.TRUE;
+			case SETLOCALE: {
+				String s = setlocale(args.optString(1,null), args.optString(2, "all"));
+				return s!=null? valueOf(s): NIL;
+			}
+			case TIME:
+				return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
+			case TMPNAME:
+				return valueOf(tmpname());
+			}
+			return NONE;
+		} catch ( IOException e ) {
+			return varargsOf(NIL, valueOf(e.getMessage()));
 		}
 	}
 

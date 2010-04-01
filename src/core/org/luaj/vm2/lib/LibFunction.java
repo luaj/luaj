@@ -45,12 +45,16 @@ abstract public class LibFunction extends LuaFunction {
 		return name!=null? name: super.toString();
 	}
 	
-	/** Bind a set of names to class instances, put values into the table. */
 	public static LuaTable bind( LuaTable table, Class libFuncClass, String[] names ) {
+		return bind( table, libFuncClass, names, 0 );
+	}
+	
+	/** Bind a set of names to class instances, put values into the table. */
+	public static LuaTable bind( LuaTable table, Class libFuncClass, String[] names, int firstOpcode ) {
 		try {
 			for ( int i=0, n=names.length; i<n; i++ ) {
 				LibFunction f = (LibFunction) libFuncClass.newInstance();
-				f.opcode = i;
+				f.opcode = firstOpcode + i;
 				f.name = names[i];
 				f.env = table;
 				table.set( names[i], f );
