@@ -191,7 +191,7 @@ public class LuaValue extends Varargs {
 	public LuaValue getmetatable() { return null; };
 	public LuaValue setmetatable(LuaValue metatable) { return error("setmetatable not allowed for "+typename()); }
 	public LuaValue getfenv() { typerror("function or thread"); return null; }
-	public void  setfenv(LuaValue env) { typerror("function or thread"); }
+	public void setfenv(LuaValue env) { typerror("function or thread"); }
 		
 	// function calls
 	public LuaValue call() { return unimplemented("call"); }

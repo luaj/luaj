@@ -38,12 +38,9 @@ import java.io.InputStream;
  */
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
-	static {
-		STDIN = System.in;
-	}
-
 	/** Construct a JSE base library instance */
 	public JseBaseLib() {
+		STDIN = System.in;
 	}
 
 	/** 

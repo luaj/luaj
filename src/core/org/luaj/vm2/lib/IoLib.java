@@ -33,7 +33,7 @@ import org.luaj.vm2.Varargs;
 
 
 abstract 
-public class IoLib extends VarArgFunction {
+public class IoLib extends OneArgFunction {
 
 	abstract 
 	protected class File extends LuaValue{
@@ -56,7 +56,7 @@ public class IoLib extends VarArgFunction {
 		
 		// delegate method access to file methods table
 		public LuaValue get( LuaValue key ) {
-			return env.get(FILEMETHODS).get(key);
+			return filemethods.get(key);
 		}
 
 		// essentially a userdata instance
@@ -115,41 +115,38 @@ public class IoLib extends VarArgFunction {
 
 	private File infile  = null;
 	private File outfile = null;
-	private File errfile  = null;
+	private File errfile = null;
 
 	private static final LuaValue STDIN       = valueOf("stdin");
 	private static final LuaValue STDOUT      = valueOf("stdout");
 	private static final LuaValue STDERR      = valueOf("stderr");		
 	private static final LuaValue FILE        = valueOf("file");
 	private static final LuaValue CLOSED_FILE = valueOf("closed file");
-	private static final LuaValue FILEMETHODS = valueOf("__filemethods");
 	
-	private static final int INIT          = 0;
-	private static final int IO_INDEX      = 1;
-	private static final int IO_CLOSE      = 2;
-	private static final int IO_FLUSH      = 3;
-	private static final int IO_INPUT      = 4;
-	private static final int IO_LINES      = 5;
-	private static final int IO_OPEN       = 6;
-	private static final int IO_OUTPUT     = 7;
-	private static final int IO_POPEN      = 8;
-	private static final int IO_READ       = 9;
-	private static final int IO_TMPFILE    = 10;
-	private static final int IO_TYPE       = 11;
-	private static final int IO_WRITE      = 12;
+	private static final int IO_CLOSE      = 0;
+	private static final int IO_FLUSH      = 1;
+	private static final int IO_INPUT      = 2;
+	private static final int IO_LINES      = 3;
+	private static final int IO_OPEN       = 4;
+	private static final int IO_OUTPUT     = 5;
+	private static final int IO_POPEN      = 6;
+	private static final int IO_READ       = 7;
+	private static final int IO_TMPFILE    = 8;
+	private static final int IO_TYPE       = 9;
+	private static final int IO_WRITE      = 10;
 
-	private static final int FILE_CLOSE    = 13;
-	private static final int FILE_FLUSH    = 14;
-	private static final int FILE_LINES    = 15;
-	private static final int FILE_READ     = 16;
-	private static final int FILE_SEEK     = 17;
-	private static final int FILE_SETVBUF  = 18;
-	private static final int FILE_WRITE    = 19;
+	private static final int FILE_CLOSE    = 11;
+	private static final int FILE_FLUSH    = 12;
+	private static final int FILE_LINES    = 13;
+	private static final int FILE_READ     = 14;
+	private static final int FILE_SEEK     = 15;
+	private static final int FILE_SETVBUF  = 16;
+	private static final int FILE_WRITE    = 17;
 	
-	private static final int LINES_ITER    = 20;
+	private static final int IO_INDEX      = 18;
+	private static final int LINES_ITER    = 19;
 
 	public static final String[] IO_NAMES = {
-		"__index",
 		"close",
 		"flush",
 		"input",
@@ -172,40 +169,36 @@ public class IoLib extends VarArgFunction {
 		"setvbuf",
 		"write",
 	};
+
+	LuaTable filemethods;
 	
 	public IoLib() {}
 	
-	protected LuaTable init() {
+	public LuaValue call(LuaValue arg) {
 		
 		// io lib functions
 		LuaTable t = new LuaTable();
-		LibFunction.bind(t, this.getClass(), IO_NAMES, IO_INDEX );
-		
-		// let t be its own metatable
-		t.setmetatable( t );
+		bindv(t, IO_NAMES );
 		
 		// create file methods table
-		LuaTable filemethods = new LuaTable();
-		LibFunction.bind(filemethods, this.getClass(), FILE_NAMES, FILE_CLOSE );
-		t.set(FILEMETHODS, filemethods);
+		filemethods = new LuaTable();
+		bind(filemethods, FILE_NAMES, -1, FILE_CLOSE );
 
+		// set up file metatable
+		LuaTable mt = tableOf( new LuaValue[] {	INDEX, bindv("__index",IO_INDEX) });
+		t.setmetatable( mt );
+		
 		// return the table
+		env.set("io", t);
 		return t;
 	}
-	
-	public Varargs invoke(Varargs args) {
+
+	protected Varargs oncallv(int opcode, Varargs args) {
 		File f;
 		int n;
 		LuaValue v;
 		try {
 			switch ( opcode ) {
-			case INIT: // init 
-				return init();
-			case IO_INDEX: // __index, returns a field
-				v = args.arg(2);
-				return v.equals(STDOUT)?output():
-					   v.equals(STDIN)?  input():
-					   v.equals(STDERR)? errput(): NIL;
 			case IO_FLUSH: //	io.flush() -> bool 
 				checkopen(output());
 				outfile.flush();
@@ -245,6 +238,7 @@ public class IoLib extends VarArgFunction {
 			case IO_WRITE: //	io.write(...) -> void
 				checkopen(output());
 				return iowrite(outfile,args);
+				
 			case FILE_CLOSE: // file:close() -> void
 				return ioclose(checkfile(args.arg1()));
 			case FILE_FLUSH: // file:flush() -> void
@@ -266,6 +260,12 @@ public class IoLib extends VarArgFunction {
 			case FILE_WRITE: //	file:write(...) -> void		
 				f = checkfile(args.arg1());
 				return iowrite(f,args.subargs(2));
+
+			case IO_INDEX: // __index, returns a field
+				v = args.arg(2);
+				return v.equals(STDOUT)?output():
+					   v.equals(STDIN)?  input():
+					   v.equals(STDERR)? errput(): NIL;
 			case LINES_ITER: //	lines iterator(s,var) -> var'
 				f = checkfile(env);
 				return freadline(f);
@@ -321,10 +321,8 @@ public class IoLib extends VarArgFunction {
 
 	private Varargs lines(final File f) throws Exception {
 		IoLib iter = (IoLib) getClass().newInstance();
-		iter.opcode = LINES_ITER;
-		iter.name = "lnext";
-		iter.env = f;
-		return iter;
+		iter.setfenv(f);
+		return iter.bindv("lnext",LINES_ITER);
 	}
 
 	private static Varargs iowrite(File f, Varargs args) throws IOException {

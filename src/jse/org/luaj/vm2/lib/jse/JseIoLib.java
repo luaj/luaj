@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,7 @@ import java.io.RandomAccessFile;
 
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
+import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.IoLib;
 
 /**
@@ -42,11 +44,11 @@ public class JseIoLib extends IoLib {
 	}
 
 	protected File wrapStdin() throws IOException {
-		return new FileImpl(JseBaseLib.STDIN);
+		return new FileImpl(BaseLib.instance.STDIN);
 	}
 	
 	protected File wrapStdout() throws IOException {
-		return new FileImpl(JseBaseLib.STDOUT);
+		return new FileImpl(BaseLib.instance.STDOUT);
 	}
 	
 	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {

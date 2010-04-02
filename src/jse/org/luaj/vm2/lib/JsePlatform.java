@@ -22,8 +22,6 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseIoLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
@@ -38,22 +36,22 @@ public class JsePlatform {
 	 * @return Table of globals initialized with the standard JSE libraries
 	 */
 	public static LuaTable standardGlobals() {
-		LuaTable _G = new JseBaseLib();
-		new org.luaj.vm2.lib.PackageLib(_G);
-		set(_G, "table",     new org.luaj.vm2.lib.TableLib() );
-		set(_G, "string",    new org.luaj.vm2.lib.StringLib() );
-		set(_G, "coroutine", new org.luaj.vm2.lib.CoroutineLib() );
-		set(_G, "debug",     new org.luaj.vm2.lib.DebugLib() );
-		set(_G, "math",      new org.luaj.vm2.lib.jse.JseMathLib() );
-		set(_G, "io",        new org.luaj.vm2.lib.jse.JseIoLib() );
-		set(_G, "os",        new org.luaj.vm2.lib.jse.JseOsLib() );
-		set(_G, "luajava",   new org.luaj.vm2.lib.jse.LuajavaLib() );
+		LuaTable _G = new LuaTable();
+		init(_G, new JseBaseLib());
+		init(_G, new PackageLib());
+		init(_G, new TableLib());
+		init(_G, new StringLib());
+		init(_G, new CoroutineLib());
+		init(_G, new DebugLib());
+		init(_G, new JseMathLib());
+		init(_G, new JseIoLib());
+		init(_G, new JseOsLib());
+		init(_G, new LuajavaLib());
 		return _G;		
 	}
-	
-	private static void set( LuaTable _G, String name, LuaValue chunk ) {
-		chunk.setfenv(_G);
-		LuaValue pkg = chunk.call(LuaValue.valueOf(name));
-		_G.set( name, pkg );
+
+	private static void init(LuaTable _G, LibFunction lib) {
+		lib.setfenv(_G);
+		lib.call();
 	}
 }

@@ -35,10 +35,6 @@ abstract public class OneArgFunction extends LibFunction {
 		this.env = env;
 	}
 	
-	public OneArgFunction( String name, int opcode, LuaValue env ) {
-		super(name, opcode, env);
-	}
-	
 	public final LuaValue call() {
 		return call(NIL);
 	}

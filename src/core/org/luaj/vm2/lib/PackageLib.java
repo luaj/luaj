@@ -32,87 +32,89 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 
-public class PackageLib extends LuaTable {
+public class PackageLib extends OneArgFunction {
 
 	public static String DEFAULT_LUA_PATH = "?.lua";
 	
-	public LuaValue       _G      = null;
-	public InputStream STDIN   = null;
-	public PrintStream STDOUT  = System.out;
-	public LuaTable       LOADED  = null;
-	public LuaTable       PACKAGE = null;
+	public InputStream    STDIN   = null;
+	public PrintStream    STDOUT  = System.out;
+	public LuaTable       LOADED;
+	public LuaTable       PACKAGE;
 
-	private static final LuaString _M         = LuaString.valueOf("_M");
-	private static final LuaString _NAME      = LuaString.valueOf("_NAME");	
-	private static final LuaString _PACKAGE   = LuaString.valueOf("_PACKAGE");	
-	private static final LuaString _DOT       = LuaString.valueOf(".");
-	private static final LuaString _LOADERS   = LuaString.valueOf("loaders");
-	private static final LuaString _LOADED    = LuaString.valueOf("loaded");
-	private static final LuaString _LOADLIB   = LuaString.valueOf("loadlib");
-	private static final LuaString _PRELOAD   = LuaString.valueOf("preload");
-	private static final LuaString _PATH      = LuaString.valueOf("path");
-	private static final LuaString _SEEALL    = LuaString.valueOf("seeall");
-	private static final LuaValue    _SENTINEL  = EMPTYSTRING;
+	private static final LuaString _M         = valueOf("_M");
+	private static final LuaString _NAME      = valueOf("_NAME");	
+	private static final LuaString _PACKAGE   = valueOf("_PACKAGE");	
+	private static final LuaString _DOT       = valueOf(".");
+	private static final LuaString _LOADERS   = valueOf("loaders");
+	private static final LuaString _LOADED    = valueOf("loaded");
+	private static final LuaString _LOADLIB   = valueOf("loadlib");
+	private static final LuaString _PRELOAD   = valueOf("preload");
+	private static final LuaString _PATH      = valueOf("path");
+	private static final LuaString _SEEALL    = valueOf("seeall");
+	private static final LuaString _LOADFILE  = valueOf("loadfile");
+	private static final LuaString _SENTINEL  = valueOf("\u0001");
 	
-	private static final int MODULE         = 1;
-	private static final int REQUIRE        = 2;
-	private static final int LOADLIB        = 3;
-	private static final int SEEALL         = 4;
-	private static final int PRELOAD_LOADER = 5;
-	private static final int LUA_LOADER     = 6;
-	private static final int JAVA_LOADER    = 7;
-	
-	
-	public PackageLib(LuaValue _G) {
-		this._G = _G;
-		_G.set( "module",  new PackageFuncV(MODULE,  "module", _G) ); 
-		_G.set( "require", new PackageFuncV(REQUIRE, "require",_G) );
-		_G.set( "package", PACKAGE = tableOf( new LuaValue[] {
+	private static final int MODULE         = 0;
+	private static final int REQUIRE        = 1;
+	private static final int LOADLIB        = 2;
+	private static final int SEEALL         = 3;
+	private static final int PRELOAD_LOADER = 4;
+	private static final int LUA_LOADER     = 5;
+	private static final int JAVA_LOADER    = 6;
+
+	public PackageLib() {
+	}
+
+	public LuaValue call(LuaValue arg) {
+		env.set("require", bind1("require",REQUIRE));
+		env.set("module",  bindv("module",MODULE));
+		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
 				_PRELOAD, tableOf(),
 				_PATH,    valueOf(DEFAULT_LUA_PATH),
-				_LOADLIB, new PackageFuncV(LOADLIB, "loadlib",_G),
-				_SEEALL,  new PackageFuncV(SEEALL, "seeall",_G),
+				_LOADLIB, bindv("loadlib",LOADLIB),
+				_SEEALL,  bind1("seeall",SEEALL),
 				_LOADERS, listOf(new LuaValue[] {
-						new PackageFuncV(PRELOAD_LOADER,"preload_loader",_G),
-						new PackageFuncV(LUA_LOADER,    "lua_loader",_G),
-						new PackageFuncV(JAVA_LOADER,   "java_loader",_G),
-				}),
-		} ) );
+						bindv("preload_loader", PRELOAD_LOADER),
+						bindv("lua_loader", LUA_LOADER),
+						bindv("java_loader", JAVA_LOADER),
+				}) }) );
+		return env;
 	}
 
-	private class PackageFuncV extends VarArgFunction {
-		public PackageFuncV(int opcode, String name, LuaValue env) {
-			super(name, opcode, env);
-		}
-		public Varargs invoke(Varargs args) {
-			switch ( opcode ) {
-			case MODULE: 
-				return module(args);
-			case REQUIRE: 
-				return require(args);
-			case LOADLIB: 
-				return loadlib(args);
-			case SEEALL: { 
-				LuaTable t = args.checktable(1);
-				LuaValue m = t.getmetatable();
-				if ( m == null )
-					t.setmetatable(m=tableOf());
-				m.set( INDEX, env );
-				return NONE;
-			}
-			case PRELOAD_LOADER: {
-				return loader_preload(args);
-			}
-			case LUA_LOADER: {
-				return loader_Lua(args);
-			}
-			case JAVA_LOADER: {
-				return loader_Java(args);
-			}
-			}
+	protected LuaValue oncall1(int opcode, LuaValue arg) {
+		switch ( opcode ) {
+		case REQUIRE: 
+			return require(arg);
+		case SEEALL: { 
+			LuaTable t = arg.checktable();
+			LuaValue m = t.getmetatable();
+			if ( m == null )
+				t.setmetatable(m=tableOf());
+			m.set( INDEX, env );
 			return NONE;
-		}		
+		}
+		}
+		return NIL;
+	}
+
+	protected Varargs oncallv(int opcode, Varargs args) {
+		switch ( opcode ) {
+		case MODULE: 
+			return module(args);
+		case LOADLIB: 
+			return loadlib(args);
+		case PRELOAD_LOADER: {
+			return loader_preload(args);
+		}
+		case LUA_LOADER: {
+			return loader_Lua(args);
+		}
+		case JAVA_LOADER: {
+			return loader_Java(args);
+		}
+		}
+		return NONE;
 	}
 	
 	/** Allow packages to mark themselves as loaded */
@@ -159,7 +161,7 @@ public class PackageLib extends LuaTable {
 		if ( ! value.istable() ) { /* not found? */
 			
 		    /* try global variable (and create one if it does not exist) */
-			module = findtable( _G, modname );
+			module = findtable( env, modname );
 			if ( module == null )
 				error( "name conflict for module '"+modname+"'" );
 			LOADED.set(modname, module);
@@ -249,8 +251,8 @@ public class PackageLib extends LuaTable {
 	 * If there is any error loading or running the module, or if it cannot find any loader for 
 	 * the module, then require signals an error.
 	 */	
-	public Varargs require( Varargs args ) {
-		LuaString name = args.checkstring(1);
+	public LuaValue require( LuaValue arg ) {
+		LuaString name = arg.checkstring();
 		LuaValue loaded = LOADED.get(name);
 		if ( loaded.toboolean() ) {
 			if ( loaded == _SENTINEL )
@@ -304,7 +306,7 @@ public class PackageLib extends LuaTable {
 		InputStream is = null;
 		
 		// try to use loadfile for the file
-		LuaValue loadfile = _G.get("loadfile");
+		LuaValue loadfile = env.get(_LOADFILE);
 		if ( ! loadfile.isfunction() ) 
 			return valueOf("loadfile is not a function" );
 		
@@ -357,7 +359,7 @@ public class PackageLib extends LuaTable {
 		try {
 			c = Class.forName(classname);
 			v = (LuaValue) c.newInstance();
-			v.setfenv(_G);
+			v.setfenv(env);
 			return v;
 		} catch ( ClassNotFoundException  cnfe ) {
 			return valueOf("\n\tno class '"+classname+"'" );

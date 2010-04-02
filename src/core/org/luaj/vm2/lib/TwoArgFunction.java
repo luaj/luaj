@@ -35,10 +35,6 @@ abstract public class TwoArgFunction extends LibFunction {
 		this.env = env;
 	}
 	
-	public TwoArgFunction( String name, int opcode, LuaValue env ) {
-		super(name, opcode, env);
-	}
-	
 	public final LuaValue call() {
 		return call(NIL, NIL);
 	}

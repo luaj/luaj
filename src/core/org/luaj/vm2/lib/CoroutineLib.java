@@ -21,24 +21,13 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-public class CoroutineLib extends VarArgFunction {
+public class CoroutineLib extends ZeroArgFunction {
 	
-	private static final String[] NAMES = {
-		"create",
-		"resume",
-		"running",
-		"status",
-		"yield",
-		"wrap",
-		"wrapped"
-	};
-	
-	private static final int INIT = -1;
 	private static final int CREATE  = 0;
 	private static final int RESUME  = 1;
 	private static final int RUNNING = 2;
@@ -48,21 +37,18 @@ public class CoroutineLib extends VarArgFunction {
 	private static final int WRAPPED = 6;
 	
 	public CoroutineLib() {
-		name = "coroutine";;
-		opcode = INIT;
-	}
-	
-	private CoroutineLib(String name, int opcode, LuaThread thread) {
-		super(name, opcode, thread);
 	}
 
-	public Varargs invoke(Varargs args) {
+	public LuaValue call() {
+		LuaTable t = new LuaTable();
+		bindv(t, new  String[] {
+			"create", "resume", "running", "status", "yield", "wrap" });
+		env.set("coroutine", t);
+		return t;
+	}
+	
+	protected Varargs oncallv(int opcode, Varargs args) {
 		switch ( opcode ) {
-			case INIT: {
-				LuaTable t = new LuaTable();
-				LibFunction.bind(t, this.getClass(), NAMES);
-				return t;
-			}
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
 				return new LuaThread(func, func.getfenv() );
@@ -87,7 +73,9 @@ public class CoroutineLib extends VarArgFunction {
 			case WRAP: {
 				final LuaValue func = args.checkfunction(1);
 				final LuaThread thread = new LuaThread(func, func.getfenv());
-				return new CoroutineLib("wrapped",WRAPPED,thread);
+				CoroutineLib cl = new CoroutineLib();
+				cl.setfenv(thread);
+				return cl.bindv("wrapped",WRAPPED);
 			}
 			case WRAPPED: {
 				final LuaThread t = (LuaThread) env;

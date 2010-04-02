@@ -21,10 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.LibFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.MathLib;
 
 /**
  * Math library implementation for use on JSE platform.
@@ -36,20 +34,21 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
 	public JseMathLib() {}
 
-	protected LuaTable init() {
-		LuaTable t = super.init();
-		LibFunction.bind( t, this.getClass(), new String[] {
+	public LuaValue call(LuaValue arg) {
+		MathLib ml = new MathLib();
+		ml.setfenv(env);
+		LuaValue t = ml.call(arg);
+		bind1( t, new String[] {
 			"acos", "asin", "atan", "cosh",  
 			"exp", "log", "log10", "sinh",  
 			"tanh" } );
-		LibFunction.bind( t, new J2seMathFunc2().getClass(), new String[] {
+		bind2( t, new String[] {
 			"atan2", "pow", } );
 		return t;
 	}
 
-	public LuaValue call(LuaValue arg) {
+	public LuaValue oncall1(int opcode, LuaValue arg) {
 		switch ( opcode ) {
-		case -1: return init();
 		case 0: return valueOf(Math.acos(arg.todouble())); 
 		case 1: return valueOf(Math.asin(arg.todouble())); 
 		case 2: return valueOf(Math.atan(arg.todouble())); 
@@ -62,15 +61,13 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 		}
 		return NIL;
 	}
-	
-	public static class J2seMathFunc2 extends TwoArgFunction {
-		public LuaValue call(LuaValue arg1,LuaValue arg2) {
-			switch ( opcode ) {
-			case 0: return valueOf(Math.atan2(arg1.todouble(), arg2.todouble()));
-			case 1: return valueOf(Math.pow(arg1.todouble(), arg2.todouble()));
-			}
-			return NIL;
+
+	public LuaValue oncall2(int opcode, LuaValue arg1, LuaValue arg2) {
+		switch ( opcode ) {
+		case 0: return valueOf(Math.atan2(arg1.todouble(), arg2.todouble()));
+		case 1: return valueOf(Math.pow(arg1.todouble(), arg2.todouble()));
 		}
+		return NIL;
 	}
 
 	/** Faster, better version of pow() used by arithmetic operator ^ */

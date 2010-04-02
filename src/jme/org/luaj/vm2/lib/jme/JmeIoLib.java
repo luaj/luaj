@@ -37,18 +37,18 @@ import org.luaj.vm2.lib.IoLib;
  * 
  * Seek is not supported. 
  */
-public class JseIoLib extends IoLib {
+public class JmeIoLib extends IoLib {
 	
-	public JseIoLib() {
+	public JmeIoLib() {
 		super();
 	}
 
 	protected File wrapStdin() throws IOException {
-		return new FileImpl(BaseLib.STDIN);
+		return new FileImpl(BaseLib.instance.STDIN);
 	}
 	
 	protected File wrapStdout() throws IOException {
-		return new FileImpl(BaseLib.STDOUT);
+		return new FileImpl(BaseLib.instance.STDOUT);
 	}
 	
 	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {

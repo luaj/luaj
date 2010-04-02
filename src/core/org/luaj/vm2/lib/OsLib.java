@@ -46,11 +46,10 @@ import org.luaj.vm2.Varargs;
  *
  * @see org.luaj.vm2.lib.jse.JseOsLib
  */
-public class OsLib extends VarArgFunction {
+public class OsLib extends OneArgFunction {
 	public static String TMP_PREFIX    = ".luaj";
 	public static String TMP_SUFFIX    = "tmp";
 
-	private static final int INIT   = -1;
 	private static final int CLOCK     = 0;
 	private static final int DATE      = 1;
 	private static final int DIFFTIME  = 2;
@@ -84,18 +83,18 @@ public class OsLib extends VarArgFunction {
 	 * Create and OsLib instance.   
 	 */
 	public OsLib() {
-		name = "os";
-		opcode = INIT;
 	}
 
-	public Varargs invoke(Varargs args) {
+	public LuaValue call(LuaValue arg) {
+		LuaTable t = new LuaTable();
+		bindv(t, NAMES);
+		env.set("os", t);
+		return t;
+	}
+
+	protected Varargs oncallv(int opcode, Varargs args) {
 		try {
 			switch ( opcode ) {
-			case INIT: {
-				LuaTable t = new LuaTable();
-				LibFunction.bind(t, getClass(), NAMES);
-				return t;
-			}
 			case CLOCK:
 				return valueOf(clock());
 			case DATE: {

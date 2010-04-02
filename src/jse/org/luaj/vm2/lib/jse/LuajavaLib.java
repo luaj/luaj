@@ -43,23 +43,20 @@ import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.LibFunction;
+import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 
-public class LuajavaLib extends VarArgFunction {
+public class LuajavaLib extends OneArgFunction {
 	
-	private static final String LIBNAME = "luajava";
-	
-	private static final int INIT        = 0;
-	private static final int BINDCLASS      = 1;
-	private static final int NEWINSTANCE	= 2;
-	private static final int NEW			= 3;
-	private static final int CREATEPROXY	= 4;
-	private static final int LOADLIB		= 5;
+	private static final int BINDCLASS      = 0;
+	private static final int NEWINSTANCE	= 1;
+	private static final int NEW			= 2;
+	private static final int CREATEPROXY	= 3;
+	private static final int LOADLIB		= 4;
 
 	private static final String[] NAMES = {
-		LIBNAME,
 		"bindClass", 
 		"newInstance", 
 		"new", 
@@ -73,18 +70,18 @@ public class LuajavaLib extends VarArgFunction {
 	}
 	
 	public LuajavaLib() {
-		name = LIBNAME;
-		opcode = INIT;
 	}
 
-	public Varargs invoke(final Varargs args) {
+	public LuaValue call(LuaValue arg) {
+		LuaTable t = new LuaTable();
+		bindv( t, NAMES );
+		env.set("luajava", t);
+		return t;
+	}
+
+	protected Varargs oncallv(int opcode, Varargs args) {
 		try {
 			switch ( opcode ) {
-			case INIT: {
-				LuaTable t = new LuaTable(0,8);
-				LibFunction.bind( t, this.getClass(), NAMES );
-				return t;
-			}
 			case BINDCLASS: {
 				final Class clazz = Class.forName(args.checkString(1));
 				return toUserdata( clazz, clazz );

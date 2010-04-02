@@ -21,20 +21,19 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-
-import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.Print;
-import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
+import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 
-public class DebugLib extends VarArgFunction {
+public class DebugLib extends OneArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
 
@@ -59,7 +58,6 @@ public class DebugLib extends VarArgFunction {
 		"traceback",
 	};
 	
-	private static final int INIT      	= -1;
 	private static final int DEBUG        	= 0;
 	private static final int GETFENV        = 1;
 	private static final int GETHOOK        = 2;
@@ -105,49 +103,34 @@ public class DebugLib extends VarArgFunction {
 	private static final LuaString ACTIVELINES     = valueOf("activelines");  
 
 	public DebugLib() {
-		name = "debug";
-		opcode = INIT;
+	}
+	
+	public LuaValue call(LuaValue arg) {
+		LuaTable t = new LuaTable();
+		bindv(t, NAMES);
+		env.set("debug", t);
+		if ( ! DEBUG_ENABLED )
+			DEBUG_ENABLED = true;
+		return t;
 	}
 
-	public Varargs invoke(Varargs args) {
+	protected Varargs oncallv(int opcode, Varargs args) {
 		switch ( opcode ) {
-		case INIT: {
-			LuaTable t = new LuaTable(0,20);
-			LibFunction.bind(t, this.getClass(), NAMES);
-			if ( ! DEBUG_ENABLED )
-				DEBUG_ENABLED = true;
-			return t;
-		}
-		case DEBUG: 
-			return _debug(args);
-		case GETFENV:
-			return _getfenv(args);
-		case GETHOOK: 
-			return _gethook(args);
-		case GETINFO: 
-			return _getinfo(args);
-		case GETLOCAL:
-			return _getlocal(args);
-		case GETMETATABLE:
-			return _getmetatable(args);
-		case GETREGISTRY:
-			return _getregistry(args);
-		case GETUPVALUE:
-			return _getupvalue(args);
-		case SETFENV:
-			return _setfenv(args);
-		case SETHOOK:
-			return _sethook(args);
-		case SETLOCAL:
-			return _setlocal(args);
-		case SETMETATABLE:
-			return _setmetatable(args);
-		case SETUPVALUE:
-			return _setupvalue(args);
-		case TRACEBACK:
-			return _traceback(args);
-		default:
-			return NONE;
+		case DEBUG:        return _debug(args);
+		case GETFENV:      return _getfenv(args);
+		case GETHOOK:      return _gethook(args);
+		case GETINFO:      return _getinfo(args);
+		case GETLOCAL:     return _getlocal(args);
+		case GETMETATABLE: return _getmetatable(args);
+		case GETREGISTRY:  return _getregistry(args);
+		case GETUPVALUE:   return _getupvalue(args);
+		case SETFENV:      return _setfenv(args);
+		case SETHOOK:      return _sethook(args);
+		case SETLOCAL:     return _setlocal(args);
+		case SETMETATABLE: return _setmetatable(args);
+		case SETUPVALUE:   return _setupvalue(args);
+		case TRACEBACK:    return _traceback(args);
+		default:           return NONE;
 		}
 	}
 

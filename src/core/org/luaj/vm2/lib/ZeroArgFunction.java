@@ -35,10 +35,6 @@ abstract public class ZeroArgFunction extends LibFunction {
 		this.env = env;
 	}
 	
-	public ZeroArgFunction( String name, int opcode, LuaValue env ) {
-		super(name, opcode, env);
-	}
-	
 	public LuaValue call(LuaValue arg) {
 		return call();
 	}

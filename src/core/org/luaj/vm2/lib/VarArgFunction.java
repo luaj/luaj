@@ -33,10 +33,6 @@ abstract public class VarArgFunction extends LibFunction {
 		this.env = env;
 	}
 	
-	public VarArgFunction( String name, int opcode, LuaValue env ) {
-		super(name, opcode, env);
-	}
-	
 	public final LuaValue call() {
 		return invoke(NONE).arg1();
 	}

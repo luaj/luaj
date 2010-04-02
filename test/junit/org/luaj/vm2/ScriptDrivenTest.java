@@ -70,9 +70,9 @@ public class ScriptDrivenTest extends TestCase {
 			
 			// override print()
 			final ByteArrayOutputStream output = new ByteArrayOutputStream();
-			final PrintStream oldps = BaseLib.STDOUT;
+			final PrintStream oldps = BaseLib.instance.STDOUT;
 			final PrintStream ps = new PrintStream( output );
-			BaseLib.STDOUT = ps;
+			BaseLib.instance.STDOUT = ps;
 	
 			// run the script
 			try {
@@ -85,7 +85,7 @@ public class ScriptDrivenTest extends TestCase {
 	
 				assertEquals(expectedOutput, actualOutput);
 			} finally {
-				BaseLib.STDOUT = oldps;
+				BaseLib.instance.STDOUT = oldps;
 				ps.close();
 			}
 		} catch ( IOException ioe ) {
