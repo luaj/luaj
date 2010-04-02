@@ -111,7 +111,11 @@ print( "a:read", ( a:read(7) ) )
 print( "b:read", ( b:read(7) ) ) 
 --]]
 
-local pcall = function(...)	return ( pcall(...) )end
+local pcall = function(...)	
+	local s,e  = pcall(...)
+	if s then return s end
+	return s,e:match("closed")
+end
 
 print( 'a:close', pcall( a.close, a ) )
 print( 'a:write', pcall( a.write, a, 'eee') )

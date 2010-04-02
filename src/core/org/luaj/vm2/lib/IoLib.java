@@ -270,7 +270,7 @@ public class IoLib extends OneArgFunction {
 				f = checkfile(env);
 				return freadline(f);
 			}
-		} catch ( Exception ioe ) {
+		} catch ( IOException ioe ) {
 			return errorresult(ioe);
 		}
 		return NONE;
@@ -319,10 +319,14 @@ public class IoLib extends OneArgFunction {
 		return varargsOf(NIL, valueOf(errortext));
 	}
 
-	private Varargs lines(final File f) throws Exception {
-		IoLib iter = (IoLib) getClass().newInstance();
-		iter.setfenv(f);
-		return iter.bindv("lnext",LINES_ITER);
+	private Varargs lines(final File f) {
+		try {
+			IoLib iter = (IoLib) getClass().newInstance();
+			iter.setfenv(f);
+			return iter.bindv("lnext",LINES_ITER);
+		} catch ( Exception e ) {
+			return error("lines: "+e);
+		}
 	}
 
 	private static Varargs iowrite(File f, Varargs args) throws IOException {
