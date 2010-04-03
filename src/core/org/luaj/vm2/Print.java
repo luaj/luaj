@@ -30,7 +30,7 @@ public class Print extends Lua {
 	private static final String STRING_FOR_NULL = "null";
 	public static PrintStream ps = System.out;
 
-	private static final String[] luaP_opnames = {
+	public static final String[] OPNAMES = {
 		  "MOVE",
 		  "LOADK",
 		  "LOADBOOL",
@@ -159,7 +159,7 @@ public class Print extends Lua {
 			ps.print("[" + line + "]  ");
 		else
 			ps.print("[-]  ");
-		ps.print(luaP_opnames[o] + "  ");
+		ps.print(OPNAMES[o] + "  ");
 		switch (getOpMode(o)) {
 		case iABC:
 			ps.print( a );

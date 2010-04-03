@@ -1,4 +1,4 @@
-package org.luaj.compiler;
+package org.luaj.vm2.compiler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,11 +9,13 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.platform.J2sePlatform;
-import org.luaj.vm.LFunction;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LuaState;
-import org.luaj.vm.Platform;
+import org.luaj.vm2.LoadState;
+import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Prototype;
+import org.luaj.vm2.lib.JsePlatform;
+
 
 public class DumpLoadEndianIntTest extends TestCase {
 	private static final String SAVECHUNKS = "SAVECHUNKS";
@@ -24,10 +26,13 @@ public class DumpLoadEndianIntTest extends TestCase {
 	private static final String intscript = "return tostring(1234)..'-#!-'..tostring(23)";
 	private static final String withdoubles = "1234-#!-23.75";
 	private static final String withints = "1234-#!-23";
-	
+
+    private LuaTable _G;
+
     protected void setUp() throws Exception {
         super.setUp();
-        Platform.setInstance(new J2sePlatform());
+        _G = JsePlatform.standardGlobals();
+        LuaC.install();
         DumpState.ALLOW_INTEGER_CASTING = false;
     }
 
@@ -76,17 +81,15 @@ public class DumpLoadEndianIntTest extends TestCase {
 	public void doTest( boolean littleEndian, int numberFormat, boolean stripDebug, 
 			String script, String expectedPriorDump, String expectedPostDump, boolean shouldPass ) {
         try {
-            LuaState vm = Platform.newLuaState();
             
             // compile into prototype
             InputStream is = new ByteArrayInputStream(script.getBytes());
-            LPrototype p = LuaC.compile(is, "script");
+            Prototype p = LuaC.compile(is, "script");
             
             // double check script result before dumping
-            LFunction f = p.newClosure(vm._G);
-            vm.pushfunction(f);
-            vm.call(0,1);
-            String actual = vm.poplvalue().toJavaString();
+            LuaClosure f = new LuaClosure(p, _G);
+            LuaValue r = f.call();
+            String actual = r.toString();
             assertEquals( expectedPriorDump, actual );
             
             // dump into bytes
@@ -105,9 +108,10 @@ public class DumpLoadEndianIntTest extends TestCase {
             
             // load again using compiler
             is = new ByteArrayInputStream(dumped);
-            vm.load(is, "dumped");
-            vm.call(0,1);
-            actual = vm.poplvalue().toJavaString();
+            p = LoadState.compile(is, "dumped");
+            f = new LuaClosure(p, _G);
+            r = f.call();
+            actual = r.toString();
             assertEquals( expectedPostDump, actual );
 
             // write test chunk

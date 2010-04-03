@@ -1,4 +1,4 @@
-package org.luaj.compiler;
+package org.luaj.vm2.compiler;
 
 /**
  * Framework to add regression tests as problem areas are found.
@@ -17,7 +17,7 @@ package org.luaj.compiler;
 public class RegressionTests extends AbstractUnitTests {
 	
 	public RegressionTests() {
-		super( "src/test/compile/regressions.zip", 
+		super( "regressions.zip", 
 				"regressions" );
 	}
 	

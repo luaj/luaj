@@ -1,40 +1,40 @@
-package org.luaj.compiler;
+package org.luaj.vm2.compiler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.TestPlatform;
-import org.luaj.lib.BaseLib;
-import org.luaj.vm.LClosure;
-import org.luaj.vm.LDouble;
-import org.luaj.vm.LInteger;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LValue;
-import org.luaj.vm.LuaState;
-import org.luaj.vm.Platform;
-import org.luaj.vm.Print;
+import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaDouble;
+import org.luaj.vm2.LuaInteger;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
+import org.luaj.vm2.Prototype;
+import org.luaj.vm2.lib.BaseLib;
+import org.luaj.vm2.lib.JsePlatform;
 
 public class SimpleTests extends TestCase {
 
+	private LuaTable _G;
+
     protected void setUp() throws Exception {
         super.setUp();
-        Platform.setInstance(new TestPlatform());
+        _G = JsePlatform.standardGlobals();
+        LuaC.install();
     }
 
     private void doTest( String script ) {
     	try {
         	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
-			LPrototype p = LuaC.compile( is, "script" );
+			Prototype p = LuaC.compile( is, "script" );
 			assertNotNull( p );
 			Print.printCode( p );
 			
 			// try running the code!
-			LuaState state = Platform.newLuaState();
-			BaseLib.install( state._G );
-			LClosure c = p.newClosure( state._G );
-			state.doCall( c, new LValue[0] );
+			LuaClosure c = new LuaClosure( p, _G );
+			c.call();
     	} catch ( Exception e ) {
     		fail("i/o exception: "+e );
     	}
@@ -93,15 +93,15 @@ public class SimpleTests extends TestCase {
 	
 	public void testDoubleHashCode() {
 		for ( int i=0; i<samehash.length; i++ ) {
-			LInteger j = LInteger.valueOf(samehash[i]);
-			LDouble d = new LDouble(samehash[i]);
+			LuaValue j = LuaInteger.valueOf(samehash[i]);
+			LuaValue d = LuaDouble.valueOf(samehash[i]);
 			int hj = j.hashCode();
 			int hd = d.hashCode();
 			assertEquals(hj, hd);
 		}
 		for ( int i=0; i<diffhash.length; i+=2 ) {
-			LDouble c = new LDouble(diffhash[i+0]);
-			LDouble d = new LDouble(diffhash[i+1]);
+			LuaValue c = LuaValue.valueOf(diffhash[i+0]);
+			LuaValue d = LuaValue.valueOf(diffhash[i+1]);
 			int hc = c.hashCode();
 			int hd = d.hashCode();
 			assertTrue("hash codes are same: "+hc,hc!=hd);

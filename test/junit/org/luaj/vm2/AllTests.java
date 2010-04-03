@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 import org.luaj.vm2.WeakTableTest.WeakKeyTableTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
+import org.luaj.vm2.vm1.Luajvm1CompatibilityTest;
 
 public class AllTests {
 
@@ -58,6 +59,7 @@ public class AllTests {
 		
 		// compatiblity tests
 		suite.addTest(CompatibiltyTest.suite());
+		suite.addTestSuite(Luajvm1CompatibilityTest.class);
 		
 		// luajc regression tests
 		TestSuite luajc = new TestSuite("Luajc Tests");

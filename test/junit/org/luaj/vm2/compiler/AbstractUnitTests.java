@@ -1,4 +1,4 @@
-package org.luaj.compiler;
+package org.luaj.vm2.compiler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,42 +9,44 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
-import org.luaj.TestPlatform;
-import org.luaj.vm.LPrototype;
-import org.luaj.vm.LoadState;
-import org.luaj.vm.LuaState;
-import org.luaj.vm.Platform;
-import org.luaj.vm.Print;
+import org.luaj.vm2.LoadState;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.Print;
+import org.luaj.vm2.Prototype;
+import org.luaj.vm2.lib.JsePlatform;
 
 abstract public class AbstractUnitTests extends TestCase {
 
-    private final String zipfile;
     private final String dir;
+    private final String jar;
+    private LuaTable _G;
 
     public AbstractUnitTests(String zipfile, String dir) {
-        this.zipfile = zipfile;
+		URL zip = getClass().getResource(zipfile);
+		this.jar = "jar:" + zip.toExternalForm()+ "!/";
         this.dir = dir;
     }
 
     protected void setUp() throws Exception {
         super.setUp();
-        Platform.setInstance(new TestPlatform());
+        _G = JsePlatform.standardGlobals();
+        LuaC.install();
     }
 
     protected void doTest(String file) {
         try {
             // load source from jar
-            String path = "jar:file:" + zipfile + "!/" + dir + "/" + file;
+            String path = jar + dir + "/" + file;
             byte[] lua = bytesFromJar(path);
 
             // compile in memory
             InputStream is = new ByteArrayInputStream(lua);
-            LPrototype p = LuaC.compile(is, dir + "/" + file);
+            Prototype p = LuaC.compile(is, dir + "/" + file);
             String actual = protoToString(p);
 
             // load expected value from jar
             byte[] luac = bytesFromJar(path + "c");
-            LPrototype e = loadFromBytes(luac, file);
+            Prototype e = loadFromBytes(luac, file);
             String expected = protoToString(e);
 
             // compare results
@@ -56,7 +58,7 @@ abstract public class AbstractUnitTests extends TestCase {
             byte[] dumped = baos.toByteArray();
 
             // re-undump
-            LPrototype p2 = loadFromBytes(dumped, file);
+            Prototype p2 = loadFromBytes(dumped, file);
             String actual2 = protoToString(p2);
 
             // compare again
@@ -79,14 +81,13 @@ abstract public class AbstractUnitTests extends TestCase {
         return baos.toByteArray();
     }
 
-    protected LPrototype loadFromBytes(byte[] bytes, String script)
+    protected Prototype loadFromBytes(byte[] bytes, String script)
             throws IOException {
-        LuaState state = Platform.newLuaState();
         InputStream is = new ByteArrayInputStream(bytes);
-        return LoadState.undump(state, is, script);
+        return LoadState.compile(is, script);
     }
 
-    protected String protoToString(LPrototype p) {
+    protected String protoToString(Prototype p) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
         Print.ps = ps;
