@@ -181,6 +181,7 @@ public class LuaValue extends Varargs {
 	public void presize( int i) { unimplemented("presize"); }
 	public Varargs next(LuaValue index) { unimplemented("next"); return null; }
 	public Varargs inext(LuaValue index) { unimplemented("inext"); return null; }
+	public LuaValue load(LuaValue library) { library.setfenv(this); return library.call(); }
 
 	// varargs references
 	public LuaValue arg(int index) { return index==1? this: NIL; }

@@ -32,8 +32,7 @@ import java.io.PrintStream;
 import junit.framework.TestCase;
 
 import org.luaj.vm2.lib.BaseLib;
-import org.luaj.vm2.lib.DebugLib;
-import org.luaj.vm2.luajc.LuaJCompiler;
+import org.luaj.vm2.luajc.JavaBytecodeCompiler;
 
 abstract
 public class ScriptDrivenTest extends TestCase {
@@ -112,7 +111,7 @@ public class ScriptDrivenTest extends TestCase {
 					return c;
 				} else {
 					script = new FileInputStream(file);
-					return LuaJCompiler.compile( script, name, _G);
+					return JavaBytecodeCompiler.load( script, name, _G);
 				}
 			default:
 				script = new FileInputStream(file);

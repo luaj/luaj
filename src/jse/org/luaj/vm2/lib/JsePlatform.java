@@ -37,21 +37,16 @@ public class JsePlatform {
 	 */
 	public static LuaTable standardGlobals() {
 		LuaTable _G = new LuaTable();
-		init(_G, new JseBaseLib());
-		init(_G, new PackageLib());
-		init(_G, new TableLib());
-		init(_G, new StringLib());
-		init(_G, new CoroutineLib());
-		init(_G, new DebugLib());
-		init(_G, new JseMathLib());
-		init(_G, new JseIoLib());
-		init(_G, new JseOsLib());
-		init(_G, new LuajavaLib());
+		_G.load(new JseBaseLib());
+		_G.load(new PackageLib());
+		_G.load(new TableLib());
+		_G.load(new StringLib());
+		_G.load(new CoroutineLib());
+		_G.load(new DebugLib());
+		_G.load(new JseMathLib());
+		_G.load(new JseIoLib());
+		_G.load(new JseOsLib());
+		_G.load(new LuajavaLib());
 		return _G;		
-	}
-
-	private static void init(LuaTable _G, LibFunction lib) {
-		lib.setfenv(_G);
-		lib.call();
 	}
 }

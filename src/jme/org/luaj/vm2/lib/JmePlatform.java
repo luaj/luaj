@@ -23,11 +23,6 @@ package org.luaj.vm2.lib;
 
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.lib.jme.JmeIoLib;
-import org.luaj.vm2.lib.jse.JseBaseLib;
-import org.luaj.vm2.lib.jse.JseIoLib;
-import org.luaj.vm2.lib.jse.JseMathLib;
-import org.luaj.vm2.lib.jse.JseOsLib;
-import org.luaj.vm2.lib.jse.LuajavaLib;
 
 public class JmePlatform {
 
@@ -38,23 +33,20 @@ public class JmePlatform {
 	 */
 	public static LuaTable standardGlobals() {
 		LuaTable _G = new LuaTable();
-		init(_G, new BaseLib());
-		init(_G, new PackageLib());
-		init(_G, new TableLib());
-		init(_G, new StringLib());
-		init(_G, new CoroutineLib());
-		init(_G, new JmeIoLib());
+		_G.load(new BaseLib());
+		_G.load(new PackageLib());
+		_G.load(new OsLib());
+		_G.load(new MathLib());
+		_G.load(new TableLib());
+		_G.load(new StringLib());
+		_G.load(new CoroutineLib());
+		_G.load(new JmeIoLib());
 		return _G;		
 	}
 	
 	public static LuaTable debugGlobals() {
 		LuaTable _G = standardGlobals();
-		init(_G, new DebugLib());
+		_G.load(new DebugLib());
 		return _G;
-	}
-
-	private static void init(LuaTable _G, LibFunction lib) {
-		lib.setfenv(_G);
-		lib.call();
 	}
 }

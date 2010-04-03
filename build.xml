@@ -56,7 +56,7 @@
 		<javac destdir="build/jse/classes" encoding="utf-8" source="1.5" target="1.5"
 			classpath="build/core/classes;lib/bcel-5.2.jar"
 			srcdir="src/jse"
-			excludes="**/antlr/**,**/lst/**,**/JavaCodeGenerator.java" />
+			excludes="**/antlr/**,**/lst/**,**/JavaCodeGenerator.java,**/LuaJCompiler.java" />
 	</target>
 	
 	<target name="jar-jme" depends="compile">
@@ -107,6 +107,7 @@
 				<exclude name="**/antlr/**"/>
 				<exclude name="**/lst/**"/>
 				<exclude name="**/JavaCodeGenerator.java"/>
+				<exclude name="**/LuaJCompiler.java"/>
 		    </fileset>
 		</copy>
 		<copy todir="build/luaj-${version}/test">

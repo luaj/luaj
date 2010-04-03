@@ -401,7 +401,5 @@ public class PackageLib extends OneArgFunction {
 		default:
 			return false;
 		}
-	}
-	
-	
+	}	
 }

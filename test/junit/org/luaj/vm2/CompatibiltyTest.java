@@ -87,7 +87,7 @@ public class CompatibiltyTest {
 	}
 	public static class JseBytecodeTest extends CompatibiltyTestSuite {
 		public JseBytecodeTest() {
-			super(ScriptDrivenTest.PlatformType.JSE);
+			super(ScriptDrivenTest.PlatformType.LUAJIT);
 		}
 		protected void setUp() throws Exception {
 			super.setUp();
