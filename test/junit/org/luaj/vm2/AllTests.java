@@ -26,13 +26,14 @@ import junit.framework.TestSuite;
 
 import org.luaj.vm2.WeakTableTest.WeakKeyTableTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
+import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
 
 public class AllTests {
 
 	public static Test suite() {
 		TestSuite suite = new TestSuite("All Tests for Luaj-vm2");
 
-		// table tests
+		// vm tests
 		TestSuite vm = new TestSuite("VM Tests");
 		vm.addTestSuite(TypeTest.class);
 		vm.addTestSuite(UnaryBinaryOperatorsTest.class);
@@ -49,6 +50,11 @@ public class AllTests {
 		table.addTestSuite(WeakKeyTableTest.class);
 		table.addTestSuite(WeakKeyValueTableTest.class);
 		suite.addTest(table);
+		
+		// library tests
+		TestSuite lib = new TestSuite("Library Tests");
+		lib.addTestSuite(LuaJavaCoercionTest.class);
+		suite.addTest(lib);
 		
 		// compatiblity tests
 		suite.addTest(CompatibiltyTest.suite());

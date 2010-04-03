@@ -26,9 +26,11 @@ package org.luaj.vm2.lib.jse;
  * 
  * TODO: coerce types on way in and out, pick method base on arg count ant types.
  */
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -42,7 +44,6 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.LibFunction;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
@@ -65,6 +66,10 @@ public class LuajavaLib extends OneArgFunction {
 	
 	private static final Map classMetatables = new HashMap(); 
 
+	private static final int METHOD_MODIFIERS_VARARGS = 0x80;
+
+	private static LuaValue LENGTH = valueOf("length");
+	
 	public static void install(LuaValue globals) {
 		globals.set("luajava", new LuajavaLib());
 	}
@@ -120,10 +125,22 @@ public class LuajavaLib extends OneArgFunction {
 						LuaValue func = lobj.get(name);
 						if ( func.isnil() )
 							return null;
+						boolean isvarargs = ((method.getModifiers() & METHOD_MODIFIERS_VARARGS) != 0);
 						int n = args!=null? args.length: 0; 
-						LuaValue[] v = new LuaValue[n];
-						for ( int i=0; i<n; i++ )
-							v[i] = CoerceJavaToLua.coerce(args[i]);
+						LuaValue[] v;
+						if ( isvarargs ) {								
+							Object o = args[--n];
+							int m = Array.getLength( o );
+							v = new LuaValue[n+m];
+							for ( int i=0; i<n; i++ )
+								v[i] = CoerceJavaToLua.coerce(args[i]);
+							for ( int i=0; i<m; i++ )
+								v[i+n] = CoerceJavaToLua.coerce(Array.get(o,i));								
+						} else {
+							v = new LuaValue[n];
+							for ( int i=0; i<n; i++ )
+								v[i] = CoerceJavaToLua.coerce(args[i]);
+						}
 						LuaValue result = func.invoke(v).arg1();
 						return CoerceLuaToJava.coerceArg(result, method.getReturnType());
 					}
@@ -153,6 +170,8 @@ public class LuajavaLib extends OneArgFunction {
 			}
 		} catch (LuaError e) {
 			throw e;
+		} catch (InvocationTargetException ite) {
+			throw new LuaError(ite.getTargetException());
 		} catch (Exception e) {
 			throw new LuaError(e);
 		}
@@ -188,12 +207,23 @@ public class LuajavaLib extends OneArgFunction {
 			mt = new LuaTable();
 			mt.set( LuaValue.INDEX, new TwoArgFunction() {
 				public LuaValue call(LuaValue table, LuaValue key) {
+					Object instance = table.touserdata();
+					if ( key.isinttype() ) {
+						if ( clazz.isArray() ) {
+							int index = key.toint() - 1;
+							if ( index >= 0 && index < Array.getLength(instance) )
+								return CoerceJavaToLua.coerce( Array.get(instance, index) );
+							return NIL;
+						}
+					}
 					final String s = key.toString();
 					try {
 						Field f = clazz.getField(s);
-						Object o = f.get(table.checkuserdata(Object.class));
+						Object o = f.get(instance);
 						return CoerceJavaToLua.coerce( o );
 					} catch (NoSuchFieldException nsfe) {
+						if ( clazz.isArray() && key.equals(LENGTH) )
+							return LuaValue.valueOf( Array.getLength(instance) );
 						return new LMethod(clazz,s);
 					} catch (Exception e) {
 						throw new LuaError(e);
@@ -202,6 +232,18 @@ public class LuajavaLib extends OneArgFunction {
 			});
 			mt.set( LuaValue.NEWINDEX, new ThreeArgFunction() {
 				public LuaValue call(LuaValue table, LuaValue key, LuaValue val) {
+					Object instance = table.touserdata();
+					if ( key.isinttype() ) {
+						if ( clazz.isArray() ) {
+							Object v = CoerceLuaToJava.coerceArg(val, clazz.getComponentType());
+							int index = key.toint() - 1;
+							if ( index >= 0 && index < Array.getLength(instance) )
+								Array.set(instance, index, v);
+							else 
+								throw new LuaError("array bounds exceeded "+index);
+							return NIL;
+						}
+					}
 					String s = key.toString();
 					try {
 						Field f = clazz.getField(s);
@@ -241,6 +283,8 @@ public class LuajavaLib extends OneArgFunction {
 				
 				// coerce the result
 				return CoerceJavaToLua.coerce(result);
+			} catch (InvocationTargetException ite) {
+				throw new LuaError(ite.getTargetException());
 			} catch (Exception e) {
 				throw new LuaError(e);
 			}

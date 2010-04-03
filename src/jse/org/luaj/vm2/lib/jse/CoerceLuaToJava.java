@@ -21,9 +21,11 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
 
 
@@ -213,14 +215,50 @@ public class CoerceLuaToJava {
 		COERCIONS.put( Object.class, objectCoercion );
 	}
 	
-	static Object coerceArg(LuaValue v, Class type) {
-		Coercion co = (Coercion) COERCIONS.get( type );
-		if ( co != null )
-			return co.coerce( v );
-		Object o = v.optuserdata(type, null);
-		if ( o != null )
-			return o;
-		return v;
+
+	/** Score a single parameter, including array handling */
+	private static int scoreParam(LuaValue a, Class c) {
+		if ( a.isuserdata(c) ) 
+			return 0;
+		Coercion co = (Coercion) COERCIONS.get( c );
+		if ( co != null ) {
+			return co.score( a );
+		}
+		if ( c.isArray() ) {
+			Class typ = c.getComponentType();
+			switch ( a.type() ) {
+			case LuaValue.TTABLE:
+				return scoreParam( a.checktable().get(1), typ );
+			default:
+				return 0x10 + (scoreParam(a, typ) << 8);
+			}
+		}
+		return 0x1000;
+	}
+
+	/** Do a conversion */
+	static Object coerceArg(LuaValue a, Class c) {
+		if ( a.isuserdata(c) ) 
+			return a.touserdata(c);
+		Coercion co = (Coercion) COERCIONS.get( c );
+		if ( co != null ) {
+			return co.coerce( a );
+		}
+		if ( c.isArray() ) {
+			boolean istable = a.istable();
+			int n = istable? a.length(): 1;
+			Class typ = c.getComponentType();
+			Object arr = Array.newInstance(typ, n);
+			for ( int i=0; i<n; i++ ) {
+				LuaValue ele = (istable? a.checktable().get(i+1): a);
+				if ( ele != null )
+					Array.set(arr, i, coerceArg(ele, typ));				
+			}
+			return arr;
+		}
+		if ( a.isnil() )
+			return null;
+		throw new LuaError("no coercion found for "+a.getClass()+" to "+c);
 	}
 
 	static Object[] coerceArgs(LuaValue[] suppliedArgs, Class[] parameterTypes) {
@@ -247,16 +285,9 @@ public class CoerceLuaToJava {
 		for ( int i=0; i<nargs && i<njava; i++ ) {
 			LuaValue a = suppliedArgs[i];
 			Class c = paramTypes[i];
-			Coercion co = (Coercion) COERCIONS.get( c );
-			if ( co != null ) {
-				score += co.score( a );
-			} else if ( a.optuserdata(c, null) == null ) {
-				score += 0x10000;
-			} else {
-				score += 0x100;
-			}
+			int s = scoreParam( a, c );
+			score += s;
 		}
 		return score;
 	}
-
 }

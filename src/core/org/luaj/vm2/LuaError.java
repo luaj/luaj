@@ -49,6 +49,8 @@ public class LuaError extends RuntimeException {
 		return msg;
 	}
 	
+	private Throwable cause;
+	
 	/**
 	 * Construct a LuaErrorException in response to a Throwable that was caught
 	 * indicating a problem with the VM rather than the lua code.
@@ -57,6 +59,7 @@ public class LuaError extends RuntimeException {
 	 */
 	public LuaError(Throwable cause) {		
 		this( errorHook( "vm error: "+cause ) );
+		this.cause = cause;
 	}
 
 	/**
@@ -92,6 +95,13 @@ public class LuaError extends RuntimeException {
 				System.out.println(traceback.elementAt(i));
 			}
 		}
+	}
+
+	/** 
+	 * Get the cause, if any.
+	 */
+	public Throwable getCause() {
+		return cause;
 	}
 
 
