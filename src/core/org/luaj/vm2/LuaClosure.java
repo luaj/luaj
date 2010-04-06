@@ -302,28 +302,17 @@ public class LuaClosure extends LuaFunction {
 					}
 					
 				case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
-					switch ( i & (Lua.MASK_B | Lua.MASK_C) ) {
-					case (1<<Lua.POS_B) | (0<<Lua.POS_C): return stack[a].invoke(NONE);
-					case (2<<Lua.POS_B) | (0<<Lua.POS_C): return stack[a].invoke(stack[a+1]);
-					case (1<<Lua.POS_B) | (1<<Lua.POS_C): stack[a].call(); return NONE;
-					case (2<<Lua.POS_B) | (1<<Lua.POS_C): stack[a].call(stack[a+1]); return NONE;
-					case (3<<Lua.POS_B) | (1<<Lua.POS_C): stack[a].call(stack[a+1],stack[a+2]); return NONE;
-					case (4<<Lua.POS_B) | (1<<Lua.POS_C): stack[a].call(stack[a+1],stack[a+2],stack[a+3]); return NONE;
-					case (1<<Lua.POS_B) | (2<<Lua.POS_C): return stack[a].call();
-					case (2<<Lua.POS_B) | (2<<Lua.POS_C): return stack[a].call(stack[a+1]);
-					case (3<<Lua.POS_B) | (2<<Lua.POS_C): return stack[a].call(stack[a+1],stack[a+2]);
-					case (4<<Lua.POS_B) | (2<<Lua.POS_C): return stack[a].call(stack[a+1],stack[a+2],stack[a+3]);
+					switch ( i & Lua.MASK_B ) {
+					case (1<<Lua.POS_B): return new TailcallVarargs(stack[a], NONE);
+					case (2<<Lua.POS_B): return new TailcallVarargs(stack[a], stack[a+1]);
+					case (3<<Lua.POS_B): return new TailcallVarargs(stack[a], varargsOf(stack[a+1],stack[a+2]));
+					case (4<<Lua.POS_B): return new TailcallVarargs(stack[a], varargsOf(stack[a+1],stack[a+2],stack[a+3]));
 					default:
 						b = i>>>23;
-						c = (i>>14)&0x1ff;
 						v = b>0? 
 							varargsOf(stack,a+1,b-1): // exact arg count
 							varargsOf(stack, a+1, top-v.narg()-(a+1), v); // from prev top 
-						switch ( c ) {
-						case 1: stack[a].invoke(v); return NONE;
-						case 2: return stack[a].invoke(v).arg1();
-						default: return stack[a].invoke(v);
-						}
+						return new TailcallVarargs( stack[a], v );
 					}
 					
 				case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
@@ -461,6 +450,4 @@ public class LuaClosure extends LuaFunction {
 	protected void setUpvalue(int i, LuaValue v) {
 		upValues[i].setValue(v);
 	}
-	
-
 }

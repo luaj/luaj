@@ -98,3 +98,46 @@ print(factorial(5))
 
 local result2 = f(-1234)
 print( result2 )
+
+local function fib_bad(n)
+	local function helper(i, a, b)
+		if i >= n then
+			return a
+		else
+			-- not recognized by luac as a tailcall!
+			local result = helper(i + 1, b, a + b)
+			return result
+		end
+	end
+	return helper(1, 1, 1)
+end
+
+local function fib_good(n)
+	local function helper(i, a, b)
+		if i >= n then
+			return a
+		else
+			-- must be a tail call!
+			return helper(i + 1, b, a + b)
+		end
+	end
+	return helper(1, 1, 1)
+end
+
+print(pcall(fib_bad, 30))
+print(pcall(fib_bad, 25000))
+print(pcall(fib_good, 30))
+print(pcall(fib_good, 25000))
+
+local function fib_all(n, i, a, b)
+	i = i or 1
+	a = a or 1
+	b = b or 1
+	if i >= n then
+		return
+	else
+		return a, fib_all(n, i+1, b, a+b)
+	end
+end
+
+print(fib_all(10))
