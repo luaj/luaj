@@ -166,20 +166,17 @@ public class LuaJavaCoercionTest extends TestCase {
 		
 		// get sample field, call with one arguments
 		LuaValue arg = CoerceJavaToLua.coerce(new Integer(123));
-		method.call(v,arg);
-		result = method.call(v);
+		result = method.call(v,arg);
 		assertEquals( "int-args 123", result.toString() );
 		
 		// get sample field, call with array argument
 		arg = CoerceJavaToLua.coerce(new int[]{345,678});
-		method.call(v,arg);
-		result = method.call(v);
+		result = method.call(v,arg);
 		assertEquals( "int-array-args 345,678", result.toString() );
 		
 		// get sample field, call with two-d array argument
 		arg = CoerceJavaToLua.coerce(new int[][]{{22,33},{44,55}});
-		method.call(v,arg);
-		result = method.call(v);
+		result = method.call(v,arg);
 		assertEquals( "int-array-array-args 22,33,44,55", result.toString() );
 	}
 	
@@ -198,10 +195,10 @@ public class LuaJavaCoercionTest extends TestCase {
 	public void testExceptionMessage() {
 		String script = "return pcall( luajava.bindClass( \""+SomeClass.class.getName()+"\").someMethod )";
 		Varargs vresult = _G.get("loadstring").call(LuaValue.valueOf(script)).invoke(LuaValue.NONE);
-		LuaValue message = vresult.arg1();
-		LuaValue status = vresult.arg(2);
+		LuaValue status = vresult.arg1();
+		LuaValue message = vresult.arg(2);
 		assertEquals( LuaValue.FALSE, status );		
-		assertEquals( "lua error: "+SomeException.class.getName()+": this is some message", message.toString() );		
+		assertEquals( "vm error: "+SomeException.class.getName()+": this is some message", message.toString() );		
 	}
 
 	public void testLuaErrorCause() {

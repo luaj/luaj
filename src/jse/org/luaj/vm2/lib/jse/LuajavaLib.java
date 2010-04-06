@@ -206,6 +206,7 @@ public class LuajavaLib extends OneArgFunction {
 		if ( mt == null ) {
 			mt = new LuaTable();
 			mt.set( LuaValue.INDEX, new TwoArgFunction() {
+				private Map methods;
 				public LuaValue call(LuaValue table, LuaValue key) {
 					Object instance = table.touserdata();
 					if ( key.isinttype() ) {
@@ -224,7 +225,16 @@ public class LuajavaLib extends OneArgFunction {
 					} catch (NoSuchFieldException nsfe) {
 						if ( clazz.isArray() && key.equals(LENGTH) )
 							return LuaValue.valueOf( Array.getLength(instance) );
-						return new LMethod(clazz,s);
+						if ( methods == null )
+							methods = new HashMap();
+						LMethod m = (LMethod) methods.get(s);
+						if ( m == null ) {
+							m = new LMethod(clazz,s);
+							// not safe - param list needs to 
+							// distinguish between more cases
+							// methods.put(s, m);
+						}
+						return m;
 					} catch (Exception e) {
 						throw new LuaError(e);
 					}
@@ -273,7 +283,7 @@ public class LuajavaLib extends OneArgFunction {
 		public Varargs invoke(Varargs args) {
 			try {
 				// find the method 
-				Object instance = args.checkuserdata(1,Object.class);
+				Object instance = args.touserdata(1);
 				ParamsList params = new ParamsList( args );
 				Method meth = resolveMethod( clazz, s, params );
 

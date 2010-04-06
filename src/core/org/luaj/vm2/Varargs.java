@@ -81,6 +81,7 @@ public abstract class Varargs {
 	public LuaString    checkstring(int i)           { return arg(i).checkstring(); }
 	public LuaTable     checktable(int i)            { return arg(i).checktable(); }
 	public LuaThread    checkthread(int i)           { return arg(i).checkthread(); }
+	public Object       checkuserdata(int i)         { return arg(i).checkuserdata(); }
 	public Object       checkuserdata(int i,Class c) { return arg(i).checkuserdata(c); }
 	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.error("value expected"); }
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
@@ -90,6 +91,17 @@ public abstract class Varargs {
 	public boolean isnoneornil(int i) {
 		return i>narg() || arg(i).isnil();
 	}
+	
+	public boolean toboolean(int i)           { return arg(i).toboolean(); }
+	public byte    tobyte(int i)              { return arg(i).tobyte(); }
+	public char    tochar(int i)              { return arg(i).tochar(); }
+	public double  todouble(int i)            { return arg(i).todouble(); }
+	public float   tofloat(int i)             { return arg(i).tofloat(); }
+	public int     toint(int i)               { return arg(i).toint(); }
+	public long    tolong(int i)              { return arg(i).tolong(); }
+	public short   toshort(int i)             { return arg(i).toshort(); }
+	public Object  touserdata(int i)          { return arg(i).touserdata(); }
+	public Object  touserdata(int i,Class c)  { return arg(i).touserdata(c); }
 	
 	public String toString() {
 		Buffer sb = new Buffer();
