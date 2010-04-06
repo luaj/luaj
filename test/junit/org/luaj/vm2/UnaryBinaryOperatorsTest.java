@@ -127,7 +127,7 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		
 		// objects should be different
 		assertNotSame(ia, ib);
-		assertNotSame(sa, sb);
+		assertSame(sa, sb);
 		assertNotSame(ia, ic);
 		assertNotSame(sa, sc);
 		
@@ -148,7 +148,7 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		
 		// objects should be different
 		assertNotSame(da, db);
-		assertNotSame(sa, sb);
+		assertSame(sa, sb);
 		assertNotSame(da, dc);
 		assertNotSame(sa, sc);
 		
