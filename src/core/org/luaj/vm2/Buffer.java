@@ -74,7 +74,7 @@ public final class Buffer {
 		this.length = length;
 	}
 	
-	public final LuaString tostrvalue() {
+	public final LuaString tostring() {
 		return new LuaString( realloc( bytes, length ) );
 	}
 	

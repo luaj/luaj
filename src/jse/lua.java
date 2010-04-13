@@ -35,7 +35,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.JsePlatform;
-import org.luaj.vm2.luajc.JavaBytecodeCompiler;
+import org.luaj.vm2.luajc.LuaJC;
 
 
 /**
@@ -89,7 +89,7 @@ public class lua {
 						// input script - defer to last stage
 						break;
 					case 'j':
-						JavaBytecodeCompiler.install();
+						LuaJC.install();
 						break;
 					case 'l':
 						if ( ++i >= args.length )

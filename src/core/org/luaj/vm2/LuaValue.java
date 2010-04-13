@@ -286,7 +286,7 @@ public class LuaValue extends Varargs {
 	public LuaValue   or( LuaValue rhs )       { return this.toboolean()? this: rhs; }
 	
 	// for loop helpers
-	/** test numeric for loop */
+	/** @deprecated - used during development only */
 	public boolean testfor_b(LuaValue limit, boolean stepgtzero) { return stepgtzero? lteq_b(limit): gteq_b(limit); }
 	/** used in for loop only */
 	public boolean testfor_b(LuaValue limit, LuaValue step) { return step.gt_b(0)? lteq_b(limit): gteq_b(limit); }
@@ -312,7 +312,7 @@ public class LuaValue extends Varargs {
 	
 	// table initializers
 	public static LuaTable tableOf() { return new LuaTable(); }
-	public static LuaTable tableOf(Varargs varargs, int firstarg) { return new LuaTable(varargs.subargs(firstarg)); }
+	public static LuaTable tableOf(Varargs varargs, int firstarg) { return new LuaTable(varargs,firstarg); }
 	public static LuaTable tableOf(int narray, int nhash) { return new LuaTable(narray, nhash); }	
 	public static LuaTable listOf(LuaValue[] unnamedValues) { return new LuaTable(null,unnamedValues,null); }
 	public static LuaTable listOf(LuaValue[] unnamedValues,Varargs lastarg) { return new LuaTable(null,unnamedValues,lastarg); }
@@ -421,8 +421,12 @@ public class LuaValue extends Varargs {
 	public static Varargs varargsOf(LuaValue v1,LuaValue v2,Varargs v3) { 
 		switch ( v3.narg() ) {
 		case 0: return new PairVarargs(v1,v2);
-		default: return new ArrayVarargs(new LuaValue[] {v1,v2},v3); }
+		default: return new ArrayVarargs(new LuaValue[] {v1,v2},v3); 
 		}
+	}
+	public static Varargs tailcallOf(LuaValue func, Varargs args) { 
+		return new TailcallVarargs(func, args);
+	}
 
 	// empty varargs
 	private static final class None extends LuaNil {

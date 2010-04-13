@@ -28,7 +28,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.JsePlatform;
-import org.luaj.vm2.luajc.LuaJCompiler;
+import org.luaj.vm2.luajc.LuaJC;
 
 public class TestLuaJC {
 	// create the script
@@ -48,9 +48,7 @@ public class TestLuaJC {
 		LuaValue chunk;
 		if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
 			InputStream is =  new ByteArrayInputStream( script.getBytes() );
-			String java =LuaJCompiler.compileToJava(is, "script");
-			System.out.println("java:\n"+java);
-			chunk = LuaJCompiler.javaCompile(java, "script");
+			chunk = LuaJC.getInstance().load(is, "script", _G);
 		} else {
 			chunk = (LuaValue) Class.forName("script").newInstance();
 		}

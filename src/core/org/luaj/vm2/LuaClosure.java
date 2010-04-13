@@ -236,7 +236,7 @@ public class LuaClosure extends LuaFunction {
 						Buffer sb = new Buffer();
 						for ( ; b<=c; )
 							sb.append( stack[b++].checkstring() );
-						stack[a] = sb.tostrvalue();
+						stack[a] = sb.tostring();
 					}
 					continue;
 					

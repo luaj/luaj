@@ -24,7 +24,6 @@ package org.luaj.vm2;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
 
 /*
 ** Loader to load compiled function prototypes

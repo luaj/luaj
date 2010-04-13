@@ -56,13 +56,17 @@ public class LuaTable extends LuaValue {
 				rawset(named[i], named[i+1]);
 	}
 
-	
 	public LuaTable(Varargs varargs) {
-		int n = varargs.narg();
+		this(varargs,1);
+	}
+
+	public LuaTable(Varargs varargs, int firstarg) {
+		int nskip = firstarg-1;
+		int n = Math.max(varargs.narg()-nskip,0);
 		presize( n, 1 );
 		set(N, valueOf(n));
 		for ( int i=1; i<=n; i++ )
-			set(i, varargs.arg(i));
+			set(i, varargs.arg(i+nskip));
 	}
 
 	private void presize(int narray, int nhash) {
@@ -232,7 +236,7 @@ public class LuaTable extends LuaValue {
 				sb.append( get(i).checkstring() );
 			}
 		}
-		return sb.tostrvalue();
+		return sb.tostring();
 	}
 
 	public LuaValue getn() { 

@@ -48,21 +48,18 @@ public class TailcallVarargs extends Varargs {
 		} while (nextcall != null);
 	}
 	
-	@Override
 	public LuaValue arg( int i ) {
 		if ( result == null )
 			eval();
 		return result.arg(i);
 	}
 	
-	@Override
 	public LuaValue arg1() {
 		if (result == null)
 			eval();
 		return result.arg1();
 	}
 	
-	@Override
 	public int narg() {
 		if (result == null)
 			eval();

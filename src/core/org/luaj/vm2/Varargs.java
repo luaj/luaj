@@ -143,5 +143,4 @@ public abstract class Varargs {
 			return end+1-start;
 		}
 	}
-
 }

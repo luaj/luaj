@@ -259,7 +259,7 @@ public class StringLib extends OneArgFunction {
 			}
 		}
 		
-		return result.tostrvalue();
+		return result.tostring();
 	}
 	
 	private static void addquoted(Buffer buf, LuaString s) {
@@ -575,7 +575,7 @@ public class StringLib extends OneArgFunction {
 				break;
 		}
 		lbuf.append( src.substring( soffset, srclen ) );
-		return varargsOf(lbuf.tostrvalue(), valueOf(n));
+		return varargsOf(lbuf.tostring(), valueOf(n));
 	}
 	
 	/** 

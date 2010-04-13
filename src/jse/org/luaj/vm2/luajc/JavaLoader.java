@@ -1,0 +1,83 @@
+package org.luaj.vm2.luajc;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Prototype;
+import org.luaj.vm2.compiler.LuaC;
+
+/*******************************************************************************
+* Copyright (c) 2010 Luaj.org. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+******************************************************************************/
+public class JavaLoader extends ClassLoader {
+
+	private final LuaValue env;
+	
+	private Map<String,byte[]> unloaded = new HashMap<String,byte[]>();
+	
+	public JavaLoader( LuaValue env ) {
+		this.env = env;
+	}
+
+	public LuaValue load( InputStream is, String classname, String filename ) throws IOException {
+		Prototype p = LuaC.compile(is, classname);
+		return load( p, classname, filename );
+	}
+	
+	public LuaValue load( Prototype p, String classname, String filename ) {
+		JavaGen jg = new JavaGen( p, classname, filename );
+		return load( jg );
+	}
+	
+	public LuaValue load( JavaGen jg ) {
+		include( jg );
+		return load( jg.classname );
+	}
+	
+	public LuaValue load(String classname) {
+		try {
+			Class c = loadClass( classname );
+			LuaValue v = (LuaValue) c.newInstance();
+			v.setfenv(env);
+			return v;
+		} catch ( Exception e ) {
+			e.printStackTrace();
+			throw new IllegalStateException("bad class gen: "+e);
+		}
+	}
+
+	public void include( JavaGen jg ) {
+		unloaded.put( jg.classname, jg.bytecode );
+		for ( int i=0; i<jg.inners.length; i++ )
+			include( jg.inners[i] );
+	}
+
+	public Class findClass(String classname) throws ClassNotFoundException {
+		byte[] bytes = unloaded.get(classname);
+		if ( bytes != null )
+			return defineClass(classname, bytes, 0, bytes.length);
+		return super.findClass(classname);
+	}
+
+}

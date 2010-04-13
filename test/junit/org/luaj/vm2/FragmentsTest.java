@@ -27,7 +27,7 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.luajc.JavaBytecodeCompiler;
+import org.luaj.vm2.luajc.LuaJC;
 
 /** 
  * Test compilation of various fragments that have
@@ -43,7 +43,7 @@ public class FragmentsTest extends TestCase {
 			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 			LuaValue chunk ;
 			if ( true ) {
-				chunk = JavaBytecodeCompiler.load(is,name,_G);
+				chunk = LuaJC.getInstance().load(is,name,_G);
 			} else {
 				chunk = (new LuaC()).load( is, name, _G );
 			}

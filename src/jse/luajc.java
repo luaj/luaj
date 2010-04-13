@@ -30,7 +30,7 @@ import java.util.Hashtable;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.compiler.DumpState;
-import org.luaj.vm2.luajc.JavaBytecodeCompiler;
+import org.luaj.vm2.luajc.LuaJC;
 
 
 
@@ -155,7 +155,7 @@ public class luajc {
 	private void processScript( InputStream script, String chunkname, OutputStream out ) throws IOException {
 		try {
 	        // create the chunk
-			Hashtable t = JavaBytecodeCompiler.loadClasses(script, chunkname);
+			Hashtable t = LuaJC.getInstance().compileAll(script, chunkname, chunkname);
 
 	        // write out the chunk
 	        if (!parseonly) {
