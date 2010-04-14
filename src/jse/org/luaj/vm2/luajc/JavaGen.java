@@ -175,8 +175,14 @@ public class JavaGen {
 				break;
 				
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
+			{
+				int pc1 = pc+1+sbx;
+				ins = p.code[pc1];
+				if ( Lua.GET_OPCODE(ins) == Lua.OP_TFORLOOP )
+					builder.createUpvalues(pc, Lua.GETARG_A(ins)+3, Lua.GETARG_C(ins));
 				builder.addBranch(pc, JavaBuilder.BRANCH_GOTO, pc+1+sbx);
 				break;
+			}
 				
 			case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
 			case Lua.OP_LT: /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
@@ -280,13 +286,15 @@ public class JavaGen {
 				break;
 				
 			case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
-				if ( c == 1 )
-					break;
-				switch ( b ) {
-				case 0: loadVarargResults( builder, pc, a, vresultbase ); break;
-				case 1: builder.loadNone(); break;
-				case 2: builder.loadLocal(pc, a); break;
-				default: builder.newVarargs(pc, a, b-1); break;
+				if ( c == 1 ) {
+					builder.loadNone();
+				} else {
+					switch ( b ) {
+					case 0: loadVarargResults( builder, pc, a, vresultbase ); break;
+					case 1: builder.loadNone(); break;
+					case 2: builder.loadLocal(pc, a); break;
+					default: builder.newVarargs(pc, a, b-1); break;
+					}
 				}
 				builder.areturn(); 
 				break;

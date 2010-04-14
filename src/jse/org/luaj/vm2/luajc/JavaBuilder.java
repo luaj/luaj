@@ -338,6 +338,23 @@ public class JavaBuilder {
 			append(new ASTORE(index));
 		}
 	}
+
+	public void createUpvalues(int pc, int firstslot, int numslots) {
+		for ( int i=0; i<numslots; i++ ) {
+			int slot = firstslot + i;
+			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
+			if ( isupcreate ) {
+				int index = findSlotIndex( slot, true );
+				append(new PUSH(cp, 1));
+				append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
+				dup();
+				append(new PUSH(cp, 0));
+				loadNil();
+				append(InstructionConstants.AASTORE);
+				append(new ASTORE(index));
+			}
+		}
+	}
 	
 	private static String upvalueName(int upindex) {
 		return PREFIX_UPVALUE+upindex;

@@ -90,6 +90,7 @@ public class Slots {
 		markassignments( p );
 		markuninitialized( p );
 		markupvalues( p );
+		markforloopupvalues( p );
 	}
 	
 	public String toString() {
@@ -329,6 +330,43 @@ public class Slots {
 		}
 	}
 	
+	private void markforloopupvalues( Prototype p ) {
+		for ( int pc1=n; --pc1>=0; ) {
+			int i = p.code[pc1];
+			if ( Lua.GET_OPCODE(i) == Lua.OP_TFORLOOP ) {
+				int a = Lua.GETARG_A(i);
+				int c = Lua.GETARG_C(i);
+				for ( int pc0=pc1; --pc0>=0; ) {
+					i = p.code[pc0];
+					int o = Lua.GET_OPCODE(i);
+					int sbx = Lua.GETARG_sBx(i);
+					if ( o == Lua.OP_JMP && (pc0 + 1 + sbx == pc1) ) {
+						for ( int j=0; j<c; j++ ) {
+							checkPromoteLoopUpvalue( pc0, pc1, a+3+j );
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	private void checkPromoteLoopUpvalue(int pc0, int pc1, int slot) {
+		for ( int index=pc0+1; index<=pc1; ++index ) {
+			switch (slots[index][slot]) {
+			case UPVAL_CREATE:
+			case UPVAL_USE_CREATE:
+			case UPVAL_USE_ASSIGN:
+			case UPVAL_USE:
+				int i = pc0;
+				slots[++i][slot] = UPVAL_CREATE;
+				while ( ++i<=pc1 )
+					slots[i][slot] = UPVAL_USE;
+				return;
+			}
+		}
+	}
+
 	private void promoteUpvalueBefore(byte[] s, int index, int j) {
 		int begin  = prevUndefined(index,j);
 		int assign = firstAssignAfter(begin,index,j);
