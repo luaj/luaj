@@ -29,6 +29,7 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 
 /**
@@ -89,6 +90,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 		PrintStream printStream = new PrintStream( outputStream );
 		try {
 			org.luaj.vm2.LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
+			LuaThread.getRunning().setfenv(_G);
 			_G.get("package").get("loaders").checktable().insert(1, new org.luaj.vm2.lib.OneArgFunction(_G) {
 				public LuaValue call(LuaValue arg) {
 					String name = arg.toString();

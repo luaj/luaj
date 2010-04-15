@@ -137,7 +137,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				if ( arg == null )
 					LuaValue.argerror(1, "invalid level");
 			}
-			return arg.getfenv();
+			LuaValue e = arg.getfenv();
+			return e!=null? e: NIL;
 		}
 		case 1: // "getmetatable", // ( object ) -> table
 			LuaValue mt = arg.getmetatable();
@@ -252,13 +253,15 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 			}
 		case 6: // "xpcall", // (f, err) -> result1, ...				
+		{
+			LuaValue errfunc = args.checkvalue(2);
 			try {
 				LuaThread.onCall(this);
 				try {
 					LuaThread thread = LuaThread.getRunning();
 					LuaValue olderr = thread.err;
 					try {
-						thread.err = args.arg(2);
+						thread.err = errfunc;
 						return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
 					} finally {
 						thread.err = olderr;
@@ -266,13 +269,14 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				} finally {
 					LuaThread.onReturn();
 				}
+			} catch ( LuaError le ) {
+				String m = le.getMessage();
+				return varargsOf(FALSE, m!=null? valueOf(m): NIL);
 			} catch ( Exception e ) {
-				try {
-					return args.arg(2).invoke(valueOf(e.getMessage()));
-				} catch ( Exception f ) {
-					return varargsOf(FALSE, valueOf(f.getMessage()));
-				}
+				String m = e.getMessage();
+				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 			}
+		}
 		case 7: // "print", // (...) -> void
 		{
 			LuaValue tostring = env.get("tostring"); 

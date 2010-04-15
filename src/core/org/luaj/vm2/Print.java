@@ -330,6 +330,10 @@ public class Print extends Lua {
 	private static String id(Prototype f) {
 		return "Proto";
 	}
+	private void _assert(boolean b) {
+		if ( !b ) 
+			throw new NullPointerException("_assert failed");
+	}
 	
 	public static void printState(LuaClosure cl, int pc, LuaValue[] stack, int top, Varargs varargs) {
 		// print opcode into buffer
