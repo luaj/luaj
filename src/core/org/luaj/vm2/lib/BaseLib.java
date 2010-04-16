@@ -132,7 +132,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		switch ( opcode ) {
 		case 0: { // "getfenv", // ( [f] ) -> env
 			if ( ! arg.isfunction() ) {
-				int i = arg.checkint();
+				int i = arg.optint(0);
 				arg = (i==0)? (LuaValue) LuaThread.getRunning(): (LuaValue) LuaThread.getCallstackFunction(i-1);
 				if ( arg == null )
 					LuaValue.argerror(1, "invalid level");
@@ -174,7 +174,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		case 3: { // "setfenv", // (f, table) -> void
 			LuaValue f = arg1;
 			if ( ! f.isfunction() ) {
-				int i = arg1.checkint();
+				int i = arg1.checkint(0);
 				f = (i==0)? (LuaValue) LuaThread.getRunning(): (LuaValue) LuaThread.getCallstackFunction(i-1);
 				if ( f == null )
 					LuaValue.argerror(1, "invalid level");
