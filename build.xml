@@ -16,10 +16,12 @@
 	</target>
 
 	<available file="lib/bcel-5.2.jar" property="bcel.lib.exists"/>			
+	<available file="lib/luaj-j2se-1.0.3.jar" property="luaj1.lib.exists"/>			
 
 	<target name="bcel-lib" unless="bcel.lib.exists">
 		<mkdir dir="lib"/>
-		<get src="http://archive.apache.org/dist/jakarta/bcel/binaries/bcel-5.2.tar.gz" dest="lib/bcel-5.2.tar.gz"/>
+		<get src="http://archive.apache.org/dist/jakarta/bcel/binaries/bcel-5.2.tar.gz" 
+			dest="lib/bcel-5.2.tar.gz"/>
 		<gunzip src="lib/bcel-5.2.tar.gz" dest="lib/bcel-5.2.tar"/>
 		<untar src="lib/bcel-5.2.tar" dest="lib" overwrite="true">
 		    <patternset>
@@ -28,8 +30,19 @@
 		    <mapper type="flatten"/>
 		</untar>
 	</target>
+	
+	<target name="luaj1-lib" unless="luaj1.lib.exists">
+		<get src="http://downloads.sourceforge.net/project/luaj/luaj/1.0.3/luaj-1.0.3.zip"
+			dest="lib/luaj-1.0.3.zip"/>
+		<unzip src="lib/luaj-1.0.3.zip" dest="lib" overwrite="true">
+		    <patternset>
+		        <include name="**/*.jar"/>
+		    </patternset>
+		    <mapper type="flatten"/>
+		</unzip>
+	</target>
 		
-	<target name="compile" depends="wtk-or-fail,bcel-lib">
+	<target name="compile" depends="wtk-or-fail,bcel-lib,luaj1-lib">
 		<mkdir dir="build/core/src"/>
 		<mkdir dir="build/core/classes"/>
 		<mkdir dir="build/jme/classes"/>
