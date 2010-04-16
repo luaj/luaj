@@ -62,21 +62,31 @@ public abstract class Varargs {
 	public boolean isvalue(int i)      { return i>0 && i<=narg(); }
 	
 	// optional argument types 
-	public LuaFunction  optfunction(int i, LuaFunction defval) { return arg(i).optfunction(defval); }
-	public int          optint(int i, int defval)              { return arg(i).optint(defval); }
-	public long         optlong(int i, long defval)            { return arg(i).optlong(defval); }
-	public LuaNumber    optnumber(int i, LuaNumber defval)     { return arg(i).optnumber(defval); }
-	public String       optString(int i, String defval)        { return arg(i).optString(defval); }
-	public LuaString    optstring(int i, LuaString defval)     { return arg(i).optstring(defval); }
-	public LuaValue     optvalue(int i, LuaValue defval)       { return i>0 && i<=narg()? arg(i): defval; }
+	public boolean      optboolean(int i, boolean defval)          { return arg(i).optboolean(defval); }
+	public LuaClosure   optclosure(int i, LuaClosure defval)       { return arg(i).optclosure(defval); }
+	public double       optdouble(int i, double defval)            { return arg(i).optdouble(defval); }
+	public LuaFunction  optfunction(int i, LuaFunction defval)     { return arg(i).optfunction(defval); }
+	public int          optint(int i, int defval)                  { return arg(i).optint(defval); }
+	public LuaInteger   optinteger(int i, LuaInteger defval)       { return arg(i).optinteger(defval); }
+	public long         optlong(int i, long defval)                { return arg(i).optlong(defval); }
+	public LuaNumber    optnumber(int i, LuaNumber defval)         { return arg(i).optnumber(defval); }
+	public String       optString(int i, String defval)            { return arg(i).optString(defval); }
+	public LuaString    optstring(int i, LuaString defval)         { return arg(i).optstring(defval); }
+	public LuaTable     opttable(int i, LuaTable defval)           { return arg(i).opttable(defval); }
+	public LuaThread    optthread(int i, LuaThread defval)         { return arg(i).optthread(defval); }
+	public Object       optuserdata(int i, Object defval)          { return arg(i).optuserdata(defval); }
+	public Object       optuserdata(int i, Class c, Object defval) { return arg(i).optuserdata(c,defval); }
+	public LuaValue     optvalue(int i, LuaValue defval)           { return i>0 && i<=narg()? arg(i): defval; }
 	
 	// required argument types 
 	public boolean      checkboolean(int i)          { return arg(i).checkboolean(); }
+	public LuaClosure   checkclosure(int i)          { return arg(i).checkclosure(); }
 	public double       checkdouble(int i)           { return arg(i).checknumber().todouble(); }
 	public LuaValue     checkfunction(int i)         { return arg(i).checkfunction(); }
 	public int          checkint(int i)              { return arg(i).checknumber().toint(); }
+	public LuaInteger   checkinteger(int i)          { return arg(i).checkinteger(); }
 	public long         checklong(int i)             { return arg(i).checknumber().tolong(); }
-	public LuaValue     checknumber(int i)           { return arg(i).checknumber(); }
+	public LuaNumber    checknumber(int i)           { return arg(i).checknumber(); }
 	public String       checkString(int i)           { return arg(i).checkString(); }
 	public LuaString    checkstring(int i)           { return arg(i).checkstring(); }
 	public LuaTable     checktable(int i)            { return arg(i).checktable(); }
@@ -86,6 +96,7 @@ public abstract class Varargs {
 	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.error("value expected"); }
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
+
 	public void         argcheck(boolean test, int i, String msg) { if (!test) LuaValue.argerror(i,msg); }
 	
 	public boolean isnoneornil(int i) {
