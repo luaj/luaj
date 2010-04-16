@@ -157,7 +157,7 @@ public class LoadState {
 			return null;
 		byte[] bytes = new byte[size];
 		is.readFully( bytes, 0, size );
-		return new LuaString( bytes, 0, bytes.length - 1 );
+		return LuaString.valueOf( bytes, 0, bytes.length - 1 );
 	}
 	
 	public static LuaValue longBitsToLuaNumber( long bits ) {

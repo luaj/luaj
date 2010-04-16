@@ -127,7 +127,7 @@ public class StringLib extends OneArgFunction {
 			if (c<0 || c>=256) error(a, "invalid value");
 			bytes[i] = (byte) c;
 		}
-		return valueOf( bytes );
+		return LuaString.valueOf( bytes );
 	}
 		
 	/** 
@@ -144,7 +144,7 @@ public class StringLib extends OneArgFunction {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			DumpState.dump( ((LuaClosure)f).p, baos, true );
-			return valueOf(baos.toByteArray());
+			return LuaString.valueOf(baos.toByteArray());
 		} catch (IOException e) {
 			return error( e.getMessage() );
 		}
@@ -625,7 +625,7 @@ public class StringLib extends OneArgFunction {
 		for ( int offset = 0; offset < bytes.length; offset += len ) {
 			s.copyInto( 0, bytes, offset, len );
 		}
-		return valueOf( bytes );
+		return LuaString.valueOf( bytes );
 	}
 
 	/** 
@@ -639,7 +639,7 @@ public class StringLib extends OneArgFunction {
 		byte[] b = new byte[n];
 		for ( int i=0, j=n-1; i<n; i++, j-- )
 			b[j] = (byte) s.luaByte(i);
-		return valueOf( b );
+		return LuaString.valueOf( b );
 	}
 
 	/** 

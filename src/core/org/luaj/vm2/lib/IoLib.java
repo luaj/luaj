@@ -398,7 +398,7 @@ public class IoLib extends OneArgFunction {
 		int r;
 		if ( ( r = f.read(b,0,b.length) ) < 0 )
 			return NIL;
-		return valueOf(b, 0, r);
+		return LuaString.valueOf(b, 0, r);
 	}
 	public static LuaValue freaduntil(File f,int delim) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -415,7 +415,7 @@ public class IoLib extends OneArgFunction {
 		}
 		return ( c < 0 && baos.size() == 0 )? 
 			(LuaValue) NIL:
-			(LuaValue) valueOf(baos.toByteArray());
+			(LuaValue) LuaString.valueOf(baos.toByteArray());
 	}
 	public static LuaValue freadline(File f) throws IOException {
 		return freaduntil(f,'\n');

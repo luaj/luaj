@@ -26,6 +26,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Hashtable;
 
 import org.luaj.vm2.lib.StringLib;
 
@@ -37,58 +38,50 @@ public class LuaString extends LuaValue {
 	public final int    m_offset;
 	public final int    m_length;
 
-	private static final int STRINGCACHE_POW2 = 10;
-	private static final WeakReference[] stringcache 
-					= new WeakReference[1<<STRINGCACHE_POW2];
+	private static final Hashtable index_java = new Hashtable();
 
-	private static class LuaJavaString extends LuaString {
-		private final String string;
-		private LuaJavaString(String value, byte[] bytes) {
-			super(bytes);
-			string = value.intern();
-		}
-		public String toString() {
-			return string;
-		}
+	private final static LuaString index_get(Hashtable indextable, Object key) {
+		WeakReference w = (WeakReference) indextable.get(key);
+		return w!=null? (LuaString) w.get(): null;
+	}
+	
+	private final static void index_set(Hashtable indextable, Object key, LuaString value) {
+		indextable.put(key, new WeakReference(value));
 	}
 	
 	public static LuaString valueOf(String string) {
-		int h = string.hashCode();
-		int i = h & ((1<<STRINGCACHE_POW2)-1);
-		if ( stringcache[i] != null ) {
-			LuaJavaString s = (LuaJavaString) stringcache[i].get();
-			if ( s != null && s.string == string ) {
-				return s;
-			}
-		}
+		LuaString s = index_get( index_java, string );
+		if ( s != null ) return s;
 		char[] c = string.toCharArray();
 		byte[] b = new byte[lengthAsUtf8(c)];
 		encodeToUtf8(c, b, 0);
-		LuaJavaString s = new LuaJavaString(string,b);
-		stringcache[i] = new WeakReference(s);
+		s = valueOf(b, 0, b.length);
+		index_set( index_java, string, s );
 		return s;
 	}
-
-	public LuaString(byte[] bytes, int offset, int length) {
-		this.m_bytes = bytes;
-		this.m_offset = offset;
-		this.m_length = length;
+	
+	public static LuaString valueOf(byte[] bytes, int off, int len) { 
+		return new LuaString(bytes, off, len);
 	}
 	
-	public LuaString(byte[] bytes) {
-		this.m_bytes = bytes;
-		this.m_offset = 0;
-		this.m_length = bytes.length;
-	}
-
 	public static LuaString valueOf(char[] bytes) {
 		int n = bytes.length;
 		byte[] b = new byte[n];
 		for ( int i=0; i<n; i++ )
 			b[i] = (byte) bytes[i];
-		return new LuaString(b, 0, n);
+		return valueOf(b, 0, n);
 	}
 	
+	public static LuaString valueOf(byte[] bytes) {
+		return valueOf(bytes, 0, bytes.length);
+	}
+	
+	private LuaString(byte[] bytes, int offset, int length) {
+		this.m_bytes = bytes;
+		this.m_offset = offset;
+		this.m_length = length;
+	}
+
 	public boolean isstring() {
 		return true; 
 	}

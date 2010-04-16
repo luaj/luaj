@@ -42,7 +42,7 @@ public final class Buffer {
 	}
 	
 	public final String toString() {
-		return new LuaString(bytes, 0, length).toString();
+		return LuaString.valueOf(bytes, 0, length).toString();
 	}
 	
 	public final void append( byte b ) {
@@ -75,7 +75,7 @@ public final class Buffer {
 	}
 	
 	public final LuaString tostring() {
-		return new LuaString( realloc( bytes, length ) );
+		return LuaString.valueOf( realloc( bytes, length ) );
 	}
 	
 	public final void ensureCapacity( int minSize ) {

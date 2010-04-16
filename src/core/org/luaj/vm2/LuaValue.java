@@ -306,9 +306,9 @@ public class LuaValue extends Varargs {
 	public static LuaInteger  valueOf(int i)        { return LuaInteger.valueOf(i); }
 	public static LuaNumber   valueOf(double d)     { return LuaDouble.valueOf(d); };
 	public static LuaString valueOf(String s)     { return LuaString.valueOf(s); }
-	public static LuaString valueOf(byte[] bytes) { return new LuaString(bytes); }
+	public static LuaString valueOf(byte[] bytes) { return LuaString.valueOf(bytes); }
 	public static LuaString valueOf(byte[] bytes, int off, int len) { 
-		return new LuaString(bytes,off,len); 
+		return LuaString.valueOf(bytes,off,len); 
 	}
 	
 	// table initializers
