@@ -229,6 +229,7 @@ public class LuaValue extends Varargs {
 	// arithmetic equality
 	public LuaValue   eq( LuaValue val )         { return valueOf(eq_b(val)); }
 	public boolean eq_b( LuaValue val )       { return this == val; }
+	public boolean eq_b( LuaString val )       { return this == val; }
 	public boolean eq_b( double val )      { return false; }
 	public boolean eq_b( int val )         { return false; }
 	public LuaValue   neq( LuaValue val )        { return valueOf(!eq_b(val)); }

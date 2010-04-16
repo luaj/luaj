@@ -261,22 +261,28 @@ public class LuaString extends LuaValue {
 	// object comparison, used in key comparison
 	public boolean equals( Object o ) {
 		if ( o instanceof LuaString ) {
-			LuaString s = (LuaString) o;
-			if ( s.m_length != m_length )
-				return false;
-			if ( s.hashCode() != hashCode() )
-				return false;
-			for ( int i=0; i<m_length; i++ )
-				if ( s.m_bytes[s.m_offset+i] != m_bytes[m_offset+i] )
-					return false;
-			return true;
-		} else {
-			return false;
+			return eq_b( (LuaString) o );
 		}
+		return false;
 	}
 
+	public boolean eq_b( LuaString s ) { 
+		if ( s == this )
+			return true;
+		if ( s.m_length != m_length )
+			return false;
+		if ( s.m_bytes == m_bytes && s.m_offset == m_offset )
+			return true;
+		if ( s.hashCode() != hashCode() )
+			return false;
+		for ( int i=0; i<m_length; i++ )
+			if ( s.m_bytes[s.m_offset+i] != m_bytes[m_offset+i] )
+				return false;
+		return true;
+	}
+	
 	public boolean eq_b( LuaValue val ) {
-		return equals( val );
+		return val.eq_b( this );
 	}
 	
 	public static boolean equals( LuaString a, int i, LuaString b, int j, int n ) {
