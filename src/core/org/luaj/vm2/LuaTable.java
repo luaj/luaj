@@ -303,6 +303,8 @@ public class LuaTable extends LuaValue {
 						break;
 					}
 				}
+				if ( hashKeys.length == 0 )
+					error( "invalid key to 'next'" );
 				i = hashFindSlot(key);
 				if ( hashKeys[i] == null )
 					error( "invalid key to 'next'" );

@@ -150,8 +150,8 @@ public class LuaValue extends Varargs {
 	public static LuaValue error(int iarg, String message) { throw new LuaError("arg "+iarg+": "+message); }
 	public static void assert_(boolean b,String msg) { if(!b) throw new LuaError(msg); }
 	public static void argerror(int i,String msg) { throw new LuaError("arg "+i+": "+msg); }
-	protected LuaValue typerror(String expected) { throw new LuaError("expected "+expected+" got "+typename()); }
-	protected LuaValue typerror(int iarg, String expected) { throw new LuaError("arg "+iarg+": expected "+expected+" got "+typename()); }
+	protected LuaValue typerror(String expected) { throw new LuaError(expected+" expected, got "+typename()); }
+	protected LuaValue typerror(int iarg, String expected) { throw new LuaError("arg "+iarg+": "+expected+" expected, got "+typename()); }
 	protected LuaValue unimplemented(String fun) { throw new LuaError("'"+fun+"' not implemented for "+typename()); }
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on "+typename()); }
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
@@ -178,9 +178,9 @@ public class LuaValue extends Varargs {
 	public void rawset( String key, int value ) { rawset(valueOf(key),valueOf(value)); }
 	public void rawset( String key, String value ) { rawset(valueOf(key),valueOf(value)); }
 	public void rawsetlist( int key0, Varargs values ) { for ( int i=0, n=values.narg(); i<n; i++ ) rawset(key0+i,values.arg(i+1)); }
-	public void presize( int i) { unimplemented("presize"); }
-	public Varargs next(LuaValue index) { unimplemented("next"); return null; }
-	public Varargs inext(LuaValue index) { unimplemented("inext"); return null; }
+	public void presize( int i) { typerror("table"); }
+	public Varargs next(LuaValue index) { return typerror("table"); }
+	public Varargs inext(LuaValue index) { return typerror("table"); }
 	public LuaValue load(LuaValue library) { library.setfenv(this); return library.call(); }
 
 	// varargs references

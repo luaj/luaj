@@ -177,7 +177,7 @@ public class PackageLib extends OneArgFunction {
 		}
 		
 		// set the environment of the current function
-		LuaFunction f = LuaThread.getCallstackFunction(0);
+		LuaFunction f = LuaThread.getCallstackFunction(1);
 		if ( f == null )
 			error(1, "no calling function");
 		f.setfenv(module);

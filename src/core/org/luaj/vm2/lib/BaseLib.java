@@ -80,14 +80,12 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		bind1( env, new String[] {
 			"getfenv", // ( [f] ) -> env
 			"getmetatable", // ( object ) -> table 
-			"tostring", // (e) -> value
 		} );
 		bind2( env, new String[] {
 			"collectgarbage", // ( opt [,arg] ) -> value
 			"error", // ( message [,level] ) -> ERR
 			"rawequal", // (v1, v2) -> boolean
 			"setfenv", // (f, table) -> void
-			"tonumber", // (e [,base]) -> value
 		} );
 		bindv( env, new String[] {
 			"assert", // ( v [,message] ) -> v, message | ERR
@@ -104,6 +102,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			"rawget", // (table, index) -> value
 			"rawset", // (table, index, value) -> table
 			"setmetatable", // (table, metatable) -> table
+			"tostring", // (e) -> value
+			"tonumber", // (e [,base]) -> value
 			"pairs", // "pairs" (t) -> iter-func, t, nil
 			"ipairs", // "ipairs", // (t) -> iter-func, t, 0
 			"next", // "next"  ( table, [index] ) -> next-index, next-value
@@ -139,8 +139,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		case 1: // "getmetatable", // ( object ) -> table
 			LuaValue mt = arg.getmetatable();
 			return mt!=null? mt: NIL;
-		case 2: // "tostring", // (e) -> value
-			return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.toString());
 		}
 		return NIL;
 	}
@@ -173,16 +171,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		    f.setfenv(t);
 		    return f.isthread()? NONE: f;
 		}
-		case 4: // "tonumber", // (e [,base]) -> value
-			final int base = arg2.optint(10);
-			if (base == 10) {  /* standard conversion */
-				return arg1.tonumber();
-			} else {
-				if ( base < 2 || base > 36 )
-					argerror(2, "base out of range");
-				final LuaString str = arg1.optstring(null);
-				return str!=null? str.tonumber(base): NIL;
-			}
 		}
 		return NIL;
 	}
@@ -332,13 +320,29 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			t.setmetatable(mt.isnil()? null: mt.checktable());
 			return t;
 		}
-		case 14: // "pairs" (t) -> iter-func, t, nil
+		case 14: { // "tostring", // (e) -> value
+			LuaValue arg = args.checkvalue(1);
+			return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.toString());
+		}
+		case 15: { // "tonumber", // (e [,base]) -> value
+			LuaValue arg1 = args.checkvalue(1);
+			final int base = args.optint(2,10);
+			if (base == 10) {  /* standard conversion */
+				return arg1.tonumber();
+			} else {
+				if ( base < 2 || base > 36 )
+					argerror(2, "base out of range");
+				final LuaString str = arg1.optstring(null);
+				return str!=null? str.tonumber(base): NIL;
+			}
+		}
+		case 16: // "pairs" (t) -> iter-func, t, nil
 			return varargsOf( next, args.checktable(1) );
-		case 15: // "ipairs", // (t) -> iter-func, t, 0
+		case 17: // "ipairs", // (t) -> iter-func, t, 0
 			return varargsOf( inext, args.checktable(1), ZERO );
-		case 16: // "next"  ( table, [index] ) -> next-index, next-value
+		case 18: // "next"  ( table, [index] ) -> next-index, next-value
 			return args.arg1().next(args.arg(2));
-		case 17: // "inext" ( table, [int-index] ) -> next-index, next-value
+		case 19: // "inext" ( table, [int-index] ) -> next-index, next-value
 			return args.arg1().inext(args.arg(2));
 		}
 		return NONE;
