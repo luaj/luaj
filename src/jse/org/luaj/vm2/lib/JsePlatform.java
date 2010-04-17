@@ -22,6 +22,7 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseIoLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
@@ -47,6 +48,7 @@ public class JsePlatform {
 		_G.load(new JseIoLib());
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
+		LuaThread.setGlobals(_G);
 		return _G;		
 	}
 }

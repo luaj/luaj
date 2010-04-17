@@ -26,6 +26,7 @@ import java.io.PrintStream;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
@@ -131,13 +132,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	protected LuaValue oncall1(int opcode, LuaValue arg) {
 		switch ( opcode ) {
 		case 0: { // "getfenv", // ( [f] ) -> env
-			if ( ! arg.isfunction() ) {
-				int i = arg.optint(0);
-				arg = (i==0)? (LuaValue) LuaThread.getRunning(): (LuaValue) LuaThread.getCallstackFunction(i-1);
-				if ( arg == null )
-					LuaValue.argerror(1, "invalid level");
-			}
-			LuaValue e = arg.getfenv();
+			LuaValue f = getfenvobj(arg);
+		    LuaValue e = f.getfenv();
 			return e!=null? e: NIL;
 		}
 		case 1: // "getmetatable", // ( object ) -> table
@@ -148,7 +144,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 		return NIL;
 	}
-	
+
 	protected LuaValue oncall2(int opcode, LuaValue arg1, LuaValue arg2) {
 		switch ( opcode ) {
 		case 0: // "collectgarbage", // ( opt [,arg] ) -> value
@@ -172,15 +168,10 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		case 2: // "rawequal", // (v1, v2) -> boolean
 			return valueOf(arg1 == arg2);
 		case 3: { // "setfenv", // (f, table) -> void
-			LuaValue f = arg1;
-			if ( ! f.isfunction() ) {
-				int i = arg1.checkint(0);
-				f = (i==0)? (LuaValue) LuaThread.getRunning(): (LuaValue) LuaThread.getCallstackFunction(i-1);
-				if ( f == null )
-					LuaValue.argerror(1, "invalid level");
-			}
-			f.setfenv(arg2);
-			return f;
+			LuaTable t = arg2.checktable();
+			LuaValue f = getfenvobj(arg1);
+		    f.setfenv(t);
+		    return f.isthread()? NONE: f;
 		}
 		case 4: // "tonumber", // (e [,base]) -> value
 			final int base = arg2.optint(10);
@@ -194,6 +185,17 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 		}
 		return NIL;
+	}
+	
+	private LuaValue getfenvobj(LuaValue arg) {
+		if ( arg.isclosure() )
+			return arg;
+		int level = arg.optint(1);
+		if ( level == 0 )
+			return LuaThread.getRunning();
+		LuaValue f = LuaThread.getCallstackFunction(level);
+	    arg.argcheck(f != null, 1, "invalid level");
+	    return f;
 	}
 
 	protected Varargs oncallv(int opcode, Varargs args) {
@@ -216,7 +218,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			try {
 				LuaValue func = args.checkfunction(1);
 				String chunkname = args.optString(2, "function");
-				return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getRunningEnv(env));
+				return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getGlobals());
 			} catch ( Exception e ) {
 				return varargsOf(NIL, valueOf(e.getMessage()));
 			} 
@@ -233,7 +235,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			try {
 				LuaString script = args.checkstring(1);
 				String chunkname = args.optString(2, "string");
-				return LoadState.load(script.toInputStream(),chunkname,LuaThread.getRunningEnv(env));
+				return LoadState.load(script.toInputStream(),chunkname,LuaThread.getGlobals());
 			} catch ( Exception e ) {
 				return varargsOf(NIL, valueOf(e.getMessage()));
 			} 
@@ -279,7 +281,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 		case 7: // "print", // (...) -> void
 		{
-			LuaValue tostring = env.get("tostring"); 
+			LuaValue tostring = LuaThread.getGlobals().get("tostring"); 
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
 				if ( i>1 ) STDOUT.write( '\t' );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
@@ -347,7 +349,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		if ( is == null )
 			return varargsOf(NIL, valueOf("not found: "+filename));
 		try {
-			return LoadState.load(is, filename, LuaThread.getRunningEnv(env));
+			return LoadState.load(is, filename, LuaThread.getGlobals());
 		} finally {
 			is.close();
 		}

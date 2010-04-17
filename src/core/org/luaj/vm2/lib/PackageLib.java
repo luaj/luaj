@@ -25,9 +25,9 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
@@ -91,7 +91,7 @@ public class PackageLib extends OneArgFunction {
 			LuaValue m = t.getmetatable();
 			if ( m == null )
 				t.setmetatable(m=tableOf());
-			m.set( INDEX, env );
+			m.set( INDEX, LuaThread.getGlobals() );
 			return NONE;
 		}
 		}

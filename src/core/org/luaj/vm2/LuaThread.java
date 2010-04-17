@@ -115,10 +115,16 @@ public class LuaThread extends LuaValue implements Runnable {
 	public static boolean isMainThread(LuaThread r) {		
 		return r == mainthread;
 	}
-
-	/** get environment of the running thread, or defval if not defined */ 
-	public static LuaValue getRunningEnv(LuaValue defval) {
-		return running_thread.env!=null? running_thread.env: defval;
+	
+	/** Set the globals of the current thread */
+	public static void setGlobals(LuaValue globals) {
+		running_thread.env = globals;
+	}
+	
+	/** Get the current thread's environment */
+	public static LuaValue getGlobals() {
+		LuaValue e = running_thread.env;
+		return e!=null? e: LuaValue.error("LuaThread.setGlobals() not initialized");
 	}
 	
 	public static final void onCall(LuaFunction function) {
@@ -137,9 +143,14 @@ public class LuaThread extends LuaValue implements Runnable {
 		return running_thread.calls;
 	}
 
+	/**
+	 * Get the function called as a specific location on the stack.
+	 * @param level 1 for the function calling this one, 2 for the next one.
+	 * @return LuaFunction on the call stack, or null if outside of range of active stack
+	 */
 	public static final LuaFunction getCallstackFunction(int level) {
-		return level>=0 && level<running_thread.calls? 
-			running_thread.callstack[running_thread.calls-level-1]:
+		return level>0 && level<=running_thread.calls? 
+			running_thread.callstack[running_thread.calls-level]:
 			null;
 	}
 
@@ -221,5 +232,6 @@ public class LuaThread extends LuaValue implements Runnable {
 		}
 		
 	}
+
 
 }

@@ -22,6 +22,7 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.lib.jme.JmeIoLib;
 
 public class JmePlatform {
@@ -41,6 +42,7 @@ public class JmePlatform {
 		_G.load(new StringLib());
 		_G.load(new CoroutineLib());
 		_G.load(new JmeIoLib());
+		LuaThread.setGlobals(_G);
 		return _G;		
 	}
 	

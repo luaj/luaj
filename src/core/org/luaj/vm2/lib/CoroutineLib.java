@@ -51,7 +51,7 @@ public class CoroutineLib extends ZeroArgFunction {
 		switch ( opcode ) {
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
-				return new LuaThread(func, func.getfenv() );
+				return new LuaThread(func, LuaThread.getGlobals() );
 			}
 			case RESUME: {
 				final LuaThread t = args.checkthread(1);
