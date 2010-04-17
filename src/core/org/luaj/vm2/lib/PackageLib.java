@@ -161,7 +161,8 @@ public class PackageLib extends OneArgFunction {
 		if ( ! value.istable() ) { /* not found? */
 			
 		    /* try global variable (and create one if it does not exist) */
-			module = findtable( env, modname );
+			LuaValue globals = LuaThread.getGlobals();
+			module = findtable( globals, modname );
 			if ( module == null )
 				error( "name conflict for module '"+modname+"'" );
 			LOADED.set(modname, module);
@@ -283,7 +284,7 @@ public class PackageLib extends OneArgFunction {
 		LuaValue result = chunk.call(name);
 		if ( ! result.isnil() )
 			LOADED.set( name, result );
-		else if ( LOADED.get(name) == _SENTINEL ) 
+		else if ( (result = LOADED.get(name)) == _SENTINEL ) 
 			LOADED.set( name, result = LuaValue.TRUE );
 		return result;
 	}
