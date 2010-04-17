@@ -210,7 +210,7 @@ public class PackageLib extends OneArgFunction {
 				table.set(key, field);
 				table = field;
 			} else if ( ! val.istable() ) {  /* field has a non-table value? */
-				return NIL;
+				return null;
 			} else {
 				table = val;
 			}
