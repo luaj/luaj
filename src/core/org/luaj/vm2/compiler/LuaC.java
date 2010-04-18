@@ -204,7 +204,7 @@ public class LuaC extends Lua implements LuaCompiler {
 		lexstate.open_func(funcstate);
 		/* main func. is always vararg */
 		funcstate.f.is_vararg = LuaC.VARARG_ISVARARG;
-		funcstate.f.source = (LuaString) LuaValue.valueOf("@"+name);
+		funcstate.f.source = (LuaString) LuaValue.valueOf(name);
 		lexstate.next(); /* read first token */
 		lexstate.chunk();
 		lexstate.check(LexState.TK_EOS);

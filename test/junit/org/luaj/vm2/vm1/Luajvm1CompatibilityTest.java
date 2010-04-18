@@ -22,6 +22,8 @@
 package org.luaj.vm2.vm1;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -55,9 +57,10 @@ public class Luajvm1CompatibilityTest extends TestCase {
 	
 	private static InputStream open(String file) {
 		try {
-			String path = jarpath+file;
-			URL url = new URL(path);
-			return url.openStream();
+			File f = new File(file);
+			return f.exists()? 
+				new FileInputStream(f): 
+				new URL(jarpath+file).openStream();
 		} catch ( Exception e ) {
 			return null;
 		}
@@ -99,7 +102,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 					if ( is == null )
 						return LuaValue.valueOf("not found: "+file);
 					try {
-						return org.luaj.vm2.LoadState.load(is, name, env);
+						return org.luaj.vm2.LoadState.load(is, file, env);
 					} catch (IOException e) {
 						return LuaValue.valueOf(e.toString());
 					} finally {
