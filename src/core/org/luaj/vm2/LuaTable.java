@@ -437,14 +437,17 @@ public class LuaTable extends LuaValue {
 		if ( value.isnil() )
 			hashRemove(key);
 		else {
-			if ( checkLoadFactor() )
-				rehash();
-
+			if ( hashKeys.length == 0 ) {
+				hashKeys = new LuaValue[ MIN_HASH_CAPACITY ];
+				hashValues = new LuaValue[ MIN_HASH_CAPACITY ];
+			}
 			int slot = hashFindSlot( key );
 			if ( hashFillSlot( slot, value ) )
 				return;
 			hashKeys[slot] = key;
 			hashValues[slot] = value;
+			if ( checkLoadFactor() )
+				rehash();
 		}
 	}
 	
