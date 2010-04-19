@@ -36,6 +36,7 @@ public class LuaThread extends LuaValue implements Runnable {
 	private static final int STATUS_RUNNING       = 1;
 	private static final int STATUS_NORMAL        = 2;
 	private static final int STATUS_DEAD          = 3;
+	private static final int STATUS_ERROR         = 4;
 	private static final String[] STATUS_NAMES = { 
 		"suspended", 
 		"running", 
@@ -158,8 +159,12 @@ public class LuaThread extends LuaValue implements Runnable {
 		synchronized ( this ) {
 			try {
 				this.args = func.invoke(this.args);
-			} finally {
 				status = STATUS_DEAD;
+			} catch ( Throwable t ) {
+				String msg = t.getMessage();
+				this.args = valueOf(msg!=null? msg: t.toString());
+				status = STATUS_ERROR;
+			} finally {
 				this.notify();
 			}
 		}
@@ -214,7 +219,12 @@ public class LuaThread extends LuaValue implements Runnable {
 				this.wait();
 				
 				// copy return values from yielding stack state
-				return varargsOf(LuaValue.TRUE, this.args);
+				if ( status == STATUS_ERROR ) {
+					status = STATUS_DEAD;
+					return varargsOf(FALSE, this.args);
+				} else {
+					return varargsOf(TRUE, this.args);
+				}
 	
 			} catch ( Throwable t ) {
 				status = STATUS_DEAD;
