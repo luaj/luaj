@@ -38,36 +38,41 @@ public class WeakTable extends LuaTable {
 			ref = new WeakReference(val);
 		}
 		public int type() {
-			return LuaValue.TNIL;
+			return strongvalue().type();
 		}
 		public String typename() {
-			return "value";
+			return "weakvalue";
 		}
 		public LuaValue strongvalue() {
 			Object o = ref.get();
 			return o!=null? (LuaValue)o: NIL;
 		}
+		public String toString() {
+			return strongvalue().toString();
+		}
 	}
 	
 	private static class WeakUserdata extends LuaValue {
-		private final WeakReference ref;
-		private LuaValue metatable;
+		private WeakReference ref;
+		private WeakReference mt;
 		public WeakUserdata(Object val, LuaValue metatable) {
-			ref = new WeakReference(val);
+			this.ref = new WeakReference(val);
+			this.mt = new WeakReference(metatable);
 		}
 		public int type() {
-			return LuaValue.TNIL;
+			return TVALUE;
 		}
 		public String typename() {
-			return "value";
+			return "weakuserdata";
 		}
 		public LuaValue strongvalue() {
-			Object o = ref.get();
-			if ( o == null ) {
-				metatable = null;
-				return NIL;
+			if ( ref != null ) {
+				Object o = ref.get();
+				if ( o != null )
+					return userdataOf( o, (LuaValue) mt.get() );
 			}
-			return userdataOf( o, metatable );
+			ref = mt = null;
+			return NIL;
 		}
 	}
 	
@@ -135,7 +140,7 @@ public class WeakTable extends LuaTable {
 		v = v.strongvalue();
 		if ( v.isnil() ) {
 			// TODO: mark table for culling? 
-			rawset(key, NIL);
+			super.rawset(key, NIL);
 		}
 		return v;
 	}
@@ -147,7 +152,7 @@ public class WeakTable extends LuaTable {
 		v = v.strongvalue();
 		if ( v.isnil() ) {
 			// TODO: mark table for culling? 
-			rawset(key, NIL);
+			super.rawset(key, NIL);
 		}
 		return v;
 	}
@@ -176,4 +181,12 @@ public class WeakTable extends LuaTable {
 			}
 		}
 	}
+	
+	protected LuaTable changemode(boolean k, boolean v) {
+		if ( k!=this.weakKeys || v!=weakValues )
+			return recreateas(k,v);
+		return this;
+	}
+
+
 }

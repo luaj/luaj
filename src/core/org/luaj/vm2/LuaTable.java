@@ -119,9 +119,34 @@ public class LuaTable extends LuaValue {
 		if ( m_metatable!=null && !m_metatable.rawget(METATABLE).isnil() )
 			error("cannot change a protected metatable");
 		m_metatable = metatable;
+		LuaValue mode;
+		if ( m_metatable!=null && (mode=m_metatable.rawget(MODE)).isstring() ) {
+			String m = mode.toString();
+			return changemode(m.contains("k"),m.contains("v"));
+		}
 		return this;
 	}
 	
+	protected LuaTable changemode(boolean weakkeys, boolean weakvalues) {
+		if ( weakkeys || weakvalues ) {
+			return recreateas(weakkeys, weakvalues);
+		}
+		return this;
+	}
+
+	protected LuaTable recreateas(boolean weakkeys, boolean weakvalues) {
+		LuaTable t = weakkeys||weakvalues? 
+				new WeakTable(weakkeys, weakvalues): 
+				new LuaTable();
+		t.presize(array.length,hashKeys.length);
+		Varargs n;
+		LuaValue k = NIL;
+		while ( !(k = ((n = next(k)).arg1())).isnil() )
+			t.rawset(k, n.arg(2));
+		t.m_metatable = m_metatable;
+		return t;
+	}
+
 	public LuaValue get( int key ) {
 		LuaValue v = rawget(key);
 		return v.isnil() && m_metatable!=null? gettable(this,valueOf(key)): v;

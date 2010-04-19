@@ -317,8 +317,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		case 13: { // "setmetatable", // (table, metatable) -> table
 			final LuaValue t = args.arg1();
 			final LuaValue mt = args.checkvalue(2);
-			t.setmetatable(mt.isnil()? null: mt.checktable());
-			return t;
+			return t.setmetatable(mt.isnil()? null: mt.checktable());
 		}
 		case 14: { // "tostring", // (e) -> value
 			LuaValue arg = args.checkvalue(1);
