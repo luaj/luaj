@@ -122,7 +122,9 @@ public class LuaTable extends LuaValue {
 		LuaValue mode;
 		if ( m_metatable!=null && (mode=m_metatable.rawget(MODE)).isstring() ) {
 			String m = mode.toString();
-			return changemode(m.contains("k"),m.contains("v"));
+			boolean k = m.indexOf('k')>=0;
+			boolean v = m.indexOf('v')>=0;
+			return changemode(k,v);
 		}
 		return this;
 	}
