@@ -45,6 +45,12 @@ public abstract class Varargs {
 	 * @return Value
 	 */
 	abstract public LuaValue arg1();
+
+	/** 
+	 * Evaluate any pending tail call and return result
+	 * @return the evaluated tail call result 
+	 */
+	public Varargs eval() { return this; }
 	
 	// -----------------------------------------------------------------------
 	// utilities to get specific arguments and type-check them.

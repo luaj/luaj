@@ -26,7 +26,6 @@ import java.io.PrintStream;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
@@ -162,7 +161,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 			return NIL;
 		case 1: // "error", // ( message [,level] ) -> ERR
-			throw new LuaError( arg1.isnil()? null: arg1.toString() );
+			throw new LuaError( arg1.isnil()? null: arg1.toString(), arg2.optint(1) );
 		case 2: // "rawequal", // (v1, v2) -> boolean
 			return valueOf(arg1 == arg2);
 		case 3: { // "setfenv", // (f, table) -> void
@@ -347,7 +346,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		return NONE;
 	}
 
-	private Varargs loadFile(String filename) throws IOException {
+	public static Varargs loadFile(String filename) throws IOException {
 		InputStream is = FINDER.findResource(filename);
 		if ( is == null )
 			return varargsOf(NIL, valueOf("not found: "+filename));

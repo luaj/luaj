@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -306,11 +307,6 @@ public class PackageLib extends OneArgFunction {
 		String name = args.checkString(1);
 		InputStream is = null;
 		
-		// try to use loadfile for the file
-		LuaValue loadfile = env.get(_LOADFILE);
-		if ( ! loadfile.isfunction() ) 
-			return valueOf("loadfile is not a function" );
-		
 		
 		// get package path
 		LuaValue pp = PACKAGE.get(_PATH);
@@ -340,7 +336,13 @@ public class PackageLib extends OneArgFunction {
 			}
 			
 			// try loading the file
-			Varargs v = loadfile.invoke(valueOf(filename));
+			Varargs v; 
+			try {
+				v = BaseLib.loadFile(filename);
+			} catch ( IOException ioe ) {
+				v = varargsOf(NIL, valueOf(ioe.getMessage()));
+				
+			}
 			if ( v.arg1().isfunction() )
 				return v.arg1();
 			

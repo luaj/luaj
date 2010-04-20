@@ -32,13 +32,15 @@ public class TailcallVarargs extends Varargs {
 		this.args = args;
 	}
 	
-	private void eval() {
+	public Varargs eval() {
 		TailcallVarargs nextcall = this;
 		do {
 			LuaValue func = nextcall.func;
 			Varargs args = nextcall.args;
 			nextcall = null;
-			Varargs r = func.invoke(args);
+			Varargs r = func.isclosure()? 
+					((LuaClosure) func).oninvoke(args):
+					func.invoke(args);
 			
 			if (r instanceof TailcallVarargs)
 				nextcall = (TailcallVarargs)r;
@@ -46,6 +48,7 @@ public class TailcallVarargs extends Varargs {
 				this.result = r;
 			
 		} while (nextcall != null);
+		return result;
 	}
 	
 	public LuaValue arg( int i ) {

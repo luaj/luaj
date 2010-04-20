@@ -71,6 +71,20 @@ public class LuaError extends RuntimeException {
 	public LuaError(String message) {
 		super( errorHook( message ) );
 	}		
+
+	/**
+	 * @param message message to supply
+	 * @param level where to supply line info from in call stack
+	 */
+	public LuaError(String message, int level) {
+		super( errorHook( addFileLine( message, level ) ) );
+	}	
+
+	/** Add file and line info to a message */
+	private static String addFileLine( String message, int level ) {
+		LuaFunction f = LuaThread.getCallstackFunction(level);
+		return f!=null? f+": "+message: message;		
+	}
 	
 	/** Get the message, including source line info if there is any */
 	public String getMessage() {		
