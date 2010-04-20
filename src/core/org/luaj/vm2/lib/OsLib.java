@@ -99,11 +99,11 @@ public class OsLib extends OneArgFunction {
 				return valueOf(clock());
 			case DATE: {
 				String s = args.optString(1, null);
-				long t = args.optlong(2,-1);
-				return valueOf( date(s, t==-1? System.currentTimeMillis(): t) );
+				double t = args.optdouble(2,-1);
+				return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
 			}
 			case DIFFTIME:
-				return valueOf(difftime(args.checklong(1),args.checklong(2)));
+				return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
 			case EXECUTE:
 				return valueOf(execute(args.optString(1, null)));
 			case EXIT:
@@ -149,8 +149,8 @@ public class OsLib extends OneArgFunction {
 	 * @param t1
 	 * @return diffeence in time values, in seconds
 	 */
-	protected double difftime(long t2, long t1) {
-		return (t2 - t1) / 1000.;
+	protected double difftime(double t2, double t1) {
+		return t2 - t1;
 	}
 
 	/**
@@ -177,8 +177,8 @@ public class OsLib extends OneArgFunction {
 	 * @return a LString or a LTable containing date and time, 
 	 * formatted according to the given string format.
 	 */
-	protected String date(String format, long time) {
-		return new java.util.Date(time).toString();
+	protected String date(String format, double time) {
+		return new java.util.Date((long)(time*1000)).toString();
 	}
 
 	/** 
@@ -254,7 +254,7 @@ public class OsLib extends OneArgFunction {
 	 * cannot be honored.
 	 */
 	protected String setlocale(String locale, String category) {
-		return null;
+		return "C";
 	}
 
 	/**

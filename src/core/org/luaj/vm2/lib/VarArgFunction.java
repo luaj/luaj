@@ -33,11 +33,11 @@ abstract public class VarArgFunction extends LibFunction {
 		this.env = env;
 	}
 	
-	public final LuaValue call() {
+	public LuaValue call() {
 		return invoke(NONE).arg1();
 	}
 
-	public final LuaValue call(LuaValue arg) {
+	public LuaValue call(LuaValue arg) {
 		return invoke(arg).arg1();
 	}
 

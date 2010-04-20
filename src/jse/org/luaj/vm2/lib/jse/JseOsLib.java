@@ -39,7 +39,7 @@ import java.io.IOException;
 public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	
 	/** return code indicating the execute() threw an I/O exception */
-	public static int EXEC_IOEXCEPTION = -1;
+	public static int EXEC_IOEXCEPTION =  1;
 	
 	/** return code indicating the execute() was interrupted */
 	public static int EXEC_INTERRUPTED = -2;
