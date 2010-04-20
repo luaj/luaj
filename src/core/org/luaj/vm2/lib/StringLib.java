@@ -203,8 +203,7 @@ public class StringLib extends OneArgFunction {
 		for ( int i = 0; i < n; ) {
 			switch ( c = fmt.luaByte( i++ ) ) {
 			case '\n':
-				// TODO: dos only? 
-				result.append( "\r\n" );
+				result.append( "\n" );
 				break;
 			default:
 				result.append( (byte) c );
@@ -267,13 +266,9 @@ public class StringLib extends OneArgFunction {
 		buf.append( (byte) '"' );
 		for ( int i = 0, n = s.length(); i < n; i++ ) {
 			switch ( c = s.luaByte( i ) ) {
-			case '"': case '\\': 
+			case '"': case '\\':  case '\n':
 				buf.append( (byte)'\\' );
 				buf.append( (byte)c );
-				break;
-			case '\n':
-				// TODO: dos only? 
-				buf.append( "\\\r\n" );
 				break;
 			case '\r':
 				buf.append( "\\r" );
