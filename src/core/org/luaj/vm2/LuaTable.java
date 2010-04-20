@@ -510,7 +510,7 @@ public class LuaTable extends LuaValue {
 		// Using a load factor of (n+1) >= 7/8 because that is easy to compute without
 		// overflow or division.
 		final int hashCapacity = hashKeys.length;
-		return hashEntries+1 >= (hashCapacity - (hashCapacity>>3));
+		return hashEntries >= (hashCapacity - (hashCapacity>>3));
 	}
 
 	private void rehash() {
