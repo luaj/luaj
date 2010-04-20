@@ -353,7 +353,7 @@ public class IoLib extends OneArgFunction {
 					typerror( i+1, "(invalid format)" );
 			}
 			if ( v[i].isnil() )
-				return varargsOf(v,0,i);
+				return i==0? NIL: varargsOf(v,0,i);
 		}
 		return varargsOf(v);
 	}
