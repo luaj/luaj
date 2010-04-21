@@ -59,8 +59,9 @@ public class Slots {
 		return false;
 	}
 	
-	public boolean isUpvalueAssign(int pc, int slot) {
+	public boolean isUpvalue(int pc, int slot) {
 		switch (slots[pc+1][slot]) {
+		case UPVAL_USE:
 		case UPVAL_CREATE:
 		case UPVAL_USE_CREATE:
 		case UPVAL_USE_ASSIGN:
@@ -342,7 +343,7 @@ public class Slots {
 					int sbx = Lua.GETARG_sBx(i);
 					if ( o == Lua.OP_JMP && (pc0 + 1 + sbx == pc1) ) {
 						for ( int j=0; j<c; j++ ) {
-							checkPromoteLoopUpvalue( pc0, pc1, a+3+j );
+							checkPromoteLoopUpvalue( pc0+1, pc1+1, a+3+j );
 						}
 					}
 				}
@@ -351,16 +352,16 @@ public class Slots {
 		
 	}
 	
-	private void checkPromoteLoopUpvalue(int pc0, int pc1, int slot) {
-		for ( int index=pc0+1; index<=pc1; ++index ) {
+	private void checkPromoteLoopUpvalue(int index0, int index1, int slot) {
+		for ( int index=index0; index<=index1; ++index ) {
 			switch (slots[index][slot]) {
 			case UPVAL_CREATE:
 			case UPVAL_USE_CREATE:
 			case UPVAL_USE_ASSIGN:
 			case UPVAL_USE:
-				int i = pc0;
-				slots[++i][slot] = UPVAL_CREATE;
-				while ( ++i<=pc1 )
+				int i = index0;
+				slots[i][slot] = UPVAL_CREATE;
+				while ( ++i<=index1 )
 					slots[i][slot] = UPVAL_USE;
 				return;
 			}

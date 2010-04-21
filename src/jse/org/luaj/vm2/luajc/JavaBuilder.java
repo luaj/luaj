@@ -92,6 +92,8 @@ public class JavaBuilder {
 	
 	private static final ArrayType TYPE_LOCALUPVALUE = new ArrayType( TYPE_LUAVALUE, 1 );
 	private static final ArrayType TYPE_CHARARRAY = new ArrayType( Type.CHAR, 1 );
+
+	private static final Type[] ARGS_NONE = new Type[0];
 	
 	private static final Class[] NO_INNER_CLASSES = {};
 
@@ -242,7 +244,7 @@ public class JavaBuilder {
 		// add class initializer 
 		if ( ! init.isEmpty() ) {
 			MethodGen mg = new MethodGen(Constants.ACC_STATIC, Type.VOID,
-					new Type[] {}, new String[] {}, "<clinit>", cg
+					ARGS_NONE, new String[] {}, "<clinit>", cg
 							.getClassName(), init, cg.getConstantPool());
 			init.append(InstructionConstants.RETURN);
 			mg.setMaxStack();
@@ -318,13 +320,12 @@ public class JavaBuilder {
 	}
 
 	public void storeLocal(int pc, int slot) {
-		boolean isupval = slots.isUpvalueAssign(pc, slot);
+		boolean isupval = slots.isUpvalue(pc, slot);
 		int index = findSlotIndex( slot, isupval );
 		if (isupval) {
 			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
-				append(new PUSH(cp, 1));
-				append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
+				append(factory.createInvoke(classname, "newupe", TYPE_LOCALUPVALUE, ARGS_NONE, Constants.INVOKESTATIC));
 				append(InstructionConstants.DUP);
 				append(new ASTORE(index));
 			} else {
@@ -345,12 +346,7 @@ public class JavaBuilder {
 			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
 				int index = findSlotIndex( slot, true );
-				append(new PUSH(cp, 1));
-				append(new ANEWARRAY(cp.addClass(STR_LUAVALUE)));
-				dup();
-				append(new PUSH(cp, 0));
-				loadNil();
-				append(InstructionConstants.AASTORE);
+				append(factory.createInvoke(classname, "newupn", TYPE_LOCALUPVALUE, ARGS_NONE, Constants.INVOKESTATIC));
 				append(new ASTORE(index));
 			}
 		}
@@ -397,7 +393,7 @@ public class JavaBuilder {
 
 	public void arg(int argindex) {
 		if ( argindex == 1 ) {
-			append(factory.createInvoke(STR_VARARGS, "arg1", TYPE_LUAVALUE, new Type[] {}, Constants.INVOKEVIRTUAL));
+			append(factory.createInvoke(STR_VARARGS, "arg1", TYPE_LUAVALUE, ARGS_NONE, Constants.INVOKEVIRTUAL));
 		} else {
 			append(new PUSH(cp, argindex));
 			append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
@@ -525,7 +521,7 @@ public class JavaBuilder {
 	
 	public void call(int nargs) {
 		switch ( nargs ) {
-		case 0: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] {}, Constants.INVOKEVIRTUAL)); break;
+		case 0: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARGS_NONE, Constants.INVOKEVIRTUAL)); break;
 		case 1: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
 		case 2: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
 		case 3: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
@@ -540,7 +536,7 @@ public class JavaBuilder {
 	public void invoke(int nargs) {
 		switch ( nargs ) {
 		case -1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
-		case 0: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] {}, Constants.INVOKEVIRTUAL)); break;
+		case 0: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARGS_NONE, Constants.INVOKEVIRTUAL)); break;
 		case 1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
 		case 2: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
 		case 3: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;

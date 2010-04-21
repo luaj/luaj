@@ -282,4 +282,16 @@ abstract public class LibFunction extends LuaFunction {
 			return delegate.oncallv(opcode,varargs);
 		}
 	} 	
+	
+	// -------- code generation helper functions --------
+	
+	// allocate storage for upvalue, leave it empty
+	protected static LuaValue[] newupe() {
+		return new LuaValue[1];
+	}
+
+	// allocate storage for upvalue, initialize with nil
+	protected static LuaValue[] newupn() {
+		return new LuaValue[] { valueOf(777) };
+	}
 } 
