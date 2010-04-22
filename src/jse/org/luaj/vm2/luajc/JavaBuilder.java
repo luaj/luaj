@@ -320,7 +320,7 @@ public class JavaBuilder {
 	}
 
 	public void storeLocal(int pc, int slot) {
-		boolean isupval = slots.isUpvalue(pc, slot);
+		boolean isupval = slots.isUpvalueAssign(pc, slot);
 		int index = findSlotIndex( slot, isupval );
 		if (isupval) {
 			boolean isupcreate = slots.isUpvalueCreate(pc, slot);

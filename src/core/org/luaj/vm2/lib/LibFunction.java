@@ -292,6 +292,11 @@ abstract public class LibFunction extends LuaFunction {
 
 	// allocate storage for upvalue, initialize with nil
 	protected static LuaValue[] newupn() {
-		return new LuaValue[] { valueOf(777) };
+		return new LuaValue[] { NIL };
+	}
+	
+	// allocate storage for upvalue, initialize with value
+	protected static LuaValue[] newupl(LuaValue v) {
+		return new LuaValue[] { v };
 	}
 } 

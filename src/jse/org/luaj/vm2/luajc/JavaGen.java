@@ -58,6 +58,7 @@ public class JavaGen {
 		int vresultbase = -1;
 		
 		for ( int pc=0, n=p.code.length; pc<n; pc++ ) {
+			int pc0 = pc; // closure changes pc
 			int ins = p.code[pc];
 			int o = Lua.GET_OPCODE(ins);
 			int a = Lua.GETARG_A(ins);
@@ -175,14 +176,8 @@ public class JavaGen {
 				break;
 				
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
-			{
-				int pc1 = pc+1+sbx;
-				ins = p.code[pc1];
-				if ( Lua.GET_OPCODE(ins) == Lua.OP_TFORLOOP )
-					builder.createUpvalues(pc, Lua.GETARG_A(ins)+3, Lua.GETARG_C(ins));
-				builder.addBranch(pc, JavaBuilder.BRANCH_GOTO, pc1);
+				builder.addBranch(pc, JavaBuilder.BRANCH_GOTO, pc+1+sbx);
 				break;
-			}
 				
 			case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
 			case Lua.OP_LT: /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
@@ -326,6 +321,7 @@ public class JavaGen {
 								 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
 								 * else pc++
 								 */
+				builder.createUpvalues(pc, a+3, c);
 				builder.loadLocal(pc, a);
 				builder.loadLocal(pc, a+1);
 				builder.loadLocal(pc, a+2);
@@ -375,12 +371,12 @@ public class JavaGen {
 					for ( int up=0; up<nup; ++up ) {
 						if ( up+1 < nup )
 							builder.dup();
-						ins = p.code[pc+up+1];
+						ins = p.code[++pc];
 						b = Lua.GETARG_B(ins);
 						if ( (ins&4) != 0 ) {
 							builder.closureInitUpvalueFromUpvalue( protoname, up, b );
 						} else {
-							builder.closureInitUpvalueFromLocal( protoname, up, pc, b );
+							builder.closureInitUpvalueFromLocal( protoname, up, pc0, b );
 						}
 					}
 				}
@@ -401,7 +397,7 @@ public class JavaGen {
 			}
 			
 			// let builder process branch instructions
-			builder.onEndOfLuaInstruction( pc );
+			builder.onEndOfLuaInstruction( pc0 );
 		}
 	}
 

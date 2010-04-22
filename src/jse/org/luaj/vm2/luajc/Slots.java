@@ -21,7 +21,11 @@
 ******************************************************************************/
 package org.luaj.vm2.luajc;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 
 /** 
@@ -36,51 +40,32 @@ import org.luaj.vm2.Prototype;
  */
 public class Slots {
 
-	private static final byte ASSIGN            = 'a'; // assignment to a slot position
-	private static final byte REFER             = 'r'; // reference to a slot position
-	private static final byte REFER_ASSIGN      = 'b'; // i.e. "both"
-	private static final byte UPVAL_CREATE      = 'U'; // where upvalue must be alloced
-	private static final byte UPVAL_USE         = 'u'; // continuation of existing upvalue
-	private static final byte UPVAL_USE_ASSIGN  = 'c'; // on create closure only
-	private static final byte UPVAL_USE_CREATE  = 'C'; // on create closure only, create new upvalue
-	private static final byte INVALID           = 'x'; // after call, etc
-	private static final byte INITIAL_NIL       = 'n'; // above parameters at initial call
+	private static final byte BIT_ASSIGN     = 0x01;  // assignment is made to this slot at this pc
+	private static final byte BIT_REFER      = 0x02;  // reference is made to this slot at this pc
+	private static final byte BIT_UP_ASSIGN  = 0x04;  // upvalue assignment
+	private static final byte BIT_UP_REFER   = 0x08;  // upvalue reference
+	private static final byte BIT_UP_CREATE  = 0x10;  // upvalue storage must be created here
+	private static final byte BIT_INVALID    = 0x20;  // slot becomes invlaid at this pc
+	private static final byte BIT_NIL        = 0x40;  // slot initialized to nil at this point
 	
 	final int n,m;
 	public final byte[][] slots;
 	public final boolean[] branchdest;
 
 	public boolean isUpvalueCreate(int pc, int slot) {
-		switch (slots[pc+1][slot]) {
-		case UPVAL_CREATE:
-		case UPVAL_USE_CREATE:
-			return true;
-		}
-		return false;
+		return (slots[pc+1][slot] & (BIT_UP_CREATE)) != 0;
 	}
 	
-	public boolean isUpvalue(int pc, int slot) {
-		switch (slots[pc+1][slot]) {
-		case UPVAL_USE:
-		case UPVAL_CREATE:
-		case UPVAL_USE_CREATE:
-		case UPVAL_USE_ASSIGN:
-			return true;
-		}
-		return false;
+	public boolean isUpvalueAssign(int pc, int slot) {
+		return (slots[pc+1][slot] & (BIT_UP_ASSIGN | BIT_UP_CREATE)) != 0;
 	}
-	
+
 	public boolean isUpvalueRefer(int pc, int slot) {
-		switch (slots[pc+1][slot]) {
-		case UPVAL_USE:
-		case UPVAL_USE_ASSIGN:
-			return true;
-		}
-		return false;
+		return (slots[pc+1][slot] & (BIT_UP_REFER)) != 0;
 	}
 
 	public boolean isInitialValueUsed(int slot) {
-		return slots[0][slot] != INVALID;
+		return (slots[0][slot] & (BIT_INVALID)) == 0;
 	}
 	
 	public Slots(Prototype p) {
@@ -95,32 +80,21 @@ public class Slots {
 	}
 	
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
-		for ( int i=0; i<slots.length; i++ ) {
-			if ( i > 0 ) sb.append( "\n" );
-			byte[] s = slots[i];
-			for ( int j=s.length; --j>=0; ) {
-				if ( s[j] == 0 )
-					s[j] = ' ';
-			}
-			sb.append( i>0 && branchdest[i]? "D": " " );
-			sb.append( new String(s) );
-		}
-		return sb.toString();
+		return toString(null);
 	}
 	
 	private void markassignments( Prototype p ) {
 		// mark initial assignments and references
 		int j=0;
 		for ( ; j<p.numparams; j++ )
-			slots[0][j] = ASSIGN;
+			slots[0][j] = BIT_ASSIGN;
 		for ( ; j<m; j++ )
-			slots[0][j] = INITIAL_NIL;
+			slots[0][j] = BIT_NIL;
 
-		for ( int index=1; index<=n; index++ ) {
+		for ( int pc=0; pc<n; pc++ ) {
+			int index = pc+1;
 			byte[] s = slots[index];
 			
-			int pc = index-1;
 			int ins = p.code[pc];
 			int a = Lua.GETARG_A(ins);
 			int b = Lua.GETARG_B(ins);
@@ -132,32 +106,32 @@ public class Slots {
 			case Lua.OP_GETUPVAL: /*	A B	R(A):= UpValue[B]				*/
 			case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
 			case Lua.OP_NEWTABLE: /*	A B C	R(A):= {} (size = B,C)				*/
-				s[a] = ASSIGN;
+				s[a] |= BIT_ASSIGN;
                 break;
                 
 			case Lua.OP_MOVE:/*	A B	R(A):= R(B)					*/
 			case Lua.OP_UNM: /*	A B	R(A):= -R(B)					*/
 			case Lua.OP_NOT: /*	A B	R(A):= not R(B)				*/
 			case Lua.OP_LEN: /*	A B	R(A):= length of R(B)				*/
-				s[a] = ASSIGN;
-				s[b] = REFER;
+				s[a] |= BIT_ASSIGN;
+				s[b] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_LOADK:/*	A Bx	R(A):= Kst(Bx)					*/
 			case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
 			case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
-				s[a] = ASSIGN;
+				s[a] |= BIT_ASSIGN;
 				break;
 
 			case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
 				while ( a<b )
-					s[a++] = ASSIGN;
+					s[a++] |= BIT_ASSIGN;
 				break;
 				
 			case Lua.OP_GETTABLE: /*	A B C	R(A):= R(B)[RK(C)]				*/
-				s[a] = ASSIGN;
-				s[b] = REFER;
-				if (c<=0xff) s[c] = REFER;
+				s[a] |= BIT_ASSIGN;
+				s[b] |= BIT_REFER;
+				if (c<=0xff) s[c] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_SETTABLE: /*	A B C	R(A)[RK(B)]:= RK(C)				*/
@@ -167,26 +141,26 @@ public class Slots {
 			case Lua.OP_DIV: /*	A B C	R(A):= RK(B) / RK(C)				*/
 			case Lua.OP_MOD: /*	A B C	R(A):= RK(B) % RK(C)				*/
 			case Lua.OP_POW: /*	A B C	R(A):= RK(B) ^ RK(C)				*/
-				s[a] = ASSIGN;
-				if (bx<=0xff) s[bx] = REFER;
-				if (c<=0xff) s[c] = REFER;
+				s[a] |= BIT_ASSIGN;
+				if (bx<=0xff) s[bx] |= BIT_REFER;
+				if (c<=0xff) s[c] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_SELF: /*	A B C	R(A+1):= R(B): R(A):= R(B)[RK(C)]		*/
-				s[a] = ASSIGN;
-				s[a+1] = ASSIGN;
-				s[b] = REFER;
-				if (c<=0xff) s[c] = REFER;
+				s[a] |= BIT_ASSIGN;
+				s[a+1] |= BIT_ASSIGN;
+				s[b] |= BIT_REFER;
+				if (c<=0xff) s[c] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_CONCAT: /*	A B C	R(A):= R(B).. ... ..R(C)			*/
-				s[a] = ASSIGN;
+				s[a] |= BIT_ASSIGN;
 				while ( b<=c )
-					s[b++] = REFER;
+					s[b++] |= BIT_REFER;
 				break;
 				             
 			case Lua.OP_LOADBOOL:/*	A B C	R(A):= (Bool)B: if (C) pc++			*/
-				s[a] = ASSIGN;
+				s[a] |= BIT_ASSIGN;
 				if ( c!=0 ) branchdest[index+2] = true;
                 break;
                 
@@ -197,52 +171,54 @@ public class Slots {
 			case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
 			case Lua.OP_LT: /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
 			case Lua.OP_LE: /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
-				if (bx<=0xff) s[bx] = REFER;
-				if (c<=0xff) s[c] = REFER;
+				if (bx<=0xff) s[bx] |= BIT_REFER;
+				if (c<=0xff) s[c] |= BIT_REFER;
 				branchdest[index+2] = true;
 				break;
 
 			case Lua.OP_TEST: /*	A C	if not (R(A) <=> C) then pc++			*/ 
-				s[a] = REFER;
+				s[a] |= BIT_REFER;
 				branchdest[index+2] = true;
 				break;
 				
 			case Lua.OP_TESTSET: /*	A B C	if (R(B) <=> C) then R(A):= R(B) else pc++	*/
-				s[a] = REFER;
-				s[b] = REFER;
+				s[a] |= BIT_REFER;
+				s[b] |= BIT_REFER;
 				branchdest[index+2] = true;
 				break;
 				
 			case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2):= R(A)(R(A+1), ... ,R(A+B-1)) */
-				while ( a < c-1 || a < b )
-					s[a++] = (byte) (a<c-1 && a<b? REFER_ASSIGN: a<c-1? ASSIGN: REFER);
-				while ( a < m )
-					s[a++] = INVALID;
+				for ( int i=0; i<c-1; i++ )
+					s[a+i] |= BIT_ASSIGN;
+				for ( int i=0; i<b; i++ )
+					s[a+i] |= BIT_REFER;
+				for ( a+=c; a<m; a++ )
+					s[a++] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
 				while ( a < b )
-					s[a++] = REFER;
+					s[a++] |= BIT_REFER;
 				while ( a < m )
-					s[a++] = INVALID;
+					s[a++] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
 				while ( a < b-1 )
-					s[a++] = REFER; 
+					s[a++] |= BIT_REFER; 
 				break;
 				
 			case Lua.OP_FORPREP: /*	A sBx	R(A)-=R(A+2): pc+=sBx				*/
-				s[a] = REFER_ASSIGN; 
-				s[a+2] = REFER; 
+				s[a] |= BIT_REFER | BIT_ASSIGN; 
+				s[a+2] |= BIT_REFER; 
 				branchdest[index+1+sbx] = true;
 				break;
 				
 			case Lua.OP_FORLOOP: /*	A sBx	R(A)+=R(A+2): if R(A) <?= R(A+1) then { pc+=sBx: R(A+3)=R(A) }*/
-				s[a] = REFER_ASSIGN; 
-				s[a+1] = REFER; 
-				s[a+2] = REFER; 
-				s[a+3] = ASSIGN; 
+				s[a] |= BIT_REFER | BIT_ASSIGN; 
+				s[a+1] |= BIT_REFER; 
+				s[a+2] |= BIT_REFER; 
+				s[a+3] |= BIT_ASSIGN; 
 				branchdest[index+1+sbx] = true;
 				break;
 			
@@ -251,25 +227,25 @@ public class Slots {
 								 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
 								 * else pc++
 								 */
-				s[a] = REFER; 
-				s[a+1] = REFER; 
-				s[a+2] = REFER_ASSIGN; 
+				s[a] |= BIT_REFER; 
+				s[a+1] |= BIT_REFER; 
+				s[a+2] |= BIT_REFER | BIT_ASSIGN; 
 				for ( int aa=a+3; aa<a+3+c; aa++ )
-					s[aa] = ASSIGN;
+					s[aa] |= BIT_ASSIGN;
 				for ( int aa=a+3+c; aa<m; aa++ )
-					s[aa] = INVALID;
+					s[aa] |= BIT_INVALID;
 				branchdest[index+2] = true;
 				break;
 				
 			case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
-				s[a] = REFER;
+				s[a] |= BIT_REFER;
 				for ( int aa=1; aa<=b; aa++ )
-					s[aa] = REFER;
+					s[aa] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
 				while ( a<m )
-					s[a++] = INVALID;
+					s[a++] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
@@ -281,15 +257,17 @@ public class Slots {
 					if ( (ins&4) != 0 ) {
 						// up : ups[b]
 					} else {
-						s[b] = UPVAL_USE;
+						s[b] |= BIT_REFER | BIT_UP_REFER;
 					}
 				}
-				s[a] = (byte) (s[a] == UPVAL_USE? UPVAL_USE_ASSIGN: ASSIGN);
+				s[a] |= ((s[a] & BIT_UP_REFER) != 0 )?
+						(BIT_ASSIGN | BIT_UP_ASSIGN):
+						BIT_ASSIGN;
 				break;
 			}				
 			case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/
 				while ( a<b )
-					s[a++] = ASSIGN;
+					s[a++] |= BIT_ASSIGN;
 				break;				
 			}
 		}
@@ -298,20 +276,15 @@ public class Slots {
 	private void markuninitialized(Prototype p) {
 		for ( int j=p.numparams; j<m; j++ )
 			if ( ! isreferrededtofirst(j) )
-				slots[0][j] = INVALID;
+				slots[0][j] |= BIT_INVALID;
 	}
 	
 	private boolean isreferrededtofirst(int j) {
 		for ( int i=1; i<=n; i++ ) {
-			switch (slots[i][j]) {
-			case REFER_ASSIGN:
-			case REFER:
-			case UPVAL_USE:
+			if ( (slots[i][j] & (BIT_REFER | BIT_UP_REFER)) != 0 )
 				return true;
-			case ASSIGN:
-			case INVALID:
+			if ( (slots[i][j] & (BIT_ASSIGN | BIT_UP_ASSIGN | BIT_UP_CREATE | BIT_INVALID)) != 0 )
 				return false;
-			}
 		}
 		return false;
 	}
@@ -322,10 +295,10 @@ public class Slots {
 				int index = pc+1;
 				byte[] s = slots[index];
 				for ( int j=0; j<m; j++ )
-					if ( s[j] == UPVAL_USE || s[j] == UPVAL_USE_ASSIGN ) {
-						promoteUpvalueBefore( s, index, j );
+					if ( (s[j] & BIT_REFER) != 0 ) {
+						promoteUpvalueBefore( index, j );
 						if ( pc<n-1 ) 
-							promoteUpvalueAfter( s, index+1, j );
+							promoteUpvalueAfter( index+1, j );
 					}
 			}
 		}
@@ -349,78 +322,120 @@ public class Slots {
 				}
 			}
 		}
-		
 	}
 	
 	private void checkPromoteLoopUpvalue(int index0, int index1, int slot) {
 		for ( int index=index0; index<=index1; ++index ) {
-			switch (slots[index][slot]) {
-			case UPVAL_CREATE:
-			case UPVAL_USE_CREATE:
-			case UPVAL_USE_ASSIGN:
-			case UPVAL_USE:
-				int i = index0;
-				slots[i][slot] = UPVAL_CREATE;
-				while ( ++i<=index1 )
-					slots[i][slot] = UPVAL_USE;
+			if ( (slots[index][slot] & BIT_UP_CREATE) != 0 ) {
+				for ( int i=index0+1; i<index1; ++i ) {
+					promoteUpvalue(slots[i], slot);
+					slots[i][slot] &= (~BIT_UP_CREATE);
+				}
+				slots[index1][slot] |= BIT_UP_CREATE;
 				return;
 			}
 		}
 	}
 
-	private void promoteUpvalueBefore(byte[] s, int index, int j) {
+	private void promoteUpvalueBefore(int index, int j) {
 		int begin  = prevUndefined(index,j);
 		int assign = firstAssignAfter(begin,index,j);
-		slots[assign][j] = slots[assign][j]==UPVAL_USE_ASSIGN? UPVAL_USE_CREATE: UPVAL_CREATE;
+		slots[assign][j] |= BIT_UP_CREATE;
 		while ( index>assign)
-			slots[index--][j] = UPVAL_USE;
+			promoteUpvalue( slots[index--], j );
 	}
 
-	private void promoteUpvalueAfter(byte[] s, int index, int j) {
+	private void promoteUpvalueAfter(int index, int j) {
 		int end = nextUndefined(index,j);
 		int access = lastAccessBefore(end,index,j);
 		while ( index<=access )
-			slots[index++][j] = UPVAL_USE;
+			promoteUpvalue( slots[index++], j );
+	}
+
+	private void promoteUpvalue(byte[] s, int slot) {
+		if ( (s[slot] & BIT_REFER) != 0 )
+			s[slot] |= BIT_UP_REFER;
+		if ( (s[slot] & BIT_ASSIGN) != 0 )
+			s[slot] |= BIT_UP_ASSIGN;
 	}
 
 	private int prevUndefined(int index, int j) {
-		while ( index>0 && slots[index][j] != INVALID )
+		while ( index>0 && ((slots[index][j] & BIT_INVALID) == 0) )
 			--index;
 		return index;
 	}
 
 	private int firstAssignAfter(int index, int limit, int j) {
 		for ( ; index<limit; ++index ) {
-			switch (slots[index][j]) {
-			case ASSIGN:
-			case REFER_ASSIGN:
+			if ( (slots[index][j] & BIT_ASSIGN) != 0 )
 				return index;
-			case UPVAL_CREATE:
-				throw new IllegalStateException("overlapping upvalues");
-			}
 		}
 		return index;
 	}
 
 	private int nextUndefined(int index, int j) {
-		while ( index+1<slots.length && slots[index+1][j] != INVALID )
+		while ( index<slots.length && ((slots[index][j] & BIT_INVALID) == 0) )
 			++index;
 		return index;
 	}
 
 	private int lastAccessBefore(int index, int limit, int j) {
-		for ( ; index>limit; --index ) {
-			switch (slots[index][j]) {
-			case ASSIGN:
-			case REFER_ASSIGN:
-			case REFER:
+		for ( --index; index>limit; --index ) {
+			if ( (slots[index][j] & (BIT_ASSIGN|BIT_REFER)) != 0 )
 				return index;
-			case UPVAL_CREATE:
-			case UPVAL_USE:
-				throw new IllegalStateException("overlapping upvalues");
-			}
 		}
 		return index;
 	}
 
+	// ------------- pretty-print slot info --------------
+	
+	public static void printSlots(Prototype p) {
+		Slots s = new Slots(p);
+		System.out.println("slots for "+p.source+":\n"+s.toString(p) );
+		for ( int i=0; i<p.p.length; i++ )
+			printSlots(p.p[i]);
+	}
+
+	String[] toStrings() {
+		int n = slots.length;
+		int m = slots[0].length;
+		String[] strs = new String[n];
+		byte[] b = new byte[m+1];
+		for ( int i=0; i<n; i++ ) {
+			for ( int j=0; j<=m; j++ )
+				b[j] = ' ';
+			if ( branchdest[i] )
+				b[0] = 'D';
+			byte[] si = slots[i];
+			for ( int j=0; j<m; j++ ) {
+				byte s = si[j];
+				b[1+j] = (byte) (
+					((s & BIT_UP_CREATE) != 0)? 'C':
+					((s & BIT_UP_ASSIGN) != 0)? 
+							(((s & BIT_UP_REFER) != 0)? 'B': 'A'):
+					((s & BIT_UP_REFER) != 0)? 'R':
+					((s & BIT_ASSIGN) != 0)? 
+						(((s & BIT_REFER) != 0)? 'b': 'a'):
+					((s & BIT_REFER) != 0)? 'r':
+					((s & BIT_INVALID) != 0)? 'x':
+					((s & BIT_NIL) != 0)? 'n': ' ' );
+			}
+			strs[i] = new String(b);
+		}
+		return strs;
+	}
+	
+	String toString(Prototype p) {
+		String[] s = toStrings();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream( baos );
+		for ( int i=0; i<s.length; i++ ) {
+			if ( i>0 ) ps.append( '\n' );
+			ps.append( s[i] );
+			if ( p != null && i>0 && i<=p.code.length )
+				Print.printOpCode(ps, p, i-1);
+		}
+		ps.close();
+		return baos.toString();
+	}
 }
