@@ -291,4 +291,47 @@ public class FragmentsTest extends TestCase {
 				"end\n" +
 				"return foo().a\n"  );
 	}
+	
+	
+	public void testLoadNilUpvalue() {
+		runFragment( LuaValue.NIL, 
+				"tostring = function() end\n" +
+				"local pc \n" +
+				"local pcall = function(...)\n" +
+				"	pc(...)\n" +
+				"end\n" +
+				"return NIL\n" );
+	}
+	
+	public void testUpvalueClosure() {
+		runFragment( LuaValue.NIL, 
+				"print()\n"+
+				"local function f2() end\n"+
+				"local function f3()\n"+
+				"	return f3\n"+
+				"end\n" +
+				"return NIL\n" );
+	}
+
+	public void testUninitializedUpvalue() {
+		runFragment( LuaValue.NIL, 
+				"local f\n"+	
+				"do\n"+
+				"	function g()\n"+
+				"		print(f())\n"+
+				"	end\n"+
+				"end\n" +
+				"return NIL\n" );
+	}
+
+	public void testTestOpUpvalues() {
+		runFragment( LuaValue.varargsOf(LuaValue.valueOf(1),LuaValue.valueOf(2),LuaValue.valueOf(3)), 
+				"print( nil and 'T' or 'F' )\n"+
+				"local a,b,c = 1,2,3\n"+
+				"function foo()\n"+
+				"	return a,b,c\n"+
+				"end\n" +
+				"return foo()\n" );				
+	}
+	
 }

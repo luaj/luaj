@@ -104,9 +104,15 @@ public class Slots {
 
 			switch ( Lua.GET_OPCODE(ins) ) {			
 			case Lua.OP_GETUPVAL: /*	A B	R(A):= UpValue[B]				*/
-			case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
 			case Lua.OP_NEWTABLE: /*	A B C	R(A):= {} (size = B,C)				*/
+			case Lua.OP_LOADK:/*	A Bx	R(A):= Kst(Bx)					*/
+			case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
 				s[a] |= BIT_ASSIGN;
+                break;
+                
+			case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
+			case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
+				s[a] |= BIT_REFER;
                 break;
                 
 			case Lua.OP_MOVE:/*	A B	R(A):= R(B)					*/
@@ -117,14 +123,8 @@ public class Slots {
 				s[b] |= BIT_REFER;
 				break;
 				
-			case Lua.OP_LOADK:/*	A Bx	R(A):= Kst(Bx)					*/
-			case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
-			case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
-				s[a] |= BIT_ASSIGN;
-				break;
-
 			case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
-				while ( a<b )
+				while ( a<=b )
 					s[a++] |= BIT_ASSIGN;
 				break;
 				
@@ -166,11 +166,12 @@ public class Slots {
 				             
 			case Lua.OP_LOADBOOL:/*	A B C	R(A):= (Bool)B: if (C) pc++			*/
 				s[a] |= BIT_ASSIGN;
-				if ( c!=0 ) branchdest[index+2] = true;
+				//if ( c!=0 ) branchdest[index+2] = true;
                 break;
                 
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
-				branchdest[index+1+sbx] = true;
+				if ( sbx < 0 )
+					branchdest[index+1+sbx] = true;
 				ins = p.code[index+0+sbx]; 
 				if ( Lua.GET_OPCODE(ins) == Lua.OP_TFORLOOP ) {
 					a = Lua.GETARG_A(ins);
@@ -185,34 +186,36 @@ public class Slots {
 			case Lua.OP_LE: /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
 				if (bx<=0xff) s[bx] |= BIT_REFER;
 				if (c<=0xff) s[c] |= BIT_REFER;
-				branchdest[index+2] = true;
+				//branchdest[index+2] = true;
 				break;
 
 			case Lua.OP_TEST: /*	A C	if not (R(A) <=> C) then pc++			*/ 
 				s[a] |= BIT_REFER;
-				branchdest[index+2] = true;
+				//branchdest[index+2] = true;
 				break;
 				
 			case Lua.OP_TESTSET: /*	A B C	if (R(B) <=> C) then R(A):= R(B) else pc++	*/
 				s[a] |= BIT_REFER;
 				s[b] |= BIT_REFER;
-				branchdest[index+2] = true;
+				//branchdest[index+2] = true;
 				break;
 				
 			case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2):= R(A)(R(A+1), ... ,R(A+B-1)) */
-				for ( int i=0; i<c-1; i++ )
-					s[a+i] |= BIT_ASSIGN;
-				for ( int i=0; i<b; i++ )
+				s[a] |= BIT_ASSIGN | BIT_REFER;
+				for ( int i=1; i<b; i++ )
 					s[a+i] |= BIT_REFER;
-				for ( a+=c; a<m; a++ )
-					s[a++] |= BIT_INVALID;
+				for ( int i=1; i<c-1; i++ )
+					s[++a] |= BIT_ASSIGN;
+				while ( ++a<m )
+					s[a] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
-				while ( a < b )
-					s[a++] |= BIT_REFER;
-				while ( a < m )
-					s[a++] |= BIT_INVALID;
+				s[a] |= BIT_REFER;
+				for ( int i=1; i<b; i++ )
+					s[++a] |= BIT_REFER;
+				while ( ++a<m )
+					s[a] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
@@ -355,8 +358,9 @@ public class Slots {
 	}
 
 	private void promoteUpvalueBefore(int index, int j) {
-		int begin  = prevUndefined(index,j);
-		int assign = firstAssignAfter(begin,index,j);
+		int undef  = prevUndefined(index,j);
+		int branch = firstBranchAfter(undef,index,j);
+		int assign = lastAssignBefore(branch,undef,j);
 		slots[assign][j] |= BIT_UP_CREATE;
 		while ( index>assign)
 			promoteUpvalue( slots[index--], j );
@@ -377,16 +381,23 @@ public class Slots {
 	}
 
 	private int prevUndefined(int index, int j) {
-		while ( index>0 && ((slots[index][j] & BIT_INVALID) == 0) )
-			--index;
+		for ( ; index>=0; --index )
+			if ( ((slots[index][j] & BIT_INVALID) != 0) )
+				return 0;
 		return index;
 	}
 
-	private int firstAssignAfter(int index, int limit, int j) {
-		for ( ; index<limit; ++index ) {
-			if ( (slots[index][j] & BIT_ASSIGN) != 0 )
+	private int firstBranchAfter(int index, int limit, int j) {
+		for ( ; ++index<limit; )
+			if ( index>0 && this.branchdest[index-1] )
 				return index;
-		}
+		return index;
+	}
+
+	private int lastAssignBefore(int index, int limit, int j) {
+		for ( int i=index-1; i>limit; --i )
+			if ( (slots[i][j] & (BIT_ASSIGN | BIT_NIL)) != 0 )
+				return i;
 		return index;
 	}
 
@@ -397,10 +408,9 @@ public class Slots {
 	}
 
 	private int lastAccessBefore(int index, int limit, int j) {
-		for ( --index; index>limit; --index ) {
+		for ( --index; index>limit; --index )
 			if ( (slots[index][j] & (BIT_ASSIGN|BIT_REFER)) != 0 )
 				return index;
-		}
 		return index;
 	}
 
