@@ -508,8 +508,8 @@ public class TypeTest extends TestCase {
 		assertEquals( String.valueOf(sampledouble), stringdouble.toString() );
 		assertEquals( "thread: ", thread.toString().substring(0,8) );
 		assertEquals( "table: ", table.toString().substring(0,7) );
-		assertEquals( "userdata: ", userdataobj.toString().substring(0,10) );
-		assertEquals( "userdata: ", userdatacls.toString().substring(0,10) );
+		assertEquals( sampleobject.toString(), userdataobj.toString() );
+		assertEquals( sampledata.toString(), userdatacls.toString() );
 		assertEquals( "function: ", somefunc.toString().substring(0,10) );
 		assertEquals( "function: ", someclosure.toString().substring(0,10) );
 	}
@@ -868,7 +868,7 @@ public class TypeTest extends TestCase {
 			fail( "did not throw bad type error" );
 			assertTrue( o instanceof MyData );
 		} catch ( LuaError le ) {
-			assertEquals( le.getMessage(), "expected org.luaj.vm2.TypeTest$MyData got userdata" );
+			assertEquals( "org.luaj.vm2.TypeTest$MyData expected, got userdata", le.getMessage() );
 		}
 	}
 	
@@ -1216,7 +1216,7 @@ public class TypeTest extends TestCase {
 			fail( "did not throw bad type error" );
 			assertTrue( o instanceof MyData );
 		} catch ( LuaError le ) {
-			assertEquals( le.getMessage(), "expected org.luaj.vm2.TypeTest$MyData got userdata" );
+			assertEquals( "org.luaj.vm2.TypeTest$MyData expected, got userdata", le.getMessage() );
 		}
 	}
 	

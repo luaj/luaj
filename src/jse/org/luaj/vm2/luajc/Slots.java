@@ -135,6 +135,11 @@ public class Slots {
 				break;
 				
 			case Lua.OP_SETTABLE: /*	A B C	R(A)[RK(B)]:= RK(C)				*/
+				s[a] |= BIT_REFER;
+				if (b<=0xff) s[b] |= BIT_REFER;
+				if (c<=0xff) s[c] |= BIT_REFER;
+				break;
+				
 			case Lua.OP_ADD: /*	A B C	R(A):= RK(B) + RK(C)				*/
 			case Lua.OP_SUB: /*	A B C	R(A):= RK(B) - RK(C)				*/
 			case Lua.OP_MUL: /*	A B C	R(A):= RK(B) * RK(C)				*/
@@ -142,7 +147,7 @@ public class Slots {
 			case Lua.OP_MOD: /*	A B C	R(A):= RK(B) % RK(C)				*/
 			case Lua.OP_POW: /*	A B C	R(A):= RK(B) ^ RK(C)				*/
 				s[a] |= BIT_ASSIGN;
-				if (bx<=0xff) s[bx] |= BIT_REFER;
+				if (b<=0xff) s[b] |= BIT_REFER;
 				if (c<=0xff) s[c] |= BIT_REFER;
 				break;
 				
@@ -273,8 +278,13 @@ public class Slots {
 				break;
 			}				
 			case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/
-				while ( a<b )
-					s[a++] |= BIT_ASSIGN;
+				if ( b == 0 ) {
+					while ( a<m )
+						s[a++] |= BIT_INVALID;
+				} else {
+					for ( int i=1; i<b; ++a, ++i )
+						s[a] |= BIT_ASSIGN;
+				}
 				break;				
 			}
 		}

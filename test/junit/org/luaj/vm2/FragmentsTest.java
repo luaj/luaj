@@ -282,4 +282,13 @@ public class FragmentsTest extends TestCase {
 				"function ccc(z) return z end\n" +
 				"return ccc( aaa(bbb(123)), aaa(456) )\n" );
 	}
+	
+	public void testSetUpvalueTableInitializer() {
+		runFragment( LuaValue.valueOf("b"), 
+				"local aliases = {a='b'}\n" +
+				"local foo = function()\n" +
+				"	return aliases\n" +
+				"end\n" +
+				"return foo().a\n"  );
+	}
 }
