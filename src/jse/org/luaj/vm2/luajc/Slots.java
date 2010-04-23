@@ -166,6 +166,13 @@ public class Slots {
                 
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
 				branchdest[index+1+sbx] = true;
+				ins = p.code[index+0+sbx]; 
+				if ( Lua.GET_OPCODE(ins) == Lua.OP_TFORLOOP ) {
+					a = Lua.GETARG_A(ins);
+					c = Lua.GETARG_C(ins);
+					for ( int i=1; i<=c; i++ )
+						s[a+2+i] |= BIT_INVALID;
+				}
 				break;
 				
 			case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
@@ -239,8 +246,8 @@ public class Slots {
 				
 			case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
 				s[a] |= BIT_REFER;
-				for ( int aa=1; aa<=b; aa++ )
-					s[aa] |= BIT_REFER;
+				for ( int i=1; i<=b; i++ )
+					s[a+i] |= BIT_REFER;
 				break;
 				
 			case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
@@ -315,8 +322,8 @@ public class Slots {
 					int o = Lua.GET_OPCODE(i);
 					int sbx = Lua.GETARG_sBx(i);
 					if ( o == Lua.OP_JMP && (pc0 + 1 + sbx == pc1) ) {
-						for ( int j=0; j<c; j++ ) {
-							checkPromoteLoopUpvalue( pc0+1, pc1+1, a+3+j );
+						for ( int j=1; j<=c; j++ ) {
+							checkPromoteLoopUpvalue( pc0+1, pc1+1, a+2+j );
 						}
 					}
 				}

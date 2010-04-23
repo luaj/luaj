@@ -321,22 +321,34 @@ public class JavaGen {
 								 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
 								 * else pc++
 								 */
-				builder.createUpvalues(pc, a+3, c);
+				// v = stack[a].invoke(varargsOf(stack[a+1],stack[a+2]));
+				// if ( (o=v.arg1()).isnil() )
+				//	++pc;
 				builder.loadLocal(pc, a);
 				builder.loadLocal(pc, a+1);
 				builder.loadLocal(pc, a+2);
 				builder.invoke(2); // varresult on stack
-				for ( int i=0; i<c; i++ ) {
-					if ( i+1 < c )
-						builder.dup();
-					builder.arg( i+1 );
-					builder.storeLocal(pc, a+3+i);
-				}
-				builder.loadLocal(pc, a+3);
+				builder.dup();
+				builder.storeVarresult();			
+				builder.arg( 1 );
 				builder.isNil();
 				builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+2);
-				builder.loadLocal(pc, a+3);
+
+				// a[2] = a[3] = v[1]
+				builder.createUpvalues(pc, a+3, c);
+				builder.loadVarresult();
+				builder.dup();
+				builder.arg( 1 );
+				builder.dup();
 				builder.storeLocal(pc, a+2);
+				builder.storeLocal(pc, a+3);
+				
+				// a[a+2+i] = v[2+i], i=2..c
+				for ( int i=2; i<=c; i++ ) {
+					if ( i<c ) builder.dup();
+					builder.arg( i );
+					builder.storeLocal(pc, a+2+c);
+				}
 				break;
 				
 			case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
