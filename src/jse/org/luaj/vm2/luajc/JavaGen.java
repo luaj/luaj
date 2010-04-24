@@ -338,7 +338,7 @@ public class JavaGen {
 				// a[2] = a[3] = v[1]
 				builder.createUpvalues(pc, a+3, c);
 				builder.loadVarresult();
-				builder.dup();
+				if ( c>=2 ) builder.dup();
 				builder.arg( 1 );
 				builder.dup();
 				builder.storeLocal(pc, a+2);

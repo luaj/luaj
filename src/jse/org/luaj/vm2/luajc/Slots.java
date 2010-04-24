@@ -201,20 +201,18 @@ public class Slots {
 				break;
 				
 			case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2):= R(A)(R(A+1), ... ,R(A+B-1)) */
-				s[a] |= BIT_ASSIGN | BIT_REFER;
-				for ( int i=1; i<b; i++ )
+				for ( int i=0; i<b; i++ )
 					s[a+i] |= BIT_REFER;
-				for ( int i=1; i<c-1; i++ )
-					s[++a] |= BIT_ASSIGN;
-				while ( ++a<m )
+				for ( int i=0; i<c-1; i++, a++ )
+					s[a] |= BIT_ASSIGN;
+				for ( ; a<m; a++ )
 					s[a] |= BIT_INVALID;
 				break;
 				
 			case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
-				s[a] |= BIT_REFER;
-				for ( int i=1; i<b; i++ )
-					s[++a] |= BIT_REFER;
-				while ( ++a<m )
+				for ( int i=1; i<b; i++, a++ )
+					s[a] |= BIT_REFER;
+				for ( ; a<m; a++ )
 					s[a] |= BIT_INVALID;
 				break;
 				
@@ -395,7 +393,7 @@ public class Slots {
 	}
 
 	private int lastAssignBefore(int index, int limit, int j) {
-		for ( int i=index-1; i>limit; --i )
+		for ( int i=index; i>limit; --i )
 			if ( (slots[i][j] & (BIT_ASSIGN | BIT_NIL)) != 0 )
 				return i;
 		return index;
