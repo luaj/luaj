@@ -574,16 +574,26 @@ public class JavaBuilder {
 	private Map<LuaValue,String> constants = new HashMap<LuaValue,String>();
 	
 	public void loadConstant(LuaValue value) {
-		String name = constants.get(value);
-		if ( name == null ) {
-			name = value.type() == LuaValue.TNUMBER? 
-					value.isinttype()? 
-						createLuaIntegerField(value.checkint()):
-						createLuaDoubleField(value.checkdouble()):
-					createLuaStringField(value.checkstring());
-			constants.put(value, name);
+		switch ( value.type() ) {
+		case LuaValue.TNIL: 
+			loadNil();
+			break;
+		case LuaValue.TNUMBER:
+		case LuaValue.TSTRING:
+			String name = constants.get(value);
+			if ( name == null ) {
+				name = value.type() == LuaValue.TNUMBER? 
+						value.isinttype()? 
+							createLuaIntegerField(value.checkint()):
+							createLuaDoubleField(value.checkdouble()):
+						createLuaStringField(value.checkstring());
+				constants.put(value, name);
+			}
+			append(factory.createGetStatic(classname, name, TYPE_LUAVALUE));
+			break;
+		default:
+			throw new IllegalArgumentException("bad constant type: "+value.type());
 		}
-		append(factory.createGetStatic(classname, name, TYPE_LUAVALUE));
 	}
 
 	private String createLuaIntegerField(int value) {

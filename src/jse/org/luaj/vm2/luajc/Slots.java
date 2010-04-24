@@ -383,7 +383,7 @@ public class Slots {
 	private int prevUndefined(int index, int j) {
 		for ( ; index>=0; --index )
 			if ( ((slots[index][j] & BIT_INVALID) != 0) )
-				return 0;
+				return index;
 		return index;
 	}
 

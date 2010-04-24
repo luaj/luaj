@@ -172,7 +172,8 @@ public class JavaGen {
 			case Lua.OP_LOADBOOL:/*	A B C	R(A):= (Bool)B: if (C) pc++			*/
 				builder.loadBoolean( b!=0 );
 				builder.storeLocal( pc, a );
-				//if ( c != 0 ) branchdest[index+2] = true;
+				if ( c!=0 ) 
+					builder.addBranch(pc, JavaBuilder.BRANCH_GOTO, pc+2);
 				break;
 				
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/

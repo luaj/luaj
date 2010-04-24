@@ -333,5 +333,10 @@ public class FragmentsTest extends TestCase {
 				"end\n" +
 				"return foo()\n" );				
 	}
-	
+	public void testTestSimpleBinops() {
+		runFragment( LuaValue.varargsOf(new LuaValue[] {
+				LuaValue.FALSE, LuaValue.FALSE, LuaValue.TRUE, LuaValue.TRUE, LuaValue.FALSE }),
+				"local a,b,c = 2,-2.5,0\n" +
+				"return (a==c), (b==c), (a==a), (a>c), (b>0)\n" );
+	}
 }
