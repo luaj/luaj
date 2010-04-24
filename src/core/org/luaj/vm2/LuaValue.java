@@ -424,8 +424,16 @@ public class LuaValue extends Varargs {
 		default: return new ArrayVarargs(new LuaValue[] {v1,v2},v3); 
 		}
 	}
+	
+	// tail call support
 	public static Varargs tailcallOf(LuaValue func, Varargs args) { 
 		return new TailcallVarargs(func, args);
+	}
+	
+	// called by TailcallVarargs to invoke the function once.  
+	// may return TailcallVarargs to be evaluated by the caller. 
+	public Varargs onInvoke(Varargs args) {
+		return invoke(args);
 	}
 
 	// empty varargs

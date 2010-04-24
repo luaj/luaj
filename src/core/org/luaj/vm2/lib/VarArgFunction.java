@@ -49,17 +49,31 @@ abstract public class VarArgFunction extends LibFunction {
 		return invoke(varargsOf(arg1,arg2,arg3)).arg1();
 	}
 
+	/** 
+	 * Override and implement for the best performance. 
+	 * May not have expected behavior for tail calls. 
+	 * Should not be used if either:
+	 * - function needs to be used as a module
+	 * - function has a possibility of returning a TailcallVarargs
+	 * @param args the arguments to the function call.
+	 */
 	public Varargs invoke(Varargs args) {
 		LuaThread.onCall(this);
 		try {
-			return onInvoke(args);
+			return this.onInvoke(args).eval();
 		} finally {
 			LuaThread.onReturn();
 		}
 	}
 
-	protected Varargs onInvoke(Varargs args) {
-		return NONE;
+	/**
+	 * Override to provide a call implementation that runs in an environment
+	 * that can participate in setfenv, and behaves as expected 
+	 * when returning TailcallVarargs. 
+	 * @param args the arguments to the function call.
+	 */
+	public Varargs onInvoke(Varargs args) {
+		return invoke(args);
 	}
 	
 } 

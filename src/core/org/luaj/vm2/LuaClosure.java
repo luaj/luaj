@@ -101,10 +101,10 @@ public class LuaClosure extends LuaFunction {
 	}
 
 	public final Varargs invoke(Varargs varargs) {
-		return oninvoke( varargs ).eval();
+		return onInvoke( varargs ).eval();
 	}
 	
-	final Varargs oninvoke(Varargs varargs) {
+	public Varargs onInvoke(Varargs varargs) {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
 		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
 		for ( int i=0; i<p.numparams; i++ )

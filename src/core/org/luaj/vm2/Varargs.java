@@ -52,6 +52,13 @@ public abstract class Varargs {
 	 */
 	public Varargs eval() { return this; }
 	
+	/**
+	 * Return true if this is a TailcallVarargs
+	 * @return true if a tail call, false otherwise
+	 */
+	public boolean isTailcall() {
+		return false;
+	}
 	// -----------------------------------------------------------------------
 	// utilities to get specific arguments and type-check them.
 	// -----------------------------------------------------------------------

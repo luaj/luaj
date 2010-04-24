@@ -108,7 +108,7 @@ public class JavaBuilder {
 	private static final ObjectType[] RETURN_TYPE_N  = { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS, };
 	private static final Type[][]     ARG_TYPES_N    = { {}, {TYPE_LUAVALUE}, {TYPE_LUAVALUE,TYPE_LUAVALUE}, {TYPE_LUAVALUE,TYPE_LUAVALUE,TYPE_LUAVALUE}, {TYPE_VARARGS},  };
 	private static final String[][]   ARG_NAMES_N    = { {}, {"arg"}, {"arg1","arg2"}, {"arg1","arg2","arg3"}, {"args"}, };
-	private static final String[]     METH_NAME_N    = { "call", "call", "call", "call", "invoke", };
+	private static final String[]     METH_NAME_N    = { "call", "call", "call", "call", "onInvoke", };
 
 	// varable naming
 	private static final String PREFIX_CONSTANT     = "k";
@@ -156,8 +156,12 @@ public class JavaBuilder {
 			superclassType = SUPERTYPE_VARARGS;
 		for ( int i=0, n=p.code.length; i<n; i++ ) {
 			int inst = p.code[i];
-			if ( Lua.GET_OPCODE(inst) == Lua.OP_RETURN && (Lua.GETARG_B(inst) < 1 || Lua.GETARG_B(inst) > 2) )
+			int o = Lua.GET_OPCODE(inst);
+			if ( (o == Lua.OP_TAILCALL) ||
+			     ((o == Lua.OP_RETURN) && (Lua.GETARG_B(inst) < 1 || Lua.GETARG_B(inst) > 2)) ) {
 				superclassType = SUPERTYPE_VARARGS;
+				break;
+			}
 		}
 		
 		// create class generator
