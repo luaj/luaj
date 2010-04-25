@@ -12,6 +12,10 @@
     <property name="wtk.midp.version" value="2.0"/>
     <taskdef resource="antenna.properties"/>
 	
+	<!-- main script -->
+	<property name="script.name"  value="hello"/>
+	<property name="script.dir"   value="examples/lua"/>
+	
 	<target name="clean">
 	    <delete failonerror="false" dir="build"/>
 	</target>
@@ -30,12 +34,21 @@
 		</javac>
 	</target>
 
-	<target name="scripts" depends="tools">
+	<!-- compile script into lua bytecode -->
+	<target name="luac" depends="tools">
+		<java classname="luac" classpath="build/tool">
+			<arg line="-o build/classes/${script.name}.lua"/>
+			<arg line="${script.dir}/${script.name}.lua"/>
+		</java>
+	</target>
+
+	<!-- compile script into java bytecode -->
+	<target name="luajc" depends="tools">
 		<java classname="luajc" classpath="build/tool:lib/bcel-5.2.jar">
 			<arg line="-verbose"/>
-			<arg line="-srcdir examples/lua"/>
+			<arg line="-srcdir ${script.dir}"/>
 			<arg line="-destdir build/classes"/>
-			<arg line="hello.lua"/>
+			<arg line="${script.name}.lua"/>
 		</java>
 	</target>
 	
@@ -45,18 +58,18 @@
 		<wtkbuild srcdir="examples/jme" destdir="build/classes" preverify="false"/>
 	</target>
 		
-    <target name="jad">
+    <target name="jad" depends="classes">
 		<wtkjad jadfile="build/sample.jad"
 			manifest="build/MANIFEST.MF"
 			name="LuaJ Sample Midlet"
 			vendor="luaj.org"
 			version="0.1" >
 		    <midlet name="LuaJ Sample Midlet" class="SampleMIDlet"/>
-			<attribute name="script" value="hello"/>
+			<attribute name="script" value="${script.name}"/>
 		</wtkjad>
     </target>
 
-	<target name="jar" depends="scripts,classes,jad">
+	<target name="jar" depends="luajc,classes,jad">
         <wtkpackage jarfile="build/sample.jar"
                     jadfile="build/sample.jad"
                     obfuscate="false"
@@ -69,9 +82,10 @@
 	<target name="obf" depends="jar">
         <wtkobfuscate jarfile="build/sample.jar"
 					  jadfile="build/sample.jad">
-        	<preserve class="hello"/>
+        	<preserve class="${script.name}"/>
 			<argument value="-printmapping build/mapping.txt"/>
 			<argument value="-repackageclasses"/>
+        	<argument value="-allowaccessmodification"/>
 			<argument value='""'/>
    		</wtkobfuscate>
 	</target>
@@ -85,6 +99,6 @@
 		<wtkrun jadfile="build/sample.jad" device="DefaultColorPhone"/>
 	</target>
 	
-	<target name="all" depends="package,run"/>
+	<target name="all" depends="clean,package,run"/>
 
 </project>
