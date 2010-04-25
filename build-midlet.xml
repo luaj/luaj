@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="sample" default="build" basedir=".">
+<project name="sample" default="all" basedir=".">
 
 	<!-- find wtk -->
 	<property environment="env"/>
@@ -16,42 +16,75 @@
 	    <delete failonerror="false" dir="build"/>
 	</target>
 
-    <target name="build">
+	<target name="dirs">
         <mkdir dir="build"/>
+        <mkdir dir="build/tool"/>
         <mkdir dir="build/classes"/>
+	</target>
+	
+	<target name="tools" depends="dirs">
+		<ant antfile="build.xml" target="bcel-lib"/>
+		<javac destdir="build/tool" classpath="lib/bcel-5.2.jar">
+			<src path="src/core"/>
+			<src path="src/jse"/>
+		</javac>
+	</target>
 
+	<target name="scripts" depends="tools">
+		<java classname="luajc" classpath="build/tool:lib/bcel-5.2.jar">
+			<arg line="-verbose"/>
+			<arg line="-srcdir examples/lua"/>
+			<arg line="-destdir build/classes"/>
+			<arg line="hello.lua"/>
+		</java>
+	</target>
+	
+	<target name="classes" depends="dirs">
         <wtkbuild srcdir="src/core"     destdir="build/classes" preverify="false"/>
         <wtkbuild srcdir="src/jme"      destdir="build/classes" preverify="false"/>
 		<wtkbuild srcdir="examples/jme" destdir="build/classes" preverify="false"/>
-
+	</target>
+		
+    <target name="jad">
 		<wtkjad jadfile="build/sample.jad"
 			manifest="build/MANIFEST.MF"
 			name="LuaJ Sample Midlet"
 			vendor="luaj.org"
 			version="0.1" >
 		    <midlet name="LuaJ Sample Midlet" class="SampleMIDlet"/>
+			<attribute name="script" value="hello"/>
 		</wtkjad>
-    	
+    </target>
+
+	<target name="jar" depends="scripts,classes,jad">
         <wtkpackage jarfile="build/sample.jar"
                     jadfile="build/sample.jad"
                     obfuscate="false"
                     preverify="false"
                     autoversion="true">
-        	
             <fileset dir="build/classes"/>
         </wtkpackage>
-
+	</target>
+	
+	<target name="obf" depends="jar">
         <wtkobfuscate jarfile="build/sample.jar"
 					  jadfile="build/sample.jad">
+        	<preserve class="hello"/>
 			<argument value="-printmapping build/mapping.txt"/>
 			<argument value="-repackageclasses"/>
 			<argument value='""'/>
    		</wtkobfuscate>
+	</target>
 
+	<target name="package" depends="jad,jar,obf">
 		<wtkpreverify jarfile="build/sample.jar"
                       jadfile="build/sample.jad"/>
-    	
-    	<wtkrun jadfile="build/sample.jad" device="DefaultColorPhone"/>
     </target>
+
+	<target name="run" depends="package">
+		<wtkrun jadfile="build/sample.jad" device="DefaultColorPhone"/>
+	</target>
+	
+	<target name="all" depends="package,run"/>
 
 </project>

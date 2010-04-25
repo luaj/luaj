@@ -22,7 +22,7 @@ public class SampleMIDlet extends MIDlet {
 		// create an environment to run in
  		LuaC.install();
 		LuaValue _G = JmePlatform.standardGlobals();
-		_G.get("dofile").call( LuaValue.valueOf(script) );
+		_G.get("require").call( LuaValue.valueOf(script) );
 	}
 
 	protected void destroyApp(boolean arg0) throws MIDletStateChangeException {
