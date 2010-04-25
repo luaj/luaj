@@ -43,12 +43,17 @@ public class JsePlatform {
 		_G.load(new TableLib());
 		_G.load(new StringLib());
 		_G.load(new CoroutineLib());
-		_G.load(new DebugLib());
 		_G.load(new JseMathLib());
 		_G.load(new JseIoLib());
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
 		LuaThread.setGlobals(_G);
 		return _G;		
+	}
+	
+	public static LuaTable debugGlobals() {
+		LuaTable _G = standardGlobals();
+		_G.load(new DebugLib());
+		return _G;
 	}
 }

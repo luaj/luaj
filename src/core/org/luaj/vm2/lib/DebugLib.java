@@ -103,14 +103,13 @@ public class DebugLib extends OneArgFunction {
 	private static final LuaString ACTIVELINES     = valueOf("activelines");  
 
 	public DebugLib() {
+		DEBUG_ENABLED = true;
 	}
 	
 	public LuaValue call(LuaValue arg) {
 		LuaTable t = new LuaTable();
 		bindv(t, NAMES);
 		env.set("debug", t);
-		if ( ! DEBUG_ENABLED )
-			DEBUG_ENABLED = true;
 		return t;
 	}
 
@@ -281,7 +280,7 @@ public class DebugLib extends OneArgFunction {
 		public String toString() {
 			return DebugLib.traceback(thread, 0);
 		}
-}
+	}
 	
 	private static DebugState getDebugState( LuaThread thread ) {
 		if ( thread.debugState == null )
