@@ -32,7 +32,6 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;

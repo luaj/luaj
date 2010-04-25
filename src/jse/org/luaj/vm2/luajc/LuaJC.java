@@ -34,6 +34,8 @@ import org.luaj.vm2.compiler.LuaC;
 
 public class LuaJC implements LuaCompiler {
 
+	private static final String NON_IDENTIFIER = "[^a-zA-Z0-9_$]";
+	
 	private static LuaJC instance;
 	private LuaC luac;
 	
@@ -78,10 +80,12 @@ public class LuaJC implements LuaCompiler {
 	}
 
 	public LuaFunction load(Prototype p, String filename, LuaValue env) {
-		JavaGen gen = new JavaGen(p, filename, filename);
+		String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
+		classname = classname.replaceAll(NON_IDENTIFIER, "_");
+		JavaGen gen = new JavaGen(p, classname, filename);
 		JavaLoader loader = new JavaLoader(env);
 		loader.include(gen);
-		return (LuaFunction) loader.load(p, filename, filename);
+		return (LuaFunction) loader.load(p, classname, filename);
 	}
 
 	public LuaValue load(InputStream stream, String name, LuaValue env) throws IOException {
