@@ -41,8 +41,8 @@ public final class Buffer {
 		length = 0;
 	}
 	
-	public final String toString() {
-		return LuaString.valueOf(bytes, 0, length).toString();
+	public final String tojstring() {
+		return LuaString.valueOf(bytes, 0, length).tojstring();
 	}
 	
 	public final void append( byte b ) {

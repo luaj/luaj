@@ -186,24 +186,24 @@ public class DebugLib extends OneArgFunction {
 			return getobjname(this, stackpos);
 		}
 		public Object sourceline() {
-			if ( closure == null ) return func.toString();
-			String s = closure.p.source.toString();
+			if ( closure == null ) return func.tojstring();
+			String s = closure.p.source.tojstring();
 			int line = currentline();
 			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
 		}
 		public String tracename() {
 			// if ( func != null )
-			// 	return func.toString();
+			// 	return func.tojstring();
 			LuaString[] kind = getfunckind();
 			if ( kind == null )
 				return "function ?";
-			return "function "+kind[0].toString();
+			return "function "+kind[0].tojstring();
 		}
 		public LuaString getlocalname(int index) {
 			if ( closure == null ) return null;
 			return closure.p.getlocalname(index, pc);
 		}
-		public String toString() {
+		public String tojstring() {
 			return sourceline()+": in "+tracename();
 		}
 	}
@@ -277,7 +277,7 @@ public class DebugLib extends OneArgFunction {
 			}
 			return new DebugInfo(func);
 		}
-		public String toString() {
+		public String tojstring() {
 			return DebugLib.traceback(thread, 0);
 		}
 	}
@@ -437,7 +437,7 @@ public class DebugLib extends OneArgFunction {
 						info.set(LINEDEFINED, valueOf(p.linedefined));
 						info.set(LASTLINEDEFINED, valueOf(p.lastlinedefined));
 					} else {
-						String shortName = di.func.toString();
+						String shortName = di.func.tojstring();
 						LuaString name = LuaString.valueOf("[Java] "+shortName);
 						info.set(WHAT, JAVA);
 						info.set(SOURCE, name);
@@ -482,7 +482,7 @@ public class DebugLib extends OneArgFunction {
 	}
 
 	public static String sourceshort(Prototype p) {
-		String name = p.source.toString();
+		String name = p.source.tojstring();
         if ( name.startsWith("@") || name.startsWith("=") )
 			name = name.substring(1);
 		else if ( name.startsWith("\033") )
@@ -618,7 +618,7 @@ public class DebugLib extends OneArgFunction {
 			di = ds.getDebugInfo(i);
 			if ( di != null ) {
 				sb.append( "\t" );
-				sb.append( di.toString() );
+				sb.append( di.tojstring() );
 				if ( i<n )
 					sb.append( "\n" );
 			}

@@ -36,7 +36,7 @@ public class LuaUserdata extends LuaValue {
 		m_metatable = metatable;
 	}
 
-	public String toString() {
+	public String tojstring() {
 		return String.valueOf(m_instance);
 	}
 	

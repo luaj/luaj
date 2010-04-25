@@ -47,8 +47,8 @@ public class WeakTable extends LuaTable {
 			Object o = ref.get();
 			return o!=null? (LuaValue)o: NIL;
 		}
-		public String toString() {
-			return strongvalue().toString();
+		public String tojstring() {
+			return strongvalue().tojstring();
 		}
 	}
 	

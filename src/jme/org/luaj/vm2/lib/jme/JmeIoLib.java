@@ -101,7 +101,7 @@ public class JmeIoLib extends IoLib {
 		private FileImpl( OutputStream o ) {
 			this( null, null, o );
 		}
-		public String toString() {
+		public String tojstring() {
 			return "file ("+this.hashCode()+")";
 		}
 		public boolean isstdfile() {

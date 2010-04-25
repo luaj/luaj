@@ -98,7 +98,7 @@ public class LuaString extends LuaValue {
 		return "string";
 	}
 	
-	public String toString() {
+	public String tojstring() {
 		return decodeAsUtf8(m_bytes, m_offset, m_length);
 	}
 
@@ -145,8 +145,8 @@ public class LuaString extends LuaValue {
 	public boolean gteq_b( double rhs )    { typerror("attempt to compare string with number"); return false; }
 
 	// concatenation
-	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(toString()); }
-	public String concatTo_s(String lhs)   { return lhs + toString(); }
+	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(tojstring()); }
+	public String concatTo_s(String lhs)   { return lhs + tojstring(); }
 
 	// string comparison 
 	public int strcmp(LuaValue lhs)           { return -lhs.strcmp(this); }
@@ -230,9 +230,13 @@ public class LuaString extends LuaValue {
 	public LuaString optstring(LuaString defval) {
 		return this; 
 	}
-		
-	public String optString(String defval) { 
-		return toString(); 
+	
+	public LuaValue tostring() {
+		return this;
+	}
+
+	public String optjstring(String defval) { 
+		return tojstring(); 
 	}
 	
 	public LuaString strvalue() {
@@ -313,8 +317,8 @@ public class LuaString extends LuaValue {
 		return luaByte( index );
 	}
 	
-	public String checkString() { 
-		return toString(); 
+	public String checkjstring() { 
+		return tojstring(); 
 	}
 
 	public LuaString checkstring() {

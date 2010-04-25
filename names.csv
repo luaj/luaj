@@ -36,7 +36,7 @@ Java Type Coercion Functions,,,,,,,,,,,,
 ,toint,int,0,0,0,0,this.v,0,this.v | 0,0,0,0
 ,tolong,long,0,0,0,0,this.v,0,this.v | 0,0,0,0
 ,toshort,short,0,0,0,0,this.v | 0,0,this.v | 0,0,0,0
-,toString,String,"""true""|""false""","""closure: x""","""name""",(str) this.v,(str) this.v,"""nil""",this.v,"""table: x""","""thread: x""","""userdata: x"""
+,tojstring,String,"""true""|""false""","""closure: x""","""name""",(str) this.v,(str) this.v,"""nil""",this.v,"""table: x""","""thread: x""","""userdata: x"""
 ,touserdata,Object,null,null,null,null,null,null,null,null,this,this.instance
 
 ,,,LuaBoolean,LuaClosure,LuaFunction,LuaDouble,LuaInteger,LuaNil,LuaString,LuaTable,LuaThread,LuaUserdata
@@ -49,7 +49,7 @@ Optional Argument Conversion Functions,,,,,,,,,,,,
 ,optinteger,LuaInteger,e,e,e,(int) this,this,defval,this | e,e,e,e
 ,optlong,long,e,e,e,(long) this,this,defval,this | e,e,e,e
 ,optnumber,LuaNumber,e,e,e,this,this,defval,this | e,e,e,e
-,optString,String,e,e,e,(str) this.v,(str) this.v,defval,this,e,e,e
+,optjstring,String,e,e,e,(str) this.v,(str) this.v,defval,this,e,e,e
 ,optstring,LuaString,e,e,e,(str) this.v,(str) this.v,defval,this,e,e,e
 ,opttable,LuaTable,e,e,e,e,e,defval,e,this,e,e
 ,optthread,LuaThread,e,e,e,e,e,defval,e,e,this,n
@@ -65,7 +65,7 @@ Required Argument Conversion Functions,,,,,,,,,,,,
 ,checkinteger,LuaInteger,e,e,e,e,this,e,e,e,e,e
 ,checklong,LuaNumber,e,e,e,this | e,this,e,e,e,e,e
 ,checknumber,LuaNumber,e,e,e,this,this,e,e,e,e,e
-,checkString,String,e,e,e,(str) this.v,(str) this.v,e,(str) this.v,e,e,e
+,checkjstring,String,e,e,e,(str) this.v,(str) this.v,e,(str) this.v,e,e,e
 ,checkstring,LuaString,e,e,e,(str) this.v,(str) this.v,e,this,e,e,e
 ,checktable,LuaTable,e,e,e,e,e,e,e,this,e,e
 ,checkthread,LuaThread,e,e,e,e,e,e,e,e,this,e

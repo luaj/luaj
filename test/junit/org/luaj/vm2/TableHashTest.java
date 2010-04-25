@@ -107,48 +107,48 @@ public class TableHashTest extends TestCase {
 		fb.set( 456, "jkl" );
 		
 		// check before setting metatable
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "nil", t.get("qqq").toString() );
-		assertEquals( "nil", t.get(456).toString() );
-		assertEquals( "nil", fb.get("ppp").toString() );
-		assertEquals( "nil", fb.get(123).toString() );
-		assertEquals( "ghi", fb.get("qqq").toString() );
-		assertEquals( "jkl", fb.get(456).toString() );
-		assertEquals( "nil", mt.get("ppp").toString() );
-		assertEquals( "nil", mt.get(123).toString() );
-		assertEquals( "nil", mt.get("qqq").toString() );
-		assertEquals( "nil", mt.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "nil", t.get("qqq").tojstring() );
+		assertEquals( "nil", t.get(456).tojstring() );
+		assertEquals( "nil", fb.get("ppp").tojstring() );
+		assertEquals( "nil", fb.get(123).tojstring() );
+		assertEquals( "ghi", fb.get("qqq").tojstring() );
+		assertEquals( "jkl", fb.get(456).tojstring() );
+		assertEquals( "nil", mt.get("ppp").tojstring() );
+		assertEquals( "nil", mt.get(123).tojstring() );
+		assertEquals( "nil", mt.get("qqq").tojstring() );
+		assertEquals( "nil", mt.get(456).tojstring() );
 		
 		// check before setting metatable
 		t.setmetatable(mt);
 		assertEquals( mt, t.getmetatable() );
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "ghi", t.get("qqq").toString() );
-		assertEquals( "jkl", t.get(456).toString() );
-		assertEquals( "nil", fb.get("ppp").toString() );
-		assertEquals( "nil", fb.get(123).toString() );
-		assertEquals( "ghi", fb.get("qqq").toString() );
-		assertEquals( "jkl", fb.get(456).toString() );
-		assertEquals( "nil", mt.get("ppp").toString() );
-		assertEquals( "nil", mt.get(123).toString() );
-		assertEquals( "nil", mt.get("qqq").toString() );
-		assertEquals( "nil", mt.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "ghi", t.get("qqq").tojstring() );
+		assertEquals( "jkl", t.get(456).tojstring() );
+		assertEquals( "nil", fb.get("ppp").tojstring() );
+		assertEquals( "nil", fb.get(123).tojstring() );
+		assertEquals( "ghi", fb.get("qqq").tojstring() );
+		assertEquals( "jkl", fb.get(456).tojstring() );
+		assertEquals( "nil", mt.get("ppp").tojstring() );
+		assertEquals( "nil", mt.get(123).tojstring() );
+		assertEquals( "nil", mt.get("qqq").tojstring() );
+		assertEquals( "nil", mt.get(456).tojstring() );
 
 		// set metatable to metatable without values
 		t.setmetatable(fb);
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "nil", t.get("qqq").toString() );
-		assertEquals( "nil", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "nil", t.get("qqq").tojstring() );
+		assertEquals( "nil", t.get(456).tojstring() );
 		
 		// set metatable to null
 		t.setmetatable(null);
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "nil", t.get("qqq").toString() );
-		assertEquals( "nil", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "nil", t.get("qqq").tojstring() );
+		assertEquals( "nil", t.get(456).tojstring() );
 	}		
 
 	public void testIndexFunction() {
@@ -168,42 +168,42 @@ public class TableHashTest extends TestCase {
 		mt.set(LuaValue.INDEX, fb);
 		
 		// check before setting metatable
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "nil", t.get("qqq").toString() );
-		assertEquals( "nil", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "nil", t.get("qqq").tojstring() );
+		assertEquals( "nil", t.get(456).tojstring() );
 		
 		
 		// check before setting metatable
 		t.setmetatable(mt);
 		assertEquals( mt, t.getmetatable() );
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "from mt: qqq", t.get("qqq").toString() );
-		assertEquals( "from mt: 456", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "from mt: qqq", t.get("qqq").tojstring() );
+		assertEquals( "from mt: 456", t.get(456).tojstring() );
 		
 		// use raw set
 		t.rawset("qqq", "alt-qqq");
 		t.rawset(456, "alt-456");
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "alt-qqq", t.get("qqq").toString() );
-		assertEquals( "alt-456", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "alt-qqq", t.get("qqq").tojstring() );
+		assertEquals( "alt-456", t.get(456).tojstring() );
 
 		// remove using raw set
 		t.rawset("qqq", LuaValue.NIL);
 		t.rawset(456, LuaValue.NIL);
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "from mt: qqq", t.get("qqq").toString() );
-		assertEquals( "from mt: 456", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "from mt: qqq", t.get("qqq").tojstring() );
+		assertEquals( "from mt: 456", t.get(456).tojstring() );
 
 		// set metatable to null
 		t.setmetatable(null);
-		assertEquals( "abc", t.get("ppp").toString() );
-		assertEquals( "def", t.get(123).toString() );
-		assertEquals( "nil", t.get("qqq").toString() );
-		assertEquals( "nil", t.get(456).toString() );
+		assertEquals( "abc", t.get("ppp").tojstring() );
+		assertEquals( "def", t.get(123).tojstring() );
+		assertEquals( "nil", t.get("qqq").tojstring() );
+		assertEquals( "nil", t.get(456).tojstring() );
 	}
 	
 	public void testNext() {

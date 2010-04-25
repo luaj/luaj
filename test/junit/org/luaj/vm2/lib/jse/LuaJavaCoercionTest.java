@@ -48,7 +48,7 @@ public class LuaJavaCoercionTest extends TestCase {
 		String s = new String("777");
 		LuaValue v = CoerceJavaToLua.coerce(s);
 		assertEquals( LuaString.class, v.getClass() );
-		assertEquals( "777", v.toString() );
+		assertEquals( "777", v.tojstring() );
 	}
 
 	public void testLuaStringToJavaString() {
@@ -162,22 +162,22 @@ public class LuaJavaCoercionTest extends TestCase {
 		// get sample field, call with no arguments
 		LuaValue method = v.get(SAMPLE);
 		LuaValue result = method.call(v);
-		assertEquals( "void-args", result.toString() );
+		assertEquals( "void-args", result.tojstring() );
 		
 		// get sample field, call with one arguments
 		LuaValue arg = CoerceJavaToLua.coerce(new Integer(123));
 		result = method.call(v,arg);
-		assertEquals( "int-args 123", result.toString() );
+		assertEquals( "int-args 123", result.tojstring() );
 		
 		// get sample field, call with array argument
 		arg = CoerceJavaToLua.coerce(new int[]{345,678});
 		result = method.call(v,arg);
-		assertEquals( "int-array-args 345,678", result.toString() );
+		assertEquals( "int-array-args 345,678", result.tojstring() );
 		
 		// get sample field, call with two-d array argument
 		arg = CoerceJavaToLua.coerce(new int[][]{{22,33},{44,55}});
 		result = method.call(v,arg);
-		assertEquals( "int-array-array-args 22,33,44,55", result.toString() );
+		assertEquals( "int-array-array-args 22,33,44,55", result.tojstring() );
 	}
 	
 	public static final class SomeException extends RuntimeException {
@@ -198,7 +198,7 @@ public class LuaJavaCoercionTest extends TestCase {
 		LuaValue status = vresult.arg1();
 		LuaValue message = vresult.arg(2);
 		assertEquals( LuaValue.FALSE, status );		
-		assertEquals( "vm error: "+SomeException.class.getName()+": this is some message", message.toString() );		
+		assertEquals( "vm error: "+SomeException.class.getName()+": this is some message", message.tojstring() );		
 	}
 
 	public void testLuaErrorCause() {
@@ -234,7 +234,7 @@ public class LuaJavaCoercionTest extends TestCase {
 			"} )\n";
 		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
 		if ( ! chunk.arg1().toboolean() )
-			fail( chunk.arg(2).toString() );
+			fail( chunk.arg(2).tojstring() );
 		LuaValue result = chunk.arg1().call();
 		Object u = result.touserdata();
 		VarArgsInterface v = (VarArgsInterface) u;

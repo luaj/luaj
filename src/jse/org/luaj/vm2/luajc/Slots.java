@@ -79,8 +79,8 @@ public class Slots {
 		markforloopupvalues( p );
 	}
 	
-	public String toString() {
-		return toString(null);
+	public String tojstring() {
+		return tojstring(null);
 	}
 	
 	private void markassignments( Prototype p ) {
@@ -416,7 +416,7 @@ public class Slots {
 	
 	public static void printSlots(Prototype p) {
 		Slots s = new Slots(p);
-		System.out.println("slots for "+p.source+":\n"+s.toString(p) );
+		System.out.println("slots for "+p.source+":\n"+s.tojstring(p) );
 		for ( int i=0; i<p.p.length; i++ )
 			printSlots(p.p[i]);
 	}
@@ -450,7 +450,7 @@ public class Slots {
 		return strs;
 	}
 	
-	String toString(Prototype p) {
+	String tojstring(Prototype p) {
 		String[] s = toStrings();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream( baos );

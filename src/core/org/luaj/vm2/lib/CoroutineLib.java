@@ -83,7 +83,7 @@ public class CoroutineLib extends ZeroArgFunction {
 				if ( result.arg1().toboolean() ) {
 					return result.subargs(2);
 				} else {
-					error( result.arg(2).toString() );
+					error( result.arg(2).tojstring() );
 				}
 			}
 			default:

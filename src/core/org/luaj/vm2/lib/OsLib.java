@@ -110,14 +110,14 @@ public class OsLib extends OneArgFunction {
 				exit(args.optint(1, 0));
 				return NONE;
 			case GETENV: {
-				final String val = getenv(args.checkString(1));
+				final String val = getenv(args.checkjstring(1));
 				return val!=null? valueOf(val): NIL;
 			}
 			case REMOVE:
-				remove(args.checkString(1));
+				remove(args.checkjstring(1));
 				return LuaValue.TRUE;
 			case RENAME:
-				rename(args.checkString(1), args.checkString(2));
+				rename(args.checkjstring(1), args.checkjstring(2));
 				return LuaValue.TRUE;
 			case SETLOCALE: {
 				String s = setlocale(args.optString(1,null), args.optString(2, "all"));

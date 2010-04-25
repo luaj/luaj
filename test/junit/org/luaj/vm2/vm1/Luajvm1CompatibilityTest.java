@@ -96,7 +96,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 			LuaThread.getRunning().setfenv(_G);
 			_G.get("package").get("loaders").checktable().insert(1, new org.luaj.vm2.lib.OneArgFunction(_G) {
 				public LuaValue call(LuaValue arg) {
-					String name = arg.toString();
+					String name = arg.tojstring();
 					String file = name + ".lua";
 					InputStream is = open( file );
 					if ( is == null )

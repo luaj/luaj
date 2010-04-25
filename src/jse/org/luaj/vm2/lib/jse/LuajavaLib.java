@@ -88,14 +88,14 @@ public class LuajavaLib extends OneArgFunction {
 		try {
 			switch ( opcode ) {
 			case BINDCLASS: {
-				final Class clazz = Class.forName(args.checkString(1));
+				final Class clazz = Class.forName(args.checkjstring(1));
 				return toUserdata( clazz, clazz );
 			}
 			case NEWINSTANCE:
 			case NEW: {
 				// get constructor
 				final LuaValue c = args.checkvalue(1); 
-				final Class clazz = (opcode==NEWINSTANCE? Class.forName(c.toString()): (Class) c.checkuserdata(Class.class));
+				final Class clazz = (opcode==NEWINSTANCE? Class.forName(c.tojstring()): (Class) c.checkuserdata(Class.class));
 				final ParamsList params = new ParamsList( args );
 				final Constructor con = resolveConstructor( clazz, params );
 	
@@ -116,7 +116,7 @@ public class LuajavaLib extends OneArgFunction {
 				// get the interfaces
 				final Class[] ifaces = new Class[niface];
 				for ( int i=0; i<niface; i++ ) 
-					ifaces[i] = Class.forName(args.checkString(i+1));
+					ifaces[i] = Class.forName(args.checkjstring(i+1));
 				
 				// create the invocation handler
 				InvocationHandler handler = new InvocationHandler() {
@@ -154,8 +154,8 @@ public class LuajavaLib extends OneArgFunction {
 			}
 			case LOADLIB: {
 				// get constructor
-				String classname = args.checkString(1);
-				String methodname = args.checkString(2);
+				String classname = args.checkjstring(1);
+				String methodname = args.checkjstring(2);
 				Class clazz = Class.forName(classname);
 				Method method = clazz.getMethod(methodname, new Class[] {});
 				Object result = method.invoke(clazz, new Object[] {});
@@ -217,7 +217,7 @@ public class LuajavaLib extends OneArgFunction {
 							return NIL;
 						}
 					}
-					final String s = key.toString();
+					final String s = key.tojstring();
 					try {
 						Field f = clazz.getField(s);
 						Object o = f.get(instance);
@@ -254,7 +254,7 @@ public class LuajavaLib extends OneArgFunction {
 							return NIL;
 						}
 					}
-					String s = key.toString();
+					String s = key.tojstring();
 					try {
 						Field f = clazz.getField(s);
 						Object v = CoerceLuaToJava.coerceArg(val, f.getType());
@@ -277,7 +277,7 @@ public class LuajavaLib extends OneArgFunction {
 			this.clazz = clazz;
 			this.s = s;
 		}
-		public String toString() {
+		public String tojstring() {
 			return clazz.getName()+"."+s+"()";
 		}
 		public Varargs invoke(Varargs args) {

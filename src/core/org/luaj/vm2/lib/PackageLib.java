@@ -127,7 +127,7 @@ public class PackageLib extends OneArgFunction {
 		PACKAGE.set( _PATH, valueOf(newLuaPath) );
 	}
 	
-	public String toString() {
+	public String tojstring() {
 		return "package";
 	}
 	
@@ -277,7 +277,7 @@ public class PackageLib extends OneArgFunction {
 			if ( chunk.isfunction() )
 				break;
 			if ( chunk.isstring() )
-				sb.append( chunk.toString() );
+				sb.append( chunk.tojstring() );
 		}
 
 		// load the module using the loader
@@ -304,7 +304,7 @@ public class PackageLib extends OneArgFunction {
 	}
 
 	private LuaValue loader_Lua( Varargs args ) {
-		String name = args.checkString(1);
+		String name = args.checkjstring(1);
 		InputStream is = null;
 		
 		
@@ -312,7 +312,7 @@ public class PackageLib extends OneArgFunction {
 		LuaValue pp = PACKAGE.get(_PATH);
 		if ( ! pp.isstring() ) 
 			return valueOf("package.path is not a string");
-		String path = pp.toString();
+		String path = pp.tojstring();
 		
 		// check the path elements
 		int e = -1;
@@ -355,7 +355,7 @@ public class PackageLib extends OneArgFunction {
 	}
 	
 	private LuaValue loader_Java( Varargs args ) {
-		String name = args.checkString(1);
+		String name = args.checkjstring(1);
 		String classname = toClassname( name );
 		Class c = null;
 		LuaValue v = null;

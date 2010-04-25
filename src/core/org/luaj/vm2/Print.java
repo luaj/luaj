@@ -122,7 +122,7 @@ public class Print extends Lua {
 	static void printValue( PrintStream ps, LuaValue v ) {
 		switch ( v.type() ) {
 		case LuaValue.TSTRING: printString( ps, (LuaString) v ); break;
-		default: ps.print( v.toString() );
+		default: ps.print( v.tojstring() );
 		
 		}
 	}
@@ -356,12 +356,12 @@ public class Print extends Lua {
 			case LuaValue.TSTRING: 
 				LuaString s = v.checkstring();
 				ps.print( s.length() < 48?
-						s.toString():
-						s.substring(0, 32).toString()+"...+"+(s.length()-32)+"b");					
+						s.tojstring():
+						s.substring(0, 32).tojstring()+"...+"+(s.length()-32)+"b");					
 				break;
 			case LuaValue.TFUNCTION:
 				ps.print( ( v instanceof LuaClosure )?
-					((LuaClosure)v).p.toString(): v.toString() );
+					((LuaClosure)v).p.tojstring(): v.tojstring() );
 				break;
 			case LuaValue.TUSERDATA:
 				Object o = v.touserdata();
@@ -370,7 +370,7 @@ public class Print extends Lua {
 				ps.print( n+": "+Integer.toHexString(o.hashCode()) );
 				break;
 			default:
-				ps.print(v.toString());
+				ps.print(v.tojstring());
 			}
 			if ( i+1 == top )
 				ps.print(']');

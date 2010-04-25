@@ -32,7 +32,7 @@ public class LocVars {
 		this.endpc = endpc;
 	}
 	
-	public String toString() {
+	public String tojstring() {
 		return varname+" "+startpc+"-"+endpc;
 	}
 }

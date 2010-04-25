@@ -53,7 +53,7 @@ public class TableArrayTest extends TestCase {
 
 		// Ensure all keys are still there.
 		for ( int i = 1; i <= 32; ++i ) {
-			assertEquals( "Test Value! " + i, t.get( i ).toString() );
+			assertEquals( "Test Value! " + i, t.get( i ).tojstring() );
 		}
 		
 		// Ensure capacities make sense
@@ -92,7 +92,7 @@ public class TableArrayTest extends TestCase {
 
 		// Ensure all keys are still there.
 		for ( int i = 1; i <= 32; ++i ) {
-			assertEquals( "Test Value! "+i, t.get( i ).toString() );
+			assertEquals( "Test Value! "+i, t.get( i ).tojstring() );
 		}
 		
 		// Ensure capacities make sense
@@ -134,8 +134,8 @@ public class TableArrayTest extends TestCase {
 				assertTrue( ( intKeys & mask ) == 0 );
 				intKeys |= mask;
 			} else if ( k instanceof LuaString ) {
-				final int ik = Integer.parseInt( k.toString() );
-				assertEquals( String.valueOf( ik ), k.toString() );
+				final int ik = Integer.parseInt( k.tojstring() );
+				assertEquals( String.valueOf( ik ), k.tojstring() );
 				assertTrue( ik >= 0 && ik < 10 );
 				final int mask = 1 << ik;
 				assertTrue( "Key \""+ik+"\" found more than once", ( stringKeys & mask ) == 0 );
@@ -267,8 +267,8 @@ public class TableArrayTest extends TestCase {
 		assertEquals(v.size(),t.length());
 		for ( int j=0; j<n; j++ ) {
 			Object vj = v.elementAt(j);
-			Object tj = t.get(j+1).toString();
-			vj = ((LuaString)vj).toString();
+			Object tj = t.get(j+1).tojstring();
+			vj = ((LuaString)vj).tojstring();
 			assertEquals(vj,tj);
 		}
 	}

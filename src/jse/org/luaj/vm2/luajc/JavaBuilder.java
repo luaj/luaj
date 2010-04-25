@@ -631,7 +631,7 @@ public class JavaBuilder {
 		cg.addField(fg.getField());
 		LuaString ls = value.checkstring();
 		if ( ls.isValidUtf8() ) {
-			init.append(new PUSH(cp, value.toString()));
+			init.append(new PUSH(cp, value.tojstring()));
 			init.append(factory.createInvoke(STR_LUASTRING, "valueOf",
 					TYPE_LUASTRING, new Type[] { Type.STRING }, Constants.INVOKESTATIC));
 		} else {

@@ -145,7 +145,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	protected LuaValue oncall2(int opcode, LuaValue arg1, LuaValue arg2) {
 		switch ( opcode ) {
 		case 0: // "collectgarbage", // ( opt [,arg] ) -> value
-			String s = arg1.optString("collect");
+			String s = arg1.optjstring("collect");
 			int result = 0;
 			if ( "collect".equals(s) ) {
 				System.gc();
@@ -161,7 +161,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 			return NIL;
 		case 1: // "error", // ( message [,level] ) -> ERR
-			throw new LuaError( arg1.isnil()? null: arg1.toString(), arg2.optint(1) );
+			throw new LuaError( arg1.isnil()? null: arg1.tojstring(), arg2.optint(1) );
 		case 2: // "rawequal", // (v1, v2) -> boolean
 			return valueOf(arg1 == arg2);
 		case 3: { // "setfenv", // (f, table) -> void
@@ -194,7 +194,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		{
 			LuaValue chunk;
 			try {
-				String filename = args.checkString(1);
+				String filename = args.checkjstring(1);
 				chunk = loadFile(filename).arg1();
 			} catch ( IOException e ) {
 				return error(e.getMessage());
@@ -212,7 +212,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		case 3: // "loadfile", // ( [filename] ) -> chunk | nil, msg
 		{
 			try {
-				String filename = args.checkString(1);
+				String filename = args.checkjstring(1);
 				return loadFile(filename);
 			} catch ( Exception e ) {
 				return varargsOf(NIL, valueOf(e.getMessage()));
@@ -320,7 +320,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 		case 14: { // "tostring", // (e) -> value
 			LuaValue arg = args.checkvalue(1);
-			return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.toString());
+			return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
 		}
 		case 15: { // "tonumber", // (e [,base]) -> value
 			LuaValue arg1 = args.checkvalue(1);
@@ -375,7 +375,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					bytes = null;
 					return -1;
 				}
-				bytes = s.toString().getBytes();
+				bytes = s.tojstring().getBytes();
 				offset = 0;
 			}
 			if ( offset >= bytes.length )

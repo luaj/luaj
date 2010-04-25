@@ -591,7 +591,7 @@ public class StringLib extends OneArgFunction {
 	 * The definition of what an uppercase letter is depends on the current locale.
 	 */
 	static LuaValue lower( LuaValue arg ) {
-		return valueOf( arg.checkString().toLowerCase() );
+		return valueOf( arg.checkjstring().toLowerCase() );
 	}
 
 	/**
@@ -675,7 +675,7 @@ public class StringLib extends OneArgFunction {
 	 * The definition of what a lowercase letter is depends on the current locale.	
 	 */
 	static LuaValue upper( LuaValue arg ) {
-		return valueOf(arg.checkString().toUpperCase());
+		return valueOf(arg.checkjstring().toUpperCase());
 	}
 	
 	/**

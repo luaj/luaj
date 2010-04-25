@@ -495,23 +495,23 @@ public class TypeTest extends TestCase {
 	}
 	
 	public void testToString() {
-		assertEquals( "nil", somenil.toString() );
-		assertEquals( "false", somefalse.toString() );
-		assertEquals( "true", sometrue.toString() );
-		assertEquals( "0", zero.toString() );
-		assertEquals( String.valueOf(sampleint), intint.toString() );
-		assertEquals( String.valueOf(samplelong), longdouble.toString() );
-		assertEquals( String.valueOf(sampledouble), doubledouble.toString() );
-		assertEquals( samplestringstring, stringstring.toString() );
-		assertEquals( String.valueOf(sampleint), stringint.toString() );
-		assertEquals( String.valueOf(samplelong), stringlong.toString() );
-		assertEquals( String.valueOf(sampledouble), stringdouble.toString() );
-		assertEquals( "thread: ", thread.toString().substring(0,8) );
-		assertEquals( "table: ", table.toString().substring(0,7) );
-		assertEquals( sampleobject.toString(), userdataobj.toString() );
-		assertEquals( sampledata.toString(), userdatacls.toString() );
-		assertEquals( "function: ", somefunc.toString().substring(0,10) );
-		assertEquals( "function: ", someclosure.toString().substring(0,10) );
+		assertEquals( "nil", somenil.tojstring() );
+		assertEquals( "false", somefalse.tojstring() );
+		assertEquals( "true", sometrue.tojstring() );
+		assertEquals( "0", zero.tojstring() );
+		assertEquals( String.valueOf(sampleint), intint.tojstring() );
+		assertEquals( String.valueOf(samplelong), longdouble.tojstring() );
+		assertEquals( String.valueOf(sampledouble), doubledouble.tojstring() );
+		assertEquals( samplestringstring, stringstring.tojstring() );
+		assertEquals( String.valueOf(sampleint), stringint.tojstring() );
+		assertEquals( String.valueOf(samplelong), stringlong.tojstring() );
+		assertEquals( String.valueOf(sampledouble), stringdouble.tojstring() );
+		assertEquals( "thread: ", thread.tojstring().substring(0,8) );
+		assertEquals( "table: ", table.tojstring().substring(0,7) );
+		assertEquals( sampleobject.toString(), userdataobj.tojstring() );
+		assertEquals( sampledata.toString(), userdatacls.tojstring() );
+		assertEquals( "function: ", somefunc.tojstring().substring(0,10) );
+		assertEquals( "function: ", someclosure.tojstring().substring(0,10) );
 	}
 	
 	public void testToUserdata() {
@@ -763,20 +763,20 @@ public class TypeTest extends TestCase {
 	}
 	
 	public void testOptJavaString() {
-		assertEquals( "xyz", somenil.optString("xyz") );
-		assertEquals( null, somenil.optString(null) );
+		assertEquals( "xyz", somenil.optjstring("xyz") );
+		assertEquals( null, somenil.optjstring(null) );
 		throwsError( sometrue, "optString", String.class, "xyz" );
 		throwsError( somefalse, "optString", String.class, "xyz" );
-		assertEquals( String.valueOf(zero), zero.optString("xyz") );
-		assertEquals( String.valueOf(intint), intint.optString("xyz") );
-		assertEquals( String.valueOf(longdouble), longdouble.optString("xyz") );
-		assertEquals( String.valueOf(doubledouble), doubledouble.optString("xyz") );
+		assertEquals( String.valueOf(zero), zero.optjstring("xyz") );
+		assertEquals( String.valueOf(intint), intint.optjstring("xyz") );
+		assertEquals( String.valueOf(longdouble), longdouble.optjstring("xyz") );
+		assertEquals( String.valueOf(doubledouble), doubledouble.optjstring("xyz") );
 		throwsError( somefunc, "optString", String.class, "xyz" );
 		throwsError( someclosure, "optString", String.class, "xyz" );
-		assertEquals( samplestringstring, stringstring.optString("xyz") );
-		assertEquals( samplestringint, stringint.optString("xyz") );
-		assertEquals( samplestringlong, stringlong.optString("xyz") );
-		assertEquals( samplestringdouble, stringdouble.optString("xyz") );
+		assertEquals( samplestringstring, stringstring.optjstring("xyz") );
+		assertEquals( samplestringint, stringint.optjstring("xyz") );
+		assertEquals( samplestringlong, stringlong.optjstring("xyz") );
+		assertEquals( samplestringdouble, stringdouble.optjstring("xyz") );
 		throwsError( thread, "optString", String.class, "xyz" );
 		throwsError( table, "optString", String.class, "xyz" );
 		throwsError( userdataobj, "optString", String.class, "xyz" );
@@ -1119,16 +1119,16 @@ public class TypeTest extends TestCase {
 		throwsErrorReq( somenil, "checkString" );
 		throwsErrorReq( sometrue, "checkString" );
 		throwsErrorReq( somefalse, "checkString" );
-		assertEquals( String.valueOf(zero), zero.checkString() );
-		assertEquals( String.valueOf(intint), intint.checkString() );
-		assertEquals( String.valueOf(longdouble), longdouble.checkString() );
-		assertEquals( String.valueOf(doubledouble), doubledouble.checkString() );
+		assertEquals( String.valueOf(zero), zero.checkjstring() );
+		assertEquals( String.valueOf(intint), intint.checkjstring() );
+		assertEquals( String.valueOf(longdouble), longdouble.checkjstring() );
+		assertEquals( String.valueOf(doubledouble), doubledouble.checkjstring() );
 		throwsErrorReq( somefunc, "checkString" );
 		throwsErrorReq( someclosure, "checkString" );
-		assertEquals( samplestringstring, stringstring.checkString() );
-		assertEquals( samplestringint, stringint.checkString() );
-		assertEquals( samplestringlong, stringlong.checkString() );
-		assertEquals( samplestringdouble, stringdouble.checkString() );
+		assertEquals( samplestringstring, stringstring.checkjstring() );
+		assertEquals( samplestringint, stringint.checkjstring() );
+		assertEquals( samplestringlong, stringlong.checkjstring() );
+		assertEquals( samplestringdouble, stringdouble.checkjstring() );
 		throwsErrorReq( thread, "checkString" );
 		throwsErrorReq( table, "checkString" );
 		throwsErrorReq( userdataobj, "checkString" );

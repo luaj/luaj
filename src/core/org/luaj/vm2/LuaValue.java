@@ -103,13 +103,19 @@ public class LuaValue extends Varargs {
 	public int     toint()               { return 0; }
 	public long    tolong()              { return 0; }
 	public short   toshort()             { return 0; }
-	public String  toString()            { return typename() + ": " + Integer.toHexString(hashCode()); }
+	public String  tojstring()           { return typename() + ": " + Integer.toHexString(hashCode()); }
 	public Object  touserdata()          { return null; }
 	public Object  touserdata(Class c)   { return null; }
 
+	// object tojstring() maps to tojstring() 
+	public String toString() { return tojstring(); }
+	
 	// type coercion to lua values
 	/** @return NIL if not a number or convertible to a number */ 
 	public LuaValue    tonumber()     { return NIL; }
+	
+	/** @return NIL if not a string or number */ 
+	public LuaValue    tostring()     { return NIL; }
 
 	// optional argument conversions
 	public boolean     optboolean(boolean defval)          { typerror("boolean");   return false; }
@@ -120,13 +126,16 @@ public class LuaValue extends Varargs {
 	public LuaInteger  optinteger(LuaInteger defval)       { typerror("integer");   return null;  }
 	public long        optlong(long defval)                { typerror("long");      return 0;     }
 	public LuaNumber   optnumber(LuaNumber defval)         { typerror("number");    return null;  }
-	public String      optString(String defval)            { typerror("String");    return null;  }
+	public String      optjstring(String defval)           { typerror("String");    return null;  }
 	public LuaString   optstring(LuaString defval)         { typerror("string");    return null;  }
 	public LuaTable    opttable(LuaTable defval)           { typerror("table");     return null;  }
 	public LuaThread   optthread(LuaThread defval)         { typerror("thread");    return null;  }
 	public Object      optuserdata(Object defval)          { typerror("object");    return null;  }
 	public Object      optuserdata(Class c, Object defval) { typerror(c.getName()); return null;  }
 	public LuaValue    optvalue(LuaValue defval)           { return this; }
+
+	/** @deprecated - use optjstring() instead */
+	public String      optString(String defval)            { return optjstring(defval);  }
 
 	// argument type checks
 	public boolean     checkboolean()          { typerror("boolean");   return false; }
@@ -137,13 +146,16 @@ public class LuaValue extends Varargs {
 	public LuaInteger  checkinteger()          { typerror("integer");   return null; }
 	public long        checklong()             { typerror("long");      return 0; }
 	public LuaNumber   checknumber()           { typerror("number");    return null; }
-	public String      checkString()           { typerror("string");    return null; }
+	public String      checkjstring()          { typerror("string");    return null; }
 	public LuaString   checkstring()           { typerror("string");    return null; }
 	public LuaTable    checktable()            { typerror("table");     return null; }	
 	public LuaThread   checkthread()           { typerror("thread");    return null; }
 	public Object      checkuserdata()         { typerror("userdata");  return null; }
 	public Object      checkuserdata(Class c)  { typerror("userdata");  return null; }
 	public LuaValue    checknotnil()           { return this; }
+	
+	/** @deprecated - use checkjstring() instead */
+	public String      checkString()          { return checkjstring(); }
 	
 	// errors
 	public static LuaValue error(String message) { throw new LuaError(message); }
@@ -441,7 +453,7 @@ public class LuaValue extends Varargs {
 		public LuaValue arg(int i) { return NIL; }
 		public int narg() { return 0; }
 		public LuaValue arg1() { return NIL; }
-		public String toString() { return "none"; }
+		public String tojstring() { return "none"; }
 	}
 	
 	// varargs from array
@@ -507,7 +519,7 @@ public class LuaValue extends Varargs {
 		public LuaValue arg1() { 
 			return v1; 
 		}
-		public String toString() {
+		public String tojstring() {
 			return "{"+v1+","+v2+"}";
 		}
 	}

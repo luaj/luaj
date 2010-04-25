@@ -83,13 +83,16 @@ public abstract class Varargs {
 	public LuaInteger   optinteger(int i, LuaInteger defval)       { return arg(i).optinteger(defval); }
 	public long         optlong(int i, long defval)                { return arg(i).optlong(defval); }
 	public LuaNumber    optnumber(int i, LuaNumber defval)         { return arg(i).optnumber(defval); }
-	public String       optString(int i, String defval)            { return arg(i).optString(defval); }
+	public String       optjstring(int i, String defval)           { return arg(i).optjstring(defval); }
 	public LuaString    optstring(int i, LuaString defval)         { return arg(i).optstring(defval); }
 	public LuaTable     opttable(int i, LuaTable defval)           { return arg(i).opttable(defval); }
 	public LuaThread    optthread(int i, LuaThread defval)         { return arg(i).optthread(defval); }
 	public Object       optuserdata(int i, Object defval)          { return arg(i).optuserdata(defval); }
 	public Object       optuserdata(int i, Class c, Object defval) { return arg(i).optuserdata(c,defval); }
 	public LuaValue     optvalue(int i, LuaValue defval)           { return i>0 && i<=narg()? arg(i): defval; }
+
+	/** @deprecated - use optjstring() instead */
+	public String       optString(int i, String defval)            { return optjstring(i,defval); }
 	
 	// required argument types 
 	public boolean      checkboolean(int i)          { return arg(i).checkboolean(); }
@@ -100,7 +103,7 @@ public abstract class Varargs {
 	public LuaInteger   checkinteger(int i)          { return arg(i).checkinteger(); }
 	public long         checklong(int i)             { return arg(i).checknumber().tolong(); }
 	public LuaNumber    checknumber(int i)           { return arg(i).checknumber(); }
-	public String       checkString(int i)           { return arg(i).checkString(); }
+	public String       checkjstring(int i)          { return arg(i).checkjstring(); }
 	public LuaString    checkstring(int i)           { return arg(i).checkstring(); }
 	public LuaTable     checktable(int i)            { return arg(i).checktable(); }
 	public LuaThread    checkthread(int i)           { return arg(i).checkthread(); }
@@ -109,6 +112,8 @@ public abstract class Varargs {
 	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.error("value expected"); }
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
+	/** @deprecated - use checkjstring() instead */
+	public String       checkString(int i)           { return checkjstring(i); }
 
 	public void         argcheck(boolean test, int i, String msg) { if (!test) LuaValue.argerror(i,msg); }
 	
@@ -123,19 +128,20 @@ public abstract class Varargs {
 	public float   tofloat(int i)             { return arg(i).tofloat(); }
 	public int     toint(int i)               { return arg(i).toint(); }
 	public long    tolong(int i)              { return arg(i).tolong(); }
+	public String  tojstring(int i)           { return arg(i).tojstring(); }
 	public short   toshort(int i)             { return arg(i).toshort(); }
 	public Object  touserdata(int i)          { return arg(i).touserdata(); }
 	public Object  touserdata(int i,Class c)  { return arg(i).touserdata(c); }
 	
-	public String toString() {
+	public String tojstring() {
 		Buffer sb = new Buffer();
 		sb.append( "(" );
 		for ( int i=1,n=narg(); i<=n; i++ ) {
 			if (i>1) sb.append( "," );
-			sb.append( arg(i).toString() );
+			sb.append( arg(i).tojstring() );
 		}
 		sb.append( ")" );
-		return sb.toString();
+		return sb.tojstring();
 	}
 
 	public Varargs subargs(final int start) {

@@ -35,7 +35,7 @@ public class LuaNil extends LuaValue {
 		return "nil";
 	}
 	
-	public String toString() {
+	public String tojstring() {
 		return "nil";
 	}
 
@@ -74,7 +74,7 @@ public class LuaNil extends LuaValue {
 	public LuaNumber   optnumber(LuaNumber defval)         { return defval; }
 	public LuaTable    opttable(LuaTable defval)           { return defval; }
 	public LuaThread   optthread(LuaThread defval)         { return defval; }
-	public String      optString(String defval)            { return defval; }
+	public String      optjstring(String defval)            { return defval; }
 	public LuaString   optstring(LuaString defval)         { return defval; }
 	public Object      optuserdata(Object defval)          { return defval; }
 	public Object      optuserdata(Class c, Object defval) { return defval; }

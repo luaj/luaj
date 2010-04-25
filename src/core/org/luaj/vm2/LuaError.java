@@ -41,7 +41,7 @@ public class LuaError extends RuntimeException {
 		LuaThread thread = LuaThread.getRunning();
 		if ( thread.err != null ) { 
 			try {
-				return thread.err.call( LuaValue.valueOf(msg) ).toString();
+				return thread.err.call( LuaValue.valueOf(msg) ).tojstring();
 			} catch ( Throwable t ) {
 				return "error in error handling";
 			}

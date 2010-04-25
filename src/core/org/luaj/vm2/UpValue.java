@@ -33,8 +33,8 @@ public final class UpValue {
 		this.index = index;
 	}
 	
-	public String toString() {
-		return array[index].toString();
+	public String tojstring() {
+		return array[index].tojstring();
 	}
 	
 	public final LuaValue getValue() {

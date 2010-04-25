@@ -110,7 +110,7 @@ abstract public class LibFunction extends LuaFunction {
 			this.delegate = delegate;
 		}
 		
-		public String toString() {
+		public String tojstring() {
 			return name;
 		}
 		
@@ -147,7 +147,7 @@ abstract public class LibFunction extends LuaFunction {
 			this.delegate = delegate;
 		}
 		
-		public String toString() {
+		public String tojstring() {
 			return name;
 		}
 		
@@ -184,7 +184,7 @@ abstract public class LibFunction extends LuaFunction {
 			this.delegate = delegate;
 		}
 		
-		public String toString() {
+		public String tojstring() {
 			return name;
 		}
 		
@@ -221,7 +221,7 @@ abstract public class LibFunction extends LuaFunction {
 			this.delegate = delegate;
 		}
 		
-		public String toString() {
+		public String tojstring() {
 			return name;
 		}
 		
@@ -258,7 +258,7 @@ abstract public class LibFunction extends LuaFunction {
 			this.delegate = delegate;
 		}
 
-		public String toString() {
+		public String tojstring() {
 			return name;
 		}
 		

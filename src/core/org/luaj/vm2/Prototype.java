@@ -44,7 +44,7 @@ public class Prototype {
 	public int maxstacksize;
 
 	
-	public String toString() {
+	public String tojstring() {
 		return source + ":" + linedefined;
 	}
 	

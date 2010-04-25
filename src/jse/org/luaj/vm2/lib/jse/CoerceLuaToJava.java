@@ -156,7 +156,7 @@ public class CoerceLuaToJava {
 		};
 		Coercion stringCoercion = new Coercion() {
 			public Object coerce(LuaValue value) {
-				return value.toString();
+				return value.tojstring();
 			} 
 			public int score(LuaValue value) {
 				switch ( value.type() ) {
@@ -173,7 +173,7 @@ public class CoerceLuaToJava {
 				case LuaValue.TUSERDATA:
 					return value.optuserdata(Object.class, null);
 				case LuaValue.TSTRING:
-					return value.toString();
+					return value.tojstring();
 				case LuaValue.TNUMBER:
 					return (value.isinttype()? 
 							new Integer(value.toint()): 

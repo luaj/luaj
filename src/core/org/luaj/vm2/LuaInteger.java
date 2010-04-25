@@ -66,7 +66,7 @@ public class LuaInteger extends LuaNumber {
 	public LuaInteger  optinteger(LuaInteger defval)       { return this; }
 	public long        optlong(long defval)                { return v; }
 
-	public String toString() {
+	public String tojstring() {
 		return Integer.toString(v);
 	}
 
@@ -77,8 +77,12 @@ public class LuaInteger extends LuaNumber {
 	public LuaString optstring(LuaString defval) {
 		return LuaString.valueOf(Integer.toString(v)); 
 	}
+	
+	public LuaValue tostring() {
+		return LuaString.valueOf(Integer.toString(v)); 
+	}
 		
-	public String optString(String defval) { 
+	public String optjstring(String defval) { 
 		return Integer.toString(v); 
 	}
 	
@@ -157,7 +161,7 @@ public class LuaInteger extends LuaNumber {
 	public double checkdouble() {
 		return v;
 	}
-	public String checkString() { 
+	public String checkjstring() { 
 		return String.valueOf(v); 
 	}
 	public LuaString checkstring() { 

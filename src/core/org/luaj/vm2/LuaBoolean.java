@@ -55,7 +55,7 @@ public class LuaBoolean extends LuaValue {
 		return v;
 	}
 
-	public String toString() {
+	public String tojstring() {
 		return v ? "true" : "false";
 	}
 

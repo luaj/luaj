@@ -89,7 +89,7 @@ public class DumpLoadEndianIntTest extends TestCase {
             // double check script result before dumping
             LuaClosure f = new LuaClosure(p, _G);
             LuaValue r = f.call();
-            String actual = r.toString();
+            String actual = r.tojstring();
             assertEquals( expectedPriorDump, actual );
             
             // dump into bytes
@@ -111,7 +111,7 @@ public class DumpLoadEndianIntTest extends TestCase {
             p = LoadState.compile(is, "dumped");
             f = new LuaClosure(p, _G);
             r = f.call();
-            actual = r.toString();
+            actual = r.tojstring();
             assertEquals( expectedPostDump, actual );
 
             // write test chunk

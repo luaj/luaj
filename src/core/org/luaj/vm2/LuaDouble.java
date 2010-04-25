@@ -30,14 +30,10 @@ public class LuaDouble extends LuaNumber {
 	public static final LuaDouble NAN    = new LuaDouble( Double.NaN );
 	public static final LuaDouble POSINF = new LuaDouble( Double.POSITIVE_INFINITY );
 	public static final LuaDouble NEGINF = new LuaDouble( Double.NEGATIVE_INFINITY );
+	public static final String JSTR_NAN    = "nan";
+	public static final String JSTR_POSINF = "inf";
+	public static final String JSTR_NEGINF = "-inf";
 	
-	private static Hashtable ALIASES = new Hashtable();
-	static {
-		ALIASES.put( "NaN", "nan" );
-		ALIASES.put( "Infinity", "inf" );
-		ALIASES.put( "-Infinity", "-inf" );
-	}
-
 	final double v;
 
 	public static LuaNumber valueOf(double d) {
@@ -135,7 +131,7 @@ public class LuaDouble extends LuaNumber {
 	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(Double.toString(v)); }
 	public String concatTo_s(String lhs)   { return lhs + v; }
 		
-	public String toString() {
+	public String tojstring() {
 		/*
 		if ( v == 0.0 ) { // never occurs in J2me 
 			long bits = Double.doubleToLongBits( v );
@@ -143,23 +139,29 @@ public class LuaDouble extends LuaNumber {
 		}
 		*/
 		long l = (long) v;
-		if ( l == v ) return Long.toString(l);
-		String s = Double.toString(v);
-		Object n = ALIASES.get(s);
-		return n!=null? (String)n: s;
+		if ( l == v ) 
+			return Long.toString(l);
+		if ( Double.isNaN(v) )
+			return JSTR_NAN;
+		if ( Double.isInfinite(v) ) 
+			return (v<0? JSTR_NEGINF: JSTR_POSINF);
+		return Double.toString(v);
 	}
 	
 	public LuaString strvalue() {
-		return LuaString.valueOf(toString());
+		return LuaString.valueOf(tojstring());
 	}
 	
 	public LuaString optstring(LuaString defval) {
-		return LuaString.valueOf(toString());
+		return LuaString.valueOf(tojstring());
 	}
 		
-	public String optString(String defval) {
-		long l = (long)v;
-		return v==l? Long.toString(l): Double.toString(v); 
+	public LuaValue tostring() {
+		return LuaString.valueOf(tojstring());
+	}
+	
+	public String optjstring(String defval) {
+		return tojstring();
 	}
 	
 	public LuaNumber optnumber(LuaNumber defval) {
@@ -182,11 +184,11 @@ public class LuaDouble extends LuaNumber {
 	public LuaNumber checknumber()       { return this; }
 	public double checkdouble()          { return v; }
 	
-	public String checkString() { 
-		return toString();
+	public String checkjstring() { 
+		return tojstring();
 	}
 	public LuaString checkstring() { 
-		return LuaString.valueOf(toString());
+		return LuaString.valueOf(tojstring());
 	}
 	
 }

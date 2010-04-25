@@ -68,7 +68,7 @@ public class IoLib extends OneArgFunction {
 		}
 		
 		// displays as "file" type
-		public String toString() {
+		public String tojstring() {
 			return "file: " + Integer.toHexString(hashCode());
 		}
 	}
@@ -211,13 +211,13 @@ public class IoLib extends OneArgFunction {
 				return ioclose(f);
 			case IO_INPUT: //	io.input([file]) -> file
 				infile = args.arg1().isnil()? input(): args.arg1().isstring()? 
-						ioopenfile(args.checkString(1),"r"):
+						ioopenfile(args.checkjstring(1),"r"):
 						checkfile(args.arg1());
 				return infile;
 				
 			case IO_OUTPUT: // io.output(filename) -> file
 				outfile = args.arg1().isnil()? output(): args.arg1().isstring()? 
-						ioopenfile(args.checkString(1),"w"):
+						ioopenfile(args.checkjstring(1),"w"):
 						checkfile(args.arg1());
 				return outfile;
 			case IO_TYPE: //	io.type(obj) -> "file" | "closed file" | nil
@@ -225,11 +225,11 @@ public class IoLib extends OneArgFunction {
 					return f.isclosed()? CLOSED_FILE: FILE;
 				return NIL;
 			case IO_POPEN: // io.popen(prog, [mode]) -> file
-				return openProgram(args.checkString(1),args.optString(2,"r"));
+				return openProgram(args.checkjstring(1),args.optString(2,"r"));
 			case IO_OPEN: //	io.open(filename, [mode]) -> file | nil,err
-				return rawopenfile(args.checkString(1), args.optString(2,"r"));
+				return rawopenfile(args.checkjstring(1), args.optString(2,"r"));
 			case IO_LINES: //	io.lines(filename) -> iterator
-				infile = args.arg1().isnil()? input(): ioopenfile(args.checkString(1),"r");
+				infile = args.arg1().isnil()? input(): ioopenfile(args.checkjstring(1),"r");
 				checkopen(infile);
 				return lines(infile);
 			case IO_READ: //	io.read(...) -> (...)
@@ -246,7 +246,7 @@ public class IoLib extends OneArgFunction {
 				return LuaValue.TRUE;
 			case FILE_SETVBUF: // file:setvbuf(mode,[size]) -> void
 				f = checkfile(args.arg1());
-				f.setvbuf(args.checkString(2),args.optint(3, 1024));
+				f.setvbuf(args.checkjstring(2),args.optint(3, 1024));
 				return LuaValue.TRUE;
 			case FILE_LINES: // file:lines() -> iterator
 				return lines(checkfile(args.arg1()));
@@ -342,7 +342,7 @@ public class IoLib extends OneArgFunction {
 			if ( args.isnumber(i+1) ) {
 				v[i] = freadbytes(f,args.checkint(i+1));
 			} else {
-				String format = args.checkString(i+1);
+				String format = args.checkjstring(i+1);
 				if ( "*n".equals(format) ) 
 					v[i] = valueOf( freadnumber(f) );
 				else if ( "*a".equals(format) ) 

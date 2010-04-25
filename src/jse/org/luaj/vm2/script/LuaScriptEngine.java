@@ -227,7 +227,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		private Object toJava(LuaValue v) {
 			switch ( v.type() ) {
 			case LuaValue.TNIL: return null;
-			case LuaValue.TSTRING: return v.toString();
+			case LuaValue.TSTRING: return v.tojstring();
 			case LuaValue.TUSERDATA: return v.checkuserdata(Object.class);
 			case LuaValue.TNUMBER: return v.isinttype()? new Integer(v.toint()): new Double(v.todouble());
 			default: 
