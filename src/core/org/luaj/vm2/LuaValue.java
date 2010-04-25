@@ -107,7 +107,7 @@ public class LuaValue extends Varargs {
 	public Object  touserdata()          { return null; }
 	public Object  touserdata(Class c)   { return null; }
 
-	// object tojstring() maps to tojstring() 
+	// Object.toString() maps to tojstring() 
 	public String toString() { return tojstring(); }
 	
 	// type coercion to lua values
@@ -518,9 +518,6 @@ public class LuaValue extends Varargs {
 		}
 		public LuaValue arg1() { 
 			return v1; 
-		}
-		public String tojstring() {
-			return "{"+v1+","+v2+"}";
 		}
 	}
 

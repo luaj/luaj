@@ -114,8 +114,8 @@ print( 'get='..tostring(s4)..','..tostring(x4==nil)..','..tostring(y4) )
 print( 'set='..tostring(s5)..','..tostring(x5==a)..','..tostring(y5) ) 
 print( 'get='..tostring(s6)..','..tostring(x6==nil)..','..tostring(y6) ) 
 print( pcall( debug.getmetatable, 1 ) )
--- print( pcall( debug.setmetatable, 1, {} ) )
--- print( pcall( debug.setmetatable, 1, nil ) )
+print( pcall( debug.setmetatable, 1, {} ) )
+print( pcall( debug.setmetatable, 1, nil ) )
 
 print( '----- debug.getinfo' )
 local printfield = function(tbl, field)
@@ -126,10 +126,6 @@ local printfield = function(tbl, field)
 		x = '{'..table.concat(x,',')..'}'
 	elseif typ=='function' then
 		x = typ
-	elseif typ=='string' then
-		if field == 'source' then 
-			x = x:sub(2)
-		end
 	end
 	print( '    '..field..': '..tostring(x) )
 end

@@ -143,6 +143,9 @@ public abstract class Varargs {
 		sb.append( ")" );
 		return sb.tojstring();
 	}
+	
+	// Object.toString() maps to tojstring() 
+	public String toString() { return tojstring(); }
 
 	public Varargs subargs(final int start) {
 		int end = narg();

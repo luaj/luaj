@@ -60,7 +60,7 @@ public class ScriptDrivenTest extends TestCase {
 			default:
 			case JSE:
 			case LUAJIT:
-				_G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
+				_G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
 				break;
 			case JME:
 				_G = org.luaj.vm2.lib.JmePlatform.debugGlobals();
@@ -115,7 +115,7 @@ public class ScriptDrivenTest extends TestCase {
 				}
 			default:
 				script = new FileInputStream(file);
-				return LoadState.load(script, "stdin", _G);
+				return LoadState.load(script, "=stdin", _G);
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace();

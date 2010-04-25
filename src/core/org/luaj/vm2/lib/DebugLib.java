@@ -22,9 +22,12 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaNil;
+import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
@@ -534,10 +537,15 @@ public class DebugLib extends OneArgFunction {
 	private static Varargs _setmetatable(Varargs args) {
 		LuaValue object = args.arg(1);
 		try {
-			if ( ! args.isnoneornil(2) )
-				object.setmetatable(args.checktable(2));
-			else
-				object.setmetatable(null);
+			LuaValue mt = args.opttable(2, null);
+			switch ( object.type() ) {
+				case TNIL:      LuaNil.s_metatable      = mt; break;
+				case TNUMBER:   LuaNumber.s_metatable   = mt; break;
+				case TBOOLEAN:  LuaBoolean.s_metatable  = mt; break;
+				case TSTRING:   LuaString.s_metatable   = mt; break;
+				case TFUNCTION: LuaFunction.s_metatable = mt; break;
+				default: object.setmetatable( mt );
+			}
 			return LuaValue.TRUE;
 		} catch ( LuaError e ) {
 			return varargsOf(FALSE, valueOf(e.toString()));

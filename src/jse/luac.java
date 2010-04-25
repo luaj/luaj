@@ -134,7 +134,7 @@ public class luac {
 						String chunkname = args[i].substring(0,args[i].length()-4);
 						processScript( new FileInputStream(args[i]), chunkname, fos );
 					} else if ( args[i].length() <= 1 ) {
-						processScript( System.in, "stdin", fos );
+						processScript( System.in, "=stdin", fos );
 					} else {
 						switch ( args[i].charAt(1) ) {
 						case 'o':

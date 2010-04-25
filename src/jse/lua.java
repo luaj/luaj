@@ -126,7 +126,7 @@ public class lua {
 					break;
 				} else if ( "-".equals( args[i] ) ) {
 					setGlobalArg( _G, args, i );
-					processScript( System.in, "stdin" );
+					processScript( System.in, "=stdin" );
 					break;
 				} else {
 					switch ( args[i].charAt(1) ) {
@@ -202,7 +202,7 @@ public class lua {
 			String line = reader.readLine();
 			if ( line == null )
 				return;
-			processScript( new ByteArrayInputStream(line.getBytes()), "stdin" );
+			processScript( new ByteArrayInputStream(line.getBytes()), "=stdin" );
 		}
 	}
 }
