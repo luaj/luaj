@@ -95,11 +95,12 @@ public class LuajavaLib extends OneArgFunction {
 				// get constructor
 				final LuaValue c = args.checkvalue(1); 
 				final Class clazz = (opcode==NEWINSTANCE? Class.forName(c.tojstring()): (Class) c.checkuserdata(Class.class));
-				final long paramssig = LuajavaLib.paramsSignatureOf( args );
+				final Varargs consargs = args.subargs(2);
+				final long paramssig = LuajavaLib.paramsSignatureOf( consargs );
 				final Constructor con = resolveConstructor( clazz, paramssig );
 	
 				// coerce args, construct instance 
-				Object[] cargs = CoerceLuaToJava.coerceArgs( args, con.getParameterTypes() );
+				Object[] cargs = CoerceLuaToJava.coerceArgs( consargs, con.getParameterTypes() );
 				Object o = con.newInstance( cargs );
 					
 				// return result
