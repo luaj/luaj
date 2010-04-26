@@ -26,29 +26,31 @@ import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-public class CoroutineLib extends ZeroArgFunction {
+public class CoroutineLib extends VarArgFunction {
 	
-	private static final int CREATE  = 0;
-	private static final int RESUME  = 1;
-	private static final int RUNNING = 2;
-	private static final int STATUS  = 3;
-	private static final int YIELD   = 4;
-	private static final int WRAP    = 5;
-	private static final int WRAPPED = 6;
+	private static final int INIT    = 0;
+	private static final int CREATE  = 1;
+	private static final int RESUME  = 2;
+	private static final int RUNNING = 3;
+	private static final int STATUS  = 4;
+	private static final int YIELD   = 5;
+	private static final int WRAP    = 6;
+	private static final int WRAPPED = 7;
 	
 	public CoroutineLib() {
 	}
 
-	public LuaValue call() {
-		LuaTable t = new LuaTable();
-		bindv(t, new  String[] {
-			"create", "resume", "running", "status", "yield", "wrap" });
-		env.set("coroutine", t);
-		return t;
-	}
-	
-	protected Varargs oncallv(int opcode, Varargs args) {
+	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
+			case INIT: {
+				LuaTable t = new LuaTable();
+				bind(t, CoroutineLib.class, new  String[] {
+					"create", "resume", "running", "status", "yield", "wrap" },
+					CREATE);
+				env.set("coroutine", t);
+				return t;
+				
+			}
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
 				return new LuaThread(func, LuaThread.getGlobals() );
@@ -75,7 +77,9 @@ public class CoroutineLib extends ZeroArgFunction {
 				final LuaThread thread = new LuaThread(func, func.getfenv());
 				CoroutineLib cl = new CoroutineLib();
 				cl.setfenv(thread);
-				return cl.bindv("wrapped",WRAPPED);
+				cl.name = "wrapped";
+				cl.opcode = WRAPPED;
+				return cl;
 			}
 			case WRAPPED: {
 				final LuaThread t = (LuaThread) env;
