@@ -21,14 +21,42 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 abstract public class LibFunction extends LuaFunction {
 	
+	protected int opcode;
+	protected String name;
+	
 	protected LibFunction() {		
 	}
+	
+	public String tojstring() {
+		return name != null? name: super.tojstring();
+	}
+	
+	protected void bind(LuaValue env, Class factory,  String[] names ) {
+		bind( env, factory, names, 0 );
+	}
+	
+	protected void bind(LuaValue env, Class factory,  String[] names, int firstopcode ) {
+		try {
+			for ( int i=0, n=names.length; i<n; i++ ) {
+				LibFunction f = (LibFunction) factory.newInstance();
+				f.opcode = firstopcode + i;
+				f.name = names[i];
+				f.env = env;
+				env.set(f.name, f);
+			}
+		} catch ( Exception e ) {
+			throw new LuaError( "bind failed: "+e );
+		}
+	}
+	
+	
 	protected void bind0(LuaValue env, String[] names) {
 		bind(env, names, 0, 0);
 	}
@@ -100,8 +128,6 @@ abstract public class LibFunction extends LuaFunction {
 
 	/** Binding to a one-arg function */
 	private static class ZeroArgBinding extends LibFunction {
-		private final String name;
-		private final int opcode;
 		private final LibFunction delegate;
 
 		private ZeroArgBinding(String name, int opcode, LibFunction delegate) {
@@ -137,8 +163,6 @@ abstract public class LibFunction extends LuaFunction {
 	
 	/** Binding to a one-arg function */
 	private static class OneArgBinding extends LibFunction {
-		private final String name;
-		private final int opcode;
 		private final LibFunction delegate;
 
 		private OneArgBinding(String name, int opcode, LibFunction delegate) {
@@ -174,8 +198,6 @@ abstract public class LibFunction extends LuaFunction {
 	
 	/** Binding to a two-arg function */
 	private static class TwoArgBinding extends LibFunction {
-		private final String name;
-		private final int opcode;
 		private final LibFunction delegate;
 
 		private TwoArgBinding(String name, int opcode, LibFunction delegate) {
@@ -211,8 +233,6 @@ abstract public class LibFunction extends LuaFunction {
 	
 	/** Binding to a three-arg function */
 	private static class ThreeArgBinding extends LibFunction {
-		private final String name;
-		private final int opcode;
 		private final LibFunction delegate;
 
 		private ThreeArgBinding(String name, int opcode, LibFunction delegate) {
@@ -248,8 +268,6 @@ abstract public class LibFunction extends LuaFunction {
 	
 	/** Binding to a var-arg function */
 	private static class VarArgBinding extends LibFunction {
-		private final String name;
-		private final int opcode;
 		private final LibFunction delegate;
 
 		private VarArgBinding(String name, int opcode, LibFunction delegate) {

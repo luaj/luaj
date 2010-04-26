@@ -41,9 +41,9 @@ public class StringLib extends OneArgFunction {
 
 	public LuaValue call(LuaValue arg) {
 		LuaTable t = new LuaTable();
-		bind1(t, new String[] {
+		bind(t, StringLib1.class, new String[] {
 			"dump", "len", "lower", "reverse", "upper", } );
-		bindv(t, new String[] {
+		bind(t, StringLibV.class, new String[] {
 			"byte", "char", "find", "format", 
 			"gmatch", "gsub", "match", "rep", 
 			"sub"} );
@@ -52,31 +52,34 @@ public class StringLib extends OneArgFunction {
 		return t;
 	}
 	
-	protected LuaValue oncall1(int opcode, LuaValue arg) {
-		switch ( opcode ) { 
-		case 0: return dump(arg); // dump (function)
-		case 1: return len(arg); // len (function)
-		case 2: return lower(arg); // lower (function)
-		case 3: return reverse(arg); // reverse (function)
-		case 4: return upper(arg); // upper (function)
+	public static final class StringLib1 extends OneArgFunction {
+		public LuaValue call(LuaValue arg) {
+			switch ( opcode ) { 
+			case 0: return dump(arg); // dump (function)
+			case 1: return StringLib.len(arg); // len (function)
+			case 2: return lower(arg); // lower (function)
+			case 3: return reverse(arg); // reverse (function)
+			case 4: return upper(arg); // upper (function)
+			}
+			return NIL;
 		}
-		return NIL;
 	}
 
-
-	protected Varargs oncallv(int opcode, Varargs args) {
-		switch ( opcode ) {
-		case 0: return StringLib.byte_( args );
-		case 1: return StringLib.char_( args );
-		case 2: return StringLib.find( args );
-		case 3: return StringLib.format( args );
-		case 4: return StringLib.gmatch( args );
-		case 5: return StringLib.gsub( args );
-		case 6: return StringLib.match( args );
-		case 7: return StringLib.rep( args );
-		case 8: return StringLib.sub( args );
+	public static final class StringLibV extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			switch ( opcode ) {
+			case 0: return StringLib.byte_( args );
+			case 1: return StringLib.char_( args );
+			case 2: return StringLib.find( args );
+			case 3: return StringLib.format( args );
+			case 4: return StringLib.gmatch( args );
+			case 5: return StringLib.gsub( args );
+			case 6: return StringLib.match( args );
+			case 7: return StringLib.rep( args );
+			case 8: return StringLib.sub( args );
+			}
+			return NONE;
 		}
-		return NONE;
 	}
 
 	/**

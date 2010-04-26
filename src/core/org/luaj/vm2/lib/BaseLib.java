@@ -76,17 +76,17 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public LuaValue call(LuaValue arg) {
 		env.set( "_G", env );
 		env.set( "_VERSION", VERSION );
-		bind1( env, new String[] {
+		bind( env, BaseLib1.class, new String[] {
 			"getfenv", // ( [f] ) -> env
 			"getmetatable", // ( object ) -> table 
 		} );
-		bind2( env, new String[] {
+		bind( env, BaseLib2.class, new String[] {
 			"collectgarbage", // ( opt [,arg] ) -> value
 			"error", // ( message [,level] ) -> ERR
 			"rawequal", // (v1, v2) -> boolean
 			"setfenv", // (f, table) -> void
 		} );
-		bindv( env, new String[] {
+		bind( env, BaseLibV.class, new String[] {
 			"assert", // ( v [,message] ) -> v, message | ERR
 			"dofile", // ( filename ) -> result1, ...
 			"load", // ( func [,chunkname] ) -> chunk | nil, msg
@@ -113,6 +113,11 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		next = env.get("next");
 		inext = env.get("__inext");
 		
+		// inject base lib
+		((BaseLibV) env.get("print")).baselib = this;
+		((BaseLibV) env.get("pairs")).baselib = this;
+		((BaseLibV) env.get("ipairs")).baselib = this;
+		
 		// set the default resource finder if not set already
 		if ( FINDER == null )
 			FINDER = this;
@@ -128,53 +133,57 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		return c.getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
 	}
 
-	protected LuaValue oncall1(int opcode, LuaValue arg) {
-		switch ( opcode ) {
-		case 0: { // "getfenv", // ( [f] ) -> env
-			LuaValue f = getfenvobj(arg);
-		    LuaValue e = f.getfenv();
-			return e!=null? e: NIL;
-		}
-		case 1: // "getmetatable", // ( object ) -> table
-			LuaValue mt = arg.getmetatable();
-			return mt!=null? mt: NIL;
-		}
-		return NIL;
-	}
-
-	protected LuaValue oncall2(int opcode, LuaValue arg1, LuaValue arg2) {
-		switch ( opcode ) {
-		case 0: // "collectgarbage", // ( opt [,arg] ) -> value
-			String s = arg1.optjstring("collect");
-			int result = 0;
-			if ( "collect".equals(s) ) {
-				System.gc();
-				return ZERO;
+	public static final class BaseLib1 extends OneArgFunction {
+		public LuaValue call(LuaValue arg) {
+			switch ( opcode ) {
+			case 0: { // "getfenv", // ( [f] ) -> env
+				LuaValue f = getfenvobj(arg);
+			    LuaValue e = f.getfenv();
+				return e!=null? e: NIL;
 			}
-			else if ( "count".equals(s) ) {
-				Runtime rt = Runtime.getRuntime();
-				long used = rt.totalMemory() - rt.freeMemory();
-				return valueOf(used/1024.);
-			} else if ( "step".equals(s) ) {
-				System.gc();
-				return LuaValue.TRUE;
+			case 1: // "getmetatable", // ( object ) -> table
+				LuaValue mt = arg.getmetatable();
+				return mt!=null? mt: NIL;
 			}
 			return NIL;
-		case 1: // "error", // ( message [,level] ) -> ERR
-			throw new LuaError( arg1.isnil()? null: arg1.tojstring(), arg2.optint(1) );
-		case 2: // "rawequal", // (v1, v2) -> boolean
-			return valueOf(arg1 == arg2);
-		case 3: { // "setfenv", // (f, table) -> void
-			LuaTable t = arg2.checktable();
-			LuaValue f = getfenvobj(arg1);
-		    f.setfenv(t);
-		    return f.isthread()? NONE: f;
 		}
+	}
+
+	public static final class BaseLib2 extends TwoArgFunction {
+		public LuaValue call(LuaValue arg1, LuaValue arg2) {
+			switch ( opcode ) {
+			case 0: // "collectgarbage", // ( opt [,arg] ) -> value
+				String s = arg1.optjstring("collect");
+				int result = 0;
+				if ( "collect".equals(s) ) {
+					System.gc();
+					return ZERO;
+				}
+				else if ( "count".equals(s) ) {
+					Runtime rt = Runtime.getRuntime();
+					long used = rt.totalMemory() - rt.freeMemory();
+					return valueOf(used/1024.);
+				} else if ( "step".equals(s) ) {
+					System.gc();
+					return LuaValue.TRUE;
+				}
+				return NIL;
+			case 1: // "error", // ( message [,level] ) -> ERR
+				throw new LuaError( arg1.isnil()? null: arg1.tojstring(), arg2.optint(1) );
+			case 2: // "rawequal", // (v1, v2) -> boolean
+				return valueOf(arg1 == arg2);
+			case 3: { // "setfenv", // (f, table) -> void
+				LuaTable t = arg2.checktable();
+				LuaValue f = getfenvobj(arg1);
+			    f.setfenv(t);
+			    return f.isthread()? NONE: f;
+			}
+			}
+			return NIL;
 		}
-		return NIL;
 	}
 	
-	private LuaValue getfenvobj(LuaValue arg) {
+	private static LuaValue getfenvobj(LuaValue arg) {
 		if ( arg.isclosure() )
 			return arg;
 		int level = arg.optint(1);
@@ -185,165 +194,168 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	    return f;
 	}
 
-	protected Varargs oncallv(int opcode, Varargs args) {
-		switch ( opcode ) {
-		case 0: // "assert", // ( v [,message] ) -> v, message | ERR
-			if ( !args.arg1().toboolean() ) error("assertion failed!");
-			return args;
-		case 1: // "dofile", // ( filename ) -> result1, ...
-		{
-			LuaValue chunk;
-			try {
-				String filename = args.checkjstring(1);
-				chunk = loadFile(filename).arg1();
-			} catch ( IOException e ) {
-				return error(e.getMessage());
-			}
-			return chunk.invoke();
-		}
-		case 2: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
-			try {
-				LuaValue func = args.checkfunction(1);
-				String chunkname = args.optString(2, "function");
-				return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getGlobals());
-			} catch ( Exception e ) {
-				return varargsOf(NIL, valueOf(e.getMessage()));
-			} 
-		case 3: // "loadfile", // ( [filename] ) -> chunk | nil, msg
-		{
-			try {
-				String filename = args.checkjstring(1);
-				return loadFile(filename);
-			} catch ( Exception e ) {
-				return varargsOf(NIL, valueOf(e.getMessage()));
-			}
-		}
-		case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
-			try {
-				LuaString script = args.checkstring(1);
-				String chunkname = args.optString(2, "string");
-				return LoadState.load(script.toInputStream(),chunkname,LuaThread.getGlobals());
-			} catch ( Exception e ) {
-				return varargsOf(NIL, valueOf(e.getMessage()));
-			} 
-		case 5: // "pcall", // (f, arg1, ...) -> status, result1, ...
-			try {
-				LuaThread.onCall(this);
+	public static final class BaseLibV extends VarArgFunction {
+		public BaseLib baselib;
+		public Varargs invoke(Varargs args) {
+			switch ( opcode ) {
+			case 0: // "assert", // ( v [,message] ) -> v, message | ERR
+				if ( !args.arg1().toboolean() ) error("assertion failed!");
+				return args;
+			case 1: // "dofile", // ( filename ) -> result1, ...
+			{
+				LuaValue chunk;
 				try {
-					return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
-				} finally {
-					LuaThread.onReturn();
+					String filename = args.checkjstring(1);
+					chunk = loadFile(filename).arg1();
+				} catch ( IOException e ) {
+					return error(e.getMessage());
 				}
-			} catch ( LuaError le ) {
-				String m = le.getMessage();
-				return varargsOf(FALSE, m!=null? valueOf(m): NIL);
-			} catch ( Exception e ) {
-				String m = e.getMessage();
-				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+				return chunk.invoke();
 			}
-		case 6: // "xpcall", // (f, err) -> result1, ...				
-		{
-			LuaValue errfunc = args.checkvalue(2);
-			try {
-				LuaThread.onCall(this);
+			case 2: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
 				try {
-					LuaThread thread = LuaThread.getRunning();
-					LuaValue olderr = thread.err;
+					LuaValue func = args.checkfunction(1);
+					String chunkname = args.optString(2, "function");
+					return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getGlobals());
+				} catch ( Exception e ) {
+					return varargsOf(NIL, valueOf(e.getMessage()));
+				} 
+			case 3: // "loadfile", // ( [filename] ) -> chunk | nil, msg
+			{
+				try {
+					String filename = args.checkjstring(1);
+					return loadFile(filename);
+				} catch ( Exception e ) {
+					return varargsOf(NIL, valueOf(e.getMessage()));
+				}
+			}
+			case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
+				try {
+					LuaString script = args.checkstring(1);
+					String chunkname = args.optString(2, "string");
+					return LoadState.load(script.toInputStream(),chunkname,LuaThread.getGlobals());
+				} catch ( Exception e ) {
+					return varargsOf(NIL, valueOf(e.getMessage()));
+				} 
+			case 5: // "pcall", // (f, arg1, ...) -> status, result1, ...
+				try {
+					LuaThread.onCall(this);
 					try {
-						thread.err = errfunc;
 						return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
 					} finally {
-						thread.err = olderr;
+						LuaThread.onReturn();
 					}
-				} finally {
-					LuaThread.onReturn();
+				} catch ( LuaError le ) {
+					String m = le.getMessage();
+					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+				} catch ( Exception e ) {
+					String m = e.getMessage();
+					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 				}
-			} catch ( LuaError le ) {
-				String m = le.getMessage();
-				return varargsOf(FALSE, m!=null? valueOf(m): NIL);
-			} catch ( Exception e ) {
-				String m = e.getMessage();
-				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+			case 6: // "xpcall", // (f, err) -> result1, ...				
+			{
+				LuaValue errfunc = args.checkvalue(2);
+				try {
+					LuaThread.onCall(this);
+					try {
+						LuaThread thread = LuaThread.getRunning();
+						LuaValue olderr = thread.err;
+						try {
+							thread.err = errfunc;
+							return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
+						} finally {
+							thread.err = olderr;
+						}
+					} finally {
+						LuaThread.onReturn();
+					}
+				} catch ( LuaError le ) {
+					String m = le.getMessage();
+					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+				} catch ( Exception e ) {
+					String m = e.getMessage();
+					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+				}
 			}
-		}
-		case 7: // "print", // (...) -> void
-		{
-			LuaValue tostring = LuaThread.getGlobals().get("tostring"); 
-			for ( int i=1, n=args.narg(); i<=n; i++ ) {
-				if ( i>1 ) STDOUT.write( '\t' );
-				LuaString s = tostring.call( args.arg(i) ).strvalue();
-				int z = s.indexOf((byte)0, 0);
-				STDOUT.write( s.m_bytes, s.m_offset, z>=0? z: s.m_length );
+			case 7: // "print", // (...) -> void
+			{
+				LuaValue tostring = LuaThread.getGlobals().get("tostring"); 
+				for ( int i=1, n=args.narg(); i<=n; i++ ) {
+					if ( i>1 ) baselib.STDOUT.write( '\t' );
+					LuaString s = tostring.call( args.arg(i) ).strvalue();
+					int z = s.indexOf((byte)0, 0);
+					baselib.STDOUT.write( s.m_bytes, s.m_offset, z>=0? z: s.m_length );
+				}
+				baselib.STDOUT.println();
+				return NONE;
 			}
-			STDOUT.println();
+			case 8: // "select", // (f, ...) -> value1, ...
+			{
+				int n = args.narg()-1; 				
+				if ( args.arg1().equals(valueOf("#")) )
+					return valueOf(n);
+				int i = args.checkint(1);
+				if ( i == 0 || i < -n )
+					typerror(1,"index out of range");
+				return args.subargs(i<0? n+i+2: i+1);
+			}
+			case 9: // "unpack", // (list [,i [,j]]) -> result1, ...
+			{
+				int na = args.narg();
+				LuaTable t = args.checktable(1);
+				int n = t.length();
+				int i = na>=2? args.checkint(2): 1;
+				int j = na>=3? args.checkint(3): n;
+				n = j-i+1;
+				if ( n<0 ) return NONE;
+				if ( n==1 ) return t.get(i);
+				if ( n==2 ) return varargsOf(t.get(i),t.get(j));
+				LuaValue[] v = new LuaValue[n];
+				for ( int k=0; k<n; k++ )
+					v[k] = t.get(i+k);
+				return varargsOf(v);
+			}
+			case 10: // "type",  // (v) -> value
+				return valueOf(args.checkvalue(1).typename());
+			case 11: // "rawget", // (table, index) -> value
+				return args.checktable(1).rawget(args.checkvalue(2));
+			case 12: { // "rawset", // (table, index, value) -> table
+				LuaTable t = args.checktable(1);
+				t.rawset(args.checknotnil(2), args.checkvalue(3));
+				return t;
+			}
+			case 13: { // "setmetatable", // (table, metatable) -> table
+				final LuaValue t = args.arg1();
+				final LuaValue mt = args.checkvalue(2);
+				return t.setmetatable(mt.isnil()? null: mt.checktable());
+			}
+			case 14: { // "tostring", // (e) -> value
+				LuaValue arg = args.checkvalue(1);
+				return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
+			}
+			case 15: { // "tonumber", // (e [,base]) -> value
+				LuaValue arg1 = args.checkvalue(1);
+				final int base = args.optint(2,10);
+				if (base == 10) {  /* standard conversion */
+					return arg1.tonumber();
+				} else {
+					if ( base < 2 || base > 36 )
+						argerror(2, "base out of range");
+					final LuaString str = arg1.optstring(null);
+					return str!=null? str.tonumber(base): NIL;
+				}
+			}
+			case 16: // "pairs" (t) -> iter-func, t, nil
+				return varargsOf( baselib.next, args.checktable(1) );
+			case 17: // "ipairs", // (t) -> iter-func, t, 0
+				return varargsOf( baselib.inext, args.checktable(1), ZERO );
+			case 18: // "next"  ( table, [index] ) -> next-index, next-value
+				return args.arg1().next(args.arg(2));
+			case 19: // "inext" ( table, [int-index] ) -> next-index, next-value
+				return args.arg1().inext(args.arg(2));
+			}
 			return NONE;
 		}
-		case 8: // "select", // (f, ...) -> value1, ...
-		{
-			int n = args.narg()-1; 				
-			if ( args.arg1().equals(valueOf("#")) )
-				return valueOf(n);
-			int i = args.checkint(1);
-			if ( i == 0 || i < -n )
-				typerror(1,"index out of range");
-			return args.subargs(i<0? n+i+2: i+1);
-		}
-		case 9: // "unpack", // (list [,i [,j]]) -> result1, ...
-		{
-			int na = args.narg();
-			LuaTable t = args.checktable(1);
-			int n = t.length();
-			int i = na>=2? args.checkint(2): 1;
-			int j = na>=3? args.checkint(3): n;
-			n = j-i+1;
-			if ( n<0 ) return NONE;
-			if ( n==1 ) return t.get(i);
-			if ( n==2 ) return varargsOf(t.get(i),t.get(j));
-			LuaValue[] v = new LuaValue[n];
-			for ( int k=0; k<n; k++ )
-				v[k] = t.get(i+k);
-			return varargsOf(v);
-		}
-		case 10: // "type",  // (v) -> value
-			return valueOf(args.checkvalue(1).typename());
-		case 11: // "rawget", // (table, index) -> value
-			return args.checktable(1).rawget(args.checkvalue(2));
-		case 12: { // "rawset", // (table, index, value) -> table
-			LuaTable t = args.checktable(1);
-			t.rawset(args.checknotnil(2), args.checkvalue(3));
-			return t;
-		}
-		case 13: { // "setmetatable", // (table, metatable) -> table
-			final LuaValue t = args.arg1();
-			final LuaValue mt = args.checkvalue(2);
-			return t.setmetatable(mt.isnil()? null: mt.checktable());
-		}
-		case 14: { // "tostring", // (e) -> value
-			LuaValue arg = args.checkvalue(1);
-			return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
-		}
-		case 15: { // "tonumber", // (e [,base]) -> value
-			LuaValue arg1 = args.checkvalue(1);
-			final int base = args.optint(2,10);
-			if (base == 10) {  /* standard conversion */
-				return arg1.tonumber();
-			} else {
-				if ( base < 2 || base > 36 )
-					argerror(2, "base out of range");
-				final LuaString str = arg1.optstring(null);
-				return str!=null? str.tonumber(base): NIL;
-			}
-		}
-		case 16: // "pairs" (t) -> iter-func, t, nil
-			return varargsOf( next, args.checktable(1) );
-		case 17: // "ipairs", // (t) -> iter-func, t, 0
-			return varargsOf( inext, args.checktable(1), ZERO );
-		case 18: // "next"  ( table, [index] ) -> next-index, next-value
-			return args.arg1().next(args.arg(2));
-		case 19: // "inext" ( table, [int-index] ) -> next-index, next-value
-			return args.arg1().inext(args.arg(2));
-		}
-		return NONE;
 	}
 
 	public static Varargs loadFile(String filename) throws IOException {

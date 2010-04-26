@@ -111,28 +111,31 @@ public class DebugLib extends OneArgFunction {
 	
 	public LuaValue call(LuaValue arg) {
 		LuaTable t = new LuaTable();
-		bindv(t, NAMES);
+		bind(t, DebugLibV.class, NAMES);
 		env.set("debug", t);
 		return t;
 	}
 
-	protected Varargs oncallv(int opcode, Varargs args) {
-		switch ( opcode ) {
-		case DEBUG:        return _debug(args);
-		case GETFENV:      return _getfenv(args);
-		case GETHOOK:      return _gethook(args);
-		case GETINFO:      return _getinfo(args);
-		case GETLOCAL:     return _getlocal(args);
-		case GETMETATABLE: return _getmetatable(args);
-		case GETREGISTRY:  return _getregistry(args);
-		case GETUPVALUE:   return _getupvalue(args);
-		case SETFENV:      return _setfenv(args);
-		case SETHOOK:      return _sethook(args);
-		case SETLOCAL:     return _setlocal(args);
-		case SETMETATABLE: return _setmetatable(args);
-		case SETUPVALUE:   return _setupvalue(args);
-		case TRACEBACK:    return _traceback(args);
-		default:           return NONE;
+	public static final class DebugLibV extends VarArgFunction {
+		protected DebugLib debuglib;
+		public Varargs invoke(Varargs args) {
+			switch ( opcode ) {
+			case DEBUG:        return _debug(args);
+			case GETFENV:      return _getfenv(args);
+			case GETHOOK:      return _gethook(args);
+			case GETINFO:      return _getinfo(args,this);
+			case GETLOCAL:     return _getlocal(args);
+			case GETMETATABLE: return _getmetatable(args);
+			case GETREGISTRY:  return _getregistry(args);
+			case GETUPVALUE:   return _getupvalue(args);
+			case SETFENV:      return _setfenv(args);
+			case SETHOOK:      return _sethook(args);
+			case SETLOCAL:     return _setlocal(args);
+			case SETMETATABLE: return _setmetatable(args);
+			case SETUPVALUE:   return _setupvalue(args);
+			case TRACEBACK:    return _traceback(args);
+			default:           return NONE;
+			}
 		}
 	}
 
@@ -406,7 +409,7 @@ public class DebugLib extends OneArgFunction {
 		return object;
 	}
 	
-	protected Varargs _getinfo(Varargs args) {
+	protected static Varargs _getinfo(Varargs args, LuaValue level0func) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		LuaValue func = args.arg(a++);
@@ -419,7 +422,7 @@ public class DebugLib extends OneArgFunction {
 			int level = func.checkint();
 			di = level>0? 
 				ds.getDebugInfo(level-1):
-				new DebugInfo( this );
+				new DebugInfo( level0func );
 		} else {			
 			di = ds.findDebugInfo( func.checkfunction() );
 		}

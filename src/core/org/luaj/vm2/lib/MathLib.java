@@ -49,66 +49,73 @@ public class MathLib extends OneArgFunction {
 		LuaTable t = new LuaTable(0,30);
 		t.set( "pi", Math.PI );
 		t.set( "huge", LuaDouble.POSINF );
-		bind1( t, new String[] {
+		bind( t, MathLib1.class, new String[] {
 			"abs", "ceil", "cos", "deg", 
 			"exp", "floor", "rad", "sin", 
 			"sqrt", "tan" } );
-		bind2( t, new String[] {
+		bind( t, MathLib2.class, new String[] {
 			"fmod", "ldexp", "pow", "random", } );
-		bindv( t, new String[] {
+		bind( t, MathLibV.class, new String[] {
 			"frexp", "max", "min", "modf", 
 			"randomseed" } );
+		((MathLib2) t.get("random"    )).mathlib = this;
+		((MathLibV) t.get("randomseed")).mathlib = this;
 		env.set("math", t);
 		return t;
 	}
 
-	public LuaValue oncall1(int opcode, LuaValue arg) {
-		switch ( opcode ) {
-		case 0: return valueOf(Math.abs(arg.todouble())); 
-		case 1: return valueOf(Math.ceil(arg.todouble())); 
-		case 2: return valueOf(Math.cos(arg.todouble())); 
-		case 3: return valueOf(Math.toDegrees(arg.todouble())); 
-		case 4: return dpow(Math.E,arg.todouble());
-		case 5: return valueOf(Math.floor(arg.todouble()));
-		case 6: return valueOf(Math.toRadians(arg.todouble())); 
-		case 7: return valueOf(Math.sin(arg.todouble())); 
-		case 8: return valueOf(Math.sqrt(arg.todouble())); 
-		case 9: return valueOf(Math.tan(arg.todouble())); 
+	public static final class MathLib1 extends OneArgFunction {
+		public LuaValue call(LuaValue arg) {
+			switch ( opcode ) {
+			case 0: return valueOf(Math.abs(arg.todouble())); 
+			case 1: return valueOf(Math.ceil(arg.todouble())); 
+			case 2: return valueOf(Math.cos(arg.todouble())); 
+			case 3: return valueOf(Math.toDegrees(arg.todouble())); 
+			case 4: return dpow(Math.E,arg.todouble());
+			case 5: return valueOf(Math.floor(arg.todouble()));
+			case 6: return valueOf(Math.toRadians(arg.todouble())); 
+			case 7: return valueOf(Math.sin(arg.todouble())); 
+			case 8: return valueOf(Math.sqrt(arg.todouble())); 
+			case 9: return valueOf(Math.tan(arg.todouble())); 
+			}
+			return NIL;
 		}
-		return NIL;
 	}
 	
-	public LuaValue oncall2(int opcode,LuaValue arg1,LuaValue arg2) {
-		switch ( opcode ) {
-		case 0: { // fmod
-			double x = arg1.checkdouble();
-			double y = arg2.checkdouble();
-			double q = x/y;
-			double f = x - y * (q>=0? Math.floor(q): Math.ceil(q));
-			return valueOf( f );
+	public static final class MathLib2 extends TwoArgFunction {
+		protected MathLib mathlib;
+		public LuaValue call(LuaValue arg1, LuaValue arg2) {
+			switch ( opcode ) {
+			case 0: { // fmod
+				double x = arg1.checkdouble();
+				double y = arg2.checkdouble();
+				double q = x/y;
+				double f = x - y * (q>=0? Math.floor(q): Math.ceil(q));
+				return valueOf( f );
+			}
+			case 1: { // ldexp
+				double x = arg1.checkdouble();
+				double y = arg2.checkdouble()+1023.5;
+				long e = (long) ((0!=(1&((int)y)))? Math.floor(y): Math.ceil(y-1));
+				return valueOf(x * Double.longBitsToDouble(e << 52));
+			}
+			case 2: { // pow
+				return dpow(arg1.todouble(), arg2.todouble());
+			}
+			case 3: { // random
+				if ( mathlib.random == null )
+					mathlib.random = new Random();
+				if ( arg1.isnil() )
+					return valueOf( mathlib.random.nextDouble() );
+				int m = arg1.toint(); 
+				if ( arg2.isnil() )
+					return valueOf( 1 + mathlib.random.nextInt(m) );
+				else
+					return valueOf( m + mathlib.random.nextInt(arg2.toint()-m) );
+			}
+			}
+			return NIL;
 		}
-		case 1: { // ldexp
-			double x = arg1.checkdouble();
-			double y = arg2.checkdouble()+1023.5;
-			long e = (long) ((0!=(1&((int)y)))? Math.floor(y): Math.ceil(y-1));
-			return valueOf(x * Double.longBitsToDouble(e << 52));
-		}
-		case 2: { // pow
-			return dpow(arg1.todouble(), arg2.todouble());
-		}
-		case 3: { // random
-			if ( random == null )
-				random = new Random();
-			if ( arg1.isnil() )
-				return valueOf( random.nextDouble() );
-			int m = arg1.toint(); 
-			if ( arg2.isnil() )
-				return valueOf( 1 + random.nextInt(m) );
-			else
-				return valueOf( m + random.nextInt(arg2.toint()-m) );
-		}
-		}
-		return NIL;
 	}
 
 	/** compute power using installed math library, or default if there is no math library installed */
@@ -148,40 +155,43 @@ public class MathLib extends OneArgFunction {
 		return p;
 	}
 
-	public Varargs oncallv(int opcode,Varargs args) {
-		switch ( opcode ) {
-		case 0: { // frexp
-			double x = args.checkdouble(1);
-			if ( x == 0 ) return varargsOf(ZERO,ZERO);
-			long bits = Double.doubleToLongBits( x );
-			double m = ((bits & (~(-1L<<52))) + (1L<<52)) * ((bits >= 0)? (.5 / (1L<<52)): (-.5 / (1L<<52)));
-			double e = (((int) (bits >> 52)) & 0x7ff) - 1022;
-			return varargsOf( valueOf(m), valueOf(e) );
-		}
-		case 1: { // max
-			double m = args.checkdouble(1);
-			for ( int i=2,n=args.narg(); i<=n; ++i )
-				m = Math.max(m,args.checkdouble(i));
-			return valueOf(m);
-		}
-		case 2: { // min
-			double m = args.checkdouble(1);
-			for ( int i=2,n=args.narg(); i<=n; ++i )
-				m = Math.min(m,args.checkdouble(i));
-			return valueOf(m);
-		}
-		case 3: { // modf
-			double x = args.checkdouble(1);
-			double intPart = ( x > 0 ) ? Math.floor( x ) : Math.ceil( x );
-			double fracPart = x - intPart;
-			return varargsOf( valueOf(intPart), valueOf(fracPart) );
-		}
-		case 4: { // randomseed 
-			long seed = args.checklong(1);
-			random = new Random(seed);
+	public static final class MathLibV extends VarArgFunction {
+		protected MathLib mathlib;
+		public Varargs invoke(Varargs args) {
+			switch ( opcode ) {
+			case 0: { // frexp
+				double x = args.checkdouble(1);
+				if ( x == 0 ) return varargsOf(ZERO,ZERO);
+				long bits = Double.doubleToLongBits( x );
+				double m = ((bits & (~(-1L<<52))) + (1L<<52)) * ((bits >= 0)? (.5 / (1L<<52)): (-.5 / (1L<<52)));
+				double e = (((int) (bits >> 52)) & 0x7ff) - 1022;
+				return varargsOf( valueOf(m), valueOf(e) );
+			}
+			case 1: { // max
+				double m = args.checkdouble(1);
+				for ( int i=2,n=args.narg(); i<=n; ++i )
+					m = Math.max(m,args.checkdouble(i));
+				return valueOf(m);
+			}
+			case 2: { // min
+				double m = args.checkdouble(1);
+				for ( int i=2,n=args.narg(); i<=n; ++i )
+					m = Math.min(m,args.checkdouble(i));
+				return valueOf(m);
+			}
+			case 3: { // modf
+				double x = args.checkdouble(1);
+				double intPart = ( x > 0 ) ? Math.floor( x ) : Math.ceil( x );
+				double fracPart = x - intPart;
+				return varargsOf( valueOf(intPart), valueOf(fracPart) );
+			}
+			case 4: { // randomseed 
+				long seed = args.checklong(1);
+				mathlib.random = new Random(seed);
+				return NONE;
+			}
+			}
 			return NONE;
 		}
-		}
-		return NONE;
 	}
 }
