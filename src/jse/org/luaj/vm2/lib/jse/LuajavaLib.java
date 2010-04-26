@@ -34,7 +34,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +95,11 @@ public class LuajavaLib extends OneArgFunction {
 				// get constructor
 				final LuaValue c = args.checkvalue(1); 
 				final Class clazz = (opcode==NEWINSTANCE? Class.forName(c.tojstring()): (Class) c.checkuserdata(Class.class));
-				final ParamsList params = new ParamsList( args );
-				final Constructor con = resolveConstructor( clazz, params );
+				final long paramssig = LuajavaLib.paramsSignatureOf( args );
+				final Constructor con = resolveConstructor( clazz, paramssig );
 	
 				// coerce args, construct instance 
-				Object[] cargs = CoerceLuaToJava.coerceArgs( params.values, con.getParameterTypes() );
+				Object[] cargs = CoerceLuaToJava.coerceArgs( args, con.getParameterTypes() );
 				Object o = con.newInstance( cargs );
 					
 				// return result
@@ -177,28 +176,64 @@ public class LuajavaLib extends OneArgFunction {
 		}
 	}
 
-	public static class ParamsList {
-		public final LuaValue[] values;
-		public final Class[] classes;
-		public int hash;
-		ParamsList( Varargs args ) {
-			int n = Math.max(args.narg()-1,0);
-			values = new LuaValue[n];
-			classes = new Class[n];
-			for ( int i=0; i<n; i++ ) {
-				values[i] = args.arg(i+2);
-				classes[i] = values[i].getClass();
-				hash += classes[i].hashCode();
+	// params signature is
+	// - low 6-bits are number of parameters
+	// - each of next 9 6-bit fields encode a parameter type:
+	//     - low 4 bits are lua type
+	//     - high 2 bits are number of indexes deep (0,1,2, or 3)
+	
+	public static long paramsSignatureOf( Varargs args ) {
+		long sig = 0;
+		int narg = args.narg();
+		int n = Math.min( narg, 9 );
+		for ( int i=1; i<=n; i++ ) {
+			LuaValue a = args.arg(i);
+			sig |= (paramTypeOf(a) << (i*6));
+		}
+		return sig | Math.min( narg, 0x3F );
+	}
+	
+	public static int paramTypeOf( LuaValue arg ) {
+		int type = arg.type();
+		int tabledepth = 0;
+		if ( type == TTABLE ) {
+			for ( tabledepth=1; (type=(arg=arg.get(1)).type()) == TTABLE && (tabledepth<3);  )
+				++tabledepth;
+		}
+		if ( type == TNUMBER && arg.isinttype() )
+			type = TINT;
+		if ( type == TUSERDATA ) {
+			Class c = arg.touserdata().getClass();
+			for ( ; c.isArray() && (tabledepth<3);  ) {
+				c = c.getComponentType();
+				++tabledepth;
 			}
 		}
-		public int hashCode() {
-			return hash;
-		}
-		public boolean equals( Object o ) {
-			return ( o instanceof ParamsList )? 
-				Arrays.equals( classes, ((ParamsList) o).classes ):
-				false;
-		}
+		return (type & 0xF) | (tabledepth << 4);
+	}
+	
+	public static int paramsCountFromSig( long paramssig ) {
+		return ((int) paramssig) & 0x3F;
+	}
+
+	public static int paramTypeFromSig(long paramssig, int argindex) {
+		return ((int) (paramssig>>(6*(argindex+1)))) & 0x3F;
+	}
+		
+	public static int paramBaseTypeFromParamType(int paramType) {
+		int t = paramType & 0xf;
+		return t == (TINT & 0xF)? TINT: t;
+	}
+		
+	public static int paramDepthFromParamType(int paramType) {
+		return (paramType >> 4) & 0x3;
+	}
+
+	public static int paramComponentTypeOfParamType(int paramType) {
+		int b = paramBaseTypeFromParamType( paramType );
+		int d = paramDepthFromParamType( paramType );
+		d = d>0? d-1: 0;
+		return (d<<4) | (b&0xF);
 	}
 		
 	static LuaUserdata toUserdata(Object instance, final Class clazz) {
@@ -284,11 +319,12 @@ public class LuajavaLib extends OneArgFunction {
 			try {
 				// find the method 
 				Object instance = args.touserdata(1);
-				ParamsList params = new ParamsList( args );
-				Method meth = resolveMethod( clazz, s, params );
+				Varargs methargs = args.subargs(2);
+				long paramssig = LuajavaLib.paramsSignatureOf(methargs);
+				Method meth = resolveMethod( clazz, s, paramssig );
 
 				// coerce the arguments
-				Object[] margs = CoerceLuaToJava.coerceArgs( params.values, meth.getParameterTypes() );
+				Object[] margs = CoerceLuaToJava.coerceArgs( methargs, meth.getParameterTypes() );
 				Object result = meth.invoke( instance, margs );
 				
 				// coerce the result
@@ -307,7 +343,7 @@ public class LuajavaLib extends OneArgFunction {
 	private static Map consIndex =
 		new HashMap();
 	
-	private static Constructor resolveConstructor(Class clazz, ParamsList params ) {
+	private static Constructor resolveConstructor(Class clazz, long paramssig ) {
 
 		// get the cache
 		Map cache = (Map) consCache.get( clazz );
@@ -315,7 +351,7 @@ public class LuajavaLib extends OneArgFunction {
 			consCache.put( clazz, cache = new HashMap() );
 		
 		// look up in the cache
-		Constructor c = (Constructor) cache.get( params );
+		Constructor c = (Constructor) cache.get( paramssig );
 		if ( c != null )
 			return c;
 
@@ -335,7 +371,7 @@ public class LuajavaLib extends OneArgFunction {
 		}
 		
 		// figure out best list of arguments == supplied args
-		Integer n = new Integer( params.classes.length );
+		Integer n = new Integer( LuajavaLib.paramsCountFromSig(paramssig) );
 		List list = (List) index.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no constructor with "+n+" args");
@@ -345,7 +381,8 @@ public class LuajavaLib extends OneArgFunction {
 		int besti = 0;
 		for ( int i=0, size=list.size(); i<size; i++ ) {
 			Constructor con = (Constructor) list.get(i);
-			int s = CoerceLuaToJava.scoreParamTypes(params.values, con.getParameterTypes());
+			int paramType = LuajavaLib.paramTypeFromSig(paramssig, 0);
+			int s = CoerceLuaToJava.scoreParamTypes(paramType, con.getParameterTypes());
 			if ( s < bests ) {
 				 bests = s;
 				 besti = i;
@@ -354,7 +391,7 @@ public class LuajavaLib extends OneArgFunction {
 		
 		// put into cache
 		c = (Constructor) list.get(besti);
-		cache.put( params, c );
+		cache.put( paramssig, c );
 		return c;
 	}
 
@@ -365,7 +402,7 @@ public class LuajavaLib extends OneArgFunction {
 	private static Map methIndex = 
 		new HashMap();
 
-	private static Method resolveMethod(Class clazz, String methodName, ParamsList params ) {
+	private static Method resolveMethod(Class clazz, String methodName, long paramssig ) {
 
 		// get the cache
 		Map nameCache = (Map) methCache.get( clazz );
@@ -376,7 +413,7 @@ public class LuajavaLib extends OneArgFunction {
 			nameCache.put( methodName, cache = new HashMap() );
 		
 		// look up in the cache
-		Method m = (Method) cache.get( params );
+		Method m = (Method) cache.get( paramssig );
 		if ( m != null )
 			return m;
 
@@ -403,7 +440,7 @@ public class LuajavaLib extends OneArgFunction {
 		Map map = (Map) index.get(methodName);
 		if ( map == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"'");
-		Integer n = new Integer( params.classes.length );
+		Integer n = new Integer( LuajavaLib.paramsCountFromSig( paramssig ) );
 		List list = (List) map.get(n);
 		if ( list == null )
 			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
@@ -413,7 +450,7 @@ public class LuajavaLib extends OneArgFunction {
 		int besti = 0;
 		for ( int i=0, size=list.size(); i<size; i++ ) {
 			Method meth = (Method) list.get(i);
-			int s = CoerceLuaToJava.scoreParamTypes(params.values, meth.getParameterTypes());
+			int s = CoerceLuaToJava.scoreParamTypes(paramssig, meth.getParameterTypes());
 			if ( s < bests ) {
 				 bests = s;
 				 besti = i;
@@ -422,7 +459,7 @@ public class LuajavaLib extends OneArgFunction {
 		
 		// put into cache
 		m = (Method) list.get(besti);
-		cache.put( params, m );
+		cache.put( paramssig, m );
 		return m;
 	}
 	

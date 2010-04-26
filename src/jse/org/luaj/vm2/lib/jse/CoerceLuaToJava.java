@@ -27,13 +27,14 @@ import java.util.Map;
 
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 
 
 public class CoerceLuaToJava {
 
 	public static interface Coercion { 
 		public Object coerce( LuaValue value );
-		public int score( LuaValue value );
+		public int score( int paramType );
 	};
 	
 	private static Map COERCIONS = new HashMap();
@@ -44,11 +45,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return value.toboolean()? Boolean.TRUE: Boolean.FALSE;
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
 				case LuaValue.TNIL:
 				case LuaValue.TBOOLEAN:
 					return 0;
+				case LuaValue.TINT:
 				case LuaValue.TNUMBER:
 					return 1;
 				default: 
@@ -60,10 +62,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Byte( (byte) value.toint() );
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 1;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 1: 2);
+					return 2;
 				default: 
 					return 4;
 				}
@@ -73,10 +77,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Character( (char) value.toint() );
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 1;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 1: 2);
+					return 2;
 				default: 
 					return 4;
 				}
@@ -86,10 +92,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Short( (short) value.toint() );
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 1;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 1: 2);
+					return 2;
 				default: 
 					return 4;
 				}
@@ -99,10 +107,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Integer( value.toint() );
 			}
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 0;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 0: 1);
+					return 1;
 				case LuaValue.TBOOLEAN:
 				case LuaValue.TNIL:
 					return 2;
@@ -115,10 +125,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Long( value.tolong() );
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 1;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 1: 2);
+					return 2;
 				default: 
 					return 4;
 				}
@@ -128,8 +140,9 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Float( value.tofloat() );
 			}
-			public int score( LuaValue value ) {
-				switch ( value.type() ) {
+			public int score( int paramType ) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
 				case LuaValue.TNUMBER:
 					return 1;
 				case LuaValue.TBOOLEAN:
@@ -143,10 +156,12 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return new Double( value.todouble() );
 			}
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
+				case LuaValue.TINT:
+					return 1;
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 1: 0);
+					return 0;
 				case LuaValue.TBOOLEAN:
 					return 2;
 				default: 
@@ -158,8 +173,8 @@ public class CoerceLuaToJava {
 			public Object coerce(LuaValue value) {
 				return value.tojstring();
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
 				case LuaValue.TUSERDATA:
 					return 0;
 				default: 
@@ -174,10 +189,10 @@ public class CoerceLuaToJava {
 					return value.optuserdata(Object.class, null);
 				case LuaValue.TSTRING:
 					return value.tojstring();
+				case LuaValue.TINT:
+					return new Integer(value.toint()); 
 				case LuaValue.TNUMBER:
-					return (value.isinttype()? 
-							new Integer(value.toint()): 
-							new Double(value.todouble()));
+					return new Double(value.todouble());
 				case LuaValue.TBOOLEAN:
 					return value.toboolean()? Boolean.TRUE: Boolean.FALSE;
 				case LuaValue.TNIL:
@@ -186,8 +201,8 @@ public class CoerceLuaToJava {
 					return value;
 				}
 			} 
-			public int score(LuaValue value) {
-				switch ( value.type() ) {
+			public int score(int paramType) {
+				switch ( paramType ) {
 				case LuaValue.TSTRING:
 					return 0;
 				default: 
@@ -217,21 +232,22 @@ public class CoerceLuaToJava {
 	
 
 	/** Score a single parameter, including array handling */
-	private static int scoreParam(LuaValue a, Class c) {
-		if ( a.isuserdata(c) ) 
+	private static int scoreParam(int paramType, Class c) {
+		if ( paramType == LuaValue.TUSERDATA && !c.isArray() ) 
 			return 0;
 		Coercion co = (Coercion) COERCIONS.get( c );
 		if ( co != null ) {
-			return co.score( a );
+			int b = LuajavaLib.paramBaseTypeFromParamType(paramType);
+			int d = LuajavaLib.paramDepthFromParamType(paramType);
+			return co.score( b ) * d;
 		}
 		if ( c.isArray() ) {
 			Class typ = c.getComponentType();
-			switch ( a.type() ) {
-			case LuaValue.TTABLE:
-				return scoreParam( a.checktable().get(1), typ );
-			default:
-				return 0x10 + (scoreParam(a, typ) << 8);
-			}
+			int d = LuajavaLib.paramDepthFromParamType(paramType);
+			if ( d > 0 )
+				return scoreParam( LuajavaLib.paramComponentTypeOfParamType(paramType), typ );
+			else
+				return 0x10 + (scoreParam(paramType, typ) << 8);
 		}
 		return 0x1000;
 	}
@@ -261,12 +277,11 @@ public class CoerceLuaToJava {
 		throw new LuaError("no coercion found for "+a.getClass()+" to "+c);
 	}
 
-	static Object[] coerceArgs(LuaValue[] suppliedArgs, Class[] parameterTypes) {
-		int nargs = suppliedArgs.length;
+	static Object[] coerceArgs(Varargs suppliedArgs, Class[] parameterTypes) {
 		int n = parameterTypes.length;
 		Object[] args = new Object[n];
-		for ( int i=0; i<n && i<nargs; i++ )
-			args[i] = coerceArg( suppliedArgs[i], parameterTypes[i] );
+		for ( int i=0; i<n; i++ )
+			args[i] = coerceArg( suppliedArgs.arg(i+1), parameterTypes[i] );
 		return args;
 	}
 
@@ -278,14 +293,14 @@ public class CoerceLuaToJava {
 	 * 3) java has less args
 	 * 4) types coerce well
 	 */
-	static int scoreParamTypes(LuaValue[] suppliedArgs, Class[] paramTypes) {
-		int nargs = suppliedArgs.length;
+	static int scoreParamTypes(long paramssig, Class[] paramTypes) {
+		int nargs = LuajavaLib.paramsCountFromSig(paramssig);
 		int njava = paramTypes.length;
 		int score = (njava == nargs? 0: njava > nargs? 0x4000: 0x8000);
 		for ( int i=0; i<nargs && i<njava; i++ ) {
-			LuaValue a = suppliedArgs[i];
+			int paramType = LuajavaLib.paramTypeFromSig(paramssig, i);
 			Class c = paramTypes[i];
-			int s = scoreParam( a, c );
+			int s = scoreParam( paramType, c );
 			score += s;
 		}
 		return score;
