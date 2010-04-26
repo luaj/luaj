@@ -26,6 +26,10 @@ import junit.framework.TestSuite;
 
 import org.luaj.vm2.WeakTableTest.WeakKeyTableTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
+import org.luaj.vm2.compiler.CompilerUnitTests;
+import org.luaj.vm2.compiler.DumpLoadEndianIntTest;
+import org.luaj.vm2.compiler.RegressionTests;
+import org.luaj.vm2.compiler.SimpleTests;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
 import org.luaj.vm2.vm1.Luajvm1CompatibilityTest;
 
@@ -52,6 +56,14 @@ public class AllTests {
 		table.addTestSuite(WeakKeyValueTableTest.class);
 		suite.addTest(table);
 		
+		// prototype compiler
+		TestSuite compiler = new TestSuite("Lua Compiler Tests");
+		compiler.addTestSuite(CompilerUnitTests.class);
+		compiler.addTestSuite(DumpLoadEndianIntTest.class);
+		compiler.addTestSuite(RegressionTests.class);
+		compiler.addTestSuite(SimpleTests.class);
+		suite.addTest(compiler);
+		
 		// library tests
 		TestSuite lib = new TestSuite("Library Tests");
 		lib.addTestSuite(LuaJavaCoercionTest.class);
@@ -62,7 +74,7 @@ public class AllTests {
 		suite.addTestSuite(Luajvm1CompatibilityTest.class);
 		
 		// luajc regression tests
-		TestSuite luajc = new TestSuite("Luajc Tests");
+		TestSuite luajc = new TestSuite("Java Compiler Tests");
 		luajc.addTestSuite(FragmentsTest.class);
 		suite.addTest(luajc);
 		

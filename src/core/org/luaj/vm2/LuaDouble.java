@@ -47,7 +47,8 @@ public class LuaDouble extends LuaNumber {
 	}
 
 	public int hashCode() {
-		return (int) Double.doubleToLongBits(v);
+		long l = Double.doubleToLongBits(v);
+		return ((int)(l>>32)) | (int) l;
 	}
 	
 	public boolean islong() {
@@ -145,7 +146,7 @@ public class LuaDouble extends LuaNumber {
 			return JSTR_NAN;
 		if ( Double.isInfinite(v) ) 
 			return (v<0? JSTR_NEGINF: JSTR_POSINF);
-		return Double.toString(v);
+		return Float.toString((float)v);
 	}
 	
 	public LuaString strvalue() {
