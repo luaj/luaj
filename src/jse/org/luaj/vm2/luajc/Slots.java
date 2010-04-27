@@ -48,6 +48,7 @@ public class Slots {
 	private static final byte BIT_INVALID    = 0x20;  // slot becomes invlaid at this pc
 	private static final byte BIT_NIL        = 0x40;  // slot initialized to nil at this point
 	
+	final Prototype p;
 	final int n,m;
 	public final byte[][] slots;
 	public final boolean[] branchdest;
@@ -68,22 +69,21 @@ public class Slots {
 		return (slots[0][slot] & (BIT_INVALID)) == 0;
 	}
 	
-	public Slots(Prototype p) {
+	public Slots(Prototype prototype) {
+		p = prototype;
 		n = p.code.length;
 		m = p.maxstacksize;
 		slots = new byte[n+1][m];
 		branchdest = new boolean[n+1];
-		markassignments( p );
-		markuninitialized( p );
-		markupvalues( p );
-		markforloopupvalues( p );
+		markassignments();
+		while ( propogatebranches() ) 
+			;
+		markuninitialized();
+		markupvalues();
+		markforloopupvalues();
 	}
-	
-	public String tojstring() {
-		return tojstring(null);
-	}
-	
-	private void markassignments( Prototype p ) {
+
+	private void markassignments() {
 		// mark initial assignments and references
 		int j=0;
 		for ( ; j<p.numparams; j++ )
@@ -290,8 +290,45 @@ public class Slots {
 			}
 		}
 	}
-	
-	private void markuninitialized(Prototype p) {
+		
+	private boolean propogatebranches() {
+		boolean hadchanges = false;
+		for ( int pc=0; pc<n; pc++ ) {
+			int index = pc+1;
+			int ins = p.code[pc];
+			switch ( Lua.GET_OPCODE(ins) ) {			
+				case Lua.OP_LOADBOOL:
+				case Lua.OP_EQ:
+				case Lua.OP_LT:
+				case Lua.OP_LE:
+				case Lua.OP_TEST: 
+				case Lua.OP_TESTSET:
+				case Lua.OP_TFORLOOP: 
+					hadchanges |= propogatebranch( index, index+2 );
+					break;
+				case Lua.OP_JMP:
+				case Lua.OP_FORPREP:
+				case Lua.OP_FORLOOP:
+					hadchanges |= propogatebranch( index, index+1+Lua.GETARG_sBx(ins) );
+					break;
+			} 
+		}
+		return hadchanges;
+	}
+
+	private boolean propogatebranch(int src, int dest) {
+		boolean hadchanges = false;
+		byte[] s = slots[src];
+		byte[] d = slots[dest];
+		for ( int j=0; j<m; j++ ) {
+			byte bits = (byte) (s[j] & (BIT_ASSIGN | BIT_INVALID));
+			hadchanges |= ((d[j] & bits) & (BIT_ASSIGN | BIT_INVALID)) != bits;
+			d[j] |= bits;
+		}
+		return hadchanges;
+	}
+
+	private void markuninitialized() {
 		for ( int j=p.numparams; j<m; j++ )
 			if ( ! isreferrededtofirst(j) )
 				slots[0][j] |= BIT_INVALID;
@@ -307,7 +344,7 @@ public class Slots {
 		return false;
 	}
 
-	private void markupvalues( Prototype p ) {
+	private void markupvalues( ) {
 		for ( int pc=0; pc<n; ++pc ) {
 			if ( Lua.GET_OPCODE(p.code[pc]) == Lua.OP_CLOSURE ) {
 				int index = pc+1;
@@ -322,7 +359,7 @@ public class Slots {
 		}
 	}
 	
-	private void markforloopupvalues( Prototype p ) {
+	private void markforloopupvalues( ) {
 		for ( int pc1=n; --pc1>=0; ) {
 			int i = p.code[pc1];
 			if ( Lua.GET_OPCODE(i) == Lua.OP_TFORLOOP ) {
@@ -357,8 +394,9 @@ public class Slots {
 
 	private void promoteUpvalueBefore(int index, int j) {
 		int undef  = prevUndefined(index,j);
-		int branch = firstBranchAfter(undef,index,j);
-		int assign = lastAssignBefore(branch,undef,j);
+//		int branch = firstBranchAfter(undef,index,j);
+//		int assign = lastAssignBefore(branch,undef,j);
+		int assign = firstAssignAfter(undef,index,j);
 		slots[assign][j] |= BIT_UP_CREATE;
 		while ( index>assign)
 			promoteUpvalue( slots[index--], j );
@@ -399,6 +437,13 @@ public class Slots {
 		return index;
 	}
 
+	private int firstAssignAfter(int index, int limit, int j) {
+		for ( int i=index; ++i<limit; )
+			if ( (slots[i][j] & (BIT_ASSIGN | BIT_NIL)) != 0 )
+				return i;
+		return limit;
+	}
+
 	private int nextUndefined(int index, int j) {
 		while ( index<slots.length && ((slots[index][j] & BIT_INVALID) == 0) )
 			++index;
@@ -414,13 +459,6 @@ public class Slots {
 
 	// ------------- pretty-print slot info --------------
 	
-	public static void printSlots(Prototype p) {
-		Slots s = new Slots(p);
-		System.out.println("slots for "+p.source+":\n"+s.tojstring(p) );
-		for ( int i=0; i<p.p.length; i++ )
-			printSlots(p.p[i]);
-	}
-
 	String[] toStrings() {
 		int n = slots.length;
 		int m = slots[0].length;
@@ -450,7 +488,7 @@ public class Slots {
 		return strs;
 	}
 	
-	String tojstring(Prototype p) {
+	public String toString() {
 		String[] s = toStrings();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream( baos );
