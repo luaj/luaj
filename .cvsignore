@@ -5,3 +5,7 @@ lib
 luaj*.jar
 jit
 *.ser
+*.gz
+*.out
+*.tar
+*.txt
