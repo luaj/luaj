@@ -30,32 +30,25 @@ public class TableLib extends OneArgFunction {
 	public TableLib() {
 	}
 
-	public LuaValue call(LuaValue arg) {
+	private LuaTable init() {
 		LuaTable t = new LuaTable();
-		bind(t, TableLib1.class, new String[] {
-			"getn", // (table) -> number
-			"maxn", // (table) -> number 
-		} );
+		bind(t, TableLib.class, new String[] { "getn", "maxn", }, 1 );
 		bind(t, TableLibV.class, new String[] {
-			"remove", // (table [, pos]) -> removed-ele
-			"concat", // (table [, sep [, i [, j]]]) -> string
-			"insert", // (table, [pos,] value) -> prev-ele
-			"sort",	  // (table [, comp]) -> void
-			"foreach", // (table, func) -> void
-			"foreachi", // (table, func) -> void			
-		} );
+			"remove", "concat", "insert", "sort", "foreach", "foreachi", } );
 		env.set("table", t);
 		return t;
 	}
 	
-	public static final class TableLib1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return arg.checktable().getn();
-			case 1: return valueOf( arg.checktable().maxn());
-			}
-			return NIL;
+	public LuaValue call(LuaValue arg) {
+		switch ( opcode ) {
+		case 0: // init library
+			return init();
+		case 1:  // "getn" (table) -> number
+			return arg.checktable().getn();
+		case 2: // "maxn"  (table) -> number 
+			return valueOf( arg.checktable().maxn());
 		}
+		return NIL;
 	}
 
 	public static final class TableLibV extends VarArgFunction {

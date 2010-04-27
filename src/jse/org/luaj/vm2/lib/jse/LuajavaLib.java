@@ -43,25 +43,28 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 
-public class LuajavaLib extends OneArgFunction {
+public class LuajavaLib extends VarArgFunction {
 	
-	private static final int BINDCLASS      = 0;
-	private static final int NEWINSTANCE	= 1;
-	private static final int NEW			= 2;
-	private static final int CREATEPROXY	= 3;
-	private static final int LOADLIB		= 4;
+	private static final int INIT           = 0;
+	private static final int BINDCLASS      = 1;
+	private static final int NEWINSTANCE	= 2;
+	private static final int NEW			= 3;
+	private static final int CREATEPROXY	= 4;
+	private static final int LOADLIB		= 5;
 
 	private static final String[] NAMES = {
 		"bindClass", 
 		"newInstance", 
 		"new", 
 		"createProxy", 
-		"loadLib" };
+		"loadLib",
+	};
 	
 	private static final Map classMetatables = new HashMap(); 
 
@@ -76,16 +79,15 @@ public class LuajavaLib extends OneArgFunction {
 	public LuajavaLib() {
 	}
 
-	public LuaValue call(LuaValue arg) {
-		LuaTable t = new LuaTable();
-		bindv( t, NAMES );
-		env.set("luajava", t);
-		return t;
-	}
-
-	protected Varargs oncallv(int opcode, Varargs args) {
+	public Varargs invoke(Varargs args) {
 		try {
 			switch ( opcode ) {
+			case INIT: {
+				LuaTable t = new LuaTable();
+				bind( t, LuajavaLib.class, NAMES, BINDCLASS );
+				env.set("luajava", t);
+				return t;
+			}
 			case BINDCLASS: {
 				final Class clazz = Class.forName(args.checkjstring(1));
 				return toUserdata( clazz, clazz );

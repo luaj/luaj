@@ -215,7 +215,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 2: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
 				try {
 					LuaValue func = args.checkfunction(1);
-					String chunkname = args.optString(2, "function");
+					String chunkname = args.optjstring(2, "function");
 					return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getGlobals());
 				} catch ( Exception e ) {
 					return varargsOf(NIL, valueOf(e.getMessage()));
@@ -232,7 +232,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
 				try {
 					LuaString script = args.checkstring(1);
-					String chunkname = args.optString(2, "string");
+					String chunkname = args.optjstring(2, "string");
 					return LoadState.load(script.toInputStream(),chunkname,LuaThread.getGlobals());
 				} catch ( Exception e ) {
 					return varargsOf(NIL, valueOf(e.getMessage()));

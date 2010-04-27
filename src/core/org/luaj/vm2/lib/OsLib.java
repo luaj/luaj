@@ -30,13 +30,13 @@ import org.luaj.vm2.Varargs;
 /**
  * Base implementation of OsLib, with simplified stub functions
  * for library functions that cannot be implemented uniformly 
- * on J2se and J2me.   
+ * on Jse and Jme.   
  * 
  * <p>
  * This can be installed as-is on either platform, or extended 
- * and refined to be used in a complete J2se implementation.
+ * and refined to be used in a complete Jse implementation.
  * 
- * <p>Contains limited implementations of features not supported well on J2me:
+ * <p>Contains limited implementations of features not supported well on Jme:
  * <bl>
  * <li>execute()</li>
  * <li>remove()</li>
@@ -46,21 +46,22 @@ import org.luaj.vm2.Varargs;
  *
  * @see org.luaj.vm2.lib.jse.JseOsLib
  */
-public class OsLib extends OneArgFunction {
+public class OsLib extends VarArgFunction {
 	public static String TMP_PREFIX    = ".luaj";
 	public static String TMP_SUFFIX    = "tmp";
 
-	private static final int CLOCK     = 0;
-	private static final int DATE      = 1;
-	private static final int DIFFTIME  = 2;
-	private static final int EXECUTE   = 3;
-	private static final int EXIT      = 4;
-	private static final int GETENV    = 5;
-	private static final int REMOVE    = 6;
-	private static final int RENAME    = 7;
-	private static final int SETLOCALE = 8;
-	private static final int TIME      = 9;
-	private static final int TMPNAME   = 10;
+	private static final int INIT      = 0;
+	private static final int CLOCK     = 1;
+	private static final int DATE      = 2;
+	private static final int DIFFTIME  = 3;
+	private static final int EXECUTE   = 4;
+	private static final int EXIT      = 5;
+	private static final int GETENV    = 6;
+	private static final int REMOVE    = 7;
+	private static final int RENAME    = 8;
+	private static final int SETLOCALE = 9;
+	private static final int TIME      = 10;
+	private static final int TMPNAME   = 11;
 
 	private static final String[] NAMES = {
 		"clock",
@@ -85,27 +86,29 @@ public class OsLib extends OneArgFunction {
 	public OsLib() {
 	}
 
-	public LuaValue call(LuaValue arg) {
+	public LuaValue init() {
 		LuaTable t = new LuaTable();
-		bindv(t, NAMES);
+		bind(t, this.getClass(), NAMES, CLOCK);
 		env.set("os", t);
 		return t;
 	}
 
-	protected Varargs oncallv(int opcode, Varargs args) {
+	public Varargs invoke(Varargs args) {
 		try {
 			switch ( opcode ) {
+			case INIT: 
+				return init();
 			case CLOCK:
 				return valueOf(clock());
 			case DATE: {
-				String s = args.optString(1, null);
+				String s = args.optjstring(1, null);
 				double t = args.optdouble(2,-1);
 				return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
 			}
 			case DIFFTIME:
 				return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
 			case EXECUTE:
-				return valueOf(execute(args.optString(1, null)));
+				return valueOf(execute(args.optjstring(1, null)));
 			case EXIT:
 				exit(args.optint(1, 0));
 				return NONE;
@@ -120,7 +123,7 @@ public class OsLib extends OneArgFunction {
 				rename(args.checkjstring(1), args.checkjstring(2));
 				return LuaValue.TRUE;
 			case SETLOCALE: {
-				String s = setlocale(args.optString(1,null), args.optString(2, "all"));
+				String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
 				return s!=null? valueOf(s): NIL;
 			}
 			case TIME:
@@ -284,6 +287,8 @@ public class OsLib extends OneArgFunction {
 	 * @return String filename to use
 	 */
 	protected String tmpname() {
-		return TMP_PREFIX+(tmpnames++)+TMP_SUFFIX;
+		synchronized ( OsLib.class ) {
+			return TMP_PREFIX+(tmpnames++)+TMP_SUFFIX;
+		}
 	}
 }

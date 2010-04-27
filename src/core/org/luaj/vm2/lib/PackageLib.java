@@ -52,7 +52,6 @@ public class PackageLib extends OneArgFunction {
 	private static final LuaString _PRELOAD   = valueOf("preload");
 	private static final LuaString _PATH      = valueOf("path");
 	private static final LuaString _SEEALL    = valueOf("seeall");
-	private static final LuaString _LOADFILE  = valueOf("loadfile");
 	private static final LuaString _SENTINEL  = valueOf("\u0001");
 	
 	private static final int MODULE         = 0;
@@ -67,55 +66,73 @@ public class PackageLib extends OneArgFunction {
 	}
 
 	public LuaValue call(LuaValue arg) {
-		env.set("require", bind1("require",REQUIRE));
-		env.set("module",  bindv("module",MODULE));
+		env.set("require", new PkgLib1(env,"require",REQUIRE,this));
+		env.set("module",  new PkgLibV(env,"module",MODULE,this));
 		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
 				_PRELOAD, tableOf(),
 				_PATH,    valueOf(DEFAULT_LUA_PATH),
-				_LOADLIB, bindv("loadlib",LOADLIB),
-				_SEEALL,  bind1("seeall",SEEALL),
+				_LOADLIB, new PkgLibV(env,"loadlib",LOADLIB,this),
+				_SEEALL,  new PkgLib1(env,"seeall",SEEALL,this),
 				_LOADERS, listOf(new LuaValue[] {
-						bindv("preload_loader", PRELOAD_LOADER),
-						bindv("lua_loader", LUA_LOADER),
-						bindv("java_loader", JAVA_LOADER),
+						new PkgLibV(env,"preload_loader", PRELOAD_LOADER,this),
+						new PkgLibV(env,"lua_loader", LUA_LOADER,this),
+						new PkgLibV(env,"java_loader", JAVA_LOADER,this),
 				}) }) );
 		return env;
 	}
 
-	protected LuaValue oncall1(int opcode, LuaValue arg) {
-		switch ( opcode ) {
-		case REQUIRE: 
-			return require(arg);
-		case SEEALL: { 
-			LuaTable t = arg.checktable();
-			LuaValue m = t.getmetatable();
-			if ( m == null )
-				t.setmetatable(m=tableOf());
-			m.set( INDEX, LuaThread.getGlobals() );
-			return NONE;
+	public static final class PkgLib1 extends OneArgFunction {
+		PackageLib lib;
+		public PkgLib1(LuaValue env,String name, int opcode, PackageLib lib) {
+			this.env = env;
+			this.name = name;
+			this.opcode = opcode;
+			this.lib = lib;
 		}
+		public LuaValue call(LuaValue arg) {
+			switch ( opcode ) {
+			case REQUIRE: 
+				return lib.require(arg);
+			case SEEALL: { 
+				LuaTable t = arg.checktable();
+				LuaValue m = t.getmetatable();
+				if ( m == null )
+					t.setmetatable(m=tableOf());
+				m.set( INDEX, LuaThread.getGlobals() );
+				return NONE;
+			}
+			}
+			return NIL;
 		}
-		return NIL;
 	}
 
-	protected Varargs oncallv(int opcode, Varargs args) {
-		switch ( opcode ) {
-		case MODULE: 
-			return module(args);
-		case LOADLIB: 
-			return loadlib(args);
-		case PRELOAD_LOADER: {
-			return loader_preload(args);
+	public static final class PkgLibV extends VarArgFunction {
+		PackageLib lib;
+		public PkgLibV(LuaValue env,String name, int opcode, PackageLib lib) {
+			this.env = env;
+			this.name = name;
+			this.opcode = opcode;
+			this.lib = lib;
 		}
-		case LUA_LOADER: {
-			return loader_Lua(args);
+		public Varargs invoke(Varargs args) {
+			switch ( opcode ) {
+			case MODULE: 
+				return lib.module(args);
+			case LOADLIB: 
+				return loadlib(args);
+			case PRELOAD_LOADER: {
+				return lib.loader_preload(args);
+			}
+			case LUA_LOADER: {
+				return lib.loader_Lua(args);
+			}
+			case JAVA_LOADER: {
+				return lib.loader_Java(args);
+			}
+			}
+			return NONE;
 		}
-		case JAVA_LOADER: {
-			return loader_Java(args);
-		}
-		}
-		return NONE;
 	}
 	
 	/** Allow packages to mark themselves as loaded */

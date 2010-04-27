@@ -36,7 +36,7 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 
-public class DebugLib extends OneArgFunction {
+public class DebugLib extends VarArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
 
@@ -61,20 +61,21 @@ public class DebugLib extends OneArgFunction {
 		"traceback",
 	};
 	
-	private static final int DEBUG        	= 0;
-	private static final int GETFENV        = 1;
-	private static final int GETHOOK        = 2;
-	private static final int GETINFO        = 3;
-	private static final int GETLOCAL       = 4;
-	private static final int GETMETATABLE 	= 5;
-	private static final int GETREGISTRY    = 6;
-	private static final int GETUPVALUE    	= 7;
-	private static final int SETFENV        = 8;
-	private static final int SETHOOK        = 9;
-	private static final int SETLOCAL 		= 10;
-	private static final int SETMETATABLE   = 11;
-	private static final int SETUPVALUE    	= 12;
-	private static final int TRACEBACK    	= 13;
+	private static final int INIT        	= 0;
+	private static final int DEBUG        	= 1;
+	private static final int GETFENV        = 2;
+	private static final int GETHOOK        = 3;
+	private static final int GETINFO        = 4;
+	private static final int GETLOCAL       = 5;
+	private static final int GETMETATABLE 	= 6;
+	private static final int GETREGISTRY    = 7;
+	private static final int GETUPVALUE    	= 8;
+	private static final int SETFENV        = 9;
+	private static final int SETHOOK        = 10;
+	private static final int SETLOCAL 		= 11;
+	private static final int SETMETATABLE   = 12;
+	private static final int SETUPVALUE    	= 13;
+	private static final int TRACEBACK    	= 14;
 
 	/* maximum stack for a Lua function */
 	private static final int MAXSTACK = 250;
@@ -106,36 +107,34 @@ public class DebugLib extends OneArgFunction {
 	private static final LuaString ACTIVELINES     = valueOf("activelines");  
 
 	public DebugLib() {
-		DEBUG_ENABLED = true;
 	}
 	
-	public LuaValue call(LuaValue arg) {
+	private LuaTable init() {
+		DEBUG_ENABLED = true;
 		LuaTable t = new LuaTable();
-		bind(t, DebugLibV.class, NAMES);
+		bind(t, DebugLib.class, NAMES, DEBUG);
 		env.set("debug", t);
 		return t;
 	}
-
-	public static final class DebugLibV extends VarArgFunction {
-		protected DebugLib debuglib;
-		public Varargs invoke(Varargs args) {
-			switch ( opcode ) {
-			case DEBUG:        return _debug(args);
-			case GETFENV:      return _getfenv(args);
-			case GETHOOK:      return _gethook(args);
-			case GETINFO:      return _getinfo(args,this);
-			case GETLOCAL:     return _getlocal(args);
-			case GETMETATABLE: return _getmetatable(args);
-			case GETREGISTRY:  return _getregistry(args);
-			case GETUPVALUE:   return _getupvalue(args);
-			case SETFENV:      return _setfenv(args);
-			case SETHOOK:      return _sethook(args);
-			case SETLOCAL:     return _setlocal(args);
-			case SETMETATABLE: return _setmetatable(args);
-			case SETUPVALUE:   return _setupvalue(args);
-			case TRACEBACK:    return _traceback(args);
-			default:           return NONE;
-			}
+	
+	public Varargs invoke(Varargs args) {
+		switch ( opcode ) {
+		case INIT:         return init();
+		case DEBUG:        return _debug(args);
+		case GETFENV:      return _getfenv(args);
+		case GETHOOK:      return _gethook(args);
+		case GETINFO:      return _getinfo(args,this);
+		case GETLOCAL:     return _getlocal(args);
+		case GETMETATABLE: return _getmetatable(args);
+		case GETREGISTRY:  return _getregistry(args);
+		case GETUPVALUE:   return _getupvalue(args);
+		case SETFENV:      return _setfenv(args);
+		case SETHOOK:      return _sethook(args);
+		case SETLOCAL:     return _setlocal(args);
+		case SETMETATABLE: return _setmetatable(args);
+		case SETUPVALUE:   return _setupvalue(args);
+		case TRACEBACK:    return _traceback(args);
+		default:           return NONE;
 		}
 	}
 
@@ -383,7 +382,7 @@ public class DebugLib extends OneArgFunction {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		LuaValue func    = args.optfunction(a++, null);
-		String str       =  args.optString(a++,"");
+		String str       = args.optjstring(a++,"");
 		int count        = args.optint(a++,0);
 		boolean call=false,line=false,rtrn=false;
 		for ( int i=0; i<str.length(); i++ )
@@ -413,7 +412,7 @@ public class DebugLib extends OneArgFunction {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		LuaValue func = args.arg(a++);
-		String what = args.optString(a++, "nSluf");
+		String what = args.optjstring(a++, "nSluf");
 		
 		// find the stack info
 		DebugState ds = getDebugState( thread );
@@ -600,7 +599,7 @@ public class DebugLib extends OneArgFunction {
 	private static LuaValue _traceback(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
-		String message = args.optString(a++, "stack traceback:");
+		String message = args.optjstring(a++, "stack traceback:");
 		int level = args.optint(a++,1);
 		String tb = DebugLib.traceback(thread, level);
 		return valueOf(message+"\n"+tb);

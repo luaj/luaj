@@ -765,22 +765,22 @@ public class TypeTest extends TestCase {
 	public void testOptJavaString() {
 		assertEquals( "xyz", somenil.optjstring("xyz") );
 		assertEquals( null, somenil.optjstring(null) );
-		throwsError( sometrue, "optString", String.class, "xyz" );
-		throwsError( somefalse, "optString", String.class, "xyz" );
+		throwsError( sometrue, "optjstring", String.class, "xyz" );
+		throwsError( somefalse, "optjstring", String.class, "xyz" );
 		assertEquals( String.valueOf(zero), zero.optjstring("xyz") );
 		assertEquals( String.valueOf(intint), intint.optjstring("xyz") );
 		assertEquals( String.valueOf(longdouble), longdouble.optjstring("xyz") );
 		assertEquals( String.valueOf(doubledouble), doubledouble.optjstring("xyz") );
-		throwsError( somefunc, "optString", String.class, "xyz" );
-		throwsError( someclosure, "optString", String.class, "xyz" );
+		throwsError( somefunc, "optjstring", String.class, "xyz" );
+		throwsError( someclosure, "optjstring", String.class, "xyz" );
 		assertEquals( samplestringstring, stringstring.optjstring("xyz") );
 		assertEquals( samplestringint, stringint.optjstring("xyz") );
 		assertEquals( samplestringlong, stringlong.optjstring("xyz") );
 		assertEquals( samplestringdouble, stringdouble.optjstring("xyz") );
-		throwsError( thread, "optString", String.class, "xyz" );
-		throwsError( table, "optString", String.class, "xyz" );
-		throwsError( userdataobj, "optString", String.class, "xyz" );
-		throwsError( userdatacls, "optString", String.class, "xyz" );
+		throwsError( thread, "optjstring", String.class, "xyz" );
+		throwsError( table, "optjstring", String.class, "xyz" );
+		throwsError( userdataobj, "optjstring", String.class, "xyz" );
+		throwsError( userdatacls, "optjstring", String.class, "xyz" );
 	}
 	
 	public void testOptLuaString() {

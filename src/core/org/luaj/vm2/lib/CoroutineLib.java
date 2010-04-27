@@ -40,16 +40,19 @@ public class CoroutineLib extends VarArgFunction {
 	public CoroutineLib() {
 	}
 
+	private LuaTable init() {
+		LuaTable t = new LuaTable();
+		bind(t, CoroutineLib.class, new  String[] {
+			"create", "resume", "running", "status", "yield", "wrap" },
+			CREATE);
+		env.set("coroutine", t);
+		return t;
+	}
+	
 	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
 			case INIT: {
-				LuaTable t = new LuaTable();
-				bind(t, CoroutineLib.class, new  String[] {
-					"create", "resume", "running", "status", "yield", "wrap" },
-					CREATE);
-				env.set("coroutine", t);
-				return t;
-				
+				return init();
 			}
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
