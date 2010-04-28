@@ -63,11 +63,11 @@ In addition to the basic goals of luaj, version 2.0 is aimed
 at improving on the 1.0 vm in the following aspects. 
 <ul>
 <li>Support for compiling lua into Java off-line for JME, and at runtime for JSE.
-<li>More alignment with C API (see <a href="names.csv">names.csv</a> for details)
 <li>Faster bytecode processing for interpreted code.
 <li>Tighter integration between lua and Java layers.
 <li>Stackless implementation of interpreted code.
 <li>Streamlined processing model with modular interpreter. 
+<li>More alignment with C API (see <a href="names.csv">names.csv</a> for details)
 <li>More uniform naming of classes. 
 <li>Better package layout. 
 <li>Better unit tests of core classes. 
@@ -91,18 +91,36 @@ You should see the following output:
 	hello, world
 </pre>
 
-<h2>Compile a script in Java SE</h2>
+<h2>Compile a script to lua bytecode</h2>
 
 <p>
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-1.0.jar luac examples/lua/hello.lua
-	java -cp lib/luaj-jse-1.0.jar lua luac.out
+	java -cp lib/luaj-jse-2.0-alpha1.jar luac examples/lua/hello.lua
+	java -cp lib/luaj-jse-2.0-alpha1.jar lua luac.out
 </pre>
 
 <p>
-The compiled output should run and produce the same result.
+The compiled output "luac.out" is lua bytecode and should run and produce the same result.
+
+<h2>Compile a script to java bytecode</h2>
+
+<p>
+Luaj can compile to lua bytecode if the bcel library is on the class path. From the main distribution directory line type:
+
+<pre>
+	ant bcel-lib
+	java -cp lib/luaj-jse-2.0-alpha1.jar;lib/bcel-5.2.jar luajc -s examples/lua -d . hello.lua
+	java -cp lib/luaj-jse-2.0-alpha1.jar;. lua -l hello
+</pre>
+
+<p>
+The output <em>hello.class</em> is Java bytecode, should run and produce the same result.
+There is no runtime dependency on the bcel library, but the compiled classes must be in the class path.
+
+<pre>
+</pre>
 
 <h2>Run a script in a Java Application</h2>
 
@@ -132,7 +150,7 @@ You must include the library <b>lib/luaj-jse-2.0-alpha1.jar</b> in your class pa
 <h2>Run a script in a MIDlet</h2>
 
 <p>
-The following pattern is used within MIDlets:
+The for MIDlets the <em>JmePlatform</em> is used instead:
 
 <pre>
 	import org.luaj.vm2.*;
@@ -157,22 +175,46 @@ A simple example may be found in
 
 <p>
 You must include the library <b>lib/luaj-jme-2.0-alpha1.jar</b> in your midlet jar.
-They can be obfuscated if desired.
 
-<h2>Including the compiler</h2>
+<p>
+An ant script to build and run the midlet is in
+<pre>
+	build-midlet.xml
+</pre>
+
+<p>
+You must install the wireless toolkit and define <em>WTK_HOME</em> for this script to work. 
+
+<h2>Including the lua bytecode compiler</h2>
 
 By default, the compiler is not included so as to minimize footprint.  
 Without a compiler, files can still be executed, but they must be compiled elsewhere beforehand.
 The "luac" utility is provided in the jse jar for this purpose, or a standard lua compiler can be used.  
 
 <p>
-To include the Java it, include the following sometime before lua source files are loaded:
+To include the lua-to-lua-bytecode compiler, include the following sometime before lua source files are loaded:
 <pre>
 	org.luaj.vm2.compiler.LuaC.install();
 </pre>
 
 <p>
 To omit the compiler, omit this line from your startup code. 
+
+<h2>Including the lua-to-Java-bytecode compiler</h2>
+
+<p>
+To compile from lua to Java bytecode for all lua loaded at runtime, use the LuaJC class:
+
+<pre>
+	org.luaj.vm2.jse.luajc.LuaJC.install();
+</pre>
+
+<p>
+This will compile all lua bytecode into Java bytecode, regardless of if they are loaded as
+lua source or lua binary files.
+
+<p>
+The <em>bcel</em> library must be on the class path for this to work.
 
 <h2>Run a script using JSR-233 Dynamic Scripting</h2>
 
@@ -198,48 +240,6 @@ A working example may be found in
 <pre>
 	examples/jse/ScriptEngineSample.java
 </pre>
-
-<h2>Compile lua to Java bytecode using luajc</h2>
-
-<p>
-A code generator that compiles lua to java bytecode base on the 
-bcel library is now included.  
-
-<p>
-To use it at runtime, the tool "lua" has an option "-j" to compile into java bytecode. 
-
-<pre>
-	java -cp luaj-jse-2.0-alpha1.jar;lib/bcel-5.2.jar lua -j examples/lua/hello.lua
-</pre>
-
-<p>
-To compile lua files into Java in advance, the tool "luajc" is provided:
-
-<pre>
-	cp examples/lua/hello.lua .
-	java -cp luaj-jse-2.0-alpha1.jar;lib/bcel-5.2.jar luajc hello.lua
-	ls -l hello.class
-</pre>
-
-You should see a class file of 906 bytes or so. A version of the <a href="http://jakarta.apache.org/bcel/">bcel</a> 
-library must be in your class path for code generation to work.
-The ant script contains a target for fetching bcel v 5.2:
-
-<pre>
-	ant bcel-lib
-</pre>
-
-<p>
-Files compiled into java in this way can be run via Java class loading, <em>without</em> the bcel libraries 
-(generated class files must be in your class path): 
-
-<pre>
-	java -cp luaj-jse-2.0-alpha1.jar;. lua -l hello
-</pre>
-
-The current bytecode generator produces a separate class file for each prototype, 
-and generated class files do not work properly with module() or setfenv(). 
-
 
 <h1>3 - <a name="3">Concepts</a></h1>
 
@@ -324,10 +324,15 @@ The following library is optional:
 
 Install from Java using:
 <pre>
-	org.luaj.vm2.lib.DebugLib.install(vm);
+	_G.load( new DebugLib() );
 </pre>
 
-or install from lua using</em>:
+or change startup code to use:
+<pre>
+	LuaValue _G = JsePlatform.debugGlobals();
+</pre>
+
+To install from lua use</em>:
 <pre>
 	require 'org.luaj.vm2.lib.DebugLib'
 </pre>
