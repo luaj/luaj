@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 200 Luaj.org. All rights reserved.
+* Copyright (c) 2010 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -36,12 +36,24 @@ import org.luaj.vm2.Varargs;
 public class PackageLib extends OneArgFunction {
 
 	public static String DEFAULT_LUA_PATH = "?.lua";
+
+	/** Most recent instance of PackageLib */
+	public static PackageLib instance;
 	
 	public InputStream    STDIN   = null;
 	public PrintStream    STDOUT  = System.out;
 	public LuaTable       LOADED;
 	public LuaTable       PACKAGE;
 
+	/** Loader that loads from preload table if found there */
+	public final LuaValue preload_loader;
+	
+	/** Loader that loads as a lua script using the LUA_PATH */
+	public final LuaValue lua_loader;
+	
+	/** Loader that loads as a Java class.  Class must have public constructor and be a LuaValue */
+	public final LuaValue java_loader;
+	
 	private static final LuaString _M         = valueOf("_M");
 	private static final LuaString _NAME      = valueOf("_NAME");	
 	private static final LuaString _PACKAGE   = valueOf("_PACKAGE");	
@@ -54,30 +66,34 @@ public class PackageLib extends OneArgFunction {
 	private static final LuaString _SEEALL    = valueOf("seeall");
 	private static final LuaString _SENTINEL  = valueOf("\u0001");
 	
-	private static final int MODULE         = 0;
-	private static final int REQUIRE        = 1;
-	private static final int LOADLIB        = 2;
-	private static final int SEEALL         = 3;
-	private static final int PRELOAD_LOADER = 4;
-	private static final int LUA_LOADER     = 5;
-	private static final int JAVA_LOADER    = 6;
-
+	private static final int OP_MODULE         = 0;
+	private static final int OP_REQUIRE        = 1;
+	private static final int OP_LOADLIB        = 2;
+	private static final int OP_SEEALL         = 3;
+	private static final int OP_PRELOAD_LOADER = 4;
+	private static final int OP_LUA_LOADER     = 5;
+	private static final int OP_JAVA_LOADER    = 6;
+	
 	public PackageLib() {
+		instance = this;
+		preload_loader = new PkgLibV(env,"preload_loader", OP_PRELOAD_LOADER,this);
+		lua_loader     = new PkgLibV(env,"lua_loader", OP_LUA_LOADER,this);
+		java_loader    = new PkgLibV(env,"java_loader", OP_JAVA_LOADER,this);
 	}
 
 	public LuaValue call(LuaValue arg) {
-		env.set("require", new PkgLib1(env,"require",REQUIRE,this));
-		env.set("module",  new PkgLibV(env,"module",MODULE,this));
+		env.set("require", new PkgLib1(env,"require",OP_REQUIRE,this));
+		env.set("module",  new PkgLibV(env,"module",OP_MODULE,this));
 		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
 				_PRELOAD, tableOf(),
 				_PATH,    valueOf(DEFAULT_LUA_PATH),
-				_LOADLIB, new PkgLibV(env,"loadlib",LOADLIB,this),
-				_SEEALL,  new PkgLib1(env,"seeall",SEEALL,this),
+				_LOADLIB, new PkgLibV(env,"loadlib",OP_LOADLIB,this),
+				_SEEALL,  new PkgLib1(env,"seeall",OP_SEEALL,this),
 				_LOADERS, listOf(new LuaValue[] {
-						new PkgLibV(env,"preload_loader", PRELOAD_LOADER,this),
-						new PkgLibV(env,"lua_loader", LUA_LOADER,this),
-						new PkgLibV(env,"java_loader", JAVA_LOADER,this),
+						preload_loader, 
+						lua_loader, 
+						java_loader, 
 				}) }) );
 		return env;
 	}
@@ -92,9 +108,9 @@ public class PackageLib extends OneArgFunction {
 		}
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) {
-			case REQUIRE: 
+			case OP_REQUIRE: 
 				return lib.require(arg);
-			case SEEALL: { 
+			case OP_SEEALL: { 
 				LuaTable t = arg.checktable();
 				LuaValue m = t.getmetatable();
 				if ( m == null )
@@ -117,17 +133,17 @@ public class PackageLib extends OneArgFunction {
 		}
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
-			case MODULE: 
+			case OP_MODULE: 
 				return lib.module(args);
-			case LOADLIB: 
+			case OP_LOADLIB: 
 				return loadlib(args);
-			case PRELOAD_LOADER: {
+			case OP_PRELOAD_LOADER: {
 				return lib.loader_preload(args);
 			}
-			case LUA_LOADER: {
+			case OP_LUA_LOADER: {
 				return lib.loader_Lua(args);
 			}
-			case JAVA_LOADER: {
+			case OP_JAVA_LOADER: {
 				return lib.loader_Java(args);
 			}
 			}
