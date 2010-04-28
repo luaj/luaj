@@ -37,22 +37,22 @@ public class PackageLib extends OneArgFunction {
 
 	public static String DEFAULT_LUA_PATH = "?.lua";
 
-	/** Most recent instance of PackageLib */
-	public static PackageLib instance;
-	
 	public InputStream    STDIN   = null;
 	public PrintStream    STDOUT  = System.out;
 	public LuaTable       LOADED;
 	public LuaTable       PACKAGE;
 
+	/** Most recent instance of PackageLib */
+	public static PackageLib instance;
+	
 	/** Loader that loads from preload table if found there */
-	public final LuaValue preload_loader;
+	public LuaValue preload_loader;
 	
 	/** Loader that loads as a lua script using the LUA_PATH */
-	public final LuaValue lua_loader;
+	public LuaValue lua_loader;
 	
 	/** Loader that loads as a Java class.  Class must have public constructor and be a LuaValue */
-	public final LuaValue java_loader;
+	public LuaValue java_loader;
 	
 	private static final LuaString _M         = valueOf("_M");
 	private static final LuaString _NAME      = valueOf("_NAME");	
@@ -76,9 +76,6 @@ public class PackageLib extends OneArgFunction {
 	
 	public PackageLib() {
 		instance = this;
-		preload_loader = new PkgLibV(env,"preload_loader", OP_PRELOAD_LOADER,this);
-		lua_loader     = new PkgLibV(env,"lua_loader", OP_LUA_LOADER,this);
-		java_loader    = new PkgLibV(env,"java_loader", OP_JAVA_LOADER,this);
 	}
 
 	public LuaValue call(LuaValue arg) {
@@ -91,9 +88,9 @@ public class PackageLib extends OneArgFunction {
 				_LOADLIB, new PkgLibV(env,"loadlib",OP_LOADLIB,this),
 				_SEEALL,  new PkgLib1(env,"seeall",OP_SEEALL,this),
 				_LOADERS, listOf(new LuaValue[] {
-						preload_loader, 
-						lua_loader, 
-						java_loader, 
+						preload_loader = new PkgLibV(env,"preload_loader", OP_PRELOAD_LOADER,this),
+						lua_loader     = new PkgLibV(env,"lua_loader", OP_LUA_LOADER,this),
+						java_loader    = new PkgLibV(env,"java_loader", OP_JAVA_LOADER,this),
 				}) }) );
 		return env;
 	}

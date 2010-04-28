@@ -124,10 +124,20 @@ local function fib_good(n)
 	return helper(1, 1, 1)
 end
 
-print(pcall(fib_bad, 30))
-print(pcall(fib_bad, 25000))
-print(pcall(fib_good, 30))
-print(pcall(fib_good, 25000))
+local aliases = {
+	['1.#INF'] = 'inf',
+	['-1.#INF'] = '-inf',
+	['1.#IND'] = 'nan',
+	['-1.#IND'] = 'nan',
+}
+	
+local p = function( s,e )
+	print( s, e and aliases[tostring(e)] or e )
+end
+p(pcall(fib_bad, 30))
+p((pcall(fib_bad, 25000)))
+p(pcall(fib_good, 30))
+p(pcall(fib_good, 25000))
 
 local function fib_all(n, i, a, b)
 	i = i or 1

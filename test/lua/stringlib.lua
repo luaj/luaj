@@ -108,15 +108,26 @@ print(string.format("(%08x) (%08d) (%08o)", 255, 255, 255))
 
 print(string.format("simple%ssimple", " simple "))
 
-print(string.format("%%"))
+local testformat = function(message,fmt,...)
+	local s,e = pcall( string.format, fmt, ... )
+	if s then
+		print( message, string.byte(e,1,#e) )
+	else
+		print( message, 'error', e )
+	end
+end
+
 specials = "\"specials\": %% \000 \r \n"
-print(string.format("specials (%%s): ----->%s<----", specials) )
-print(string.format("specials (%%q): ----->%q<----", specials) )
-print(string.format("controls (%%q): ----->%q<----", ' \a \b \f \t \v \\ ') )
-print(string.format("extended (%%q): ----->%q<----", ' \222 \223 \224 ') )
-print(string.format("embedded newlines: %s\n%s\n%s", '======>', '<======>', '<======='))
-print(string.format("this is a %s long string", string.rep("really, ", 30)))
-	
+testformat('plain %', "%%")
+testformat("specials (%s)", "---%s---", specials)
+testformat("specials (%q)", "---%q---", specials)
+testformat("controls (%q)", "---%q---", ' \a \b \f \t \v \\ ')
+testformat("extended (%q)", "---%q---", ' \222 \223 \224 ')
+testformat("embedded newlines", "%s\r%s\n%s", '===', '===', '===')
+
+-- format long string
+print("this is a %s long string", string.rep("really, ", 30))
+
 local function pc(...)
 	local s,e = pcall(...)
 	return s and e or 'false-'..type(e)

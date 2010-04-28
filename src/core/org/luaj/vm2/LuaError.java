@@ -86,6 +86,7 @@ public class LuaError extends RuntimeException {
 
 	/** Add file and line info to a message */
 	private static String addFileLine( String message, int level ) {
+		if ( message == null ) return message;
 		LuaFunction f = LuaThread.getCallstackFunction(level);
 		return f!=null? f+": "+message: message;		
 	}
