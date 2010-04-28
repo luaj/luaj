@@ -238,43 +238,21 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					return varargsOf(NIL, valueOf(e.getMessage()));
 				} 
 			case 5: // "pcall", // (f, arg1, ...) -> status, result1, ...
+			{
+				LuaThread.onCall(this);
 				try {
-					LuaThread.onCall(this);
-					try {
-						return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
-					} finally {
-						LuaThread.onReturn();
-					}
-				} catch ( LuaError le ) {
-					String m = le.getMessage();
-					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
-				} catch ( Exception e ) {
-					String m = e.getMessage();
-					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+					return pcall(args.arg1(),args.subargs(2),null);
+				} finally {
+					LuaThread.onReturn();
 				}
+			}
 			case 6: // "xpcall", // (f, err) -> result1, ...				
 			{
-				LuaValue errfunc = args.checkvalue(2);
+				LuaThread.onCall(this);
 				try {
-					LuaThread.onCall(this);
-					try {
-						LuaThread thread = LuaThread.getRunning();
-						LuaValue olderr = thread.err;
-						try {
-							thread.err = errfunc;
-							return varargsOf(LuaValue.TRUE, args.arg1().invoke(args.subargs(2)));
-						} finally {
-							thread.err = olderr;
-						}
-					} finally {
-						LuaThread.onReturn();
-					}
-				} catch ( LuaError le ) {
-					String m = le.getMessage();
-					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
-				} catch ( Exception e ) {
-					String m = e.getMessage();
-					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+					return pcall(args.arg1(),NONE,args.checkvalue(2));
+				} finally {
+					LuaThread.onReturn();
 				}
 			}
 			case 7: // "print", // (...) -> void
@@ -358,6 +336,25 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 	}
 
+	public static Varargs pcall(LuaValue func, Varargs args, LuaValue errfunc) {
+		try {
+			LuaThread thread = LuaThread.getRunning();
+			LuaValue olderr = thread.err;
+			try {
+				thread.err = errfunc;
+				return varargsOf(LuaValue.TRUE, func.invoke(args));
+			} finally {
+				thread.err = olderr;
+			}
+		} catch ( LuaError le ) {
+			String m = le.getMessage();
+			return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+		} catch ( Exception e ) {
+			String m = e.getMessage();
+			return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+		}
+	}
+	
 	public static Varargs loadFile(String filename) throws IOException {
 		InputStream is = FINDER.findResource(filename);
 		if ( is == null )

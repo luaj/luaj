@@ -286,3 +286,20 @@ print( 'pcall(unpack,t,function() end)', pcall(unpack,t,function() end) );
 -- _VERSION
 print( '_VERSION', type(_VERSION) )
 
+-- xpcall
+local errfunc = function( detail ) 
+	print( '  in errfunc', type(detail) )
+	return 'response-from-xpcall' 
+end
+local badfunc = function() error( 'error-from-badfunc' ) end
+local wrappedbad = function() pcall( badfunc ) end
+print( 'pcall(badfunc)', pcall(badfunc) )
+print( 'pcall(badfunc,errfunc)', pcall(badfunc,errfunc) )
+print( 'pcall(badfunc,badfunc)', pcall(badfunc,badfunc) )
+print( 'pcall(wrappedbad)', pcall(wrappedbad) )
+print( 'pcall(wrappedbad,errfunc)', pcall(wrappedbad,errfunc) )
+print( 'pcall(xpcall(badfunc))', pcall(xpcall,badfunc) )
+print( 'pcall(xpcall(badfunc,errfunc))', pcall(xpcall,badfunc,errfunc) )
+print( 'pcall(xpcall(badfunc,badfunc))', pcall(xpcall,badfunc,badfunc) )
+print( 'pcall(xpcall(wrappedbad))', pcall(xpcall,wrappedbad) )
+print( 'xpcall(wrappedbad,errfunc)', xpcall(wrappedbad,errfunc) )

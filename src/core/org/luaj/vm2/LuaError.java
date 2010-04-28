@@ -40,10 +40,14 @@ public class LuaError extends RuntimeException {
 	private static String errorHook(String msg) {
 		LuaThread thread = LuaThread.getRunning();
 		if ( thread.err != null ) { 
+			LuaValue errfunc = thread.err;
+			thread.err = null;
 			try {
-				return thread.err.call( LuaValue.valueOf(msg) ).tojstring();
+				return errfunc.call( LuaValue.valueOf(msg) ).tojstring();
 			} catch ( Throwable t ) {
 				return "error in error handling";
+			} finally {
+				thread.err = errfunc;
 			}
 		}
 		return msg;
