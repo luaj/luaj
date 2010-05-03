@@ -199,7 +199,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
 			case 0: // "assert", // ( v [,message] ) -> v, message | ERR
-				if ( !args.arg1().toboolean() ) error("assertion failed!");
+				if ( !args.arg1().toboolean() ) 
+					error( args.narg()>1? args.checkjstring(2): "assertion failed!" );
 				return args;
 			case 1: // "dofile", // ( filename ) -> result1, ...
 			{
