@@ -153,6 +153,8 @@ public class LuaValue extends Varargs {
 	public Object      checkuserdata()         { typerror("userdata");  return null; }
 	public Object      checkuserdata(Class c)  { typerror("userdata");  return null; }
 	public LuaValue    checknotnil()           { return this; }
+	public LuaValue    checkvalidkey()         { return this; }
+
 	
 	/** @deprecated - use checkjstring() instead */
 	public String      checkString()          { return checkjstring(); }
