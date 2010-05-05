@@ -44,7 +44,7 @@ public class DebugLib extends VarArgFunction {
 	// remove it in production builds
 	public static boolean DEBUG_ENABLED;
 
-	private static final String[] NAMES = {
+	static final String[] NAMES = {
 		"debug",
 		"getfenv",
 		"gethook",
@@ -146,7 +146,7 @@ public class DebugLib extends VarArgFunction {
 	// Each thread will get a DebugState attached to it by the debug library
 	// which will track function calls, hook functions, etc.
 	// 
-	private static class DebugInfo {
+	static class DebugInfo {
 		LuaValue func;
 		LuaClosure closure;
 		LuaValue[] stack;
@@ -214,7 +214,7 @@ public class DebugLib extends VarArgFunction {
 	}
 	
 	/** DebugState is associated with a Thread */
-	private static class DebugState {
+	static class DebugState {
 		private final LuaThread thread;
 		private int debugCalls = 0;
 		private DebugInfo[] debugInfo = new DebugInfo[LuaThread.MAX_CALLSTACK+1];
@@ -222,7 +222,7 @@ public class DebugLib extends VarArgFunction {
 		private boolean hookcall,hookline,hookrtrn,inhook;
 		private int hookcount,hookcodes;
 		private int line;
-		private DebugState(LuaThread thread) {
+		DebugState(LuaThread thread) {
 			this.thread = thread;
 		}
 		public DebugInfo nextInfo() {
@@ -242,7 +242,7 @@ public class DebugLib extends VarArgFunction {
 			while ( debugCalls > calls )
 				debugInfo[--debugCalls].clear();
 		}
-		private void callHookFunc(DebugState ds, LuaString type, LuaValue arg) {
+		void callHookFunc(DebugState ds, LuaString type, LuaValue arg) {
 			if ( inhook || hookfunc == null )
 				return;
 			inhook = true;
@@ -268,10 +268,16 @@ public class DebugLib extends VarArgFunction {
 			this.hookrtrn = rtrn;
 			this.hookfunc = func;
 		}
-		private DebugInfo getDebugInfo() {
-			return debugInfo[debugCalls-1];
+		DebugInfo getDebugInfo() {
+			try {
+				return debugInfo[debugCalls-1];
+			} catch ( Throwable t ) {
+				if ( debugCalls <= 0 )
+					return debugInfo[debugCalls++] = new DebugInfo();
+				return null;
+			}
 		}
-		private DebugInfo getDebugInfo(int level) {
+		DebugInfo getDebugInfo(int level) {
 			return level < 0 || level >= debugCalls? null: debugInfo[debugCalls-level-1];
 		}
 		public DebugInfo findDebugInfo(LuaValue func) {			
@@ -287,13 +293,13 @@ public class DebugLib extends VarArgFunction {
 		}
 	}
 	
-	private static DebugState getDebugState( LuaThread thread ) {
+	static DebugState getDebugState( LuaThread thread ) {
 		if ( thread.debugState == null )
 			thread.debugState = new DebugState(thread);
 		return (DebugState) thread.debugState;
 	}
 	
-	private static DebugState getDebugState() {
+	static DebugState getDebugState() {
 		return getDebugState( LuaThread.getRunning() );
 	}
 	
@@ -364,11 +370,11 @@ public class DebugLib extends VarArgFunction {
 	
 	// j2se subclass may wish to override and provide actual console here. 
 	// j2me platform has not System.in to provide console.
-	private static Varargs _debug(Varargs args) {
+	static Varargs _debug(Varargs args) {
 		return NONE;
 	}
 	
-	private static Varargs _gethook(Varargs args) {
+	static Varargs _gethook(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		DebugState ds = getDebugState(thread);
@@ -378,7 +384,7 @@ public class DebugLib extends VarArgFunction {
 				valueOf(ds.hookcount));
 	}
 
-	private static Varargs _sethook(Varargs args) {
+	static Varargs _sethook(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		LuaValue func    = args.optfunction(a++, null);
@@ -395,13 +401,13 @@ public class DebugLib extends VarArgFunction {
 		return NONE;
 	}
 
-	private static Varargs _getfenv(Varargs args) {
+	static Varargs _getfenv(Varargs args) {
 		LuaValue object = args.arg1();
 		LuaValue env = object.getfenv();
 		return env!=null? env: LuaValue.NIL;
 	}
 
-	private static Varargs _setfenv(Varargs args) {
+	static Varargs _setfenv(Varargs args) {
 		LuaValue object = args.arg1();
 		LuaTable table = args.checktable(2);
 		object.setfenv(table);
@@ -495,7 +501,7 @@ public class DebugLib extends VarArgFunction {
         return name;
 	}
 	
-	private static Varargs _getlocal(Varargs args) {
+	static Varargs _getlocal(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		int level = args.checkint(a++);
@@ -512,7 +518,7 @@ public class DebugLib extends VarArgFunction {
 		}
 	}
 
-	private static Varargs _setlocal(Varargs args) {
+	static Varargs _setlocal(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		int level = args.checkint(a++);
@@ -530,13 +536,13 @@ public class DebugLib extends VarArgFunction {
 		}
 	}
 
-	private static LuaValue _getmetatable(Varargs args) {
+	static LuaValue _getmetatable(Varargs args) {
 		LuaValue object = args.arg(1);
 		LuaValue mt = object.getmetatable();
 		return mt!=null? mt: NIL;
 	}
 
-	private static Varargs _setmetatable(Varargs args) {
+	static Varargs _setmetatable(Varargs args) {
 		LuaValue object = args.arg(1);
 		try {
 			LuaValue mt = args.opttable(2, null);
@@ -554,11 +560,11 @@ public class DebugLib extends VarArgFunction {
 		}
 	}
 
-	private static Varargs _getregistry(Varargs args) {
+	static Varargs _getregistry(Varargs args) {
 		return new LuaTable();
 	}
 
-	private static LuaString findupvalue(LuaClosure c, int up) {
+	static LuaString findupvalue(LuaClosure c, int up) {
 		if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
 				return c.p.upvalues[up-1];
@@ -568,7 +574,7 @@ public class DebugLib extends VarArgFunction {
 		return null;
 	}
 
-	private static Varargs _getupvalue(Varargs args) {
+	static Varargs _getupvalue(Varargs args) {
 		LuaValue func = args.checkfunction(1);
 		int up = args.checkint(2);
 		if ( func instanceof LuaClosure ) {
@@ -581,7 +587,7 @@ public class DebugLib extends VarArgFunction {
 		return NIL;
 	}
 
-	private static LuaValue _setupvalue(Varargs args) {
+	static LuaValue _setupvalue(Varargs args) {
 		LuaValue func = args.checkfunction(1);
 		int up = args.checkint(2);
 		LuaValue value = args.arg(3);
@@ -596,7 +602,7 @@ public class DebugLib extends VarArgFunction {
 		return NIL;
 	}
 
-	private static LuaValue _traceback(Varargs args) {
+	static LuaValue _traceback(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
 		String message = args.optjstring(a++, "stack traceback:");
@@ -638,13 +644,13 @@ public class DebugLib extends VarArgFunction {
 	
 	// =======================================================
 	
-	private static void lua_assert(boolean x) {
+	static void lua_assert(boolean x) {
 		if (!x) throw new RuntimeException("lua_assert failed");
 	}	
 
 	
 	// return StrValue[] { name, namewhat } if found, null if not
-	private static LuaString[] getobjname(DebugInfo di, int stackpos) {
+	static LuaString[] getobjname(DebugInfo di, int stackpos) {
 		LuaString name;
 		if (di.closure != null) { /* a Lua function? */
 			Prototype p = di.closure.p;
@@ -690,18 +696,18 @@ public class DebugLib extends VarArgFunction {
 		return null; /* no useful name found */
 	}
 
-	private static LuaString kname(Prototype p, int c) {
+	static LuaString kname(Prototype p, int c) {
 		if (Lua.ISK(c) && p.k[Lua.INDEXK(c)].isstring())
 			return p.k[Lua.INDEXK(c)].strvalue();
 		else
 			return QMARK;
 	}
 
-	private static boolean checkreg(Prototype pt,int reg)	{
+	static boolean checkreg(Prototype pt,int reg)	{
 		return (reg < pt.maxstacksize);
 	}
 
-	private static boolean precheck(Prototype pt) {
+	static boolean precheck(Prototype pt) {
 		if (!(pt.maxstacksize <= MAXSTACK)) return false;
 		lua_assert(pt.numparams + (pt.is_vararg & Lua.VARARG_HASARG) <= pt.maxstacksize);
 		lua_assert((pt.is_vararg & Lua.VARARG_NEEDSARG) == 0
@@ -712,7 +718,7 @@ public class DebugLib extends VarArgFunction {
 		return true;
 	}
 
-	private static boolean checkopenop(Prototype pt,int pc) {
+	static boolean checkopenop(Prototype pt,int pc) {
 		int i = pt.code[(pc)+1];
 		switch (Lua.GET_OPCODE(i)) {
 		case Lua.OP_CALL:
@@ -728,7 +734,7 @@ public class DebugLib extends VarArgFunction {
 	}
 	
 	//static int checkArgMode (Prototype pt, int r, enum OpArgMask mode) {
-	private static boolean checkArgMode (Prototype pt, int r, int mode) {
+	static boolean checkArgMode (Prototype pt, int r, int mode) {
 		switch (mode) {
 			case Lua.OpArgN: if (!(r == 0)) return false; break;
 			case Lua.OpArgU: break;
@@ -742,7 +748,7 @@ public class DebugLib extends VarArgFunction {
 
 
 	// return last instruction, or 0 if error
-	private static int symbexec(Prototype pt, int lastpc, int reg) {
+	static int symbexec(Prototype pt, int lastpc, int reg) {
 		int pc;
 		int last; /* stores position of last instruction that changed `reg' */
 		last = pt.code.length - 1; /*

@@ -228,7 +228,7 @@ public class PackageLib extends OneArgFunction {
 	 * @param fname the name to look up or create, such as "abc.def.ghi"
 	 * @return the table for that name, possible a new one, or null if a non-table has that name already. 
 	 */
-	private static LuaValue findtable(LuaValue table, LuaString fname) {
+	private static final LuaValue findtable(LuaValue table, LuaString fname) {
 		int b, e=(-1);
 		do {
 			e = fname.indexOf(_DOT, b=e+1 );
@@ -249,7 +249,7 @@ public class PackageLib extends OneArgFunction {
 		return table;
 	}
 
-	private static void modinit(LuaValue module, LuaString modname) {
+	private static final void modinit(LuaValue module, LuaString modname) {
 		/* module._M = module */
 		module.set(_M, module);
 		int e = modname.lastIndexOf(_DOT);
@@ -324,7 +324,7 @@ public class PackageLib extends OneArgFunction {
 		return varargsOf(NIL, valueOf("dynamic libraries not enabled"), valueOf("absent"));
 	}
 
-	private LuaValue loader_preload( Varargs args ) {
+	LuaValue loader_preload( Varargs args ) {
 		LuaString name = args.checkstring(1);
 		LuaValue preload = PACKAGE.get(_PRELOAD).checktable();
 		LuaValue val = preload.get(name);
@@ -333,7 +333,7 @@ public class PackageLib extends OneArgFunction {
 			val;
 	}
 
-	private LuaValue loader_Lua( Varargs args ) {
+	LuaValue loader_Lua( Varargs args ) {
 		String name = args.checkjstring(1);
 		InputStream is = null;
 		
@@ -384,7 +384,7 @@ public class PackageLib extends OneArgFunction {
 		return valueOf(sb.toString());
 	}
 	
-	private LuaValue loader_Java( Varargs args ) {
+	LuaValue loader_Java( Varargs args ) {
 		String name = args.checkjstring(1);
 		String classname = toClassname( name );
 		Class c = null;
