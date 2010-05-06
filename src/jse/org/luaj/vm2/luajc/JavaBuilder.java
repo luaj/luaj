@@ -582,6 +582,9 @@ public class JavaBuilder {
 		case LuaValue.TNIL: 
 			loadNil();
 			break;
+		case LuaValue.TBOOLEAN:
+			loadBoolean( value.toboolean() );
+			break;
 		case LuaValue.TNUMBER:
 		case LuaValue.TSTRING:
 			String name = constants.get(value);
