@@ -696,9 +696,12 @@ public class JavaBuilder {
 		int nc = p.code.length; 
 		for (int pc = 0; pc < nc; pc++) {
 			if (branches[pc] != null) {
-				if ( branchDestHandles[targets[pc]] == null )
-					 throw new IllegalArgumentException("no target at "+targets[pc]+" op="+Lua.GET_OPCODE(p.code[targets[pc]]));
-				branches[pc].setTarget(branchDestHandles[targets[pc]]);
+				int t=targets[pc];
+				while ( t<branchDestHandles.length && branchDestHandles[t] == null )
+					t++;
+				if ( t>= branchDestHandles.length )
+					 throw new IllegalArgumentException("no target at or after "+targets[pc]+" op="+Lua.GET_OPCODE(p.code[targets[pc]]));
+				branches[pc].setTarget(branchDestHandles[t]);
 			}
 		}
 	}
