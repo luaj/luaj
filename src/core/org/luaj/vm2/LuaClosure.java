@@ -431,13 +431,9 @@ public class LuaClosure extends LuaFunction {
 				}
 			}
 		} catch ( LuaError le ) {
-			if ( p.lineinfo!=null && p.lineinfo.length>=pc )
-				le.addTracebackLine(p.source+":"+p.lineinfo[pc-1]);
 			throw le;
 		} catch ( Throwable t ) {
 			LuaError le = new LuaError(t);
-			if ( p.lineinfo!=null && p.lineinfo.length>=pc )
-				le.addTracebackLine(p.source+":"+p.lineinfo[pc-1]);
 			throw le;
 		} finally {
 			LuaThread.onReturn();

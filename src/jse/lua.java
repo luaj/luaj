@@ -64,7 +64,7 @@ public class lua {
 	public static void main( String[] args ) throws IOException {
 
 		// new lua state
-		_G = JsePlatform.standardGlobals();
+		_G = JsePlatform.debugGlobals();
 		LuaC.install();
 		
 		// process args

@@ -351,7 +351,7 @@ public class LuaValue extends Varargs {
 				if ((!res.isnil()) || (tm = t.metatag(INDEX)).isnil())
 					return res;
 			} else if ((tm = t.metatag(INDEX)).isnil())
-				t.typerror("index");
+				t.typerror("table");
 			if (tm.isfunction())
 				return tm.call(t, key);
 			t = tm;

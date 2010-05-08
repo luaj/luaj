@@ -190,7 +190,7 @@ public class DebugLib extends VarArgFunction {
 			int stackpos = (closure.p.code[pc] >> 6) & 0xff; 
 			return getobjname(this, stackpos);
 		}
-		public Object sourceline() {
+		public String sourceline() {
 			if ( closure == null ) return func.tojstring();
 			String s = closure.p.source.tojstring();
 			int line = currentline();
@@ -209,7 +209,7 @@ public class DebugLib extends VarArgFunction {
 			return closure.p.getlocalname(index, pc);
 		}
 		public String tojstring() {
-			return sourceline()+": in "+tracename();
+			return tracename()+" "+sourceline();
 		}
 	}
 	
@@ -605,10 +605,10 @@ public class DebugLib extends VarArgFunction {
 	static LuaValue _traceback(Varargs args) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 
-		String message = args.optjstring(a++, "stack traceback:");
+		String message = args.optjstring(a++, null);
 		int level = args.optint(a++,1);
-		String tb = DebugLib.traceback(thread, level);
-		return valueOf(message+"\n"+tb);
+		String tb = DebugLib.traceback(thread, level-1);
+		return valueOf(message!=null? message+"\n"+tb: tb);
 	}
 	
 	// =================== public utilities ====================
@@ -622,26 +622,59 @@ public class DebugLib extends VarArgFunction {
 	
 	/**
 	 * Get a traceback for a particular thread.
-	 * @param thread
-	 * @param level
-	 * @return
+	 * @param thread LuaThread to provide stack trace for
+	 * @param level 0-based level to start reporting on
+	 * @return String containing the stack trace.
 	 */
 	public static String traceback(LuaThread thread, int level) {
 		StringBuffer sb = new StringBuffer();
 		DebugState ds = getDebugState(thread);
-		DebugInfo di;
-		for ( int i=level, n=ds.debugCalls; i<n; i++ ) {
-			di = ds.getDebugInfo(i);
-			if ( di != null ) {
-				sb.append( "\t" );
-				sb.append( di.tojstring() );
-				if ( i<n )
-					sb.append( "\n" );
+		sb.append( "stack traceback:" );
+		DebugInfo di = ds.getDebugInfo(level);
+		if ( di != null ) {
+			sb.append( "\n\t" );
+			sb.append( di.sourceline() );
+			sb.append( " in " );
+			while ( (di = ds.getDebugInfo(++level)) != null ) {
+				sb.append( di.tracename() );
+				sb.append( "\n\t" );
+				sb.append( di.sourceline() );
+				sb.append( " in " );
 			}
+			sb.append( "main chunk" );
 		}
 		return sb.toString();
 	}
-	
+
+
+	/**
+	 * Get file and line for the nearest calling closure.
+	 * @return String identifying the file and line of the nearest lua closure,
+	 * or the function name of the Java call if no closure is being called.
+	 */
+	public static String fileline() {
+		DebugState ds = getDebugState(LuaThread.getRunning());
+		DebugInfo di;
+		for ( int i=0, n=ds.debugCalls; i<n; i++ ) {
+			di = ds.getDebugInfo(i);
+			if ( di != null && di.func.isclosure() )
+				return di.sourceline();
+		}
+		return fileline(0);
+	}
+
+	/**
+	 * Get file and line for a particular level, even if it is a java function.
+	 * 
+	 * @param level 0-based index of level to get
+	 * @return
+	 */
+	public static String fileline(int level) {
+		DebugState ds = getDebugState(LuaThread.getRunning());
+		DebugInfo di = ds.getDebugInfo(level);
+		return di!=null? di.sourceline(): null;
+	}
+
 	// =======================================================
 	
 	static void lua_assert(boolean x) {

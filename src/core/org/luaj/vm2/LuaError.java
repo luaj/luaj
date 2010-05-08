@@ -23,6 +23,8 @@ package org.luaj.vm2;
 
 import java.util.Vector;
 
+import org.luaj.vm2.lib.DebugLib;
+
 /**
  * RuntimeException that is thrown and caught in response to a lua error. 
  * This error does not indicate any problem with the normal functioning 
@@ -34,7 +36,7 @@ public class LuaError extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
 	private LuaValue msgvalue = null;
-	private Vector traceback = null;
+	private String traceback;
 
 	/** Run the error hook if there is one */
 	private static String errorHook(String msg) {
@@ -61,9 +63,10 @@ public class LuaError extends RuntimeException {
 	 *  
 	 * All errors generated from lua code should throw LuaError(String) instead. 
 	 */
-	public LuaError(Throwable cause) {		
-		this( errorHook( "vm error: "+cause ) );
+	public LuaError(Throwable cause) {
+		super( errorHook( addFileLine( "vm error: "+cause ) ) );
 		this.cause = cause;
+		this.traceback = DebugLib.traceback(1);
 	}
 
 	/**
@@ -73,7 +76,8 @@ public class LuaError extends RuntimeException {
 	 * @param message message to supply
 	 */
 	public LuaError(String message) {
-		super( errorHook( message ) );
+		super( errorHook( addFileLine( message ) ) );
+		this.traceback = DebugLib.traceback(1);
 	}		
 
 	/**
@@ -82,38 +86,35 @@ public class LuaError extends RuntimeException {
 	 */
 	public LuaError(String message, int level) {
 		super( errorHook( addFileLine( message, level ) ) );
+		this.traceback = DebugLib.traceback(1);
 	}	
 
-	/** Add file and line info to a message */
+	/** Add file and line info to a message at a particular level */
 	private static String addFileLine( String message, int level ) {
-		if ( message == null ) return message;
-		LuaFunction f = LuaThread.getCallstackFunction(level);
-		return f!=null? f+": "+message: message;		
-	}
-	
-	/** Get the message, including source line info if there is any */
-	public String getMessage() {		
-		String msg = super.getMessage();
-		return msg!=null && traceback!=null? traceback.elementAt(0)+": "+msg: msg;
+		if ( message == null ) return null;
+		if ( level == 0 ) return message;
+		String fileline = DebugLib.fileline(level-1);
+		return fileline!=null? fileline+": "+message: message;		
 	}
 
-	/** Add a line of traceback info */
-	public void addTracebackLine( String line ) {
-		if ( traceback == null ) {
-			traceback = new Vector();
-		}
-		traceback.addElement( line );
+	/** Add file and line info for the nearest enclosing closure */
+	private static String addFileLine( String message ) {
+		if ( message == null ) return null;
+		String fileline = DebugLib.fileline();
+		return fileline!=null? fileline+": "+message: message;		
 	}
+	
+//	/** Get the message, including source line info if there is any */
+//	public String getMessage() {		
+//		String msg = super.getMessage();
+//		return msg!=null && traceback!=null? traceback+": "+msg: msg;
+//	}
 
 	/** Print the message and stack trace */
 	public void printStackTrace() {
 		System.out.println( toString() );
-		if ( traceback != null ) {
-			for ( int i=0,n=traceback.size(); i<n; i++ ) {
-				System.out.print("\t");
-				System.out.println(traceback.elementAt(i));
-			}
-		}
+		if ( traceback != null )
+			System.out.println( traceback );
 	}
 
 	/** 
