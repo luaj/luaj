@@ -174,7 +174,6 @@ local function fmterr(...)
 	if r then
 		return s
 	else
-		print( 'initial error -->'..tostring(s) )
 		s = string.gsub(s, "stdin:%d+:%s*", "")
 		return s
 	end
