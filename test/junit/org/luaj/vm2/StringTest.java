@@ -1,16 +1,21 @@
-package org.luaj.vm;
+package org.luaj.vm2;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-import org.luaj.vm.LString;
-
 import junit.framework.TestCase;
 
-public class LStringTest extends TestCase {
+import org.luaj.vm2.lib.JsePlatform;
+
+public class StringTest extends TestCase {
+
+	protected void setUp() throws Exception {
+		JsePlatform.standardGlobals();
+	}
+
 	public void testToInputStream() throws IOException {
-		LString str = new LString("Hello");
+		LuaString str = LuaString.valueOf("Hello");
 		
 		InputStream is = str.toInputStream();
 		
@@ -31,7 +36,7 @@ public class LStringTest extends TestCase {
 		is.reset();
 		assertEquals( 'e', is.read() );
 		
-		LString substr = str.substring( 1, 4 );
+		LuaString substr = str.substring( 1, 4 );
 		assertEquals( 3, substr.length() );
 		
 		is.close();
@@ -66,14 +71,14 @@ public class LStringTest extends TestCase {
 		for ( int i=4; i<0xffff; i+=4 ) {
 			char[] c = { (char) (i+0), (char) (i+1), (char) (i+2), (char) (i+3) };
 			String before = new String(c)+" "+i+"-"+(i+4);
-			LString ls = new LString(before);
-			String after = ls.toJavaString();
+			LuaString ls = LuaString.valueOf(before);
+			String after = ls.tojstring();
 			assertEquals( userFriendly( before ), userFriendly( after ) );
 		}
 		char[] c = { (char) (1), (char) (2), (char) (3) };
 		String before = new String(c)+" 1-3";
-		LString ls = new LString(before);
-		String after = ls.toJavaString();
+		LuaString ls = LuaString.valueOf(before);
+		String after = ls.tojstring();
 		assertEquals( userFriendly( before ), userFriendly( after ) );
 		
 	}
@@ -81,7 +86,7 @@ public class LStringTest extends TestCase {
 	public void testSpotCheckUtf8() throws UnsupportedEncodingException {
 		byte[] bytes = {(byte)194,(byte)160,(byte)194,(byte)161,(byte)194,(byte)162,(byte)194,(byte)163,(byte)194,(byte)164};
 		String expected = new String(bytes, "UTF8");
-		String actual = new LString(bytes).toJavaString();
+		String actual = LuaString.valueOf(bytes).tojstring();
 		char[] d = actual.toCharArray();
 		assertEquals(160, d[0]);
 		assertEquals(161, d[1]);
@@ -94,8 +99,8 @@ public class LStringTest extends TestCase {
 	public void testNullTerminated() {		
 		char[] c = { 'a', 'b', 'c', '\0', 'd', 'e', 'f' };
 		String before = new String(c);
-		LString ls = new LString(before);
-		String after = ls.toJavaString();
+		LuaString ls = LuaString.valueOf(before);
+		String after = ls.tojstring();
 		assertEquals( userFriendly( "abc" ), userFriendly( after ) );
 		
 	}

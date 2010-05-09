@@ -299,7 +299,7 @@ public class PackageLib extends OneArgFunction {
 		for ( int i=1; true; i++ ) {
 			LuaValue loader = tbl.get(i);
 			if ( loader.isnil() ) {
-				error( "module '"+name+"' not found: "+name+"\n"+sb );				
+				error( "module '"+name+"' not found: "+name+sb );				
 		    }
 						
 		    /* call loader with module name as argument */

@@ -44,6 +44,7 @@ public class AllTests {
 		vm.addTestSuite(UnaryBinaryOperatorsTest.class);
 		vm.addTestSuite(MetatableTest.class);
 		vm.addTestSuite(LuaOperationsTest.class);
+		vm.addTestSuite(StringTest.class);
 		suite.addTest(vm);
 
 		// table tests
@@ -67,11 +68,14 @@ public class AllTests {
 		// library tests
 		TestSuite lib = new TestSuite("Library Tests");
 		lib.addTestSuite(LuaJavaCoercionTest.class);
+		lib.addTestSuite(RequireClassTest.class);
 		suite.addTest(lib);
 		
 		// compatiblity tests
-		suite.addTest(CompatibiltyTest.suite());
-		suite.addTestSuite(Luajvm1CompatibilityTest.class);
+		TestSuite compat = (TestSuite) CompatibiltyTest.suite();
+		suite.addTest( compat );
+		compat.addTestSuite(ErrorsTest.class);
+		compat.addTestSuite(Luajvm1CompatibilityTest.class);
 		
 		// luajc regression tests
 		TestSuite luajc = new TestSuite("Java Compiler Tests");
