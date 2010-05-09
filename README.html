@@ -51,7 +51,7 @@ This is an alpha release for a luaj 2.0.  The most recent stable release is 1.0.
 <h2>Goals of Luaj</h2>
 Luaj is a lua interpreter based on the 5.1.x line of lua with the following goals in mind:
 <ul>
-<li>Java-centric implementation to take advantage of native Java features like garbage collection, and a robust class model.
+<li>Java-centric implementation built to use Java features like garbage collection, and class dispatch.
 <li>Lightweight to allow for small, fast interpretation of lua bytecode. 
 <li>Complete set of libraries and tools for integration into real-world projects.
 <li>Multi-platform to be able to run on JME, JSE, or JEE environments. 
@@ -63,16 +63,11 @@ In addition to the basic goals of luaj, version 2.0 is aimed
 at improving on the 1.0 vm in the following aspects. 
 <ul>
 <li>Support for compiling lua into Java off-line for JME, and at runtime for JSE.
-<li>Faster bytecode processing for interpreted code.
-<li>Tighter integration between lua and Java layers.
-<li>Stackless implementation of interpreted code.
-<li>Streamlined processing model with modular interpreter. 
+<li>Fastest possible bytecode processing for interpreted code.
 <li>More alignment with C API (see <a href="names.csv">names.csv</a> for details)
-<li>More uniform naming of classes. 
-<li>Better package layout. 
-<li>Better unit tests of core classes. 
+<li>Improved class and package naming conventions. 
+<li>Improved unit tests of core classes. 
 </ul>
-
 
 <h1>2 - <a name="2">Simple Examples</a></h1>
 
@@ -271,43 +266,54 @@ Libraries are coded to closely match the behavior specified in
 See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for details on the library API's
 
 <p>
-The following libraries are loaded by default in Java ME and Java SE platforms:
+The following libraries are loaded in py both <em>JsePlatform.standardGlobals()</em> and <em>JmePlatform.standardGlobals()</em>:
 <pre>
 	base
 	coroutine
+	io
 	math
+	os
 	package
 	string
 	table
 </pre>
 
 <p>
-The following libraries are optional, but preconfigured for some platforms and tools:
+The <em>JsePlatform.standardGlobals()</em> globals also include:
 <pre>           
-	io
-	os
-	debug     
 	luajava 
 </pre>
 
-<h2>Optional  Libraries</h2>
+<p>
+The <em>JsePlatform.debugGlobals()</em> and <em>JsePlatform.debugGlobals()</em> functions produce globals that include:
+<pre>           
+	debug
+</pre>
 
 <h3>I/O Library</h3>
-The Java SE platform contains the <em>io</em> library by default.
+The implementation of the <em>io</em> library differs by platform owing to platform limitations.
 
 <p>
-The Java ME platform has an optional, partial implementation of the <em>io</em> in 
+The <em>JmePlatform.standardGlobals()</em> instantiated the io library <em>io</em> in 
 <pre>
 	src/jme/org/luaj/vm2/lib/jme/JmeIoLib.java
 </pre>
 
+The <em>JsePlatform.standardGlobals()</em> includes support for random access and is in 
+<pre>
+	src/jse/org/luaj/vm2/lib/jse/JseIoLib.java
+</pre>
+
 <h3>OS Library</h3>
-A basic os library implementation for either Java ME or Java SE is provided ins 
+The implementation of the <em>os</em> library also differs per platform.
+
+<p>
+The basic <em>os</em> library implementation us used by <em>JmePlatform</em> and is in:
 <pre>
 	src/core/org/luaj/lib/OsLib.java
 </pre>
 
-A slightly more complete version for Java SE is in: 
+A richer version for use by <em>JsePlatform</em> is : 
 <pre>
 	src/jse/org/luaj/vm2/lib/jse/JseOsLib.java
 </pre>
@@ -317,31 +323,22 @@ and most time and date formatting, locales, and other features
 are not implemented.
 
 <h3>Debug Library</h3>
-The following library is optional:
-<pre>
-	debug
-</pre>
+The <em>debug</em> library is not included by default by 
+<em>JmePlatform.standardGlobals()</em> or <em>JsePlatform.standardGlobsls()</em> .
 
-Install from Java using:
-<pre>
-	_G.load( new DebugLib() );
-</pre>
+The functions <em>JmePlatform.debugGlobals()</em> and <em>JsePlatform.debugGlobsls()</em> 
+create globals that contain the debug library in addition to the other standard libraries. 
 
-or change startup code to use:
-<pre>
-	LuaValue _G = JsePlatform.debugGlobals();
-</pre>
-
-To install from lua use</em>:
+To install dynamically from lua use java-class-based require:</em>:
 <pre>
 	require 'org.luaj.vm2.lib.DebugLib'
 </pre>
 
-The <em>lua</em> command line utility includes the debug library by default.
+The <em>lua</em> command line utility includes the <em>debug</em> library by default.
 
 
 <h3>The Luajava Library</h3>
-The Java SE platform includes the <em>luajava</em> library, which simplifies binding to Java classes and methods.  
+The <em>JsePlatform.standardGlobals()</em> includes the <em>luajava</em> library, which simplifies binding to Java classes and methods.  
 It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
 
 <p>
@@ -363,6 +360,9 @@ See a longer sample in <em>src/test/res/swingapp.lua</em> for details, or try ru
 <p>
 The Java ME platform does not include this library, and it cannot be made to work because of the lack of a reflection API in Java SE. 
 
+<p>
+The <em>lua</em> connand line tool includes <em>luajava</em>. 
+
 <h1>5 - <a name="5">Building and Testing</a></h1>
 
 <h2>Building the jars</h2>
@@ -374,19 +374,29 @@ Other targets exist for creating distribution file an measuring code coverage of
 <h2>Unit tests</h2>
 
 <p>
-A large array of test scripts may be found in
-<pre>
-	test/lua/*.lua
-</pre>
-
-<p>
-A large set of JUnit tests are invoked by the JUnit 3 suite:
+The main luaj JUnit tests are organized into a JUnit 3 suite:
 <pre>
 	test/junit/org/luaj/vm2/AllTests.lua
 </pre>
 
 <p>
-These tests are used for to produce code coverage statistics using build-coverage.xml.
+Unit test scripts can be found in these locations
+<pre>
+	test/lua/*.lua
+	test/junit/org/luaj/vm2/compiler/lua5.1-tests.zip
+	test/junit/org/luaj/vm2/compiler/regressions.zip
+	test/junit/org/luaj/vm2/vm1/luajvm1-tests.zip
+</pre>
+
+<h2>Code coverage</h2>
+
+<p>
+A build script for running unit tests and producing code coverage statistics is in 
+<pre>
+	build-coverage.xml
+</pre>
+
+It relies on the cobertura code coverage library.
 
 <h1>6 - <a name="6">Downloads</a></h1>
 
