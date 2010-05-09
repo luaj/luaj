@@ -1,4 +1,4 @@
-package.path = "?.lua;src/test/errors/?.lua"
+package.path = "?.lua;test/lua/errors/?.lua"
 require 'args'
 
 -- arg types for basic library functions
@@ -6,8 +6,8 @@ require 'args'
 -- assert
 banner('assert')
 checkallpass('assert',{{true,123},anylua})
-checkallerrors('assert',{{nil,false},{nil}},'assertion failed')
-checkallerrors('assert',{{nil,false},{'message'}},'message')
+checkallerrors('assert',{{nil,false,n=2},{nil,n=1}},'assertion failed')
+checkallerrors('assert',{{nil,false,n=2},{'message'}},'message')
 
 -- collectgarbage
 banner('collectgarbage')
@@ -17,7 +17,7 @@ checkallerrors('collectgarbage',{notanil},'bad argument #1')
 -- dofile
 banner('dofile')
 checkallpass('dofile', {})
-checkallpass('dofile', {{'src/test/errors/args.lua'}})
+checkallpass('dofile', {{'test/lua/errors/args.lua'}})
 checkallerrors('dofile', {{'args.lua'}}, 'cannot open args.lua')
 checkallerrors('dofile', {nonstring}, 'bad argument #1')
 
@@ -51,7 +51,7 @@ checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument #2')
 banner('loadfile')
 checkallpass('loadfile', {})
 checkallpass('loadfile', {{'bogus'}})
-checkallpass('loadfile', {{'src/test/errors/args.lua'}})
+checkallpass('loadfile', {{'test/lua/errors/args.lua'}})
 checkallpass('loadfile', {{'args.lua'}})
 checkallerrors('loadfile', {nonstring}, 'bad argument #1')
 

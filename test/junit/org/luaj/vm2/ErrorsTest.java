@@ -21,6 +21,7 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
+import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.compiler.LuaC;
 
 
@@ -33,7 +34,7 @@ import org.luaj.vm2.compiler.LuaC;
 public class ErrorsTest extends ScriptDrivenTest {
 
 	private static final String dir = "test/lua/errors";
-	
+
 	public ErrorsTest() {
 		super(ScriptDrivenTest.PlatformType.JSE, dir);
 	}

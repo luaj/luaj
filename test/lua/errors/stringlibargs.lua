@@ -1,4 +1,4 @@
-package.path = "?.lua;src/test/errors/?.lua"
+package.path = "?.lua;test/lua/errors/?.lua"
 require 'args'
 
 -- arg type tests for string library functions

@@ -75,7 +75,7 @@ local pretty = {
 
 local function values(list)
 	local t = {}
-	for i=1,#list do
+	for i=1,(list.n or #list) do
 		local ai = list[i]
 		local fi = pretty[type(ai)]
 		t[i] = fi and fi(ai) or tostring(ai)
@@ -85,7 +85,7 @@ end
 
 local function types(list)
 	local t = {}
-	for i=1,#list do
+	for i=1,(list.n or #list) do
 		local ai = list[i]
 		t[i] = type(ai)
 	end
@@ -98,7 +98,7 @@ end
 
 local function dup(t)
 	local s = {}
-	for i=1,#t do
+	for i=1,(t.n or #t) do
 		s[i] = t[i]
 	end
 	return s
@@ -106,7 +106,7 @@ end
 
 local function split(t)
 	local s = {}
-	local n = #t
+	local n = (t.n or #t)
 	for i=1,n-1 do
 		s[i] = t[i]
 	end
@@ -116,13 +116,13 @@ end
 local function expand(argsets, typesets, ...)	
 	local n = typesets and #typesets or 0
 	if n <= 0 then
-		table.insert(argsets,{...})
+		table.insert(argsets,arg)
 		return argsets
 	end
 
 	local s,v = split(typesets)
-	for i=1,#v do
-		expand(argsets, s, v[i], ...)
+	for i=1,(v.n or #v) do
+		expand(argsets, s, v[i], unpack(arg,1,arg.n))
 	end
 	return argsets
 end
@@ -140,12 +140,7 @@ end
 local function invoke( name, arglist )
 	local s,c = pcall(lookup, name)
 	if not s then return s,c end
-	local f = function(...)
-		local u = unpack
-		local t = { c(...) }
-		return u(t)
-	end
-	return pcall(f, unpack(arglist))
+	return pcall(c, unpack(arglist,1,arglist.n or #arglist))
 end
 
 -- messages, banners
