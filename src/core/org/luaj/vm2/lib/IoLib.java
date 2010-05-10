@@ -317,7 +317,7 @@ public class IoLib extends OneArgFunction {
 
 	//	io.read(...) -> (...)
 	public Varargs _io_read(Varargs args) throws IOException {
-		checkopen(infile);
+		checkopen(input());
 		return ioread(infile,args);
 	}
 
@@ -494,15 +494,21 @@ public class IoLib extends OneArgFunction {
 			return NIL;
 		return LuaString.valueOf(b, 0, r);
 	}
-	public static LuaValue freaduntil(File f,int delim) throws IOException {
+	public static LuaValue freaduntil(File f,boolean lineonly) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int c;
 		try {
-			while ( true ) { 
-				c = f.read();
-				if ( c < 0 || c == delim )
-					break;
-				baos.write(c);
+			if ( lineonly ) {
+				loop: while ( (c = f.read()) > 0 ) { 
+					switch ( c ) {
+					case '\r': break;
+					case '\n': break loop;
+					default: baos.write(c); break;
+					}
+				}
+			} else {
+				while ( (c = f.read()) > 0 ) 
+					baos.write(c);
 			}
 		} catch ( EOFException e ) {
 			c = -1;
@@ -512,14 +518,14 @@ public class IoLib extends OneArgFunction {
 			(LuaValue) LuaString.valueOf(baos.toByteArray());
 	}
 	public static LuaValue freadline(File f) throws IOException {
-		return freaduntil(f,'\n');
+		return freaduntil(f,true);
 	}
 	public static LuaValue freadall(File f) throws IOException {
 		int n = f.remaining();
 		if ( n >= 0 ) {
 			return freadbytes(f, n);
 		} else {
-			return freaduntil(f,-1);
+			return freaduntil(f,false);
 		}
 	}
 	public static double freadnumber(File f) throws IOException {
