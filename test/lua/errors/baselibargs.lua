@@ -12,7 +12,8 @@ checkallerrors('assert',{{nil,false,n=2},{'message'}},'message')
 -- collectgarbage
 banner('collectgarbage')
 checkallpass('collectgarbage',{{'collect','count'}},true)
-checkallerrors('collectgarbage',{notanil},'bad argument #1')
+checkallerrors('collectgarbage',{{astring, anumber}},'bad argument #1')
+checkallerrors('collectgarbage',{{aboolean, atable, afunction, athread}},'string expected')
 
 -- dofile
 banner('dofile')

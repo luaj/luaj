@@ -153,19 +153,20 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			switch ( opcode ) {
 			case 0: // "collectgarbage", // ( opt [,arg] ) -> value
-				String s = arg1.optjstring("collect");
+				String s = arg1.checkjstring();
 				int result = 0;
 				if ( "collect".equals(s) ) {
 					System.gc();
 					return ZERO;
-				}
-				else if ( "count".equals(s) ) {
+				} else if ( "count".equals(s) ) {
 					Runtime rt = Runtime.getRuntime();
 					long used = rt.totalMemory() - rt.freeMemory();
 					return valueOf(used/1024.);
 				} else if ( "step".equals(s) ) {
 					System.gc();
 					return LuaValue.TRUE;
+				} else {
+					this.argerror(1, "gc op");
 				}
 				return NIL;
 			case 1: // "error", // ( message [,level] ) -> ERR
