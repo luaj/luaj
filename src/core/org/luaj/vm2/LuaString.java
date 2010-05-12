@@ -388,7 +388,7 @@ public class LuaString extends LuaValue {
 	public static String decodeAsUtf8(byte[] bytes, int offset, int length) {
 		int i,j,n,b;
 		for ( i=offset,j=offset+length,n=0; i<j; ++n ) {
-			switch ( 0xC0 & bytes[i++] ) {
+			switch ( 0xE0 & bytes[i++] ) {
 			case 0xE0: ++i;
 			case 0xC0: ++i;
 			}

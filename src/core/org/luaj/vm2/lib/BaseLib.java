@@ -276,7 +276,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					return valueOf(n);
 				int i = args.checkint(1);
 				if ( i == 0 || i < -n )
-					typerror(1,"index out of range");
+					argerror(1,"index out of range");
 				return args.subargs(i<0? n+i+2: i+1);
 			}
 			case 9: // "unpack", // (list [,i [,j]]) -> result1, ...

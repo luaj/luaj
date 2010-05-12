@@ -118,40 +118,40 @@ public class LuaValue extends Varargs {
 	public LuaValue    tostring()     { return NIL; }
 
 	// optional argument conversions
-	public boolean     optboolean(boolean defval)          { typerror("boolean");   return false; }
-	public LuaClosure  optclosure(LuaClosure defval)       { typerror("closure");   return null;  }
-	public double      optdouble(double defval)            { typerror("double");    return 0;     }
-	public LuaFunction optfunction(LuaFunction defval)     { typerror("function");  return null;  }
-	public int         optint(int defval)                  { typerror("int");       return 0;     }
-	public LuaInteger  optinteger(LuaInteger defval)       { typerror("integer");   return null;  }
-	public long        optlong(long defval)                { typerror("long");      return 0;     }
-	public LuaNumber   optnumber(LuaNumber defval)         { typerror("number");    return null;  }
-	public String      optjstring(String defval)           { typerror("String");    return null;  }
-	public LuaString   optstring(LuaString defval)         { typerror("string");    return null;  }
-	public LuaTable    opttable(LuaTable defval)           { typerror("table");     return null;  }
-	public LuaThread   optthread(LuaThread defval)         { typerror("thread");    return null;  }
-	public Object      optuserdata(Object defval)          { typerror("object");    return null;  }
-	public Object      optuserdata(Class c, Object defval) { typerror(c.getName()); return null;  }
+	public boolean     optboolean(boolean defval)          { argerror("boolean");   return false; }
+	public LuaClosure  optclosure(LuaClosure defval)       { argerror("closure");   return null;  }
+	public double      optdouble(double defval)            { argerror("double");    return 0;     }
+	public LuaFunction optfunction(LuaFunction defval)     { argerror("function");  return null;  }
+	public int         optint(int defval)                  { argerror("int");       return 0;     }
+	public LuaInteger  optinteger(LuaInteger defval)       { argerror("integer");   return null;  }
+	public long        optlong(long defval)                { argerror("long");      return 0;     }
+	public LuaNumber   optnumber(LuaNumber defval)         { argerror("number");    return null;  }
+	public String      optjstring(String defval)           { argerror("String");    return null;  }
+	public LuaString   optstring(LuaString defval)         { argerror("string");    return null;  }
+	public LuaTable    opttable(LuaTable defval)           { argerror("table");     return null;  }
+	public LuaThread   optthread(LuaThread defval)         { argerror("thread");    return null;  }
+	public Object      optuserdata(Object defval)          { argerror("object");    return null;  }
+	public Object      optuserdata(Class c, Object defval) { argerror(c.getName()); return null;  }
 	public LuaValue    optvalue(LuaValue defval)           { return this; }
 
 	/** @deprecated - use optjstring() instead */
 	public String      optString(String defval)            { return optjstring(defval);  }
 
 	// argument type checks
-	public boolean     checkboolean()          { typerror("boolean");   return false; }
-	public LuaClosure  checkclosure()          { typerror("closure");   return null;  }
-	public double      checkdouble()           { typerror("double");    return 0; }
-	public LuaValue    checkfunction()         { typerror("function");  return null; }	
-	public int         checkint()              { typerror("int");       return 0; }
-	public LuaInteger  checkinteger()          { typerror("integer");   return null; }
-	public long        checklong()             { typerror("long");      return 0; }
-	public LuaNumber   checknumber()           { typerror("number");    return null; }
-	public String      checkjstring()          { typerror("string");    return null; }
-	public LuaString   checkstring()           { typerror("string");    return null; }
-	public LuaTable    checktable()            { typerror("table");     return null; }	
-	public LuaThread   checkthread()           { typerror("thread");    return null; }
-	public Object      checkuserdata()         { typerror("userdata");  return null; }
-	public Object      checkuserdata(Class c)  { typerror("userdata");  return null; }
+	public boolean     checkboolean()          { argerror("boolean");   return false; }
+	public LuaClosure  checkclosure()          { argerror("closure");   return null;  }
+	public double      checkdouble()           { argerror("double");    return 0; }
+	public LuaValue    checkfunction()         { argerror("function");  return null; }	
+	public int         checkint()              { argerror("int");       return 0; }
+	public LuaInteger  checkinteger()          { argerror("integer");   return null; }
+	public long        checklong()             { argerror("long");      return 0; }
+	public LuaNumber   checknumber()           { argerror("number");    return null; }
+	public String      checkjstring()          { argerror("string");    return null; }
+	public LuaString   checkstring()           { argerror("string");    return null; }
+	public LuaTable    checktable()            { argerror("table");     return null; }	
+	public LuaThread   checkthread()           { argerror("thread");    return null; }
+	public Object      checkuserdata()         { argerror("userdata");  return null; }
+	public Object      checkuserdata(Class c)  { argerror("userdata");  return null; }
 	public LuaValue    checknotnil()           { return this; }
 	public LuaValue    checkvalidkey()         { return this; }
 
@@ -162,10 +162,12 @@ public class LuaValue extends Varargs {
 	// errors
 	public static LuaValue error(String message) { throw new LuaError(message); }
 	public static void assert_(boolean b,String msg) { if(!b) throw new LuaError(msg); }
+	protected LuaValue argerror(String expected) { throw new LuaError("bad argument: "+expected+" expected, got "+typename()); }
 	public static void argerror(int iarg,String msg) { throw new LuaError("bad argument #"+iarg+": "+msg); }
-	protected LuaValue typerror(String expected) { throw new LuaError("bad argument: "+expected+" expected, got "+typename()); }
-	protected LuaValue typerror(int iarg, String expected) { throw new LuaError("bad argument #"+iarg+": "+expected+" expected, got "+typename()); }
+	protected LuaValue typerror(String expected) { throw new LuaError(expected+" expected, got "+typename()); }
 	protected LuaValue unimplemented(String fun) { throw new LuaError("'"+fun+"' not implemented for "+typename()); }
+	protected LuaValue callerror() { throw new LuaError("attempt to call "+typename()); }
+	protected LuaValue lenerror() { throw new LuaError("attempt to get length of "+typename()); }
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on "+typename()); }
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
 	
@@ -208,10 +210,10 @@ public class LuaValue extends Varargs {
 	public void setfenv(LuaValue env) { typerror("function or thread"); }
 		
 	// function calls
-	public LuaValue call() { return unimplemented("call"); }
-	public LuaValue call(LuaValue arg) { return unimplemented("call"); }
-	public LuaValue call(LuaValue arg1, LuaValue arg2) { return unimplemented("call"); }
-	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return unimplemented("call"); }
+	public LuaValue call() { return callerror(); }
+	public LuaValue call(LuaValue arg) { return callerror(); }
+	public LuaValue call(LuaValue arg1, LuaValue arg2) { return callerror(); }
+	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return callerror(); }
 	public LuaValue method(String name) { return this.get(name).call(this); }
 	public LuaValue method(LuaValue name) { return this.get(name).call(this); }
 	public LuaValue method(String name, LuaValue arg) { return this.get(name).call(this,arg); }
@@ -219,7 +221,7 @@ public class LuaValue extends Varargs {
 	public LuaValue method(String name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public LuaValue method(LuaValue name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public Varargs invoke() { return invoke(NONE); }
-	public Varargs invoke(Varargs args) { unimplemented("call"); return null; }
+	public Varargs invoke(Varargs args) { return callerror(); }
 	public Varargs invoke(LuaValue arg,Varargs varargs) { return invoke(varargsOf(arg,varargs)); }
 	public Varargs invoke(LuaValue arg1,LuaValue arg2,Varargs varargs) { return invoke(varargsOf(arg1,arg2,varargs)); }
 	public Varargs invoke(LuaValue[] args) { return invoke(varargsOf(args)); }
@@ -232,8 +234,8 @@ public class LuaValue extends Varargs {
 	// unary operators
 	public LuaValue not()  { return FALSE;  }
 	public LuaValue neg()  { return aritherror("neg");  }
-	public LuaValue len()  { return typerror("len");  }
-	public int length() { typerror("len"); return 0; }
+	public LuaValue len()  { return lenerror(); }
+	public int length() { error("attempt to get length of "+typename()); return 0; }
 	public LuaValue getn() { return typerror("getn"); }
 	
 	// object equality, used for key comparison
@@ -287,8 +289,8 @@ public class LuaValue extends Varargs {
 	public boolean gteq_b( double rhs )    { aritherror("gteq"); return false; }
 
 	// string comparison
-	public int strcmp( LuaValue rhs )         { typerror("attempt to compare "+typename()); return 0; }
-	public int strcmp( LuaString rhs )      { typerror("attempt to compare "+typename()); return 0; }
+	public int strcmp( LuaValue rhs )         { error("attempt to compare "+typename()); return 0; }
+	public int strcmp( LuaString rhs )      { error("attempt to compare "+typename()); return 0; }
 
 	// concatenation
 	public LuaValue   concat( LuaValue rhs )      { return valueOf(concat_s(rhs)); }

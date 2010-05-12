@@ -444,7 +444,7 @@ public class IoLib extends OneArgFunction {
 				else if ( "*l".equals(format) )
 					v[i] = freadline(f);
 				else
-					typerror( i+1, "(invalid format)" );
+					argerror( i+1, "(invalid format)" );
 			}
 			if ( v[i].isnil() )
 				return i==0? NIL: varargsOf(v,0,i);

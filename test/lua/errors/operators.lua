@@ -9,7 +9,7 @@ require 'args'
 banner('unary -')
 negative = function(a) return - a end
 checkallpass('negative',{somenumber})
-checkallerrors('negative',{notanumber},'attempt to perform arithmetic on')
+checkallerrors('negative',{notanumber},'attempt to perform arithmetic')
 
 -- length
 banner('#')
@@ -21,7 +21,7 @@ checkallerrors('lengthop',{notatable},'attempt to get length of')
 banner('not')
 notop = function(a) return not a end
 checkallpass('notop',{somenumber})
-checkallerrors('notop',{notanumber},'attempt to perform arithmetic on')
+checkallpass('notop',{notanumber})
 
 -- function call
 banner( '()' )
