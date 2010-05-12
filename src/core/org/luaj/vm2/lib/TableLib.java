@@ -21,6 +21,9 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm.LNil;
+import org.luaj.vm.LTable;
+import org.luaj.vm.LValue;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -74,7 +77,9 @@ public class TableLib extends OneArgFunction {
 				return NONE;
 			}
 			case 3: { // "sort" (table [, comp]) -> void
-				args.checktable(1).sort( args.optvalue(2,NIL) );
+				LuaTable table = args.checktable(1);
+				LuaValue compare = (args.isnoneornil(2)? NIL: args.checkfunction(2));
+				table.sort( compare );
 				return NONE;
 			}
 			case 4: { // (table, func) -> void
