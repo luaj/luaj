@@ -127,7 +127,7 @@ public class StringLib extends OneArgFunction {
 		byte[] bytes = new byte[n];
 		for ( int i=0, a=1; i<n; i++, a++ ) {
 			int c = args.checkint(a);
-			if (c<0 || c>=256) error(a, "invalid value");
+			if (c<0 || c>=256) argerror(a, "invalid value");
 			bytes[i] = (byte) c;
 		}
 		return LuaString.valueOf( bytes );

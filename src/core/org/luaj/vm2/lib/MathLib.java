@@ -54,12 +54,12 @@ public class MathLib extends OneArgFunction {
 			"exp", "floor", "rad", "sin", 
 			"sqrt", "tan" } );
 		bind( t, MathLib2.class, new String[] {
-			"fmod", "ldexp", "pow", "random", } );
+			"fmod", "ldexp", "pow", } );
 		bind( t, MathLibV.class, new String[] {
 			"frexp", "max", "min", "modf", 
-			"randomseed" } );
-		((MathLib2) t.get("random"    )).mathlib = this;
+			"randomseed", "random", } );
 		((MathLibV) t.get("randomseed")).mathlib = this;
+		((MathLibV) t.get("random"    )).mathlib = this;
 		env.set("math", t);
 		return t;
 	}
@@ -67,16 +67,16 @@ public class MathLib extends OneArgFunction {
 	public static final class MathLib1 extends OneArgFunction {
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) {
-			case 0: return valueOf(Math.abs(arg.todouble())); 
-			case 1: return valueOf(Math.ceil(arg.todouble())); 
-			case 2: return valueOf(Math.cos(arg.todouble())); 
-			case 3: return valueOf(Math.toDegrees(arg.todouble())); 
-			case 4: return dpow(Math.E,arg.todouble());
-			case 5: return valueOf(Math.floor(arg.todouble()));
-			case 6: return valueOf(Math.toRadians(arg.todouble())); 
-			case 7: return valueOf(Math.sin(arg.todouble())); 
-			case 8: return valueOf(Math.sqrt(arg.todouble())); 
-			case 9: return valueOf(Math.tan(arg.todouble())); 
+			case 0: return valueOf(Math.abs(arg.checkdouble())); 
+			case 1: return valueOf(Math.ceil(arg.checkdouble())); 
+			case 2: return valueOf(Math.cos(arg.checkdouble())); 
+			case 3: return valueOf(Math.toDegrees(arg.checkdouble())); 
+			case 4: return dpow(Math.E,arg.checkdouble());
+			case 5: return valueOf(Math.floor(arg.checkdouble()));
+			case 6: return valueOf(Math.toRadians(arg.checkdouble())); 
+			case 7: return valueOf(Math.sin(arg.checkdouble())); 
+			case 8: return valueOf(Math.sqrt(arg.checkdouble())); 
+			case 9: return valueOf(Math.tan(arg.checkdouble())); 
 			}
 			return NIL;
 		}
@@ -100,18 +100,7 @@ public class MathLib extends OneArgFunction {
 				return valueOf(x * Double.longBitsToDouble(e << 52));
 			}
 			case 2: { // pow
-				return dpow(arg1.todouble(), arg2.todouble());
-			}
-			case 3: { // random
-				if ( mathlib.random == null )
-					mathlib.random = new Random();
-				if ( arg1.isnil() )
-					return valueOf( mathlib.random.nextDouble() );
-				int m = arg1.toint(); 
-				if ( arg2.isnil() )
-					return valueOf( 1 + mathlib.random.nextInt(m) );
-				else
-					return valueOf( m + mathlib.random.nextInt(arg2.toint()-m) );
+				return dpow(arg1.checkdouble(), arg2.checkdouble());
 			}
 			}
 			return NIL;
@@ -189,6 +178,26 @@ public class MathLib extends OneArgFunction {
 				long seed = args.checklong(1);
 				mathlib.random = new Random(seed);
 				return NONE;
+			}
+			case 5: { // random
+				if ( mathlib.random == null )
+					mathlib.random = new Random();
+				
+				switch ( args.narg() ) {
+				case 0:
+					return valueOf( mathlib.random.nextDouble() );
+				case 1: {
+					int m = args.checkint(1);
+					if (m<1) argerror(1, "interval is empty");
+					return valueOf( 1 + mathlib.random.nextInt(m) );
+				}
+				default: {
+					int m = args.checkint(1);
+					int n = args.checkint(2);
+					if (n<m) argerror(2, "interval is empty");
+					return valueOf( m + mathlib.random.nextInt(n+1-m) );
+				}
+				}
 			}
 			}
 			return NONE;

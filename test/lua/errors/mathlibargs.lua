@@ -29,7 +29,7 @@ for i,v in ipairs(singleargfunctions) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somenumber})
-	checkallerrors(funcname,{notanumber},'bad argument #1')
+	checkallerrors(funcname,{notanumber},'bad argument')
 end	
 
 -- single argument, positive domain tests
@@ -37,7 +37,7 @@ for i,v in ipairs(singleargposdomain) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somepositive})
-	checkallerrors(funcname,{notanumber},'bad argument #1')
+	checkallerrors(funcname,{notanumber},'bad argument')
 end	
 
 -- two-argument tests
@@ -45,11 +45,11 @@ for i,v in ipairs(twoargfunctions) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somenumber,somenumber})
-	checkallerrors(funcname,{},'bad argument #')
-	checkallerrors(funcname,{notanumber},'bad argument #')
-	checkallerrors(funcname,{notanumber,somenumber},'bad argument #1')
-	checkallerrors(funcname,{somenumber},'bad argument #2')
-	checkallerrors(funcname,{somenumber,notanumber},'bad argument #2')
+	checkallerrors(funcname,{},'bad argument')
+	checkallerrors(funcname,{notanumber},'bad argument')
+	checkallerrors(funcname,{notanumber,somenumber},'bad argument')
+	checkallerrors(funcname,{somenumber},'bad argument')
+	checkallerrors(funcname,{somenumber,notanumber},'bad argument')
 end
 
 -- two-argument, positive domain tests
@@ -57,28 +57,28 @@ for i,v in ipairs(twoargsposdomain) do
 	local funcname = 'math.'..v
 	banner(funcname)
 	checkallpass(funcname,{somepositive,somenumber})
-	checkallerrors(funcname,{},'bad argument #')
-	checkallerrors(funcname,{notanumber},'bad argument #')
-	checkallerrors(funcname,{notanumber,somenumber},'bad argument #1')
-	checkallerrors(funcname,{somenumber},'bad argument #2')
-	checkallerrors(funcname,{somenumber,notanumber},'bad argument #2')
+	checkallerrors(funcname,{},'bad argument')
+	checkallerrors(funcname,{notanumber},'bad argument')
+	checkallerrors(funcname,{notanumber,somenumber},'bad argument')
+	checkallerrors(funcname,{somenumber},'bad argument')
+	checkallerrors(funcname,{somenumber,notanumber},'bad argument')
 end
 
 -- math.max
 banner('math.max')
 checkallpass('math.max',{somenumber})
 checkallpass('math.max',{somenumber,somenumber})
-checkallerrors('math.max',{},'bad argument #1')
-checkallerrors('math.max',{nonnumber},'bad argument #1')
-checkallerrors('math.max',{somenumber,nonnumber},'bad argument #2')
+checkallerrors('math.max',{},'bad argument')
+checkallerrors('math.max',{nonnumber},'bad argument')
+checkallerrors('math.max',{somenumber,nonnumber},'bad argument')
 
 -- math.min
 banner('math.min')
 checkallpass('math.min',{somenumber})
 checkallpass('math.min',{somenumber,somenumber})
-checkallerrors('math.min',{},'bad argument #1')
-checkallerrors('math.min',{nonnumber},'bad argument #1')
-checkallerrors('math.min',{somenumber,nonnumber},'bad argument #2')
+checkallerrors('math.min',{},'bad argument')
+checkallerrors('math.min',{nonnumber},'bad argument')
+checkallerrors('math.min',{somenumber,nonnumber},'bad argument')
 
 -- math.random
 local somem = {3,4.5,'6.7'}
@@ -91,8 +91,8 @@ checkallpass('math.random',{somem,somen},true)
 checkallpass('math.random',{{-4,-5.6,'-7','-8.9'},{-1,100,23.45,'-1.23'}},true)
 checkallerrors('math.random',{{-4,-5.6,'-7','-8.9'}},'interval is empty')
 checkallerrors('math.random',{somen,somem},'interval is empty')
-checkallerrors('math.random',{notamn,somen},'bad argument #1')
-checkallerrors('math.random',{somem,notamn},'bad argument #2')
+checkallerrors('math.random',{notamn,somen},'bad argument')
+checkallerrors('math.random',{somem,notamn},'bad argument')
 
 -- math.ldexp
 local somee = {-3,0,3,9.10,'12.34'}
@@ -101,6 +101,6 @@ banner('math.ldexp')
 checkallpass('math.ldexp',{somenumber,somee})
 checkallerrors('math.ldexp',{},'bad argument')
 checkallerrors('math.ldexp',{notanumber},'bad argument')
-checkallerrors('math.ldexp',{notanumber,somee},'bad argument #1')
-checkallerrors('math.ldexp',{somenumber},'bad argument #2')
-checkallerrors('math.ldexp',{somenumber,notae},'bad argument #2')
+checkallerrors('math.ldexp',{notanumber,somee},'bad argument')
+checkallerrors('math.ldexp',{somenumber},'bad argument')
+checkallerrors('math.ldexp',{somenumber,notae},'bad argument')

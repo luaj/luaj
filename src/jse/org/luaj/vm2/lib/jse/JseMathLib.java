@@ -50,15 +50,15 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	public static final class JseMathLib1 extends OneArgFunction {
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) {
-			case 0: return valueOf(Math.acos(arg.todouble())); 
-			case 1: return valueOf(Math.asin(arg.todouble())); 
-			case 2: return valueOf(Math.atan(arg.todouble())); 
-			case 3: return valueOf(Math.cosh(arg.todouble())); 
-			case 4: return valueOf(Math.exp(arg.todouble())); 
-			case 5: return valueOf(Math.log(arg.todouble())); 
-			case 6: return valueOf(Math.log10(arg.todouble())); 
-			case 7: return valueOf(Math.sinh(arg.todouble())); 
-			case 8: return valueOf(Math.tanh(arg.todouble())); 
+			case 0: return valueOf(Math.acos(arg.checkdouble())); 
+			case 1: return valueOf(Math.asin(arg.checkdouble())); 
+			case 2: return valueOf(Math.atan(arg.checkdouble())); 
+			case 3: return valueOf(Math.cosh(arg.checkdouble())); 
+			case 4: return valueOf(Math.exp(arg.checkdouble())); 
+			case 5: return valueOf(Math.log(arg.checkdouble())); 
+			case 6: return valueOf(Math.log10(arg.checkdouble())); 
+			case 7: return valueOf(Math.sinh(arg.checkdouble())); 
+			case 8: return valueOf(Math.tanh(arg.checkdouble())); 
 			}
 			return NIL;
 		}
@@ -67,8 +67,8 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	public static final class JseMathLib2 extends TwoArgFunction {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			switch ( opcode ) {
-			case 0: return valueOf(Math.atan2(arg1.todouble(), arg2.todouble()));
-			case 1: return valueOf(Math.pow(arg1.todouble(), arg2.todouble()));
+			case 0: return valueOf(Math.atan2(arg1.checkdouble(), arg2.checkdouble()));
+			case 1: return valueOf(Math.pow(arg1.checkdouble(), arg2.checkdouble()));
 			}
 			return NIL;
 		}
