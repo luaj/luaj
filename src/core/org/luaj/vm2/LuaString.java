@@ -180,7 +180,7 @@ public class LuaString extends LuaValue {
 	public LuaNumber checknumber() {
 		LuaValue n = tonumber(10);
 		if ( ! n.isnumber() )
-			typerror("number");
+			argerror("number");
 		return (LuaNumber) n;
 	}
 	public LuaValue tonumber() {

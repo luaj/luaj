@@ -12,7 +12,7 @@ checkallerrors('coroutine.create',{notafunction},'bad argument')
 banner('coroutine.resume')
 local co = coroutine.create(function() while true do coroutine.yield() end end)
 checkallpass('coroutine.resume',{{co},anylua})
-checkallerrors('coroutine.resume',{notathread},'bad argument #1')
+checkallerrors('coroutine.resume',{notathread},'bad argument')
 
 -- coroutine.running
 banner('coroutine.running')
@@ -21,12 +21,12 @@ checkallpass('coroutine.running',{anylua})
 -- coroutine.status
 banner('coroutine.status')
 checkallpass('coroutine.status',{{co}})
-checkallerrors('coroutine.status',{notathread},'bad argument #1')
+checkallerrors('coroutine.status',{notathread},'bad argument')
 
 -- coroutine.wrap
 banner('coroutine.wrap')
 checkallpass('coroutine.wrap',{somefunction})
-checkallerrors('coroutine.wrap',{notafunction},'bad argument #1')
+checkallerrors('coroutine.wrap',{notafunction},'bad argument')
 
 -- coroutine.yield
 banner('coroutine.yield')
