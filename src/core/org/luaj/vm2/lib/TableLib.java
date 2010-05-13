@@ -21,9 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-import org.luaj.vm.LNil;
-import org.luaj.vm.LTable;
-import org.luaj.vm.LValue;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
