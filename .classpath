@@ -14,6 +14,5 @@
 	<classpathentry kind="var" path="WTK_HOME/lib/cldcapi11.jar"/>
 	<classpathentry kind="var" path="WTK_HOME/lib/midpapi20.jar"/>
 	<classpathentry kind="lib" path="lib/bcel-5.2.jar"/>
-	<classpathentry kind="lib" path="lib/luaj-j2se-1.0.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
