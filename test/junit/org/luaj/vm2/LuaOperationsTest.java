@@ -196,7 +196,6 @@ public class LuaOperationsTest extends TestCase {
 		LuaValue aaa = LuaValue.valueOf("aaa");
 		LuaValue eee = LuaValue.valueOf("eee");
 		LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
-		LuaC.install();
 		LuaTable newenv = LuaValue.tableOf( new LuaValue[] { 
 				LuaValue.valueOf("a"), LuaValue.valueOf("aaa"), 
 				LuaValue.valueOf("b"), LuaValue.valueOf("bbb"), } );

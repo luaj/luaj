@@ -21,6 +21,7 @@
  ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.lib.jme.JmeIoLib;
@@ -43,6 +44,7 @@ public class JmePlatform {
 		_G.load(new CoroutineLib());
 		_G.load(new JmeIoLib());
 		LuaThread.setGlobals(_G);
+		LuaC.install();
 		return _G;		
 	}
 	

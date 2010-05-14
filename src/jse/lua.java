@@ -32,7 +32,6 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
@@ -65,7 +64,6 @@ public class lua {
 
 		// new lua state
 		_G = JsePlatform.debugGlobals();
-		LuaC.install();
 		
 		// process args
 		boolean interactive = (args.length == 0);

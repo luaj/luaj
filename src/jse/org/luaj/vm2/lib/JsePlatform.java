@@ -21,6 +21,7 @@
  ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -48,6 +49,7 @@ public class JsePlatform {
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
 		LuaThread.setGlobals(_G);
+		LuaC.install();
 		return _G;		
 	}
 	

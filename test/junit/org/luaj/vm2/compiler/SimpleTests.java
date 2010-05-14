@@ -22,7 +22,6 @@ public class SimpleTests extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         _G = JsePlatform.standardGlobals();
-        LuaC.install();
     }
 
     private void doTest( String script ) {

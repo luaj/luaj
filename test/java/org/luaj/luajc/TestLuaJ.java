@@ -25,10 +25,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.luaj.vm2.LuaClosure;
-import org.luaj.vm2.Print;
-import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
+import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.JsePlatform;
 
@@ -53,7 +53,6 @@ public class TestLuaJ {
 		
 		// create an environment to run in
 		LuaTable _G = JsePlatform.standardGlobals();
-		LuaC.install();
 		
 		// compile into a chunk, or load as a class
 		InputStream is =  new ByteArrayInputStream( script.getBytes() );

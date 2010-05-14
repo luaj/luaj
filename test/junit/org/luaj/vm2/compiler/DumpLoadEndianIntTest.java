@@ -32,7 +32,6 @@ public class DumpLoadEndianIntTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         _G = JsePlatform.standardGlobals();
-        LuaC.install();
         DumpState.ALLOW_INTEGER_CASTING = false;
     }
 

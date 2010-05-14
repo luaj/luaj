@@ -110,7 +110,6 @@ public class Luajvm1CompatibilityTest extends TestCase {
 					}
 				}
 			});
-			org.luaj.vm2.compiler.LuaC.install();
 			org.luaj.vm2.lib.BaseLib.instance.STDOUT = printStream;
 			_G.get("require").call(LuaValue.valueOf(test));
 			printStream.flush();

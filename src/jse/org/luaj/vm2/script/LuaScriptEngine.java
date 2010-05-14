@@ -63,10 +63,6 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
     private static final String __ARGV__             = "arg";
     private static final String __FILENAME__         = "?";
     
-    static {
-    	LuaC.install();
-    }
-
     private static final ScriptEngineFactory myFactory = new LuaScriptEngineFactory();
     
     private ScriptContext defaultContext;

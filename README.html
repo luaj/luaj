@@ -125,10 +125,8 @@ The following pattern is used within Java SE
 <pre>
 	import org.luaj.vm2.*;
 	import org.luaj.vm2.lib.*;
-	import org.luaj.vm2.compiler.LuaC;
 
 	String script = "examples/lua/hello.lua";
-	LuaC.install();
 	LuaValue _G = JsePlatform.standardGlobals();
 	_G.get("dofile").call( LuaValue.valueOf(script) );
 </pre>
@@ -150,10 +148,8 @@ The for MIDlets the <em>JmePlatform</em> is used instead:
 <pre>
 	import org.luaj.vm2.*;
 	import org.luaj.vm2.lib.*;
-	import org.luaj.vm2.compiler.LuaC;
 
 	String script = "examples/lua/hello.lua";
-	LuaC.install();
 	LuaValue _G = JmePlatform.standardGlobals();
 	_G.get("dofile").call( LuaValue.valueOf(script) );
 </pre>
@@ -180,25 +176,27 @@ An ant script to build and run the midlet is in
 <p>
 You must install the wireless toolkit and define <em>WTK_HOME</em> for this script to work. 
 
-<h2>Including the lua bytecode compiler</h2>
+<h2>Excluding the lua bytecode compiler</h2>
 
-By default, the compiler is not included so as to minimize footprint.  
+By default, the compiler is included whenever <em>standardGlobals()</em> or <em>debugGlobals()</em> are called.  
 Without a compiler, files can still be executed, but they must be compiled elsewhere beforehand.
 The "luac" utility is provided in the jse jar for this purpose, or a standard lua compiler can be used.  
 
 <p>
-To include the lua-to-lua-bytecode compiler, include the following sometime before lua source files are loaded:
+To exclude the lua-to-lua-bytecode compiler, do not call 
+<em>standardGlobals()</em> or <em>debugGlobals()</em> 
+but instead initialize globals with including only those libraries 
+that are needed and omitting the line:
 <pre>
 	org.luaj.vm2.compiler.LuaC.install();
 </pre>
 
-<p>
-To omit the compiler, omit this line from your startup code. 
 
 <h2>Including the lua-to-Java-bytecode compiler</h2>
 
 <p>
-To compile from lua to Java bytecode for all lua loaded at runtime, use the LuaJC class:
+To compile from lua to Java bytecode for all lua loaded at runtime, 
+install the LuaJC compiler <em>after</em> globals have been created using:
 
 <pre>
 	org.luaj.vm2.jse.luajc.LuaJC.install();

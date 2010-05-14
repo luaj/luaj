@@ -30,7 +30,6 @@ abstract public class AbstractUnitTests extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         _G = JsePlatform.standardGlobals();
-        LuaC.install();
     }
 
     protected void doTest(String file) {

@@ -1,8 +1,7 @@
 
 
-import org.luaj.vm2.*;
-import org.luaj.vm2.lib.*;
-import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.JsePlatform;
 
 public class SampleJseMain {
 	
@@ -11,7 +10,6 @@ public class SampleJseMain {
 		String script = "examples/lua/hello.lua";
 		
 		// create an environment to run in
- 		LuaC.install();
 		LuaValue _G = JsePlatform.standardGlobals();
 		_G.get("dofile").call( LuaValue.valueOf(script) );
 	}

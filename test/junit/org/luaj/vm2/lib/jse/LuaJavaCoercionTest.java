@@ -24,7 +24,6 @@ public class LuaJavaCoercionTest extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		_G = JsePlatform.standardGlobals();
-		LuaC.install();
 	}
 	
 	public void testJavaIntToLuaInt() {

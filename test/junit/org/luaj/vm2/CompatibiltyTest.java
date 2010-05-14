@@ -82,7 +82,6 @@ public class CompatibiltyTest {
 		protected void setUp() throws Exception {
 			super.setUp();
 			System.setProperty("JME", "false");
-			LuaC.install();
 		}
 	}
 	public static class JseBytecodeTest extends CompatibiltyTestSuite {

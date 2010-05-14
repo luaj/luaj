@@ -44,30 +44,37 @@ public class ScriptDrivenTest extends TestCase {
 	
 	private final PlatformType platform;
 	private final String basedir;
+	private LuaTable _G;
 	
 	protected ScriptDrivenTest( PlatformType platform, String directory ) {
 		this.platform = platform;
 		this.basedir = directory;
+		initGlobals();
 	}
 	
+	private void initGlobals() {
+		switch ( platform ) {
+		default:
+		case JSE:
+		case LUAJIT:
+			_G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
+			break;
+		case JME:
+			_G = org.luaj.vm2.lib.JmePlatform.debugGlobals();
+			break;
+		}
+	}
+	
+	
+	protected void setUp() throws Exception {
+		super.setUp();
+	}
+
 	// */
 	protected void runTest(String testName) {
 		try {
-	
-			// create globals
-			LuaTable _G = null;
-			switch ( platform ) {
-			default:
-			case JSE:
-			case LUAJIT:
-				_G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
-				break;
-			case JME:
-				_G = org.luaj.vm2.lib.JmePlatform.debugGlobals();
-				break;
-			}
-			
 			// override print()
+			initGlobals();
 			final ByteArrayOutputStream output = new ByteArrayOutputStream();
 			final PrintStream oldps = BaseLib.instance.STDOUT;
 			final PrintStream ps = new PrintStream( output );

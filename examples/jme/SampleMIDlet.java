@@ -20,7 +20,6 @@ public class SampleMIDlet extends MIDlet {
 			script = DEFAULT_SCRIPT;
 		
 		// create an environment to run in
- 		LuaC.install();
 		LuaValue _G = JmePlatform.standardGlobals();
 		_G.get("require").call( LuaValue.valueOf(script) );
 	}

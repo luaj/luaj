@@ -40,7 +40,6 @@ public class ErrorsTest extends ScriptDrivenTest {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		LuaC.install();
 	}
 
 	public void testBaseLibArgs()       { runTest("baselibargs");      }
