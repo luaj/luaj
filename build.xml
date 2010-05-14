@@ -42,7 +42,7 @@
 		</unzip>
 	</target>
 		
-	<target name="compile" depends="wtk-or-fail,bcel-lib,luaj1-lib">
+	<target name="compile" depends="wtk-or-fail,bcel-lib">
 		<mkdir dir="build/core/src"/>
 		<mkdir dir="build/core/classes"/>
 		<mkdir dir="build/jme/classes"/>

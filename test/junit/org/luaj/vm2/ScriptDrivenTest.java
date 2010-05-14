@@ -162,7 +162,7 @@ public class ScriptDrivenTest extends TestCase {
 		}
 	}
 
-	private String collectProcessOutput(String[] cmd, final InputStream input)
+	public static String collectProcessOutput(String[] cmd, final InputStream input)
 			throws IOException, InterruptedException {
 		Runtime r = Runtime.getRuntime();
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -237,7 +237,7 @@ public class ScriptDrivenTest extends TestCase {
 		return new String(baos.toByteArray());
 	}
 
-	private void copy(InputStream is, OutputStream os) throws IOException {
+	private static void copy(InputStream is, OutputStream os) throws IOException {
 		byte[] buf = new byte[1024];
 		int r;
 		while ((r = is.read(buf)) >= 0) {

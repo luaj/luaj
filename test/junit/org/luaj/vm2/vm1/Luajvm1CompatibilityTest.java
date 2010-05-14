@@ -33,24 +33,28 @@ import junit.framework.TestCase;
 
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.ScriptDrivenTest;
 
 /**
- * Test for compatiblity between luaj 1.0 and 2.0 vms
+ * Test for compatiblity between luaj 1.0 and 2.0.
  * 
+ * Runs an archive of the tests that were used in 
+ * the luaj-vm 1.0 development, modified to account 
+ * for changes to interpetation of the lua vm spec. 
  */
 public class Luajvm1CompatibilityTest extends TestCase {
 
 	private static final String zipfile = "luajvm1-tests.zip";
 	private static String jarpath;
 
-	private void runTest(String test) {
+	protected void runTest(String test) {
 		try {
 			URL zip = getClass().getResource(zipfile);
 			jarpath = "jar:"+zip.toExternalForm()+"!/";
-			String luaj10 = luaj10Run(test);
+			String lua = luaRun(test);
 			String luaj20 = luaj20Run(test);
-			assertEquals( luaj10, luaj20 );
-		} catch ( IOException ioe ) {
+			assertEquals( lua, luaj20 );
+		} catch ( Exception ioe ) {
 			fail( ioe.toString() );
 		}
 	}
@@ -65,8 +69,24 @@ public class Luajvm1CompatibilityTest extends TestCase {
 			return null;
 		}
 	}
-	
-	private String luaj10Run(String test) throws IOException {
+
+	private String luaRun(String test) throws Exception {
+		InputStream script =open(test+".lua");
+		if ( script == null )
+			fail("Could not load script for test case: " + test);
+		try {
+		    String luaCommand = System.getProperty("LUA_COMMAND");
+		    if ( luaCommand == null )
+		        luaCommand = "lua";
+		    String[] args = new String[] { luaCommand, "-", "jse" };
+			return ScriptDrivenTest.collectProcessOutput(args, script);
+		} finally {
+			script.close();
+		}
+	}
+
+	/*
+	private String luaj10Run(String test) throws Exception {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
 			org.luaj.vm.Platform.setInstance(new org.luaj.platform.J2sePlatform() {
@@ -87,7 +107,8 @@ public class Luajvm1CompatibilityTest extends TestCase {
 			outputStream.close();
 		}
 	}
-
+	*/
+	
 	private String luaj20Run(String test) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		PrintStream printStream = new PrintStream( outputStream );
@@ -102,7 +123,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 					if ( is == null )
 						return LuaValue.valueOf("not found: "+file);
 					try {
-						return org.luaj.vm2.LoadState.load(is, file, env);
+						return org.luaj.vm2.LoadState.load(is, "@stdin", env);
 					} catch (IOException e) {
 						return LuaValue.valueOf(e.toString());
 					} finally {
@@ -116,7 +137,6 @@ public class Luajvm1CompatibilityTest extends TestCase {
 			return outputStream.toString();
 		} finally {
 			printStream.close();
-//			script.close();
 		}
 	}
 
@@ -129,7 +149,6 @@ public class Luajvm1CompatibilityTest extends TestCase {
 	public void testTest4() { runTest("test4"); }
 	public void testTest5() { runTest("test5"); }
 	public void testTest6() { runTest("test6"); }
-	public void testTest7() { runTest("test7"); }
 	public void testTest8() { runTest("test8"); }
 	public void testTest9() { runTest("test9"); }
 	public void testAutoload() { runTest("autoload"); }
