@@ -29,12 +29,11 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 /**
- *
- * @author jim_roseborough
+ * Jsr 223 scripting engine factory
  */
 public class LuaScriptEngineFactory implements ScriptEngineFactory {
     
-    private static final String FILEEXT = ".lua";
+ 	private static final String FILEEXT = ".lua";
     
     private static final String [] MIMETYPES = {
         "text/plain",
@@ -47,13 +46,14 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
         "luaj",
     };
     
-    private ScriptEngine myScriptEngine;
+    private static final ThreadLocal<ScriptEngine> engines 
+		= new ThreadLocal<ScriptEngine>();
     private List<String> extensions;
     private List<String> mimeTypes;
     private List<String> names;
+
     
     public LuaScriptEngineFactory() {
-        myScriptEngine = new LuaScriptEngine();
         extensions = Collections.nCopies(1, FILEEXT);
         mimeTypes = Arrays.asList(MIMETYPES);
         names = Arrays.asList(NAMES);
@@ -122,6 +122,11 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
     }
     
     public ScriptEngine getScriptEngine() {
-        return myScriptEngine;
+    	ScriptEngine eng = engines.get();
+    	if ( eng == null ) {
+    		eng = new LuaScriptEngine();
+	        engines.set(eng);
+    	}
+		return eng;
     }
 }
