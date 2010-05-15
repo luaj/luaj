@@ -366,13 +366,7 @@ public class PackageLib extends OneArgFunction {
 			}
 			
 			// try loading the file
-			Varargs v; 
-			try {
-				v = BaseLib.loadFile(filename);
-			} catch ( IOException ioe ) {
-				v = varargsOf(NIL, valueOf(ioe.getMessage()));
-				
-			}
+			Varargs v = BaseLib.loadFile(filename); 
 			if ( v.arg1().isfunction() )
 				return v.arg1();
 			

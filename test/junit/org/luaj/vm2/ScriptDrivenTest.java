@@ -68,13 +68,13 @@ public class ScriptDrivenTest extends TestCase {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
+		initGlobals();
 	}
 
 	// */
 	protected void runTest(String testName) {
 		try {
 			// override print()
-			initGlobals();
 			final ByteArrayOutputStream output = new ByteArrayOutputStream();
 			final PrintStream oldps = BaseLib.instance.STDOUT;
 			final PrintStream ps = new PrintStream( output );

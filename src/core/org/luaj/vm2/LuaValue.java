@@ -164,7 +164,7 @@ public class LuaValue extends Varargs {
 	public static LuaValue error(String message) { throw new LuaError(message); }
 	public static void assert_(boolean b,String msg) { if(!b) throw new LuaError(msg); }
 	protected LuaValue argerror(String expected) { throw new LuaError("bad argument: "+expected+" expected, got "+typename()); }
-	public static void argerror(int iarg,String msg) { throw new LuaError("bad argument #"+iarg+": "+msg); }
+	public static LuaValue argerror(int iarg,String msg) { throw new LuaError("bad argument #"+iarg+": "+msg); }
 	protected LuaValue typerror(String expected) { throw new LuaError(expected+" expected, got "+typename()); }
 	protected LuaValue unimplemented(String fun) { throw new LuaError("'"+fun+"' not implemented for "+typename()); }
 	protected LuaValue callerror() { throw new LuaError("attempt to call "+typename()); }

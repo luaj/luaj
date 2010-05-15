@@ -66,6 +66,39 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	private LuaValue next;
 	private LuaValue inext;
 	
+	private static final String[] LIB1_KEYS = {
+		"getfenv", // ( [f] ) -> env
+		"getmetatable", // ( object ) -> table 
+	};
+	private static final String[] LIB2_KEYS = {
+		"collectgarbage", // ( opt [,arg] ) -> value
+		"error", // ( message [,level] ) -> ERR
+		"setfenv", // (f, table) -> void
+	};
+	private static final String[] LIBV_KEYS = {
+		"assert", // ( v [,message] ) -> v, message | ERR
+		"dofile", // ( filename ) -> result1, ...
+		"load", // ( func [,chunkname] ) -> chunk | nil, msg
+		"loadfile", // ( [filename] ) -> chunk | nil, msg
+		"loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
+		"pcall", // (f, arg1, ...) -> status, result1, ...
+		"xpcall", // (f, err) -> result1, ...
+		"print", // (...) -> void
+		"select", // (f, ...) -> value1, ...
+		"unpack", // (list [,i [,j]]) -> result1, ...
+		"type",  // (v) -> value
+		"rawequal", // (v1, v2) -> boolean
+		"rawget", // (table, index) -> value
+		"rawset", // (table, index, value) -> table
+		"setmetatable", // (table, metatable) -> table
+		"tostring", // (e) -> value
+		"tonumber", // (e [,base]) -> value
+		"pairs", // "pairs" (t) -> iter-func, t, nil
+		"ipairs", // "ipairs", // (t) -> iter-func, t, 0
+		"next", // "next"  ( table, [index] ) -> next-index, next-value
+		"__inext", // "inext" ( table, [int-index] ) -> next-index, next-value
+	};
+	
 	/**
 	 * Construct a base libarary instance.
 	 */
@@ -76,47 +109,17 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public LuaValue call(LuaValue arg) {
 		env.set( "_G", env );
 		env.set( "_VERSION", VERSION );
-		bind( env, BaseLib1.class, new String[] {
-			"getfenv", // ( [f] ) -> env
-			"getmetatable", // ( object ) -> table 
-		} );
-		bind( env, BaseLib2.class, new String[] {
-			"collectgarbage", // ( opt [,arg] ) -> value
-			"error", // ( message [,level] ) -> ERR
-			"rawequal", // (v1, v2) -> boolean
-			"setfenv", // (f, table) -> void
-		} );
-		bind( env, BaseLibV.class, new String[] {
-			"assert", // ( v [,message] ) -> v, message | ERR
-			"dofile", // ( filename ) -> result1, ...
-			"load", // ( func [,chunkname] ) -> chunk | nil, msg
-			"loadfile", // ( [filename] ) -> chunk | nil, msg
-			"loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
-			"pcall", // (f, arg1, ...) -> status, result1, ...
-			"xpcall", // (f, err) -> result1, ...
-			"print", // (...) -> void
-			"select", // (f, ...) -> value1, ...
-			"unpack", // (list [,i [,j]]) -> result1, ...
-			"type",  // (v) -> value
-			"rawget", // (table, index) -> value
-			"rawset", // (table, index, value) -> table
-			"setmetatable", // (table, metatable) -> table
-			"tostring", // (e) -> value
-			"tonumber", // (e [,base]) -> value
-			"pairs", // "pairs" (t) -> iter-func, t, nil
-			"ipairs", // "ipairs", // (t) -> iter-func, t, 0
-			"next", // "next"  ( table, [index] ) -> next-index, next-value
-			"__inext", // "inext" ( table, [int-index] ) -> next-index, next-value
-		} );
+		bind( env, BaseLib1.class, LIB1_KEYS );
+		bind( env, BaseLib2.class, LIB2_KEYS );
+		bind( env, BaseLibV.class, LIBV_KEYS ); 
 		
 		// remember next, and inext for use in pairs and ipairs
 		next = env.get("next");
 		inext = env.get("__inext");
 		
-		// inject base lib
-		((BaseLibV) env.get("print")).baselib = this;
-		((BaseLibV) env.get("pairs")).baselib = this;
-		((BaseLibV) env.get("ipairs")).baselib = this;
+		// inject base lib int vararg instances
+		for ( int i=0; i<LIBV_KEYS.length; i++ ) 
+			((BaseLibV) env.get(LIBV_KEYS[i])).baselib = this;
 		
 		// set the default resource finder if not set already
 		if ( FINDER == null )
@@ -171,9 +174,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				return NIL;
 			case 1: // "error", // ( message [,level] ) -> ERR
 				throw new LuaError( arg1.isnil()? null: arg1.tojstring(), arg2.optint(1) );
-			case 2: // "rawequal", // (v1, v2) -> boolean
-				return valueOf(arg1 == arg2);
-			case 3: { // "setfenv", // (f, table) -> void
+			case 2: { // "setfenv", // (f, table) -> void
 				LuaTable t = arg2.checktable();
 				LuaValue f = getfenvobj(arg1);
 			    f.setfenv(t);
@@ -205,45 +206,35 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				return args;
 			case 1: // "dofile", // ( filename ) -> result1, ...
 			{
-				LuaValue chunk;
-				try {
-					String filename = args.checkjstring(1);
-					chunk = loadFile(filename).arg1();
-				} catch ( IOException e ) {
-					return error(e.getMessage());
-				}
-				return chunk.invoke();
+				Varargs v = args.isnil(1)? 
+						BaseLib.loadStream( baselib.STDIN, "=stdin" ):
+						BaseLib.loadFile( args.checkjstring(1) );
+				return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();
 			}
 			case 2: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
-				try {
-					LuaValue func = args.checkfunction(1);
-					String chunkname = args.optjstring(2, "function");
-					return LoadState.load(new StringInputStream(func), chunkname, LuaThread.getGlobals());
-				} catch ( Exception e ) {
-					return varargsOf(NIL, valueOf(e.getMessage()));
-				} 
+			{
+				LuaValue func = args.checkfunction(1);
+				String chunkname = args.optjstring(2, "function");
+				return BaseLib.loadStream(new StringInputStream(func), chunkname);
+			}
 			case 3: // "loadfile", // ( [filename] ) -> chunk | nil, msg
 			{
-				try {
-					String filename = args.checkjstring(1);
-					return loadFile(filename);
-				} catch ( Exception e ) {
-					return varargsOf(NIL, valueOf(e.getMessage()));
-				}
+				return args.isnil(1)? 
+					BaseLib.loadStream( baselib.STDIN, "=stdin" ):
+					BaseLib.loadFile( args.checkjstring(1) );
 			}
 			case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
-				try {
-					LuaString script = args.checkstring(1);
-					String chunkname = args.optjstring(2, "string");
-					return LoadState.load(script.toInputStream(),chunkname,LuaThread.getGlobals());
-				} catch ( Exception e ) {
-					return varargsOf(NIL, valueOf(e.getMessage()));
-				} 
+			{
+				LuaString script = args.checkstring(1);
+				String chunkname = args.optjstring(2, "string");
+				return BaseLib.loadStream(script.toInputStream(),chunkname);
+			}
 			case 5: // "pcall", // (f, arg1, ...) -> status, result1, ...
 			{
+				LuaValue func = args.checkvalue(1);
 				LuaThread.onCall(this);
 				try {
-					return pcall(args.arg1(),args.subargs(2),null);
+					return pcall(func,args.subargs(2),null);
 				} finally {
 					LuaThread.onReturn();
 				}
@@ -297,23 +288,25 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 			case 10: // "type",  // (v) -> value
 				return valueOf(args.checkvalue(1).typename());
-			case 11: // "rawget", // (table, index) -> value
+			case 11: // "rawequal", // (v1, v2) -> boolean
+				return valueOf(args.checkvalue(1) == args.checkvalue(2));
+			case 12: // "rawget", // (table, index) -> value
 				return args.checktable(1).rawget(args.checkvalue(2));
-			case 12: { // "rawset", // (table, index, value) -> table
+			case 13: { // "rawset", // (table, index, value) -> table
 				LuaTable t = args.checktable(1);
 				t.rawset(args.checknotnil(2), args.checkvalue(3));
 				return t;
 			}
-			case 13: { // "setmetatable", // (table, metatable) -> table
+			case 14: { // "setmetatable", // (table, metatable) -> table
 				final LuaValue t = args.arg1();
 				final LuaValue mt = args.checkvalue(2);
 				return t.setmetatable(mt.isnil()? null: mt.checktable());
 			}
-			case 14: { // "tostring", // (e) -> value
+			case 15: { // "tostring", // (e) -> value
 				LuaValue arg = args.checkvalue(1);
 				return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
 			}
-			case 15: { // "tonumber", // (e [,base]) -> value
+			case 16: { // "tonumber", // (e [,base]) -> value
 				LuaValue arg1 = args.checkvalue(1);
 				final int base = args.optint(2,10);
 				if (base == 10) {  /* standard conversion */
@@ -325,14 +318,14 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					return str!=null? str.tonumber(base): NIL;
 				}
 			}
-			case 16: // "pairs" (t) -> iter-func, t, nil
+			case 17: // "pairs" (t) -> iter-func, t, nil
 				return varargsOf( baselib.next, args.checktable(1) );
-			case 17: // "ipairs", // (t) -> iter-func, t, 0
+			case 18: // "ipairs", // (t) -> iter-func, t, 0
 				return varargsOf( baselib.inext, args.checktable(1), ZERO );
-			case 18: // "next"  ( table, [index] ) -> next-index, next-value
-				return args.arg1().next(args.arg(2));
-			case 19: // "inext" ( table, [int-index] ) -> next-index, next-value
-				return args.arg1().inext(args.arg(2));
+			case 19: // "next"  ( table, [index] ) -> next-index, next-value
+				return args.checktable(1).next(args.arg(2));
+			case 20: // "inext" ( table, [int-index] ) -> next-index, next-value
+				return args.checktable(1).inext(args.arg(2));
 			}
 			return NONE;
 		}
@@ -357,17 +350,34 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 	}
 	
-	public static Varargs loadFile(String filename) throws IOException {
+	/** 
+	 * Load from a named file, returning the chunk or nil,error of can't load
+	 * @return Varargs containing chunk, or NIL,error-text on error
+	 */
+	public static Varargs loadFile(String filename) {
 		InputStream is = FINDER.findResource(filename);
 		if ( is == null )
-			return varargsOf(NIL, valueOf("not found: "+filename));
+			return varargsOf(NIL, valueOf("cannot open "+filename));
 		try {
-			return LoadState.load(is, filename, LuaThread.getGlobals());
+			return loadStream(is, "@"+filename);
 		} finally {
-			is.close();
+			try {
+				is.close();
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
 		}
 	}
 
+	public static Varargs loadStream(InputStream is, String chunkname) {
+		try {
+			if ( is == null )
+				return varargsOf(NIL, valueOf("not found: "+chunkname));
+			return LoadState.load(is, chunkname, LuaThread.getGlobals());
+		} catch (IOException e) {
+			return varargsOf(NIL, valueOf(e.getMessage()));
+		}
+	}
 	
 	
 	private static class StringInputStream extends InputStream {

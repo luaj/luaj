@@ -21,7 +21,11 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.BaseLib;
 
 
 /**
@@ -42,7 +46,14 @@ public class ErrorsTest extends ScriptDrivenTest {
 		super.setUp();
 	}
 
-	public void testBaseLibArgs()       { runTest("baselibargs");      }
+	public void testBaseLibArgs()       { 
+		BaseLib.instance.STDIN = new InputStream() {
+			public int read() throws IOException {
+				return -1;
+			}
+		};
+		runTest("baselibargs");      
+	}
 	public void testCoroutineLibArgs()  { runTest("coroutinelibargs"); }	
 	public void testIoLibArgs()         { runTest("iolibargs");        }	
 	public void testMathLibArgs()       { runTest("mathlibargs");      }	

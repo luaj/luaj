@@ -109,7 +109,7 @@ public abstract class Varargs {
 	public LuaThread    checkthread(int i)           { return arg(i).checkthread(); }
 	public Object       checkuserdata(int i)         { return arg(i).checkuserdata(); }
 	public Object       checkuserdata(int i,Class c) { return arg(i).checkuserdata(c); }
-	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.error("value expected"); }
+	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.argerror(i,"value expected"); }
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
 	/** @deprecated - use checkjstring() instead */
