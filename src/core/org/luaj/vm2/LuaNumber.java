@@ -38,6 +38,10 @@ public class LuaNumber extends LuaValue {
 		return this; 
 	}
 	
+	public LuaNumber checknumber(String errmsg) {
+		return this; 
+	}
+	
 	public LuaNumber optnumber(LuaNumber defval) {
 		return this; 
 	}

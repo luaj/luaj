@@ -146,6 +146,7 @@ public class LuaValue extends Varargs {
 	public LuaInteger  checkinteger()          { argerror("integer");   return null; }
 	public long        checklong()             { argerror("long");      return 0; }
 	public LuaNumber   checknumber()           { argerror("number");    return null; }
+	public LuaNumber   checknumber(String msg) { throw new LuaError(msg); }
 	public String      checkjstring()          { argerror("string");    return null; }
 	public LuaString   checkstring()           { argerror("string");    return null; }
 	public LuaTable    checktable()            { argerror("table");     return null; }	
@@ -170,6 +171,8 @@ public class LuaValue extends Varargs {
 	protected LuaValue lenerror() { throw new LuaError("attempt to get length of "+typename()); }
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on "+typename()); }
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
+	protected LuaValue compareerror(String rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs); }
+	protected LuaValue compareerror(LuaValue rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs.typename()); }
 	
 	// table operations
 	public LuaValue get( LuaValue key ) { return gettable(this,key); }
@@ -271,22 +274,22 @@ public class LuaValue extends Varargs {
 	public LuaValue   modFrom(double lhs)     { return aritherror("modFrom"); }
 	
 	// relational operators
-	public LuaValue   lt( LuaValue rhs )         { return aritherror("lt"); }
-	public boolean lt_b( LuaValue rhs )       { aritherror("lt"); return false; }
-	public boolean lt_b( int rhs )         { aritherror("lt"); return false; }
-	public boolean lt_b( double rhs )      { aritherror("lt"); return false; }
-	public LuaValue   lteq( LuaValue rhs )       { return aritherror("lteq"); }
-	public boolean lteq_b( LuaValue rhs )     { aritherror("lteq"); return false; }
-	public boolean lteq_b( int rhs )       { aritherror("lteq"); return false; }
-	public boolean lteq_b( double rhs )    { aritherror("lteq"); return false; }
-	public LuaValue   gt( LuaValue rhs )         { return aritherror("gt"); }
-	public boolean gt_b( LuaValue rhs )       { aritherror("gt"); return false; }
-	public boolean gt_b( int rhs )         { aritherror("gt"); return false; }
-	public boolean gt_b( double rhs )      { aritherror("gt"); return false; }
-	public LuaValue   gteq( LuaValue rhs )       { return aritherror("gteq"); }
-	public boolean gteq_b( LuaValue rhs )     { aritherror("gteq"); return false; }
-	public boolean gteq_b( int rhs )       { aritherror("gteq"); return false; }
-	public boolean gteq_b( double rhs )    { aritherror("gteq"); return false; }
+	public LuaValue   lt( LuaValue rhs )         { return compareerror(rhs); }
+	public boolean lt_b( LuaValue rhs )       { compareerror(rhs); return false; }
+	public boolean lt_b( int rhs )         { compareerror("number"); return false; }
+	public boolean lt_b( double rhs )      { compareerror("number"); return false; }
+	public LuaValue   lteq( LuaValue rhs )       { return compareerror(rhs); }
+	public boolean lteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
+	public boolean lteq_b( int rhs )       { compareerror("number"); return false; }
+	public boolean lteq_b( double rhs )    { compareerror("number"); return false; }
+	public LuaValue   gt( LuaValue rhs )         { return compareerror(rhs); }
+	public boolean gt_b( LuaValue rhs )       { compareerror(rhs); return false; }
+	public boolean gt_b( int rhs )         { compareerror("number"); return false; }
+	public boolean gt_b( double rhs )      { compareerror("number"); return false; }
+	public LuaValue   gteq( LuaValue rhs )       { return compareerror(rhs); }
+	public boolean gteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
+	public boolean gteq_b( int rhs )       { compareerror("number"); return false; }
+	public boolean gteq_b( double rhs )    { compareerror("number"); return false; }
 
 	// string comparison
 	public int strcmp( LuaValue rhs )         { error("attempt to compare "+typename()); return 0; }
@@ -352,7 +355,7 @@ public class LuaValue extends Varargs {
 				if ((!res.isnil()) || (tm = t.metatag(INDEX)).isnil())
 					return res;
 			} else if ((tm = t.metatag(INDEX)).isnil())
-				t.typerror("table");
+				t.indexerror();
 			if (tm.isfunction())
 				return tm.call(t, key);
 			t = tm;

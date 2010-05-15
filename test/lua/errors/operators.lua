@@ -39,38 +39,38 @@ checkallerrors('concatop',{somestring,notastring},'attempt to concatenate')
 banner( '+' )
 plusop = function(a,b) return a+b end
 checkallpass('plusop',{somenumber,somenumber})
-checkallerrors('plusop',{notanumber,somenumber},'attempt to perform arithmetic on')
-checkallerrors('plusop',{somenumber,notanumber},'attempt to perform arithmetic on')
+checkallerrors('plusop',{notanumber,somenumber},'attempt to perform arithmetic')
+checkallerrors('plusop',{somenumber,notanumber},'attempt to perform arithmetic')
 
 banner( '-' )
 minusop = function(a,b) return a-b end
 checkallpass('minusop',{somenumber,somenumber})
-checkallerrors('minusop',{notanumber,somenumber},'attempt to perform arithmetic on')
-checkallerrors('minusop',{somenumber,notanumber},'attempt to perform arithmetic on')
+checkallerrors('minusop',{notanumber,somenumber},'attempt to perform arithmetic')
+checkallerrors('minusop',{somenumber,notanumber},'attempt to perform arithmetic')
 
 banner( '*' )
 timesop = function(a,b) return a*b end
 checkallpass('timesop',{somenumber,somenumber})
-checkallerrors('timesop',{notanumber,somenumber},'attempt to perform arithmetic on')
-checkallerrors('timesop',{somenumber,notanumber},'attempt to perform arithmetic on')
+checkallerrors('timesop',{notanumber,somenumber},'attempt to perform arithmetic')
+checkallerrors('timesop',{somenumber,notanumber},'attempt to perform arithmetic')
 
 banner( '/' )
 divideop = function(a,b) return a/b end
 checkallpass('divideop',{somenumber,somenumber})
-checkallerrors('divideop',{notanumber,somenumber},'attempt to perform arithmetic on')
-checkallerrors('divideop',{somenumber,notanumber},'attempt to perform arithmetic on')
+checkallerrors('divideop',{notanumber,somenumber},'attempt to perform arithmetic')
+checkallerrors('divideop',{somenumber,notanumber},'attempt to perform arithmetic')
 
 banner( '%' )
 modop = function(a,b) return a%b end
 checkallpass('modop',{somenumber,somenumber})
-checkallerrors('modop',{notanumber,somenumber},'attempt to perform arithmetic on')
-checkallerrors('modop',{somenumber,notanumber},'attempt to perform arithmetic on')
+checkallerrors('modop',{notanumber,somenumber},'attempt to perform arithmetic')
+checkallerrors('modop',{somenumber,notanumber},'attempt to perform arithmetic')
 
 banner( '^' )
 powerop = function(a,b) return a^b end
 checkallpass('powerop',{{2,'2.5'},{3,'3.5'}})
-checkallerrors('powerop',{notanumber,{3,'3.1'}},'attempt to perform arithmetic on')
-checkallerrors('powerop',{{2,'2.1'},notanumber},'attempt to perform arithmetic on')
+checkallerrors('powerop',{notanumber,{3,'3.1'}},'attempt to perform arithmetic')
+checkallerrors('powerop',{{2,'2.1'},notanumber},'attempt to perform arithmetic')
 
 banner( '==' )
 equalsop = function(a,b) return a==b end

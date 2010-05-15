@@ -240,7 +240,7 @@ public class LuaClosure extends LuaFunction {
 					{
 						Buffer sb = new Buffer();
 						for ( ; b<=c; )
-							sb.append( stack[b++].checkstring() );
+							sb.append( stack[b++] );
 						stack[a] = sb.tostring();
 					}
 					continue;
@@ -345,9 +345,9 @@ public class LuaClosure extends LuaFunction {
 					
 				case Lua.OP_FORPREP: /*	A sBx	R(A)-=R(A+2): pc+=sBx				*/
 					{
-						LuaValue init  = stack[a].checknumber();
-						LuaValue limit = stack[a + 1].checknumber();
-						LuaValue step  = stack[a + 2].checknumber();
+						LuaValue init  = stack[a].checknumber("'for' initial value must be a number");
+						LuaValue limit = stack[a + 1].checknumber("'for' limit must be a number");
+						LuaValue step  = stack[a + 2].checknumber("'for' step must be a number");
 						stack[a] = init.sub(step);
 						stack[a + 1] = limit;
 						stack[a + 2] = step;

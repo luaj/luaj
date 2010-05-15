@@ -183,6 +183,12 @@ public class LuaString extends LuaValue {
 			argerror("number");
 		return (LuaNumber) n;
 	}
+	public LuaNumber checknumber(String msg) {
+		LuaValue n = tonumber(10);
+		if ( ! n.isnumber() )
+			argerror(msg);
+		return (LuaNumber) n;
+	}
 	public LuaValue tonumber() {
 		return tonumber(10);
 	}

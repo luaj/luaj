@@ -51,6 +51,8 @@ public final class Buffer {
 	}
 	
 	public final void append( LuaValue val ) {
+		if ( ! val.isstring() ) 
+			val.error("attempt to concatenate a '"+val.typename()+"' value");
 		append( val.strvalue() );
 	}
 	

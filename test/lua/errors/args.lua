@@ -8,9 +8,9 @@ local badmsg = 'badmsg '
 akey      = 'aa'
 astring   = 'abc'
 astrnum   = '789'
-anumber   = 1.23
+anumber   = 1.25
 ainteger  = 345
-adouble   = 123.456
+adouble   = 12.75
 aboolean  = true
 atable    = {[akey]=456}
 afunction = function() end
