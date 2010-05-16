@@ -36,6 +36,7 @@ public class TableLib extends OneArgFunction {
 		bind(t, TableLibV.class, new String[] {
 			"remove", "concat", "insert", "sort", "foreach", "foreachi", } );
 		env.set("table", t);
+		PackageLib.instance.LOADED.set("table", t);
 		return t;
 	}
 	

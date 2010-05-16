@@ -46,6 +46,7 @@ public class CoroutineLib extends VarArgFunction {
 			"create", "resume", "running", "status", "yield", "wrap" },
 			CREATE);
 		env.set("coroutine", t);
+		PackageLib.instance.LOADED.set("coroutine", t);
 		return t;
 	}
 	

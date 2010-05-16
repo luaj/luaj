@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -92,6 +91,7 @@ public class PackageLib extends OneArgFunction {
 						lua_loader     = new PkgLibV(env,"lua_loader", OP_LUA_LOADER,this),
 						java_loader    = new PkgLibV(env,"java_loader", OP_JAVA_LOADER,this),
 				}) }) );
+		LOADED.set("package", PACKAGE);
 		return env;
 	}
 
@@ -212,6 +212,8 @@ public class PackageLib extends OneArgFunction {
 		LuaFunction f = LuaThread.getCallstackFunction(1);
 		if ( f == null )
 			error("no calling function");
+		if ( ! f.isclosure() )
+			error("'module' not called from a Lua function");
 		f.setfenv(module);
 		
 		// apply the functions
@@ -321,6 +323,7 @@ public class PackageLib extends OneArgFunction {
 	}
 
 	public static Varargs loadlib( Varargs args ) {
+		args.checkstring(1);
 		return varargsOf(NIL, valueOf("dynamic libraries not enabled"), valueOf("absent"));
 	}
 

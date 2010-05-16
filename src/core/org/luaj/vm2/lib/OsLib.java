@@ -90,6 +90,7 @@ public class OsLib extends VarArgFunction {
 		LuaTable t = new LuaTable();
 		bind(t, this.getClass(), NAMES, CLOCK);
 		env.set("os", t);
+		PackageLib.instance.LOADED.set("os", t);
 		return t;
 	}
 

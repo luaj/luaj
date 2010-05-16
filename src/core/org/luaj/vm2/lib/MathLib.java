@@ -61,6 +61,7 @@ public class MathLib extends OneArgFunction {
 		((MathLibV) t.get("randomseed")).mathlib = this;
 		((MathLibV) t.get("random"    )).mathlib = this;
 		env.set("math", t);
+		PackageLib.instance.LOADED.set("math", t);
 		return t;
 	}
 

@@ -51,6 +51,7 @@ public class StringLib extends OneArgFunction {
 		instance = t;
 		if ( LuaString.s_metatable == null )
 			LuaString.s_metatable = tableOf( new LuaValue[] { INDEX, t } );
+		PackageLib.instance.LOADED.set("string", t);
 		return t;
 	}
 	

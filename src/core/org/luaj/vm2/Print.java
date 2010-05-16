@@ -361,7 +361,7 @@ public class Print extends Lua {
 				break;
 			case LuaValue.TFUNCTION:
 				ps.print( ( v instanceof LuaClosure )?
-					((LuaClosure)v).p.tojstring(): v.tojstring() );
+					((LuaClosure)v).p.toString(): v.tojstring() );
 				break;
 			case LuaValue.TUSERDATA:
 				Object o = v.touserdata();

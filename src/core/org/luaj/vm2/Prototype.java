@@ -44,8 +44,8 @@ public class Prototype {
 	public int maxstacksize;
 
 	
-	public String tojstring() {
-		return source + ":" + linedefined;
+	public String toString() {
+		return source + ":" + linedefined+"-"+lastlinedefined;
 	}
 	
 	/** Get the name of a local variable.

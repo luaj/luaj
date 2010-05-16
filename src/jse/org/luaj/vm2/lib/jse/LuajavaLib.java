@@ -45,6 +45,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -72,10 +73,6 @@ public class LuajavaLib extends VarArgFunction {
 
 	private static LuaValue LENGTH = valueOf("length");
 	
-	public static void install(LuaValue globals) {
-		globals.set("luajava", new LuajavaLib());
-	}
-	
 	public LuajavaLib() {
 	}
 
@@ -86,6 +83,7 @@ public class LuajavaLib extends VarArgFunction {
 				LuaTable t = new LuaTable();
 				bind( t, LuajavaLib.class, NAMES, BINDCLASS );
 				env.set("luajava", t);
+				PackageLib.instance.LOADED.set("luajava", t);
 				return t;
 			}
 			case BINDCLASS: {

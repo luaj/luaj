@@ -197,6 +197,7 @@ public class IoLib extends OneArgFunction {
 		
 		// return the table
 		env.set("io", t);
+		PackageLib.instance.LOADED.set("io", t);
 		return t;
 	}
 

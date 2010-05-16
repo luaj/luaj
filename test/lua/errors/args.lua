@@ -132,12 +132,11 @@ local function arglists(typesets)
 	return ipairs(argsets)	
 end
 
-
-local function lookup( name ) 
+function lookup( name ) 
 	return loadstring('return '..name)()
 end
 
-local function invoke( name, arglist )
+function invoke( name, arglist )
 	local s,c = pcall(lookup, name)
 	if not s then return s,c end
 	return pcall(c, unpack(arglist,1,arglist.n or #arglist))

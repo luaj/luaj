@@ -1,6 +1,12 @@
 package.path = "?.lua;test/lua/errors/?.lua"
 require 'args'
 
+local tostring = tostring
+_G.tostring = function(x) 
+	local s = tostring(x)
+	return type(x)=='number' and #s>4 and (s:sub(1,5)..'...') or s
+end
+
 -- arg type tests for math library functions
 local somenumber = {1,0.75,'-1','-0.25'}
 local somepositive = {1,0.75,'2', '2.5'}
