@@ -156,7 +156,7 @@ local function subbanner(name)
 end
 
 local function pack(s,...) 
-	return s,{...}
+	return s,arg
 end
 
 -- check that all combinations of arguments pass

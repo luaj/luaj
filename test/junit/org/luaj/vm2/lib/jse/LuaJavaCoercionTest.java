@@ -195,7 +195,8 @@ public class LuaJavaCoercionTest extends TestCase {
 		LuaValue status = vresult.arg1();
 		LuaValue message = vresult.arg(2);
 		assertEquals( LuaValue.FALSE, status );		
-		assertEquals( "vm error: "+SomeException.class.getName()+": this is some message", message.toString() );		
+		int index = message.toString().indexOf( "this is some message" );
+		assertTrue( "bad message: "+message, index>=0 );		
 	}
 
 	public void testLuaErrorCause() {

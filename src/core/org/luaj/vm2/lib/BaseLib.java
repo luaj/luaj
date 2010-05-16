@@ -66,10 +66,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	private LuaValue next;
 	private LuaValue inext;
 	
-	private static final String[] LIB1_KEYS = {
-		"getfenv", // ( [f] ) -> env
-		"getmetatable", // ( object ) -> table 
-	};
 	private static final String[] LIB2_KEYS = {
 		"collectgarbage", // ( opt [,arg] ) -> value
 		"error", // ( message [,level] ) -> ERR
@@ -78,6 +74,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	private static final String[] LIBV_KEYS = {
 		"assert", // ( v [,message] ) -> v, message | ERR
 		"dofile", // ( filename ) -> result1, ...
+		"getfenv", // ( [f] ) -> env
+		"getmetatable", // ( object ) -> table 
 		"load", // ( func [,chunkname] ) -> chunk | nil, msg
 		"loadfile", // ( [filename] ) -> chunk | nil, msg
 		"loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
@@ -109,7 +107,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public LuaValue call(LuaValue arg) {
 		env.set( "_G", env );
 		env.set( "_VERSION", VERSION );
-		bind( env, BaseLib1.class, LIB1_KEYS );
 		bind( env, BaseLib2.class, LIB2_KEYS );
 		bind( env, BaseLibV.class, LIBV_KEYS ); 
 		
@@ -134,22 +131,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public InputStream findResource(String filename) {
 		Class c = getClass();
 		return c.getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
-	}
-
-	public static final class BaseLib1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: { // "getfenv", // ( [f] ) -> env
-				LuaValue f = getfenvobj(arg);
-			    LuaValue e = f.getfenv();
-				return e!=null? e: NIL;
-			}
-			case 1: // "getmetatable", // ( object ) -> table
-				LuaValue mt = arg.getmetatable();
-				return mt!=null? mt: NIL;
-			}
-			return NIL;
-		}
 	}
 
 	public static final class BaseLib2 extends TwoArgFunction {
@@ -177,6 +158,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 2: { // "setfenv", // (f, table) -> void
 				LuaTable t = arg2.checktable();
 				LuaValue f = getfenvobj(arg1);
+				if ( f.isfunction() && ! f.isclosure() )
+					error("'setfenv' cannot change environment of given object");
 			    f.setfenv(t);
 			    return f.isthread()? NONE: f;
 			}
@@ -186,9 +169,10 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	}
 	
 	private static LuaValue getfenvobj(LuaValue arg) {
-		if ( arg.isclosure() )
+		if ( arg.isfunction() )
 			return arg;
 		int level = arg.optint(1);
+	    arg.argcheck(level>=0, 1, "level must be non-negative");
 		if ( level == 0 )
 			return LuaThread.getRunning();
 		LuaValue f = LuaThread.getCallstackFunction(level);
@@ -211,25 +195,36 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 						BaseLib.loadFile( args.checkjstring(1) );
 				return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();
 			}
-			case 2: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
+			case 2: // "getfenv", // ( [f] ) -> env
+			{
+				LuaValue f = getfenvobj(args.arg1());
+			    LuaValue e = f.getfenv();
+				return e!=null? e: NIL;
+			}
+			case 3: // "getmetatable", // ( object ) -> table
+			{
+				LuaValue mt = args.checkvalue(1).getmetatable();
+				return mt!=null? mt: NIL;
+			}
+			case 4: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
 			{
 				LuaValue func = args.checkfunction(1);
 				String chunkname = args.optjstring(2, "function");
 				return BaseLib.loadStream(new StringInputStream(func), chunkname);
 			}
-			case 3: // "loadfile", // ( [filename] ) -> chunk | nil, msg
+			case 5: // "loadfile", // ( [filename] ) -> chunk | nil, msg
 			{
 				return args.isnil(1)? 
-					BaseLib.loadStream( baselib.STDIN, "=stdin" ):
+					BaseLib.loadStream( baselib.STDIN, "stdin" ):
 					BaseLib.loadFile( args.checkjstring(1) );
 			}
-			case 4: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
+			case 6: // "loadstring", // ( string [,chunkname] ) -> chunk | nil, msg
 			{
 				LuaString script = args.checkstring(1);
 				String chunkname = args.optjstring(2, "string");
 				return BaseLib.loadStream(script.toInputStream(),chunkname);
 			}
-			case 5: // "pcall", // (f, arg1, ...) -> status, result1, ...
+			case 7: // "pcall", // (f, arg1, ...) -> status, result1, ...
 			{
 				LuaValue func = args.checkvalue(1);
 				LuaThread.onCall(this);
@@ -239,7 +234,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					LuaThread.onReturn();
 				}
 			}
-			case 6: // "xpcall", // (f, err) -> result1, ...				
+			case 8: // "xpcall", // (f, err) -> result1, ...				
 			{
 				LuaThread.onCall(this);
 				try {
@@ -248,7 +243,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					LuaThread.onReturn();
 				}
 			}
-			case 7: // "print", // (...) -> void
+			case 9: // "print", // (...) -> void
 			{
 				LuaValue tostring = LuaThread.getGlobals().get("tostring"); 
 				for ( int i=1, n=args.narg(); i<=n; i++ ) {
@@ -260,7 +255,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				baselib.STDOUT.println();
 				return NONE;
 			}
-			case 8: // "select", // (f, ...) -> value1, ...
+			case 10: // "select", // (f, ...) -> value1, ...
 			{
 				int n = args.narg()-1; 				
 				if ( args.arg1().equals(valueOf("#")) )
@@ -270,7 +265,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					argerror(1,"index out of range");
 				return args.subargs(i<0? n+i+2: i+1);
 			}
-			case 9: // "unpack", // (list [,i [,j]]) -> result1, ...
+			case 11: // "unpack", // (list [,i [,j]]) -> result1, ...
 			{
 				int na = args.narg();
 				LuaTable t = args.checktable(1);
@@ -286,27 +281,27 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 					v[k] = t.get(i+k);
 				return varargsOf(v);
 			}
-			case 10: // "type",  // (v) -> value
+			case 12: // "type",  // (v) -> value
 				return valueOf(args.checkvalue(1).typename());
-			case 11: // "rawequal", // (v1, v2) -> boolean
+			case 13: // "rawequal", // (v1, v2) -> boolean
 				return valueOf(args.checkvalue(1) == args.checkvalue(2));
-			case 12: // "rawget", // (table, index) -> value
+			case 14: // "rawget", // (table, index) -> value
 				return args.checktable(1).rawget(args.checkvalue(2));
-			case 13: { // "rawset", // (table, index, value) -> table
+			case 15: { // "rawset", // (table, index, value) -> table
 				LuaTable t = args.checktable(1);
 				t.rawset(args.checknotnil(2), args.checkvalue(3));
 				return t;
 			}
-			case 14: { // "setmetatable", // (table, metatable) -> table
+			case 16: { // "setmetatable", // (table, metatable) -> table
 				final LuaValue t = args.arg1();
 				final LuaValue mt = args.checkvalue(2);
 				return t.setmetatable(mt.isnil()? null: mt.checktable());
 			}
-			case 15: { // "tostring", // (e) -> value
+			case 17: { // "tostring", // (e) -> value
 				LuaValue arg = args.checkvalue(1);
 				return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
 			}
-			case 16: { // "tonumber", // (e [,base]) -> value
+			case 18: { // "tonumber", // (e [,base]) -> value
 				LuaValue arg1 = args.checkvalue(1);
 				final int base = args.optint(2,10);
 				if (base == 10) {  /* standard conversion */
@@ -314,17 +309,16 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				} else {
 					if ( base < 2 || base > 36 )
 						argerror(2, "base out of range");
-					final LuaString str = arg1.optstring(null);
-					return str!=null? str.tonumber(base): NIL;
+					return arg1.checkstring().tonumber(base);
 				}
 			}
-			case 17: // "pairs" (t) -> iter-func, t, nil
-				return varargsOf( baselib.next, args.checktable(1) );
-			case 18: // "ipairs", // (t) -> iter-func, t, 0
+			case 19: // "pairs" (t) -> iter-func, t, nil
+				return varargsOf( baselib.next, args.checktable(1), NIL );
+			case 20: // "ipairs", // (t) -> iter-func, t, 0
 				return varargsOf( baselib.inext, args.checktable(1), ZERO );
-			case 19: // "next"  ( table, [index] ) -> next-index, next-value
+			case 21: // "next"  ( table, [index] ) -> next-index, next-value
 				return args.checktable(1).next(args.arg(2));
-			case 20: // "inext" ( table, [int-index] ) -> next-index, next-value
+			case 22: // "inext" ( table, [int-index] ) -> next-index, next-value
 				return args.checktable(1).inext(args.arg(2));
 			}
 			return NONE;
@@ -357,7 +351,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public static Varargs loadFile(String filename) {
 		InputStream is = FINDER.findResource(filename);
 		if ( is == null )
-			return varargsOf(NIL, valueOf("cannot open "+filename));
+			return varargsOf(NIL, valueOf("cannot open "+filename+": No such file or directory"));
 		try {
 			return loadStream(is, "@"+filename);
 		} finally {
@@ -374,7 +368,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			if ( is == null )
 				return varargsOf(NIL, valueOf("not found: "+chunkname));
 			return LoadState.load(is, chunkname, LuaThread.getGlobals());
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return varargsOf(NIL, valueOf(e.getMessage()));
 		}
 	}

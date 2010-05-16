@@ -49,6 +49,8 @@ public class StringLib extends OneArgFunction {
 			"sub"} );
 		env.set("string", t);
 		instance = t;
+		if ( LuaString.s_metatable == null )
+			LuaString.s_metatable = tableOf( new LuaValue[] { INDEX, t } );
 		return t;
 	}
 	

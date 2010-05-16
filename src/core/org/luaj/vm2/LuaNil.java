@@ -60,7 +60,7 @@ public class LuaNil extends LuaValue {
 	}
 
 	public LuaValue checknotnil() { 
-		return typerror("value");
+		return argerror("value");
 	}
 	
 	public LuaValue checkvalidkey() {
