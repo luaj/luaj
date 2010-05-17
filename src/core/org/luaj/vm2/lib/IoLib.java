@@ -230,7 +230,7 @@ public class IoLib extends OneArgFunction {
 				case IO_TYPE:		return iolib._io_type(args.arg1());
 				case IO_POPEN:		return iolib._io_popen(args.checkjstring(1),args.optjstring(2,"r"));
 				case IO_OPEN:		return iolib._io_open(args.checkjstring(1), args.optjstring(2,"r"));
-				case IO_LINES:		return iolib._io_lines(args.arg1());
+				case IO_LINES:		return iolib._io_lines(args.isvalue(1)? args.checkjstring(1): null);
 				case IO_READ:		return iolib._io_read(args);
 				case IO_WRITE:		return iolib._io_write(args);
 					
@@ -310,8 +310,8 @@ public class IoLib extends OneArgFunction {
 	}
 
 	//	io.lines(filename) -> iterator
-	public Varargs _io_lines(LuaValue filename) {
-		infile = filename.isnil()? input(): ioopenfile(filename.checkjstring(),"r");
+	public Varargs _io_lines(String filename) {
+		infile = filename==null? input(): ioopenfile(filename,"r");
 		checkopen(infile);
 		return lines(infile);
 	}
@@ -433,24 +433,29 @@ public class IoLib extends OneArgFunction {
 	private Varargs ioread(File f, Varargs args) throws IOException {
 		int i,n=args.narg();
 		LuaValue[] v = new LuaValue[n];
-		for ( i=0; i<n; i++ ) {
-			if ( args.isnumber(i+1) ) {
-				v[i] = freadbytes(f,args.checkint(i+1));
-			} else {
-				String format = args.checkjstring(i+1);
-				if ( "*n".equals(format) ) 
-					v[i] = valueOf( freadnumber(f) );
-				else if ( "*a".equals(format) ) 
-					v[i] = freadall(f);
-				else if ( "*l".equals(format) )
-					v[i] = freadline(f);
-				else
-					argerror( i+1, "(invalid format)" );
+		LuaValue ai,vi;
+		LuaString fmt;
+		for ( i=0; i<n; ) {
+			item: switch ( (ai = args.arg(i+1)).type() ) {
+				case LuaValue.TNUMBER:
+					vi = freadbytes(f,ai.toint());
+					break item;
+				case LuaValue.TSTRING:
+					fmt = ai.checkstring();
+					if ( fmt.m_length == 2 && fmt.m_bytes[fmt.m_offset] == '*' ) {
+						switch ( fmt.m_bytes[fmt.m_offset+1] ) {
+						case 'n': vi = freadnumber(f); break item;
+						case 'l': vi = freadline(f); break item;
+						case 'a': vi = freadall(f); break item;
+						}
+					}
+				default: 
+					return argerror( i+1, "(invalid format)" ); 
 			}
-			if ( v[i].isnil() )
-				return i==0? NIL: varargsOf(v,0,i);
+			if ( (v[i++] = vi).isnil() )
+				break;
 		}
-		return varargsOf(v);
+		return i==0? NIL: varargsOf(v, 0, i);
 	}
 
 	private static File checkfile(LuaValue val) {
@@ -529,7 +534,7 @@ public class IoLib extends OneArgFunction {
 			return freaduntil(f,false);
 		}
 	}
-	public static double freadnumber(File f) throws IOException {
+	public static LuaValue freadnumber(File f) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		freadchars(f," \t\r\n",null);
 		freadchars(f,"-+",baos);
@@ -542,7 +547,7 @@ public class IoLib extends OneArgFunction {
 		// freadchars(f,"+-",baos);
 		//freadchars(f,"0123456789",baos);
 		String s = baos.toString();
-		return s.length()>0? Double.parseDouble(s): 0;
+		return s.length()>0? valueOf( Double.parseDouble(s) ): NIL;
 	}
 	private static void freadchars(File f, String chars, ByteArrayOutputStream baos) throws IOException {
 		int c;

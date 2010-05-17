@@ -159,8 +159,9 @@ public class JseIoLib extends IoLib {
 				is.reset();
 				return c;
 			} else if ( file != null ) {
+				long fp = file.getFilePointer();
 				int c = file.read();
-				file.seek(file.getFilePointer()-1);
+				file.seek(fp);
 				return c;
 			}
 			notimplemented();
