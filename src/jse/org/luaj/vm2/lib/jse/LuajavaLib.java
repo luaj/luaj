@@ -43,8 +43,6 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.BaseLib;
-import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
@@ -52,14 +50,14 @@ import org.luaj.vm2.lib.VarArgFunction;
 
 public class LuajavaLib extends VarArgFunction {
 	
-	private static final int INIT           = 0;
-	private static final int BINDCLASS      = 1;
-	private static final int NEWINSTANCE	= 2;
-	private static final int NEW			= 3;
-	private static final int CREATEPROXY	= 4;
-	private static final int LOADLIB		= 5;
+	static final int INIT           = 0;
+	static final int BINDCLASS      = 1;
+	static final int NEWINSTANCE	= 2;
+	static final int NEW			= 3;
+	static final int CREATEPROXY	= 4;
+	static final int LOADLIB		= 5;
 
-	private static final String[] NAMES = {
+	static final String[] NAMES = {
 		"bindClass", 
 		"newInstance", 
 		"new", 
@@ -67,12 +65,17 @@ public class LuajavaLib extends VarArgFunction {
 		"loadLib",
 	};
 	
-	private static final Map classMetatables = new HashMap(); 
+	static final Map classMetatables = new HashMap(); 
 
-	private static final int METHOD_MODIFIERS_VARARGS = 0x80;
+	static final int METHOD_MODIFIERS_VARARGS = 0x80;
 
-	private static LuaValue LENGTH = valueOf("length");
+	static final LuaValue LENGTH = valueOf("length");
 	
+	static final Map consCache = new HashMap();
+	static final Map consIndex = new HashMap();
+	static final Map methCache = new HashMap();
+	static final Map methIndex = new HashMap();
+
 	public LuajavaLib() {
 	}
 
@@ -98,10 +101,11 @@ public class LuajavaLib extends VarArgFunction {
 				final Varargs consargs = args.subargs(2);
 				final long paramssig = LuajavaLib.paramsSignatureOf( consargs );
 				final Constructor con = resolveConstructor( clazz, paramssig );
+				final boolean isvarargs = ((con.getModifiers() & METHOD_MODIFIERS_VARARGS) != 0);
 	
 				// coerce args, construct instance 
-				Object[] cargs = CoerceLuaToJava.coerceArgs( consargs, con.getParameterTypes() );
-				Object o = con.newInstance( cargs );
+				final Object[] cargs = CoerceLuaToJava.coerceArgs( consargs, con.getParameterTypes(), isvarargs );
+				final Object o = con.newInstance( cargs );
 					
 				// return result
 				return toUserdata( o, clazz );
@@ -306,7 +310,7 @@ public class LuajavaLib extends VarArgFunction {
 		return LuaValue.userdataOf(instance,mt);
 	}
 	
-	private static final class LMethod extends VarArgFunction {
+	static final class LMethod extends VarArgFunction {
 		private final Class clazz;
 		private final String s;
 		private LMethod(Class clazz, String s) {
@@ -319,14 +323,15 @@ public class LuajavaLib extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			try {
 				// find the method 
-				Object instance = args.touserdata(1);
-				Varargs methargs = args.subargs(2);
-				long paramssig = LuajavaLib.paramsSignatureOf(methargs);
-				Method meth = resolveMethod( clazz, s, paramssig );
+				final Object instance = args.touserdata(1);
+				final Varargs methargs = args.subargs(2);
+				final long paramssig = LuajavaLib.paramsSignatureOf(methargs);
+				final Method meth = resolveMethod( clazz, s, paramssig );
+				final boolean isvarargs = ((meth.getModifiers() & METHOD_MODIFIERS_VARARGS) != 0);
 
 				// coerce the arguments
-				Object[] margs = CoerceLuaToJava.coerceArgs( methargs, meth.getParameterTypes() );
-				Object result = meth.invoke( instance, margs );
+				final Object[] margs = CoerceLuaToJava.coerceArgs( methargs, meth.getParameterTypes(), isvarargs );
+				final Object result = meth.invoke( instance, margs );
 				
 				// coerce the result
 				return CoerceJavaToLua.coerce(result);
@@ -338,13 +343,7 @@ public class LuajavaLib extends VarArgFunction {
 		}
 	}
 
-	private static Map consCache =
-		new HashMap();
-	
-	private static Map consIndex =
-		new HashMap();
-	
-	private static Constructor resolveConstructor(Class clazz, long paramssig ) {
+	static Constructor resolveConstructor(Class clazz, long paramssig ) {
 
 		// get the cache
 		Map cache = (Map) consCache.get( clazz );
@@ -357,31 +356,18 @@ public class LuajavaLib extends VarArgFunction {
 			return c;
 
 		// get index
-		Map index = (Map) consIndex.get( clazz );
-		if ( index == null ) {
-			consIndex.put( clazz, index = new HashMap() );
-			Constructor[] cons = clazz.getConstructors();
-			for ( int i=0; i<cons.length; i++ ) {
-				Constructor con = cons[i];
-				Integer n = new Integer( con.getParameterTypes().length );
-				List list = (List) index.get(n);
-				if ( list == null )
-					index.put( n, list = new ArrayList() );
-				list.add( con );
-			}
+		Constructor[] cons = (Constructor[]) consIndex.get( clazz );
+		if ( cons == null ) {
+			consIndex.put( clazz, cons = clazz.getConstructors() );
+			if ( cons == null )
+				throw new IllegalArgumentException("no public constructors");
 		}
-		
-		// figure out best list of arguments == supplied args
-		Integer n = new Integer( LuajavaLib.paramsCountFromSig(paramssig) );
-		List list = (List) index.get(n);
-		if ( list == null )
-			throw new IllegalArgumentException("no constructor with "+n+" args");
 
 		// find constructor with best score
 		int bests = Integer.MAX_VALUE;
 		int besti = 0;
-		for ( int i=0, size=list.size(); i<size; i++ ) {
-			Constructor con = (Constructor) list.get(i);
+		for ( int i=0, size=cons.length; i<size; i++ ) {
+			Constructor con = cons[i];
 			int paramType = LuajavaLib.paramTypeFromSig(paramssig, 0);
 			int s = CoerceLuaToJava.scoreParamTypes(paramType, con.getParameterTypes());
 			if ( s < bests ) {
@@ -391,19 +377,12 @@ public class LuajavaLib extends VarArgFunction {
 		}
 		
 		// put into cache
-		c = (Constructor) list.get(besti);
+		c = cons[besti];
 		cache.put( paramssig, c );
 		return c;
 	}
-
 	
-	private static Map methCache = 
-		new HashMap();
-	
-	private static Map methIndex = 
-		new HashMap();
-
-	private static Method resolveMethod(Class clazz, String methodName, long paramssig ) {
+	static Method resolveMethod(Class clazz, String methodName, long paramssig ) {
 
 		// get the cache
 		Map nameCache = (Map) methCache.get( clazz );
@@ -426,27 +405,19 @@ public class LuajavaLib extends VarArgFunction {
 			for ( int i=0; i<meths.length; i++ ) {
 				Method meth = meths[i];
 				String s = meth.getName();
-				Integer n = new Integer(meth.getParameterTypes().length);
-				Map map = (Map) index.get(s);
-				if ( map == null )
-					index.put( s, map = new HashMap() );
-				List list = (List) map.get(n);
+				List list = (List) index.get(s);
 				if ( list == null )
-					map.put( n, list = new ArrayList() );
+					index.put( s, list = new ArrayList() );
 				list.add( meth );
 			}
 		}
 		
 		// figure out best list of arguments == supplied args
-		Map map = (Map) index.get(methodName);
-		if ( map == null )
-			throw new IllegalArgumentException("no method named '"+methodName+"'");
-		Integer n = new Integer( LuajavaLib.paramsCountFromSig( paramssig ) );
-		List list = (List) map.get(n);
+		List list = (List) index.get(methodName);
 		if ( list == null )
-			throw new IllegalArgumentException("no method named '"+methodName+"' with "+n+" args");
+			throw new IllegalArgumentException("no method named '"+methodName+"'");
 
-		// find constructor with best score
+		// find method with best score
 		int bests = Integer.MAX_VALUE;
 		int besti = 0;
 		for ( int i=0, size=list.size(); i<size; i++ ) {
