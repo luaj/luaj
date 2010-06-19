@@ -17,6 +17,7 @@
 
 	<available file="lib/bcel-5.2.jar" property="bcel.lib.exists"/>			
 	<available file="lib/luaj-j2se-1.0.3.jar" property="luaj1.lib.exists"/>			
+	<available file="lib/javacc.jar" property="javacc.lib.exists"/>			
 
 	<target name="bcel-lib" unless="bcel.lib.exists">
 		<mkdir dir="lib"/>
@@ -40,6 +41,24 @@
 		    </patternset>
 		    <mapper type="flatten"/>
 		</unzip>
+	</target>
+	
+	<target name="javacc-lib" unless="javacc.lib.exists">
+		<get src="https://javacc.dev.java.net/files/documents/17/138912/javacc-5.0.zip"
+			dest="lib/javacc-5.0.zip"/>
+		<unzip src="lib/javacc-5.0.zip" dest="lib" overwrite="true">
+		    <patternset>
+		        <include name="**/javacc.jar"/>
+		    </patternset>
+		    <mapper type="flatten"/>
+		</unzip>
+	</target>
+
+	<target name="parser" depends="javacc-lib">
+		<java classname="javacc" classpath="lib/javacc.jar">
+			<arg line="-OUTPUT_DIRECTORY=src/jse/org/luaj/vm2/parser"/>
+			<arg line="grammar/Lua51.jj"/>
+		</java>
 	</target>
 		
 	<target name="compile" depends="wtk-or-fail,bcel-lib">
