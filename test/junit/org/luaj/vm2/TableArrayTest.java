@@ -57,10 +57,10 @@ public class TableArrayTest extends TestCase {
 		}
 		
 		// Ensure capacities make sense
-		assertEquals( 0, t.hashCapacity() );
+		assertEquals( 0, t.getHashLength() );
 		
-		assertTrue( t.arrayCapacity() >= 32 );
-		assertTrue( t.arrayCapacity() <= 64 );
+		assertTrue( t.getArrayLength() >= 32 );
+		assertTrue( t.getArrayLength() <= 64 );
 		
 	}
 	
@@ -79,8 +79,8 @@ public class TableArrayTest extends TestCase {
 			assertEquals(LuaInteger.valueOf(i), t.get(i));
 		}
 		
-		assertTrue( t.arrayCapacity() >= 0 && t.arrayCapacity() <= 2 );
-		assertTrue( t.hashCapacity() >= 4 );
+		assertTrue( t.getArrayLength() >= 0 && t.getArrayLength() <= 2 );
+		assertTrue( t.getHashLength() >= 4 );
 	}
 	
 	public void testOutOfOrderIntegerKeyInsertion() {
@@ -96,11 +96,11 @@ public class TableArrayTest extends TestCase {
 		}
 		
 		// Ensure capacities make sense
-		assertTrue( t.arrayCapacity() >= 0 );
-		assertTrue( t.arrayCapacity() <= 6 );
+		assertTrue( t.getArrayLength() >= 0 );
+		assertTrue( t.getArrayLength() <= 6 );
 		
-		assertTrue( t.hashCapacity() >= 16 );
-		assertTrue( t.hashCapacity() <= 64 );
+		assertTrue( t.getHashLength() >= 16 );
+		assertTrue( t.getHashLength() <= 64 );
 		
 	}
 	
@@ -113,10 +113,10 @@ public class TableArrayTest extends TestCase {
 			t.set( str, LuaInteger.valueOf( i ) );
 		}
 		
-		assertTrue( t.arrayCapacity() >= 9 ); // 1, 2, ..., 9
-		assertTrue( t.arrayCapacity() <= 18 );
-		assertTrue( t.hashCapacity() >= 11 ); // 0, "0", "1", ..., "9"
-		assertTrue( t.hashCapacity() <= 33 );
+		assertTrue( t.getArrayLength() >= 9 ); // 1, 2, ..., 9
+		assertTrue( t.getArrayLength() <= 18 );
+		assertTrue( t.getHashLength() >= 11 ); // 0, "0", "1", ..., "9"
+		assertTrue( t.getHashLength() <= 33 );
 		
 		LuaValue[] keys = t.keys();
 		

@@ -26,6 +26,7 @@ import junit.framework.TestSuite;
 
 import org.luaj.vm2.WeakTableTest.WeakKeyTableTest;
 import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
+import org.luaj.vm2.WeakTableTest.WeakValueTableTest;
 import org.luaj.vm2.compiler.CompilerUnitTests;
 import org.luaj.vm2.compiler.DumpLoadEndianIntTest;
 import org.luaj.vm2.compiler.RegressionTests;
@@ -52,7 +53,7 @@ public class AllTests {
 		table.addTestSuite(TableTest.class);
 		table.addTestSuite(TableArrayTest.class);
 		table.addTestSuite(TableHashTest.class);
-		table.addTestSuite(WeakTableTest.class);
+		table.addTestSuite(WeakValueTableTest.class);
 		table.addTestSuite(WeakKeyTableTest.class);
 		table.addTestSuite(WeakKeyValueTableTest.class);
 		suite.addTest(table);

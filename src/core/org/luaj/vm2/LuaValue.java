@@ -167,6 +167,7 @@ public class LuaValue extends Varargs {
 	public static LuaValue argerror(int iarg,String msg) { throw new LuaError("bad argument #"+iarg+": "+msg); }
 	protected LuaValue typerror(String expected) { throw new LuaError(expected+" expected, got "+typename()); }
 	protected LuaValue unimplemented(String fun) { throw new LuaError("'"+fun+"' not implemented for "+typename()); }
+	protected LuaValue illegal(String op,String typename) { throw new LuaError("illegal operation '"+op+"' for "+typename); }
 	protected LuaValue callerror() { throw new LuaError("attempt to call "+typename()); }
 	protected LuaValue lenerror() { throw new LuaError("attempt to get length of "+typename()); }
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on "+typename()); }
@@ -316,6 +317,7 @@ public class LuaValue extends Varargs {
 	
 	// lua number/string conversion
 	public LuaString strvalue()     { typerror("strValue"); return null; }
+	public LuaValue  strongkey()    { return this; }
 	public LuaValue  strongvalue()  { return this; }
 
 	// conversion from java values

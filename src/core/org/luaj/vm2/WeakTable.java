@@ -23,170 +23,269 @@ package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 
-public class WeakTable extends LuaTable {
+import org.luaj.vm2.lib.TwoArgFunction;
 
-	private final boolean weakKeys,weakValues;
+public class WeakTable extends LuaTable {
+	private LuaTable backing;
+	private boolean weakkeys,weakvalues;
 	
-	WeakTable( boolean weakKeys, boolean weakValues ) {
-		this.weakKeys = weakKeys;
-		this.weakValues = weakValues;
+	public WeakTable(boolean weakkeys, boolean weakvalues) {
+		this(weakkeys, weakvalues, 0, 0);
+	}
+	protected WeakTable(boolean weakkeys, boolean weakvalues, int narray, int nhash) {
+		this.backing = new LuaTable(narray, nhash);
+		this.weakkeys = weakkeys;
+		this.weakvalues = weakvalues;
+	}
+	protected WeakTable(boolean weakkeys, boolean weakvalues, LuaTable source) {
+		this(weakkeys, weakvalues, source.getArrayLength(), source.getHashLength());
+		Varargs n;
+		LuaValue k = NIL;
+		while ( !(k = ((n = source.next(k)).arg1())).isnil() )
+			rawset(k, n.arg(2));
+		m_metatable = source.m_metatable;
+	}
+	
+	public void presize( int narray ) {
+		backing.presize(narray);
 	}
 
-	private static class WeakValue extends LuaValue {
-		private final WeakReference ref;
-		public WeakValue(LuaValue val) {
-			ref = new WeakReference(val);
+	public void presize(int narray, int nhash) {
+		backing.presize(narray, nhash);
+	}
+	
+	protected int getArrayLength() {
+		return backing.getArrayLength();
+	}
+
+	protected int getHashLength() {
+		return backing.getHashLength();
+	}
+	
+	protected WeakTable changemode(boolean weakkeys, boolean weakvalues) {
+		this.weakkeys = weakkeys;
+		this.weakvalues = weakvalues;
+		return this;
+	}
+	
+	LuaValue weaken( LuaValue value ) {
+		switch ( value.type() ) {
+			case LuaValue.TFUNCTION:
+			case LuaValue.TTHREAD:
+			case LuaValue.TTABLE:
+				return new WeakValue(value);
+			case LuaValue.TUSERDATA:
+				return new WeakUserdata(value);
+			default:
+				return value;
 		}
+	}
+	
+	public void rawset( int key, LuaValue value ) {
+		if ( weakvalues )
+			value = weaken( value );
+		backing.set(key, value);
+	}
+
+	/** caller must ensure key is not nil */
+	public void rawset( LuaValue key, LuaValue value ) {
+		if ( weakvalues )
+			value = weaken( value );
+		if ( weakkeys ) {
+			switch ( key.type() ) {
+				case LuaValue.TFUNCTION:
+				case LuaValue.TTHREAD:
+				case LuaValue.TTABLE:
+				case LuaValue.TUSERDATA:
+					key = value = new WeakEntry(this, key, value);
+					break;
+				default:
+					break;
+			}
+		}
+		backing.set(key, value);
+	}
+	
+
+	public LuaValue rawget( int key ) {
+		return rawget(valueOf(key));
+	}
+	
+	public LuaValue rawget( LuaValue key ) {
+		LuaValue v = backing.rawget(key);
+		if ( v.isnil() )
+			return NIL;
+		v = v.strongvalue();
+		if ( v.isnil() )
+			backing.rawset(key, NIL);
+		return v;
+	}
+	
+	public int maxn() {
+		return backing.maxn();
+	}
+
+
+	/**
+	 * Get the next element after a particular key in the table 
+	 * @return key,value or nil
+	 */
+	public Varargs next( LuaValue key ) {
+		while ( true ) {
+			Varargs n = backing.next(key);
+			LuaValue k = n.arg1();
+			if ( k.isnil() )
+				return NIL;
+			LuaValue ks = k.strongkey();
+			LuaValue vs = n.arg(2).strongvalue();
+			if ( ks.isnil() || vs.isnil() ) {
+				backing.rawset(ks, NIL);
+			} else {
+				return varargsOf(ks,vs);
+			}
+		}
+	}
+	
+	/**
+	 * Get the next element after a particular key in the 
+	 * contiguous array part of a table 
+	 * @return key,value or nil
+	 */
+	public Varargs inext(LuaValue key) {
+		int k = key.optint(0)+1;
+		LuaValue v = this.rawget(k);
+		return v.isnil()? NIL: varargsOf(valueOf(k),v);
+	}
+	
+	// ----------------- sort support -----------------------------
+	public void sort(final LuaValue comparator) {
+		backing.sort( new TwoArgFunction() {
+			public LuaValue call(LuaValue arg1, LuaValue arg2) {
+				return comparator.call( arg1.strongvalue(), arg2.strongvalue() );
+			}
+		} );
+	}
+
+	static class WeakValue extends LuaValue {
+		final WeakReference ref;
+
+		protected WeakValue(LuaValue value) {
+			ref = new WeakReference(value);
+		}
+
 		public int type() {
-			return strongvalue().type();
+			illegal("type","weak value");
+			return 0;
 		}
+
 		public String typename() {
-			return "weakvalue";
+			illegal("typename","weak value");
+			return null;
 		}
+		
+		public String toString() {
+			return "weak<"+ref.get()+">";
+		}
+
+		public LuaValue strongkey() {
+			Object o = ref.get();
+			return o!=null? (LuaValue)o: NIL;
+		}
+		
 		public LuaValue strongvalue() {
 			Object o = ref.get();
 			return o!=null? (LuaValue)o: NIL;
 		}
-		public String tojstring() {
-			return strongvalue().tojstring();
-		}
-	}
-	
-	private static class WeakUserdata extends LuaValue {
-		private WeakReference ref;
-		private WeakReference mt;
-		public WeakUserdata(Object val, LuaValue metatable) {
-			this.ref = new WeakReference(val);
-			this.mt = new WeakReference(metatable);
-		}
-		public int type() {
-			return TVALUE;
-		}
-		public String typename() {
-			return "weakuserdata";
-		}
-		public LuaValue strongvalue() {
-			if ( ref != null ) {
-				Object o = ref.get();
-				if ( o != null )
-					return userdataOf( o, (LuaValue) mt.get() );
-			}
-			ref = mt = null;
-			return NIL;
-		}
-	}
-	
-	private static class WeakEntry extends LuaValue {
-		private LuaValue key;
-		private LuaValue val;
-		private WeakEntry(LuaValue key, LuaValue val) {
-			this.key = key;
-			this.val = val;
-		}
-		public int type() {
-			return LuaValue.TNIL;
-		}
-		public String typename() {
-			return "weakentry";
-		}
-		public LuaValue strongkey() {
-			LuaValue k = key.strongvalue();
-			LuaValue v = val.strongvalue();
-			if ( k.isnil() || v.isnil() )
-				return key = val = NIL;
-			return k;
-		}
-		public LuaValue strongvalue() {
-			LuaValue k = key.strongvalue();
-			LuaValue v = val.strongvalue();
-			if ( k.isnil() || v.isnil() )
-				return key = val = NIL;
-			return v;
-		}
+		
 		public boolean eq_b(LuaValue rhs) {
-			return strongkey().eq_b(rhs);
-		}
-		public int hashCode() {
-			return strongkey().hashCode(); 
+			Object o = ref.get();
+			return o!=null && rhs.eq_b((LuaValue)o);
 		}
 	}
 	
-	
-	private boolean shouldWeaken( LuaValue value ) {
-		switch ( value.type() ) {
-		case LuaValue.TFUNCTION:
-		case LuaValue.TTHREAD: 
-		case LuaValue.TTABLE: 
-		case LuaValue.TUSERDATA:
+	static final class WeakUserdata extends WeakValue {
+		private final WeakReference ob;
+		private final WeakReference mt;
+
+		private WeakUserdata(LuaValue value) {
+			super(value);
+			ob = new WeakReference(value.touserdata());
+			LuaValue udmt = value.getmetatable();
+			mt = udmt!=null? new WeakReference(udmt): null;
+		}
+		
+		public LuaValue strongvalue() {
+			Object u = ref.get();
+			if ( u != null )
+				return (LuaValue) u;
+			Object o = ob.get();
+			Object m = mt!=null? mt.get(): null;
+			return o!=null? m!=null? userdataOf(o,(LuaValue)m): userdataOf(o): NIL;
+		}
+		
+		public boolean eq_b(LuaValue rhs) {
+			return rhs.isuserdata() && (rhs.touserdata() == ob.get());
+		}
+		
+		public boolean isuserdata() {
 			return true;
 		}
-		return false;
-	}
-
-	private LuaValue toWeak( LuaValue value ) {
-		switch ( value.type() ) {
-		case LuaValue.TFUNCTION:
-		case LuaValue.TTHREAD: 
-		case LuaValue.TTABLE: return new WeakValue( value );
-		case LuaValue.TUSERDATA: return new WeakUserdata( value.checkuserdata(), value.getmetatable() );
-		default: return value;
+		
+		public Object touserdata() {
+			return ob.get();
 		}
 	}
 
-	public LuaValue rawget(int key) {
-		LuaValue v = super.rawget(key);
-		if ( v.isnil() )
-			return NIL;
-		v = v.strongvalue();
-		if ( v.isnil() ) {
-			// TODO: mark table for culling? 
-			super.rawset(key, NIL);
-		}
-		return v;
-	}
+	static final class WeakEntry extends LuaValue {
+		final WeakTable table;
+		final LuaValue weakkey;
+		final int keyhash;
 
-	public LuaValue rawget(LuaValue key) {
-		LuaValue v = super.rawget(key);
-		if ( v.isnil() )
-			return NIL;
-		v = v.strongvalue();
-		if ( v.isnil() ) {
-			// TODO: mark table for culling? 
-			super.rawset(key, NIL);
-		}
-		return v;
-	}
-	
-	public void rawset(int key, LuaValue val) {
-		if ( val.isnil() || !weakValues || !shouldWeaken(val) ) {
-			super.rawset(key, val);
-		} else {
-			super.rawset(key, toWeak(val));
-		}
-	}
+		private WeakEntry(WeakTable table, LuaValue key, LuaValue weakvalue) {
+			this.table = table;
+			this.weakkey = table.weaken(key);
+			this.keyhash = key.hashCode();
 
-	public void rawset(LuaValue key, LuaValue val) {
-		if ( val.isnil() ) {
-			super.rawset(key, val);
-		} else {
-			boolean weakenKey = weakKeys   && shouldWeaken(key);
-			boolean weakenVal = weakValues && shouldWeaken(val);
-			if ( weakenKey ) {
-				WeakEntry e = new WeakEntry( toWeak(key), weakenVal? toWeak(val): val);
-				super.rawset(e, e);
-			} else if ( weakenVal ) {
-				super.rawset(key, toWeak(val));
-			} else {
-				super.rawset(key, val);
-			}
+			// store an association from table to value in the key's metatable
+			LuaValue mt = key.getmetatable();
+			if ( mt == null )
+				key.setmetatable(mt=new LuaTable(0,1));
+			mt.set(table, weakvalue);
 		}
-	}
-	
-	protected LuaTable changemode(boolean k, boolean v) {
-		if ( k!=this.weakKeys || v!=weakValues )
-			return recreateas(k,v);
-		return this;
-	}
+
+		// when looking up the value, look in the keys metatable
+		public LuaValue strongvalue() {
+			LuaValue key = weakkey.strongkey();
+			if ( key.isnil() )
+				return NIL;
+			LuaValue mt = key.getmetatable();
+			if ( mt == null )
+				return NIL;
+			LuaValue weakvalue = mt.get(table);
+			return weakvalue.strongvalue();
+		}
 
 
+		public int type() {
+			illegal("type","weak entry");
+			return 0;
+		}
+
+		public String typename() {
+			illegal("typename","weak entry");
+			return null;
+		}
+		
+		public String toString() {
+			return "weak<"+strongkey()+","+strongvalue()+">";
+		}
+		
+		public int hashCode() {
+			return keyhash;
+		}
+		
+		public boolean eq_b(LuaValue rhs) {
+			return rhs.eq_b(weakkey.strongkey());
+		}
+	}
 }
