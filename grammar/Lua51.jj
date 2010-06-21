@@ -1,5 +1,5 @@
 /** 
-* Javacc grammer for lua language version 5.1
+* Javacc grammar for lua language version 5.1
 *
 * Originally created for use in luaj, a Java implementation of the lua language
 * @see http://sourceforge.net/projects/luaj/
@@ -10,7 +10,7 @@
 * Empty grammar that validates syntax without producing a parse tree.  
 *
 * @author Jim Roseborough
-* @date June 19, 2010
+* @date June 21, 2010
 */
 
 options {
