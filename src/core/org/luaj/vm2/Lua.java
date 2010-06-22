@@ -229,6 +229,13 @@ public class Lua {
 	
 	public static final int NUM_OPCODES	= OP_VARARG + 1;
 
+	/* pseudo-opcodes used in parsing only.  */
+	public static final int OP_GT  = 63; // > 
+	public static final int OP_GE  = 62; // >=
+	public static final int OP_NEQ = 61; // ~= 
+	public static final int OP_AND = 60; // and 
+	public static final int OP_OR  = 59; // or 
+	
 	/*===========================================================================
 	  Notes:
 	  (*) In OP_CALL, if (B == 0) then B = top. C is the number of returns - 1,

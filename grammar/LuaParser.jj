@@ -1,0 +1,464 @@
+/*******************************************************************************
+* Copyright (c) 2010 Luaj.org. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+******************************************************************************/
+/**
+* Javacc grammar used to produce a parse tree.  
+*
+*/
+
+options {
+  STATIC = false;
+  JDK_VERSION = "1.3";
+  ERROR_REPORTING = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_PARSER = false;
+  DEBUG_TOKEN_MANAGER = false;
+  OUTPUT_DIRECTORY = "src/jse/org/luaj/vm2/parser";
+}
+
+PARSER_BEGIN(LuaParser)
+package org.luaj.vm2.parser;
+import org.luaj.vm2.*;
+import org.luaj.vm2.ast.*;
+import java.util.*;
+
+public class LuaParser {
+
+  public static void main(String args[]) throws ParseException {
+    LuaParser parser = new LuaParser(System.in);
+    parser.Chunk();
+  }
+  
+  private static VarExp assertvarexp(PrimaryExp pe) throws ParseException {
+  	if (!pe.isvarexp()) 
+		throw new ParseException("exptected variable");
+	return (VarExp) pe; 
+  }
+  
+  private static FuncCall assertfunccall(PrimaryExp pe) throws ParseException {
+  	if (!pe.isfunccall()) 
+		throw new ParseException("expected function call");
+	return (FuncCall) pe; 
+  }
+}
+
+PARSER_END(LuaParser)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " " | "\t" | "\n" | "\r" | "\f"
+}
+
+/* COMMENTS and LONG STRINGS */
+
+MORE :
+{
+  "--[[": IN_LC0
+| "--[=[": IN_LC1
+| "--[==[": IN_LC2
+| "--[===[": IN_LC3
+| < "--[====" ("=")* "[" > : IN_LCN
+| "[[" : IN_LS0
+| "[=[" : IN_LS1
+| "[==[" : IN_LS2
+| "[===[" : IN_LS3
+| < "[====" ("=")* "[" > : IN_LSN
+| "--"   : IN_COMMENT
+}
+
+<IN_COMMENT> SPECIAL_TOKEN :
+{
+  <COMMENT: (~["\n","\r"])* ("\n"|"\r"|"\r\n")? > : DEFAULT
+}
+
+<IN_LC0> SPECIAL_TOKEN : { <LONGCOMMENT0: "]]" > : DEFAULT }
+<IN_LC1> SPECIAL_TOKEN : { <LONGCOMMENT1: "]=]" > : DEFAULT }
+<IN_LC2> SPECIAL_TOKEN : { <LONGCOMMENT2: "]==]" > : DEFAULT }
+<IN_LC3> SPECIAL_TOKEN : { <LONGCOMMENT3: "]===]" > : DEFAULT }
+<IN_LCN> SPECIAL_TOKEN : { <LONGCOMMENTN: "]====" ("=")* "]" > : DEFAULT }
+
+<IN_LS0> TOKEN : { <LONGSTRING0: "]]" > : DEFAULT }
+<IN_LS1> TOKEN : { <LONGSTRING1: "]=]" > : DEFAULT }
+<IN_LS2> TOKEN : { <LONGSTRING2: "]==]" > : DEFAULT }
+<IN_LS3> TOKEN : { <LONGSTRING3: "]===]" > : DEFAULT }
+<IN_LSN> TOKEN : { <LONGSTRINGN: "]====" ("=")* "]" > : DEFAULT }
+
+<IN_LC0,IN_LC1,IN_LC2,IN_LC3,IN_LCN,IN_LS0,IN_LS1,IN_LS2,IN_LS3,IN_LSN> MORE :
+{
+  < ~[] >
+}
+
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  <AND: "and">
+| <BREAK: "break">
+| <DO: "do">
+| <ELSE: "else">
+| <ELSEIF: "elseif">
+| <END: "end">
+| <FALSE: "false">
+| <FOR: "for">
+| <FUNCTION: "function">
+| <IF: "if">
+| <IN: "in">
+| <LOCAL: "local">
+| <NIL: "nil">
+| <NOT: "not">
+| <OR: "or">
+| <RETURN: "return">
+| <REPEAT: "repeat">
+| <THEN: "then">
+| <TRUE: "true">
+| <UNTIL: "until">
+| <WHILE: "while">
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < NAME: ["a"-"z", "A"-"Z", "_"] (["a"-"z", "A"-"Z", "_", "0"-"9"])* >
+| < NUMBER: <HEX> | <FLOAT> >
+| < #FLOAT: (<DIGIT>)+ "." (<DIGIT>)* (<EXP>)? | "." (<DIGIT>)+ (<EXP>)? | (<DIGIT>)+ (<EXP>)? >
+| < #DIGIT: ["0"-"9"] >
+| < #EXP: ["e","E"] (["+","-"])? (<DIGIT>)+ >
+| < #HEX: "0" ["x","X"] (<HEXDIGIT>)+ >
+| < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
+| < STRING: "\"" (<QUOTED> | ~["\\","\""])* "\"" >
+| < CHARSTRING: "'" (<QUOTED> | ~["\\","'"])* "'" >
+| < #QUOTED: <DECIMAL> | <UNICODE> | <CHAR> >
+| < #DECIMAL:   "\\" ["0"-"9"] (["0"-"9"])? (["0"-"9"])? >
+| < #UNICODE: "\\" "u" <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> >
+//| < #CHAR: "\\" ("a"|"b"|"f"|"n"|"r"|"t"|"v"|"["|"]"|"'"|"\""|"\\"|"0"|<LF>) >
+| < #CHAR: "\\" (~[]) >
+| < #LF: ("\n" | "\r" | "\r\n") >
+}
+
+/** Root production. */
+Chunk Chunk():
+{
+	Block b;
+}
+{
+	b=Block() <EOF> { return new Chunk(b); }
+}
+
+Block Block():
+{
+	Block b = new Block();
+	Stat s;
+}
+{
+	(s=Stat() (";")? {b.add(s);} )* (s=LastStat() (";")? {b.add(s);} )? { return b; } 
+}
+
+Stat Stat():
+{
+	Block b,b2;
+	Exp e,e2,e3=null;
+	Stat s;
+	FuncName fn;
+	FuncBody fb;
+	Token n;
+	List<Name> nl;
+	List<Exp> el=null;
+}
+{
+	<DO> b=Block() <END> { return Stat.block(b); }
+|	<WHILE> e=Exp() <DO> b=Block() <END> { return Stat.whiledo(e,b); }
+|	<REPEAT> b=Block() <UNTIL> e=Exp() { return Stat.repeatuntil(b,e); }
+|	s=IfThenElse() { return s; }
+|	LOOKAHEAD(3) <FOR> n=<NAME> "=" e=Exp() "," e2=Exp() ( "," e3=Exp() )? <DO> b=Block() <END>	{ return Stat.fornumeric(n.image,e,e2,e3,b); }
+|	<FOR> nl=NameList() <IN> el=ExpList() <DO> b=Block() <END> { return Stat.forgeneric(nl,el,b); }
+|	<FUNCTION> fn=FuncName() fb=FuncBody() { return Stat.functiondef(fn,fb); }
+|	LOOKAHEAD(2) <LOCAL> <FUNCTION> n=<NAME> fb=FuncBody() { return Stat.localfunctiondef(n.image,fb); }
+|	<LOCAL> nl=NameList() ( "=" el=ExpList() )?  { return Stat.localassignment(nl,el); }
+|	s=ExprStat() { return s; }
+}
+
+Stat IfThenElse():
+{
+	Block b,b2,b3=null;
+	Exp e,e2;
+	List<Exp> el=null;
+	List<Block> bl=null; 
+}
+{
+	<IF> e=Exp() 
+		<THEN> b=Block() 
+		(<ELSEIF> e2=Exp() <THEN> b2=Block() { 
+			if (el==null) el=new ArrayList<Exp>(); 
+			if (bl==null) bl=new ArrayList<Block>(); 
+			el.add(e2);
+			bl.add(b2);
+		} )* 
+		(<ELSE> b3=Block())? <END> 
+			{ return Stat.ifthenelse(e,b,el,bl,b3); }
+}
+
+Stat LastStat():
+{
+	List<Exp> el=null;
+}
+{
+	<BREAK> { return Stat.breakstat(); }
+|	<RETURN> ( el=ExpList() )? { return Stat.returnstat(el); }
+}
+
+Stat ExprStat():
+{
+	PrimaryExp pe;
+	Assign as=null;
+}
+{
+	pe=PrimaryExp() ( as=Assign(assertvarexp(pe)) )?
+	{ return as==null? Stat.functioncall(assertfunccall(pe)): Stat.assignment(as); }
+}
+
+Assign Assign(VarExp v0):
+{
+	List<VarExp> vl = new ArrayList<VarExp>();
+	vl.add(v0);
+	VarExp ve;
+	List<Exp> el;
+}
+{
+	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { return new Assign(vl,el); }
+}
+
+VarExp VarExp():
+{
+	PrimaryExp pe;
+}
+{
+	pe=PrimaryExp() { return assertvarexp(pe); }	
+}
+
+FuncName FuncName():
+{
+	FuncName fn;
+	Token n;
+}
+{
+	n=<NAME> {fn=new FuncName(n.image);} 
+		( "." n=<NAME> {fn.adddot(n.image);} )* 
+		( ":" n=<NAME> {fn.method=n.image;} )? 
+			{return fn;}
+}
+
+PrimaryExp PrefixExp():
+{
+	Token n;
+	Exp e;
+}
+{
+	n=<NAME>			{ return PrimaryExp.nameprefix(n.image); }
+|	"(" e=Exp() ")"		{ return PrimaryExp.parensprefix(e); }
+}
+
+PrimaryExp PrimaryExp(): 
+{	
+	PrimaryExp pe;
+	PostfixOp po; 
+}
+{
+	pe=PrefixExp() ( LOOKAHEAD(2) po=PostfixOp() {pe=pe.append(po);} )* { return pe; }
+}
+
+PostfixOp PostfixOp():
+{
+	Token n;
+	Exp e;
+	FuncArgs a;
+}
+{
+	"." n=<NAME>				{ return PostfixOp.fieldop(n.image); } 
+|	"[" e=Exp() "]"				{ return PostfixOp.indexop(e); }
+|	":" n=<NAME> a=FuncArgs()	{ return PostfixOp.methodop(n.image,a); } 
+|	a=FuncArgs() 				{ return PostfixOp.functionop(a); }
+}
+
+FuncArgs FuncArgs():
+{
+	List<Exp> el=null;
+	TableConstructor tc;
+	LuaString s;
+}
+{
+	"(" ( el=ExpList() )? ")"	{ return FuncArgs.explist(el); }
+|	tc=TableConstructor()		{ return FuncArgs.tableconstructor(tc); }
+|	s=Str()						{ return FuncArgs.string(s); }
+}
+
+List<Name> NameList():
+{
+	List<Name> nl = new ArrayList<Name>();
+	Token name;
+}
+{
+	name=<NAME> {nl.add(new Name(name.image));} ( LOOKAHEAD(2) "," name=<NAME> {nl.add(new Name(name.image));} )* {return nl;}
+}
+
+List<Exp> ExpList():
+{
+	List<Exp> el = new ArrayList<Exp>();
+	Exp e;
+}
+{
+	e=Exp() {el.add(e);} ( "," e=Exp() {el.add(e);} )* {return el;}
+}
+
+Exp SimpleExp():
+{
+	Token n;
+	LuaString s;
+	Exp e;
+	TableConstructor tc;
+}
+{
+	<NIL>		{ return Exp.constant(LuaValue.NIL); } 		
+|	<TRUE>		{ return Exp.constant(LuaValue.TRUE); }
+|	<FALSE>		{ return Exp.constant(LuaValue.FALSE); }
+|	n=<NUMBER>	{ return Exp.constant(LuaValue.valueOf(Double.valueOf(n.image))); }
+|	s=Str()		{ return Exp.constant(s); }
+|	"..."		{ return Exp.varargs(); } 
+|	tc=TableConstructor()	{ return Exp.tableconstructor(tc); }
+|	Function() 				{ return null; }
+|	e=PrimaryExp()			{ return e; } 
+}
+
+LuaString Str():
+{}
+{
+	<STRING>		{ return Str.quoteString(token.image); } 
+|	<CHARSTRING>	{ return Str.charString(token.image); }
+|	<LONGSTRING0>	{ return Str.longString(token.image); }
+|	<LONGSTRING1>	{ return Str.longString(token.image); }
+|	<LONGSTRING2>	{ return Str.longString(token.image); }
+|	<LONGSTRING3>	{ return Str.longString(token.image); }
+|	<LONGSTRINGN>	{ return Str.longString(token.image); }
+}
+
+Exp Exp():
+{
+	Exp e,s;
+	int op;
+}
+{
+	( e=SimpleExp() | op=Unop() s=Exp() {e=Exp.unaryexp(op,s);}) 
+		(LOOKAHEAD(2) op=Binop() s=Exp() {e=Exp.binaryexp(e,op,s);} )* { return e; }
+}
+
+FuncBody Function():
+{
+	FuncBody fb;
+}
+{
+	<FUNCTION> fb=FuncBody() { return fb; }
+}
+
+FuncBody FuncBody():
+{
+	FuncBody fb = new FuncBody();
+	ParList pl;
+	Block b;
+}
+{
+	"(" ( pl=ParList() { fb.parlist=pl; } )? ")" b=Block() { fb.block=b; } <END> { return fb; }
+}
+
+ParList ParList():
+{
+	ParList pl = new ParList();
+	List<Name> nl;
+}
+{
+	nl=NameList() { pl.namelist=nl; } ( "," "..." { pl.isvararg=true; } )? { return pl; } 
+|	"..." { pl.isvararg=true; return pl; }
+}
+
+TableConstructor TableConstructor():
+{
+	TableConstructor tc = new TableConstructor();
+	List<Field> fl = null;
+}
+{
+	"{" ( fl=FieldList() {tc.fields=fl;} )? "}" { return tc; }
+}
+
+List<Field> FieldList():
+{
+	List<Field> fl = new ArrayList<Field>();
+	Field f;
+}
+{
+	f=Field() {fl.add(f);} (LOOKAHEAD(2) FieldSep() f=Field() {fl.add(f);})* (FieldSep())? { return fl; }
+}
+
+Field Field():
+{
+	Token name;
+	Exp exp,rhs;
+}
+{
+	"[" exp=Exp() "]" "=" rhs=Exp()         { return Field.keyedField(exp,rhs); }
+|	LOOKAHEAD(2) name=<NAME> "=" rhs=Exp()  { return Field.namedField(name.image,rhs); }
+|	rhs=Exp()                               { return Field.listField(rhs); }
+}
+
+void FieldSep():
+{}
+{
+	"," | ";"
+}
+
+int Binop():
+{}
+{
+	"+"   { return Lua.OP_ADD; }
+|	"-"   { return Lua.OP_SUB; } 
+|	"*"   { return Lua.OP_MUL; } 
+|	"/"   { return Lua.OP_DIV; } 
+|	"^"   { return Lua.OP_POW; } 
+|	"%"   { return Lua.OP_MOD; } 
+|	".."  { return Lua.OP_CONCAT; } 
+|	"<"   { return Lua.OP_LT;  } 
+|	"<="  { return Lua.OP_LE;  } 
+|	">"   { return Lua.OP_GT;  } 
+|	">="  { return Lua.OP_GE;  }
+|	"=="  { return Lua.OP_EQ;  } 
+|	"~="  { return Lua.OP_NEQ; } 
+|	<AND> { return Lua.OP_AND; } 
+|	<OR>  { return Lua.OP_OR;  }
+}
+
+int Unop():
+{}
+{
+	"-"   { return Lua.OP_UNM; }
+|	<NOT> { return Lua.OP_NOT; } 
+|	"#"   { return Lua.OP_LEN; }
+}

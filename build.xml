@@ -56,8 +56,7 @@
 
 	<target name="parser" depends="javacc-lib">
 		<java classname="javacc" classpath="lib/javacc.jar">
-			<arg line="-OUTPUT_DIRECTORY=src/jse/org/luaj/vm2/parser"/>
-			<arg line="grammar/Lua51.jj"/>
+			<arg line="grammar/LuaParser.jj"/>
 		</java>
 	</target>
 		
