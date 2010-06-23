@@ -231,14 +231,14 @@ Stat LastStat():
 Stat ExprStat():
 {
 	PrimaryExp pe;
-	Assign as=null;
+	Stat as=null;
 }
 {
 	pe=PrimaryExp() ( as=Assign(assertvarexp(pe)) )?
-	{ return as==null? Stat.functioncall(assertfunccall(pe)): Stat.assignment(as); }
+	{ return as==null? Stat.functioncall(assertfunccall(pe)): as; }
 }
 
-Assign Assign(VarExp v0):
+Stat Assign(VarExp v0):
 {
 	List<VarExp> vl = new ArrayList<VarExp>();
 	vl.add(v0);
@@ -246,7 +246,7 @@ Assign Assign(VarExp v0):
 	List<Exp> el;
 }
 {
-	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { return new Assign(vl,el); }
+	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { return Stat.assignment(vl,el); }
 }
 
 VarExp VarExp():
@@ -337,16 +337,17 @@ Exp SimpleExp():
 	LuaString s;
 	Exp e;
 	TableConstructor tc;
+	FuncBody fb;
 }
 {
-	<NIL>		{ return Exp.constant(LuaValue.NIL); } 		
-|	<TRUE>		{ return Exp.constant(LuaValue.TRUE); }
-|	<FALSE>		{ return Exp.constant(LuaValue.FALSE); }
-|	n=<NUMBER>	{ return Exp.constant(LuaValue.valueOf(Double.valueOf(n.image))); }
-|	s=Str()		{ return Exp.constant(s); }
-|	"..."		{ return Exp.varargs(); } 
+	<NIL>					{ return Exp.constant(LuaValue.NIL); } 		
+|	<TRUE>					{ return Exp.constant(LuaValue.TRUE); }
+|	<FALSE>					{ return Exp.constant(LuaValue.FALSE); }
+|	n=<NUMBER>				{ return Exp.constant(LuaValue.valueOf(Double.valueOf(n.image))); }
+|	s=Str()					{ return Exp.constant(s); }
+|	"..."					{ return Exp.varargs(); } 
 |	tc=TableConstructor()	{ return Exp.tableconstructor(tc); }
-|	Function() 				{ return null; }
+|	fb=Function() 			{ return Exp.anonymousfunction(fb); }
 |	e=PrimaryExp()			{ return e; } 
 }
 
@@ -382,22 +383,21 @@ FuncBody Function():
 
 FuncBody FuncBody():
 {
-	FuncBody fb = new FuncBody();
-	ParList pl;
+	ParList pl=null;
 	Block b;
 }
 {
-	"(" ( pl=ParList() { fb.parlist=pl; } )? ")" b=Block() { fb.block=b; } <END> { return fb; }
+	"(" ( pl=ParList() )? ")" b=Block() <END> { return new FuncBody(pl,b); }
 }
 
 ParList ParList():
 {
-	ParList pl = new ParList();
-	List<Name> nl;
+	List<Name> nl=null;
+	boolean v=false;
 }
 {
-	nl=NameList() { pl.namelist=nl; } ( "," "..." { pl.isvararg=true; } )? { return pl; } 
-|	"..." { pl.isvararg=true; return pl; }
+	nl=NameList() ( "," "..." { v=true; } )? { return new ParList(nl,v); } 
+|	"..." {  return new ParList(null,true); ; }
 }
 
 TableConstructor TableConstructor():

@@ -22,8 +22,8 @@
 package org.luaj.vm2.ast;
 
 public class Name {
-	public final String luaname;
-	public Name(String luaname) {
-		this.luaname = luaname;
+	public final String name;
+	public Name(String name) {
+		this.name = name;
 	}
 }

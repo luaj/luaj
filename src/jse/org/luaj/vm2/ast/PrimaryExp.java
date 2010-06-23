@@ -51,4 +51,7 @@ public class PrimaryExp extends Exp {
 		return ops != null && ops.get(ops.size()-1).isfunccall(); 
 	}
 
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }

@@ -24,4 +24,12 @@ package org.luaj.vm2.ast;
 public class FuncBody {
 	public ParList parlist;
 	public Block block;
+
+	public FuncBody(ParList parlist, Block block) {
+		this.parlist = parlist!=null? parlist: ParList.EMPTY_PARLIST;
+		this.block = block;
+	}
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }

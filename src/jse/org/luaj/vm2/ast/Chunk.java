@@ -27,4 +27,8 @@ public class Chunk {
 	public Chunk(Block b) {
 		this.block = b;
 	}
+	
+	public void accept( Visitor visitor ) {
+		visitor.visit( this );
+	}
 }

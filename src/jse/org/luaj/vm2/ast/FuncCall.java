@@ -23,4 +23,8 @@ package org.luaj.vm2.ast;
 
 public class FuncCall extends PrimaryExp {
 
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
+
 }

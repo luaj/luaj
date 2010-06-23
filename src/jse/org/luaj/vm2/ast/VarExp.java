@@ -22,4 +22,7 @@
 package org.luaj.vm2.ast;
 
 public class VarExp extends PrimaryExp {
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }

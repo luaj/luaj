@@ -55,4 +55,7 @@ public class PostfixOp {
 		return false;
 	}
 
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }

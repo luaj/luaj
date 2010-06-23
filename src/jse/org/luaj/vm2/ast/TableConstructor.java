@@ -25,4 +25,8 @@ import java.util.List;
 
 public class TableConstructor extends Exp {
 	public List<Field> fields;
+
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }

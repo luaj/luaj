@@ -23,31 +23,87 @@ package org.luaj.vm2.ast;
 
 import org.luaj.vm2.LuaValue;
 
+abstract
 public class Exp {
+	abstract public void accept(Visitor visitor);
 
 	public static Exp constant(LuaValue value) {
-		// TODO Auto-generated method stub
-		return null;
+		return new Constant(value);
 	}
 
 	public static Exp varargs() {
-		// TODO Auto-generated method stub
-		return null;
+		return new VarargsExp();
 	}
 
 	public static Exp tableconstructor(TableConstructor tc) {
-		// TODO Auto-generated method stub
-		return null;
+		return tc;
 	}
 
-	public static Exp unaryexp(int op, Exp s) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Exp unaryexp(int op, Exp rhs) {
+		return new UnopExp(op, rhs);
 	}
 
-	public static Exp binaryexp(Exp e, int op, Exp s) {
-		// TODO Auto-generated method stub
-		return null;
+	public static Exp binaryexp(Exp lhs, int op, Exp rhs) {
+		return new BinopExp(lhs, op, rhs);
 	}
 
+	public static Exp anonymousfunction(FuncBody funcbody) {
+		return new AnonFuncDef(funcbody);
+	}
+
+	public static class Constant extends Exp {
+		public final LuaValue value;
+		public Constant(LuaValue value) {
+			this.value = value;
+		}
+
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}		
+	}
+
+	public static class VarargsExp extends Exp {
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}		
+	}
+	
+	public static class UnopExp extends Exp {
+		public final int op;
+		public final Exp rhs;
+		public UnopExp(int op, Exp rhs) {
+			this.op = op;
+			this.rhs = rhs;
+		}
+
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}		
+	}
+	
+	public static class BinopExp extends Exp {
+		public final Exp lhs,rhs;
+		public final int op;
+		public BinopExp(Exp lhs, int op, Exp rhs) {
+			this.lhs = lhs;
+			this.op = op;
+			this.rhs = rhs;
+		}
+
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}		
+	}
+	
+	public static class AnonFuncDef extends Exp {
+		public final FuncBody funcbody;
+		public AnonFuncDef(FuncBody funcbody) {
+			this.funcbody = funcbody;
+		}
+
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}		
+	}
 }

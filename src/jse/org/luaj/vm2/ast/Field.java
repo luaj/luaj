@@ -44,4 +44,8 @@ public class Field {
 	public static Field listField(Exp rhs) {
 		return new Field(null, null, rhs);
 	}
+
+	public void accept(Visitor visitor) {
+		visitor.visit(this);
+	}
 }
