@@ -22,5 +22,4 @@
 package org.luaj.vm2.ast;
 
 public class VarExp extends PrimaryExp {
-
 }

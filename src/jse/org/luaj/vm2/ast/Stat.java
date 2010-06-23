@@ -25,17 +25,17 @@ import java.util.List;
 
 public class Stat {
 
-	public static Stat block(Block b) {
+	public static Stat block(Block block) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat whiledo(Exp e, Block b) {
+	public static Stat whiledo(Exp exp, Block block) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat repeatuntil(Block b, Exp e) {
+	public static Stat repeatuntil(Block block, Exp exp) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -45,48 +45,47 @@ public class Stat {
 		return null;
 	}
 
-	public static Stat returnstat(List<Exp> el) {
+	public static Stat returnstat(List<Exp> exps) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat assignment(Assign as) {
+	public static Stat assignment(Assign assign) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat functioncall(PrimaryExp pe) {
+	public static Stat functioncall(FuncCall exp) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat localfunctiondef(String image, FuncBody fb) {
+	public static Stat localfunctiondef(String name, FuncBody funcbody) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat fornumeric(String image, Exp e, Exp e2, Exp e3, Block b) {
+	public static Stat fornumeric(String name, Exp initial, Exp limit, Exp step, Block block) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat functiondef(FuncName fn, FuncBody fb) {
+	public static Stat functiondef(FuncName funcname, FuncBody funcbody) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat forgeneric(List<Name> nl, List<Exp> el, Block b) {
+	public static Stat forgeneric(List<Name> names, List<Exp> exps, Block block) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat localassignment(List<Name> nl, List<Exp> el) {
+	public static Stat localassignment(List<Name> names, List<Exp> values) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public static Stat ifthenelse(Exp e, Block b, List<Exp> el, List<Block> bl,
-			Block b3) {
+	public static Stat ifthenelse(Exp ifexp, Block ifblock, List<Exp> elseifexps, List<Block> elseifblocks, Block elseblock) {
 		// TODO Auto-generated method stub
 		return null;
 	}
