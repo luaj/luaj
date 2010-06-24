@@ -57,7 +57,7 @@ public class Str {
 		try {
 			return s.getBytes("UTF8");
 		} catch ( Exception e ) {
-			throw new RuntimeException("utf8 nto found: "+e);
+			throw new RuntimeException("utf8 not found: "+e);
 		}
 	}
 }

@@ -51,6 +51,142 @@ public class Exp {
 		return new AnonFuncDef(funcbody);
 	}
 
+	/** foo */
+	public static NameExp nameprefix(String name) {
+		return new NameExp(name);
+	}
+
+	/** ( foo.bar ) */
+	public static ParensExp parensprefix(Exp exp) {
+		return new ParensExp(exp);
+	}
+
+	/** foo[exp] */
+	public static IndexExp indexop(PrimaryExp lhs, Exp exp) {
+		return new IndexExp(lhs, exp);
+	}
+
+	/** foo.bar */
+	public static FieldExp fieldop(PrimaryExp lhs, String name) {
+		return new FieldExp(lhs, name);
+	}
+
+	/** foo(2,3) */
+	public static FuncCall functionop(PrimaryExp lhs, FuncArgs args) {
+		return new FuncCall(lhs, args);
+	}
+
+	/** foo:bar(4,5) */
+	public static MethodCall methodop(PrimaryExp lhs, String name, FuncArgs args) {
+		return new MethodCall(lhs, name, args);
+	}
+
+	public boolean isvarexp() {
+		return false;
+	}
+
+	public boolean isfunccall() {
+		return false;
+	}
+
+	abstract public static class PrimaryExp extends Exp {
+		public boolean isvarexp() {
+			return false;
+		}
+		public boolean isfunccall() {
+			return false;
+		}
+	}
+
+	abstract public static class VarExp extends PrimaryExp {
+		public boolean isvarexp() {
+			return true;
+		}
+	}
+	
+	public static class NameExp extends VarExp {
+		public final Name name;
+		public NameExp(String name) {
+			this.name = new Name(name);
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+	
+	public static class ParensExp extends PrimaryExp {
+		public final Exp exp;
+		public ParensExp(Exp exp) {
+			this.exp = exp;
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+	
+	public static class FieldExp extends VarExp {
+		public final PrimaryExp lhs;
+		public final Name name;
+		public FieldExp(PrimaryExp lhs, String name) {
+			this.lhs = lhs;
+			this.name = new Name(name);
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+	
+	public static class IndexExp extends VarExp {
+		public final PrimaryExp lhs;
+		public final Exp exp;
+		public IndexExp(PrimaryExp lhs, Exp exp) {
+			this.lhs = lhs;
+			this.exp = exp;
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+	
+	public static class FuncCall extends PrimaryExp {
+		public final PrimaryExp lhs;
+		public final FuncArgs args;
+		
+		public FuncCall(PrimaryExp lhs, FuncArgs args) {
+			this.lhs = lhs;
+			this.args = args;
+		}
+
+		public boolean isfunccall() {
+			return true;
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+	
+	public static class MethodCall extends FuncCall {
+		public final String name;
+		
+		public MethodCall(PrimaryExp lhs, String name, FuncArgs args) {
+			super(lhs, args);
+			this.name = new String(name);
+		}
+
+		public boolean isfunccall() {
+			return true;
+		}
+		
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+
 	public static class Constant extends Exp {
 		public final LuaValue value;
 		public Constant(LuaValue value) {

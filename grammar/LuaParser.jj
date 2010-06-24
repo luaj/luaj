@@ -47,16 +47,16 @@ public class LuaParser {
     parser.Chunk();
   }
   
-  private static VarExp assertvarexp(PrimaryExp pe) throws ParseException {
+  private static Exp.VarExp assertvarexp(Exp.PrimaryExp pe) throws ParseException {
   	if (!pe.isvarexp()) 
 		throw new ParseException("exptected variable");
-	return (VarExp) pe; 
+	return (Exp.VarExp) pe; 
   }
   
-  private static FuncCall assertfunccall(PrimaryExp pe) throws ParseException {
+  private static Exp.FuncCall assertfunccall(Exp.PrimaryExp pe) throws ParseException {
   	if (!pe.isfunccall()) 
 		throw new ParseException("expected function call");
-	return (FuncCall) pe; 
+	return (Exp.FuncCall) pe; 
   }
 }
 
@@ -230,7 +230,7 @@ Stat LastStat():
 
 Stat ExprStat():
 {
-	PrimaryExp pe;
+	Exp.PrimaryExp pe;
 	Stat as=null;
 }
 {
@@ -238,20 +238,20 @@ Stat ExprStat():
 	{ return as==null? Stat.functioncall(assertfunccall(pe)): as; }
 }
 
-Stat Assign(VarExp v0):
+Stat Assign(Exp.VarExp v0):
 {
-	List<VarExp> vl = new ArrayList<VarExp>();
+	List<Exp.VarExp> vl = new ArrayList<Exp.VarExp>();
 	vl.add(v0);
-	VarExp ve;
+	Exp.VarExp ve;
 	List<Exp> el;
 }
 {
 	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { return Stat.assignment(vl,el); }
 }
 
-VarExp VarExp():
+Exp.VarExp VarExp():
 {
-	PrimaryExp pe;
+	Exp.PrimaryExp pe;
 }
 {
 	pe=PrimaryExp() { return assertvarexp(pe); }	
@@ -269,36 +269,35 @@ FuncName FuncName():
 			{return fn;}
 }
 
-PrimaryExp PrefixExp():
+Exp.PrimaryExp PrefixExp():
 {
 	Token n;
 	Exp e;
 }
 {
-	n=<NAME>			{ return PrimaryExp.nameprefix(n.image); }
-|	"(" e=Exp() ")"		{ return PrimaryExp.parensprefix(e); }
+	n=<NAME>			{ return Exp.nameprefix(n.image); }
+|	"(" e=Exp() ")"		{ return Exp.parensprefix(e); }
 }
 
-PrimaryExp PrimaryExp(): 
+Exp.PrimaryExp PrimaryExp(): 
 {	
-	PrimaryExp pe;
-	PostfixOp po; 
+	Exp.PrimaryExp pe;
 }
 {
-	pe=PrefixExp() ( LOOKAHEAD(2) po=PostfixOp() {pe=pe.append(po);} )* { return pe; }
+	pe=PrefixExp() ( LOOKAHEAD(2) pe=PostfixOp(pe) )* { return pe; }
 }
 
-PostfixOp PostfixOp():
+Exp.PrimaryExp PostfixOp(Exp.PrimaryExp lhs):
 {
 	Token n;
 	Exp e;
 	FuncArgs a;
 }
 {
-	"." n=<NAME>				{ return PostfixOp.fieldop(n.image); } 
-|	"[" e=Exp() "]"				{ return PostfixOp.indexop(e); }
-|	":" n=<NAME> a=FuncArgs()	{ return PostfixOp.methodop(n.image,a); } 
-|	a=FuncArgs() 				{ return PostfixOp.functionop(a); }
+	"." n=<NAME>				{ return Exp.fieldop(lhs, n.image); } 
+|	"[" e=Exp() "]"				{ return Exp.indexop(lhs, e); }
+|	":" n=<NAME> a=FuncArgs()	{ return Exp.methodop(lhs, n.image,a); } 
+|	a=FuncArgs() 				{ return Exp.functionop(lhs, a); }
 }
 
 FuncArgs FuncArgs():
@@ -403,30 +402,30 @@ ParList ParList():
 TableConstructor TableConstructor():
 {
 	TableConstructor tc = new TableConstructor();
-	List<Field> fl = null;
+	List<TableField> fl = null;
 }
 {
 	"{" ( fl=FieldList() {tc.fields=fl;} )? "}" { return tc; }
 }
 
-List<Field> FieldList():
+List<TableField> FieldList():
 {
-	List<Field> fl = new ArrayList<Field>();
-	Field f;
+	List<TableField> fl = new ArrayList<TableField>();
+	TableField f;
 }
 {
 	f=Field() {fl.add(f);} (LOOKAHEAD(2) FieldSep() f=Field() {fl.add(f);})* (FieldSep())? { return fl; }
 }
 
-Field Field():
+TableField Field():
 {
 	Token name;
 	Exp exp,rhs;
 }
 {
-	"[" exp=Exp() "]" "=" rhs=Exp()         { return Field.keyedField(exp,rhs); }
-|	LOOKAHEAD(2) name=<NAME> "=" rhs=Exp()  { return Field.namedField(name.image,rhs); }
-|	rhs=Exp()                               { return Field.listField(rhs); }
+	"[" exp=Exp() "]" "=" rhs=Exp()         { return TableField.keyedField(exp,rhs); }
+|	LOOKAHEAD(2) name=<NAME> "=" rhs=Exp()  { return TableField.namedField(name.image,rhs); }
+|	rhs=Exp()                               { return TableField.listField(rhs); }
 }
 
 void FieldSep():

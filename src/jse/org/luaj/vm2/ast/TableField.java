@@ -21,34 +21,28 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
-import java.util.ArrayList;
-import java.util.List;
+public class TableField {
 
-public class PrimaryExp extends Exp {
-
-	List<PostfixOp> ops;
+	public final Exp index;
+	public final String name;
+	public final Exp rhs;
 	
-	public static PrimaryExp nameprefix(String image) {
-		return null;
+	public TableField(Exp index, String name, Exp rhs) {
+		this.index = index;
+		this.name = name;
+		this.rhs = rhs;
+	}
+	
+	public static TableField keyedField(Exp index, Exp rhs) {
+		return new TableField(index, null, rhs);
 	}
 
-	public static PrimaryExp parensprefix(Exp e) {
-		return null;
+	public static TableField namedField(String name, Exp rhs) {
+		return new TableField(null, name, rhs);
 	}
 
-	public PrimaryExp append(PostfixOp op) {	
-		if ( ops == null )
-			ops = new ArrayList<PostfixOp>();
-		ops.add( op );
-		return this;
-	}
-
-	public boolean isvarexp() {
-		return ops != null && ops.get(ops.size()-1).isvarop(); 
-	}
-
-	public boolean isfunccall() {
-		return ops != null && ops.get(ops.size()-1).isfunccall(); 
+	public static TableField listField(Exp rhs) {
+		return new TableField(null, null, rhs);
 	}
 
 	public void accept(Visitor visitor) {

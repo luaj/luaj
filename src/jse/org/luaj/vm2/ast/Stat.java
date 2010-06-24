@@ -47,11 +47,11 @@ public class Stat {
 		return new Return(exps);
 	}
 
-	public static Stat assignment(List<VarExp> vars, List<Exp> exps) {
+	public static Stat assignment(List<Exp.VarExp> vars, List<Exp> exps) {
 		return new Assign(vars,exps);
 	}
 
-	public static Stat functioncall(FuncCall funccall) {
+	public static Stat functioncall(Exp.FuncCall funccall) {
 		return new FuncCallStat(funccall);
 	}
 
@@ -80,10 +80,10 @@ public class Stat {
 	}
 
 	public static class Assign extends Stat {
-		public final List<VarExp> vars;
+		public final List<Exp.VarExp> vars;
 		public final List<Exp> exps;
 		
-		public Assign(List<VarExp> vars, List<Exp> exps) {
+		public Assign(List<Exp.VarExp> vars, List<Exp> exps) {
 			this.vars = vars;
 			this.exps = exps;
 		}
@@ -136,8 +136,8 @@ public class Stat {
 	}
 
 	public static class FuncCallStat extends Stat {
-		public final FuncCall funccall;
-		public FuncCallStat(FuncCall funccall) {
+		public final Exp.FuncCall funccall;
+		public FuncCallStat(Exp.FuncCall funccall) {
 			this.funccall = funccall;
 		}
 
