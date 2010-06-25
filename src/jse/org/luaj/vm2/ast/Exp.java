@@ -89,6 +89,10 @@ public class Exp {
 		return false;
 	}
 
+	public boolean isvarargexp() {
+		return false;
+	}
+	
 	abstract public static class PrimaryExp extends Exp {
 		public boolean isvarexp() {
 			return false;
@@ -168,6 +172,10 @@ public class Exp {
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
+		
+		public boolean isvarargexp() {
+			return true;
+		}
 	}
 	
 	public static class MethodCall extends FuncCall {
@@ -202,7 +210,11 @@ public class Exp {
 		
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
-		}		
+		}
+		
+		public boolean isvarargexp() {
+			return true;
+		}
 	}
 	
 	public static class UnopExp extends Exp {
@@ -233,13 +245,14 @@ public class Exp {
 	}
 	
 	public static class AnonFuncDef extends Exp {
-		public final FuncBody funcbody;
+		public final FuncBody body;
 		public AnonFuncDef(FuncBody funcbody) {
-			this.funcbody = funcbody;
+			this.body = funcbody;
 		}
 
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}		
 	}
+
 }

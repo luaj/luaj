@@ -48,8 +48,9 @@ abstract public class Visitor {
 	public void visit(Stat.NumericFor stat) {
 		visit(stat.name);
 		stat.initial.accept(this);
-		stat.step.accept(this);
 		stat.limit.accept(this);
+		if ( stat.step != null )
+			stat.step.accept(this);
 		stat.block.accept(this);
 	}
 	public void visit(Stat.RepeatUntil stat) {
@@ -78,7 +79,7 @@ abstract public class Visitor {
 		field.rhs.accept(this);
 	}
 	public void visit(Exp.AnonFuncDef exp) {
-		exp.funcbody.accept(this);
+		exp.body.accept(this);
 	}
 	public void visit(Exp.BinopExp exp) {
 		exp.lhs.accept(this);
