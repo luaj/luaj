@@ -21,8 +21,11 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
+import org.luaj.vm2.ast.NameScope.NamedVariable;
+
 public class Name {
 	public final String name;
+	public NamedVariable variable;
 	public Name(String name) {
 		this.name = name;
 	}

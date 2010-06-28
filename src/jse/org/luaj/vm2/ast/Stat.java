@@ -23,6 +23,8 @@ package org.luaj.vm2.ast;
 
 import java.util.List;
 
+import org.luaj.vm2.ast.Exp.NameExp;
+
 abstract
 public class Stat {
 	public abstract void accept(Visitor visitor);
@@ -176,6 +178,7 @@ public class Stat {
 		public List<Name> names;
 		public List<Exp> exps;
 		public Block block;
+		public NameScope scope;
 		public GenericFor(List<Name> names, List<Exp> exps, Block block) {
 			this.names = names;
 			this.exps = exps;
@@ -191,6 +194,7 @@ public class Stat {
 		public final Name name;
 		public final Exp initial,limit,step;
 		public final Block block;
+		public NameScope scope;
 		public NumericFor(String name, Exp initial, Exp limit, Exp step, Block block) {
 			this.name = new Name(name);
 			this.initial = initial;

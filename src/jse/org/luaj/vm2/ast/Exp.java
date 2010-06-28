@@ -106,6 +106,8 @@ public class Exp {
 		public boolean isvarexp() {
 			return true;
 		}
+		public void markHasAssignment() {
+		}
 	}
 	
 	public static class NameExp extends VarExp {
@@ -113,7 +115,9 @@ public class Exp {
 		public NameExp(String name) {
 			this.name = new Name(name);
 		}
-		
+		public void markHasAssignment() {
+			name.variable.hasassignments = true;
+		}
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}

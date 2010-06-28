@@ -7,6 +7,7 @@ abstract public class Visitor {
 		chunk.block.accept(this); 
 	};
 	public void visit(Block block) {
+		visit(block.scope);
 		if ( block.stats != null )
 			for ( Stat s: block.stats )
 				s.accept(this);
@@ -24,6 +25,7 @@ abstract public class Visitor {
 		stat.body.accept(this);
 	}
 	public void visit(Stat.GenericFor stat) {
+		visit(stat.scope);
 		visitNames(stat.names);
 		visitExps(stat.exps);
 		stat.block.accept(this);
@@ -46,6 +48,7 @@ abstract public class Visitor {
 		stat.body.accept(this);
 	}
 	public void visit(Stat.NumericFor stat) {
+		visit(stat.scope);
 		visit(stat.name);
 		stat.initial.accept(this);
 		stat.limit.accept(this);
@@ -65,6 +68,7 @@ abstract public class Visitor {
 		stat.block.accept(this);
 	}
 	public void visit(FuncBody body) {
+		visit(body.scope);
 		body.parlist.accept(this);
 		body.block.accept(this);
 	}
@@ -138,8 +142,10 @@ abstract public class Visitor {
 			for ( Name n: names )
 				visit(n);
 	}
-	private void visit(Name name) {
+	public void visit(Name name) {
 	}
-	private void visit(String name) {
+	public void visit(String name) {
+	}
+	public void visit(NameScope scope) {
 	}
 }

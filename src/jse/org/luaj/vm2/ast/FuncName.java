@@ -28,7 +28,7 @@ public class FuncName {
 	// example: a.b.c.d:e
 	
 	// initial base name: "a"
-	public final String name;
+	public final Name name;
 	
 	// intermediate field accesses: "b", "c", "d"
 	public List<String> dots;
@@ -37,7 +37,7 @@ public class FuncName {
 	public String method;
 	
 	public FuncName( String name ) {
-		this.name = name;
+		this.name = new Name(name);
 	}
 	
 	public void adddot(String dot) {
