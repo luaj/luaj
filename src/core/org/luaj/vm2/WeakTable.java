@@ -26,14 +26,13 @@ import java.lang.ref.WeakReference;
 import org.luaj.vm2.lib.TwoArgFunction;
 
 public class WeakTable extends LuaTable {
-	private LuaTable backing;
 	private boolean weakkeys,weakvalues;
 	
 	public WeakTable(boolean weakkeys, boolean weakvalues) {
 		this(weakkeys, weakvalues, 0, 0);
 	}
 	protected WeakTable(boolean weakkeys, boolean weakvalues, int narray, int nhash) {
-		this.backing = new LuaTable(narray, nhash);
+		super(narray, nhash);
 		this.weakkeys = weakkeys;
 		this.weakvalues = weakvalues;
 	}
@@ -47,19 +46,19 @@ public class WeakTable extends LuaTable {
 	}
 	
 	public void presize( int narray ) {
-		backing.presize(narray);
+		super.presize(narray);
 	}
 
 	public void presize(int narray, int nhash) {
-		backing.presize(narray, nhash);
+		super.presize(narray, nhash);
 	}
 	
 	protected int getArrayLength() {
-		return backing.getArrayLength();
+		return super.getArrayLength();
 	}
 
 	protected int getHashLength() {
-		return backing.getHashLength();
+		return super.getHashLength();
 	}
 	
 	protected WeakTable changemode(boolean weakkeys, boolean weakvalues) {
@@ -84,7 +83,7 @@ public class WeakTable extends LuaTable {
 	public void rawset( int key, LuaValue value ) {
 		if ( weakvalues )
 			value = weaken( value );
-		backing.set(key, value);
+		super.rawset(key, value);
 	}
 
 	/** caller must ensure key is not nil */
@@ -103,26 +102,43 @@ public class WeakTable extends LuaTable {
 					break;
 			}
 		}
-		backing.set(key, value);
+		super.rawset(key, value);
 	}
 	
 
 	public LuaValue rawget( int key ) {
-		return rawget(valueOf(key));
-	}
-	
-	public LuaValue rawget( LuaValue key ) {
-		LuaValue v = backing.rawget(key);
+		LuaValue v = super.rawget(key).strongvalue();
 		if ( v.isnil() )
-			return NIL;
-		v = v.strongvalue();
-		if ( v.isnil() )
-			backing.rawset(key, NIL);
+			super.rawset(key, NIL);
 		return v;
 	}
 	
+	public LuaValue rawget( LuaValue key ) {
+		LuaValue v = super.rawget(key).strongvalue();
+		if ( v.isnil() )
+			super.rawset(key, NIL);
+		return v;
+	}
+	
+	// override to remove values for weak keys as we search
+	public int hashFindSlot(LuaValue key) {		
+		int i = ( key.hashCode() & 0x7FFFFFFF ) % hashKeys.length;
+		LuaValue k;
+		while ( i<hashKeys.length && ( k = hashKeys[i] ) != null ) {
+			if ( k.isnil() ) {
+				hashClearSlot(i);
+			}
+			else {
+				if ( k.eq_b(key) )
+					return i;
+				i = ( i + 1 ) % hashKeys.length;
+			}
+		}
+		return i;
+	}
+	
 	public int maxn() {
-		return backing.maxn();
+		return super.maxn();
 	}
 
 
@@ -132,14 +148,14 @@ public class WeakTable extends LuaTable {
 	 */
 	public Varargs next( LuaValue key ) {
 		while ( true ) {
-			Varargs n = backing.next(key);
+			Varargs n = super.next(key);
 			LuaValue k = n.arg1();
 			if ( k.isnil() )
 				return NIL;
 			LuaValue ks = k.strongkey();
 			LuaValue vs = n.arg(2).strongvalue();
 			if ( ks.isnil() || vs.isnil() ) {
-				backing.rawset(ks, NIL);
+				super.rawset(ks, NIL);
 			} else {
 				return varargsOf(ks,vs);
 			}
@@ -159,7 +175,7 @@ public class WeakTable extends LuaTable {
 	
 	// ----------------- sort support -----------------------------
 	public void sort(final LuaValue comparator) {
-		backing.sort( new TwoArgFunction() {
+		super.sort( new TwoArgFunction() {
 			public LuaValue call(LuaValue arg1, LuaValue arg2) {
 				return comparator.call( arg1.strongvalue(), arg2.strongvalue() );
 			}
@@ -201,17 +217,20 @@ public class WeakTable extends LuaTable {
 			Object o = ref.get();
 			return o!=null && rhs.eq_b((LuaValue)o);
 		}
+		
+		public boolean isnil() {
+			return ref.get() == null;
+		}
 	}
 	
 	static final class WeakUserdata extends WeakValue {
 		private final WeakReference ob;
-		private final WeakReference mt;
+		private final LuaValue mt;
 
 		private WeakUserdata(LuaValue value) {
 			super(value);
 			ob = new WeakReference(value.touserdata());
-			LuaValue udmt = value.getmetatable();
-			mt = udmt!=null? new WeakReference(udmt): null;
+			mt = value.getmetatable();
 		}
 		
 		public LuaValue strongvalue() {
@@ -219,8 +238,7 @@ public class WeakTable extends LuaTable {
 			if ( u != null )
 				return (LuaValue) u;
 			Object o = ob.get();
-			Object m = mt!=null? mt.get(): null;
-			return o!=null? m!=null? userdataOf(o,(LuaValue)m): userdataOf(o): NIL;
+			return o!=null? userdataOf(o,mt): NIL;
 		}
 		
 		public boolean eq_b(LuaValue rhs) {
@@ -234,34 +252,28 @@ public class WeakTable extends LuaTable {
 		public Object touserdata() {
 			return ob.get();
 		}
+		
+		public boolean isnil() {
+			return ob.get() == null || ref.get() == null;
+		}
 	}
 
 	static final class WeakEntry extends LuaValue {
-		final WeakTable table;
 		final LuaValue weakkey;
+		LuaValue weakvalue;
 		final int keyhash;
 
 		private WeakEntry(WeakTable table, LuaValue key, LuaValue weakvalue) {
-			this.table = table;
 			this.weakkey = table.weaken(key);
 			this.keyhash = key.hashCode();
-
-			// store an association from table to value in the key's metatable
-			LuaValue mt = key.getmetatable();
-			if ( mt == null )
-				key.setmetatable(mt=new LuaTable(0,1));
-			mt.set(table, weakvalue);
+			this.weakvalue = weakvalue;
 		}
 
 		// when looking up the value, look in the keys metatable
 		public LuaValue strongvalue() {
 			LuaValue key = weakkey.strongkey();
 			if ( key.isnil() )
-				return NIL;
-			LuaValue mt = key.getmetatable();
-			if ( mt == null )
-				return NIL;
-			LuaValue weakvalue = mt.get(table);
+				return weakvalue = NIL;
 			return weakvalue.strongvalue();
 		}
 
@@ -286,6 +298,10 @@ public class WeakTable extends LuaTable {
 		
 		public boolean eq_b(LuaValue rhs) {
 			return rhs.eq_b(weakkey.strongkey());
+		}
+		
+		public boolean isnil() {
+			return weakkey.isnil() || weakvalue.isnil();
 		}
 	}
 }

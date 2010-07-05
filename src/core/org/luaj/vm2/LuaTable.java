@@ -444,7 +444,7 @@ public class LuaTable extends LuaValue {
 		}
 	}
 	
-	private void hashClearSlot( int i ) {
+	protected void hashClearSlot( int i ) {
 		if ( hashKeys[ i ] != null ) {
 			
 			int j = i;

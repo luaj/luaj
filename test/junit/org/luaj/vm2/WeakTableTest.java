@@ -121,7 +121,7 @@ abstract public class WeakTableTest extends TableTest {
 			key = LuaValue.userdataOf(new MyData(111));
 			val = LuaValue.userdataOf(new MyData(222));
 
-			// new key and value should be interchangeable (feature of this test class
+			// new key and value should be interchangeable (feature of this test class)
 			assertEquals( key, origkey.get() );
 			assertEquals( val, origval.get() );
 			assertEquals( val, t.get(key) );
@@ -131,8 +131,9 @@ abstract public class WeakTableTest extends TableTest {
 			// value should not be reachable after gc
 			collectGarbage();
 			assertEquals( null, origkey.get() );
-			assertEquals( null, origval.get() );
 			assertEquals( LuaValue.NIL, t.get(key) );
+			collectGarbage();
+			assertEquals( null, origval.get() );
 		}
 	}
 	
