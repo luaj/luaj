@@ -269,7 +269,6 @@ public class WeakTable extends LuaTable {
 			this.weakvalue = weakvalue;
 		}
 
-		// when looking up the value, look in the keys metatable
 		public LuaValue strongvalue() {
 			LuaValue key = weakkey.strongkey();
 			if ( key.isnil() )

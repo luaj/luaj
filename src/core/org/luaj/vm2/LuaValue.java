@@ -317,8 +317,9 @@ public class LuaValue extends Varargs {
 	
 	// lua number/string conversion
 	public LuaString strvalue()     { typerror("strValue"); return null; }
-	public LuaValue  strongkey()    { return this; }
+	public LuaValue  strongkey()    { return strongvalue(); }
 	public LuaValue  strongvalue()  { return this; }
+	public boolean   isweaknil()    { return false; }
 
 	// conversion from java values
 	public static LuaBoolean  valueOf(boolean b)    { return b? LuaValue.TRUE: FALSE; };

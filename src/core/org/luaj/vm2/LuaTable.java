@@ -30,7 +30,7 @@ public class LuaTable extends LuaValue {
 	protected LuaValue[] array;
 	protected LuaValue[] hashKeys;
 	protected LuaValue[] hashValues;
-	private int hashEntries;
+	protected int hashEntries;
 	protected LuaValue m_metatable;
 	
 	public LuaTable() {
@@ -170,7 +170,7 @@ public class LuaTable extends LuaValue {
 		return hashget( key );
 	}
 		
-	private LuaValue hashget(LuaValue key) {
+	protected LuaValue hashget(LuaValue key) {
 		if ( hashEntries > 0 ) {
 			LuaValue v = hashValues[hashFindSlot(key)];
 			return v!=null? v: NIL;
