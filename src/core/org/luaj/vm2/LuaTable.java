@@ -569,8 +569,10 @@ public class LuaTable extends LuaValue {
 			Varargs n = next(k);
 			if ( (k = n.arg1()).isnil() )
 				break;
-			l.add( k );
+			l.addElement( k );
 		}
-		return (LuaValue[]) l.toArray(new LuaValue[l.size()]);
+		LuaValue[] a = new LuaValue[l.size()];
+		l.copyInto(a);
+		return a;
 	}
 }

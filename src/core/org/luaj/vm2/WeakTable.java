@@ -61,7 +61,7 @@ public class WeakTable extends LuaTable {
 		return super.getHashLength();
 	}
 	
-	protected WeakTable changemode(boolean weakkeys, boolean weakvalues) {
+	protected LuaTable changemode(boolean weakkeys, boolean weakvalues) {
 		this.weakkeys = weakkeys;
 		this.weakvalues = weakvalues;
 		return this;
