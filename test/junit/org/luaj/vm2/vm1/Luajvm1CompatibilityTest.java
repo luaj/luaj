@@ -53,6 +53,8 @@ public class Luajvm1CompatibilityTest extends TestCase {
 			jarpath = "jar:"+zip.toExternalForm()+"!/";
 			String lua = luaRun(test);
 			String luaj20 = luaj20Run(test);
+			lua = lua.replaceAll("\r\n", "\n");
+			luaj20 = luaj20.replaceAll("\r\n", "\n");
 			assertEquals( lua, luaj20 );
 		} catch ( Exception ioe ) {
 			fail( ioe.toString() );

@@ -86,8 +86,10 @@ public class ScriptDrivenTest extends TestCase {
 				chunk.call(LuaValue.valueOf(platform.toString()));
 	
 				ps.flush();
-				final String actualOutput = new String(output.toByteArray());
-				final String expectedOutput = getExpectedOutput(testName);
+				String actualOutput = new String(output.toByteArray());
+				String expectedOutput = getExpectedOutput(testName);
+				actualOutput = actualOutput.replaceAll("\r\n", "\n");
+				expectedOutput = expectedOutput.replaceAll("\r\n", "\n");
 	
 				assertEquals(expectedOutput, actualOutput);
 			} finally {
