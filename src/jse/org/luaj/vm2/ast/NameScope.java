@@ -42,7 +42,7 @@ public class NameScope {
 		validateIsNotKeyword(name);
 		for ( NameScope n = this; n!=null; n=n.outerScope )
 			if ( n.namedVariables.containsKey(name) )
-				return namedVariables.get(name);
+				return n.namedVariables.get(name);
 		NamedVariable value = new NamedVariable(name);
 		this.namedVariables.put(name, value);
 		return value;
