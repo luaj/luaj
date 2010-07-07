@@ -31,9 +31,11 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ScriptDrivenTest;
+import org.luaj.vm2.Varargs;
 
 /**
  * Test for compatiblity between luaj 1.0 and 2.0.
@@ -117,7 +119,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 		try {
 			org.luaj.vm2.LuaTable _G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
 			LuaThread.getRunning().setfenv(_G);
-			_G.get("package").get("loaders").checktable().insert(1, new org.luaj.vm2.lib.OneArgFunction(_G) {
+			LuaValue loader = new org.luaj.vm2.lib.OneArgFunction(_G) {
 				public LuaValue call(LuaValue arg) {
 					String name = arg.tojstring();
 					String file = name + ".lua";
@@ -132,14 +134,15 @@ public class Luajvm1CompatibilityTest extends TestCase {
 						try { is.close(); } catch ( IOException ioe ) {}
 					}
 				}
-			});
+			};
+			LuaTable loaders = _G.get("package").get("loaders").checktable();
+			loaders.insert(1, loader);
 			org.luaj.vm2.lib.BaseLib.instance.STDOUT = printStream;
-			_G.get("require").call(LuaValue.valueOf(test));
-			printStream.flush();
-			return outputStream.toString();
+			loader.call(LuaValue.valueOf(test)).invoke(LuaValue.valueOf(test));
 		} finally {
 			printStream.close();
 		}
+		return outputStream.toString();
 	}
 
 	public Luajvm1CompatibilityTest() {
