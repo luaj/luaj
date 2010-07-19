@@ -135,6 +135,13 @@ public class Stat {
 		public void accept(Visitor visitor) {
 			visitor.visit( this );
 		}
+		
+		public int nreturns() {
+			int n = values!=null? values.size(): 0;
+			if ( n>0 && values.get(n-1).isvarargexp() )
+				n = -1;
+			return n;		
+		}
 	}
 
 	public static class FuncCallStat extends Stat {

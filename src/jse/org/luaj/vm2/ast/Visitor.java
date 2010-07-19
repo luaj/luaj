@@ -33,11 +33,13 @@ abstract public class Visitor {
 	public void visit(Stat.IfThenElse stat) {
 		stat.ifexp.accept(this);
 		stat.ifblock.accept(this);
-		for ( int i=0, n=stat.elseifblocks.size(); i<n; i++ ) {
-			stat.elseifexps.get(i).accept(this);
-			stat.elseifblocks.get(i).accept(this);
-		}
-		visit( stat.elseblock );
+		if ( stat.elseifblocks != null ) 
+			for ( int i=0, n=stat.elseifblocks.size(); i<n; i++ ) {
+				stat.elseifexps.get(i).accept(this);
+				stat.elseifblocks.get(i).accept(this);
+			}
+		if ( stat.elseblock != null )
+			visit( stat.elseblock );
 	}
 	public void visit(Stat.LocalAssign stat) {
 		visitNames(stat.names);

@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
+import java.io.ByteArrayOutputStream;
+
 import org.luaj.vm2.LuaString;
 
 public class Str {
@@ -50,9 +52,39 @@ public class Str {
 		return LuaString.valueOf(s);
 	}
 	public static byte[] unquote(String s) {
-		// TODO: unquote string data
-		return utf8decode(s);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		char[] c = s.toCharArray();
+		int n = c.length;
+		for ( int i=0; i<n; i++ ) {
+			if ( c[i] == '\\' && i<n ) {
+				switch ( c[++i] ) {
+				case '0': case '1': case '2': case '3': case '4':
+				case '5': case '6': case '7': case '8': case '9':
+					int d=(int) (c[i++]-'0');
+					for ( int j=0; i<n && j<2 && c[i]>='0' && c[i]<='9'; i++, j++ )
+						d = d * 10 + (int) (c[i]-'0');
+					baos.write( (byte) d );
+					--i;
+					continue;
+				case 'a':  baos.write( (byte) 7 );    continue;
+				case 'b':  baos.write( (byte) '\b' ); continue;
+				case 'f':  baos.write( (byte) '\f' ); continue;
+				case 'n':  baos.write( (byte) '\n' ); continue;
+				case 'r':  baos.write( (byte) '\r' ); continue;
+				case 't':  baos.write( (byte) '\t' ); continue;
+				case 'v':  baos.write( (byte) 11 );   continue;
+				case '"':  baos.write( (byte) '"' );  continue;
+				case '\'': baos.write( (byte) '\'' ); continue;
+				case '\\': baos.write( (byte) '\\' ); continue;
+				default: baos.write( (byte) c[i] ); break;
+				}
+			} else {
+				baos.write( (byte) c[i] );
+			}
+		}
+		return baos.toByteArray();
 	}
+	/*
 	private static byte[] utf8decode(String s) {
 		try {
 			return s.getBytes("UTF8");
@@ -60,4 +92,5 @@ public class Str {
 			throw new RuntimeException("utf8 not found: "+e);
 		}
 	}
+	*/
 }

@@ -41,8 +41,9 @@ public class NameResolver extends Visitor {
 		pushScope();
 		scope.functionNestingCount++;
 		body.scope = scope;
-		for ( Name n : body.parlist.names )
-			defineLocalVar(n);
+		if ( body.parlist.names != null )
+			for ( Name n : body.parlist.names )
+				defineLocalVar(n);
 		super.visit(body);
 		popScope();
 	}

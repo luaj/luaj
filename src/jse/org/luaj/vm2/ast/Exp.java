@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
+import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaValue;
 
 abstract
@@ -40,13 +41,59 @@ public class Exp {
 	}
 
 	public static Exp unaryexp(int op, Exp rhs) {
+		if ( rhs instanceof BinopExp ) {
+			BinopExp b = (BinopExp) rhs;
+			if ( precedence(op) > precedence(b.op)  )
+				return binaryexp( unaryexp(op, b.lhs), b.op, b.rhs );
+		}
 		return new UnopExp(op, rhs);
 	}
 
 	public static Exp binaryexp(Exp lhs, int op, Exp rhs) {
+		if ( lhs instanceof UnopExp ) {
+			UnopExp u = (UnopExp) lhs;
+			if ( precedence(op) > precedence(u.op) )
+				return unaryexp( u.op, binaryexp( u.rhs, op, rhs ) );
+		}
+		// TODO: cumulate string concatenations together
+		// TODO: constant folding
+		if ( lhs instanceof BinopExp ) {
+			BinopExp b = (BinopExp) lhs;
+			if ( (precedence(op) > precedence(b.op)) ||
+				 ((precedence(op) == precedence(b.op)) && isrightassoc(op)) )
+				return binaryexp( b.lhs, b.op, binaryexp( b.rhs, op, rhs ) );
+		}
+		if ( rhs instanceof BinopExp ) {
+			BinopExp b = (BinopExp) rhs;
+			if ( (precedence(op) > precedence(b.op)) ||
+				 ((precedence(op) == precedence(b.op)) && ! isrightassoc(op)) )
+				return binaryexp( binaryexp( lhs, op, b.lhs ), b.op, b.rhs );
+		}
 		return new BinopExp(lhs, op, rhs);
 	}
 
+	static boolean isrightassoc(int op) {
+		switch ( op ) {
+		case Lua.OP_CONCAT:
+		case Lua.OP_POW: return true;
+		default: return false;
+		}
+	}
+	
+	static int precedence(int op) {
+		switch ( op ) {
+		case Lua.OP_OR: return 0;
+		case Lua.OP_AND: return 1;
+		case Lua.OP_LT: case Lua.OP_GT: case Lua.OP_LE: case Lua.OP_GE: case Lua.OP_NEQ: case Lua.OP_EQ: return 2;
+		case Lua.OP_CONCAT: return 3;
+		case Lua.OP_ADD: case Lua.OP_SUB: return 4;
+		case Lua.OP_MUL: case Lua.OP_DIV: return 5;
+		case Lua.OP_NOT: case Lua.OP_UNM: case Lua.OP_LEN: return 6;
+		case Lua.OP_POW: return 7;
+		default: throw new IllegalStateException("precedence of bad op "+op);
+		}
+	}	
+	
 	public static Exp anonymousfunction(FuncBody funcbody) {
 		return new AnonFuncDef(funcbody);
 	}
