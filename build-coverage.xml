@@ -50,7 +50,6 @@
 			<classpath refid="cobertura.classpath" />
 		    <classpath refid="wtk-libs" />
 		    <classpath path="lib/bcel-5.2.jar" />
-		    <classpath path="lib/luaj-j2se-1.0.3.jar" />
 		    <src path="src/core"/>
 		    <src path="src/jme"/>
 		    <src path="src/jse"/>
@@ -84,7 +83,6 @@
 			<classpath location="src/test/res" />
 			<classpath refid="cobertura.classpath" />
 		    <classpath path="lib/bcel-5.2.jar" />
-		    <classpath path="lib/luaj-j2se-1.0.3.jar" />
 			<formatter type="xml" />
 			<batchtest todir="${reports.xml.dir}">
 				<fileset dir="test/junit">

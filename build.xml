@@ -16,7 +16,7 @@
 	</target>
 
 	<available file="lib/bcel-5.2.jar" property="bcel.lib.exists"/>			
-	<available file="lib/luaj-j2se-1.0.3.jar" property="luaj1.lib.exists"/>			
+	<available file="lib/luaj-j2se-1.0.4.jar" property="luaj1.lib.exists"/>			
 	<available file="lib/javacc.jar" property="javacc.lib.exists"/>			
 
 	<target name="bcel-lib" unless="bcel.lib.exists">
@@ -33,9 +33,9 @@
 	</target>
 	
 	<target name="luaj1-lib" unless="luaj1.lib.exists">
-		<get src="http://downloads.sourceforge.net/project/luaj/luaj/1.0.3/luaj-1.0.3.zip"
-			dest="lib/luaj-1.0.3.zip"/>
-		<unzip src="lib/luaj-1.0.3.zip" dest="lib" overwrite="true">
+		<get src="http://downloads.sourceforge.net/project/luaj/luaj-1.0/1.0.4/luaj-1.0.4.zip"
+			dest="lib/luaj-1.0.4.zip"/>
+		<unzip src="lib/luaj-1.0.4.zip" dest="lib" overwrite="true">
 		    <patternset>
 		        <include name="**/*.jar"/>
 		    </patternset>
