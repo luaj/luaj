@@ -3,18 +3,17 @@
 	Run code coverage for unit tests on the luaj vm and libraries.
 	-->
 
-	<property name="classes.dir" value="build/classes" />
+	<property name="classes.dir" value="build/classes-debug" />
 	<property name="instrumented.dir" value="build/instrumented" />
 	<property name="reports.xml.dir" value="build/reports-junit-xml" />
 	<property name="reports.html.dir" value="build/reports-junit-html" />
 	<property name="coverage.xml.dir" value="build/reports-coverage-xml" />
 	<property name="coverage.html.dir" value="build/reports-coverage-html" />
+	<property name="cobertura.serfile" value="cobertura.ser" />
+	<property name="cobertura.logfile" value="cobertura.log" />
 
 	<artifact:dependencies filesetId="cobutura.fileset">
-		<dependency groupId="cobertura" artifactId="cobertura" version="1.8"/>
-		<dependency groupId="log4j" artifactId="log4j" version="1.2.9"/>
-		<dependency groupId="asm" artifactId="asm" version="2.2.1"/>
-		<dependency groupId="oro" artifactId="oro" version="2.0.7"/>
+		<dependency groupId="net.sourceforge.cobertura" artifactId="cobertura" version="1.9.4.1"/>
 		<dependency groupId="junit" artifactId="junit" version="3.8.1"/>
 	</artifact:dependencies>
 	
@@ -29,9 +28,10 @@
 	<property environment="env"/>
 
 	<target name="clean" description="Remove all files created by the build/test process.">
-		<delete dir="build" failonerror="no"/>
-		<delete file="cobertura.log" />
-		<delete file="cobertura.ser" />
+		<delete dir="${classes.dir}" failonerror="yes"/>
+		<delete dir="${instrumented.dir}" failonerror="yes"/>
+		<delete file="${cobertura.logfile}" />
+		<delete file="${cobertura.serfile}" />
 	</target>
 
 	<target name="init">
@@ -58,10 +58,9 @@
 	</target>
 
 	<target name="instrument" depends="compile">
-		<delete file="cobertura.ser"/>
+		<delete file="${cobertura.serfile}"/>
 		<delete dir="${instrumented.dir}" failonerror="no"/>
-		<cobertura-instrument todir="${instrumented.dir}">
-			<ignore regex="org.apache.log4j.*" />
+		<cobertura-instrument datafile="${cobertura.serfile}" todir="${instrumented.dir}">
 			<fileset dir="${classes.dir}">
 				<include name="org/luaj/vm2/*.class" />
 				<include name="org/luaj/vm2/lib/*.class" />
@@ -69,19 +68,21 @@
 				<include name="org/luaj/vm2/lib/jme/*.class" />
 				<include name="org/luaj/vm2/compiler/*.class" />
 				<include name="org/luaj/vm2/luajc/*.class" />
-				<include name="org/luaj/vm2/luajc/lst/*.class" />
-				<include name="org/luaj/vm2/script/*.class" />
 				<exclude name="**/*Test*.class" />
 			</fileset>
 		</cobertura-instrument>
 	</target>
 
-	<target name="test" depends="instrument">
-		<junit fork="yes" forkmode="once" showoutput="no">
+	<target name="test">
+		<junit fork="yes" dir="${basedir}" showoutput="yes">
+     		<sysproperty key="net.sourceforge.cobertura.serfile" 
+     			file="${basedir}/${cobertura.serfile}" />		    
 			<classpath location="${instrumented.dir}" />
 			<classpath location="${classes.dir}" />
-			<classpath location="src/test/res" />
 			<classpath refid="cobertura.classpath" />
+			<classpath location="test/lua" />
+			<classpath location="test/junit/org/luaj/vm2/compiler" />
+			<classpath location="test/junit/org/luaj/vm2/vm1" />
 		    <classpath path="lib/bcel-5.2.jar" />
 			<formatter type="xml" />
 			<batchtest todir="${reports.xml.dir}">
@@ -99,11 +100,13 @@
 		</junitreport>
 	</target>
 
-	<target name="coverage" depends="test">
-		<cobertura-report srcdir="src/core" destdir="${coverage.xml.dir}" format="xml" /> 
-		<cobertura-report srcdir="src/core" destdir="${coverage.html.dir}" />
+	<target name="report">
+		<cobertura-report datafile="${cobertura.serfile}" srcdir="src/core" destdir="${coverage.xml.dir}" format="xml" /> 
+		<cobertura-report datafile="${cobertura.serfile}" srcdir="src/core" destdir="${coverage.html.dir}" />
 	</target>
 
-	<target name="all" depends="clean,init,compile,instrument,test,coverage" />
+	<target name="coverage" depends="clean,init,compile,instrument,test,report"/>
+
+	<target name="all" depends="coverage" />
 	
 </project>
