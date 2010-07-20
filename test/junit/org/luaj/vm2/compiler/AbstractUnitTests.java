@@ -2,9 +2,11 @@ package org.luaj.vm2.compiler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import junit.framework.TestCase;
@@ -22,7 +24,19 @@ abstract public class AbstractUnitTests extends TestCase {
     private LuaTable _G;
 
     public AbstractUnitTests(String zipfile, String dir) {
-		URL zip = getClass().getResource(zipfile);
+    	URL zip = null;
+		zip = getClass().getResource(zipfile);
+		if ( zip == null ) {
+	    	File file = new File("test/junit/org/luaj/vm2/compiler/"+zipfile);
+			try {
+		    	if ( file.exists() )
+					zip = file.toURI().toURL();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+		}
+		if ( zip == null )
+			throw new RuntimeException("not found: "+zipfile);
 		this.jar = "jar:" + zip.toExternalForm()+ "!/";
         this.dir = dir;
     }

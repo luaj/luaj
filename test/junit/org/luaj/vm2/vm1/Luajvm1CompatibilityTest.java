@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import junit.framework.TestCase;
@@ -35,7 +36,6 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ScriptDrivenTest;
-import org.luaj.vm2.Varargs;
 
 /**
  * Test for compatiblity between luaj 1.0 and 2.0.
@@ -51,7 +51,19 @@ public class Luajvm1CompatibilityTest extends TestCase {
 
 	protected void runTest(String test) {
 		try {
-			URL zip = getClass().getResource(zipfile);
+	    	URL zip = null;
+			zip = getClass().getResource(zipfile);
+			if ( zip == null ) {
+		    	File file = new File("test/junit/org/luaj/vm2/vm1/"+zipfile);
+				try {
+			    	if ( file.exists() )
+						zip = file.toURI().toURL();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+			}
+			if ( zip == null )
+				throw new RuntimeException("not found: "+zipfile);			
 			jarpath = "jar:"+zip.toExternalForm()+"!/";
 			String lua = luaRun(test);
 			String luaj20 = luaj20Run(test);
