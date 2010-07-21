@@ -89,8 +89,9 @@ public class JavaScope extends NameScope {
 	}
 	
 	final String getJavaName(NamedVariable nv) {
-		if ( astele2javaname.containsKey(nv) )
-			return astele2javaname.get(nv);
+		for ( JavaScope s = this; s != null; s = (JavaScope) s.outerScope )
+			if ( s.astele2javaname.containsKey(nv) )
+				return s.astele2javaname.get(nv);
 		return allocateJavaName( nv, nv.name );
 	}
 
@@ -129,9 +130,9 @@ public class JavaScope extends NameScope {
 		String better = string.replaceAll("[^\\w]", "_");
 		if ( better.length() > MAX_CONSTNAME_LEN )
 			better = better.substring(0,MAX_CONSTNAME_LEN);
-//		if ( !Character.isJavaIdentifierStart( better.charAt(0) ) )
-//			better = "_"+better;
-		return "$"+better;
+		if ( better.length() == 0 || !Character.isJavaIdentifierStart( better.charAt(0) ) )
+			better = "_"+better;
+		return better;
 	}
 	
 	private JavaScope initialize(Block block, int nreturns) {

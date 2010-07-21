@@ -6,6 +6,7 @@ import org.luaj.vm2.ast.Exp.NameExp;
 import org.luaj.vm2.ast.Exp.VarExp;
 import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
+import org.luaj.vm2.ast.Stat.FuncDef;
 import org.luaj.vm2.ast.Stat.GenericFor;
 import org.luaj.vm2.ast.Stat.LocalAssign;
 import org.luaj.vm2.ast.Stat.LocalFuncDef;
@@ -41,13 +42,10 @@ public class NameResolver extends Visitor {
 		pushScope();
 		scope.functionNestingCount++;
 		body.scope = scope;
-		if ( body.parlist.names != null )
-			for ( Name n : body.parlist.names )
-				defineLocalVar(n);
 		super.visit(body);
 		popScope();
 	}
-
+	
 	public void visit(LocalFuncDef stat) {
 		defineLocalVar(stat.name);
 		super.visit(stat);
@@ -70,13 +68,22 @@ public class NameResolver extends Visitor {
 	}
 
 	public void visit(NameExp exp) {
-		NamedVariable v = scope.find(exp.name.name);
-		exp.name.variable = v;
-		if ( v.isLocal() && scope.functionNestingCount != v.definingScope.functionNestingCount )
-			v.isupvalue = true;
+		exp.name.variable = resolveNameReference(exp.name);
 		super.visit(exp);
 	}
 	
+	public void visit(FuncDef stat) {
+		stat.name.name.variable = resolveNameReference(stat.name.name);
+		super.visit(stat);
+	}
+	
+	protected NamedVariable resolveNameReference(Name name) {
+		NamedVariable v = scope.find(name.name);
+		if ( v.isLocal() && scope.functionNestingCount != v.definingScope.functionNestingCount )
+			v.isupvalue = true;
+		return v;
+	}
+
 	public void visit(Assign stat) {
 		super.visit(stat);
 		for ( VarExp v : stat.vars )
@@ -88,6 +95,12 @@ public class NameResolver extends Visitor {
 		super.visit(stat);
 	}
 
+	public void visit(ParList pars) {
+		if ( pars.names != null )
+			defineLocalVars(pars.names);
+		super.visit(pars);
+	}
+	
 	protected void defineLocalVars(List<Name> names) {
 		for ( Name n : names ) 
 			defineLocalVar(n);

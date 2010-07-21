@@ -235,7 +235,7 @@ public class JavaCodeGen {
 					if ( exp.name.variable.isLocal() )
 						singleLocalAssign(exp.name, valu);
 					else
-						outl( "env.set("+evalStringConstant(exp.name.name)+","+valu+");");
+						outl( "env.set("+evalLuaValue(exp)+","+valu+");");
 				}
 			};
 			if ( varOrName instanceof VarExp )
@@ -550,9 +550,34 @@ public class JavaCodeGen {
 		}
 
 		public void visit(FuncDef stat) {
-			outi( "env.set("+evalStringConstant(stat.name.name.name)+",");
+			Writer x = pushWriter();
 			stat.body.accept(this);
-			outr(");");
+			String value = popWriter(x);
+			int n = stat.name.dots!=null? stat.name.dots.size(): 0;
+			boolean m = stat.name.method != null;
+			if ( n>0 && !m && stat.name.name.variable.isLocal() ) 
+				singleLocalAssign(stat.name.name,value);
+			else if ( n==0 && !m ) {
+				if ( stat.name.name.variable.isLocal() ) {
+					outi( javascope.getJavaName(stat.name.name.variable) );
+					if ( stat.name.name.variable.isupvalue )
+						out( "[0]" );
+					outr( " = "+value+";" );
+				} else {
+					outi( "env.set("+evalStringConstant(stat.name.name.name)+","+value+");" );
+				}
+			} else {
+				if ( stat.name.name.variable.isLocal() ) {
+					outi( javascope.getJavaName(stat.name.name.variable) );
+					if ( stat.name.name.variable.isupvalue )
+						out( "[0]" );
+				} else {
+					outi( "env.get("+evalStringConstant(stat.name.name.name)+")" );
+				}
+				for ( int i=0; i<n-1 || (m&&i<n); i++ )
+					out( ".get("+evalStringConstant(stat.name.dots.get(i))+")" );
+				outr( ".set("+evalStringConstant(m? stat.name.method: stat.name.dots.get(n))+", "+value+");" );
+			}
 		}
 
 		public void visit(LocalFuncDef stat) {
