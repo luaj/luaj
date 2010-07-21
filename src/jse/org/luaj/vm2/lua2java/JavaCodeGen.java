@@ -169,8 +169,8 @@ public class JavaCodeGen {
 			int n = s.nreturns();
 			switch ( n ) {
 			case 0: outl( "return NONE;" ); break;
-			case 1: outl( "return "+eval(s.values.get(0))+";" ); break;
-			default: outl( "return "+eval(s.values)+";" ); break;
+			case 1: outl( "return "+evalLuaValue(s.values.get(0))+";" ); break;
+			default: outl( "return "+evalVarargs(s.values)+";" ); break;
 			}
 		}
 
@@ -183,12 +183,7 @@ public class JavaCodeGen {
 			int m = stat.values!=null? stat.values.size(): 0;
 			if ( n == 1 && m<=1 ) {
 				Name name = stat.names.get(0);
-				String javaname = javascope.getJavaName(name.variable);
-				String value = "NIL";
-				if ( m > 0 ) {
-					Exp val= stat.values.get(0);
-					value = eval(val) + (val.isvarargexp()? ".arg1()": "");
-				}
+				String value = m>0? evalLuaValue(stat.values.get(0)): "NIL";
 				singleLocalDeclareAssign(name,value);
 			} else {
 				for ( Name name : stat.names )
@@ -202,26 +197,26 @@ public class JavaCodeGen {
 		private void multiAssign(List varsOrNames, List<Exp> exps) {
 			int n = varsOrNames.size();
 			int m = exps != null? exps.size(): 0;
-			boolean varlist = m>0 && exps.get(m-1).isvarargexp() && n>m;
+			boolean vararglist = m>0 && exps.get(m-1).isvarargexp() && n>m;
 			if ( n<=m ) {
 				for ( int i=1; i<=n; i++ )
-					singleAssign( varsOrNames.get(i-1), eval(exps.get(i-1)) );
+					singleAssign( varsOrNames.get(i-1), evalLuaValue(exps.get(i-1)) );
 				for ( int i=n+1; i<=m; i++ )
-					outl( eval(exps.get(i-1))+";" );
+					outl( evalLuaValue(exps.get(i-1))+";" );
 			} else {
 				outb( "{" );
 				for ( int i=1; i<=m; i++ ) {
-					boolean vtype = varlist && (i==m);
 					Exp e = exps.get(i-1);
-					String decl = (vtype? "Varargs": "LuaValue")+" $"+i;
-					String valu = eval(e)+(e.isvarexp() && !vtype? ".arg1()": "");
-					outl( decl+"="+valu+";" );
+					if ( vararglist && (i==m) )
+						outl( "Varargs $"+i+" = "+evalVarargs(e)+";" );
+					else
+						outl( "LuaValue $"+i+" = "+evalLuaValue(e)+";" );
 				}
 				for ( int i=1; i<=n; i++ ) {
 					String valu;
 					if ( i < m ) valu = "$"+i;
-					else if ( i==m ) valu = (varlist? "$"+i+".arg1()": "$"+i);
-					else if ( varlist ) valu = "$"+m+".arg("+(i-m+1)+")";
+					else if ( i==m ) valu = (vararglist? "$"+i+".arg1()": "$"+i);
+					else if ( vararglist ) valu = "$"+m+".arg("+(i-m+1)+")";
 					else valu = "NIL";
 					singleAssign( varsOrNames.get(i-1), valu );
 				}
@@ -231,10 +226,10 @@ public class JavaCodeGen {
 		private void singleAssign(final Object varOrName, final String valu) {
 			Visitor v = new Visitor() {
 				public void visit(FieldExp exp) {
-					outl(eval(exp.lhs)+".set("+evalStringConstant(exp.name.name)+","+valu+");");
+					outl(evalLuaValue(exp.lhs)+".set("+evalStringConstant(exp.name.name)+","+valu+");");
 				}
 				public void visit(IndexExp exp) {
-					outl(eval(exp.lhs)+".set("+eval(exp.exp)+","+valu+");");
+					outl(evalLuaValue(exp.lhs)+".set("+evalLuaValue(exp.exp)+","+valu+");");
 				}
 				public void visit(NameExp exp) {
 					if ( exp.name.variable.isLocal() )
@@ -280,24 +275,30 @@ public class JavaCodeGen {
 			return c.toString();
 		}
 		
-		public String eval(List<Exp> values) {
+		public String evalVarargs(List<Exp> values) {
 			int n = values.size();
 			switch ( n ) {
 			case 0: return "NONE";
-			case 1: return eval(values.get(0));
+			case 1: return evalVarargs(values.get(0));
 			default: 
+			case 2: case 3:
 				Writer x = pushWriter();
-				out( n<=3? "varargsOf(": "varargsOf(new LuaValue[] {" );
-				for ( int i=0; i<n; i++ ) {
-					if ( i>0 ) out( "," );
-					out(eval(values.get(i)));
-				}
-				out( n<=3? ")": "})" );
+				out( n>3? "varargsOf(new LuaValue[] {":"varargsOf(" );
+				for ( int i=1; i<n; i++ )
+					out( evalLuaValue(values.get(i-1))+"," );
+				if ( n>3 )
+					out( "}," );
+				out( evalVarargs(values.get(n-1))+")" );
 				return popWriter(x);
 			}
 		}
 		
-		public String eval(Exp exp) {
+		public String evalLuaValue(Exp exp) {
+			String s = evalVarargs(exp);
+			return exp.isvarargexp()? s+".arg1()": s;
+		}
+		
+		public String evalVarargs(Exp exp) {
 			Writer x = pushWriter();
 			exp.accept(this);
 			return popWriter(x);
@@ -437,15 +438,15 @@ public class JavaCodeGen {
 				out(")");
 				break;
 			default:
-				out(".invokemethod("+evalStringConstant(exp.name)+",varargsOf(new LuaValue[]{");
-				exp.args.accept(this);
-				out("})).arg1()");
+				out(".invokemethod("+evalStringConstant(exp.name)+","+evalVarargs(exp.args.exps)+")");
 				break;
 			}
 		}
 		
 		public void visit(FuncCall exp) {
 			int n = exp.args.exps != null? exp.args.exps.size(): 0;
+			if ( n > 0 && exp.args.exps.get(n-1).isvarargexp() )
+				n = -1;
 			exp.lhs.accept(this);
 			switch ( n ) {
 			case 0: case 1: case 2: case 3: 
@@ -454,7 +455,7 @@ public class JavaCodeGen {
 				out(")");
 				break;
 			default:
-				out(".invoke("+eval(exp.args.exps)+").arg1()");
+				out(".invoke("+evalVarargs(exp.args.exps)+")");
 				break;
 			}
 		}
@@ -462,11 +463,10 @@ public class JavaCodeGen {
 		public void visit(FuncArgs args) {
 			if ( args.exps != null ) {
 				int n = args.exps.size();
-				for ( int i=0; i<n; i++ ) {
-					if ( i > 0 ) out(",");
-					Exp e = args.exps.get(i);
-					out( eval( e ) );
-					// TODO: arg1(), varargs
+				if ( n > 0 ) {
+					for ( int i=1; i<n; i++ )
+						out( evalLuaValue( args.exps.get(i-1) )+"," );
+					out( evalVarargs( args.exps.get(n-1) ) );
 				}
 			}
 		}
@@ -524,7 +524,7 @@ public class JavaCodeGen {
 						outl( "LuaValue "+argname+" = "+value+";" );
 				}
 				if ( body.parlist.isvararg && m > 0 ) 
-					outl( "arg = arg.arglist("+(m+1)+");" );
+					outl( "arg = arg.subargs("+(m+1)+");" );
 			}
 			writeBodyBlock(body.block);
 			oute("}");
@@ -546,11 +546,13 @@ public class JavaCodeGen {
 		}
 		
 		public void visit(FuncCallStat stat) {
-			outl(eval(stat.funccall)+";");
+			outl(evalVarargs(stat.funccall)+";");
 		}
 
 		public void visit(FuncDef stat) {
-			super.visit(stat);
+			outi( "env.set("+evalStringConstant(stat.name.name.name)+",");
+			stat.body.accept(this);
+			outr(");");
 		}
 
 		public void visit(LocalFuncDef stat) {
@@ -566,11 +568,11 @@ public class JavaCodeGen {
 		public void visit(NumericFor stat) {
 			String javaname = javascope.getJavaName(stat.name.variable);
 			outi("for ( LuaValue "
-					+javaname+"="+eval(stat.initial)+", "
-					+javaname+"$limit="+eval(stat.limit));
+					+javaname+"="+evalLuaValue(stat.initial)+", "
+					+javaname+"$limit="+evalLuaValue(stat.limit));
 			String stepname = "ONE";
 			if ( stat.step!=null ) 
-				out(", "+(stepname=javaname+"$step")+"="+eval(stat.step));
+				out(", "+(stepname=javaname+"$step")+"="+evalLuaValue(stat.step));
 			outr( "; "
 					+javaname+".testfor_b("+javaname+"$limit,"+stepname+"); "
 					+javaname+"="+javaname+".add("+stepname+") ) {" );
@@ -617,12 +619,12 @@ public class JavaCodeGen {
 		}
 
 		public void visit(IfThenElse stat) {
-			outb( "if ( "+eval(stat.ifexp)+".toboolean() ) {");
+			outb( "if ( "+evalLuaValue(stat.ifexp)+".toboolean() ) {");
 			super.visit(stat.ifblock);
 			if ( stat.elseifblocks != null ) 
 				for ( int i=0, n=stat.elseifblocks.size(); i<n; i++ ) {
 					subindent();
-					outl( "} else if ( "+eval(stat.elseifexps.get(i))+".toboolean() ) {");
+					outl( "} else if ( "+evalLuaValue(stat.elseifexps.get(i))+".toboolean() ) {");
 					addindent();
 					super.visit(stat.elseifblocks.get(i));
 				}
@@ -638,7 +640,7 @@ public class JavaCodeGen {
 		public void visit(RepeatUntil stat) {
 			outb( "do {");
 			super.visit(stat.block);
-			oute( "} while (!"+eval(stat.exp)+".toboolean());" );
+			oute( "} while (!"+evalLuaValue(stat.exp)+".toboolean());" );
 		}
 		
 		public void visit(TableConstructor table) {
@@ -654,21 +656,21 @@ public class JavaCodeGen {
 					if ( f.name != null )
 						out( evalStringConstant(f.name)+"," );
 					else
-						out( eval(f.index)+"," );
-					out( eval(f.rhs)+"," );
+						out( evalLuaValue(f.index)+"," );
+					out( evalLuaValue(f.rhs)+"," );
 				}
 				out("},new LuaValue[] {");
 				for ( int i=0; i<n; i++ ) {
 					TableField f = table.fields.get(i);
 					if ( f.name == null && f.index == null )
-						out( eval(f.rhs)+"," );
+						out( evalLuaValue(f.rhs)+"," );
 				}
 				out("})");
 			}
 		}
 
 		public void visit(WhileDo stat) {
-			outb( "while ("+eval(stat.exp)+") {");
+			outb( "while ("+evalLuaValue(stat.exp)+".toboolean()) {");
 			super.visit(stat.block);
 			oute( "}" );
 		}

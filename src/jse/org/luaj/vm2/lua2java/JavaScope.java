@@ -42,7 +42,7 @@ public class JavaScope extends NameScope {
 
 	private static final String[] specials = {
 			// keywords used by our code generator
-			"name", 	"opcode",	"env",
+			"name", 	"opcode",	"env",	"arg", 
 			
 			// java keywords
 			"abstract", "continue", "for",  	"new",		"switch",

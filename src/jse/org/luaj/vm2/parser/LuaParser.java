@@ -13,7 +13,7 @@ public class LuaParser implements LuaParserConstants {
 
   private static Exp.VarExp assertvarexp(Exp.PrimaryExp pe) throws ParseException {
         if (!pe.isvarexp())
-                throw new ParseException("exptected variable");
+                throw new ParseException("expected variable");
         return (Exp.VarExp) pe;
   }
 
