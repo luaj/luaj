@@ -56,6 +56,9 @@ public class JavaScope extends NameScope {
 			"char", 	"final", 	"interface", "static", 	"void",
 			"class", 	"finally", 	"long", 	"strictfp", "volatile",
 			"const", 	"float", 	"native", 	"super", 	"while",
+			
+			// java literals
+			"false", 	"null",		"true",	
 	};
 	
 	static {
@@ -101,7 +104,7 @@ public class JavaScope extends NameScope {
 	final private String allocateJavaName(Object astele, String proposal) {
 		for ( int i=0; true; i++ ) {
 			String jname = proposal+(i==0? "": "$"+i);
-			if ( ! javanames.contains(jname) && ! SPECIALS.contains(jname) && !staticnames.contains(jname)  ) {
+			if ( ! isJavanameInScope(jname) && ! SPECIALS.contains(jname) && !staticnames.contains(jname)  ) {
 				javanames.add(jname);
 				astele2javaname.put(astele,jname);
 				return jname;

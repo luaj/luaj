@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.ast.Chunk;
+import org.luaj.vm2.lib.JsePlatform;
 import org.luaj.vm2.lua2java.JavaCodeGen;
 import org.luaj.vm2.parser.LuaParser;
 
@@ -125,6 +126,7 @@ public class lua2java {
 			}
 			
 			// process input files
+			JsePlatform.standardGlobals();
 			for ( InputFile inf : files )
 				processFile( inf );
 			

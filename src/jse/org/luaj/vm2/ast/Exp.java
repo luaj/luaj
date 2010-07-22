@@ -32,6 +32,10 @@ public class Exp {
 		return new Constant(value);
 	}
 
+	public static Exp numberconstant(String token) {		
+		return new Constant( LuaValue.valueOf(token).tonumber() );
+	}
+
 	public static Exp varargs() {
 		return new VarargsExp();
 	}
@@ -87,7 +91,7 @@ public class Exp {
 		case Lua.OP_LT: case Lua.OP_GT: case Lua.OP_LE: case Lua.OP_GE: case Lua.OP_NEQ: case Lua.OP_EQ: return 2;
 		case Lua.OP_CONCAT: return 3;
 		case Lua.OP_ADD: case Lua.OP_SUB: return 4;
-		case Lua.OP_MUL: case Lua.OP_DIV: return 5;
+		case Lua.OP_MUL: case Lua.OP_DIV: case Lua.OP_MOD: return 5;
 		case Lua.OP_NOT: case Lua.OP_UNM: case Lua.OP_LEN: return 6;
 		case Lua.OP_POW: return 7;
 		default: throw new IllegalStateException("precedence of bad op "+op);

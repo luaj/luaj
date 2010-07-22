@@ -317,18 +317,17 @@ public class JavaCodeGen {
 		}
 		
 		public void visit(BinopExp exp) {
+			String lhs = evalLuaValue(exp.lhs) ;
+			String rhs = evalLuaValue(exp.rhs) ; 
 			switch ( exp.op ) {
 			case Lua.OP_AND:
 			case Lua.OP_OR:
-				out(exp.op==Lua.OP_AND? "(!($b=": "(($b=");
-				exp.lhs.accept(this);
-				out(").toboolean()?$b:");
-				exp.rhs.accept(this);
-				out( ")" );
+				String not = (exp.op==Lua.OP_AND? "!": ""); 
+				out("("+not+"($b="+lhs+").toboolean()?$b:"+rhs+")");
 				return;
 				
 			}
-			exp.lhs.accept(this);
+			out( lhs );
 			switch ( exp.op ) {
 			case Lua.OP_ADD: out(".add"); break;
 			case Lua.OP_SUB: out(".sub"); break;
@@ -345,9 +344,7 @@ public class JavaCodeGen {
 			case Lua.OP_CONCAT: out(".concat"); break;
 			default: throw new IllegalStateException("unknown bin op:"+exp.op);
 			}
-			out("(");
-			exp.rhs.accept(this);
-			out(")");
+			out("("+rhs+")");
 		}
 
 		public void visit(UnopExp exp) {
@@ -444,7 +441,7 @@ public class JavaCodeGen {
 			case 0: 
 				out(".method("+evalStringConstant(exp.name)+")"); 
 				break;
-			case 1: case 2: case 3: 
+			case 1: case 2: 
 				out(".method("+evalStringConstant(exp.name)+",");
 				exp.args.accept(this);
 				out(")");
@@ -605,16 +602,19 @@ public class JavaCodeGen {
 
 		public void visit(NumericFor stat) {
 			String javaname = javascope.getJavaName(stat.name.variable);
+			String indexname = stat.name.variable.isupvalue? javaname+"$0": javaname;
 			outi("for ( LuaValue "
-					+javaname+"="+evalLuaValue(stat.initial)+", "
+					+indexname+"="+evalLuaValue(stat.initial)+", "
 					+javaname+"$limit="+evalLuaValue(stat.limit));
 			String stepname = "ONE";
 			if ( stat.step!=null ) 
 				out(", "+(stepname=javaname+"$step")+"="+evalLuaValue(stat.step));
 			outr( "; "
-					+javaname+".testfor_b("+javaname+"$limit,"+stepname+"); "
-					+javaname+"="+javaname+".add("+stepname+") ) {" );
+					+indexname+".testfor_b("+javaname+"$limit,"+stepname+"); "
+					+indexname+"="+indexname+".add("+stepname+") ) {" );
 			addindent();
+			if ( stat.name.variable.isupvalue )
+				this.singleLocalDeclareAssign(stat.name, indexname);
 			super.visit(stat.block);
 			oute( "}" );
 		}

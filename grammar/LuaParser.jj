@@ -342,7 +342,7 @@ Exp SimpleExp():
 	<NIL>					{ return Exp.constant(LuaValue.NIL); } 		
 |	<TRUE>					{ return Exp.constant(LuaValue.TRUE); }
 |	<FALSE>					{ return Exp.constant(LuaValue.FALSE); }
-|	n=<NUMBER>				{ return Exp.constant(LuaValue.valueOf(Double.valueOf(n.image))); }
+|	n=<NUMBER>				{ return Exp.numberconstant(n.image); }
 |	s=Str()					{ return Exp.constant(s); }
 |	"..."					{ return Exp.varargs(); } 
 |	tc=TableConstructor()	{ return Exp.tableconstructor(tc); }

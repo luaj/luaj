@@ -551,7 +551,7 @@ public class LuaParser implements LuaParserConstants {
       break;
     case NUMBER:
       n = jj_consume_token(NUMBER);
-                                                  {if (true) return Exp.constant(LuaValue.valueOf(Double.valueOf(n.image)));}
+                                                  {if (true) return Exp.numberconstant(n.image);}
       break;
     case LONGSTRING0:
     case LONGSTRING1:

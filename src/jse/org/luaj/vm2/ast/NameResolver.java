@@ -91,7 +91,7 @@ public class NameResolver extends Visitor {
 	}
 
 	public void visit(LocalAssign stat) {
-		super.visit(stat);
+		visitExps(stat.values);
 		defineLocalVars( stat.names );
 	}
 
