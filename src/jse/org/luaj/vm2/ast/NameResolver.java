@@ -91,8 +91,8 @@ public class NameResolver extends Visitor {
 	}
 
 	public void visit(LocalAssign stat) {
-		defineLocalVars( stat.names );
 		super.visit(stat);
+		defineLocalVars( stat.names );
 	}
 
 	public void visit(ParList pars) {

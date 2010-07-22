@@ -33,6 +33,7 @@ import org.luaj.vm2.ast.NameScope;
 import org.luaj.vm2.ast.Visitor;
 import org.luaj.vm2.ast.Exp.BinopExp;
 import org.luaj.vm2.ast.Stat.Return;
+import org.luaj.vm2.lib.LibFunction;
 
 
 public class JavaScope extends NameScope {
@@ -60,7 +61,10 @@ public class JavaScope extends NameScope {
 	static {
 		for ( int i=0; i<specials.length; i++ )
 			SPECIALS.add(specials[i]);
-		// TODO: add any via reflection from LuaValue
+		for ( java.lang.reflect.Field f : LibFunction.class.getFields() )
+			SPECIALS.add(f.getName());
+		for ( java.lang.reflect.Method m : LibFunction.class.getMethods() )
+			SPECIALS.add(m.getName());
 	}
 
 	public int nreturns;
@@ -69,7 +73,6 @@ public class JavaScope extends NameScope {
 	final Set<String> staticnames;
 	final Set<String> javanames = new HashSet<String>();
 	final Map<Object,String> astele2javaname = new HashMap<Object,String>();
-//	final public List<String> tmpvars = new ArrayList<String>();
 	
 	private JavaScope(Set<String> staticnames, JavaScope outerScope) {		
 		super(outerScope);	
@@ -95,30 +98,29 @@ public class JavaScope extends NameScope {
 		return allocateJavaName( nv, nv.name );
 	}
 
-//	public String getTempVar(BinopExp exp) {
-//		return astele2javaname.containsKey(exp)? astele2javaname.get(exp): "$t";
-//	}
-//
-//	public void allocateTempVar(BinopExp exp) {
-//		tmpvars.add( allocateJavaName( exp, "t" ) );
-//	}
-//	
 	final private String allocateJavaName(Object astele, String proposal) {
 		for ( int i=0; true; i++ ) {
 			String jname = proposal+(i==0? "": "$"+i);
-			if ( ! javanames.contains(jname) && ! SPECIALS.contains(jname)  ) {
+			if ( ! javanames.contains(jname) && ! SPECIALS.contains(jname) && !staticnames.contains(jname)  ) {
 				javanames.add(jname);
 				astele2javaname.put(astele,jname);
 				return jname;
 			}
 		}
 	}
+
+	private boolean isJavanameInScope(String javaname) {
+		for ( JavaScope s = this; s != null; s = (JavaScope) s.outerScope )
+			if ( s.javanames.contains(javaname) )
+				return true;
+		return false;
+	}
 	
 	public String createConstantName(String proposal) {
 		proposal = toLegalJavaName(proposal);
 		for ( int i=0; true; i++ ) {
 			String jname = proposal+(i==0? "": "$"+i);
-			if ( ! javanames.contains(jname) && ! SPECIALS.contains(jname) && !staticnames.contains(jname) ) {
+			if ( ! isJavanameInScope(jname) && ! SPECIALS.contains(jname) && !staticnames.contains(jname) ) {
 				javanames.add(jname);
 				staticnames.add(jname);
 				return jname;
@@ -153,6 +155,7 @@ public class JavaScope extends NameScope {
 		public void visit(Return s) {
 			int n = s.nreturns();
 			nreturns = (nreturns<0||n<0? -1: Math.max(n,nreturns));
+			super.visit(s);
 		}
 		public void visit(BinopExp exp) {
 			switch ( exp.op ) {

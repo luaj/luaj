@@ -148,7 +148,7 @@ public class JavaCodeGen {
 			if ( javascope.needsbinoptmp )
 				outl( "LuaValue $b;" );
 			super.visit(block);
-			if ( !endsInReturn(block) )
+			if ( ! endsInReturn(block) )
 				outl( "return NONE;" );
 		}
 		
@@ -162,7 +162,19 @@ public class JavaCodeGen {
 			int n = block.stats.size();
 			if ( n<=0 ) return false;
 			Stat s = block.stats.get(n-1);
-			return s instanceof Return || s instanceof Break;
+			if ( s instanceof Return || s instanceof Break ) 
+				return true;
+			else if ( s instanceof IfThenElse ) {
+				IfThenElse ite = (IfThenElse) s;
+				if ( ite.elseblock == null || ! endsInReturn(ite.ifblock) || ! endsInReturn(ite.elseblock) )
+					return false;
+				if ( ite.elseifblocks != null )
+					for ( Block b : ite.elseifblocks ) 
+						if ( ! endsInReturn(b) )
+							return false;
+				return true;
+			}
+			return false;
 		}
 		
 		public void visit(Stat.Return s) {
@@ -325,9 +337,9 @@ public class JavaCodeGen {
 			case Lua.OP_POW: out(".pow"); break;
 			case Lua.OP_MOD: out(".mod"); break;
 			case Lua.OP_GT: out(".gt"); break;
-			case Lua.OP_GE: out(".ge"); break;
+			case Lua.OP_GE: out(".gteq"); break;
 			case Lua.OP_LT: out(".lt"); break;
-			case Lua.OP_LE: out(".le"); break;
+			case Lua.OP_LE: out(".lteq"); break;
 			case Lua.OP_EQ: out(".eq"); break;
 			case Lua.OP_NEQ: out(".neq"); break;
 			case Lua.OP_CONCAT: out(".concat"); break;
@@ -564,7 +576,7 @@ public class JavaCodeGen {
 						out( "[0]" );
 					outr( " = "+value+";" );
 				} else {
-					outi( "env.set("+evalStringConstant(stat.name.name.name)+","+value+");" );
+					outl( "env.set("+evalStringConstant(stat.name.name.name)+","+value+");" );
 				}
 			} else {
 				if ( stat.name.name.variable.isLocal() ) {
@@ -582,12 +594,13 @@ public class JavaCodeGen {
 
 		public void visit(LocalFuncDef stat) {
 			String javaname = javascope.getJavaName(stat.name.variable);
-			if ( stat.name.variable.isupvalue ) 
-				outi("final LuaValue[] "+javaname+" = {");
-			else
+			if ( stat.name.variable.isupvalue ) {
+				outl("final LuaValue[] "+javaname+" = {null};");
+				outi(javaname+"[0] = ");
+			} else
 				outi("LuaValue "+javaname+" = ");
 			super.visit(stat);
-			outr( stat.name.variable.isupvalue? "};": ";" );
+			outr( ";" );
 		}
 
 		public void visit(NumericFor stat) {
