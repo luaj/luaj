@@ -183,7 +183,7 @@ public class JavaCodeGen {
 			switch ( n ) {
 			case 0: outl( "return NONE;" ); break;
 			case 1: outl( "return "+evalLuaValue(s.values.get(0))+";" ); break;
-			default: outl( "return "+evalVarargs(s.values)+";" ); break;
+			default: outl( "return "+evalListAsVarargs(s.values)+";" ); break;
 			}
 		}
 
@@ -288,8 +288,8 @@ public class JavaCodeGen {
 			return c.toString();
 		}
 		
-		public String evalVarargs(List<Exp> values) {
-			int n = values.size();
+		public String evalListAsVarargs(List<Exp> values) {
+			int n = values!=null? values.size(): 0;
 			switch ( n ) {
 			case 0: return "NONE";
 			case 1: return evalVarargs(values.get(0));
@@ -306,15 +306,26 @@ public class JavaCodeGen {
 			}
 		}
 		
+		Map<Exp,Integer> callerExpects = new HashMap<Exp,Integer>();
+		
 		public String evalLuaValue(Exp exp) {
-			String s = evalVarargs(exp);
-			return exp.isvarargexp()? s+".arg1()": s;
+			Writer x = pushWriter();
+			callerExpects.put(exp,1);
+			exp.accept(this);
+			return popWriter(x);
 		}
 		
 		public String evalVarargs(Exp exp) {
 			Writer x = pushWriter();
+			callerExpects.put(exp,-1);
 			exp.accept(this);
 			return popWriter(x);
+		}
+		
+		public void visit(FuncCallStat stat) {
+			outi("");
+			stat.funccall.accept(this);
+			outr(";");
 		}
 		
 		public void visit(BinopExp exp) {
@@ -429,17 +440,21 @@ public class JavaCodeGen {
 		}
 
 		public void visit(ParensExp exp) {
-			exp.exp.accept(this);
-			out(".arg1()");
+			out( evalLuaValue(exp.exp) );
 		}
 
 		public void visit(VarargsExp exp) {
-			out( "arg" );
+			int c = callerExpects.containsKey(exp)? callerExpects.get(exp): 0;
+			out( c==1? "arg.arg1()": "arg" );
 		}
 
 		public void visit(MethodCall exp) {
-			int n = exp.args.exps != null? exp.args.exps.size(): 0;
-			exp.lhs.accept(this);
+			List<Exp> e = exp.args.exps;
+			int n = e != null? e.size(): 0;
+			int c = callerExpects.containsKey(exp)? callerExpects.get(exp): 0;
+			if ( c == -1 )
+				n = -1;
+			out( evalLuaValue(exp.lhs) );
 			switch ( n ) {
 			case 0: 
 				out(".method("+evalStringConstant(exp.name)+")"); 
@@ -449,17 +464,24 @@ public class JavaCodeGen {
 				exp.args.accept(this);
 				out(")");
 				break;
-			default:
-				out(".invokemethod("+evalStringConstant(exp.name)+","+evalVarargs(exp.args.exps)+")");
+			default:			
+				out(".invokemethod("+evalStringConstant(exp.name)
+						+((e==null||e.size()==0)? "": ","+evalListAsVarargs(exp.args.exps))+")");
+				if ( c == 1 )
+					out(".arg1()");
 				break;
 			}
 		}
 		
 		public void visit(FuncCall exp) {
-			int n = exp.args.exps != null? exp.args.exps.size(): 0;
-			if ( n > 0 && exp.args.exps.get(n-1).isvarargexp() )
+			List<Exp> e = exp.args.exps;
+			int n = e != null? e.size(): 0;
+			if ( n > 0 && e.get(n-1).isvarargexp() )
 				n = -1;
-			exp.lhs.accept(this);
+			int c = callerExpects.containsKey(exp)? callerExpects.get(exp): 0;
+			if ( c == -1 )
+				n = -1;
+			out( evalLuaValue(exp.lhs) );
 			switch ( n ) {
 			case 0: case 1: case 2: case 3: 
 				out(".call(");
@@ -467,7 +489,9 @@ public class JavaCodeGen {
 				out(")");
 				break;
 			default:
-				out(".invoke("+evalVarargs(exp.args.exps)+")");
+				out(".invoke("+((e==null||e.size()==0)? "": evalListAsVarargs(e))+")");
+				if ( c == 1 )
+					out(".arg1()");
 				break;
 			}
 		}
@@ -557,10 +581,6 @@ public class JavaCodeGen {
 			}
 		}
 		
-		public void visit(FuncCallStat stat) {
-			outl(evalVarargs(stat.funccall)+";");
-		}
-
 		public void visit(FuncDef stat) {
 			Writer x = pushWriter();
 			stat.body.accept(this);
@@ -685,29 +705,40 @@ public class JavaCodeGen {
 		}
 		
 		public void visit(TableConstructor table) {
-			if ( table.fields == null ) {
-				out("LuaValue.tableOf()");
-			} else {
-				int n = table.fields.size();
-				out("LuaValue.tableOf(new LuaValue[]{");
-				for ( int i=0; i<n; i++ ) {
-					TableField f = table.fields.get(i);
-					if ( f.name == null && f.index == null )
-						continue;
+			int n = table.fields!=null? table.fields.size(): 0;
+			List<TableField> keyed = new ArrayList<TableField>();
+			List<TableField> list = new ArrayList<TableField>();
+			for ( int i=0; i<n; i++ ) {
+				TableField f = table.fields.get(i);
+				(( f.name != null || f.index != null )? keyed: list).add(f);
+			}
+			int nk = keyed.size();
+			int nl = list.size();
+			out( (nk==0 && nl!=0)? "LuaValue.listOf(": "LuaValue.tableOf(" );
+			
+			// named elements
+			if ( nk != 0 ) {
+				out( "new LuaValue[]{");
+				for ( TableField f : keyed ) {
 					if ( f.name != null )
 						out( evalStringConstant(f.name)+"," );
 					else
 						out( evalLuaValue(f.index)+"," );
 					out( evalLuaValue(f.rhs)+"," );
 				}
-				out("},new LuaValue[] {");
-				for ( int i=0; i<n; i++ ) {
-					TableField f = table.fields.get(i);
-					if ( f.name == null && f.index == null )
-						out( evalLuaValue(f.rhs)+"," );
-				}
-				out("})");
+				out( "}" );
 			}
+			
+			// unnamed elements
+			if ( nl != 0 ) {
+				out( (nk!=0? ",": "") + "new LuaValue[]{" );
+				Exp last = list.get(nl-1).rhs;
+				boolean vlist = last.isvarargexp();
+				for ( int i=0, limit=vlist? nl-1: nl; i<limit ; i++ )
+					out( evalLuaValue( list.get(i).rhs )+"," );
+				out( vlist? "}, "+evalVarargs(last): "}");
+			}
+			out( ")" );
 		}
 
 		public void visit(WhileDo stat) {

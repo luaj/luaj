@@ -43,7 +43,7 @@ public class Str {
 	}
 	
 	public static LuaString longString(String image) {
-		int i = image.indexOf('[', image.indexOf('[')+1);
+		int i = image.indexOf('[', image.indexOf('[')+1)+1;
 		String s = image.substring(i,image.length()-i);
 		byte[] b = iso88591bytes(s);
 		return LuaString.valueOf(b);

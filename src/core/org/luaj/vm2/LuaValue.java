@@ -230,6 +230,8 @@ public class LuaValue extends Varargs {
 	public Varargs invoke(LuaValue arg1,LuaValue arg2,Varargs varargs) { return invoke(varargsOf(arg1,arg2,varargs)); }
 	public Varargs invoke(LuaValue[] args) { return invoke(varargsOf(args)); }
 	public Varargs invoke(LuaValue[] args,Varargs varargs) { return invoke(varargsOf(args,varargs)); }
+	public Varargs invokemethod(String name) { return get(name).invoke(this); }
+	public Varargs invokemethod(LuaValue name) { return get(name).invoke(this); }
 	public Varargs invokemethod(String name, Varargs args) { return get(name).invoke(varargsOf(this,args)); }
 	public Varargs invokemethod(LuaValue name, Varargs args) { return get(name).invoke(varargsOf(this,args)); }
 	public Varargs invokemethod(String name, LuaValue[] args) { return get(name).invoke(varargsOf(this,varargsOf(args))); }
