@@ -22,35 +22,41 @@
 package org.luaj.vm2.ast;
 
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 
 import org.luaj.vm2.LuaString;
 
 public class Str {
 	
-	public final byte[] bytes;
-	public final boolean isutf8;
+	private Str() {}
 	
-	public Str(byte[] bytes) {
-		this.bytes = bytes;
-		this.isutf8 = true; // TODO: scan to see
-	}
 	public static LuaString quoteString(String image) {
 		String s = image.substring(1, image.length()-1);
 		byte[] bytes = unquote(s);
-		// TODO: check for non-utf8
 		return LuaString.valueOf(bytes);
 	}
+	
 	public static LuaString charString(String image) {
 		String s = image.substring(1, image.length()-1);
 		byte[] bytes = unquote(s);
-		// TODO: check for non-utf8
 		return LuaString.valueOf(bytes);
 	}
+	
 	public static LuaString longString(String image) {
 		int i = image.indexOf('[', image.indexOf('[')+1);
 		String s = image.substring(i,image.length()-i);
-		return LuaString.valueOf(s);
+		byte[] b = iso88591bytes(s);
+		return LuaString.valueOf(b);
 	}
+	
+	public static byte[] iso88591bytes( String s ) {
+		try {
+			return s.getBytes("ISO8859-1");
+		} catch (UnsupportedEncodingException e) {
+			throw new IllegalStateException("ISO8859-1 not supported");
+		}
+	}
+	
 	public static byte[] unquote(String s) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		char[] c = s.toCharArray();
@@ -84,13 +90,4 @@ public class Str {
 		}
 		return baos.toByteArray();
 	}
-	/*
-	private static byte[] utf8decode(String s) {
-		try {
-			return s.getBytes("UTF8");
-		} catch ( Exception e ) {
-			throw new RuntimeException("utf8 not found: "+e);
-		}
-	}
-	*/
 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ast.Block;
 import org.luaj.vm2.ast.Chunk;
@@ -88,7 +89,7 @@ public class JavaCodeGen {
 
 		JavaScope javascope = null;
 		List<String> constantDeclarations = new ArrayList<String>();
-		Map<String,String> stringConstants = new HashMap<String,String>();
+		Map<LuaString,String> stringConstants = new HashMap<LuaString,String>();
 		Map<Double,String> numberConstants = new HashMap<Double,String>();
 		
 		
@@ -359,8 +360,7 @@ public class JavaCodeGen {
 		public void visit(Constant exp) {
 			switch ( exp.value.type() ) {
 			case LuaValue.TSTRING: {
-				// TODO: non-UTF8 data
-				out( evalStringConstant(exp.value.tojstring()) );
+				out( evalLuaStringConstant(exp.value.checkstring()) );
 				break;
 			}
 			case LuaValue.TNIL:
@@ -379,11 +379,14 @@ public class JavaCodeGen {
 		}
 
 		private String evalStringConstant(String str) {
-			// TODO: quoting, data pooling
+			return evalLuaStringConstant( LuaValue.valueOf(str) );
+		}
+		
+		private String evalLuaStringConstant(LuaString str) {
 			if ( stringConstants.containsKey(str) )
 				return stringConstants.get(str);
-			String declvalue = quotedStringInitializer(str.getBytes());
-			String javaname = javascope.createConstantName(str);
+			String declvalue = quotedStringInitializer(str);
+			String javaname = javascope.createConstantName(str.tojstring());
 			constantDeclarations.add( "static final LuaValue "+javaname+" = valueOf("+declvalue+");" );
 			stringConstants.put(str,javaname);
 			return javaname;
@@ -726,40 +729,41 @@ public class JavaCodeGen {
 		}		
 	}
 
-	private static String quotedStringInitializer(byte[] bytes) {
-		int n = bytes.length;
+	private static String quotedStringInitializer(LuaString s) {
+		byte[] bytes = s.m_bytes;
+		int o = s.m_offset;
+		int n = s.m_length;
 		StringBuffer sb = new StringBuffer(n+2);		
 		
-		// check for characters beyond ascii 128
-		for ( int i=0; i<n; i++ )
-			if (bytes[i]<0) {
-				sb.append( "new byte[]{" );
-				for ( int j=0; j<n; j++ ) {
-					if ( j>0 ) sb.append(",");
-					byte b = bytes[j];
-					switch ( b ) {
-						case '\n': sb.append( "'\\n'" ); break; 
-						case '\r': sb.append( "'\\r'" ); break; 
-						case '\t': sb.append( "'\\t'" ); break; 
-						case '\\': sb.append( "'\\\\'" ); break;
-						default:
-							if ( b >= ' ' ) {
-								sb.append( '\'');
-								sb.append( (char) b );
-								sb.append( '\'');
-							} else {
-								sb.append( String.valueOf((int)b) );
-							}
-						break;
-					}					
-				}
-				sb.append( "}" );
-				return sb.toString();
+		// check for bytes not encodable as utf8
+		if ( ! s.isValidUtf8() ) {
+			sb.append( "new byte[]{" );
+			for ( int j=0; j<n; j++ ) {
+				if ( j>0 ) sb.append(",");
+				byte b = bytes[o+j];
+				switch ( b ) {
+					case '\n': sb.append( "'\\n'" ); break; 
+					case '\r': sb.append( "'\\r'" ); break; 
+					case '\t': sb.append( "'\\t'" ); break; 
+					case '\\': sb.append( "'\\\\'" ); break;
+					default:
+						if ( b >= ' ' ) {
+							sb.append( '\'');
+							sb.append( (char) b );
+							sb.append( '\'');
+						} else {
+							sb.append( String.valueOf((int)b) );
+						}
+					break;
+				}					
 			}
+			sb.append( "}" );
+			return sb.toString();
+		}
 
 		sb.append('"');
 		for ( int i=0; i<n; i++ ) {
-			byte b = bytes[i];
+			byte b = bytes[o+i];
 			switch ( b ) {
 				case '\b': sb.append( "\\b" ); break; 
 				case '\f': sb.append( "\\f" ); break; 

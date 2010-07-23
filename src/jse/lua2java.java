@@ -47,6 +47,7 @@ public class lua2java {
 		"  -s src	source directory\n" +
 		"  -d dir	destination directory\n" +
 		"  -p pkg	package prefix to apply to all classes\n" +
+		"  -e enc	override default character encoding\n" +
 		"  -r		recursively compile all\n" +
 		"  -v   	verbose\n";
 	
@@ -58,6 +59,7 @@ public class lua2java {
 	private String srcdir = null;
 	private String destdir = null;
 	private String pkgprefix = null;
+	private String encoding = "ISO8859-1";
 	private boolean recurse = false;
 	private boolean verbose = false;
 	private List<InputFile> files = new ArrayList<InputFile>();
@@ -93,6 +95,11 @@ public class lua2java {
 							usageExit();
 						pkgprefix = args[i];
 						break;
+					case 'e':
+						if ( ++i >= args.length )
+							usageExit();
+						encoding = args[i];
+						break;
 					case 'r':
 						recurse = true;
 						break;
@@ -112,6 +119,7 @@ public class lua2java {
 				System.out.println("srcdir: "+srcdir);
 				System.out.println("destdir: "+destdir);
 				System.out.println("files: "+files);
+				System.out.println("encoding: "+encoding);
 				System.out.println("recurse: "+recurse);
 			}
 
@@ -186,7 +194,7 @@ public class lua2java {
 			FileInputStream in = new FileInputStream(inf.infile);
 			FileOutputStream out = new FileOutputStream(inf.outfile);
 			PrintWriter pw = new PrintWriter(out);
-		    LuaParser parser = new LuaParser(in);
+		    LuaParser parser = new LuaParser(in,encoding);
 		    Chunk chunk = parser.Chunk();
 			new JavaCodeGen(chunk,pw,inf.javapackage,inf.javaclassname);
 			pw.close();
