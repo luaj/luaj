@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.luaj.vm2.ast.Exp.NameExp;
 import org.luaj.vm2.ast.Exp.VarExp;
+import org.luaj.vm2.ast.Exp.VarargsExp;
 import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
 import org.luaj.vm2.ast.Stat.FuncDef;
@@ -77,13 +78,6 @@ public class NameResolver extends Visitor {
 		super.visit(stat);
 	}
 	
-	protected NamedVariable resolveNameReference(Name name) {
-		NamedVariable v = scope.find(name.name);
-		if ( v.isLocal() && scope.functionNestingCount != v.definingScope.functionNestingCount )
-			v.isupvalue = true;
-		return v;
-	}
-
 	public void visit(Assign stat) {
 		super.visit(stat);
 		for ( VarExp v : stat.vars )
@@ -98,6 +92,8 @@ public class NameResolver extends Visitor {
 	public void visit(ParList pars) {
 		if ( pars.names != null )
 			defineLocalVars(pars.names);
+		if ( pars.isvararg )
+			scope.define("arg");
 		super.visit(pars);
 	}
 	
@@ -108,5 +104,12 @@ public class NameResolver extends Visitor {
 
 	protected void defineLocalVar(Name name) {
 		name.variable = scope.define(name.name);
+	}
+	
+	protected NamedVariable resolveNameReference(Name name) {
+		NamedVariable v = scope.find(name.name);
+		if ( v.isLocal() && scope.functionNestingCount != v.definingScope.functionNestingCount )
+			v.isupvalue = true;
+		return v;
 	}
 }

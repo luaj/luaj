@@ -43,7 +43,7 @@ public class JavaScope extends NameScope {
 
 	private static final String[] specials = {
 			// keywords used by our code generator
-			"name", 	"opcode",	"env",	"arg", 
+			"name", 	"opcode",	"env",	// "arg", 
 			
 			// java keywords
 			"abstract", "continue", "for",  	"new",		"switch",
@@ -112,6 +112,11 @@ public class JavaScope extends NameScope {
 		}
 	}
 
+	public void setJavaName(NamedVariable astele, String javaname) {
+		javanames.add(javaname);
+		astele2javaname.put(astele,javaname);
+	}	
+
 	private boolean isJavanameInScope(String javaname) {
 		for ( JavaScope s = this; s != null; s = (JavaScope) s.outerScope )
 			if ( s.javanames.contains(javaname) )
@@ -168,5 +173,6 @@ public class JavaScope extends NameScope {
 			}
 			super.visit(exp);
 		}
-	}	
+	}
+
 }

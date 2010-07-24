@@ -56,6 +56,7 @@ import org.luaj.vm2.ast.Exp.ParensExp;
 import org.luaj.vm2.ast.Exp.UnopExp;
 import org.luaj.vm2.ast.Exp.VarExp;
 import org.luaj.vm2.ast.Exp.VarargsExp;
+import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
 import org.luaj.vm2.ast.Stat.Break;
 import org.luaj.vm2.ast.Stat.FuncCallStat;
@@ -134,7 +135,7 @@ public class JavaCodeGen {
 			outl("import org.luaj.vm2.*;");
 			outl("import org.luaj.vm2.lib.*;");
 			outb("public class "+classname+" extends VarArgFunction {");
-			outl("public Varargs invoke(Varargs arg) {");
+			outl("public Varargs invoke(Varargs $arg) {");
 			addindent();
 			javascope = JavaScope.newJavaScope( chunk );
 			writeBodyBlock(chunk.block);
@@ -514,19 +515,19 @@ public class JavaCodeGen {
 			if ( n>=0 && n<=1 && m<=3 && ! body.parlist.isvararg ) {
 				switch ( m ) {
 				case 0: 
-					outr("new ZeroArgFunction() {");
+					outr("new ZeroArgFunction(env) {");
 					addindent();
 					outb("public LuaValue call() {");
 					break;
 				case 1: 
-					outr("new OneArgFunction() {");
+					outr("new OneArgFunction(env) {");
 					addindent();
 					outb("public LuaValue call("
 							+declareArg(body.parlist.names.get(0))+") {");
 					assignArg(body.parlist.names.get(0));
 					break;
 				case 2: 
-					outr("new TwoArgFunction() {");
+					outr("new TwoArgFunction(env) {");
 					addindent();
 					outb("public LuaValue call("
 							+declareArg(body.parlist.names.get(0))+","
@@ -535,7 +536,7 @@ public class JavaCodeGen {
 					assignArg(body.parlist.names.get(1));
 					break;
 				case 3: 
-					outr("new ThreeArgFunction() {");
+					outr("new ThreeArgFunction(env) {");
 					addindent();
 					outb("public LuaValue call("
 							+declareArg(body.parlist.names.get(0))+","
@@ -547,20 +548,24 @@ public class JavaCodeGen {
 					break;
 				}
 			} else {
-				outr("new VarArgFunction() {");
+				outr("new VarArgFunction(env) {");
 				addindent();
-				outb("public Varargs invoke(Varargs arg) {");
+				outb("public Varargs invoke(Varargs $arg) {");
+				if ( body.parlist.isvararg ) {
+					NamedVariable arg = body.scope.find("arg");
+					javascope.setJavaName(arg,"arg");
+					String value = "LuaValue.tableOf($arg,"+(m+1)+")";
+					outl( arg.isupvalue? "final LuaValue[] arg = {"+value+"};": "LuaValue arg = "+value+";" ); 
+				}
 				for ( int i=0; i<m; i++ ) {
 					Name name = body.parlist.names.get(i);
 					String argname = javascope.getJavaName(name.variable);
-					String value = i>0? "arg.arg("+(i+1)+")": "arg.arg1()";
+					String value = i>0? "$arg.arg("+(i+1)+")": "$arg.arg1()";
 					if ( name.variable.isupvalue )
 						outl( "final LuaValue[] "+argname+" = {"+value+"};" );
 					else
 						outl( "LuaValue "+argname+" = "+value+";" );
 				}
-				if ( body.parlist.isvararg && m > 0 ) 
-					outl( "arg = arg.subargs("+(m+1)+");" );
 			}
 			writeBodyBlock(body.block);
 			oute("}");
