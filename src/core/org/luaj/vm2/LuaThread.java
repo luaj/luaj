@@ -52,7 +52,7 @@ public class LuaThread extends LuaValue implements Runnable {
 	public LuaValue err;
 	
 	
-	public static final int        MAX_CALLSTACK = 64;
+	public static final int        MAX_CALLSTACK = 256;
 	public final LuaFunction[]     callstack     = new LuaFunction[MAX_CALLSTACK];
 	public int                     calls         = 0;
 

@@ -38,8 +38,8 @@ import org.luaj.vm2.compiler.LexState.expdesc;
 
 public class FuncState extends LuaC {
 	class upvaldesc {
-		  byte k;
-		  byte info;
+		  short k;
+		  short info;
 	};
 
 	static class BlockCnt {
@@ -129,8 +129,8 @@ public class FuncState extends LuaC {
 		f.upvalues[f.nups] = name;
 		_assert (v.k == LexState.VLOCAL || v.k == LexState.VUPVAL);
 		upvalues[f.nups] = new upvaldesc();
-		upvalues[f.nups].k = (byte) (v.k);
-		upvalues[f.nups].info = (byte) (v.u.s.info);
+		upvalues[f.nups].k = (short) (v.k);
+		upvalues[f.nups].info = (short) (v.u.s.info);
 		return f.nups++;
 	}
 		

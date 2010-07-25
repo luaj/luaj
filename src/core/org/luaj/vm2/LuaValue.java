@@ -68,10 +68,10 @@ public class LuaValue extends Varargs {
 	public static final LuaString METATABLE   = valueOf("__metatable");
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
-	private static int MAXLOCALS = 200;	
-	public static final LuaValue[] NILS = new LuaValue[MAXLOCALS];	
+	private static int MAXSTACK = 250;
+	public static final LuaValue[] NILS = new LuaValue[MAXSTACK];	
 	static {
-		for ( int i=0; i<MAXLOCALS; i++ )
+		for ( int i=0; i<MAXSTACK; i++ )
 			NILS[i] = NIL;
 	}
 	

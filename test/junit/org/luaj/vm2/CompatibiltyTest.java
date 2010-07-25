@@ -47,6 +47,7 @@ public class CompatibiltyTest {
 		public void testErrors()        { runTest("errors"); }	
 		public void testFunctions()     { runTest("functions"); }	
 		public void testIoLib()         { runTest("iolib");     }
+		public void testManyUpvals()    { runTest("manyupvals"); }
 		public void testMathLib()       { runTest("mathlib"); }
 		public void testOsLib()         { runTest("oslib"); }
 		public void testStringLib()     { runTest("stringlib"); }
