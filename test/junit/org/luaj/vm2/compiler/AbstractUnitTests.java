@@ -54,7 +54,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
             // compile in memory
             InputStream is = new ByteArrayInputStream(lua);
-            Prototype p = LuaC.compile(is, "@" + dir + "/" + file);
+            Prototype p = LuaC.instance.compile(is, "@" + dir + "/" + file);
             String actual = protoToString(p);
 
             // load expected value from jar
@@ -97,7 +97,7 @@ abstract public class AbstractUnitTests extends TestCase {
     protected Prototype loadFromBytes(byte[] bytes, String script)
             throws IOException {
         InputStream is = new ByteArrayInputStream(bytes);
-        return LoadState.compile(is, script);
+        return LoadState.loadBinaryChunk(is.read(), is, script);
     }
 
     protected String protoToString(Prototype p) {

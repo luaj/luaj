@@ -159,7 +159,7 @@ public class luac {
 	private void processScript( InputStream script, String chunkname, OutputStream out ) throws IOException {
 		try {
 	        // create the chunk
-	        Prototype chunk = LuaC.compile(script, chunkname);
+	        Prototype chunk = LuaC.instance.compile(script, chunkname);
 
 	        // list the chunk
 	        if (list)

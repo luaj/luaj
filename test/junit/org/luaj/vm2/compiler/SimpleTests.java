@@ -5,14 +5,11 @@ import java.io.InputStream;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaDouble;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Print;
-import org.luaj.vm2.Prototype;
-import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.JsePlatform;
 
 public class SimpleTests extends TestCase {
@@ -27,12 +24,7 @@ public class SimpleTests extends TestCase {
     private void doTest( String script ) {
     	try {
         	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
-			Prototype p = LuaC.compile( is, "script" );
-			assertNotNull( p );
-			Print.printCode( p );
-			
-			// try running the code!
-			LuaClosure c = new LuaClosure( p, _G );
+			LuaFunction c = LuaC.instance.load( is, "script", _G );
 			c.call();
     	} catch ( Exception e ) {
     		fail("i/o exception: "+e );

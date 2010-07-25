@@ -56,15 +56,9 @@ public class LoadState {
 	/** Interface for the compiler, if it is installed. */
 	public interface LuaCompiler {
 		
-		/** Compile into a prototype, without taking the additional step of create a LuaFunction or LuaClosure */
-		public Prototype compile(int firstByte, InputStream stream, String name) throws IOException;
-		
-		/** Load into a Closure or LuaFunction, with the supplied initial environment */
-		public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException;
-		
-		/** Load into a LuaFunction given a prototype.  May compile into a class, or return a LuaClosure 
-		 * @param filename TODO*/
-		public LuaFunction load(Prototype p, String filename, LuaValue env);
+		/** Load into a Closure or LuaFunction from a Stream and initializes the environment 
+		 * @throws IOException */
+		public LuaFunction load(InputStream stream, String filename, LuaValue env) throws IOException;
 	}
 
 	/** Compiler instance, if installed */
@@ -275,26 +269,25 @@ public class LoadState {
 	}
 
 	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
-		Prototype p = compile( stream, name );
 		if ( compiler != null )
-			return compiler.load(p, name, env);
-		else
+			return compiler.load(stream, name, env);
+		else {
+			int firstByte = stream.read();
+			if ( firstByte != LUA_SIGNATURE[0] )
+				throw new LuaError("no compiler");
+			Prototype p = loadBinaryChunk( firstByte, stream, name );
 			return new LuaClosure( p, env );
+		}
 	}
 
-	public static Prototype compile( InputStream stream, String name ) throws IOException {
-		int c = stream.read();
-		if ( c != LUA_SIGNATURE[0] ) {
-			if ( compiler != null )
-				return compiler.compile(c, stream, name);
-			throw new LuaError("no compiler");
-		}
+	public static Prototype loadBinaryChunk( int firstByte, InputStream stream, String name ) throws IOException {
 
 		// check rest of signature
-		for ( int i=1; i<4; i++ ) {
-			if ( stream.read() != LUA_SIGNATURE[i] )
-				throw new IllegalArgumentException("bad signature");
-		}
+		if ( firstByte != LUA_SIGNATURE[0] 
+		   || stream.read() != LUA_SIGNATURE[1]
+	       || stream.read() != LUA_SIGNATURE[2]
+		   || stream.read() != LUA_SIGNATURE[3] )
+			throw new IllegalArgumentException("bad signature");
 		
 		// load file as a compiled chunk
 		String sname = getSourceName(name);

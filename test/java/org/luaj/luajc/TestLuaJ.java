@@ -56,9 +56,7 @@ public class TestLuaJ {
 		
 		// compile into a chunk, or load as a class
 		InputStream is =  new ByteArrayInputStream( script.getBytes() );
-		Prototype p = LuaC.compile(is, "script");
-		print( p );
-		LuaValue chunk = new LuaClosure(p,_G);
+		LuaValue chunk = LuaC.instance.load(is, "script",_G);
 		chunk.call();
 	}
 

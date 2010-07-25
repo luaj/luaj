@@ -45,7 +45,7 @@ public class FragmentsTest extends TestCase {
 			if ( true ) {
 				chunk = LuaJC.getInstance().load(is,name,_G);
 			} else {
-				chunk = (new LuaC()).load( is, name, _G );
+				chunk = LuaC.instance.load( is, name, _G );
 			}
 			Varargs actual = chunk.invoke();
 			assertEquals( expected.narg(), actual.narg() );

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
@@ -41,12 +42,14 @@ import org.luaj.vm2.LoadState.LuaCompiler;
  */
 public class LuaC extends Lua implements LuaCompiler {
 
+	public static final LuaC instance = new LuaC();
+	
 	/** Install the compiler so that LoadState will first 
 	 * try to use it when handed bytes that are 
 	 * not already a compiled lua chunk.
 	 */
 	public static void install() {
-		org.luaj.vm2.LoadState.compiler = new LuaC();
+		org.luaj.vm2.LoadState.compiler = instance;
 	}
 
 	protected static void _assert(boolean b) {		
@@ -156,43 +159,26 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	public int nCcalls;
-	Hashtable strings = new Hashtable();
+	Hashtable strings;
 
-	/** Utility method to invoke the compiler for an input stream 
-	 */
-	public static Prototype compile(InputStream is, String name) throws IOException {
-		return new LuaC().compile(is.read(), is, name);
+	protected LuaC() {}
+	
+	private LuaC(Hashtable strings) {
+		 this.strings = strings;
 	}
 	
 	/** Load into a Closure or LuaFunction, with the supplied initial environment */
-	public static LuaFunction load(InputStream is, String name, LuaValue env) throws IOException {
-		return new LuaC().load(is.read(), is, name, env);
-	}
-	
-	/** Load into a Closure or LuaFunction, with the supplied initial environment */
-	public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException {
-		Prototype p = compile(firstByte, stream, name);
+	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException {
+		Prototype p = compile( stream, name );
 		return new LuaClosure( p, env );
 	}
 
-	/** Compile source bytes into a LPrototype.  
-	 * 
-	 * Try to compile the file, and return the Prototype on success, 
-	 * or throw LuaErrorException on syntax error or I/O Exception
-	 * 
-	 * @param firstByte the first byte from the InputStream.  
-	 * This can be read by the client and tested to see if it is already a binary chunk.  
-	 * @param stream  InputStream to read from. 
-	 * @param name Name of the chunk
-	 * @return null if the first byte indicates it is a binary chunk, 
-	 *   a LPrototype instance if it can be compiled, 
-	 *   or an exception is thrown if there is an error.
-	 * @throws IOException if an I/O exception occurs
-	 * @throws LuaError if there is a syntax error.
-	 */
-	public Prototype compile(int firstByte, InputStream stream, String name) throws IOException {
-		LuaC compiler = new LuaC();
-		return compiler.luaY_parser(firstByte, stream, name);
+	/** Compile a prototype or load as a binary chunk */
+	public static Prototype compile(InputStream stream, String name) throws IOException {
+		int firstByte = stream.read();
+		return ( firstByte == '\033' )?
+			LoadState.loadBinaryChunk(firstByte, stream, name):
+			(new LuaC(new Hashtable())).luaY_parser(firstByte, stream, name);
 	}
 
 	/** Parse the input */

@@ -37,7 +37,6 @@ public class LuaJC implements LuaCompiler {
 	private static final String NON_IDENTIFIER = "[^a-zA-Z0-9_$]";
 	
 	private static LuaJC instance;
-	private LuaC luac;
 	
 	public static LuaJC getInstance() {
 		if ( instance == null )
@@ -54,12 +53,11 @@ public class LuaJC implements LuaCompiler {
 	}
 	
 	public LuaJC() {
-		luac = new LuaC();
 	}
 
 	public Hashtable compileAll(InputStream script, String classname, String filename) throws IOException {
 		Hashtable h = new Hashtable();
-		Prototype p = luac.compile(script.read(), script, classname);
+		Prototype p = LuaC.instance.compile(script, classname);
 		JavaGen gen = new JavaGen(p, classname, filename);
 		insert( h, gen );
 		return h;
@@ -71,25 +69,11 @@ public class LuaJC implements LuaCompiler {
 			insert(h, gen.inners[i]);
 	}
 
-	public Prototype compile(int firstByte, InputStream stream, String name) throws IOException {
-		return luac.compile(firstByte, stream, name);
-	}
-
-	public LuaFunction load(int firstByte, InputStream stream, String name, LuaValue env) throws IOException {
-		return load( compile(firstByte, stream, name), name, env );
-	}
-
-	public LuaFunction load(Prototype p, String filename, LuaValue env) {
-		String classname = filename.endsWith(".lua")? filename.substring(0,filename.length()-4): filename;
+	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException {
+		Prototype p = LuaC.instance.compile(stream, name);
+		String classname = name.endsWith(".lua")? name.substring(0,name.length()-4): name;
 		classname = classname.replaceAll(NON_IDENTIFIER, "_");
-		JavaGen gen = new JavaGen(p, classname, filename);
 		JavaLoader loader = new JavaLoader(env);
-		loader.include(gen);
-		return (LuaFunction) loader.load(p, classname, filename);
+		return loader.load(p, classname, name);
 	}
-
-	public LuaValue load(InputStream stream, String name, LuaValue env) throws IOException {
-		return load(stream.read(), stream, name, env);
-	}
-
 }

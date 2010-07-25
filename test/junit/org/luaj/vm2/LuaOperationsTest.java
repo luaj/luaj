@@ -181,7 +181,7 @@ public class LuaOperationsTest extends TestCase {
 		try {
 			LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
 			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
-			return LuaC.compile(is, name);
+			return LuaC.instance.compile(is, name);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

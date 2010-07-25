@@ -1,13 +1,11 @@
 package org.luaj.vm2.luajc;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.compiler.LuaC;
 
 /*******************************************************************************
 * Copyright (c) 2010 Luaj.org. All rights reserved.
@@ -40,25 +38,20 @@ public class JavaLoader extends ClassLoader {
 		this.env = env;
 	}
 
-	public LuaValue load( InputStream is, String classname, String filename ) throws IOException {
-		Prototype p = LuaC.compile(is, classname);
-		return load( p, classname, filename );
-	}
-	
-	public LuaValue load( Prototype p, String classname, String filename ) {
+	public LuaFunction load( Prototype p, String classname, String filename ) {
 		JavaGen jg = new JavaGen( p, classname, filename );
 		return load( jg );
 	}
 	
-	public LuaValue load( JavaGen jg ) {
+	public LuaFunction load( JavaGen jg ) {
 		include( jg );
 		return load( jg.classname );
 	}
 	
-	public LuaValue load(String classname) {
+	public LuaFunction load(String classname) {
 		try {
 			Class c = loadClass( classname );
-			LuaValue v = (LuaValue) c.newInstance();
+			LuaFunction v = (LuaFunction) c.newInstance();
 			v.setfenv(env);
 			return v;
 		} catch ( Exception e ) {

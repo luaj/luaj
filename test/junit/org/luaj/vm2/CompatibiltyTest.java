@@ -24,6 +24,7 @@ package org.luaj.vm2;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
 
 /**
@@ -62,8 +63,20 @@ public class CompatibiltyTest {
 		TestSuite suite = new TestSuite("Compatibility Tests");
 		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
 		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
+		suite.addTest( new TestSuite( Lua2JavaTest.class,   "Lua2Java Tests" ) );
 		suite.addTest( new TestSuite( JseBytecodeTest.class,        "JSE Bytecode Tests" ) );
 		return suite;
+	}
+	
+	public static class Lua2JavaTest extends CompatibiltyTestSuite {
+		public Lua2JavaTest() {
+			super(ScriptDrivenTest.PlatformType.LUA2JAVA);
+		}
+		protected void setUp() throws Exception {
+			super.setUp();
+			System.setProperty("Lua2Java", "false");
+			Lua2Java.install();
+		}
 	}
 
 	public static class JmeCompatibilityTest extends CompatibiltyTestSuite {

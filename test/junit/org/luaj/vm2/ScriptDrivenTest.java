@@ -39,7 +39,7 @@ public class ScriptDrivenTest extends TestCase {
 	public static final boolean nocompile = "true".equals(System.getProperty("nocompile"));
 
 	public enum PlatformType {
-		JME, JSE, LUAJIT,
+		JME, JSE, LUAJIT, LUA2JAVA,
 	}
 	
 	private final PlatformType platform;
@@ -57,6 +57,7 @@ public class ScriptDrivenTest extends TestCase {
 		default:
 		case JSE:
 		case LUAJIT:
+		case LUA2JAVA:
 			_G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
 			break;
 		case JME:
