@@ -68,6 +68,9 @@
 				<include name="org/luaj/vm2/lib/jme/*.class" />
 				<include name="org/luaj/vm2/compiler/*.class" />
 				<include name="org/luaj/vm2/luajc/*.class" />
+				<include name="org/luaj/vm2/lua2java/*.class" />
+				<include name="org/luaj/vm2/parser/*.class" />
+				<include name="org/luaj/vm2/ast/*.class" />
 				<exclude name="**/*Test*.class" />
 			</fileset>
 		</cobertura-instrument>
@@ -101,8 +104,12 @@
 	</target>
 
 	<target name="report">
-		<cobertura-report datafile="${cobertura.serfile}" srcdir="src/core" destdir="${coverage.xml.dir}" format="xml" /> 
-		<cobertura-report datafile="${cobertura.serfile}" srcdir="src/core" destdir="${coverage.html.dir}" />
+		<cobertura-report datafile="${cobertura.serfile}" destdir="${coverage.xml.dir}" format="xml" /> 
+		<cobertura-report datafile="${cobertura.serfile}" destdir="${coverage.html.dir}">
+			<fileset dir="src/core"/>
+			<fileset dir="src/jse"/>
+			<fileset dir="src/jme"/>
+		</cobertura-report>
 	</target>
 
 	<target name="coverage" depends="clean,init,compile,instrument,test,report"/>

@@ -41,7 +41,7 @@ public class lua2java {
 	private static final String version = Lua._VERSION + "Copyright (C) 2010 luaj.org";
 
 	private static final String usage = 
-		"usage: java -cp luaj-jse.jar lua2java [options] [filenames].\n" +
+		"usage: java -cp luaj-jse.jar lua2java [options] fileordir [, fileordir ...]\n" +
 		"Available options are:\n" +
 		"  -		process stdin\n" +
 		"  -s src	source directory\n" +
@@ -129,7 +129,7 @@ public class lua2java {
 			
 			// check for at least one file
 			if ( files.size() <= 0 ) {
-				System.err.println("no files found in "+seeds);
+				System.err.println(usage);
 				System.exit(-1);
 			}
 			

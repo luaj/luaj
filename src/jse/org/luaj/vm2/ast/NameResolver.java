@@ -75,6 +75,7 @@ public class NameResolver extends Visitor {
 	
 	public void visit(FuncDef stat) {
 		stat.name.name.variable = resolveNameReference(stat.name.name);
+		stat.name.name.variable.hasassignments = true;
 		super.visit(stat);
 	}
 	

@@ -214,16 +214,18 @@ public class JavaCodeGen {
 				multiAssign(stat.names, stat.values);
 			}
 		}
+		
 		public void visit(Assign stat) {
 			multiAssign(stat.vars, stat.exps);
 		}
+		
 		private void multiAssign(List varsOrNames, List<Exp> exps) {
 			int n = varsOrNames.size();
 			int m = exps != null? exps.size(): 0;
 			boolean vararglist = m>0 && exps.get(m-1).isvarargexp() && n>m;
 			if ( n<=m ) {
 				for ( int i=1; i<=n; i++ )
-					singleAssign( varsOrNames.get(i-1), evalLuaValue(exps.get(i-1)) );
+					singleVarOrNameAssign( varsOrNames.get(i-1), evalLuaValue(exps.get(i-1)) );
 				for ( int i=n+1; i<=m; i++ )
 					outl( evalLuaValue(exps.get(i-1))+";" );
 			} else {
@@ -241,12 +243,13 @@ public class JavaCodeGen {
 					else if ( i==m ) valu = (vararglist? "$"+i+".arg1()": "$"+i);
 					else if ( vararglist ) valu = "$"+m+".arg("+(i-m+1)+")";
 					else valu = "NIL";
-					singleAssign( varsOrNames.get(i-1), valu );
+					singleVarOrNameAssign( varsOrNames.get(i-1), valu );
 				}
 				oute( "}" );
 			}
 		}
-		private void singleAssign(final Object varOrName, final String valu) {
+		
+		private void singleVarOrNameAssign(final Object varOrName, final String valu) {
 			Visitor v = new Visitor() {
 				public void visit(FieldExp exp) {
 					outl(evalLuaValue(exp.lhs)+".set("+evalStringConstant(exp.name.name)+","+valu+");");
@@ -255,32 +258,50 @@ public class JavaCodeGen {
 					outl(evalLuaValue(exp.lhs)+".set("+evalLuaValue(exp.exp)+","+valu+");");
 				}
 				public void visit(NameExp exp) {
-					if ( exp.name.variable.isLocal() )
-						singleLocalAssign(exp.name, valu);
-					else
-						outl( "env.set("+evalStringConstant(exp.name.name)+","+valu+");");
+					singleAssign( exp.name, valu );
 				}
 			};
 			if ( varOrName instanceof VarExp )
 				((VarExp)varOrName).accept(v);
 			else if ( varOrName instanceof Name )
-				singleLocalAssign((Name) varOrName, valu);
+				singleAssign((Name) varOrName, valu);
 			else
 				throw new IllegalStateException("can't assign to "+varOrName.getClass());
 		}
-		private void singleLocalAssign(Name name, String valu) {
-			outi( javascope.getJavaName(name.variable) );
-			if ( name.variable.isupvalue )
-				out( "[0]" );
-			outr( " = "+valu+";");
+		
+		private void singleAssign(Name name, String valu) {
+			if ( name.variable.isLocal() ) {
+				outi( "" );
+				singleReference( name );
+				outr( " = "+valu+";" );
+			} else
+				outl( "env.set("+evalStringConstant(name.name)+","+valu+");");
 		}
+		
+		private void singleReference(Name name) {
+			if ( name.variable.isLocal() ) {
+				out( javascope.getJavaName(name.variable) );
+				if ( name.variable.isupvalue && name.variable.hasassignments )
+					out( "[0]" );
+			} else {
+				out( "env.get("+evalStringConstant(name.name)+")");
+			}
+		}
+		
 		private void singleLocalDeclareAssign(Name name, String value) {
-			String javaname = javascope.getJavaName(name.variable);
-			if ( name.variable.isupvalue )
+			singleLocalDeclareAssign( name.variable, value );
+		}
+		
+		private void singleLocalDeclareAssign(NamedVariable variable, String value) {
+			String javaname = javascope.getJavaName(variable);
+			if ( variable.isupvalue && variable.hasassignments )
 				outl( "final LuaValue[] "+javaname+" = {"+value+"};" );
+			else if ( variable.isupvalue )
+				outl( "final LuaValue "+javaname+(value!=null? " = "+value: "")+";" );
 			else
 				outl( "LuaValue "+javaname+(value!=null? " = "+value: "")+";" );
 		}
+		
 		public void visit(Break breakstat) {
 			// TODO: wrap in do {} while(false), or add label as nec
 			outl( "break;" );
@@ -440,13 +461,7 @@ public class JavaCodeGen {
 		}
 
 		public void visit(NameExp exp) {
-			if ( exp.name.variable.isLocal() ) {
-				out( javascope.getJavaName(exp.name.variable) );
-				if ( exp.name.variable.isupvalue )
-					out( "[0]" );
-			} else {
-				out( "env.get("+evalStringConstant(exp.name.name)+")");
-			}
+			singleReference( exp.name );
 		}
 
 		public void visit(ParensExp exp) {
@@ -574,12 +589,8 @@ public class JavaCodeGen {
 				outb("public Varargs invoke(Varargs $arg) {");
 				for ( int i=0; i<m; i++ ) {
 					Name name = body.parlist.names.get(i);
-					String argname = javascope.getJavaName(name.variable);
 					String value = i>0? "$arg.arg("+(i+1)+")": "$arg.arg1()";
-					if ( name.variable.isupvalue )
-						outl( "final LuaValue[] "+argname+" = {"+value+"};" );
-					else
-						outl( "LuaValue "+argname+" = "+value+";" );
+					singleLocalDeclareAssign( name, value );
 				}
 				if ( body.parlist.isvararg ) {
 					NamedVariable arg = body.scope.find("arg");
@@ -587,7 +598,7 @@ public class JavaCodeGen {
 					if ( m > 0 ) 
 						outl( "$arg = $arg.subargs("+(m+1)+");" );
 					String value = (javascope.usesvarargs? "NIL": "LuaValue.tableOf($arg,1)");
-					outl( arg.isupvalue? "final LuaValue[] arg = {"+value+"};": "LuaValue arg = "+value+";" ); 
+					singleLocalDeclareAssign( arg, value );
 				}
 			}
 			writeBodyBlock(body.block);
@@ -605,7 +616,7 @@ public class JavaCodeGen {
 		private void assignArg(Name name) {
 			if ( name.variable.isupvalue ) {
 				String argname = javascope.getJavaName(name.variable);
-				outl( "final LuaValue[] "+argname+" = {"+argname+"$0};" );
+				singleLocalDeclareAssign(name, argname+"$0");
 			}
 		}
 		
@@ -616,39 +627,43 @@ public class JavaCodeGen {
 			int n = stat.name.dots!=null? stat.name.dots.size(): 0;
 			boolean m = stat.name.method != null;
 			if ( n>0 && !m && stat.name.name.variable.isLocal() ) 
-				singleLocalAssign(stat.name.name,value);
+				singleAssign( stat.name.name, value );
 			else if ( n==0 && !m ) {
-				if ( stat.name.name.variable.isLocal() ) {
-					outi( javascope.getJavaName(stat.name.name.variable) );
-					if ( stat.name.name.variable.isupvalue )
-						out( "[0]" );
-					outr( " = "+value+";" );
-				} else {
-					outl( "env.set("+evalStringConstant(stat.name.name.name)+","+value+");" );
-				}
+				singleAssign( stat.name.name, value );
 			} else {
-				if ( stat.name.name.variable.isLocal() ) {
-					outi( javascope.getJavaName(stat.name.name.variable) );
-					if ( stat.name.name.variable.isupvalue )
-						out( "[0]" );
-				} else {
-					outi( "env.get("+evalStringConstant(stat.name.name.name)+")" );
-				}
+				singleReference( stat.name.name );
 				for ( int i=0; i<n-1 || (m&&i<n); i++ )
 					out( ".get("+evalStringConstant(stat.name.dots.get(i))+")" );
 				outr( ".set("+evalStringConstant(m? stat.name.method: stat.name.dots.get(n))+", "+value+");" );
 			}
 		}
 
+		// functions that use themselves as upvalues require special treatment
 		public void visit(LocalFuncDef stat) {
-			String javaname = javascope.getJavaName(stat.name.variable);
-			if ( stat.name.variable.isupvalue ) {
-				outl("final LuaValue[] "+javaname+" = {null};");
-				outi(javaname+"[0] = ");
-			} else
-				outi("LuaValue "+javaname+" = ");
+			final Name funcname = stat.name;
+			final boolean[] isrecursive = { false };
+			stat.body.accept( new Visitor() {
+				public void visit(Name name) {
+					if ( name.variable == funcname.variable ) {
+						isrecursive[0] = true;
+						name.variable.hasassignments = true;
+					}
+				}				
+			} );
+			
+			// write body
+			Writer x = pushWriter();
 			super.visit(stat);
-			outr( ";" );
+			String value = popWriter(x);
+
+			// write declaration
+			if ( isrecursive[0] ) {
+				String javaname = javascope.getJavaName(funcname.variable);
+				outl("final LuaValue[] "+javaname+" = new LuaValue[1];");
+				outl(javaname+"[0] = "+value+";");
+			} else {
+				singleLocalDeclareAssign( funcname, value );
+			}
 		}
 
 		public void visit(NumericFor stat) {
