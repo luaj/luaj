@@ -667,20 +667,20 @@ public class JavaCodeGen {
 		}
 
 		public void visit(NumericFor stat) {
-			String javaname = javascope.getJavaName(stat.name.variable);
-			String indexname = stat.name.variable.isupvalue? javaname+"$0": javaname;
-			outi("for ( LuaValue "
-					+indexname+"="+evalLuaValue(stat.initial)+", "
-					+javaname+"$limit="+evalLuaValue(stat.limit));
-			String stepname = "ONE";
-			if ( stat.step!=null ) 
-				out(", "+(stepname=javaname+"$step")+"="+evalLuaValue(stat.step));
-			outr( "; "
-					+indexname+".testfor_b("+javaname+"$limit,"+stepname+"); "
-					+indexname+"="+indexname+".add("+stepname+") ) {" );
+			String j = javascope.getJavaName(stat.name.variable);
+			String i = j+"$0";
+			outi("for ( double "
+					+i+"="+evalLuaValue(stat.initial)+".todouble(), "
+					+j+"$limit="+evalLuaValue(stat.limit)+".todouble()");
+			if ( stat.step == null )
+				outr( "; "+i+"<="+j+"$limit; ++"+i+" ) {" );
+			else {
+				out( ", "+j+"$step="+evalLuaValue(stat.step)+".todouble()");
+				out( "; "+j+"$step>0? ("+i+"<="+j+"$limit): ("+i+">="+j+"$limit);" );
+				outr( " "+i+"+="+j+"$step ) {" );
+			}
 			addindent();
-			if ( stat.name.variable.isupvalue )
-				this.singleLocalDeclareAssign(stat.name, indexname);
+			singleLocalDeclareAssign(stat.name, "valueOf("+i+")");
 			super.visit(stat.block);
 			oute( "}" );
 		}
