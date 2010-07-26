@@ -32,6 +32,7 @@ import org.luaj.vm2.ast.FuncBody;
 import org.luaj.vm2.ast.NameScope;
 import org.luaj.vm2.ast.Visitor;
 import org.luaj.vm2.ast.Exp.BinopExp;
+import org.luaj.vm2.ast.Exp.VarargsExp;
 import org.luaj.vm2.ast.Stat.Return;
 import org.luaj.vm2.lib.LibFunction;
 
@@ -72,6 +73,7 @@ public class JavaScope extends NameScope {
 
 	public int nreturns;
 	public boolean needsbinoptmp;
+	public boolean usesvarargs;
 
 	final Set<String> staticnames;
 	final Set<String> javanames = new HashSet<String>();
@@ -150,12 +152,14 @@ public class JavaScope extends NameScope {
 		block.accept( v );
 		this.nreturns = v.nreturns;
 		this.needsbinoptmp = v.needsbinoptmp;
+		this.usesvarargs = v.usesvarargs;
 		return this;
 	}
 
 	class NewScopeVisitor extends Visitor {
 		int nreturns = 0;
 		boolean needsbinoptmp = false;
+		boolean usesvarargs = false;
 		NewScopeVisitor(int nreturns) {
 			this.nreturns = nreturns;
 		}
@@ -173,6 +177,10 @@ public class JavaScope extends NameScope {
 			}
 			super.visit(exp);
 		}
+		public void visit(VarargsExp exp) {
+			usesvarargs = true;
+		}
+		
 	}
 
 }

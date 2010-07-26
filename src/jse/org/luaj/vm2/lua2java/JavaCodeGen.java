@@ -135,7 +135,7 @@ public class JavaCodeGen {
 			outl("import org.luaj.vm2.*;");
 			outl("import org.luaj.vm2.lib.*;");
 			outb("public class "+classname+" extends VarArgFunction {");
-			outl("public Varargs invoke(Varargs $arg) {");
+			outl("public Varargs onInvoke(Varargs $arg) {");
 			addindent();
 			javascope = JavaScope.newJavaScope( chunk );
 			writeBodyBlock(chunk.block);
@@ -182,9 +182,18 @@ public class JavaCodeGen {
 		public void visit(Stat.Return s) {
 			int n = s.nreturns();
 			switch ( n ) {
-			case 0: outl( "return NONE;" ); break;
-			case 1: outl( "return "+evalLuaValue(s.values.get(0))+";" ); break;
-			default: outl( "return "+evalListAsVarargs(s.values)+";" ); break;
+			case 0: 
+				outl( "return NONE;" ); 
+				break;
+			case 1: 
+				outl( "return "+evalLuaValue(s.values.get(0))+";" ); 
+				break;
+			default: 
+				if ( s.values.size()==1 && s.values.get(0).isfunccall() )
+					tailCall( s.values.get(0) );
+				else
+					outl( "return "+evalListAsVarargs(s.values)+";" ); 
+				break;
 			}
 		}
 
@@ -249,7 +258,7 @@ public class JavaCodeGen {
 					if ( exp.name.variable.isLocal() )
 						singleLocalAssign(exp.name, valu);
 					else
-						outl( "env.set("+evalLuaValue(exp)+","+valu+");");
+						outl( "env.set("+evalStringConstant(exp.name.name)+","+valu+");");
 				}
 			};
 			if ( varOrName instanceof VarExp )
@@ -446,7 +455,7 @@ public class JavaCodeGen {
 
 		public void visit(VarargsExp exp) {
 			int c = callerExpects.containsKey(exp)? callerExpects.get(exp): 0;
-			out( c==1? "arg.arg1()": "arg" );
+			out( c==1? "$arg.arg1()": "$arg" );
 		}
 
 		public void visit(MethodCall exp) {
@@ -497,6 +506,18 @@ public class JavaCodeGen {
 			}
 		}
 
+		public void tailCall( Exp e ) {
+			if ( e instanceof MethodCall ) {
+				MethodCall mc = (MethodCall) e;
+				outl("return new TailcallVarargs("+evalLuaValue(mc.lhs)+","+evalStringConstant(mc.name)+","+evalListAsVarargs(mc.args.exps)+");");
+			} else if ( e instanceof FuncCall ) {
+				FuncCall fc = (FuncCall) e;
+				outl("return new TailcallVarargs("+evalLuaValue(fc.lhs)+","+evalListAsVarargs(fc.args.exps)+");");
+			} else {
+				throw new IllegalArgumentException("can't tail call "+e);
+			}
+		}
+		
 		public void visit(FuncArgs args) {
 			if ( args.exps != null ) {
 				int n = args.exps.size();
@@ -551,12 +572,6 @@ public class JavaCodeGen {
 				outr("new VarArgFunction(env) {");
 				addindent();
 				outb("public Varargs invoke(Varargs $arg) {");
-				if ( body.parlist.isvararg ) {
-					NamedVariable arg = body.scope.find("arg");
-					javascope.setJavaName(arg,"arg");
-					String value = "LuaValue.tableOf($arg,"+(m+1)+")";
-					outl( arg.isupvalue? "final LuaValue[] arg = {"+value+"};": "LuaValue arg = "+value+";" ); 
-				}
 				for ( int i=0; i<m; i++ ) {
 					Name name = body.parlist.names.get(i);
 					String argname = javascope.getJavaName(name.variable);
@@ -565,6 +580,14 @@ public class JavaCodeGen {
 						outl( "final LuaValue[] "+argname+" = {"+value+"};" );
 					else
 						outl( "LuaValue "+argname+" = "+value+";" );
+				}
+				if ( body.parlist.isvararg ) {
+					NamedVariable arg = body.scope.find("arg");
+					javascope.setJavaName(arg,"arg");
+					if ( m > 0 ) 
+						outl( "$arg = $arg.subargs("+(m+1)+");" );
+					String value = (javascope.usesvarargs? "NIL": "LuaValue.tableOf($arg,1)");
+					outl( arg.isupvalue? "final LuaValue[] arg = {"+value+"};": "LuaValue arg = "+value+";" ); 
 				}
 			}
 			writeBodyBlock(body.block);
