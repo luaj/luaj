@@ -356,40 +356,95 @@ public class JavaCodeGen {
 		public String evalBoolean(Exp exp) {
 			Writer x = pushWriter();
 			callerExpects.put(exp,LuaValue.TBOOLEAN);
-			final Visitor plain = this;
 			exp.accept(new Visitor() {
 				public void visit(UnopExp exp) {
 					switch ( exp.op ) {
 					case Lua.OP_NOT: out( "(!"+evalBoolean( exp.rhs )+")"); break;
-					default: plain.visit(exp); out(".toboolean()"); break;
+					default: out(evalLuaValue(exp)+".toboolean()"); break;
 					}
 				}
 				public void visit(BinopExp exp) {
+					String op;
 					switch ( exp.op ) {
 					case Lua.OP_AND:
 					case Lua.OP_OR:
-						String op = (exp.op==Lua.OP_AND? " && ": " || "); 
+						op = (exp.op==Lua.OP_AND? " && ": " || "); 
 						out("("+evalBoolean(exp.lhs)+op+evalBoolean(exp.rhs)+")");
 						break;
-					default: 
-						plain.visit(exp); out(".toboolean()");
+					case Lua.OP_EQ:
+					case Lua.OP_NEQ:
+						op = (exp.op==Lua.OP_EQ? ".eq_b(": ".neq_b("); 
+						out("("+evalLuaValue(exp.lhs)+op+evalLuaValue(exp.rhs)+")");
 						break;
+					case Lua.OP_GT:
+					case Lua.OP_GE:
+					case Lua.OP_LT:
+					case Lua.OP_LE:
+						op = (exp.op==Lua.OP_GT? ">": exp.op==Lua.OP_GE? ">=": exp.op==Lua.OP_LT? "<": "<="); 
+						out("("+evalNumber(exp.lhs)+op+evalNumber(exp.rhs)+")");
+						break;
+					default: out(evalLuaValue(exp)+".toboolean()"); break;
 					}
-				}
-				public void visit(VarargsExp exp) {
-					plain.visit(exp); out(".toboolean(1)");
 				}
 				public void visit(ParensExp exp) {
 					evalBoolean(exp.exp);
 				}
+				public void visit(VarargsExp exp) {
+					out(evalLuaValue(exp)+".toboolean()");
+				}
 				public void visit(FieldExp exp) {
-					plain.visit(exp); out(".toboolean()");
+					out(evalLuaValue(exp)+".toboolean()");
 				}
 				public void visit(IndexExp exp) {
-					plain.visit(exp); out(".toboolean()");
+					out(evalLuaValue(exp)+".toboolean()");
 				}
 				public void visit(NameExp exp) {
-					plain.visit(exp); out(".toboolean()");
+					out(evalLuaValue(exp)+".toboolean()");
+				}
+			});
+			return popWriter(x);
+		}
+		
+		public String evalNumber(Exp exp) {
+			Writer x = pushWriter();
+			callerExpects.put(exp,LuaValue.TBOOLEAN);
+			exp.accept(new Visitor() {
+				public void visit(UnopExp exp) {
+					switch ( exp.op ) {
+					case Lua.OP_LEN: out(evalLuaValue(exp.rhs)+".length()"); break;
+					case Lua.OP_UNM: out("(-"+evalNumber(exp.rhs)+")"); break;
+					default: out(evalLuaValue(exp)+".todouble()"); break;
+					}
+				}
+				public void visit(BinopExp exp) {
+					String op;
+					switch ( exp.op ) {
+					case Lua.OP_ADD:
+					case Lua.OP_SUB:
+					case Lua.OP_MUL:
+						op = (exp.op==Lua.OP_ADD? "+": exp.op==Lua.OP_SUB? "-": "*"); 
+						out("("+evalNumber(exp.lhs)+op+evalNumber(exp.rhs)+")");
+						break;
+					case Lua.OP_POW: out("MathLib.dpow("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					//case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					//case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					default: out(evalLuaValue(exp)+".todouble()"); break;
+					}
+				}
+				public void visit(ParensExp exp) {
+					evalNumber(exp.exp);
+				}
+				public void visit(VarargsExp exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(FieldExp exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(IndexExp exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(NameExp exp) {
+					out(evalLuaValue(exp)+".todouble()");
 				}
 			});
 			return popWriter(x);
@@ -402,34 +457,29 @@ public class JavaCodeGen {
 		}
 		
 		public void visit(BinopExp exp) {
-			String lhs = evalLuaValue(exp.lhs) ;
-			String rhs = evalLuaValue(exp.rhs) ; 
 			switch ( exp.op ) {
 			case Lua.OP_AND:
 			case Lua.OP_OR:
 				String not = (exp.op==Lua.OP_AND? "!": ""); 
-				out("("+not+"($b="+lhs+").toboolean()?$b:"+rhs+")");
-				return;
-				
+				out("("+not+"($b="+evalLuaValue(exp.lhs)+").toboolean()?$b:"+evalLuaValue(exp.rhs)+")");
+				return;				
 			}
-			out( lhs );
 			switch ( exp.op ) {
-			case Lua.OP_ADD: out(".add"); break;
-			case Lua.OP_SUB: out(".sub"); break;
-			case Lua.OP_MUL: out(".mul"); break;
-			case Lua.OP_DIV: out(".div"); break;
-			case Lua.OP_POW: out(".pow"); break;
-			case Lua.OP_MOD: out(".mod"); break;
-			case Lua.OP_GT: out(".gt"); break;
-			case Lua.OP_GE: out(".gteq"); break;
-			case Lua.OP_LT: out(".lt"); break;
-			case Lua.OP_LE: out(".lteq"); break;
-			case Lua.OP_EQ: out(".eq"); break;
-			case Lua.OP_NEQ: out(".neq"); break;
-			case Lua.OP_CONCAT: out(".concat"); break;
+			case Lua.OP_ADD: out(evalLuaValue(exp.lhs)+".add("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_SUB: out(evalLuaValue(exp.lhs)+".sub("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_MUL: out(evalLuaValue(exp.lhs)+".mul("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_POW: out(evalLuaValue(exp.lhs)+".pow("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+			case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+			case Lua.OP_GT: out(evalLuaValue(exp.lhs)+".gt("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_GE: out(evalLuaValue(exp.lhs)+".gteq("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_LT: out(evalLuaValue(exp.lhs)+".lt("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_CONCAT: out(evalLuaValue(exp.lhs)+".concat("+evalNumber(exp.rhs)+")"); return;
 			default: throw new IllegalStateException("unknown bin op:"+exp.op);
 			}
-			out("("+rhs+")");
 		}
 
 		public void visit(UnopExp exp) {
