@@ -122,14 +122,20 @@ public class lua2java {
 				System.out.println("encoding: "+encoding);
 				System.out.println("recurse: "+recurse);
 			}
+			
+			// need at least one seed
+			if ( seeds.size() <= 0 ) {
+				System.err.println(usage);
+				System.exit(-1);
+			}
 
 			// collect up files to process
 			for ( int i=0; i<seeds.size(); i++ )
-				collectFiles( seeds.get(i) );
+				collectFiles( srcdir+"/"+seeds.get(i) );
 			
 			// check for at least one file
 			if ( files.size() <= 0 ) {
-				System.err.println(usage);
+				System.err.println("no files found in "+seeds);
 				System.exit(-1);
 			}
 			
