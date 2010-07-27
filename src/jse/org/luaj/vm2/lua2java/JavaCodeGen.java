@@ -353,6 +353,48 @@ public class JavaCodeGen {
 			return popWriter(x);
 		}
 		
+		public String evalBoolean(Exp exp) {
+			Writer x = pushWriter();
+			callerExpects.put(exp,LuaValue.TBOOLEAN);
+			final Visitor plain = this;
+			exp.accept(new Visitor() {
+				public void visit(UnopExp exp) {
+					switch ( exp.op ) {
+					case Lua.OP_NOT: out( "(!"+evalBoolean( exp.rhs )+")"); break;
+					default: plain.visit(exp); out(".toboolean()"); break;
+					}
+				}
+				public void visit(BinopExp exp) {
+					switch ( exp.op ) {
+					case Lua.OP_AND:
+					case Lua.OP_OR:
+						String op = (exp.op==Lua.OP_AND? " && ": " || "); 
+						out("("+evalBoolean(exp.lhs)+op+evalBoolean(exp.rhs)+")");
+						break;
+					default: 
+						plain.visit(exp); out(".toboolean()");
+						break;
+					}
+				}
+				public void visit(VarargsExp exp) {
+					plain.visit(exp); out(".toboolean(1)");
+				}
+				public void visit(ParensExp exp) {
+					evalBoolean(exp.exp);
+				}
+				public void visit(FieldExp exp) {
+					plain.visit(exp); out(".toboolean()");
+				}
+				public void visit(IndexExp exp) {
+					plain.visit(exp); out(".toboolean()");
+				}
+				public void visit(NameExp exp) {
+					plain.visit(exp); out(".toboolean()");
+				}
+			});
+			return popWriter(x);
+		}
+		
 		public void visit(FuncCallStat stat) {
 			outi("");
 			stat.funccall.accept(this);
@@ -723,12 +765,12 @@ public class JavaCodeGen {
 		}
 
 		public void visit(IfThenElse stat) {
-			outb( "if ( "+evalLuaValue(stat.ifexp)+".toboolean() ) {");
+			outb( "if ( "+evalBoolean(stat.ifexp)+" ) {");
 			super.visit(stat.ifblock);
 			if ( stat.elseifblocks != null ) 
 				for ( int i=0, n=stat.elseifblocks.size(); i<n; i++ ) {
 					subindent();
-					outl( "} else if ( "+evalLuaValue(stat.elseifexps.get(i))+".toboolean() ) {");
+					outl( "} else if ( "+evalBoolean(stat.elseifexps.get(i))+" ) {");
 					addindent();
 					super.visit(stat.elseifblocks.get(i));
 				}
@@ -744,7 +786,7 @@ public class JavaCodeGen {
 		public void visit(RepeatUntil stat) {
 			outb( "do {");
 			super.visit(stat.block);
-			oute( "} while (!"+evalLuaValue(stat.exp)+".toboolean());" );
+			oute( "} while (!"+evalBoolean(stat.exp)+");" );
 		}
 		
 		public void visit(TableConstructor table) {
