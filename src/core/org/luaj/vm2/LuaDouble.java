@@ -85,42 +85,64 @@ public class LuaDouble extends LuaNumber {
 	public LuaValue   add( LuaValue rhs )        { return rhs.add(v); }
 	public LuaValue   add( double lhs )     { return LuaDouble.valueOf(lhs + v); }
 	public LuaValue   sub( LuaValue rhs )        { return rhs.subFrom(v); }
+	public LuaValue   sub( double rhs )        { return LuaDouble.valueOf(v - rhs); }
+	public LuaValue   sub( int rhs )        { return LuaDouble.valueOf(v - rhs); }
 	public LuaValue   subFrom( double lhs )   { return LuaDouble.valueOf(lhs - v); }
 	public LuaValue   mul( LuaValue rhs )        { return rhs.mul(v); }
 	public LuaValue   mul( double lhs )   { return LuaDouble.valueOf(lhs * v); }
 	public LuaValue   mul( int lhs )      { return LuaDouble.valueOf(lhs * v); }
 	public LuaValue   pow( LuaValue rhs )        { return rhs.powWith(v); }
+	public LuaValue   pow( double rhs )        { return MathLib.dpow(v,rhs); }
+	public LuaValue   pow( int rhs )        { return MathLib.dpow(v,rhs); }
 	public LuaValue   powWith( double lhs )   { return MathLib.dpow(lhs,v); }
 	public LuaValue   powWith( int lhs )      { return MathLib.dpow(lhs,v); }
 	public LuaValue   div( LuaValue rhs )        { return rhs.divInto(v); }
+	public LuaValue   div( double rhs )        { return LuaDouble.ddiv(v,rhs); }
+	public LuaValue   div( int rhs )        { return LuaDouble.ddiv(v,rhs); }
 	public LuaValue   divInto( double lhs )   { return LuaDouble.ddiv(lhs,v); }
 	public LuaValue   mod( LuaValue rhs )        { return rhs.modFrom(v); }
+	public LuaValue   mod( double rhs )        { return LuaDouble.dmod(v,rhs); }
+	public LuaValue   mod( int rhs )        { return LuaDouble.dmod(v,rhs); }
 	public LuaValue   modFrom( double lhs )   { return LuaDouble.dmod(lhs,v); }
 	
 	/** lua division is always double, specific values for singularities */
 	public static LuaValue ddiv(double lhs, double rhs) {
 		return rhs!=0? valueOf( lhs / rhs ): lhs>0? POSINF: lhs==0? NAN: NEGINF;	
 	}
+	public static double ddiv_d(double lhs, double rhs) {
+		return rhs!=0? lhs / rhs: lhs>0? Double.POSITIVE_INFINITY: lhs==0? Double.NaN: Double.NEGATIVE_INFINITY;	
+	}
 	
 	/** lua module is always wrt double. */
 	public static LuaValue dmod(double lhs, double rhs) {
 		return rhs!=0? valueOf( lhs-rhs*Math.floor(lhs/rhs) ): NAN;
 	}
+	public static double dmod_d(double lhs, double rhs) {
+		return rhs!=0? lhs-rhs*Math.floor(lhs/rhs): Double.NaN;
+	}
 
 	// relational operators
 	public LuaValue   lt( LuaValue rhs )         { return rhs.gt_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   lt( double rhs )      { return v < rhs? TRUE: FALSE; }
+	public LuaValue   lt( int rhs )         { return v < rhs? TRUE: FALSE; }
 	public boolean lt_b( LuaValue rhs )       { return rhs.gt_b(v); }
 	public boolean lt_b( int rhs )         { return v < rhs; }
 	public boolean lt_b( double rhs )      { return v < rhs; }
 	public LuaValue   lteq( LuaValue rhs )       { return rhs.gteq_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   lteq( double rhs )    { return v <= rhs? TRUE: FALSE; }
+	public LuaValue   lteq( int rhs )       { return v <= rhs? TRUE: FALSE; }
 	public boolean lteq_b( LuaValue rhs )     { return rhs.gteq_b(v); }
 	public boolean lteq_b( int rhs )       { return v <= rhs; }
 	public boolean lteq_b( double rhs )    { return v <= rhs; }
 	public LuaValue   gt( LuaValue rhs )         { return rhs.lt_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   gt( double rhs )      { return v > rhs? TRUE: FALSE; }
+	public LuaValue   gt( int rhs )         { return v > rhs? TRUE: FALSE; }
 	public boolean gt_b( LuaValue rhs )       { return rhs.lt_b(v); }
 	public boolean gt_b( int rhs )         { return v > rhs; }
 	public boolean gt_b( double rhs )      { return v > rhs; }
 	public LuaValue   gteq( LuaValue rhs )       { return rhs.lteq_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   gteq( double rhs )    { return v >= rhs? TRUE: FALSE; }
+	public LuaValue   gteq( int rhs )       { return v >= rhs? TRUE: FALSE; }
 	public boolean gteq_b( LuaValue rhs )     { return rhs.lteq_b(v); }
 	public boolean gteq_b( int rhs )       { return v >= rhs; }
 	public boolean gteq_b( double rhs )    { return v >= rhs; }

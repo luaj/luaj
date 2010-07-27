@@ -355,7 +355,6 @@ public class JavaCodeGen {
 		
 		public String evalBoolean(Exp exp) {
 			Writer x = pushWriter();
-			callerExpects.put(exp,LuaValue.TBOOLEAN);
 			exp.accept(new Visitor() {
 				public void visit(UnopExp exp) {
 					switch ( exp.op ) {
@@ -374,7 +373,7 @@ public class JavaCodeGen {
 					case Lua.OP_EQ:
 					case Lua.OP_NEQ:
 						op = (exp.op==Lua.OP_EQ? ".eq_b(": ".neq_b("); 
-						out("("+evalLuaValue(exp.lhs)+op+evalLuaValue(exp.rhs)+")");
+						out(evalLuaValue(exp.lhs)+op+evalLuaValue(exp.rhs)+")");
 						break;
 					case Lua.OP_GT:
 					case Lua.OP_GE:
@@ -386,8 +385,18 @@ public class JavaCodeGen {
 					default: out(evalLuaValue(exp)+".toboolean()"); break;
 					}
 				}
+				public void visit(Constant exp) {
+					switch ( exp.value.type() ) {
+					case LuaValue.TBOOLEAN:
+						out(exp.value.toboolean()? "true": "false");
+						break;
+					default:
+						out(evalLuaValue(exp)+".toboolean()");
+						break;
+					}
+				}
 				public void visit(ParensExp exp) {
-					evalBoolean(exp.exp);
+					out(evalBoolean(exp.exp));
 				}
 				public void visit(VarargsExp exp) {
 					out(evalLuaValue(exp)+".toboolean()");
@@ -401,13 +410,21 @@ public class JavaCodeGen {
 				public void visit(NameExp exp) {
 					out(evalLuaValue(exp)+".toboolean()");
 				}
+				public void visit(FuncCall exp) {
+					out(evalLuaValue(exp)+".toboolean()");
+				}
+				public void visit(MethodCall exp) {
+					out(evalLuaValue(exp)+".toboolean()");
+				}
+				public void visit(TableConstructor exp) {
+					out(evalLuaValue(exp)+".toboolean()");
+				}
 			});
 			return popWriter(x);
 		}
 		
 		public String evalNumber(Exp exp) {
 			Writer x = pushWriter();
-			callerExpects.put(exp,LuaValue.TBOOLEAN);
 			exp.accept(new Visitor() {
 				public void visit(UnopExp exp) {
 					switch ( exp.op ) {
@@ -425,14 +442,24 @@ public class JavaCodeGen {
 						op = (exp.op==Lua.OP_ADD? "+": exp.op==Lua.OP_SUB? "-": "*"); 
 						out("("+evalNumber(exp.lhs)+op+evalNumber(exp.rhs)+")");
 						break;
-					case Lua.OP_POW: out("MathLib.dpow("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
-					//case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
-					//case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					case Lua.OP_POW: out("MathLib.dpow_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					case Lua.OP_DIV: out("LuaDouble.ddiv_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+					case Lua.OP_MOD: out("LuaDouble.dmod_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
 					default: out(evalLuaValue(exp)+".todouble()"); break;
 					}
 				}
+				public void visit(Constant exp) {
+					switch ( exp.value.type() ) {
+					case LuaValue.TNUMBER:
+						out( evalNumberLiteral(exp.value.todouble()) );
+						break;
+					default:
+						out(evalLuaValue(exp)+".todouble()");
+						break;
+					}
+				}
 				public void visit(ParensExp exp) {
-					evalNumber(exp.exp);
+					out(evalNumber(exp.exp));
 				}
 				public void visit(VarargsExp exp) {
 					out(evalLuaValue(exp)+".todouble()");
@@ -444,6 +471,15 @@ public class JavaCodeGen {
 					out(evalLuaValue(exp)+".todouble()");
 				}
 				public void visit(NameExp exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(FuncCall exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(MethodCall exp) {
+					out(evalLuaValue(exp)+".todouble()");
+				}
+				public void visit(TableConstructor exp) {
 					out(evalLuaValue(exp)+".todouble()");
 				}
 			});
@@ -465,19 +501,19 @@ public class JavaCodeGen {
 				return;				
 			}
 			switch ( exp.op ) {
-			case Lua.OP_ADD: out(evalLuaValue(exp.lhs)+".add("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_SUB: out(evalLuaValue(exp.lhs)+".sub("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_MUL: out(evalLuaValue(exp.lhs)+".mul("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_POW: out(evalLuaValue(exp.lhs)+".pow("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
-			case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
+			case Lua.OP_ADD: out("valueOf("+evalNumber(exp.lhs)+"+"+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_SUB: out("valueOf("+evalNumber(exp.lhs)+"-"+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_MUL: out("valueOf("+evalNumber(exp.lhs)+"*"+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_POW: out("MathLib.dpow("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_GT: out(evalLuaValue(exp.lhs)+".gt("+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_GE: out(evalLuaValue(exp.lhs)+".gteq("+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_LT: out(evalLuaValue(exp.lhs)+".lt("+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_CONCAT: out(evalLuaValue(exp.lhs)+".concat("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_CONCAT: out(evalLuaValue(exp.lhs)+".concat("+evalLuaValue(exp.rhs)+")"); return;
 			default: throw new IllegalStateException("unknown bin op:"+exp.op);
 			}
 		}
@@ -532,12 +568,16 @@ public class JavaCodeGen {
 			if ( value == 1 ) return "ONE";
 			if ( numberConstants.containsKey(value) )
 				return numberConstants.get(value);
-			int ivalue = (int) value;
-			String declvalue = value==ivalue? String.valueOf(ivalue): String.valueOf(value);
+			String declvalue = evalNumberLiteral(value);
 			String javaname = javascope.createConstantName(declvalue);
 			constantDeclarations.add( "static final LuaValue "+javaname+" = valueOf("+declvalue+");" );
 			numberConstants.put(value,javaname);
 			return javaname;
+		}
+		
+		private String evalNumberLiteral(double value) {
+			int ivalue = (int) value;
+			return value==ivalue? String.valueOf(ivalue): String.valueOf(value);
 		}
 		
 		public void visit(FieldExp exp) {
@@ -877,7 +917,7 @@ public class JavaCodeGen {
 		}
 
 		public void visit(WhileDo stat) {
-			outb( "while ("+evalLuaValue(stat.exp)+".toboolean()) {");
+			outb( "while ("+evalBoolean(stat.exp)+") {");
 			super.visit(stat.block);
 			oute( "}" );
 		}

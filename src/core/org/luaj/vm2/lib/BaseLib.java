@@ -158,7 +158,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 2: { // "setfenv", // (f, table) -> void
 				LuaTable t = arg2.checktable();
 				LuaValue f = getfenvobj(arg1);
-				if ( f.isfunction() && ! f.isclosure() )
+				if ( ! f.isfunction() && ! f.isclosure() )
 					error("'setfenv' cannot change environment of given object");
 			    f.setfenv(t);
 			    return f.isthread()? NONE: f;

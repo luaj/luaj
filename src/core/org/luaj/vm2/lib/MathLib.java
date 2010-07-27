@@ -112,14 +112,19 @@ public class MathLib extends OneArgFunction {
 	public static LuaValue dpow(double a, double b) {
 		return LuaDouble.valueOf( 
 				MATHLIB!=null?
-				MATHLIB.dpow_d(a,b):
+				MATHLIB.dpow_lib(a,b):
 				dpow_default(a,b) );
+	}
+	public static double dpow_d(double a, double b) {
+		return MATHLIB!=null? 
+				MATHLIB.dpow_lib(a,b): 
+				dpow_default(a,b);
 	}
 	
 	/** 
 	 * Hook to override default dpow behavior with faster implementation.  
 	 */
-	public double dpow_d(double a, double b) {
+	public double dpow_lib(double a, double b) {
 		return dpow_default(a,b);
 	}
 

@@ -263,33 +263,49 @@ public class LuaValue extends Varargs {
 	public LuaValue   add(double rhs)         { return aritherror("add"); }
 	public LuaValue   add(int rhs)            { return add((double)rhs); }
 	public LuaValue   sub( LuaValue rhs )        { return aritherror("sub"); }
+	public LuaValue   sub( double rhs )        { return aritherror("sub"); }
+	public LuaValue   sub( int rhs )        { return aritherror("sub"); }
 	public LuaValue   subFrom(double lhs)     { return aritherror("sub"); }
 	public LuaValue   subFrom(int lhs)        { return subFrom((double)lhs); }
 	public LuaValue   mul( LuaValue rhs )        { return aritherror("mul"); }
 	public LuaValue   mul(double rhs)         { return aritherror("mul"); }
 	public LuaValue   mul(int rhs)            { return mul((double)rhs); }
 	public LuaValue   pow( LuaValue rhs )        { return aritherror("pow"); }
+	public LuaValue   pow( double rhs )        { return aritherror("pow"); }
+	public LuaValue   pow( int rhs )        { return aritherror("pow"); }
 	public LuaValue   powWith(double lhs)     { return aritherror("mul"); }
 	public LuaValue   powWith(int lhs)        { return powWith((double)lhs); }
 	public LuaValue   div( LuaValue rhs )        { return aritherror("div"); }
+	public LuaValue   div( double rhs )        { return aritherror("div"); }
+	public LuaValue   div( int rhs )        { return aritherror("div"); }
 	public LuaValue   divInto(double lhs)     { return aritherror("divInto"); }
 	public LuaValue   mod( LuaValue rhs )        { return aritherror("mod"); }
+	public LuaValue   mod( double rhs )        { return aritherror("mod"); }
+	public LuaValue   mod( int rhs )        { return aritherror("mod"); }
 	public LuaValue   modFrom(double lhs)     { return aritherror("modFrom"); }
 	
 	// relational operators
 	public LuaValue   lt( LuaValue rhs )         { return compareerror(rhs); }
+	public LuaValue   lt( double rhs )         { return compareerror("number"); }
+	public LuaValue   lt( int rhs )         { return compareerror("number"); }
 	public boolean lt_b( LuaValue rhs )       { compareerror(rhs); return false; }
 	public boolean lt_b( int rhs )         { compareerror("number"); return false; }
 	public boolean lt_b( double rhs )      { compareerror("number"); return false; }
 	public LuaValue   lteq( LuaValue rhs )       { return compareerror(rhs); }
+	public LuaValue   lteq( double rhs )       { return compareerror("number"); }
+	public LuaValue   lteq( int rhs )       { return compareerror("number"); }
 	public boolean lteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
 	public boolean lteq_b( int rhs )       { compareerror("number"); return false; }
 	public boolean lteq_b( double rhs )    { compareerror("number"); return false; }
 	public LuaValue   gt( LuaValue rhs )         { return compareerror(rhs); }
+	public LuaValue   gt( double rhs )         { return compareerror("number"); }
+	public LuaValue   gt( int rhs )         { return compareerror("number"); }
 	public boolean gt_b( LuaValue rhs )       { compareerror(rhs); return false; }
 	public boolean gt_b( int rhs )         { compareerror("number"); return false; }
 	public boolean gt_b( double rhs )      { compareerror("number"); return false; }
-	public LuaValue   gteq( LuaValue rhs )       { return compareerror(rhs); }
+	public LuaValue   gteq( LuaValue rhs )       { return compareerror("number"); }
+	public LuaValue   gteq( double rhs )         { return compareerror("number"); }
+	public LuaValue   gteq( int rhs )         { return valueOf(todouble() >= rhs); }
 	public boolean gteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
 	public boolean gteq_b( int rhs )       { compareerror("number"); return false; }
 	public boolean gteq_b( double rhs )    { compareerror("number"); return false; }

@@ -75,7 +75,7 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	}
 
 	/** Faster, better version of pow() used by arithmetic operator ^ */
-	public double dpow_d(double a, double b) {
+	public double dpow_lib(double a, double b) {
 		return Math.pow(a, b);
 	}
 	
