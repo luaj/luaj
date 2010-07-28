@@ -166,6 +166,8 @@ public class JavaCodeGen {
 			Stat s = block.stats.get(n-1);
 			if ( s instanceof Return || s instanceof Break ) 
 				return true;
+			else if ( isInfiniteLoop( s ) )
+				return true;
 			else if ( s instanceof IfThenElse ) {
 				IfThenElse ite = (IfThenElse) s;
 				if ( ite.elseblock == null || ! endsInReturn(ite.ifblock) || ! endsInReturn(ite.elseblock) )
@@ -178,6 +180,15 @@ public class JavaCodeGen {
 			}
 			return false;
 		}
+		
+		private boolean isInfiniteLoop(Stat s) {
+			if ( s instanceof WhileDo && "true".equals(evalBoolean(((WhileDo)s).exp)) )
+				return true;
+			if ( s instanceof RepeatUntil && "false".equals(evalBoolean(((RepeatUntil)s).exp)) )
+				return true;
+			return false;
+		}
+		
 		
 		public void visit(Stat.Return s) {
 			int n = s.nreturns();
@@ -409,31 +420,26 @@ public class JavaCodeGen {
 			exp.accept(new Visitor() {
 				public void visit(UnopExp exp) {
 					switch ( exp.op ) {
-					case Lua.OP_NOT: out( "(!"+evalBoolean( exp.rhs )+")"); break;
+					case Lua.OP_NOT: 
+						String rhs = evalBoolean( exp.rhs );
+						out( "true".equals(rhs)? "false":
+							"false".equals(rhs)? "true":
+							"(!"+rhs+")"); 
+						break;
 					default: out(evalLuaValue(exp)+".toboolean()"); break;
 					}
 				}
 				public void visit(BinopExp exp) {
-					String op;
 					switch ( exp.op ) {
-					case Lua.OP_AND:
-					case Lua.OP_OR:
-						op = (exp.op==Lua.OP_AND? " && ": " || "); 
-						out("("+evalBoolean(exp.lhs)+op+evalBoolean(exp.rhs)+")");
-						break;
-					case Lua.OP_EQ:
-					case Lua.OP_NEQ:
-						op = (exp.op==Lua.OP_EQ? ".eq_b(": ".neq_b("); 
-						out(evalLuaValue(exp.lhs)+op+evalLuaValue(exp.rhs)+")");
-						break;
-					case Lua.OP_GT:
-					case Lua.OP_GE:
-					case Lua.OP_LT:
-					case Lua.OP_LE:
-						op = (exp.op==Lua.OP_GT? ">": exp.op==Lua.OP_GE? ">=": exp.op==Lua.OP_LT? "<": "<="); 
-						out("("+evalNumber(exp.lhs)+op+evalNumber(exp.rhs)+")");
-						break;
-					default: out(evalLuaValue(exp)+".toboolean()"); break;
+					case Lua.OP_AND: out("("+evalBoolean(exp.lhs)+"&&"+evalBoolean(exp.rhs)+")"); return;
+					case Lua.OP_OR: out("("+evalBoolean(exp.lhs)+"||"+evalBoolean(exp.rhs)+")"); return;
+					case Lua.OP_GT: out(evalLuaValue(exp.lhs)+".gt_b("+evalLuaValue(exp.rhs)+")"); return;
+					case Lua.OP_GE: out(evalLuaValue(exp.lhs)+".gteq_b("+evalLuaValue(exp.rhs)+")"); return;
+					case Lua.OP_LT: out(evalLuaValue(exp.lhs)+".lt_b("+evalLuaValue(exp.rhs)+")"); return;
+					case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq_b("+evalLuaValue(exp.rhs)+")"); return;
+					case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq_b("+evalLuaValue(exp.rhs)+")"); return;
+					case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq_b("+evalLuaValue(exp.rhs)+")"); return;
+					default: out(evalLuaValue(exp)+".toboolean()"); return;
 					}
 				}
 				public void visit(Constant exp) {
@@ -460,7 +466,7 @@ public class JavaCodeGen {
 				}
 				public void visit(NameExp exp) {
 					if ( exp.name.variable.isConstant() ) {
-						out ( exp.name.variable.initialValue.toboolean()? "TRUE": "FALSE");
+						out ( exp.name.variable.initialValue.toboolean()? "true": "false");
 						return;
 					}
 					out(evalLuaValue(exp)+".toboolean()");
@@ -485,7 +491,7 @@ public class JavaCodeGen {
 					switch ( exp.op ) {
 					case Lua.OP_LEN: out(evalLuaValue(exp.rhs)+".length()"); break;
 					case Lua.OP_UNM: out("(-"+evalNumber(exp.rhs)+")"); break;
-					default: out(evalLuaValue(exp)+".todouble()"); break;
+					default: out(evalLuaValue(exp)+".checkdouble()"); break;
 					}
 				}
 				public void visit(BinopExp exp) {
@@ -500,16 +506,16 @@ public class JavaCodeGen {
 					case Lua.OP_POW: out("MathLib.dpow_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
 					case Lua.OP_DIV: out("LuaDouble.ddiv_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
 					case Lua.OP_MOD: out("LuaDouble.dmod_d("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); break;
-					default: out(evalLuaValue(exp)+".todouble()"); break;
+					default: out(evalLuaValue(exp)+".checkdouble()"); break;
 					}
 				}
 				public void visit(Constant exp) {
 					switch ( exp.value.type() ) {
 					case LuaValue.TNUMBER:
-						out( evalNumberLiteral(exp.value.todouble()) );
+						out( evalNumberLiteral(exp.value.checkdouble()) );
 						break;
 					default:
-						out(evalLuaValue(exp)+".todouble()");
+						out(evalLuaValue(exp)+".checkdouble()");
 						break;
 					}
 				}
@@ -517,31 +523,31 @@ public class JavaCodeGen {
 					out(evalNumber(exp.exp));
 				}
 				public void visit(VarargsExp exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(FieldExp exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(IndexExp exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(NameExp exp) {
 					if ( exp.name.variable.isConstant() ) {
 						if ( exp.name.variable.initialValue.isnumber() ) {
-							out( evalNumberLiteral(exp.name.variable.initialValue.todouble()) );
+							out( evalNumberLiteral(exp.name.variable.initialValue.checkdouble()) );
 							return;
 						}
 					}
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(FuncCall exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(MethodCall exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 				public void visit(TableConstructor exp) {
-					out(evalLuaValue(exp)+".todouble()");
+					out(evalLuaValue(exp)+".checkdouble()");
 				}
 			});
 			return popWriter(x);
@@ -568,10 +574,10 @@ public class JavaCodeGen {
 			case Lua.OP_POW: out("MathLib.dpow("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_DIV: out("LuaDouble.ddiv("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_MOD: out("LuaDouble.dmod("+evalNumber(exp.lhs)+","+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_GT: out(evalLuaValue(exp.lhs)+".gt("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_GE: out(evalLuaValue(exp.lhs)+".gteq("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_LT: out(evalLuaValue(exp.lhs)+".lt("+evalNumber(exp.rhs)+")"); return;
-			case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq("+evalNumber(exp.rhs)+")"); return;
+			case Lua.OP_GT: out(evalLuaValue(exp.lhs)+".gt("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_GE: out(evalLuaValue(exp.lhs)+".gteq("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_LT: out(evalLuaValue(exp.lhs)+".lt("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq("+evalLuaValue(exp.rhs)+")"); return;
 			case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq("+evalLuaValue(exp.rhs)+")"); return;
 			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalLuaValue(exp.rhs)+")"); return;
 			case Lua.OP_CONCAT: 
@@ -650,7 +656,8 @@ public class JavaCodeGen {
 		
 		private String evalNumberLiteral(double value) {
 			int ivalue = (int) value;
-			return value==ivalue? String.valueOf(ivalue): String.valueOf(value);
+			String svalue = value==ivalue? String.valueOf(ivalue): String.valueOf(value);
+			return (value < 0? "("+svalue+")": svalue);
 		}
 		
 		public void visit(FieldExp exp) {
@@ -670,7 +677,10 @@ public class JavaCodeGen {
 		}
 
 		public void visit(ParensExp exp) {
-			out( evalLuaValue(exp.exp) );
+			if ( exp.exp.isvarargexp() )
+				out( evalLuaValue(exp.exp) );
+			else
+				exp.exp.accept(this);
 		}
 
 		public void visit(VarargsExp exp) {
@@ -875,12 +885,12 @@ public class JavaCodeGen {
 			String j = javascope.getJavaName(stat.name.variable);
 			String i = j+"$0";
 			outi("for ( double "
-					+i+"="+evalLuaValue(stat.initial)+".todouble(), "
-					+j+"$limit="+evalLuaValue(stat.limit)+".todouble()");
+					+i+"="+evalLuaValue(stat.initial)+".checkdouble(), "
+					+j+"$limit="+evalLuaValue(stat.limit)+".checkdouble()");
 			if ( stat.step == null )
 				outr( "; "+i+"<="+j+"$limit; ++"+i+" ) {" );
 			else {
-				out( ", "+j+"$step="+evalLuaValue(stat.step)+".todouble()");
+				out( ", "+j+"$step="+evalLuaValue(stat.step)+".checkdouble()");
 				out( "; "+j+"$step>0? ("+i+"<="+j+"$limit): ("+i+">="+j+"$limit);" );
 				outr( " "+i+"+="+j+"$step ) {" );
 			}

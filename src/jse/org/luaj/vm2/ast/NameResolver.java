@@ -89,17 +89,15 @@ public class NameResolver extends Visitor {
 	public void visit(LocalAssign stat) {
 		visitExps(stat.values);
 		defineLocalVars( stat.names );
-		if ( stat.values != null ) {
-			int n = stat.names.size();
-			int m = stat.values.size();
-			boolean varlist = m>0 && stat.values.get(m-1).isvarargexp();
-			for ( int i=0; i<n && i<(varlist?m-1:m); i++ )
-				if ( stat.values.get(i) instanceof Constant )
-					stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
-			if ( !varlist )
-				for ( int i=m; i<n; i++ )
-					stat.names.get(i).variable.initialValue = LuaValue.NIL;
-		}
+		int n = stat.names.size();
+		int m = stat.values!=null? stat.values.size(): 0;
+		boolean isvarlist = m>0 && m<n && stat.values.get(m-1).isvarargexp();
+		for ( int i=0; i<n && i<(isvarlist?m-1:m); i++ )
+			if ( stat.values.get(i) instanceof Constant )
+				stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
+		if ( !isvarlist )
+			for ( int i=m; i<n; i++ )
+				stat.names.get(i).variable.initialValue = LuaValue.NIL;
 	}
 
 	public void visit(ParList pars) {
