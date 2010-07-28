@@ -533,11 +533,25 @@ public class JavaCodeGen {
 			case Lua.OP_LE: out(evalLuaValue(exp.lhs)+".lteq("+evalNumber(exp.rhs)+")"); return;
 			case Lua.OP_EQ: out(evalLuaValue(exp.lhs)+".eq("+evalLuaValue(exp.rhs)+")"); return;
 			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalLuaValue(exp.rhs)+")"); return;
-			case Lua.OP_CONCAT: out(evalLuaValue(exp.lhs)+".concat("+evalLuaValue(exp.rhs)+")"); return;
+			case Lua.OP_CONCAT: 
+				if ( isConcatExp(exp.rhs) ) {
+					out( "new Buffer().append("+evalLuaValue(exp.lhs)+")" );
+					Exp e = exp.rhs;
+					for ( ; isConcatExp(e); e=((BinopExp)e).rhs ) 
+						out( ".append("+evalLuaValue(((BinopExp)e).lhs)+")" );
+					out( ".append("+evalLuaValue(e)+")" );
+					out( ".tostring()" );
+				} else
+					out(evalLuaValue(exp.lhs)+".concat("+evalLuaValue(exp.rhs)+")"); 
+				return;
 			default: throw new IllegalStateException("unknown bin op:"+exp.op);
 			}
 		}
 
+		private boolean isConcatExp(Exp e) {
+			return (e instanceof BinopExp) && (((BinopExp)e).op == Lua.OP_CONCAT);
+		}
+		
 		public void visit(UnopExp exp) {
 			exp.rhs.accept(this);
 			switch ( exp.op ) {

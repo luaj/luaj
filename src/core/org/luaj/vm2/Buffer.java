@@ -45,30 +45,34 @@ public final class Buffer {
 		return LuaString.valueOf(bytes, 0, length).tojstring();
 	}
 	
-	public final void append( byte b ) {
+	public final Buffer append( byte b ) {
 		ensureCapacity( length + 1 );
 		bytes[ length++ ] = b;
+		return this;
 	}
 	
-	public final void append( LuaValue val ) {
+	public final Buffer append( LuaValue val ) {
 		if ( ! val.isstring() ) 
 			val.error("attempt to concatenate a '"+val.typename()+"' value");
 		append( val.strvalue() );
+		return this;
 	}
 	
-	public final void append( LuaString str ) {
+	public final Buffer append( LuaString str ) {
 		final int alen = str.length();
 		ensureCapacity( length + alen );
 		str.copyInto( 0, bytes, length, alen );
 		length += alen;
+		return this;
 	}
 	
-	public final void append( String str ) {
+	public final Buffer append( String str ) {
 		char[] chars = str.toCharArray();
 		final int alen = LuaString.lengthAsUtf8( chars );
 		ensureCapacity( length + alen );
 		LuaString.encodeToUtf8( chars, bytes, length );
 		length += alen;
+		return this;
 	}
 	
 	public final void setLength( int length ) {
