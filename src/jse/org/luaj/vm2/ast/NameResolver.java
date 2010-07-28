@@ -97,7 +97,7 @@ public class NameResolver extends Visitor {
 				if ( stat.values.get(i) instanceof Constant )
 					stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
 			if ( !varlist )
-				for ( int i=m+1; i<n; i++ )
+				for ( int i=m; i<n; i++ )
 					stat.names.get(i).variable.initialValue = LuaValue.NIL;
 		}
 	}

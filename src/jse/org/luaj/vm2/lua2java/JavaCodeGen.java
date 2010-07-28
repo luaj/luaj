@@ -201,53 +201,94 @@ public class JavaCodeGen {
 			super.visit(def);
 		}
 
-		public void visit(LocalAssign stat) {
-			int n = stat.names.size();
-			int m = stat.values!=null? stat.values.size(): 0;
-			if ( n == 1 && m<=1 ) {
-				Name name = stat.names.get(0);
-				if ( name.variable.isConstant() )
-					return;
-				String value = m>0? evalLuaValue(stat.values.get(0)): "NIL";
-				singleLocalDeclareAssign(name,value);
-			} else {
-				for ( Name name : stat.names )
-					singleLocalDeclareAssign(name,null);
-				multiAssign(stat.names, stat.values);
-			}
-		}
-		
 		public void visit(Assign stat) {
 			multiAssign(stat.vars, stat.exps);
 		}
 		
+		public void visit(LocalAssign stat) {
+			List<Name> names = stat.names;
+			List<Exp> values = stat.values;
+			int n = names.size();
+			int m = values != null? values.size(): 0;
+			boolean isvarlist = m>0 && m<n && values.get(m-1).isvarargexp();
+			for ( int i=0; i<n && i<(isvarlist? m-1: m); i++ )
+				if ( ! names.get(i).variable.isConstant() )
+					singleLocalDeclareAssign(names.get(i), evalLuaValue(values.get(i)));
+			if ( isvarlist ) {
+				String t = javascope.getJavaName(tmpJavaVar("t").variable);
+				outl( "final Varargs "+t+" = "+evalVarargs(values.get(m-1))+";" );
+				for ( int i=m-1; i<n; i++ )
+					singleLocalDeclareAssign(names.get(i), t+(i==m-1? ".arg1()": ".arg("+(i-m+2)+")"));
+				
+			} else {
+				for ( int i=m; i<n; i++ ) {
+					if ( ! names.get(i).variable.isConstant() )
+						singleLocalDeclareAssign(names.get(i), "NIL");
+				}
+			}
+			for ( int i=n; i<m; i++ ) {
+				String t = javascope.getJavaName(tmpJavaVar("t").variable);
+				outl( "final Varargs "+t+" = "+evalVarargs(values.get(i)) );
+			}
+		}
+		
 		private void multiAssign(List varsOrNames, List<Exp> exps) {
+			final boolean[] needsTmpvarsMultiAssign = { false };
+			if ( exps.size() > 1 ) {
+				new Visitor() {
+					public void visit(FuncBody body) {}
+					public void visit(FieldExp exp) { needsTmpvarsMultiAssign[0] = true; }
+					public void visit(FuncCall exp) { needsTmpvarsMultiAssign[0] = true; }
+					public void visit(IndexExp exp) { needsTmpvarsMultiAssign[0] = true; }
+					public void visit(MethodCall exp) { needsTmpvarsMultiAssign[0] = true; }
+				}.visitExps(exps);
+			}
+			if ( needsTmpvarsMultiAssign[0] )
+				tmpvarsMultiAssign( varsOrNames, exps );
+			else
+				directMultiAssign( varsOrNames, exps );
+		}
+	
+		private void directMultiAssign(List varsOrNames, List<Exp> values) {
+			int n = varsOrNames.size();
+			int m = values != null? values.size(): 0;
+			boolean isvarlist = m>0 && m<n && values.get(m-1).isvarargexp();
+			for ( int i=0; i<n && i<(isvarlist? m-1: m); i++ )
+					singleVarOrNameAssign(varsOrNames.get(i), evalLuaValue(values.get(i)));
+			if ( isvarlist ) {
+				String vname = javascope.getJavaName(tmpJavaVar("v").variable);
+				outl( "final Varargs "+vname+" = "+evalVarargs(values.get(m-1))+";" );
+				for ( int i=m-1; i<n; i++ )
+					singleVarOrNameAssign(varsOrNames.get(i), vname+(i==m-1? ".arg1()": ".arg("+(i-m+2)+")"));
+				
+			} else
+				for ( int i=m; i<n; i++ )
+					singleVarOrNameAssign(varsOrNames.get(i), "NIL");
+			for ( int i=n; i<m; i++ ) {
+				String tmp = javascope.getJavaName(tmpJavaVar("tmp").variable);
+				outl( "final Varargs "+tmp+" = "+evalVarargs(values.get(i)) );
+			}
+		}
+			
+		private void tmpvarsMultiAssign(List varsOrNames, List<Exp> exps) {
 			int n = varsOrNames.size();
 			int m = exps != null? exps.size(): 0;
-			boolean vararglist = m>0 && exps.get(m-1).isvarargexp() && n>m;
-			if ( n<=m ) {
-				for ( int i=1; i<=n; i++ )
-					singleVarOrNameAssign( varsOrNames.get(i-1), evalLuaValue(exps.get(i-1)) );
-				for ( int i=n+1; i<=m; i++ )
-					outl( evalLuaValue(exps.get(i-1))+";" );
-			} else {
-				outb( "{" );
-				for ( int i=1; i<=m; i++ ) {
-					Exp e = exps.get(i-1);
-					if ( vararglist && (i==m) )
-						outl( "Varargs $"+i+" = "+evalVarargs(e)+";" );
-					else
-						outl( "LuaValue $"+i+" = "+evalLuaValue(e)+";" );
-				}
-				for ( int i=1; i<=n; i++ ) {
-					String valu;
-					if ( i < m ) valu = "$"+i;
-					else if ( i==m ) valu = (vararglist? "$"+i+".arg1()": "$"+i);
-					else if ( vararglist ) valu = "$"+m+".arg("+(i-m+1)+")";
-					else valu = "NIL";
-					singleVarOrNameAssign( varsOrNames.get(i-1), valu );
-				}
-				oute( "}" );
+			boolean isvarlist = m>0 && m<n && exps.get(m-1).isvarargexp();
+			List<String> tmpnames = new ArrayList<String>();
+			for ( int i=0; i<m; i++ ) {
+				tmpnames.add( javascope.getJavaName(tmpJavaVar("t").variable) );
+				if ( isvarlist && (i==m-1) )
+					outl( "final Varargs "+tmpnames.get(i)+" = "+evalVarargs(exps.get(i))+";" );
+				else
+					outl( "final LuaValue "+tmpnames.get(i)+" = "+evalLuaValue(exps.get(i))+";" );
+			}
+			for ( int i=0; i<n; i++ ) {
+				if ( i < (isvarlist? m-1: m) )
+					singleVarOrNameAssign( varsOrNames.get(i), tmpnames.get(i) );
+				else if ( isvarlist ) 
+					singleVarOrNameAssign( varsOrNames.get(i), tmpnames.get(m-1)+(i==m-1? ".arg1()": ".arg("+(i-m+2)+")") );
+				else 
+					singleVarOrNameAssign( varsOrNames.get(i), "NIL" );
 			}
 		}
 		
@@ -309,7 +350,7 @@ public class JavaCodeGen {
 			else if ( variable.isupvalue )
 				outl( "final LuaValue "+javaname+(value!=null? " = "+value: "")+";" );
 			else
-				outl( "LuaValue "+javaname+(value!=null? " = "+value: "")+";" );
+				outl( (variable.hasassignments? "LuaValue ": "final LuaValue ")+javaname+(value!=null? " = "+value: "")+";" );
 		}
 		
 		public void visit(Break breakstat) {
