@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.luaj.vm2.LuaValue;
+
 public class NameScope {
 
 	private static final Set<String> LUA_KEYWORDS = new HashSet<String>();
@@ -67,6 +69,7 @@ public class NameScope {
 		public final NameScope definingScope;
 		public boolean isupvalue;
 		public boolean hasassignments;
+		public LuaValue initialValue;
 		/** Global is named variable not associated with a defining scope */
 		public NamedVariable(String name) {
 			this.name = name;
@@ -79,6 +82,9 @@ public class NameScope {
 		}
 		public boolean isLocal() {
 			return this.definingScope != null;
+		}
+		public boolean isConstant() {
+			return ! hasassignments && initialValue != null;
 		}
 	}
 }

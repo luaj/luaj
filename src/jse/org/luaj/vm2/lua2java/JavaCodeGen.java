@@ -206,6 +206,8 @@ public class JavaCodeGen {
 			int m = stat.values!=null? stat.values.size(): 0;
 			if ( n == 1 && m<=1 ) {
 				Name name = stat.names.get(0);
+				if ( name.variable.isConstant() )
+					return;
 				String value = m>0? evalLuaValue(stat.values.get(0)): "NIL";
 				singleLocalDeclareAssign(name,value);
 			} else {
@@ -271,6 +273,8 @@ public class JavaCodeGen {
 		
 		private void singleAssign(Name name, String valu) {
 			if ( name.variable.isLocal() ) {
+				if ( name.variable.isConstant() )
+					return;
 				outi( "" );
 				singleReference( name );
 				outr( " = "+valu+";" );
@@ -280,6 +284,10 @@ public class JavaCodeGen {
 		
 		private void singleReference(Name name) {
 			if ( name.variable.isLocal() ) {
+				if ( name.variable.isConstant() ) {
+					out( evalConstant(name.variable.initialValue) );
+					return;
+				}
 				out( javascope.getJavaName(name.variable) );
 				if ( name.variable.isupvalue && name.variable.hasassignments )
 					out( "[0]" );
@@ -294,7 +302,9 @@ public class JavaCodeGen {
 		
 		private void singleLocalDeclareAssign(NamedVariable variable, String value) {
 			String javaname = javascope.getJavaName(variable);
-			if ( variable.isupvalue && variable.hasassignments )
+			if ( variable.isConstant() )
+				return;
+			else if ( variable.isupvalue && variable.hasassignments )
 				outl( "final LuaValue[] "+javaname+" = {"+value+"};" );
 			else if ( variable.isupvalue )
 				outl( "final LuaValue "+javaname+(value!=null? " = "+value: "")+";" );
@@ -408,6 +418,10 @@ public class JavaCodeGen {
 					out(evalLuaValue(exp)+".toboolean()");
 				}
 				public void visit(NameExp exp) {
+					if ( exp.name.variable.isConstant() ) {
+						out ( exp.name.variable.initialValue.toboolean()? "TRUE": "FALSE");
+						return;
+					}
 					out(evalLuaValue(exp)+".toboolean()");
 				}
 				public void visit(FuncCall exp) {
@@ -471,6 +485,12 @@ public class JavaCodeGen {
 					out(evalLuaValue(exp)+".todouble()");
 				}
 				public void visit(NameExp exp) {
+					if ( exp.name.variable.isConstant() ) {
+						if ( exp.name.variable.initialValue.isnumber() ) {
+							out( evalNumberLiteral(exp.name.variable.initialValue.todouble()) );
+							return;
+						}
+					}
 					out(evalLuaValue(exp)+".todouble()");
 				}
 				public void visit(FuncCall exp) {
@@ -528,23 +548,21 @@ public class JavaCodeGen {
 		}
 
 		public void visit(Constant exp) {
-			switch ( exp.value.type() ) {
-			case LuaValue.TSTRING: {
-				out( evalLuaStringConstant(exp.value.checkstring()) );
-				break;
-			}
+			out( evalConstant(exp.value) );
+		}
+
+		protected String evalConstant(LuaValue value) {
+			switch ( value.type() ) {
+			case LuaValue.TSTRING:
+				return evalLuaStringConstant(value.checkstring());
 			case LuaValue.TNIL:
-				out("NIL");
-				break;
+				return "NIL";
 			case LuaValue.TBOOLEAN:
-				out(exp.value.toboolean()? "TRUE": "FALSE");
-				break;
-			case LuaValue.TNUMBER: {
-				out( evalNumberConstant(exp.value.todouble()) );
-				break;
-			}
+				return value.toboolean()? "TRUE": "FALSE";
+			case LuaValue.TNUMBER:
+				return evalNumberConstant(value.todouble());
 			default:
-				throw new IllegalStateException("unknown constant type: "+exp.value.typename());
+				throw new IllegalStateException("unknown constant type: "+value.typename());
 			}
 		}
 

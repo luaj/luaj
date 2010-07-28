@@ -2,9 +2,10 @@ package org.luaj.vm2.ast;
 
 import java.util.List;
 
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.ast.Exp.Constant;
 import org.luaj.vm2.ast.Exp.NameExp;
 import org.luaj.vm2.ast.Exp.VarExp;
-import org.luaj.vm2.ast.Exp.VarargsExp;
 import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
 import org.luaj.vm2.ast.Stat.FuncDef;
@@ -88,6 +89,17 @@ public class NameResolver extends Visitor {
 	public void visit(LocalAssign stat) {
 		visitExps(stat.values);
 		defineLocalVars( stat.names );
+		if ( stat.values != null ) {
+			int n = stat.names.size();
+			int m = stat.values.size();
+			boolean varlist = m>0 && stat.values.get(m-1).isvarargexp();
+			for ( int i=0; i<n && i<(varlist?m-1:m); i++ )
+				if ( stat.values.get(i) instanceof Constant )
+					stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
+			if ( !varlist )
+				for ( int i=m+1; i<n; i++ )
+					stat.names.get(i).variable.initialValue = LuaValue.NIL;
+		}
 	}
 
 	public void visit(ParList pars) {
