@@ -1,3 +1,24 @@
+/*******************************************************************************
+* Copyright (c) 2010 Luaj.org. All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+******************************************************************************/
 package org.luaj.vm2.ast;
 
 import java.util.HashMap;
@@ -5,7 +26,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.luaj.vm2.LuaValue;
 
 public class NameScope {
 
@@ -21,7 +41,7 @@ public class NameScope {
 			LUA_KEYWORDS.add( k[i] );
 	}
 	
-	public final Map<String,NamedVariable> namedVariables = new HashMap<String,NamedVariable>();
+	public final Map<String,Variable> namedVariables = new HashMap<String,Variable>();
 
 	public final NameScope outerScope;
 
@@ -40,20 +60,20 @@ public class NameScope {
 	}
 	
 	/** Look up a name.  If it is a global name, then throw IllegalArgumentException. */
-	public NamedVariable find( String name ) throws IllegalArgumentException {
+	public Variable find( String name ) throws IllegalArgumentException {
 		validateIsNotKeyword(name);
 		for ( NameScope n = this; n!=null; n=n.outerScope )
 			if ( n.namedVariables.containsKey(name) )
 				return n.namedVariables.get(name);
-		NamedVariable value = new NamedVariable(name);
+		Variable value = new Variable(name);
 		this.namedVariables.put(name, value);
 		return value;
 	}
 	
 	/** Define a name in this scope.  If it is a global name, then throw IllegalArgumentException. */
-	public NamedVariable define( String name ) throws IllegalStateException, IllegalArgumentException {
+	public Variable define( String name ) throws IllegalStateException, IllegalArgumentException {
 		validateIsNotKeyword(name);
-		NamedVariable value = new NamedVariable(name, this);
+		Variable value = new Variable(name, this);
 		this.namedVariables.put(name, value);
 		return value;
 	}
@@ -61,30 +81,5 @@ public class NameScope {
 	private void validateIsNotKeyword(String name) {
 		if ( LUA_KEYWORDS.contains(name) )
 			throw new IllegalArgumentException("name is a keyword: '"+name+"'");
-	}
-
-	/** Named variable is load, global, or upvalue.  */
-	public static class NamedVariable {
-		public final String name;
-		public final NameScope definingScope;
-		public boolean isupvalue;
-		public boolean hasassignments;
-		public LuaValue initialValue;
-		/** Global is named variable not associated with a defining scope */
-		public NamedVariable(String name) {
-			this.name = name;
-			this.definingScope = null;
-		}
-		public NamedVariable(String name, NameScope definingScope) {
-		/** Local variable is defined in a particular scope.  */
-			this.name = name;
-			this.definingScope = definingScope;
-		}
-		public boolean isLocal() {
-			return this.definingScope != null;
-		}
-		public boolean isConstant() {
-			return ! hasassignments && initialValue != null;
-		}
 	}
 }

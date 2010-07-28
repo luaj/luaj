@@ -30,6 +30,7 @@ import org.luaj.vm2.ast.Block;
 import org.luaj.vm2.ast.Chunk;
 import org.luaj.vm2.ast.FuncBody;
 import org.luaj.vm2.ast.NameScope;
+import org.luaj.vm2.ast.Variable;
 import org.luaj.vm2.ast.Visitor;
 import org.luaj.vm2.ast.Exp.BinopExp;
 import org.luaj.vm2.ast.Exp.VarargsExp;
@@ -96,7 +97,7 @@ public class JavaScope extends NameScope {
 		return (JavaScope) outerScope;
 	}
 	
-	final String getJavaName(NamedVariable nv) {
+	final String getJavaName(Variable nv) {
 		for ( JavaScope s = this; s != null; s = (JavaScope) s.outerScope )
 			if ( s.astele2javaname.containsKey(nv) )
 				return s.astele2javaname.get(nv);
@@ -114,7 +115,7 @@ public class JavaScope extends NameScope {
 		}
 	}
 
-	public void setJavaName(NamedVariable astele, String javaname) {
+	public void setJavaName(Variable astele, String javaname) {
 		javanames.add(javaname);
 		astele2javaname.put(astele,javaname);
 	}	

@@ -6,7 +6,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ast.Exp.Constant;
 import org.luaj.vm2.ast.Exp.NameExp;
 import org.luaj.vm2.ast.Exp.VarExp;
-import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
 import org.luaj.vm2.ast.Stat.FuncDef;
 import org.luaj.vm2.ast.Stat.GenericFor;
@@ -117,8 +116,8 @@ public class NameResolver extends Visitor {
 		name.variable = scope.define(name.name);
 	}
 	
-	protected NamedVariable resolveNameReference(Name name) {
-		NamedVariable v = scope.find(name.name);
+	protected Variable resolveNameReference(Name name) {
+		Variable v = scope.find(name.name);
 		if ( v.isLocal() && scope.functionNestingCount != v.definingScope.functionNestingCount )
 			v.isupvalue = true;
 		return v;

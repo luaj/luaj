@@ -39,6 +39,7 @@ import org.luaj.vm2.ast.FuncArgs;
 import org.luaj.vm2.ast.FuncBody;
 import org.luaj.vm2.ast.Name;
 import org.luaj.vm2.ast.NameResolver;
+import org.luaj.vm2.ast.Variable;
 import org.luaj.vm2.ast.ParList;
 import org.luaj.vm2.ast.Stat;
 import org.luaj.vm2.ast.TableConstructor;
@@ -56,7 +57,6 @@ import org.luaj.vm2.ast.Exp.ParensExp;
 import org.luaj.vm2.ast.Exp.UnopExp;
 import org.luaj.vm2.ast.Exp.VarExp;
 import org.luaj.vm2.ast.Exp.VarargsExp;
-import org.luaj.vm2.ast.NameScope.NamedVariable;
 import org.luaj.vm2.ast.Stat.Assign;
 import org.luaj.vm2.ast.Stat.Break;
 import org.luaj.vm2.ast.Stat.FuncCallStat;
@@ -352,7 +352,7 @@ public class JavaCodeGen {
 			singleLocalDeclareAssign( name.variable, value );
 		}
 		
-		private void singleLocalDeclareAssign(NamedVariable variable, String value) {
+		private void singleLocalDeclareAssign(Variable variable, String value) {
 			String javaname = javascope.getJavaName(variable);
 			if ( variable.isConstant() )
 				return;
@@ -808,7 +808,7 @@ public class JavaCodeGen {
 					singleLocalDeclareAssign( name, value );
 				}
 				if ( body.parlist.isvararg ) {
-					NamedVariable arg = body.scope.find("arg");
+					Variable arg = body.scope.find("arg");
 					javascope.setJavaName(arg,"arg");
 					if ( m > 0 ) 
 						outl( "$arg = $arg.subargs("+(m+1)+");" );
