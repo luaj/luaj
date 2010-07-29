@@ -22,7 +22,10 @@
 package org.luaj.luajc;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -34,36 +37,69 @@ public class TestLuaJC {
 	// create the script
 	public static String name = "script";
 	public static String script =
-		"local a='a\\ab\\bf\\fn\\nt\\tv\\vw\\133x\\222y'\n"+
-		"local t={string.byte(a,1,#a)}\n"+
-		"print( table.concat(t,',') )\n";
+		"for i = 1,2 do\n"+
+		"	t[i] = function()\n"+
+		"		return i\n"+
+		"	end\n"+
+		"end\n";
 		
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);
-		
-		// create an environment to run in
-		LuaTable _G = JsePlatform.standardGlobals();
-		
-		// compile into a chunk, or load as a class
-		LuaValue chunk;
-		if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
-			InputStream is =  new ByteArrayInputStream( script.getBytes() );
-			chunk = LuaJC.getInstance().load(is, "script", _G);
-		} else {
-			chunk = (LuaValue) Class.forName("script").newInstance();
+		try {
+			
+			// create an environment to run in
+			LuaTable _G = JsePlatform.standardGlobals();
+			
+			// compile into a chunk, or load as a class
+			LuaValue chunk;
+			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
+				InputStream is =  new ByteArrayInputStream( script.getBytes() );
+				chunk = LuaJC.getInstance().load(is, "script", _G);
+			} else {
+				chunk = (LuaValue) Class.forName("script").newInstance();
+			}
+			chunk.setfenv(_G);
+	
+			// call with arguments
+			LuaValue[] vargs = new LuaValue[args.length];
+			for ( int i=0; i<args.length; i++ )
+				vargs[i] = LuaValue.valueOf(args[i]);
+			Varargs cargs = LuaValue.varargsOf(vargs);
+			Varargs v = chunk.invoke(cargs);
+			
+			// print the result
+			for ( int i=1; i<=v.narg(); i++ )
+				System.out.println("result["+i+"]: "+v.arg(i));
+		} catch ( Throwable e ) {
+			e.printStackTrace();
+			saveClasses();
 		}
-		chunk.setfenv(_G);
-
-		// call with arguments
-		LuaValue[] vargs = new LuaValue[args.length];
-		for ( int i=0; i<args.length; i++ )
-			vargs[i] = LuaValue.valueOf(args[i]);
-		Varargs cargs = LuaValue.varargsOf(vargs);
-		Varargs v = chunk.invoke(cargs);
-		
-		// print the result
-		for ( int i=1; i<=v.narg(); i++ )
-			System.out.println("result["+i+"]: "+v.arg(i));
 	}
+
+	private static void saveClasses() throws Exception {
+        // create the chunk
+		String chunkname = "script";
+		String filename = "script";
+		String destdir = ".";
 		
+		InputStream is = new ByteArrayInputStream( script.getBytes() );
+		Hashtable t = LuaJC.getInstance().compileAll(is, chunkname, filename);
+
+        // write out the chunk
+    	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
+    		String key = (String) e.nextElement();
+    		byte[] bytes = (byte[]) t.get(key);
+    		String destpath = (destdir!=null? destdir+"/": "") + key + ".class";
+    		System.out.println( 
+						"chunk "+chunkname+
+						" from "+filename+
+						" written to "+destpath
+						+" length="+bytes.length+" bytes");
+        	FileOutputStream fos = new FileOutputStream( destpath );
+        	fos.write( bytes );
+        	fos.close();
+        }
+		
+	}
+	
 }

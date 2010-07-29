@@ -27,6 +27,7 @@ import java.io.InputStream;
 import junit.framework.TestCase;
 
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
 
 /** 
@@ -36,16 +37,27 @@ import org.luaj.vm2.luajc.LuaJC;
  */
 public class FragmentsTest extends TestCase {
 
+	static final int TEST_TYPE_LUAC     = 0;
+	static final int TEST_TYPE_LUAJC    = 1;
+	static final int TEST_TYPE_LUA2JAVA = 2;
+	static final int TEST_TYPE          = TEST_TYPE_LUA2JAVA;
+	
 	public void runFragment( Varargs expected, String script ) {
 		try {
 			String name = getName();
 			LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
 			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 			LuaValue chunk ;
-			if ( true ) {
+			switch ( TEST_TYPE ) {
+			case TEST_TYPE_LUA2JAVA: 
+				chunk = Lua2Java.instance.load(is,name,_G);
+				break;
+			case TEST_TYPE_LUAJC:
 				chunk = LuaJC.getInstance().load(is,name,_G);
-			} else {
+				break;
+			default:
 				chunk = LuaC.instance.load( is, name, _G );
+				break;
 			}
 			Varargs actual = chunk.invoke();
 			assertEquals( expected.narg(), actual.narg() );
@@ -135,7 +147,6 @@ public class FragmentsTest extends TestCase {
 			"local bar = {1000, math.sqrt(9)}\n"+
 			"return bar[1]+bar[2]\n" );
 	}
-
 	
 	public void testMultiAssign() {
 		// arargs evaluations are all done before assignments 
@@ -338,5 +349,16 @@ public class FragmentsTest extends TestCase {
 				LuaValue.FALSE, LuaValue.FALSE, LuaValue.TRUE, LuaValue.TRUE, LuaValue.FALSE }),
 				"local a,b,c = 2,-2.5,0\n" +
 				"return (a==c), (b==c), (a==a), (a>c), (b>0)\n" );
+	}
+	
+	public void testNumericForUpvalues() {
+		runFragment( LuaValue.valueOf(8), 
+				"for i = 3,4 do\n"+
+				"	i = i + 5\n"+
+				"	local a = function()\n"+
+				"		return i\n"+
+				"	end\n" +
+				"	return a()\n"+
+				"end\n");
 	}
 }

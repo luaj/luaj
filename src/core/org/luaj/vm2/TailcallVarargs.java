@@ -34,7 +34,7 @@ public class TailcallVarargs extends Varargs {
 	
 	public TailcallVarargs(LuaValue object, LuaValue methodname, Varargs args) {
 		this.func = object.get(methodname);
-		this.args = args;
+		this.args = LuaValue.varargsOf(object, args);
 	}
 	
 	public boolean isTailcall() {

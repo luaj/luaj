@@ -243,7 +243,7 @@ public class JavaCodeGen {
 			}
 		}
 		
-		private void multiAssign(List varsOrNames, List<Exp> exps) {
+		private void multiAssign(final List varsOrNames, List<Exp> exps) {
 			final boolean[] needsTmpvarsMultiAssign = { false };
 			if ( exps.size() > 1 ) {
 				new Visitor() {
@@ -252,6 +252,7 @@ public class JavaCodeGen {
 					public void visit(FuncCall exp) { needsTmpvarsMultiAssign[0] = true; }
 					public void visit(IndexExp exp) { needsTmpvarsMultiAssign[0] = true; }
 					public void visit(MethodCall exp) { needsTmpvarsMultiAssign[0] = true; }
+					public void visit(NameExp exp) { needsTmpvarsMultiAssign[0] = true; }
 				}.visitExps(exps);
 			}
 			if ( needsTmpvarsMultiAssign[0] )
