@@ -24,14 +24,9 @@ package org.luaj.vm2;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.luaj.vm2.CompatibiltyTest.JmeCompatibilityTest;
-import org.luaj.vm2.CompatibiltyTest.JseCompatibilityTest;
-import org.luaj.vm2.CompatibiltyTest.Lua2JavaTest;
-import org.luaj.vm2.CompatibiltyTest.LuaJCTest;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
