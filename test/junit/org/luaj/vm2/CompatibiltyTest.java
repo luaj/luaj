@@ -59,11 +59,11 @@ public class CompatibiltyTest {
 	}
 
 
-	public static Test suite() {
+	public static TestSuite suite() {
 		TestSuite suite = new TestSuite("Compatibility Tests");
 		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
 		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
-		suite.addTest( new TestSuite( JseBytecodeTest.class,        "JSE Bytecode Tests" ) );
+		suite.addTest( new TestSuite( LuaJCTest.class,        "JSE Bytecode Tests" ) );
 		suite.addTest( new TestSuite( Lua2JavaTest.class,   		"Lua2Java Tests" ) );
 		return suite;
 	}
@@ -74,7 +74,7 @@ public class CompatibiltyTest {
 		}
 		protected void setUp() throws Exception {
 			super.setUp();
-			System.setProperty("Lua2Java", "false");
+			System.setProperty("JME", "false");
 			Lua2Java.install();
 		}
 	}
@@ -97,8 +97,8 @@ public class CompatibiltyTest {
 			System.setProperty("JME", "false");
 		}
 	}
-	public static class JseBytecodeTest extends CompatibiltyTestSuite {
-		public JseBytecodeTest() {
+	public static class LuaJCTest extends CompatibiltyTestSuite {
+		public LuaJCTest() {
 			super(ScriptDrivenTest.PlatformType.LUAJIT);
 		}
 		protected void setUp() throws Exception {

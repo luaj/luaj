@@ -58,6 +58,10 @@ public class AllTests {
 		table.addTestSuite(WeakKeyValueTableTest.class);
 		suite.addTest(table);
 		
+		// bytecode compilers regression tests
+		TestSuite bytecodetests = FragmentsTest.suite();
+		suite.addTest(bytecodetests);
+		
 		// prototype compiler
 		TestSuite compiler = new TestSuite("Lua Compiler Tests");
 		compiler.addTestSuite(CompilerUnitTests.class);
@@ -73,15 +77,10 @@ public class AllTests {
 		suite.addTest(lib);
 		
 		// compatiblity tests
-		TestSuite compat = (TestSuite) CompatibiltyTest.suite();
+		TestSuite compat = CompatibiltyTest.suite();
 		suite.addTest( compat );
 		compat.addTestSuite(ErrorsTest.class);
 		compat.addTestSuite(Luajvm1CompatibilityTest.class);
-		
-		// luajc regression tests
-		TestSuite luajc = new TestSuite("Java Compiler Tests");
-		luajc.addTestSuite(FragmentsTest.class);
-		suite.addTest(luajc);
 		
 		return suite;
 	}

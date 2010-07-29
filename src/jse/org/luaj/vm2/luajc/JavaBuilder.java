@@ -355,6 +355,17 @@ public class JavaBuilder {
 			}
 		}
 	}
+
+	public void convertToUpvalue(int pc, int slot) {
+		boolean isupassign = slots.isUpvalueAssign(pc, slot);
+		if ( isupassign ) {
+			int index = findSlotIndex( slot, false );
+			append(new ALOAD(index));
+			append(factory.createInvoke(classname, "newupl", TYPE_LOCALUPVALUE,  new Type[] { TYPE_LUAVALUE }, Constants.INVOKESTATIC));
+			int upindex = findSlotIndex( slot, true );
+			append(new ASTORE(upindex));
+		}
+	}
 	
 	private static String upvalueName(int upindex) {
 		return PREFIX_UPVALUE+upindex;

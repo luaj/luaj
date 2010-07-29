@@ -60,7 +60,7 @@ public class JavaGen {
 		for ( int pc=0, n=p.code.length; pc<n; pc++ ) {
 			int pc0 = pc; // closure changes pc
 			int ins = p.code[pc];
-			int o = Lua.GET_OPCODE(ins);
+			final int o = Lua.GET_OPCODE(ins);
 			int a = Lua.GETARG_A(ins);
 			int b = Lua.GETARG_B(ins);
 			int bx = Lua.GETARG_Bx(ins);
@@ -410,6 +410,13 @@ public class JavaGen {
 			
 			// let builder process branch instructions
 			builder.onEndOfLuaInstruction( pc0 );
+
+			// for-loops have upvalue created at top of loop
+			switch ( o ) {
+			case Lua.OP_FORPREP:
+				builder.convertToUpvalue(pc+1, a+3);
+				break;
+			}
 		}
 	}
 
