@@ -729,6 +729,6 @@ public class JavaBuilder {
 
 	public void appendBuffer() {
         append(factory.createInvoke(STR_LUAVALUE, "checkstring", TYPE_LUASTRING, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
-        append(factory.createInvoke(STR_BUFFER, "append", Type.VOID, new Type[] { TYPE_LUASTRING }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_BUFFER, "append", TYPE_BUFFER, new Type[] { TYPE_LUASTRING }, Constants.INVOKEVIRTUAL));
 	}
 }

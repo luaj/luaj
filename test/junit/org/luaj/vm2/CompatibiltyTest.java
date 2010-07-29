@@ -63,8 +63,8 @@ public class CompatibiltyTest {
 		TestSuite suite = new TestSuite("Compatibility Tests");
 		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
 		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
-		suite.addTest( new TestSuite( Lua2JavaTest.class,   "Lua2Java Tests" ) );
 		suite.addTest( new TestSuite( JseBytecodeTest.class,        "JSE Bytecode Tests" ) );
+		suite.addTest( new TestSuite( Lua2JavaTest.class,   		"Lua2Java Tests" ) );
 		return suite;
 	}
 	

@@ -161,7 +161,6 @@ public class JavaGen {
 			case Lua.OP_CONCAT: /*	A B C	R(A):= R(B).. ... ..R(C)			*/
 				builder.newBuffer();
 				while ( b<=c ) {
-					builder.dup();
 					builder.loadLocal(pc, b++);
 					builder.appendBuffer();
 				}
