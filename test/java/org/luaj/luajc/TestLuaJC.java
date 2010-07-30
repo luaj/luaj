@@ -37,12 +37,13 @@ public class TestLuaJC {
 	// create the script
 	public static String name = "script";
 	public static String script =
-		"for i = 1,2 do\n" +
-		"	i = i + 5\n"+
-		"	return (function()\n"+
-		"		return i\n"+
-		"	end)()\n"+
-		"end\n";
+		"local a = 1\n"+
+		"local b\n"+
+		"function c()\n"+
+		"	b=5\n" +
+		"	return a\n"+
+		"end\n"+
+		"return c(),b\n";
 		
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);

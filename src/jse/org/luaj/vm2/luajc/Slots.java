@@ -217,7 +217,7 @@ public class Slots {
 				break;
 				
 			case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
-				while ( a < b-1 )
+				while ( --b>0 )
 					s[a++] |= BIT_REFER; 
 				break;
 				
@@ -298,6 +298,8 @@ public class Slots {
 			int ins = p.code[pc];
 			switch ( Lua.GET_OPCODE(ins) ) {			
 				case Lua.OP_LOADBOOL:
+					if ( Lua.GETARG_C(ins) == 0 )
+						break;
 				case Lua.OP_EQ:
 				case Lua.OP_LT:
 				case Lua.OP_LE:

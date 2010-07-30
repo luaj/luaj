@@ -387,5 +387,16 @@ public class FragmentsTest extends TestSuite {
 					"	return a()\n"+
 					"end\n");
 		}
+		
+		public void testReturnUpvalue() {
+			runFragment( LuaValue.varargsOf(new LuaValue[] { LuaValue.ONE, LuaValue.valueOf(5), }),
+					"local a = 1\n"+
+					"local b\n"+
+					"function c()\n"+
+					"	b=5\n" +
+					"	return a\n"+
+					"end\n"+
+					"return c(),b\n" );			
+		}
 	}
 }

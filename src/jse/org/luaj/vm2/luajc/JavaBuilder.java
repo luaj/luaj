@@ -93,7 +93,6 @@ public class JavaBuilder {
 	private static final ArrayType TYPE_LOCALUPVALUE = new ArrayType( TYPE_LUAVALUE, 1 );
 	private static final ArrayType TYPE_CHARARRAY = new ArrayType( Type.CHAR, 1 );
 
-	private static final Type[] ARGS_NONE = new Type[0];
 	
 	private static final Class[] NO_INNER_CLASSES = {};
 
@@ -103,13 +102,35 @@ public class JavaBuilder {
 	private static final String STR_FUNC2 = TwoArgFunction.class.getName();
 	private static final String STR_FUNC3 = ThreeArgFunction.class.getName();
 
+	// argument list types
+	private static final Type[] ARG_TYPES_NONE = {};
+	private static final Type[] ARG_TYPES_INT =  { Type.INT };
+	private static final Type[] ARG_TYPES_DOUBLE = { Type.DOUBLE };
+	private static final Type[] ARG_TYPES_STRING = { Type.STRING };
+	private static final Type[] ARG_TYPES_CHARARRAY = { TYPE_CHARARRAY };
+	private static final Type[] ARG_TYPES_VARARGS_INT =  { TYPE_VARARGS, Type.INT };	
+	private static final Type[] ARG_TYPES_LUASTRING = { TYPE_LUASTRING };
+	private static final Type[] ARG_TYPES_INT_LUAVALUE = { Type.INT, TYPE_LUAVALUE };
+	private static final Type[] ARG_TYPES_INT_VARARGS = { Type.INT, TYPE_VARARGS };
+	private static final Type[] ARG_TYPES_LUAVALUE_VARARGS = { TYPE_LUAVALUE, TYPE_VARARGS };
+	private static final Type[] ARG_TYPES_LUAVALUE_LUAVALUE_VARARGS = { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS };
+	private static final Type[] ARG_TYPES_LUAVALUEARRAY = { new ArrayType( TYPE_LUAVALUE, 1 ) };
+	private static final Type[] ARG_TYPES_LUAVALUEARRAY_VARARGS = { new ArrayType( TYPE_LUAVALUE, 1 ), TYPE_VARARGS };
+	private static final Type[] ARG_TYPES_LUAVALUE_LUAVALUE_LUAVALUE = { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE };
+	private static final Type[] ARG_TYPES_VARARGS = { TYPE_VARARGS };
+	private static final Type[] ARG_TYPES_LUAVALUE_LUAVALUE = { TYPE_LUAVALUE, TYPE_LUAVALUE };
+	private static final Type[] ARG_TYPES_INT_INT = { Type.INT, Type.INT };
+	private static final Type[] ARG_TYPES_LUAVALUE = { TYPE_LUAVALUE };
+
 	// names, arg types for main prototype classes
 	private static final String[]     SUPER_NAME_N   = { STR_FUNC0, STR_FUNC1, STR_FUNC2, STR_FUNC3, STR_FUNCV, };
 	private static final ObjectType[] RETURN_TYPE_N  = { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS, };
-	private static final Type[][]     ARG_TYPES_N    = { {}, {TYPE_LUAVALUE}, {TYPE_LUAVALUE,TYPE_LUAVALUE}, {TYPE_LUAVALUE,TYPE_LUAVALUE,TYPE_LUAVALUE}, {TYPE_VARARGS},  };
+	private static final Type[][]     ARG_TYPES_N    = { ARG_TYPES_NONE, ARG_TYPES_LUAVALUE, ARG_TYPES_LUAVALUE_LUAVALUE, ARG_TYPES_LUAVALUE_LUAVALUE_LUAVALUE, ARG_TYPES_VARARGS,  };
 	private static final String[][]   ARG_NAMES_N    = { {}, {"arg"}, {"arg1","arg2"}, {"arg1","arg2","arg3"}, {"args"}, };
 	private static final String[]     METH_NAME_N    = { "call", "call", "call", "call", "onInvoke", };
-
+	
+	
+	
 	// varable naming
 	private static final String PREFIX_CONSTANT     = "k";
 	private static final String PREFIX_UPVALUE      = "u";
@@ -206,7 +227,7 @@ public class JavaBuilder {
 				if ( slots.isInitialValueUsed(slot) ) {
 					append(new ALOAD(1));
 					append(new PUSH(cp, slot+1));
-					append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+					append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
 					storeLocal(-1, slot);
 				}
 			}
@@ -214,13 +235,13 @@ public class JavaBuilder {
 			if ( needsarg ) {
 				append(new ALOAD(1));
 				append(new PUSH(cp, 1 + p.numparams));
-				append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, new Type[] { TYPE_VARARGS, Type.INT }, Constants.INVOKESTATIC));
+				append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, ARG_TYPES_VARARGS_INT, Constants.INVOKESTATIC));
 				storeLocal(-1, slot++ );
 			}
 			else if ( p.numparams > 0 ) {
 				append(new ALOAD(1));
 				append(new PUSH(cp, 1 + p.numparams));
-				append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+				append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
 				append(new ASTORE(1));
 			}
 		} else {
@@ -248,8 +269,8 @@ public class JavaBuilder {
 		// add class initializer 
 		if ( ! init.isEmpty() ) {
 			MethodGen mg = new MethodGen(Constants.ACC_STATIC, Type.VOID,
-					ARGS_NONE, new String[] {}, "<clinit>", cg
-							.getClassName(), init, cg.getConstantPool());
+					ARG_TYPES_NONE, new String[] {}, "<clinit>", 
+					cg.getClassName(), init, cg.getConstantPool());
 			init.append(InstructionConstants.RETURN);
 			mg.setMaxStack();
 			cg.addMethod(mg.getMethod());
@@ -329,7 +350,7 @@ public class JavaBuilder {
 		if (isupval) {
 			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
-				append(factory.createInvoke(classname, "newupe", TYPE_LOCALUPVALUE, ARGS_NONE, Constants.INVOKESTATIC));
+				append(factory.createInvoke(classname, "newupe", TYPE_LOCALUPVALUE, ARG_TYPES_NONE, Constants.INVOKESTATIC));
 				append(InstructionConstants.DUP);
 				append(new ASTORE(index));
 			} else {
@@ -350,7 +371,7 @@ public class JavaBuilder {
 			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
 				int index = findSlotIndex( slot, true );
-				append(factory.createInvoke(classname, "newupn", TYPE_LOCALUPVALUE, ARGS_NONE, Constants.INVOKESTATIC));
+				append(factory.createInvoke(classname, "newupn", TYPE_LOCALUPVALUE, ARG_TYPES_NONE, Constants.INVOKESTATIC));
 				append(new ASTORE(index));
 			}
 		}
@@ -361,7 +382,7 @@ public class JavaBuilder {
 		if ( isupassign ) {
 			int index = findSlotIndex( slot, false );
 			append(new ALOAD(index));
-			append(factory.createInvoke(classname, "newupl", TYPE_LOCALUPVALUE,  new Type[] { TYPE_LUAVALUE }, Constants.INVOKESTATIC));
+			append(factory.createInvoke(classname, "newupl", TYPE_LOCALUPVALUE,  ARG_TYPES_LUAVALUE, Constants.INVOKESTATIC));
 			int upindex = findSlotIndex( slot, true );
 			append(new ASTORE(upindex));
 		}
@@ -386,10 +407,11 @@ public class JavaBuilder {
 		append(InstructionConstants.AASTORE);
 	}
 
+	
 	public void newTable( int b, int c ) {
 		append(new PUSH(cp, b));
 		append(new PUSH(cp, c));
-		append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, new Type[] { Type.INT, Type.INT }, Constants.INVOKESTATIC));
+		append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, ARG_TYPES_INT_INT, Constants.INVOKESTATIC));
 	}
 
 	public void loadEnv() {
@@ -408,10 +430,10 @@ public class JavaBuilder {
 
 	public void arg(int argindex) {
 		if ( argindex == 1 ) {
-			append(factory.createInvoke(STR_VARARGS, "arg1", TYPE_LUAVALUE, ARGS_NONE, Constants.INVOKEVIRTUAL));
+			append(factory.createInvoke(STR_VARARGS, "arg1", TYPE_LUAVALUE, ARG_TYPES_NONE, Constants.INVOKEVIRTUAL));
 		} else {
 			append(new PUSH(cp, argindex));
-			append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+			append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
 		}
 	}
 
@@ -431,15 +453,15 @@ public class JavaBuilder {
 
 	public void subargs(int firstarg) {
 		append(new PUSH(cp, firstarg));
-		append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, new Type[] { Type.INT }, Constants.INVOKEVIRTUAL));
+		append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
 	}
 	
 	public void getTable() {
-        append(factory.createInvoke(STR_LUAVALUE, "get", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_LUAVALUE, "get", TYPE_LUAVALUE, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
-
+	
 	public void setTable() {
-        append(factory.createInvoke(STR_LUAVALUE, "set", Type.VOID, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_LUAVALUE, "set", Type.VOID, ARG_TYPES_LUAVALUE_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void unaryop(int o) {
@@ -464,7 +486,7 @@ public class JavaBuilder {
 			case Lua.OP_MOD: op = "mod"; break;
 			case Lua.OP_POW: op = "pow"; break;
 		}
-        append(factory.createInvoke(STR_LUAVALUE, op, TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_LUAVALUE, op, TYPE_LUAVALUE, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void compareop(int o) {
@@ -475,7 +497,7 @@ public class JavaBuilder {
 			case Lua.OP_LT: op = "lt_b"; break;
 			case Lua.OP_LE: op = "lteq_b"; break;
 		}
-        append(factory.createInvoke(STR_LUAVALUE, op, Type.BOOLEAN, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_LUAVALUE, op, Type.BOOLEAN, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void areturn() {
@@ -495,7 +517,7 @@ public class JavaBuilder {
 	}
 
 	public void testForLoop() {
-		append(factory.createInvoke(STR_LUAVALUE, "testfor_b", Type.BOOLEAN, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+		append(factory.createInvoke(STR_LUAVALUE, "testfor_b", Type.BOOLEAN, ARG_TYPES_LUAVALUE_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void loadArrayArgs(int pc, int firstslot, int nargs) {
@@ -506,9 +528,9 @@ public class JavaBuilder {
 			append(new PUSH(cp, i));
 			loadLocal(pc, firstslot++);
 			append(new AASTORE());
-		}
-		
+		}	
 	}
+	
 	public void newVarargs(int pc, int firstslot, int nargs) {
 		switch ( nargs ) {
 		case 0: loadNone(); 
@@ -516,14 +538,14 @@ public class JavaBuilder {
 		case 1: loadLocal(pc, firstslot); 
 			break;
 		case 2: loadLocal(pc, firstslot); loadLocal(pc, firstslot+1); 
-			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKESTATIC));
+			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, ARG_TYPES_LUAVALUE_VARARGS, Constants.INVOKESTATIC));
 			break;
 		case 3: loadLocal(pc, firstslot); loadLocal(pc, firstslot+1); loadLocal(pc, firstslot+2); 
-			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKESTATIC));
+			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, ARG_TYPES_LUAVALUE_LUAVALUE_VARARGS, Constants.INVOKESTATIC));
 			break;
 		default:
 			loadArrayArgs(pc, firstslot, nargs);
-			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, new Type[] { new ArrayType( TYPE_LUAVALUE, 1 ) }, Constants.INVOKESTATIC));
+			append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, ARG_TYPES_LUAVALUEARRAY, Constants.INVOKESTATIC));
 			break;
 		}
 	}
@@ -531,30 +553,30 @@ public class JavaBuilder {
 	public void newVarargsVarresult(int pc, int firstslot, int nslots) {
 		loadArrayArgs(pc, firstslot, nslots );
 		loadVarresult();
-		append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, new Type[] { new ArrayType( TYPE_LUAVALUE, 1 ), TYPE_VARARGS }, Constants.INVOKESTATIC));
+		append(factory.createInvoke(STR_LUAVALUE, "varargsOf", TYPE_VARARGS, ARG_TYPES_LUAVALUEARRAY_VARARGS, Constants.INVOKESTATIC));
 	}
 	
 	public void call(int nargs) {
 		switch ( nargs ) {
-		case 0: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARGS_NONE, Constants.INVOKEVIRTUAL)); break;
-		case 1: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
-		case 2: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
-		case 3: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL)); break;
+		case 0: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARG_TYPES_NONE, Constants.INVOKEVIRTUAL)); break;
+		case 1: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL)); break;
+		case 2: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARG_TYPES_LUAVALUE_LUAVALUE, Constants.INVOKEVIRTUAL)); break;
+		case 3: append(factory.createInvoke(STR_LUAVALUE, "call", TYPE_LUAVALUE, ARG_TYPES_LUAVALUE_LUAVALUE_LUAVALUE, Constants.INVOKEVIRTUAL)); break;
 		default: throw new IllegalArgumentException("can't call with "+nargs+" args");
 		}
 	}
 
 	public void newTailcallVarargs() {
-		append(factory.createInvoke(STR_LUAVALUE, "tailcallOf", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKESTATIC));
+		append(factory.createInvoke(STR_LUAVALUE, "tailcallOf", TYPE_VARARGS, ARG_TYPES_LUAVALUE_VARARGS, Constants.INVOKESTATIC));
 	}
 	
 	public void invoke(int nargs) {
 		switch ( nargs ) {
-		case -1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
-		case 0: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARGS_NONE, Constants.INVOKEVIRTUAL)); break;
-		case 1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
-		case 2: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
-		case 3: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, new Type[] { TYPE_LUAVALUE, TYPE_LUAVALUE, TYPE_VARARGS }, Constants.INVOKEVIRTUAL)); break;
+		case -1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARG_TYPES_VARARGS, Constants.INVOKEVIRTUAL)); break;
+		case 0: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARG_TYPES_NONE, Constants.INVOKEVIRTUAL)); break;
+		case 1: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARG_TYPES_VARARGS, Constants.INVOKEVIRTUAL)); break;
+		case 2: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARG_TYPES_LUAVALUE_VARARGS, Constants.INVOKEVIRTUAL)); break;
+		case 3: append(factory.createInvoke(STR_LUAVALUE, "invoke", TYPE_VARARGS, ARG_TYPES_LUAVALUE_LUAVALUE_VARARGS, Constants.INVOKEVIRTUAL)); break;
 		default: throw new IllegalArgumentException("can't invoke with "+nargs+" args");
 		}
 	}
@@ -568,7 +590,7 @@ public class JavaBuilder {
 		append(factory.createInvoke(protoname, "<init>", Type.VOID, Type.NO_ARGS, Constants.INVOKESPECIAL));
 		append(InstructionConstants.DUP);
 		loadEnv();
-		append(factory.createInvoke(STR_LUAVALUE, "setfenv", Type.VOID, new Type[] { TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+		append(factory.createInvoke(STR_LUAVALUE, "setfenv", Type.VOID, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void closureInitUpvalueFromUpvalue(String protoname, int newup, int upindex) {
@@ -621,11 +643,11 @@ public class JavaBuilder {
 		cg.addField(fg.getField());
 		init.append(new PUSH(cp, value));
 		init.append(factory.createInvoke(STR_LUAVALUE, "valueOf",
-				TYPE_LUAINTEGER, new Type[] { Type.INT }, Constants.INVOKESTATIC));
+				TYPE_LUAINTEGER, ARG_TYPES_INT, Constants.INVOKESTATIC));
 		init.append(factory.createPutStatic(classname, name, TYPE_LUAVALUE));
 		return name;
 	}
-
+	
 	private String createLuaDoubleField(double value) {
 		String name = PREFIX_CONSTANT+constants.size();
 		FieldGen fg = new FieldGen(Constants.ACC_STATIC | Constants.ACC_FINAL, 
@@ -633,7 +655,7 @@ public class JavaBuilder {
 		cg.addField(fg.getField());
 		init.append(new PUSH(cp, value));
 		init.append(factory.createInvoke(STR_LUAVALUE, "valueOf",
-				TYPE_LUANUMBER, new Type[] { Type.DOUBLE }, Constants.INVOKESTATIC));
+				TYPE_LUANUMBER, ARG_TYPES_DOUBLE, Constants.INVOKESTATIC));
 		init.append(factory.createPutStatic(classname, name, TYPE_LUAVALUE));			
 		return name;
 	}
@@ -647,7 +669,7 @@ public class JavaBuilder {
 		if ( ls.isValidUtf8() ) {
 			init.append(new PUSH(cp, value.tojstring()));
 			init.append(factory.createInvoke(STR_LUASTRING, "valueOf",
-					TYPE_LUASTRING, new Type[] { Type.STRING }, Constants.INVOKESTATIC));
+					TYPE_LUASTRING, ARG_TYPES_STRING, Constants.INVOKESTATIC));
 		} else {
 			char[] c = new char[ls.m_length];
 			for ( int j=0; j<ls.m_length; j++ ) 
@@ -657,7 +679,7 @@ public class JavaBuilder {
 					TYPE_CHARARRAY, Type.NO_ARGS,
 					Constants.INVOKEVIRTUAL));
 			init.append(factory.createInvoke(STR_LUASTRING, "valueOf",
-					TYPE_LUASTRING, new Type[] { TYPE_CHARARRAY },
+					TYPE_LUASTRING, ARG_TYPES_CHARARRAY,
 					Constants.INVOKESTATIC));
 		}
 		init.append(factory.createPutStatic(classname, name, TYPE_LUAVALUE));			
@@ -716,20 +738,20 @@ public class JavaBuilder {
 			}
 		}
 	}
-
+	
 	public void setlistStack(int pc, int a0, int index0, int nvals) {
 		for ( int i=0; i<nvals; i++ ) {
 			dup();
 			append(new PUSH(cp, index0+i));
 			loadLocal( pc, a0+i );
-	        append(factory.createInvoke(STR_LUAVALUE, "rawset", Type.VOID, new Type[] { Type.INT, TYPE_LUAVALUE }, Constants.INVOKEVIRTUAL));
+	        append(factory.createInvoke(STR_LUAVALUE, "rawset", Type.VOID, ARG_TYPES_INT_LUAVALUE, Constants.INVOKEVIRTUAL));
     	}
 	}
 
 	public void setlistVarargs(int index0, int vresultbase) {
 		append(new PUSH(cp, index0));
 		loadVarresult();
-		append(factory.createInvoke(STR_LUAVALUE, "rawsetlist", Type.VOID, new Type[] { Type.INT, TYPE_VARARGS }, Constants.INVOKEVIRTUAL));
+		append(factory.createInvoke(STR_LUAVALUE, "rawsetlist", Type.VOID, ARG_TYPES_INT_VARARGS, Constants.INVOKEVIRTUAL));
 	}
 
 	public void newBuffer() {
@@ -740,6 +762,6 @@ public class JavaBuilder {
 
 	public void appendBuffer() {
         append(factory.createInvoke(STR_LUAVALUE, "checkstring", TYPE_LUASTRING, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
-        append(factory.createInvoke(STR_BUFFER, "append", TYPE_BUFFER, new Type[] { TYPE_LUASTRING }, Constants.INVOKEVIRTUAL));
+        append(factory.createInvoke(STR_BUFFER, "append", TYPE_BUFFER, ARG_TYPES_LUASTRING, Constants.INVOKEVIRTUAL));
 	}
 }

@@ -21,7 +21,6 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.luaj.vm2.lua2java.Lua2Java;
@@ -33,7 +32,7 @@ import org.luaj.vm2.luajc.LuaJC;
  * Results are compared for exact match with 
  * the installed C-based lua environment. 
  */
-public class CompatibiltyTest {
+public class CompatibiltyTest extends TestSuite {
 
 	private static final String dir = "test/lua";
 	
