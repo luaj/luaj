@@ -2,9 +2,9 @@ package org.luaj.vm2;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.lib.JsePlatform;
 import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class MathLibTest extends TestCase {
 

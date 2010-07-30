@@ -5,6 +5,7 @@ import javax.microedition.midlet.MIDletStateChangeException;
 
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
+import org.luaj.vm2.lib.jme.JmePlatform;
 import org.luaj.vm2.compiler.LuaC;
 
 

@@ -6,7 +6,7 @@ import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class StringTest extends TestCase {
 

@@ -129,7 +129,7 @@ public class Luajvm1CompatibilityTest extends TestCase {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		PrintStream printStream = new PrintStream( outputStream );
 		try {
-			org.luaj.vm2.LuaTable _G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
+			org.luaj.vm2.LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 			LuaThread.getRunning().setfenv(_G);
 			LuaValue loader = new org.luaj.vm2.lib.OneArgFunction(_G) {
 				public LuaValue call(LuaValue arg) {

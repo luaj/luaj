@@ -2,7 +2,7 @@ package org.luaj.vm2;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.require.RequireSampleClassCastExcep;
 import org.luaj.vm2.require.RequireSampleLoadLuaError;
 import org.luaj.vm2.require.RequireSampleLoadRuntimeExcep;

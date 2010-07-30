@@ -58,10 +58,10 @@ public class ScriptDrivenTest extends TestCase {
 		case JSE:
 		case LUAJIT:
 		case LUA2JAVA:
-			_G = org.luaj.vm2.lib.JsePlatform.debugGlobals();
+			_G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 			break;
 		case JME:
-			_G = org.luaj.vm2.lib.JmePlatform.debugGlobals();
+			_G = org.luaj.vm2.lib.jme.JmePlatform.debugGlobals();
 			break;
 		}
 	}

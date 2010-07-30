@@ -312,8 +312,11 @@ public class DebugLib extends VarArgFunction {
 		ds.nextInfo().setargs( args, stack );
 	}
 	
-	/** Called by Closures and recursing java functions on entry 
-	 * @param calls */
+	/** Called by Closures and recursing java functions on entry
+	 * @param thread the thread for the call 
+	 * @param calls the number of calls in the call stack
+	 * @param func the function called
+	 */
 	public static void debugOnCall(LuaThread thread, int calls, LuaFunction func) {
 		DebugState ds = getDebugState();
 		if ( ds.inhook )
@@ -326,8 +329,9 @@ public class DebugLib extends VarArgFunction {
 	}
 	
 	/** Called by Closures and recursing java functions on return 
-	 * @param running_calls 
-	 * @param thread */
+	 * @param thread the thread for the call 
+	 * @param calls the number of calls in the call stack
+	 */
 	public static void debugOnReturn(LuaThread thread, int calls) {
 		DebugState ds = getDebugState(thread);
 		if ( ds.inhook )
@@ -668,7 +672,7 @@ public class DebugLib extends VarArgFunction {
 	 * Get file and line for a particular level, even if it is a java function.
 	 * 
 	 * @param level 0-based index of level to get
-	 * @return
+	 * @return String containing file and line info if available
 	 */
 	public static String fileline(int level) {
 		DebugState ds = getDebugState(LuaThread.getRunning());

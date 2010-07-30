@@ -30,7 +30,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 /** Test the plain old bytecode interpreter */
 public class TestLuaJ {

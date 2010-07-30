@@ -142,7 +142,7 @@ The following pattern is used within Java SE
 
 <pre>
 	import org.luaj.vm2.*;
-	import org.luaj.vm2.lib.*;
+	import org.luaj.vm2.lib.jse.*;
 
 	String script = "examples/lua/hello.lua";
 	LuaValue _G = JsePlatform.standardGlobals();
@@ -165,7 +165,7 @@ The for MIDlets the <em>JmePlatform</em> is used instead:
 
 <pre>
 	import org.luaj.vm2.*;
-	import org.luaj.vm2.lib.*;
+	import org.luaj.vm2.lib.jme.*;
 
 	String script = "examples/lua/hello.lua";
 	LuaValue _G = JmePlatform.standardGlobals();

@@ -91,7 +91,10 @@ public class IoLib extends OneArgFunction {
 	/**
 	 * Open a file in a particular mode. 
 	 * @param filename
-	 * @param mode
+	 * @param readMode true if opening in read mode
+	 * @param appendMode true if opening in append mode
+	 * @param updateMode true if opening in update mode
+	 * @param binaryMode true if opening in binary mode
 	 * @return File object if successful
 	 * @throws IOException if could not be opened
 	 */

@@ -32,7 +32,7 @@ import java.util.List;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.compiler.DumpState;
-import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 /**

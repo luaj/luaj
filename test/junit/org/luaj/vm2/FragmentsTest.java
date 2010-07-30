@@ -71,7 +71,7 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
+				LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {

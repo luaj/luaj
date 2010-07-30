@@ -15,7 +15,7 @@ import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.lib.JsePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 abstract public class AbstractUnitTests extends TestCase {
 

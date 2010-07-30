@@ -19,12 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  ******************************************************************************/
-package org.luaj.vm2.lib;
+package org.luaj.vm2.lib.jme;
 
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.lib.jme.JmeIoLib;
+import org.luaj.vm2.lib.BaseLib;
+import org.luaj.vm2.lib.CoroutineLib;
+import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.MathLib;
+import org.luaj.vm2.lib.OsLib;
+import org.luaj.vm2.lib.PackageLib;
+import org.luaj.vm2.lib.StringLib;
+import org.luaj.vm2.lib.TableLib;
 
 public class JmePlatform {
 

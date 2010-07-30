@@ -179,7 +179,7 @@ public class LuaOperationsTest extends TestCase {
 
 	public Prototype createPrototype( String script, String name ) {
 		try {
-			LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
+			LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 			return LuaC.instance.compile(is, name);
 		} catch (Exception e) {
@@ -195,7 +195,7 @@ public class LuaOperationsTest extends TestCase {
 		// set up suitable environments for execution
 		LuaValue aaa = LuaValue.valueOf("aaa");
 		LuaValue eee = LuaValue.valueOf("eee");
-		LuaTable _G = org.luaj.vm2.lib.JsePlatform.standardGlobals();
+		LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 		LuaTable newenv = LuaValue.tableOf( new LuaValue[] { 
 				LuaValue.valueOf("a"), LuaValue.valueOf("aaa"), 
 				LuaValue.valueOf("b"), LuaValue.valueOf("bbb"), } );
