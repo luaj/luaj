@@ -556,12 +556,12 @@ public class LuaTable extends LuaValue {
 		array[j] = a;
 	}
 	
-	/** @deprecate - count via iteration instead */
+	/** @deprecated - count via iteration instead */
 	public int keyCount() {
 		return keys().length;		
 	}
 	
-	/** @deprecate - use next() instead */
+	/** @deprecated - use next() instead */
 	public LuaValue[] keys() {
 		Vector l = new Vector();
 		LuaValue k = LuaValue.NIL;
