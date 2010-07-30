@@ -37,13 +37,13 @@ public class TestLuaJC {
 	// create the script
 	public static String name = "script";
 	public static String script =
-		"local a = 1\n"+
-		"local b\n"+
-		"function c()\n"+
-		"	b=5\n" +
-		"	return a\n"+
+		"local a = unpack()\n"+   
+		"local b = c and { d = e }\n"+
+		"local f\n"+
+		"local function g()\n"+
+		"     return f\n"+
 		"end\n"+
-		"return c(),b\n";
+		"";
 		
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);

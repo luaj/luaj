@@ -398,5 +398,14 @@ public class FragmentsTest extends TestSuite {
 					"end\n"+
 					"return c(),b\n" );			
 		}
+		
+		public void testUninitializedAroundBranch() {
+			runFragment( LuaValue.valueOf(333), 
+					"local state\n"+
+					"if _G then\n"+
+					"    state = 333\n"+
+					"end\n"+
+					"return state\n" );
+		}
 	}
 }
