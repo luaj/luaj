@@ -31,6 +31,7 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.DumpState;
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 
 /**
@@ -128,6 +129,7 @@ public class luac {
 			
 			// process input files
 			try {
+				JsePlatform.standardGlobals();
 				processing = true;
 				for ( int i=0; i<args.length; i++ ) {
 					if ( ! processing || ! args[i].startsWith("-") ) {
