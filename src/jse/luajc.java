@@ -20,7 +20,6 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,7 +30,6 @@ import java.util.Hashtable;
 import java.util.List;
 
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.compiler.DumpState;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
@@ -63,7 +61,7 @@ public class luajc {
 	private boolean verbose = false;
 	private boolean loadclasses = false;
 	private String pkgprefix = null;
-	private List<InputFile> files = new ArrayList<InputFile>();
+	private List files = new ArrayList();
 
 	public static void main( String[] args ) throws IOException {
 		new luajc( args );
@@ -72,7 +70,7 @@ public class luajc {
 	private luajc( String[] args ) throws IOException {
 		
 		// process args
-		List<String> seeds = new ArrayList<String> ();
+		List seeds = new ArrayList ();
 		
 		// get stateful args
 		for ( int i=0; i<args.length; i++ ) {
@@ -138,8 +136,8 @@ public class luajc {
 		
 		// process input files
 		JsePlatform.standardGlobals();
-		for ( InputFile inf : files )
-			processFile( inf );
+		for ( int i=0,n=files.size(); i<n; i++ )
+			processFile( (InputFile) files.get(i) );
 	}
 	
 	private void collectFiles(String path) {
@@ -230,7 +228,7 @@ public class luajc {
 	        		try {
                 		Class c = loader.loadClass(classname);
                 		if ( verbose )
-    	        			System.out.println("    loaded "+classname+" as "+c );
+    	        			System.out.println("    loaded "+classname+" as "+c.newInstance() );
 	        		} catch ( Throwable th ) {
 	        			System.out.flush();
 	        			System.err.println("    failed to load "+classname+": "+th );

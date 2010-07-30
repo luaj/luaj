@@ -62,7 +62,7 @@ public class lua2java {
 	private String encoding = "ISO8859-1";
 	private boolean recurse = false;
 	private boolean verbose = false;
-	private List<InputFile> files = new ArrayList<InputFile>();
+	private List files = new ArrayList();
 
 	public static void main( String[] args ) throws IOException {
 		new lua2java( args );
@@ -72,7 +72,7 @@ public class lua2java {
 		
 		// process args
 		try {
-			List<String> seeds = new ArrayList<String> ();
+			List seeds = new ArrayList ();
 			
 			// get stateful args
 			for ( int i=0; i<args.length; i++ ) {
@@ -141,8 +141,8 @@ public class lua2java {
 			
 			// process input files
 			JsePlatform.standardGlobals();
-			for ( InputFile inf : files )
-				processFile( inf );
+			for ( int i=0,n=files.size(); i<n; i++ )
+				processFile( (InputFile) files.get(i) );
 			
 		} catch ( Exception ioe ) {
 			System.err.println( ioe.toString() );
