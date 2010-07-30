@@ -20,16 +20,18 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
+import java.util.List;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.compiler.DumpState;
+import org.luaj.vm2.lib.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 /**
@@ -39,16 +41,16 @@ public class luajc {
 	private static final String version = Lua._VERSION + "Copyright (C) 2009 luaj.org";
 
 	private static final String usage = 
-		"usage: java -cp luaj-jse.jar,bcel-5.2.jar luajc [options] [filenames].\n" +
+		"usage: java -cp luaj-jse.jar,bcel-5.2.jar luajc [options] fileordir [, fileordir ...]\n" +
 		"Available options are:\n" +
 		"  -        process stdin\n" +
-		"  -s		source directory\n" +
-		"  -d		destination directory\n" +
+		"  -s src	source directory\n" +
+		"  -d dir	destination directory\n" +
+		"  -p pkg	package prefix to apply to all classes\n" +
 		"  -n       no debug information (strip debug)\n" +
-		"  -e       little endian format for numbers\n" +
 		"  -i<n>    number format 'n', (n=0,1 or 4, default="+DumpState.NUMBER_FORMAT_DEFAULT+")\n" +
-		"  -v       show version information\n" +
-		"  --       stop handling options\n";
+		"  -r		recursively compile all\n" +
+		"  -v   	verbose\n";
 	
 	private static void usageExit() {
 		System.out.println(usage);
@@ -58,9 +60,11 @@ public class luajc {
 	private String srcdir = null;
 	private String destdir = null;
 	private boolean stripdebug = false;
-	private boolean littleendian = false;
 	private int numberformat = DumpState.NUMBER_FORMAT_DEFAULT;
+	private boolean recurse = false;
 	private boolean verbose = false;
+	private String pkgprefix = null;
+	private List<InputFile> files = new ArrayList<InputFile>();
 
 	public static void main( String[] args ) throws IOException {
 		new luajc( args );
@@ -69,93 +73,150 @@ public class luajc {
 	private luajc( String[] args ) throws IOException {
 		
 		// process args
-		try {
-			Vector files = new Vector();
-			
-			// get stateful args
-			for ( int i=0; i<args.length; i++ ) {
-				if ( ! args[i].startsWith("-") ) {
-					files.add(args[i]);
-				} else {
-					switch ( args[i].charAt(1) ) {
-					case 's':
-						if ( ++i >= args.length )
-							usageExit();
-						srcdir = args[i];
-						break;
-					case 'd':
-						if ( ++i >= args.length )
-							usageExit();
-						destdir = args[i];
-						break;
-					case 'n':
-						stripdebug = true;
-						break;
-					case 'e':
-						littleendian = true;
-						break;
-					case 'i':
-						if ( args[i].length() <= 2 )
-							usageExit();
-						numberformat = Integer.parseInt(args[i].substring(2));
-						break;
-					case 'v':
-						verbose = true;
-						break;
-					default:
+		List<String> seeds = new ArrayList<String> ();
+		
+		// get stateful args
+		for ( int i=0; i<args.length; i++ ) {
+			if ( ! args[i].startsWith("-") ) {
+				seeds.add(args[i]);
+			} else {
+				switch ( args[i].charAt(1) ) {
+				case 's':
+					if ( ++i >= args.length )
 						usageExit();
-						break;
-					}
+					srcdir = args[i];
+					break;
+				case 'd':
+					if ( ++i >= args.length )
+						usageExit();
+					destdir = args[i];
+					break;
+				case 'n':
+					stripdebug = true;
+					break;
+				case 'i':
+					if ( args[i].length() <= 2 )
+						usageExit();
+					numberformat = Integer.parseInt(args[i].substring(2));
+					break;
+				case 'p':
+					if ( ++i >= args.length )
+						usageExit();
+					pkgprefix = args[i];
+					break;
+				case 'r':
+					recurse = true;
+					break;
+				case 'v':
+					verbose = true;
+					break;
+				default:
+					usageExit();
+					break;
 				}
 			}
-			
-			// echo version
-			if ( verbose ) {
-				System.out.println(version);
-				System.out.println("srcdir: "+srcdir);
-				System.out.println("destdir: "+srcdir);
-				System.out.println("stripdebug: "+stripdebug);
-				System.out.println("littleendian: "+littleendian);
-				System.out.println("numberformat: "+numberformat);
-				System.out.println("files: "+files);
-			}
+		}
+		
+		// echo version
+		if ( verbose ) {
+			System.out.println(version);
+			System.out.println("srcdir: "+srcdir);
+			System.out.println("destdir: "+srcdir);
+			System.out.println("stripdebug: "+stripdebug);
+			System.out.println("numberformat: "+numberformat);
+			System.out.println("files: "+seeds);
+			System.out.println("recurse: "+recurse);
+		}
 
-			// process input files
-			for ( int i=0; i<files.size(); i++ ) {
-				String filename = (String) files.elementAt(i);
-				int index = filename.lastIndexOf('.');
-				if ( index < 0 )
-					usageExit();
-				String chunkname = filename.substring(0,index);
-				String sourcepath = srcdir!=null? srcdir+"/"+filename: filename;
-				if ( verbose )
-					System.out.println("filename="+filename+" chunkname="+filename+" sourcepath="+sourcepath);
-				InputStream is = new FileInputStream( sourcepath );
-				processScript( is, chunkname, filename );
-			}
-			
-		} catch ( IOException ioe ) {
-			System.err.println( ioe.toString() );
-			System.exit(-2);
+		// need at least one seed
+		if ( seeds.size() <= 0 ) {
+			System.err.println(usage);
+			System.exit(-1);
+		}
+
+		// collect up files to process
+		for ( int i=0; i<seeds.size(); i++ )
+			collectFiles( srcdir+"/"+seeds.get(i) );
+		
+		// check for at least one file
+		if ( files.size() <= 0 ) {
+			System.err.println("no files found in "+seeds);
+			System.exit(-1);
+		}
+		
+		// process input files
+		JsePlatform.standardGlobals();
+		for ( InputFile inf : files )
+			processFile( inf );
+	}
+	
+	private void collectFiles(String path) {
+		File f = new File(path);
+		if ( f.isDirectory() && recurse )
+			scandir(f,pkgprefix);
+		else if ( f.isFile() ) {
+			File dir = f.getAbsoluteFile().getParentFile();
+			if ( dir != null )
+				scanfile( dir, f, pkgprefix );
+		}
+	}
+	private void scandir(File dir, String javapackage) {
+		File[] f = dir.listFiles();
+		for ( int i=0; i<f.length; i++ ) 
+			scanfile( dir, f[i], javapackage );
+	}
+
+	private void scanfile(File dir, File f, String javapackage) {
+		if ( f.exists() ) {
+			if ( f.isDirectory() && recurse )
+				scandir( f, (javapackage!=null? javapackage+"."+f.getName(): f.getName()) );
+			else if ( f.isFile() && f.getName().endsWith(".lua") )
+				files.add( new InputFile(dir,f,javapackage) );
+		}
+	}
+
+	class InputFile {
+		public String luachunkname;
+		public String srcfilename;
+		public File infile;
+		public File outdir;
+		public String javapackage;
+		
+		public InputFile(File dir, File f, String javapackage) {
+			this.infile = f;
+			String subdir = javapackage!=null? javapackage.replace('.', '/'): null;
+			String outdirpath = subdir!=null? destdir+"/"+subdir: destdir;
+			this.javapackage = javapackage;
+			this.srcfilename = (subdir!=null? subdir+"/": "")+infile.getName();
+			this.luachunkname = (subdir!=null? subdir+"/": "")+infile.getName().substring( 0, infile.getName().lastIndexOf('.') );
+			this.infile = f;
+			this.outdir = new File(outdirpath);
 		}
 	}
 	
-	private void processScript( InputStream script, String chunkname, String filename) throws IOException {
+	
+	private void processFile( InputFile inf ) {
+		inf.outdir.mkdirs();
 		try {
-	        // create the chunk
-			Hashtable t = LuaJC.getInstance().compileAll(script, chunkname, filename);
+			if ( verbose ) 
+				System.out.println("chunk="+inf.luachunkname+" srcfile="+inf.srcfilename);
 
+	        // create the chunk
+			FileInputStream fis = new FileInputStream( inf.infile );
+			Hashtable t = LuaJC.getInstance().compileAll(fis, inf.luachunkname, inf.srcfilename);
+			fis.close();
+			
 	        // write out the chunk
         	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
         		String key = (String) e.nextElement();
         		byte[] bytes = (byte[]) t.get(key);
+        		if ( key.indexOf('/')>=0 ) {
+        			String d = (destdir!=null? destdir+"/": "")+key.substring(0,key.lastIndexOf('/'));
+        			new File(d).mkdirs();
+        		}
         		String destpath = (destdir!=null? destdir+"/": "") + key + ".class";
     			if ( verbose )
-    				System.out.println( 
-    						"chunk "+chunkname+
-    						" from "+filename+
-    						" written to "+destpath
-    						+" length="+bytes.length+" bytes");
+    				System.out.println( "  "+destpath +" ("+bytes.length+" bytes)");
 	        	FileOutputStream fos = new FileOutputStream( destpath );
 	        	fos.write( bytes );
 	        	fos.close();
@@ -163,8 +224,6 @@ public class luajc {
 	        
 		} catch ( Throwable t ) {
 			t.printStackTrace( System.err );
-		} finally {
-			script.close();
 		}
 	}
 }

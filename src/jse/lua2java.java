@@ -118,7 +118,7 @@ public class lua2java {
 				System.out.println(version);
 				System.out.println("srcdir: "+srcdir);
 				System.out.println("destdir: "+destdir);
-				System.out.println("files: "+files);
+				System.out.println("files: "+seeds);
 				System.out.println("encoding: "+encoding);
 				System.out.println("recurse: "+recurse);
 			}

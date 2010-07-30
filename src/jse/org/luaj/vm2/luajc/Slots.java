@@ -317,6 +317,8 @@ public class Slots {
 	}
 
 	private boolean propogatebranch(int src, int dest) {
+		if ( dest >= slots.length )
+			return false;
 		boolean hadchanges = false;
 		byte[] s = slots[src];
 		byte[] d = slots[dest];
