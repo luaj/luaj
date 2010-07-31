@@ -35,11 +35,13 @@ Freely available under the terms of the
 &middot;
 <a href="#4">libraries</a>
 &middot;
-<a href="#5">building</a>
+<a href="#5">luaj api</a>
 &middot;
-<a href="#6">downloads</a>
+<a href="#6">building</a>
 &middot;
-<a href="#7">release notes</a>
+<a href="#7">downloads</a>
+&middot;
+<a href="#8">release notes</a>
 
 <!-- ====================================================================== -->
 <p>
@@ -389,7 +391,110 @@ The Java ME platform does not include this library, and it cannot be made to wor
 <p>
 The <em>lua</em> connand line tool includes <em>luajava</em>. 
 
-<h1>5 - <a name="5">Building and Testing</a></h1>
+<h1>5 - <a name="5">LuaJ API</a></h1>
+
+<h2>API Javadoc</h2>
+The distribution now contains javadoc for the main classes in the LuaJ API.
+<pre>
+	 <a href="docs/api/index.html">docs/api/index.html</a>
+</pre>
+
+<h2>LuaValue and Varargs</h2>
+All lua value manipulation is now organized around 
+<a href="docs/api/org/luaj/vm2/LuaValue.html">LuaValue</a>
+which exposes the majority of interfaces used for lua computation.  
+<pre>
+	 <a href="docs/api/org/luaj/vm2/LuaValue.html">org.luaj.vm2.LuaValue</a>
+</pre>
+
+<h3>Common Functions</h3>
+<em>LuaValue</em> exposes functions for each of the operations in LuaJ.  
+Some commonly used functions and constants include:
+<pre>
+	call();               // invoke the function with no arguments
+	call(LuaValue arg1);  // call the function with 1 argument
+	invoke(Varargs arg);  // call the function with variable arguments, variable return values
+	get(int index);       // get a table entry using an integer key
+	get(LuaValue key);    // get a table entry using an arbitrary key, may be a LuaInteger
+	rawget(int index);    // raw get without metatable calls
+	valueOf(int i);       // return LuaValue corresponding to an integer
+	valueOf(String s);    // return LuaValue corresponding to a String
+	toint();              // return value as a Java int
+	tojstring();          // return value as a Java String
+	isnil();              // is the value nil
+	NIL;                  // the value nil
+	NONE;                 // a Varargs instance with no values	 
+</pre>
+
+<h2>Varargs</h2>
+The interface <a href="docs/api/org/luaj/vm2/Varargs.html">Varargs</a> provides an abstraction for 
+both a variable argument list and multiple return values.  
+For convenience, <em>LuaValue</em> implements <em>Varargs</em> so a single value can be supplied anywhere 
+variable arguments are expected.      
+<pre>
+	 <a href="docs/api/org/luaj/vm2/Varargs.html">org.luaj.vm2.Varargs</a>
+</pre>
+
+<h3>Common Functions</h3>
+<em>Varargs</em> exposes functions for accessing elements, and coercing them to specific types:
+<pre>
+	narg();                 // return number of arguments
+	arg1();                 // return the first argument
+	arg(int n);             // return the nth argument
+	isnil(int n);           // true if the nth argument is nil
+	checktable(int n);      // return table or throw error
+	optlong(int n,long d);  // return n if a long, d if no argument, or error if not a long
+</pre>
+ 
+See the <a href="docs/api/org/luaj/vm2/Varargs.html">Varargs</a> API for a complete list.
+ 
+<h2>LibFunction</h2>
+The simplest way to implement a function is to choose a base class based on the number of arguments to the function.
+LuaJ provides 5 base classes for this purpose, depending if the function has 0, 1, 2, 3 or variable arguments, 
+and if it provide multiple return values.   
+<pre>
+	 <a href="docs/api/org/luaj/vm2/lib/ZeroArgFunction.html">org.luaj.vm2.lib.ZeroArgFunction</a>
+	 <a href="docs/api/org/luaj/vm2/lib/OneArgFunction.html">org.luaj.vm2.lib.OneArgFunction</a>
+	 <a href="docs/api/org/luaj/vm2/lib/TwoArgFunction.html">org.luaj.vm2.lib.TwoArgFunction</a>
+	 <a href="docs/api/org/luaj/vm2/lib/ThreeArgFunction.html">org.luaj.vm2.lib.ThreeArgFunction</a>
+	 <a href="docs/api/org/luaj/vm2/lib/VarArgFunction.html">org.luaj.vm2.lib.VarArgFunction</a>
+</pre>
+
+Each of these functions has an abstract method that must be implemented, 
+and argument fixup is done automatically by the classes as each Java function is invoked.
+
+<p>
+For example, to implement a &quot;hello, world&quot; function, we could supply:
+<pre>
+	pubic class hello extends ZeroArgFunction {
+		public LuaValue call() {
+			env.get("print").call(valueOf("hello, world"));
+		}
+	}
+</pre>
+
+The value <em>env</em> is the environment of the function, and is normally supplied 
+by the instantiating object whenever default loading is used. 
+
+<p>
+Calling this function from lua could be done by:
+<pre> 
+	require( 'hello' )()
+</pre>
+
+while calling this function from Java would look like:
+<pre> 
+	new hello().call();
+</pre>
+
+Note that in both the lua and Java case, extra arguments will be ignored, and the function will be called.  
+Also, no virtual machine instance is necessary to call the function. 
+To allow for arguments, or return multiple values, extend one of the other base classes. 
+ 
+<h2>Closures</h2>
+Closures still exist in this framework, but are optional, and are only used to implement lua bytecode execution.  
+
+<h1>6 - <a name="6">Building and Testing</a></h1>
 
 <h2>Building the jars</h2>
 An ant file is included in the root directory which builds the libraries by default.
@@ -424,7 +529,7 @@ A build script for running unit tests and producing code coverage statistics is 
 
 It relies on the cobertura code coverage library.
 
-<h1>6 - <a name="6">Downloads</a></h1>
+<h1>7 - <a name="7">Downloads</a></h1>
 
 <h2>Downloads and Project Pages</h2>
 Downloads for version 1.0.3 are currently hosted on SourceForge.  
@@ -442,7 +547,7 @@ and LuaForge:
 	<a href="http://luaforge.net/frs/?group_id=457">LuaForge Luaj Project Area</a>
 </pre>
 
-<h1>7 - <a name="7">Release Notes</a></h1>
+<h1>8 - <a name="8">Release Notes</a></h1>
 
 <h2>Main Changes by Version</h2>
 <table cellspacing="10"><tr><td><table cellspacing="4">
