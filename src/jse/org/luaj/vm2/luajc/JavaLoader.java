@@ -67,7 +67,7 @@ public class JavaLoader extends ClassLoader {
 	}
 
 	public Class findClass(String classname) throws ClassNotFoundException {
-		byte[] bytes = unloaded.get(classname);
+		byte[] bytes = (byte[]) unloaded.get(classname);
 		if ( bytes != null )
 			return defineClass(classname, bytes, 0, bytes.length);
 		return super.findClass(classname);

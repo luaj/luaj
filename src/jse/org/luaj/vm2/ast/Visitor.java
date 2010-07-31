@@ -23,6 +23,8 @@ package org.luaj.vm2.ast;
 
 import java.util.List;
 
+import org.luaj.vm2.ast.Exp.VarExp;
+
 abstract public class Visitor {
 	public void visit(Chunk chunk) { 
 		chunk.block.accept(this); 
@@ -30,8 +32,8 @@ abstract public class Visitor {
 	public void visit(Block block) {
 		visit(block.scope);
 		if ( block.stats != null )
-			for ( Stat s: block.stats )
-				s.accept(this);
+			for ( int i=0, n=block.stats.size(); i<n; i++ )
+				((Stat)block.stats.get(i)).accept(this);
 	};
 	public void visit(Stat.Assign stat) {
 		visitVars(stat.vars);
@@ -56,8 +58,8 @@ abstract public class Visitor {
 		stat.ifblock.accept(this);
 		if ( stat.elseifblocks != null ) 
 			for ( int i=0, n=stat.elseifblocks.size(); i<n; i++ ) {
-				stat.elseifexps.get(i).accept(this);
-				stat.elseifblocks.get(i).accept(this);
+				((Exp)stat.elseifexps.get(i)).accept(this);
+				((Block)stat.elseifblocks.get(i)).accept(this);
 			}
 		if ( stat.elseblock != null )
 			visit( stat.elseblock );
@@ -147,23 +149,23 @@ abstract public class Visitor {
 	}
 	public void visit(TableConstructor table) {
 		if( table.fields != null)
-			for ( TableField f: table.fields )
-				f.accept(this);
+			for ( int i=0, n=table.fields.size(); i<n; i++ )
+				((TableField)table.fields.get(i)).accept(this);
 	}
-	public void visitVars(List<Exp.VarExp> vars) {
+	public void visitVars(List<VarExp> vars) {
 		if ( vars != null )
-			for ( Exp.VarExp v: vars )
-				v.accept(this);
+			for ( int i=0, n=vars.size(); i<n; i++ )
+				((Exp.VarExp)vars.get(i)).accept(this);
 	}
 	public void visitExps(List<Exp> exps) {
 		if ( exps != null )
-			for ( Exp e: exps )
-				e.accept(this);
+			for ( int i=0, n=exps.size(); i<n; i++ )
+				((Exp)exps.get(i)).accept(this);
 	}
 	public void visitNames(List<Name> names) {
 		if ( names != null )
-			for ( Name n: names )
-				visit(n);
+			for ( int i=0, n=names.size(); i<n; i++ )
+				visit((Name) names.get(i));
 	}
 	public void visit(Name name) {
 	}

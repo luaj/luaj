@@ -61,51 +61,64 @@
 	</target>
 		
 	<target name="compile" depends="wtk-or-fail,bcel-lib">
-		<mkdir dir="build/core/src"/>
-		<mkdir dir="build/core/classes"/>
+		<delete dir="build/jme/src"/>
+		<delete dir="build/jse/src"/>
+		<mkdir dir="build/jme/src"/>
+		<mkdir dir="build/jse/src"/>
 		<mkdir dir="build/jme/classes"/>
 		<mkdir dir="build/jse/classes"/>
-		<copy todir="build/core/src">
-			<fileset dir="src/core">
-				<include name="**/Lua.java"/>
-			</fileset>
+		<copy todir="build/jme/src">
+			<fileset dir="src/core"/>
+			<fileset dir="src/jme"/>
 			<filterchain>
-				<tokenfilter>
-			  	    <replacestring from='"Luaj 0.0"' to='"Luaj ${version}"'/>
-				</tokenfilter>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jme ${version}"'/></tokenfilter>
 			</filterchain>
 		</copy>
-		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
-			srcdir="src/core"/>
-		<javac destdir="build/core/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
-			classpath="build/core/classes"
-			srcdir="build/core/src"
-			excludes="**/Lua.java"/>
+		<copy todir="build/jse/src">
+			<fileset dir="src/core"/>
+			<filterchain>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jme ${version}"'/></tokenfilter>
+			</filterchain>
+		</copy>
+		<copy todir="build/jse/src">
+			<fileset dir="src/jse"/>
+			<filterchain>
+				<tokenfilter><replacestring from='&lt;String&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Stat&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Exp&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Name&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Block&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;TableField&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;VarExp&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Exp.VarExp&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Object,String&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Double,String&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Integer,Integer&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Exp,Integer&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;String,byte[]&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;String,Variable&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;LuaValue,String&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;LuaString,String&gt;' to=''/></tokenfilter>
+			</filterchain>
+		</copy>
 		<javac destdir="build/jme/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
-			classpath="build/core/classes"
-			srcdir="src/jme"/>
+			srcdir="build/jme/src"/>
+		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
+			classpath="lib/bcel-5.2.jar"
+			srcdir="build/jse/src"
+			excludes="**/script/*,**/Lua2Java*"/>
 		<javac destdir="build/jse/classes" encoding="utf-8" source="1.5" target="1.5"
-			classpath="build/core/classes;lib/bcel-5.2.jar"
+			classpath="build/jse/classes"
 			srcdir="src/jse"
-			excludes="**/antlr/**,**/lst/**,**/JavaCodeGenerator.java,**/LuaJCompiler.java" />
+			includes="**/script/*,**/Lua2Java*"/>
 	</target>
 	
 	<target name="jar-jme" depends="compile">
-		<jar destfile="${jar.name.jme}">
-			<fileset dir="build/core/classes"/>
-			<fileset dir="build/jme/classes"/>
-		</jar>
+		<jar destfile="${jar.name.jme}" basedir="build/jme/classes"/>
 	</target>
 	
 	<target name="jar-jse" depends="compile">
-		<jar destfile="${jar.name.jse}">
-			<fileset dir="build/core/classes"/>
-			<fileset dir="build/jme/classes"/>
-			<fileset dir="build/jse/classes"/>
-		    <fileset dir="src/jse/">
-				<include name="META-INF/**"/>
-		    </fileset>		
-		</jar>
+		<jar destfile="${jar.name.jse}" basedir="build/jse/classes"/>
 	</target>
 
 	<target name="doc">

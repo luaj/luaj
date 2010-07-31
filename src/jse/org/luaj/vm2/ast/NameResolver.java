@@ -81,8 +81,10 @@ public class NameResolver extends Visitor {
 	
 	public void visit(Assign stat) {
 		super.visit(stat);
-		for ( VarExp v : stat.vars )
+		for ( int i=0, n=stat.vars.size(); i<n; i++ ) {
+			VarExp v = (VarExp) stat.vars.get(i);
 			v.markHasAssignment();
+		}
 	}
 
 	public void visit(LocalAssign stat) {
@@ -90,13 +92,13 @@ public class NameResolver extends Visitor {
 		defineLocalVars( stat.names );
 		int n = stat.names.size();
 		int m = stat.values!=null? stat.values.size(): 0;
-		boolean isvarlist = m>0 && m<n && stat.values.get(m-1).isvarargexp();
+		boolean isvarlist = m>0 && m<n && ((Exp)stat.values.get(m-1)).isvarargexp();
 		for ( int i=0; i<n && i<(isvarlist?m-1:m); i++ )
 			if ( stat.values.get(i) instanceof Constant )
-				stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
+				((Name)stat.names.get(i)).variable.initialValue = ((Constant) stat.values.get(i)).value;
 		if ( !isvarlist )
 			for ( int i=m; i<n; i++ )
-				stat.names.get(i).variable.initialValue = LuaValue.NIL;
+				((Name)stat.names.get(i)).variable.initialValue = LuaValue.NIL;
 	}
 
 	public void visit(ParList pars) {
@@ -108,8 +110,8 @@ public class NameResolver extends Visitor {
 	}
 	
 	protected void defineLocalVars(List<Name> names) {
-		for ( Name n : names ) 
-			defineLocalVar(n);
+		for ( int i=0, n=names.size(); i<n; i++ )
+			defineLocalVar((Name) names.get(i));
 	}
 
 	protected void defineLocalVar(Name name) {

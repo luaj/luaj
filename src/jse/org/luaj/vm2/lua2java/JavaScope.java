@@ -66,10 +66,12 @@ public class JavaScope extends NameScope {
 	static {
 		for ( int i=0; i<specials.length; i++ )
 			SPECIALS.add(specials[i]);
-		for ( java.lang.reflect.Field f : LibFunction.class.getFields() )
-			SPECIALS.add(f.getName());
-		for ( java.lang.reflect.Method m : LibFunction.class.getMethods() )
-			SPECIALS.add(m.getName());
+		java.lang.reflect.Field[] fields = LibFunction.class.getFields();
+		for ( int i=0, n=fields.length; i<n; i++ )
+			SPECIALS.add(fields[i].getName());
+		java.lang.reflect.Method[] methods = LibFunction.class.getMethods();
+		for ( int i=0, n=methods.length; i<n; i++ )
+			SPECIALS.add(methods[i].getName());
 	}
 
 	public int nreturns;
@@ -100,7 +102,7 @@ public class JavaScope extends NameScope {
 	final String getJavaName(Variable nv) {
 		for ( JavaScope s = this; s != null; s = (JavaScope) s.outerScope )
 			if ( s.astele2javaname.containsKey(nv) )
-				return s.astele2javaname.get(nv);
+				return (String) s.astele2javaname.get(nv);
 		return allocateJavaName( nv, nv.name );
 	}
 

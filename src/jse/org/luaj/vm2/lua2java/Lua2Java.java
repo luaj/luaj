@@ -82,14 +82,12 @@ public class Lua2Java implements LuaCompiler {
 				writer.close();
 					
 				// set up output location 
-				Iterable<? extends File> dest = Arrays.asList(new File[] { new File(binDirRoot) });
 				StandardJavaFileManager fm = compiler.getStandardFileManager( null, null, null);
-				fm.setLocation(StandardLocation.CLASS_OUTPUT, dest);
+				fm.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(new File[] { new File(binDirRoot) }));
 				
 				// compile the file
-				Iterable<? extends JavaFileObject> compilationUnits = fm.getJavaFileObjects(source);
-				CompilationTask task = compiler.getTask(null, fm, null, null, null, compilationUnits);
-				boolean success = task.call();
+				CompilationTask task = compiler.getTask(null, fm, null, null, null, fm.getJavaFileObjects(source));
+				boolean success = task.call().booleanValue();
 
 				// instantiate, config and return
 				if (success) {

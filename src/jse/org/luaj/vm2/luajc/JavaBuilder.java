@@ -247,7 +247,7 @@ public class JavaBuilder {
 		} else {
 			// fixed arg function between 0 and 3 arguments
 			for ( slot=0; slot<p.numparams; slot++ ) {
-				this.plainSlotVars.put( slot, 1+slot );
+				this.plainSlotVars.put( Integer.valueOf(slot), Integer.valueOf(1+slot) );
 				if ( slots.isUpvalueCreate(-1, slot) ) {
 					append(new ALOAD(1+slot));
 					storeLocal(-1, slot);
@@ -320,12 +320,13 @@ public class JavaBuilder {
 	private Map<Integer,Integer> plainSlotVars = new HashMap<Integer,Integer>();
 	private Map<Integer,Integer> upvalueSlotVars = new HashMap<Integer,Integer>();
 	private int findSlot( int slot, Map<Integer,Integer> map, String prefix, Type type ) {
-		if ( map.containsKey(slot) )
-			return map.get(slot);
+		Integer islot = Integer.valueOf(slot);
+		if ( map.containsKey(islot) )
+			return ((Integer)map.get(islot)).intValue();
 		String name = prefix+slot;
 		LocalVariableGen local = mg.addLocalVariable(name, type, null, null);
 		int index = local.getIndex();
-		map.put(slot, index);
+		map.put(islot, Integer.valueOf(index));
 		return index;
 	}
 	private int findSlotIndex( int slot, boolean isupvalue ) {
@@ -620,7 +621,7 @@ public class JavaBuilder {
 			break;
 		case LuaValue.TNUMBER:
 		case LuaValue.TSTRING:
-			String name = constants.get(value);
+			String name = (String) constants.get(value);
 			if ( name == null ) {
 				name = value.type() == LuaValue.TNUMBER? 
 						value.isinttype()? 

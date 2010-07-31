@@ -351,7 +351,7 @@ public class LuajavaLib extends VarArgFunction {
 			consCache.put( clazz, cache = new HashMap() );
 		
 		// look up in the cache
-		Constructor c = (Constructor) cache.get( paramssig );
+		Constructor c = (Constructor) cache.get( Long.valueOf(paramssig) );
 		if ( c != null )
 			return c;
 
@@ -378,7 +378,7 @@ public class LuajavaLib extends VarArgFunction {
 		
 		// put into cache
 		c = cons[besti];
-		cache.put( paramssig, c );
+		cache.put( Long.valueOf(paramssig), c );
 		return c;
 	}
 	
@@ -393,7 +393,7 @@ public class LuajavaLib extends VarArgFunction {
 			nameCache.put( methodName, cache = new HashMap() );
 		
 		// look up in the cache
-		Method m = (Method) cache.get( paramssig );
+		Method m = (Method) cache.get( Long.valueOf(paramssig) );
 		if ( m != null )
 			return m;
 
@@ -431,7 +431,7 @@ public class LuajavaLib extends VarArgFunction {
 		
 		// put into cache
 		m = (Method) list.get(besti);
-		cache.put( paramssig, m );
+		cache.put( Long.valueOf(paramssig), m );
 		return m;
 	}
 	

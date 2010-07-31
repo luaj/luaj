@@ -23,7 +23,7 @@ package org.luaj.vm2.ast;
 
 import java.util.List;
 
-import org.luaj.vm2.ast.Exp.NameExp;
+import org.luaj.vm2.ast.Exp.VarExp;
 
 abstract
 public class Stat {
@@ -49,7 +49,7 @@ public class Stat {
 		return new Return(exps);
 	}
 
-	public static Stat assignment(List<Exp.VarExp> vars, List<Exp> exps) {
+	public static Stat assignment(List<VarExp> vars, List<Exp> exps) {
 		return new Assign(vars,exps);
 	}
 
@@ -82,10 +82,10 @@ public class Stat {
 	}
 
 	public static class Assign extends Stat {
-		public final List<Exp.VarExp> vars;
+		public final List<VarExp> vars;
 		public final List<Exp> exps;
 		
-		public Assign(List<Exp.VarExp> vars, List<Exp> exps) {
+		public Assign(List<VarExp> vars, List<Exp> exps) {
 			this.vars = vars;
 			this.exps = exps;
 		}
@@ -138,7 +138,7 @@ public class Stat {
 		
 		public int nreturns() {
 			int n = values!=null? values.size(): 0;
-			if ( n>0 && values.get(n-1).isvarargexp() )
+			if ( n>0 && ((Exp)values.get(n-1)).isvarargexp() )
 				n = -1;
 			return n;		
 		}
