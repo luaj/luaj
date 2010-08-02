@@ -125,7 +125,7 @@ public class Slots {
 				
 			case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
 				while ( a<=b )
-					s[a++] |= BIT_ASSIGN;
+					s[a++] |= BIT_ASSIGN | BIT_NIL;
 				break;
 				
 			case Lua.OP_GETTABLE: /*	A B C	R(A):= R(B)[RK(C)]				*/
@@ -445,9 +445,13 @@ public class Slots {
 	}
 
 	private int prevUndefined(int index, int j) {
-		for ( ; index>=0; --index )
-			if ( ((slots[index][j] & BIT_INVALID) != 0) )
+		for ( ; index>=0; --index ) {
+			int s = slots[index][j];
+			if ( ((s & BIT_INVALID) != 0) )
 				return index;
+			else if ( ((s & BIT_NIL) != 0) )
+				return index-1;
+		}
 		return index;
 	}
 

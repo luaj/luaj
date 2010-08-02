@@ -407,5 +407,16 @@ public class FragmentsTest extends TestSuite {
 					"end\n"+
 					"return state\n" );
 		}
+		
+		public void testLoadedNilUpvalue() {
+			runFragment( LuaValue.NIL, 
+					"local a = print()\n"+   
+					"local b = c and { d = e }\n"+
+					"local f\n"+
+					"local function g()\n"+
+					"	return f\n"+
+					"end\n" +
+					"return g()\n" );
+		}
 	}
 }
