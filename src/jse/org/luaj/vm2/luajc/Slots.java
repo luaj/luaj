@@ -170,7 +170,7 @@ public class Slots {
                 break;
                 
 			case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
-				if ( sbx < 0 )
+				//if ( sbx < 0 )
 					branchdest[index+1+sbx] = true;
 				ins = p.code[index+0+sbx]; 
 				if ( Lua.GET_OPCODE(ins) == Lua.OP_TFORLOOP ) {
