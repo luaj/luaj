@@ -227,8 +227,9 @@ public class luajc {
                 	String classname = key.replace('/', '.');
 	        		try {
                 		Class c = loader.loadClass(classname);
+                		Object o = c.newInstance();
                 		if ( verbose )
-    	        			System.out.println("    loaded "+classname+" as "+c.newInstance() );
+    	        			System.out.println("    loaded "+classname+" as "+o );
 	        		} catch ( Throwable th ) {
 	        			System.out.flush();
 	        			System.err.println("    failed to load "+classname+": "+th );
