@@ -139,9 +139,9 @@ public class JavaBuilder {
 	private static final String NAME_VARRESULT      = "v";
 	
 	// basic info
+	private final ProtoInfo pi;
 	private final Prototype p;
 	private final String classname;
-	private final Slots slots;
 	
 	// bcel variables
 	private final ClassGen cg;
@@ -166,10 +166,10 @@ public class JavaBuilder {
 	// hold vararg result
 	private LocalVariableGen varresult = null;
 	
-	public JavaBuilder(Prototype p, String classname, String filename) {
-		this.p = p;
+	public JavaBuilder(ProtoInfo pi, String classname, String filename) {
+		this.pi = pi;
+		this.p = pi.prototype;
 		this.classname = classname;
-		this.slots = new Slots(p);
 		
 		// what class to inherit from
 		superclassType = p.numparams;
@@ -224,7 +224,7 @@ public class JavaBuilder {
 		int slot = 0;
 		if ( superclassType == SUPERTYPE_VARARGS ) {
 			for ( slot=0; slot<p.numparams; slot++ ) {
-				if ( slots.isInitialValueUsed(slot) ) {
+				if ( pi.isInitialValueUsed(slot) ) {
 					append(new ALOAD(1));
 					append(new PUSH(cp, slot+1));
 					append(factory.createInvoke(STR_VARARGS, "arg", TYPE_LUAVALUE, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
@@ -248,7 +248,7 @@ public class JavaBuilder {
 			// fixed arg function between 0 and 3 arguments
 			for ( slot=0; slot<p.numparams; slot++ ) {
 				this.plainSlotVars.put( Integer.valueOf(slot), Integer.valueOf(1+slot) );
-				if ( slots.isUpvalueCreate(-1, slot) ) {
+				if ( pi.isUpvalueCreate(-1, slot) ) {
 					append(new ALOAD(1+slot));
 					storeLocal(-1, slot);
 				}
@@ -257,7 +257,7 @@ public class JavaBuilder {
 		
 		// nil parameters 
 		for ( ; slot<p.maxstacksize; slot++ ) {
-			if ( slots.isInitialValueUsed(slot) ) {
+			if ( pi.isInitialValueUsed(slot) ) {
 				loadNil();
 				storeLocal(-1, slot);
 			}
@@ -336,7 +336,7 @@ public class JavaBuilder {
 	}
 
 	public void loadLocal(int pc, int slot) {
-		boolean isupval = slots.isUpvalueRefer(pc, slot);
+		boolean isupval = pi.isUpvalueRefer(pc, slot);
 		int index = findSlotIndex( slot, isupval );
 		append(new ALOAD(index));
 		if (isupval) {
@@ -346,10 +346,10 @@ public class JavaBuilder {
 	}
 
 	public void storeLocal(int pc, int slot) {
-		boolean isupval = slots.isUpvalueAssign(pc, slot);
+		boolean isupval = pi.isUpvalueAssign(pc, slot);
 		int index = findSlotIndex( slot, isupval );
 		if (isupval) {
-			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
+			boolean isupcreate = pi.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
 				append(factory.createInvoke(classname, "newupe", TYPE_LOCALUPVALUE, ARG_TYPES_NONE, Constants.INVOKESTATIC));
 				append(InstructionConstants.DUP);
@@ -369,7 +369,7 @@ public class JavaBuilder {
 	public void createUpvalues(int pc, int firstslot, int numslots) {
 		for ( int i=0; i<numslots; i++ ) {
 			int slot = firstslot + i;
-			boolean isupcreate = slots.isUpvalueCreate(pc, slot);
+			boolean isupcreate = pi.isUpvalueCreate(pc, slot);
 			if ( isupcreate ) {
 				int index = findSlotIndex( slot, true );
 				append(factory.createInvoke(classname, "newupn", TYPE_LOCALUPVALUE, ARG_TYPES_NONE, Constants.INVOKESTATIC));
@@ -379,7 +379,7 @@ public class JavaBuilder {
 	}
 
 	public void convertToUpvalue(int pc, int slot) {
-		boolean isupassign = slots.isUpvalueAssign(pc, slot);
+		boolean isupassign = pi.isUpvalueAssign(pc, slot);
 		if ( isupassign ) {
 			int index = findSlotIndex( slot, false );
 			append(new ALOAD(index));

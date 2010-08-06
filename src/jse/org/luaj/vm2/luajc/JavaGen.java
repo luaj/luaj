@@ -36,18 +36,26 @@ public class JavaGen {
 	public JavaGen[] inners;
 	
 	public JavaGen( Prototype p, String classname, String filename ) {
+		this( new ProtoInfo(p,classname), classname, filename );
+	}
+	
+	private JavaGen( ProtoInfo pi, String classname, String filename ) {
 		this.classname = classname;
 		
 		// build this class
-		JavaBuilder builder = new JavaBuilder(p, classname, filename);
-		scanInstructions(p, classname, builder);
+		JavaBuilder builder = new JavaBuilder(pi, classname, filename);
+		scanInstructions(pi.prototype, classname, builder);
 		this.bytecode = builder.completeClass();
 		
 		// build sub-prototypes
-		int n = p.p.length;
-		inners = new JavaGen[n];
-		for ( int i=0; i<n; i++ )
-			inners[i] = new JavaGen(p.p[i], closureName(classname,i), filename);
+		if ( pi.subprotos != null ) {
+			int n = pi.subprotos.length;
+			inners = new JavaGen[n];
+			for ( int i=0; i<n; i++ )
+				inners[i] = new JavaGen(pi.subprotos[i], closureName(classname,i), filename);
+		} else {
+			inners = null;
+		}
 	}
 
 	private String closureName(String classname, int subprotoindex) {
