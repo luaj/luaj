@@ -161,19 +161,19 @@ public class ProtoInfo {
 				for ( ; a<=b; a++ )
 					v[a][pc] = new VarInfo(a,pc);
 				break;
-			case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
 			case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/			
 				a = Lua.GETARG_A( ins );
 				b = Lua.GETARG_B( ins );
-				for ( int j=0; j<b; j++, a++ )
+				for ( int j=1; j<b; j++, a++ )
 					v[a][pc] = new VarInfo(a,pc);
-				for ( ; a<m; a++ )
-					v[a][pc] = VarInfo.INVALID;
+				if ( b == 0 ) 
+					for ( ; a<m; a++ )
+						v[a][pc] = VarInfo.INVALID;
 				break;
 			case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
 				a = Lua.GETARG_A( ins );
 				c = Lua.GETARG_C( ins );
-				for ( int j=0; j<c; j++, a++ )
+				for ( int j=0; j<=c-2; j++, a++ )
 					v[a][pc] = new VarInfo(a,pc);
 				for ( ; a<m; a++ )
 					v[a][pc] = VarInfo.INVALID;
@@ -297,18 +297,23 @@ public class ProtoInfo {
 	public boolean isUpvalueAssign(int pc, int slot) {
 		if ( pc < 0 ) pc = 0;
 		VarInfo v = vars[slot][pc];
-		return v.upvalue != null && v.upvalue.rw;
+//		return v.upvalue != null && v.upvalue.rw;
+		return v != null && v.upvalue != null;
 	}
 
 	public boolean isUpvalueCreate(int pc, int slot) {
+		if ( pc < 0 ) pc = 0;
 		VarInfo v = vars[slot][pc];
-		return v.upvalue != null && v.upvalue.rw && v.allocupvalue && pc == v.pc;
+//		return v.upvalue != null && v.upvalue.rw && v.allocupvalue && pc == v.pc;
+		return v != null && v.upvalue != null && v.allocupvalue && pc == v.pc;
 	}
 
 	public boolean isUpvalueRefer(int pc, int slot) {
 		// TODO: when it is a CALL
+		if ( pc < 0 ) pc = 0;
 		VarInfo v = vars[slot][pc];
-		return v.upvalue != null && v.upvalue.rw;
+//		return v.upvalue != null && v.upvalue.rw;
+		return v != null && v.upvalue != null;
 	}
 
 	public boolean isInitialValueUsed(int slot) {

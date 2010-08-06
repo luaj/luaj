@@ -128,6 +128,9 @@ public class BasicBlock {
 			case Lua.OP_LOADBOOL:
 				if ( Lua.GETARG_C(ins) == 0 )
 					break;
+				if ( Lua.GET_OPCODE(code[i+1]) == Lua.OP_JMP  )
+					throw new IllegalArgumentException("OP_LOADBOOL followed by jump at "+i); 
+				break;
 			case Lua.OP_EQ:
 			case Lua.OP_LT:
 			case Lua.OP_LE:

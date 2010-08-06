@@ -65,7 +65,7 @@ public class LuaJC implements LuaCompiler {
 	
 	private void insert(Hashtable h, JavaGen gen) {
 		h.put(gen.classname, gen.bytecode);
-		for ( int i=0; i<gen.inners.length; i++ )
+		for ( int i=0, n=gen.inners!=null? gen.inners.length: 0; i<n; i++ )
 			insert(h, gen.inners[i]);
 	}
 

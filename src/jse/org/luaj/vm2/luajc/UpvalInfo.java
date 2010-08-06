@@ -60,6 +60,13 @@ public class UpvalInfo {
 		
 		// check for previous assignment
 		loop: while ( true ) {
+			// invalid values terminate search
+			if ( v == VarInfo.INVALID )
+				return;
+			// nil values also terminate (TODO: mark as unintialized upvalue)
+			if ( v.pc == -1 )
+				return;
+			
 			BasicBlock b = pi.blocks[v.pc];
 			if ( v.upvalue == this ) {
 				// loop detected, include previous values
@@ -75,10 +82,6 @@ public class UpvalInfo {
 			if ( v.upvalue != null ) 
 				throw new IllegalArgumentException("upvalue collision detected between "+v.upvalue+" and "+this);
 
-			// invalid values terminate search
-			if ( v == VarInfo.INVALID )
-				return;
-			
 			// assign the variable
 			v.upvalue = this;
 			this.includeVar(v);
