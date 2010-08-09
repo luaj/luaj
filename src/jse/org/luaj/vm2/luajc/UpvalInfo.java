@@ -77,10 +77,6 @@ public class UpvalInfo {
 				return;
 			}
 
-			// check for assignment to 2 upvalues at once
-			if ( v.upvalue != null ) 
-				throw new IllegalArgumentException("upvalue collision detected between "+v.upvalue+" and "+this);
-
 			// assign the variable
 			v.upvalue = this;
 			this.includeVar(v);
