@@ -63,13 +63,12 @@ public class UpvalInfo {
 			// invalid values terminate search
 			if ( v == VarInfo.INVALID )
 				return;
-			// nil values also terminate (TODO: mark as unintialized upvalue)
-			if ( v.pc == -1 )
-				return;
+
+			// basic block for nil values is initial block
+			BasicBlock b = pi.blocks[v.pc<0? 0: v.pc];
 			
-			BasicBlock b = pi.blocks[v.pc];
+			// look for loops
 			if ( v.upvalue == this ) {
-				// loop detected, include previous values
 				for ( int i=0, n=b.ninputs[slot]; i<n; i++ ) {
 					v = b.inputs[slot][i];
 					if ( v.upvalue != this )
@@ -77,7 +76,7 @@ public class UpvalInfo {
 				}
 				return;
 			}
-			
+
 			// check for assignment to 2 upvalues at once
 			if ( v.upvalue != null ) 
 				throw new IllegalArgumentException("upvalue collision detected between "+v.upvalue+" and "+this);
@@ -86,6 +85,10 @@ public class UpvalInfo {
 			v.upvalue = this;
 			this.includeVar(v);
 
+			// nil values also terminate
+			if ( v.pc == -1 )
+				return;
+			
 			// find next variable within the basic block
 			for ( int i=v.pc; i<=b.pc1; i++ ) {
 				if ( pi.vars[slot][i] != v ) {
@@ -102,6 +105,8 @@ public class UpvalInfo {
 	}
 	
 	private boolean testIsAllocUpvalue(VarInfo v) {
+		if ( v.pc < 0 )
+			return true;
 		BasicBlock b = pi.blocks[v.pc];
 		if ( v.pc > b.pc0 )
 			return pi.vars[slot][v.pc-1].upvalue != this;

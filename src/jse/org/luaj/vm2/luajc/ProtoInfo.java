@@ -18,6 +18,7 @@ public class ProtoInfo {
 	public final BasicBlock[] blocks;     // basic block analysis of code branching
 	public final BasicBlock[] blocklist;  // blocks in breadhth-first order
 	public final VarInfo[][] vars;        // Each variable
+	public final VarInfo[] params;        // Parameters and initial values of stack variables
 	public final UpvalInfo[] upvals;      // from outer scope
 	public final UpvalInfo[][] openups;   // per slot, upvalues allocated by this prototype
 
@@ -35,6 +36,15 @@ public class ProtoInfo {
 		// find basic blocks
 		this.blocks = BasicBlock.findBasicBlocks(p);
 		this.blocklist = BasicBlock.sortDepthFirst(blocks);
+
+		
+		// params are inputs to first block
+		this.params = new VarInfo[p.maxstacksize];
+		for ( int slot=0; slot<p.maxstacksize; slot++ ) {
+			VarInfo v = VarInfo.PARAM(slot);
+			params[slot] = v;
+			this.blocklist[0].mergeSlotInput(slot, v);
+		}
 		
 		// find variables and block inputs
 		this.vars = findVariables();
@@ -295,23 +305,20 @@ public class ProtoInfo {
 	}
 
 	public boolean isUpvalueAssign(int pc, int slot) {
-		if ( pc < 0 ) pc = 0;
-		VarInfo v = vars[slot][pc];
+		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 //		return v.upvalue != null && v.upvalue.rw;
 		return v != null && v.upvalue != null;
 	}
 
 	public boolean isUpvalueCreate(int pc, int slot) {
-		if ( pc < 0 ) pc = 0;
-		VarInfo v = vars[slot][pc];
+		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 //		return v.upvalue != null && v.upvalue.rw && v.allocupvalue && pc == v.pc;
 		return v != null && v.upvalue != null && v.allocupvalue && pc == v.pc;
 	}
 
 	public boolean isUpvalueRefer(int pc, int slot) {
 		// TODO: when it is a CALL
-		if ( pc < 0 ) pc = 0;
-		VarInfo v = vars[slot][pc];
+		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 //		return v.upvalue != null && v.upvalue.rw;
 		return v != null && v.upvalue != null;
 	}
