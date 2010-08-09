@@ -3,9 +3,15 @@ package org.luaj.vm2.luajc;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
+import org.luaj.vm2.TailcallVarargs;
+import org.luaj.vm2.UpValue;
 
 /**
  * Prototype information for static single-assignment analysis
@@ -17,8 +23,8 @@ public class ProtoInfo {
 	public final ProtoInfo[] subprotos;   // one per enclosed prototype, or null
 	public final BasicBlock[] blocks;     // basic block analysis of code branching
 	public final BasicBlock[] blocklist;  // blocks in breadhth-first order
-	public final VarInfo[][] vars;        // Each variable
 	public final VarInfo[] params;        // Parameters and initial values of stack variables
+	public final VarInfo[][] vars;        // Each variable
 	public final UpvalInfo[] upvals;      // from outer scope
 	public final UpvalInfo[][] openups;   // per slot, upvalues allocated by this prototype
 
@@ -46,9 +52,9 @@ public class ProtoInfo {
 			this.blocklist[0].mergeSlotInput(slot, v);
 		}
 		
-		// find variables and block inputs
+		// find variables
 		this.vars = findVariables();
-		findBasicBlockInputs();
+		replaceTrivialPhiVariables();
 
 		// find upvalues, create sub-prototypes
 		this.openups = new UpvalInfo[p.maxstacksize][];
@@ -121,154 +127,275 @@ public class ProtoInfo {
 			v[i] = new VarInfo[n];		
 		
 		// process instructions
-		for ( int pc=0; pc<n; pc++ ) {
+		for ( int bi=0; bi<blocklist.length; bi++ ) {
+			BasicBlock b0 = blocklist[bi];
 			
-			// propogate previous value except at block boundaries
-			if ( pc>0 && blocks[pc].pc0 != pc )
-				for ( int j=0; j<m; j++ )
-					v[j][pc] = v[j][pc-1];
+			// input from previous blocks
+			int nprev = b0.prev!=null? b0.prev.length: 0;
+			for ( int slot=0; slot<m; slot++ ) {
+				VarInfo var = null;
+				if ( nprev == 0 ) 
+					var = params[slot];
+				else if ( nprev == 1 )
+					var = v[slot][b0.prev[0].pc1];
+				else {
+					for ( int i=0; i<nprev; i++ ) {
+						BasicBlock bp = b0.prev[i];
+						if ( v[slot][bp.pc1] == VarInfo.INVALID )
+							var = VarInfo.INVALID;
+					}
+					if ( var == null )
+						var = VarInfo.PHI(this, slot, b0.pc0);
+				}
+				v[slot][b0.pc0] = var;
+			}
+
+			// process instructions for this basic block
+			for ( int pc=b0.pc0; pc<=b0.pc1; pc++ ) {
 			
-			// account for assignments and invalidations
-			int a,b,c;
-			int ins = prototype.code[pc];
-			switch ( Lua.GET_OPCODE( ins ) ) {
-			case Lua.OP_MOVE:/*	A B	R(A) := R(B)					*/				
-			case Lua.OP_LOADK:/*	A Bx	R(A) := Kst(Bx)					*/
-			case Lua.OP_LOADBOOL:/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
-			case Lua.OP_GETUPVAL: /*	A B	R(A) := UpValue[B]				*/
-			case Lua.OP_GETGLOBAL: /*	A Bx	R(A) := Gbl[Kst(Bx)]				*/
-			case Lua.OP_GETTABLE: /*	A B C	R(A) := R(B)[RK(C)]				*/
-			case Lua.OP_NEWTABLE: /*	A B C	R(A) := {} (size = B,C)				*/
-			case Lua.OP_ADD: /*	A B C	R(A) := RK(B) + RK(C)				*/
-			case Lua.OP_SUB: /*	A B C	R(A) := RK(B) - RK(C)				*/
-			case Lua.OP_MUL: /*	A B C	R(A) := RK(B) * RK(C)				*/
-			case Lua.OP_DIV: /*	A B C	R(A) := RK(B) / RK(C)				*/
-			case Lua.OP_MOD: /*	A B C	R(A) := RK(B) % RK(C)				*/
-			case Lua.OP_POW: /*	A B C	R(A) := RK(B) ^ RK(C)				*/
-			case Lua.OP_UNM: /*	A B	R(A) := -R(B)					*/
-			case Lua.OP_NOT: /*	A B	R(A) := not R(B)				*/
-			case Lua.OP_LEN: /*	A B	R(A) := length of R(B)				*/
-			case Lua.OP_CONCAT: /*	A B C	R(A) := R(B).. ... ..R(C)			*/
-			case Lua.OP_TESTSET: /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
-			case Lua.OP_FORPREP: /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
-				a = Lua.GETARG_A( ins );
-				v[a][pc] = new VarInfo(a,pc);
-				break;
-			case Lua.OP_SELF: /*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
-				a = Lua.GETARG_A( ins );
-				v[a][pc] = new VarInfo(a,pc);
-				v[a+1][pc] = new VarInfo(a+1,pc);
-				break;
-			case Lua.OP_FORLOOP: /*	A sBx	R(A)+=R(A+2);
-				if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }*/
-				a = Lua.GETARG_A( ins );
-				v[a][pc] = new VarInfo(a,pc);
-				v[a+3][pc] = new VarInfo(a+1,pc);
-				break;
-			case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(B) := nil			*/
-				a = Lua.GETARG_A( ins );
-				b = Lua.GETARG_B( ins );
-				for ( ; a<=b; a++ )
-					v[a][pc] = new VarInfo(a,pc);
-				break;
-			case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/			
-				a = Lua.GETARG_A( ins );
-				b = Lua.GETARG_B( ins );
-				for ( int j=1; j<b; j++, a++ )
-					v[a][pc] = new VarInfo(a,pc);
-				if ( b == 0 ) 
-					for ( ; a<m; a++ )
-						v[a][pc] = VarInfo.INVALID;
-				break;
-			case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
-				a = Lua.GETARG_A( ins );
-				c = Lua.GETARG_C( ins );
-				for ( int j=0; j<=c-2; j++, a++ )
-					v[a][pc] = new VarInfo(a,pc);
-				for ( ; a<m; a++ )
-					v[a][pc] = VarInfo.INVALID;
-				break;
-			case Lua.OP_TFORLOOP: /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
-			                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
-				a = Lua.GETARG_A( ins );
-				c = Lua.GETARG_C( ins );
-				a += 3;
-				for ( int j=0; j<c; j++, a++ )
-					v[a][pc] = new VarInfo(a,pc);
-				for ( ; a<m; a++ )
-					v[a][pc] = VarInfo.INVALID;
-				break;
-			case Lua.OP_CLOSURE: /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
-				a = Lua.GETARG_A( ins );
-				b = Lua.GETARG_Bx( ins );
-				v[a][pc] = new VarInfo(a,pc);
-				for ( int k=prototype.p[b].nups; --k>=0; ) {
-					++pc;
+				// propogate previous for all but block boundaries
+				if ( pc>b0.pc0 )
 					for ( int j=0; j<m; j++ )
 						v[j][pc] = v[j][pc-1];
+				
+				int a,b,c,nups;
+				int ins = prototype.code[pc];
+				int op = Lua.GET_OPCODE(ins);
+	
+				// account for assignments, references and invalidations
+				switch ( op ) {
+				case Lua.OP_LOADK:/*	A Bx	R(A) := Kst(Bx)					*/
+				case Lua.OP_LOADBOOL:/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
+				case Lua.OP_GETUPVAL: /*	A B	R(A) := UpValue[B]				*/
+				case Lua.OP_GETGLOBAL: /*	A Bx	R(A) := Gbl[Kst(Bx)]				*/
+				case Lua.OP_NEWTABLE: /*	A B C	R(A) := {} (size = B,C)				*/
+					a = Lua.GETARG_A( ins );
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+				
+				case Lua.OP_MOVE:/*	A B	R(A) := R(B)					*/				
+				case Lua.OP_UNM: /*	A B	R(A) := -R(B)					*/
+				case Lua.OP_NOT: /*	A B	R(A) := not R(B)				*/
+				case Lua.OP_LEN: /*	A B	R(A) := length of R(B)				*/
+				case Lua.OP_TESTSET: /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					v[b][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_ADD: /*	A B C	R(A) := RK(B) + RK(C)				*/
+				case Lua.OP_SUB: /*	A B C	R(A) := RK(B) - RK(C)				*/
+				case Lua.OP_MUL: /*	A B C	R(A) := RK(B) * RK(C)				*/
+				case Lua.OP_DIV: /*	A B C	R(A) := RK(B) / RK(C)				*/
+				case Lua.OP_MOD: /*	A B C	R(A) := RK(B) % RK(C)				*/
+				case Lua.OP_POW: /*	A B C	R(A) := RK(B) ^ RK(C)				*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					if (!Lua.ISK(b)) v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_SETTABLE: /*	A B C	R(A)[RK(B)]:= RK(C)				*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					v[a][pc].isreferenced = true;
+					if (!Lua.ISK(b)) v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					break;
+					
+				case Lua.OP_CONCAT: /*	A B C	R(A) := R(B).. ... ..R(C)			*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					for ( ; b<=c; b++ )
+						v[b][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_FORPREP: /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
+					a = Lua.GETARG_A( ins );
+					v[a+2][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_GETTABLE: /*	A B C	R(A) := R(B)[RK(C)]				*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_SELF: /*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					v[a+1][pc] = new VarInfo(a+1,pc);
+					break;
+					
+				case Lua.OP_FORLOOP: /*	A sBx	R(A)+=R(A+2);
+					if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }*/
+					a = Lua.GETARG_A( ins );
+					v[a+2][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					v[a+3][pc] = new VarInfo(a+1,pc);
+					v[a][pc].isreferenced = true;
+					v[a+1][pc].isreferenced = true;
+					break;
+					
+				case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(B) := nil			*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					for ( ; a<=b; a++ )
+						v[a][pc] = new VarInfo(a,pc);
+					break;
+					
+				case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/			
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					for ( int j=1; j<b; j++, a++ )
+						v[a][pc] = new VarInfo(a,pc);
+					if ( b == 0 ) 
+						for ( ; a<m; a++ )
+							v[a][pc] = VarInfo.INVALID;
+					break;
+					
+				case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					v[a][pc].isreferenced = true;
+					v[a][pc].isreferenced = true;
+					for ( int i=1; i<=b-1; i++ )
+						v[a+i][pc].isreferenced = true;
+					for ( int j=0; j<=c-2; j++, a++ )
+						v[a][pc] = new VarInfo(a,pc);
+					for ( ; a<m; a++ )
+						v[a][pc] = VarInfo.INVALID;
+					break;
+					
+				case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					v[a][pc].isreferenced = true;
+					for ( int i=1; i<=b-1; i++ )
+						v[a+i][pc].isreferenced = true;
+					break;
+					
+				case Lua.OP_RETURN: /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					for ( int i=0; i<=b-2; i++ )
+						v[a+i][pc].isreferenced = true;
+					break;
+					
+				case Lua.OP_TFORLOOP: /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
+				                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
+					a = Lua.GETARG_A( ins );
+					c = Lua.GETARG_C( ins );
+					v[a++][pc].isreferenced = true;
+					v[a++][pc].isreferenced = true;
+					v[a++][pc].isreferenced = true;
+					for ( int j=0; j<c; j++, a++ )
+						v[a][pc] = new VarInfo(a,pc);
+					for ( ; a<m; a++ )
+						v[a][pc] = VarInfo.INVALID;
+					break;
+					
+				case Lua.OP_CLOSURE: /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_Bx( ins );
+					nups = prototype.p[b].nups;
+					for ( int k=1; k<=nups; ++k ) {
+						int i = prototype.code[pc+k];
+						if ( (i&4) == 0 ) {
+							b = Lua.GETARG_B(i);
+							v[b][pc].isreferenced = true;
+						}
+					}
+					v[a][pc] = new VarInfo(a,pc);
+					for ( int k=1; k<=nups; ++k ) {
+						for ( int j=0; j<m; j++ )
+							v[j][pc+k] = v[j][pc];
+					}
+					pc += nups;
+					break;
+				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
+					a = Lua.GETARG_A( ins );
+					for ( ; a<m; a++ )
+						v[a][pc] = VarInfo.INVALID;
+					break;
+	
+				case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
+					a = Lua.GETARG_A( ins );
+					b = Lua.GETARG_B( ins );
+					v[a][pc].isreferenced = true;
+					for ( int i=1; i<=b; i++ )
+						v[a+i][pc].isreferenced = true;
+					break;
+					
+				case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
+				case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
+				case Lua.OP_TEST: /*	A C	if not (R(A) <=> C) then pc++			*/ 
+					a = Lua.GETARG_A( ins );
+					v[a][pc].isreferenced = true;
+					break;
+
+				case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
+				case Lua.OP_LT: /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
+				case Lua.OP_LE: /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
+					if (!Lua.ISK(b)) v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					break;
+
+				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
+					break;
+	
+				default:
+					throw new IllegalStateException("unhandled opcode: "+ins);
 				}
-				break;
-			case Lua.OP_CLOSE:
-				a = Lua.GETARG_A( ins );
-				for ( ; a<m; a++ )
-					v[a][pc] = VarInfo.INVALID;
-				break;
 			}
-		}
+		}			
 		return v;
 	}
 
-	private void findBasicBlockInputs() {
-		
-		for ( boolean changed=true; changed; ) {
-			changed = false;
-			
-			// send inputs to next stage
-			for ( int i=0; i<blocklist.length; i++ ) {
-				BasicBlock b0 = blocklist[i];
-				for ( int k=0, n=b0.next!=null? b0.next.length: 0; k<n; k++ ) {
-					BasicBlock b1 = b0.next[k];
-					for ( int slot=0; slot<prototype.maxstacksize; slot++ ) {
-						VarInfo v = vars[slot][b0.pc1];
-						if ( v != null ) {
-							if ( b1.mergeSlotInput(slot, v) ) {
-								if ( vars[slot][b1.pc0] == null )
-									if ( b1.ninputs[slot] == 2 || v == VarInfo.INVALID )
-										createInputVar( b1, slot );
-								changed = true;
-							}
-						}
-					}
-				}
+	private void replaceTrivialPhiVariables() {		
+		for ( int i=0; i<blocklist.length; i++ ) {
+			BasicBlock b0 = blocklist[i];
+			for ( int slot=0; slot<prototype.maxstacksize; slot++ ) {
+				VarInfo vold = vars[slot][b0.pc1];
+				VarInfo vnew = vold.resolvePhiVariableValues();
+				if ( vnew != null )
+					substituteVariable( slot, vold, vnew );
 			}
-			
-			// propogate up to one more variable per slot
-			if ( ! changed ) {
-				eachslot: for ( int slot=0; slot<prototype.maxstacksize; slot++ ) {
-					for ( int i=0; i<blocklist.length; i++ ) {
-						BasicBlock b0 = blocklist[i];
-						if ( vars[slot][b0.pc0] == null ) {
-							createInputVar( b0, slot );
-							changed = true;
-							continue eachslot;
-						}
-					}
-				}
-			}
+		}
+	}					
+	
+	private void substituteVariable(int slot, VarInfo vold, VarInfo vnew) {
+		for ( int i=0, n=prototype.code.length; i<n; i++ )
+			replaceAll( vars[slot], vars[slot].length, vold, vnew );
+		for ( int i=0; i<blocklist.length; i++ ) {
+			BasicBlock b = blocklist[i];
+			replaceAll( b.inputs[slot], b.ninputs[slot], vold, vnew );
 		}
 	}
 
-	private void createInputVar(BasicBlock b, int slot) {
-		int n = b.ninputs[slot];
-		VarInfo v = 
-			n==-1? VarInfo.INVALID: 
-			n==0? VarInfo.NIL(slot): 
-			n==1? b.inputs[slot][0]: 
-				VarInfo.PHI(slot,b.pc0);
-		for ( int pc=b.pc0; pc<=b.pc1 && vars[slot][pc] == null; ++pc )
-			vars[slot][pc] = v;
+	private void replaceAll(VarInfo[] v, int n, VarInfo vold, VarInfo vnew) {
+		for ( int i=0; i<n; i++ )
+			if ( v[i] == vold )
+				v[i] = vnew;
 	}
-	
+
 	private void findUpvalues() {
 		int[] code = prototype.code;
 		int n = code.length;
@@ -317,13 +444,23 @@ public class ProtoInfo {
 	}
 
 	public boolean isUpvalueRefer(int pc, int slot) {
-		// TODO: when it is a CALL
+		// special case for opcodes where overlap between refer and assign
+		if ( pc >= 0 ) {
+			switch ( Lua.GET_OPCODE(prototype.code[pc]) ) {
+			case Lua.OP_CLOSURE:
+			case Lua.OP_CALL:
+			case Lua.OP_TFORLOOP:
+				pc -= 1;
+				break;
+			}
+		}
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 //		return v.upvalue != null && v.upvalue.rw;
 		return v != null && v.upvalue != null;
 	}
 
 	public boolean isInitialValueUsed(int slot) {
-		return true;
+		VarInfo v = params[slot];
+		return v.isreferenced;
 	}
 }
