@@ -453,5 +453,21 @@ public class FragmentsTest extends TestSuite {
 					"end\n" +
 					"return c()\n" );
 		}
+		
+		public void testNestedUpvalues() {
+			runFragment( LuaValue.varargsOf( new LuaValue[] { LuaValue.valueOf(5), LuaValue.valueOf(8), LuaValue.valueOf(9) } ),
+					"local x = 3\n"+
+					"local y = 5\n"+	   
+					"local function f()\n"+
+					"   return y\n"+
+					"end\n"+
+					"local function g(x1, y1)\n"+
+					"   x = x1\n"+
+					"   y = y1\n" +
+					"	return x,y\n"+
+					"end\n"+
+					"return f(), g(8,9)\n"+
+					"\n" );
+		}
 	}
 }
