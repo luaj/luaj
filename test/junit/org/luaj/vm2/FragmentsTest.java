@@ -418,5 +418,17 @@ public class FragmentsTest extends TestSuite {
 					"end\n" +
 					"return g()\n" );
 		}
+		
+		public void testUpvalueInFirstSlot() {
+			runFragment( LuaValue.valueOf("foo"), 
+					"local p = {'foo'}\n"+
+					"bar = function()\n"+
+					"	return p \n"+
+					"end\n"+
+					"for i,key in ipairs(p) do\n"+
+					"	print()\n"+
+					"end\n" +
+					"return bar()[1]");
+		}
 	}
 }
