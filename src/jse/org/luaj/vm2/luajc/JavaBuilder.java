@@ -198,7 +198,7 @@ public class JavaBuilder {
 		// create the fields
 		for ( int i=0; i<p.nups; i++ ) {
 			boolean isrw = pi.isReadWriteUpvalue( pi.upvals[i] ); 
-			Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
+			Type uptype = isrw? (Type) TYPE_LOCALUPVALUE: (Type) TYPE_LUAVALUE;
 			FieldGen fg = new FieldGen(0, uptype, upvalueName(i), cp);
 			cg.addField(fg.getField());
 		}
@@ -610,7 +610,7 @@ public class JavaBuilder {
 
 	public void closureInitUpvalueFromUpvalue(String protoname, int newup, int upindex) {
 		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
-		Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
+		Type uptype = isrw? (Type) TYPE_LOCALUPVALUE: (Type) TYPE_LUAVALUE;
 		String srcname = upvalueName(upindex);
 		String destname = upvalueName(newup);
 		append(InstructionConstants.THIS);
@@ -620,7 +620,7 @@ public class JavaBuilder {
 
 	public void closureInitUpvalueFromLocal(String protoname, int newup, int pc, int srcslot) {
 		boolean isrw = pi.isReadWriteUpvalue( pi.vars[srcslot][pc].upvalue ); 
-		Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
+		Type uptype = isrw? (Type) TYPE_LOCALUPVALUE: (Type) TYPE_LUAVALUE;
 		String destname = upvalueName(newup);
 		int index = findSlotIndex( srcslot, isrw );
 		append(new ALOAD(index));

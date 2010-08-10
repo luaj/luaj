@@ -22,7 +22,7 @@ public class ProtoInfo {
 	public final Prototype prototype;     // the prototype that this info is about
 	public final ProtoInfo[] subprotos;   // one per enclosed prototype, or null
 	public final BasicBlock[] blocks;     // basic block analysis of code branching
-	public final BasicBlock[] blocklist;  // blocks in breadhth-first order
+	public final BasicBlock[] blocklist;  // blocks in breadth-first order
 	public final VarInfo[] params;        // Parameters and initial values of stack variables
 	public final VarInfo[][] vars;        // Each variable
 	public final UpvalInfo[] upvals;      // from outer scope
@@ -49,7 +49,6 @@ public class ProtoInfo {
 		for ( int slot=0; slot<p.maxstacksize; slot++ ) {
 			VarInfo v = VarInfo.PARAM(slot);
 			params[slot] = v;
-			this.blocklist[0].mergeSlotInput(slot, v);
 		}
 		
 		// find variables
@@ -74,17 +73,13 @@ public class ProtoInfo {
 		// basic blocks
 		for ( int i=0; i<blocklist.length; i++ ) {
 			sb.append( "  block "+blocklist[i].toString() );
-			sb.append( "\n" );
+			appendOpenUps( sb, -1 );
 			
 			// instructions
 			for ( int pc=blocklist[i].pc0; pc<=blocklist[i].pc1; pc++ ) {
 
 				// open upvalue storage
-				for ( int j=0; j<prototype.maxstacksize; j++ ) {
-					if ( vars[j][pc].pc == pc && vars[j][pc].allocupvalue ) {
-						sb.append( "    open: "+vars[j][pc].upvalue+"\n" );
-					}
-				}
+				appendOpenUps( sb, pc );
 				
 				// opcode
 				sb.append( "     " );
@@ -115,6 +110,15 @@ public class ProtoInfo {
 		}
 		
 		return sb.toString();
+	}
+
+	private void appendOpenUps(StringBuffer sb, int pc) {
+		for ( int j=0; j<prototype.maxstacksize; j++ ) {
+			VarInfo v = (pc<0? params[j]: vars[j][pc]);
+			if ( v.pc == pc && v.allocupvalue ) {
+				sb.append( "    open: "+v.upvalue+"\n" );
+			}
+		}
 	}
 
 	private VarInfo[][] findVariables() {
@@ -385,10 +389,6 @@ public class ProtoInfo {
 	private void substituteVariable(int slot, VarInfo vold, VarInfo vnew) {
 		for ( int i=0, n=prototype.code.length; i<n; i++ )
 			replaceAll( vars[slot], vars[slot].length, vold, vnew );
-		for ( int i=0; i<blocklist.length; i++ ) {
-			BasicBlock b = blocklist[i];
-			replaceAll( b.inputs[slot], b.ninputs[slot], vold, vnew );
-		}
 	}
 
 	private void replaceAll(VarInfo[] v, int n, VarInfo vold, VarInfo vnew) {
@@ -429,7 +429,11 @@ public class ProtoInfo {
 			openups[slot] = new UpvalInfo[prototype.code.length];
 		if ( openups[slot][pc] != null )
 			return openups[slot][pc];
-		return new UpvalInfo(this, pc, slot);
+		UpvalInfo u = new UpvalInfo(this, pc, slot);
+		for ( int i=0, n=prototype.code.length; i<n; ++i )
+			if ( vars[slot][i] != null && vars[slot][i].upvalue == u )
+				openups[slot][i] = u;
+		return u;
 	}
 
 	public boolean isUpvalueAssign(int pc, int slot) {

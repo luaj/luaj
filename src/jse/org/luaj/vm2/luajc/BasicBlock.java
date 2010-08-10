@@ -14,13 +14,8 @@ public class BasicBlock {
 	BasicBlock[] prev;  // previous basic blocks (0-n of these)
 	BasicBlock[] next;  // next basic blocks (0, 1, or 2 of these)
 	
-	short[] ninputs;    // number of input values per slot, >0 means is phi variable
-	VarInfo[][] inputs;   // variables for each input, -1=closed/undefined, 1,2...=revisionof that variable
-	
 	public BasicBlock(Prototype p, int pc0) {
 		this.pc0 = this.pc1 = pc0;
-		this.ninputs = new short[p.maxstacksize];
-		this.inputs = new VarInfo[p.maxstacksize][];
 	}
 	
 	public String toString() {
@@ -28,18 +23,7 @@ public class BasicBlock {
 		sb.append( (pc0+1)+"-"+(pc1+1)
 				+(prev!=null? "  prv: "+str(prev,1): "")
 				+(next!=null? "  nxt: "+str(next,0): "")
-				+"\n " );
-		for ( int i=0; i<ninputs.length; i++ ) {
-			if ( ninputs[i] < 0 )
-				sb.append( "     x " );
-			else if ( ninputs[i] == 0 )
-				sb.append( "     - " );
-			else {
-				sb.append( "    "+inputs[i][0] );
-				for ( int j=1; j<ninputs[i]; j++ )
-					sb.append(","+inputs[i][j]);
-			}
-		}
+				+"\n" );
 		return sb.toString();
 	}
 	
@@ -121,7 +105,6 @@ public class BasicBlock {
 		int sbx,j;
 		int[] code = p.code;
 		int n = code.length;
-		boolean[] branchdests = new boolean[n];
 		for ( int i=0; i<n; i++ ) {
 			int ins = code[i];
 			switch ( Lua.GET_OPCODE( ins ) ) {
@@ -160,41 +143,6 @@ public class BasicBlock {
 			if ( i+1<n && visitor.isbeg[i+1] )
 				visitor.visitBranch( i, i+1 );
 		}
-	}
-
-	public boolean mergeSlotInput(int slot, VarInfo v) {
-		int n = ninputs[slot];
-		if ( n == -1 )
-			return false;
-		if ( v == VarInfo.INVALID) {
-			ninputs[slot] = -1;
-			inputs[slot] = null;
-			return true;
-		} 
-		if ( n == 0 ) {
-			ninputs[slot] = 1;
-			inputs[slot] = new VarInfo[] { v };
-			return true;
-		}
-		for ( int i=0; i<n; i++ )
-			if ( inputs[slot][i] == v )
-				return false;
-		if ( n+1 > inputs[slot].length ) {
-			VarInfo[] s = inputs[slot];
-			inputs[slot] = new VarInfo[(n+1)*2];
-			System.arraycopy(s, 0, inputs[slot], 0, n);
-		}
-		inputs[slot][n] = v;
-		ninputs[slot]++;
-		return true;
-	}
-	
-	boolean includesVar(int slot, VarInfo v) {
-		int n = ninputs[slot];
-		for ( int i=0; i<n; i++ )
-			if ( inputs[slot][i] == v )
-				return true;
-		return false;
 	}
 
 	public static BasicBlock[] sortDepthFirst(BasicBlock[] blocks) {

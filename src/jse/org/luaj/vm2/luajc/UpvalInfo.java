@@ -69,9 +69,9 @@ public class UpvalInfo {
 			
 			// look for loops
 			if ( v.upvalue == this ) {
-				for ( int i=0, n=b.ninputs[slot]; i<n; i++ ) {
-					v = b.inputs[slot][i];
-					if ( v.upvalue != this )
+				for ( int i=0, n=b.prev!=null? b.prev.length: 0; i<n; i++ ) {
+					v = pi.vars[slot][b.prev[i].pc1];
+					if ( v != null && v.upvalue != this )
 						includeVars(v);
 				}
 				return;
@@ -80,7 +80,7 @@ public class UpvalInfo {
 			// assign the variable
 			v.upvalue = this;
 			this.includeVar(v);
-
+			
 			// nil values also terminate
 			if ( v.pc == -1 )
 				return;
@@ -106,11 +106,17 @@ public class UpvalInfo {
 		BasicBlock b = pi.blocks[v.pc];
 		if ( v.pc > b.pc0 )
 			return pi.vars[slot][v.pc-1].upvalue != this;
-		if ( b.ninputs[slot] <= 0 )
-			return true;
-		for ( int k=0, n=b.ninputs[slot]; k<n; k++ )
-			if ( b.inputs[slot][k].upvalue != this )
+		if ( b.prev == null ) {
+			v = pi.params[slot];
+			if ( v != null && v.upvalue != this )
 				return true;
+		} else {
+			for ( int i=0, n=b.prev.length; i<n; i++ ) {
+				v = pi.vars[slot][b.prev[i].pc1];
+				if ( v != null && v.upvalue != this )
+					return true;
+			}
+		}
 		return false;
 	}
 
