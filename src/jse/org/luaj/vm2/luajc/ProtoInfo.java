@@ -434,14 +434,12 @@ public class ProtoInfo {
 
 	public boolean isUpvalueAssign(int pc, int slot) {
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
-//		return v.upvalue != null && v.upvalue.rw;
-		return v != null && v.upvalue != null;
+		return v != null && v.upvalue != null && v.upvalue.rw;
 	}
 
 	public boolean isUpvalueCreate(int pc, int slot) {
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
-//		return v.upvalue != null && v.upvalue.rw && v.allocupvalue && pc == v.pc;
-		return v != null && v.upvalue != null && v.allocupvalue && pc == v.pc;
+		return v != null && v.upvalue != null && v.upvalue.rw && v.allocupvalue && pc == v.pc;
 	}
 
 	public boolean isUpvalueRefer(int pc, int slot) {
@@ -449,12 +447,15 @@ public class ProtoInfo {
 		if ( pc >= 0 && vars[slot][pc] != null && vars[slot][pc].pc == pc )
 			pc -= 1;
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
-//		return v.upvalue != null && v.upvalue.rw;
-		return v != null && v.upvalue != null;
+		return v != null && v.upvalue != null && v.upvalue.rw;
 	}
 
 	public boolean isInitialValueUsed(int slot) {
 		VarInfo v = params[slot];
 		return v.isreferenced;
+	}
+
+	public boolean isReadWriteUpvalue(UpvalInfo u) {
+		return u.rw;
 	}
 }

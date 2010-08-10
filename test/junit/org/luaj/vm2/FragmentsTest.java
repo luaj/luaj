@@ -442,5 +442,16 @@ public class FragmentsTest extends TestSuite {
 					"end\n" +
 					"return bar()[1]");
 		}
+		
+		public void testReadOnlyAndReadWriteUpvalues() {
+			runFragment( LuaValue.varargsOf( new LuaValue[] { LuaValue.valueOf(333), LuaValue.valueOf(222) } ),
+					"local a = 111\n" +
+					"local b = 222\n" +
+					"local c = function()\n"+
+					"	a = a + b\n" +
+					"	return a,b\n"+
+					"end\n" +
+					"return c()\n" );
+		}
 	}
 }

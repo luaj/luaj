@@ -317,7 +317,6 @@ public class JavaGen {
 				builder.dup();
 				builder.dup();
 				builder.storeLocal(pc, a);
-//				builder.createUpvalues(pc, a+3, 1);
 				builder.storeLocal(pc, a+3);
 				builder.loadLocal(pc, a+1); // limit
 				builder.loadLocal(pc, a+2); // step

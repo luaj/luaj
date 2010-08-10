@@ -197,7 +197,9 @@ public class JavaBuilder {
 
 		// create the fields
 		for ( int i=0; i<p.nups; i++ ) {
-			FieldGen fg = new FieldGen(0, TYPE_LOCALUPVALUE, upvalueName(i), cp);
+			boolean isrw = pi.isReadWriteUpvalue( pi.upvals[i] ); 
+			Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
+			FieldGen fg = new FieldGen(0, uptype, upvalueName(i), cp);
 			cg.addField(fg.getField());
 		}
 		
@@ -395,18 +397,29 @@ public class JavaBuilder {
 	}
 	
 	public void loadUpvalue(int upindex) {
+		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
 		append(InstructionConstants.THIS);
-		append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LOCALUPVALUE, Constants.GETFIELD));
-		append(new PUSH(cp,0));
-		append(InstructionConstants.AALOAD);
+		if ( isrw ) {
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+			append(new PUSH(cp,0));
+			append(InstructionConstants.AALOAD);
+		} else {
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LUAVALUE, Constants.GETFIELD));
+		}
 	}
 
 	public void storeUpvalue(int pc, int upindex, int slot) {
+		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
 		append(InstructionConstants.THIS);
-		append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LOCALUPVALUE, Constants.GETFIELD));
-		append(new PUSH(cp,0));
-		loadLocal(pc, slot);
-		append(InstructionConstants.AASTORE);
+		if ( isrw ) {
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LOCALUPVALUE, Constants.GETFIELD));
+			append(new PUSH(cp,0));
+			loadLocal(pc, slot);
+			append(InstructionConstants.AASTORE);
+		} else {
+			loadLocal(pc, slot);
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LUAVALUE, Constants.PUTFIELD));
+		}
 	}
 
 	
@@ -596,18 +609,22 @@ public class JavaBuilder {
 	}
 
 	public void closureInitUpvalueFromUpvalue(String protoname, int newup, int upindex) {
+		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
+		Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
 		String srcname = upvalueName(upindex);
 		String destname = upvalueName(newup);
 		append(InstructionConstants.THIS);
-		append(factory.createFieldAccess(classname, srcname, TYPE_LOCALUPVALUE, Constants.GETFIELD));
-		append(factory.createFieldAccess(protoname, destname, TYPE_LOCALUPVALUE, Constants.PUTFIELD));
+		append(factory.createFieldAccess(classname, srcname, uptype, Constants.GETFIELD));
+		append(factory.createFieldAccess(protoname, destname, uptype, Constants.PUTFIELD));
 	}
 
 	public void closureInitUpvalueFromLocal(String protoname, int newup, int pc, int srcslot) {
+		boolean isrw = pi.isReadWriteUpvalue( pi.vars[srcslot][pc].upvalue ); 
+		Type uptype = isrw? TYPE_LOCALUPVALUE: TYPE_LUAVALUE;
 		String destname = upvalueName(newup);
-		int index = findSlotIndex( srcslot, true );
+		int index = findSlotIndex( srcslot, isrw );
 		append(new ALOAD(index));
-		append(factory.createFieldAccess(protoname, destname, TYPE_LOCALUPVALUE, Constants.PUTFIELD));
+		append(factory.createFieldAccess(protoname, destname, uptype, Constants.PUTFIELD));
 	}
 	
 	private Map<LuaValue,String> constants = new HashMap<LuaValue,String>();
