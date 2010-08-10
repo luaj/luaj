@@ -317,6 +317,7 @@ public class JavaGen {
 				builder.dup();
 				builder.dup();
 				builder.storeLocal(pc, a);
+//				builder.createUpvalues(pc, a+3, 1);
 				builder.storeLocal(pc, a+3);
 				builder.loadLocal(pc, a+1); // limit
 				builder.loadLocal(pc, a+2); // step
@@ -418,13 +419,6 @@ public class JavaGen {
 			
 			// let builder process branch instructions
 			builder.onEndOfLuaInstruction( pc0 );
-
-			// for-loops have upvalue created at top of loop
-			switch ( o ) {
-			case Lua.OP_FORPREP:
-				builder.convertToUpvalue(pc+1, a+3);
-				break;
-			}
 		}
 	}
 

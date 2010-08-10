@@ -244,11 +244,12 @@ public class ProtoInfo {
 				case Lua.OP_FORLOOP: /*	A sBx	R(A)+=R(A+2);
 					if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }*/
 					a = Lua.GETARG_A( ins );
+					v[a][pc].isreferenced = true;
 					v[a+2][pc].isreferenced = true;
 					v[a][pc] = new VarInfo(a,pc);
-					v[a+3][pc] = new VarInfo(a+1,pc);
 					v[a][pc].isreferenced = true;
 					v[a+1][pc].isreferenced = true;
+					v[a+3][pc] = new VarInfo(a+3,pc);
 					break;
 					
 				case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(B) := nil			*/
@@ -444,16 +445,9 @@ public class ProtoInfo {
 	}
 
 	public boolean isUpvalueRefer(int pc, int slot) {
-		// special case for opcodes where overlap between refer and assign
-		if ( pc >= 0 ) {
-			switch ( Lua.GET_OPCODE(prototype.code[pc]) ) {
-			case Lua.OP_CLOSURE:
-			case Lua.OP_CALL:
-			case Lua.OP_TFORLOOP:
-				pc -= 1;
-				break;
-			}
-		}
+		// special case when both refer and assign in same instruction
+		if ( pc >= 0 && vars[slot][pc] != null && vars[slot][pc].pc == pc )
+			pc -= 1;
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 //		return v.upvalue != null && v.upvalue.rw;
 		return v != null && v.upvalue != null;

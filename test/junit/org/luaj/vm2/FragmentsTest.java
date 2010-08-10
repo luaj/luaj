@@ -388,6 +388,18 @@ public class FragmentsTest extends TestSuite {
 					"end\n");
 		}
 		
+		public void testNumericForUpvalues2() {
+			runFragment( LuaValue.valueOf("222 222"), 
+					"local t = {}\n"+
+					"local template = [[123 456]]\n"+
+					"for i = 1,2 do\n"+
+					"	t[i] = template:gsub('%d', function(s)\n"+
+					"		return i\n"+
+					"	end)\n"+
+					"end\n" +
+					"return t[2]\n");
+		}
+		
 		public void testReturnUpvalue() {
 			runFragment( LuaValue.varargsOf(new LuaValue[] { LuaValue.ONE, LuaValue.valueOf(5), }),
 					"local a = 1\n"+
