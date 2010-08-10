@@ -222,6 +222,7 @@ public class JavaBuilder {
 	
 	public void initializeSlots() {
 		int slot = 0;
+		createUpvalues(-1, 0, p.maxstacksize);
 		if ( superclassType == SUPERTYPE_VARARGS ) {
 			for ( slot=0; slot<p.numparams; slot++ ) {
 				if ( pi.isInitialValueUsed(slot) ) {
