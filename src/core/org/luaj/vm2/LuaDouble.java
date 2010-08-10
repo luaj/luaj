@@ -21,8 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import java.util.Hashtable;
-
 import org.luaj.vm2.lib.MathLib;
 
 public class LuaDouble extends LuaNumber {

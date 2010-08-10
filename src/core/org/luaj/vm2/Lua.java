@@ -24,7 +24,6 @@ package org.luaj.vm2;
 
 /**
  * Constants for lua limits and opcodes
- * @deprecated  these will all move to LuaC or LoadState or DumpState
  */
 public class Lua {
 	/** version is supplied by ant build task */

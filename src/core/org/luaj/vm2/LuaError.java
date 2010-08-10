@@ -21,8 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import java.util.Vector;
-
 import org.luaj.vm2.lib.DebugLib;
 
 /**
@@ -35,7 +33,6 @@ import org.luaj.vm2.lib.DebugLib;
 public class LuaError extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
-	private LuaValue msgvalue = null;
 	private String traceback;
 
 	/** Run the error hook if there is one */
