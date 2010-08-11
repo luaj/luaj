@@ -61,7 +61,7 @@ public class UpvalInfo {
 		// check for previous assignment
 		loop: while ( true ) {
 			// invalid values terminate search
-			if ( v == VarInfo.INVALID )
+			if ( v == null || v == VarInfo.INVALID )
 				return;
 
 			// basic block for nil values is initial block

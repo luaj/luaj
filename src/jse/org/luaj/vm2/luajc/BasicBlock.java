@@ -113,7 +113,9 @@ public class BasicBlock {
 					break;
 				if ( Lua.GET_OPCODE(code[i+1]) == Lua.OP_JMP  )
 					throw new IllegalArgumentException("OP_LOADBOOL followed by jump at "+i); 
-				break;
+				visitor.visitBranch( i, i+1 ); 				
+				visitor.visitBranch( i, i+2 );
+				continue;
 			case Lua.OP_EQ:
 			case Lua.OP_LT:
 			case Lua.OP_LE:
