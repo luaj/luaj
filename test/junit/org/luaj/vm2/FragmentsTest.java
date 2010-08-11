@@ -480,5 +480,26 @@ public class FragmentsTest extends TestSuite {
 					"	end\n"+
 					"end\n" );
 		}
+		
+		public void testBasicForLoop() {
+			runFragment( LuaValue.valueOf(2), 
+					"local data\n"+
+					"for i = 1, 2 do\n"+
+					"     data = i\n"+
+					"end\n"+
+					"local bar = function()\n"+
+					"	return data\n"+
+					"end\n" +
+					"return bar()\n" );
+		}
+		
+		public void testGenericForMultipleValues() {
+			runFragment( LuaValue.varargsOf(LuaValue.valueOf(3),LuaValue.valueOf(2),LuaValue.valueOf(1)), 
+					"local iter = function() return 1,2,3,4 end\n" +
+					"local foo  = function() return iter,5 end\n" +
+			        "for a,b,c in foo() do\n" +
+			        "    return c,b,a\n" +
+			        "end\n" );
+		}
 	}
 }

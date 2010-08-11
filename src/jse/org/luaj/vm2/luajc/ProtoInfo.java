@@ -65,13 +65,14 @@ public class ProtoInfo {
 			sb.append( " up["+i+"]: "+upvals[i]+"\n" );
 		
 		// basic blocks
-		for ( int i=0; i<blocklist.length; i++ ) {
-			sb.append( "  block "+blocklist[i].toString() );
+		for ( int pc0=blocks[0].pc0; pc0<prototype.code.length; pc0=blocks[pc0].pc1+1 ) {
+			BasicBlock b = blocks[pc0];
+			sb.append( "  block "+b.toString() );
 			appendOpenUps( sb, -1 );
 			
 			// instructions
-			for ( int pc=blocklist[i].pc0; pc<=blocklist[i].pc1; pc++ ) {
-
+			for ( int pc=pc0; pc<=b.pc1; pc++ ) {
+	
 				// open upvalue storage
 				appendOpenUps( sb, pc );
 				
@@ -79,8 +80,8 @@ public class ProtoInfo {
 				sb.append( "     " );
 				for ( int j=0; j<prototype.maxstacksize; j++ ) {
 					VarInfo v = vars[j][pc];
-					String u = (v.upvalue!=null? !v.upvalue.rw? "[C] ": (v.allocupvalue&&v.pc==pc? "[*] ": "[]  "): "    ");
-					String s = String.valueOf(v);
+					String u = (v==null? "": v.upvalue!=null? !v.upvalue.rw? "[C] ": (v.allocupvalue&&v.pc==pc? "[*] ": "[]  "): "    ");
+					String s = v==null? "null   ": String.valueOf(v);
 					sb.append( s+u);
 				}
 				sb.append( "  " );
@@ -109,7 +110,7 @@ public class ProtoInfo {
 	private void appendOpenUps(StringBuffer sb, int pc) {
 		for ( int j=0; j<prototype.maxstacksize; j++ ) {
 			VarInfo v = (pc<0? params[j]: vars[j][pc]);
-			if ( v.pc == pc && v.allocupvalue ) {
+			if ( v != null && v.pc == pc && v.allocupvalue ) {
 				sb.append( "    open: "+v.upvalue+"\n" );
 			}
 		}

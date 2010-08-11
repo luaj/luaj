@@ -44,7 +44,7 @@ public class JavaGen {
 		
 		// build this class
 		JavaBuilder builder = new JavaBuilder(pi, classname, filename);
-		scanInstructions(pi.prototype, classname, builder);
+		scanInstructions(pi, classname, builder);
 		this.bytecode = builder.completeClass();
 		
 		// build sub-prototypes
@@ -62,10 +62,19 @@ public class JavaGen {
 		return classname+"$"+subprotoindex;
 	}
 	
-	private void scanInstructions(Prototype p, String classname, JavaBuilder builder) {
+	private void scanInstructions(ProtoInfo pi, String classname, JavaBuilder builder) {
+		Prototype p = pi.prototype;
 		int vresultbase = -1;
 		
 		for ( int pc=0, n=p.code.length; pc<n; pc++ ) {
+			
+			// skip dead blocks
+			BasicBlock b0 = pi.blocks[pc];
+			if ( b0.pc0>0 && b0.prev == null ) {
+				pc = b0.pc1;
+				continue;
+			}
+			
 			int pc0 = pc; // closure changes pc
 			int ins = p.code[pc];
 			final int o = Lua.GET_OPCODE(ins);
@@ -342,20 +351,22 @@ public class JavaGen {
 				builder.isNil();
 				builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+2);
 
-				// a[2] = a[3] = v[1]
+				// a[2] = a[3] = v[1], leave varargs on stack
 				builder.createUpvalues(pc, a+3, c);
 				builder.loadVarresult();
-				if ( c>=2 ) builder.dup();
+				if (c>=2)
+					builder.dup();
 				builder.arg( 1 );
 				builder.dup();
 				builder.storeLocal(pc, a+2);
 				builder.storeLocal(pc, a+3);
 				
-				// a[a+2+i] = v[2+i], i=2..c
-				for ( int i=2; i<=c; i++ ) {
-					if ( i<c ) builder.dup();
-					builder.arg( i );
-					builder.storeLocal(pc, a+2+c);
+				// v[2]..v[c], use varargs from stack
+				for ( int j=2; j<=c; j++ ) {
+					if ( j<c )
+						builder.dup();
+					builder.arg( j );
+					builder.storeLocal(pc, a+2+j);
 				}
 				break;
 				
@@ -380,6 +391,28 @@ public class JavaGen {
 				
 			case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 			{
+				/*
+				String protoname = closureName(classname, bx);
+				int nups = p.p[bx].nups;
+				for ( int k=1; k<=nups; ++k ) {
+					builder.dup();
+					int i = p.code[pc+k];
+					b = Lua.GETARG_B(i);
+					if ( (i&4) == 0 ) {
+						builder.closureInitUpvalueFromUpvalue( protoname, k-1, b );
+					} else {
+						builder.closureInitUpvalueFromLocal( protoname, k-1, pc, b );
+					}
+				}
+				v[a][pc] = new VarInfo(a,pc);
+				for ( int k=1; k<=nups; ++k ) {
+					for ( int j=0; j<m; j++ )
+						v[j][pc+k] = v[j][pc];
+				}
+				pc += nups;
+/*/
+				
+				
 				Prototype newp = p.p[bx];
 				String protoname = closureName(classname, bx);
 				int nup = newp.nups;
@@ -391,15 +424,17 @@ public class JavaGen {
 					for ( int up=0; up<nup; ++up ) {
 						if ( up+1 < nup )
 							builder.dup();
-						ins = p.code[++pc];
+						ins = p.code[pc+up+1];
 						b = Lua.GETARG_B(ins);
 						if ( (ins&4) != 0 ) {
 							builder.closureInitUpvalueFromUpvalue( protoname, up, b );
 						} else {
-							builder.closureInitUpvalueFromLocal( protoname, up, pc0, b );
+							builder.closureInitUpvalueFromLocal( protoname, up, pc, b );
 						}
 					}
+					pc += nup;
 				}
+				//*/
 				break;
 			}				
 			case Lua.OP_VARARG: /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/

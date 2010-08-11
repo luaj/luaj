@@ -64,7 +64,7 @@ public class UpvalInfo {
 			VarInfo v = pi.vars[slot][b.pc0];
 			if ( v == poster ) {
 				for ( int j=0, m=b.prev!=null? b.prev.length: 0; j<m; j++ ) {
-					BasicBlock b0 = b.next[j];
+					BasicBlock b0 = b.prev[j];
 					VarInfo v0 = pi.vars[slot][b0.pc1];
 					if ( v0 != poster )
 						includeVarAndPosteriorVars( v0 );

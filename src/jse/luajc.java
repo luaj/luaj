@@ -239,7 +239,9 @@ public class luajc {
         	}
         	
 		} catch ( Throwable t ) {
+			System.err.println("    failed to load "+inf.srcfilename+": "+t );
 			t.printStackTrace( System.err );
+			System.err.flush();
 		}
 	}
 }

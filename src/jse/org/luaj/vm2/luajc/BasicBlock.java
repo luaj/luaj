@@ -102,18 +102,17 @@ public class BasicBlock {
 	}
 	
 	public static void visitBranches( Prototype p, BranchVisitor visitor ) {
-		int sbx,j;
+		int sbx,j,c;
 		int[] code = p.code;
 		int n = code.length;
 		for ( int i=0; i<n; i++ ) {
 			int ins = code[i];
 			switch ( Lua.GET_OPCODE( ins ) ) {
 			case Lua.OP_LOADBOOL:
-				if ( Lua.GETARG_C(ins) == 0 )
+				if ( 0 == Lua.GETARG_C(ins) )
 					break;
 				if ( Lua.GET_OPCODE(code[i+1]) == Lua.OP_JMP  )
-					throw new IllegalArgumentException("OP_LOADBOOL followed by jump at "+i); 
-				visitor.visitBranch( i, i+1 ); 				
+					throw new IllegalArgumentException("OP_LOADBOOL followed by jump at "+i);
 				visitor.visitBranch( i, i+2 );
 				continue;
 			case Lua.OP_EQ:
@@ -130,9 +129,14 @@ public class BasicBlock {
 				visitor.visitBranch( i, j );
 				visitor.visitBranch( i, i+1 ); 				
 				continue;
+			case Lua.OP_FORLOOP:
+				sbx = Lua.GETARG_sBx(ins);
+				j = i + sbx + 1;
+				visitor.visitBranch( i, j );
+				visitor.visitBranch( i, i+1 ); 				
+				continue;
 			case Lua.OP_JMP:
 			case Lua.OP_FORPREP:
-			case Lua.OP_FORLOOP:
 				sbx = Lua.GETARG_sBx(ins);
 				j = i + sbx + 1;
 				visitor.visitBranch( i, j );
