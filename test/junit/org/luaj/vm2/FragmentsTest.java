@@ -469,5 +469,16 @@ public class FragmentsTest extends TestSuite {
 					"return f(), g(8,9)\n"+
 					"\n" );
 		}
+		
+		public void testLoadBool() {
+			runFragment( LuaValue.NONE, 
+					"print( type(foo)=='string' )\n"+
+					"local a,b\n"+
+					"if print() then\n"+
+					"	b = function()\n"+
+					"		return a\n"+
+					"	end\n"+
+					"end\n" );
+		}
 	}
 }

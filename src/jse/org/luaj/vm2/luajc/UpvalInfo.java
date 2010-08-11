@@ -15,10 +15,80 @@ public class UpvalInfo {
 		this.slot = slot;
 		this.nvars = 0;
 		this.var = null;
-		includeVars( pi.vars[slot][pc] );
+		includeVarAndPosteriorVars( pi.vars[slot][pc] );
 		for ( int i=0; i<nvars; i++ )
 			var[i].allocupvalue = testIsAllocUpvalue( var[i] );
 		this.rw = nvars > 1;		
+	}
+
+	private boolean includeVarAndPosteriorVars( VarInfo var ) {
+		if ( var == null || var == VarInfo.INVALID )
+			return false;
+		if ( var.upvalue == this )
+			return true;
+		var.upvalue = this;
+		appendVar( var );
+		boolean loopDetected = includePosteriorVarsCheckLoops( var );
+		if ( loopDetected )
+			includePriorVarsIgnoreLoops( var );
+		return loopDetected;
+	}
+	
+	private boolean includePosteriorVarsCheckLoops( VarInfo prior ) {
+		boolean loopDetected = false;
+		for ( int i=0, n=pi.blocklist.length; i<n; i++ ) {
+			BasicBlock b = pi.blocklist[i];
+			VarInfo v = pi.vars[slot][b.pc1];
+			if ( v == prior ) {
+				for ( int j=0, m=b.next!=null? b.next.length: 0; j<m; j++ ) {
+					BasicBlock b1 = b.next[j];
+					VarInfo v1 = pi.vars[slot][b1.pc0];
+					if ( v1 != prior )
+						loopDetected |= includeVarAndPosteriorVars( v1 );
+				}
+			} else {
+				for ( int pc=b.pc1-1; pc>=b.pc0; pc-- ) {
+					if ( pi.vars[slot][pc] == prior ) {
+						loopDetected |= includeVarAndPosteriorVars( pi.vars[slot][pc+1] );
+						break;
+					}
+				}
+			}
+		}
+		return loopDetected;
+	}
+	
+	private void includePriorVarsIgnoreLoops(VarInfo poster) {
+		for ( int i=0, n=pi.blocklist.length; i<n; i++ ) {
+			BasicBlock b = pi.blocklist[i];
+			VarInfo v = pi.vars[slot][b.pc0];
+			if ( v == poster ) {
+				for ( int j=0, m=b.prev!=null? b.prev.length: 0; j<m; j++ ) {
+					BasicBlock b0 = b.next[j];
+					VarInfo v0 = pi.vars[slot][b0.pc1];
+					if ( v0 != poster )
+						includeVarAndPosteriorVars( v0 );
+				}
+			} else {
+				for ( int pc=b.pc0+1; pc<=b.pc1; pc++ ) {
+					if (  pi.vars[slot][pc] == poster ) {
+						includeVarAndPosteriorVars( pi.vars[slot][pc-1] );
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private void appendVar(VarInfo v) {
+		if ( nvars == 0 ) {
+			var = new VarInfo[1];
+		} else if ( nvars+1 >= var.length ) {
+			VarInfo[] s = var;
+			var = new VarInfo[nvars*2+1];
+			System.arraycopy(s, 0, var, 0, nvars);				
+		}
+		var[nvars++] = v;
 	}
 
 	public String toString() {
@@ -31,73 +101,6 @@ public class UpvalInfo {
 		if ( rw )
 			sb.append( "(rw)" );
 		return sb.toString();
-	}
-	
-	private void includeVar(VarInfo v) {
-		if ( v == null )
-			return;
-		if ( includes(v) )
-			return;
-		if ( nvars == 0 ) {
-			var = new VarInfo[1];
-		} else if ( nvars+1 >= var.length ) {
-			VarInfo[] s = var;
-			var = new VarInfo[nvars*2+1];
-			System.arraycopy(s, 0, var, 0, nvars);				
-		}
-		var[nvars++] = v;
-	}
-	
-	private boolean includes(VarInfo v) {
-		for ( int i=0; i<nvars; i++ )
-			if ( var[i] == v )
-				return true;
-		return false;
-	}
-	
-	public void includeVars(VarInfo v) {
-		int slot = this.slot;
-		
-		// check for previous assignment
-		loop: while ( true ) {
-			// invalid values terminate search
-			if ( v == null || v == VarInfo.INVALID )
-				return;
-
-			// basic block for nil values is initial block
-			BasicBlock b = pi.blocks[v.pc<0? 0: v.pc];
-			
-			// look for loops
-			if ( v.upvalue == this ) {
-				for ( int i=0, n=b.prev!=null? b.prev.length: 0; i<n; i++ ) {
-					v = pi.vars[slot][b.prev[i].pc1];
-					if ( v != null && v.upvalue != this )
-						includeVars(v);
-				}
-				return;
-			}
-
-			// assign the variable
-			v.upvalue = this;
-			this.includeVar(v);
-			
-			// nil values also terminate
-			if ( v.pc == -1 )
-				return;
-			
-			// find next variable within the basic block
-			for ( int i=v.pc; i<=b.pc1; i++ ) {
-				if ( pi.vars[slot][i] != v ) {
-					v = pi.vars[slot][i];
-					continue loop;
-				}
-			}
-			
-			// at end of basic block, go to next blocks
-			for ( int i=0, n=b.next!=null? b.next.length: 0; i<n; i++ )
-				includeVars(pi.vars[slot][b.next[i].pc0]);
-			return;
-		}
 	}
 	
 	private boolean testIsAllocUpvalue(VarInfo v) {

@@ -3,15 +3,9 @@ package org.luaj.vm2.luajc;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaClosure;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.TailcallVarargs;
-import org.luaj.vm2.UpValue;
 
 /**
  * Prototype information for static single-assignment analysis
