@@ -535,7 +535,7 @@ public class FragmentsTest extends TestSuite {
 					"return 5\n" );
 		}
 		
-		public void testTwoLoops() {
+		public void testLoopVarUpvalues() {
 			runFragment( LuaValue.valueOf("b"), 
 					"local env = {}\n" +
 					"for a,b in pairs(_G) do\n" +

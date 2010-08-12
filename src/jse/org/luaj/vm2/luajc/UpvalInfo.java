@@ -3,6 +3,8 @@
  */
 package org.luaj.vm2.luajc;
 
+import org.luaj.vm2.Lua;
+
 public class UpvalInfo {
 	ProtoInfo pi;    // where defined
 	int slot;       // where defined
@@ -28,12 +30,25 @@ public class UpvalInfo {
 			return true;
 		var.upvalue = this;
 		appendVar( var );
+		if ( isLoopVariable( var ) )
+			return false;
 		boolean loopDetected = includePosteriorVarsCheckLoops( var );
 		if ( loopDetected )
 			includePriorVarsIgnoreLoops( var );
 		return loopDetected;
 	}
 	
+	private boolean isLoopVariable(VarInfo var) {
+		if ( var.pc >= 0 ) {
+			switch ( Lua.GET_OPCODE(pi.prototype.code[var.pc]) ) {
+			case Lua.OP_TFORLOOP:
+			case Lua.OP_FORLOOP:
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean includePosteriorVarsCheckLoops( VarInfo prior ) {
 		boolean loopDetected = false;
 		for ( int i=0, n=pi.blocklist.length; i<n; i++ ) {
