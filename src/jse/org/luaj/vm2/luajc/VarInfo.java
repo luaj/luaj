@@ -63,6 +63,10 @@ public class VarInfo {
 		vars.add(this);
 	}
 
+	public boolean isPhiVar() {
+		return false;
+	}
+
 	private static final class PhiVarInfo extends VarInfo {
 		private final ProtoInfo pi;
 		VarInfo[] values;
@@ -70,6 +74,10 @@ public class VarInfo {
 		private PhiVarInfo(ProtoInfo pi, int slot, int pc) {
 			super(slot, pc);
 			this.pi = pi;
+		}
+
+		public boolean isPhiVar() {
+			return true;
 		}
 
 		public String toString() {
@@ -108,6 +116,8 @@ public class VarInfo {
 
 		protected void collectUniqueValues(Set visitedBlocks, Set vars) {
 			BasicBlock b = pi.blocks[pc];
+			if ( pc == 0 )
+				vars.add(pi.params[slot]);
 			for (int i = 0, n = b.prev != null ? b.prev.length : 0; i < n; i++) {
 				BasicBlock bp = b.prev[i];
 				if (!visitedBlocks.contains(bp)) {

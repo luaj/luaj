@@ -3,7 +3,6 @@
  */
 package org.luaj.vm2.luajc;
 
-import java.util.Hashtable;
 import java.util.Vector;
 
 import org.luaj.vm2.Lua;
@@ -13,6 +12,7 @@ public class BasicBlock {
 	int pc0,pc1;        // range of program counter values for the block
 	BasicBlock[] prev;  // previous basic blocks (0-n of these)
 	BasicBlock[] next;  // next basic blocks (0, 1, or 2 of these)
+	boolean islive;     // true if this block is used
 	
 	public BasicBlock(Prototype p, int pc0) {
 		this.pc0 = this.pc1 = pc0;
@@ -150,36 +150,31 @@ public class BasicBlock {
 				visitor.visitBranch( i, i+1 );
 		}
 	}
-
-	public static BasicBlock[] sortDepthFirst(BasicBlock[] blocks) {
-		Vector list = new Vector();
-		Hashtable seen = new Hashtable();
-		Vector next = new Vector();
-		BasicBlock b0,b1,b[];
-
+	
+	public static BasicBlock[] findLiveBlocks(BasicBlock[] blocks) {
+		// add reachable blocks
+		Vector next = new Vector ();
 		next.addElement( blocks[0] );
-		seen.put( blocks[0], Boolean.TRUE );
-		while ( (b = toBasicBlockArray(next)) != null ) {
-			next.clear();
-			for ( int i=0; i<b.length; i++ ) {
-				list.addElement( b0 = b[i] );
-				for ( int k=0, n=b0.next!=null? b0.next.length: 0; k<n; k++ ) {
-					if ( seen.get( b1 = b0.next[k] ) == null ) {
-						seen.put( b1, Boolean.TRUE );
-						next.addElement( b1 );
-					}
-				}
+		while ( ! next.isEmpty() ) {
+			BasicBlock b = (BasicBlock) next.elementAt(0);
+			next.removeElementAt(0);
+			if ( ! b.islive ) {
+				b.islive = true;
+				for ( int i=0, n=b.next!=null? b.next.length: 0; i<n; i++ )
+					if ( ! b.next[i].islive )
+						next.addElement( b.next[i] );
 			}
 		}
-		return toBasicBlockArray(list);
-	}
-
-	private static BasicBlock[] toBasicBlockArray(Vector list) {
-		if ( list.size() <= 0 )
-			return null;
+		
+		// create list in natural order
+		Vector list = new Vector();
+		for ( int i=0; i<blocks.length; i=blocks[i].pc1+1 )
+			if ( blocks[i].islive )
+				list.addElement(blocks[i]);
+		
+		// convert to array
 		BasicBlock[] array = new BasicBlock[list.size()];
 		list.copyInto(array);
 		return array;
 	}
-
 }

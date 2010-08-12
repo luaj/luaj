@@ -501,5 +501,53 @@ public class FragmentsTest extends TestSuite {
 			        "    return c,b,a\n" +
 			        "end\n" );
 		}
+		
+		public void testPhiUpvalue() {
+			runFragment( LuaValue.valueOf(6), 
+					"local a = foo or 0\n"+
+					"local function b(c)\n"+
+					"	if c > a then a = c end\n" +
+					"	return a\n"+
+					"end\n" +
+					"b(6)\n" +
+					"return a\n" );
+		}
+		
+		public void testAssignReferUpvalues() {
+			runFragment( LuaValue.valueOf(123), 
+					"local entity = 234\n" +
+				    "local function c()\n" +
+					"    return entity\n" +
+					"end\n" +
+				    "entity = (a == b) and 123\n" +
+				    "if entity then\n" +
+				    "    return entity\n" +
+				    "end\n" );			
+		}
+		
+		public void testSimpleRepeatUntil() {
+			runFragment( LuaValue.valueOf(5), 
+					"local a\n"+
+					"local w\n"+
+					"repeat\n"+
+					"	a = w\n"+
+					"until not a\n" +
+					"return 5\n" );
+		}
+		
+		public void testTwoLoops() {
+			runFragment( LuaValue.valueOf("b"), 
+					"local env = {}\n" +
+					"for a,b in pairs(_G) do\n" +
+					"	c = function()\n" +
+					"		return b\n" +
+					"	end\n" +
+					"end\n" +
+					"local e = env\n" +
+					"local f = {a='b'}\n" +
+					"for k,v in pairs(f) do\n" +
+					"	return env[k] or v\n" +
+					"end\n");
+		}
 	}
 }

@@ -21,7 +21,6 @@ public class ProtoInfo {
 	public final VarInfo[][] vars;        // Each variable
 	public final UpvalInfo[] upvals;      // from outer scope
 	public final UpvalInfo[][] openups;   // per slot, upvalues allocated by this prototype
-
 	
 	public ProtoInfo(Prototype p, String name) {
 		this(p,name,null);
@@ -35,8 +34,7 @@ public class ProtoInfo {
 		
 		// find basic blocks
 		this.blocks = BasicBlock.findBasicBlocks(p);
-		this.blocklist = BasicBlock.sortDepthFirst(blocks);
-
+		this.blocklist = BasicBlock.findLiveBlocks(blocks);
 		
 		// params are inputs to first block
 		this.params = new VarInfo[p.maxstacksize];
@@ -65,8 +63,9 @@ public class ProtoInfo {
 			sb.append( " up["+i+"]: "+upvals[i]+"\n" );
 		
 		// basic blocks
-		for ( int pc0=blocks[0].pc0; pc0<prototype.code.length; pc0=blocks[pc0].pc1+1 ) {
-			BasicBlock b = blocks[pc0];
+		for ( int i=0; i<blocklist.length; i++ ) {
+			BasicBlock b = blocklist[i];
+			int pc0 = b.pc0;
 			sb.append( "  block "+b.toString() );
 			appendOpenUps( sb, -1 );
 			
@@ -143,19 +142,18 @@ public class ProtoInfo {
 						if ( v[slot][bp.pc1] == VarInfo.INVALID )
 							var = VarInfo.INVALID;
 					}
-					if ( var == null )
-						var = VarInfo.PHI(this, slot, b0.pc0);
 				}
+				if ( var == null )
+					var = VarInfo.PHI(this, slot, b0.pc0);
 				v[slot][b0.pc0] = var;
 			}
 
 			// process instructions for this basic block
 			for ( int pc=b0.pc0; pc<=b0.pc1; pc++ ) {
 			
-				// propogate previous for all but block boundaries
-				if ( pc>b0.pc0 )
-					for ( int j=0; j<m; j++ )
-						v[j][pc] = v[j][pc-1];
+				// propogate previous values except at block boundaries
+				if (  pc > b0.pc0 )
+					propogateVars( v, pc-1, pc );
 				
 				int a,b,c,nups;
 				int ins = prototype.code[pc];
@@ -322,10 +320,8 @@ public class ProtoInfo {
 						}
 					}
 					v[a][pc] = new VarInfo(a,pc);
-					for ( int k=1; k<=nups; ++k ) {
-						for ( int j=0; j<m; j++ )
-							v[j][pc+k] = v[j][pc];
-					}
+					for ( int k=1; k<=nups; k++ )
+						propogateVars( v, pc, pc+k );
 					pc += nups;
 					break;
 				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
@@ -369,11 +365,16 @@ public class ProtoInfo {
 		return v;
 	}
 
+	private static void propogateVars(VarInfo[][] v, int pcfrom, int pcto) {
+		for ( int j=0, m=v.length; j<m; j++ )
+			v[j][pcto] = v[j][pcfrom];
+	}
+
 	private void replaceTrivialPhiVariables() {		
 		for ( int i=0; i<blocklist.length; i++ ) {
 			BasicBlock b0 = blocklist[i];
 			for ( int slot=0; slot<prototype.maxstacksize; slot++ ) {
-				VarInfo vold = vars[slot][b0.pc1];
+				VarInfo vold = vars[slot][b0.pc0];
 				VarInfo vnew = vold.resolvePhiVariableValues();
 				if ( vnew != null )
 					substituteVariable( slot, vold, vnew );
@@ -443,7 +444,7 @@ public class ProtoInfo {
 
 	public boolean isUpvalueRefer(int pc, int slot) {
 		// special case when both refer and assign in same instruction
-		if ( pc >= 0 && vars[slot][pc] != null && vars[slot][pc].pc == pc )
+		if ( pc > 0 && vars[slot][pc] != null && vars[slot][pc].pc == pc && vars[slot][pc-1] != null  )
 			pc -= 1;
 		VarInfo v = pc<0? params[slot]: vars[slot][pc];
 		return v != null && v.upvalue != null && v.upvalue.rw;
