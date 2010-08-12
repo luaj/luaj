@@ -58,8 +58,11 @@ public class UpvalInfo {
 				for ( int j=0, m=b.next!=null? b.next.length: 0; j<m; j++ ) {
 					BasicBlock b1 = b.next[j];
 					VarInfo v1 = pi.vars[slot][b1.pc0];
-					if ( v1 != prior )
+					if ( v1 != prior ) {
 						loopDetected |= includeVarAndPosteriorVars( v1 );
+						if ( v1.isPhiVar() )
+							includePriorVarsIgnoreLoops( v1 );
+					}
 				}
 			} else {
 				for ( int pc=b.pc1-1; pc>=b.pc0; pc-- ) {

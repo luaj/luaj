@@ -549,5 +549,35 @@ public class FragmentsTest extends TestSuite {
 					"	return env[k] or v\n" +
 					"end\n");
 		}
+		
+		public void testPhiVarUpvalue() {
+			runFragment( LuaValue.valueOf(2), 
+					"local a = 1\n"+    
+				    "local function b()\n"+
+				    "    a = a + 1\n"+
+				    "    return function() end\n"+
+				    "end\n"+
+				    "for i in b() do\n"+
+					"	a = 3\n"+
+				    "end\n" +
+				    "return a\n");			
+		}
+		
+		public void testUpvaluesInElseClauses() {
+			runFragment( LuaValue.valueOf(111), 
+					"if a then\n" +
+			        "   foo(bar)\n" +
+			        "elseif _G then\n" +
+			        "    local x = 111\n" +
+			        "    if d then\n" +
+			        "        foo(bar)\n" +
+			        "    else\n" +
+			        "    	local y = function()\n" +
+			        "    		return x\n" +
+			        "        end\n" +
+			        "    	return y()\n" +
+			        "    end\n" +
+			        "end\n");
+		}
 	}
 }
