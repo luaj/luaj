@@ -33,6 +33,7 @@ import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
 
 
@@ -49,7 +50,8 @@ public class lua {
 		"  -l name  require library 'name'\n" +
 		"  -i       enter interactive mode after executing 'script'\n" +
 		"  -v       show version information\n" +
-		"  -j      	compile into java bytecode\n" +
+		"  -j      	use lua2java source-to-source compiler\n" +
+		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -84,6 +86,9 @@ public class lua {
 						if ( ++i >= args.length )
 							usageExit();
 						// input script - defer to last stage
+						break;
+					case 'b':
+						Lua2Java.install();
 						break;
 					case 'j':
 						LuaJC.install();
