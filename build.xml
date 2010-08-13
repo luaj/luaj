@@ -106,11 +106,15 @@
 		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
 			classpath="lib/bcel-5.2.jar"
 			srcdir="build/jse/src"
-			excludes="**/script/*,**/Lua2Java*"/>
+			excludes="**/script/*,**/Lua2Java*,lua*"/>
 		<javac destdir="build/jse/classes" encoding="utf-8" source="1.5" target="1.5"
 			classpath="build/jse/classes"
-			srcdir="src/jse"
+			srcdir="build/jse/src"
 			includes="**/script/*,**/Lua2Java*"/>
+		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
+			classpath="build/jse/classes"
+			srcdir="build/jse/src"
+			includes="lua*"/>
 	</target>
 	
 	<target name="jar-jme" depends="compile">
