@@ -31,9 +31,9 @@ import org.luaj.vm2.Prototype;
  */
 public class JavaGen {
 
-	public String classname;
-	public byte[] bytecode;
-	public JavaGen[] inners;
+	public final String classname;
+	public final byte[] bytecode;
+	public final JavaGen[] inners;
 	
 	public JavaGen( Prototype p, String classname, String filename ) {
 		this( new ProtoInfo(p,classname), classname, filename );

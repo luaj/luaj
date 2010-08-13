@@ -34,7 +34,7 @@ import org.luaj.vm2.compiler.LuaC;
 
 public class LuaJC implements LuaCompiler {
 
-	private static final String NON_IDENTIFIER = "[^a-zA-Z0-9_$]";
+	private static final String NON_IDENTIFIER = "[^a-zA-Z0-9_$/.\\-]";
 	
 	private static LuaJC instance;
 	
@@ -55,10 +55,12 @@ public class LuaJC implements LuaCompiler {
 	public LuaJC() {
 	}
 
-	public Hashtable compileAll(InputStream script, String classname, String filename) throws IOException {
+	public Hashtable compileAll(InputStream script, String chunkname, String filename) throws IOException {
+		String classname = toStandardJavaClassName( chunkname );
+		String luaname = toStandardLuaFileName( filename );
 		Hashtable h = new Hashtable();
 		Prototype p = LuaC.instance.compile(script, classname);
-		JavaGen gen = new JavaGen(p, classname, filename);
+		JavaGen gen = new JavaGen(p, classname, luaname);
 		insert( h, gen );
 		return h;
 	}
@@ -71,9 +73,29 @@ public class LuaJC implements LuaCompiler {
 
 	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException {
 		Prototype p = LuaC.instance.compile(stream, name);
-		String classname = name.endsWith(".lua")? name.substring(0,name.length()-4): name;
-		classname = classname.replaceAll(NON_IDENTIFIER, "_");
+		String classname = toStandardJavaClassName( name );
+		String luaname = toStandardLuaFileName( name );
 		JavaLoader loader = new JavaLoader(env);
-		return loader.load(p, classname, name);
+		return loader.load(p, classname, luaname);
+	}
+	
+	private static String toStandardJavaClassName( String luachunkname ) {
+		String stub = toStub( luachunkname );
+		String classname = stub.replace('/','.').replaceAll(NON_IDENTIFIER, "_");
+		int c = classname.charAt(0);
+		if ( c!='_' && !Character.isJavaIdentifierStart(c) )
+			classname = "_"+classname;
+		return classname;
+	}
+	
+	private static String toStandardLuaFileName( String luachunkname ) {
+		String stub = toStub( luachunkname );
+		String filename = stub.replace('.','/')+".lua";
+		return filename;
+	}
+	
+	private static String toStub( String s ) {
+		String stub = s.endsWith(".lua")? s.substring(0,s.length()-4): s;
+		return stub;
 	}
 }

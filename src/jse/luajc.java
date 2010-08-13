@@ -215,16 +215,14 @@ public class luajc {
         	if ( loadclasses ) {
 				ClassLoader loader = new ClassLoader() {
 			         public Class findClass(String classname) throws ClassNotFoundException {
-			        	 String key = classname.replace('.', '/');
-			        	 byte[] bytes = (byte[]) t.get(key);
+			        	 byte[] bytes = (byte[]) t.get(classname);
 			        	 if ( bytes != null )
 			        		 return defineClass(classname, bytes, 0, bytes.length);
 			        	 return super.findClass(classname);
 			         }
 				};
             	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
-                	String key = (String) e.nextElement();
-                	String classname = key.replace('/', '.');
+                	String classname = (String) e.nextElement();
 	        		try {
                 		Class c = loader.loadClass(classname);
                 		Object o = c.newInstance();
