@@ -170,17 +170,6 @@ public class WeakTable extends LuaTable {
 		}
 	}
 	
-	/**
-	 * Get the next element after a particular key in the 
-	 * contiguous array part of a table 
-	 * @return key,value or nil
-	 */
-	public Varargs inext(LuaValue key) {
-		int k = key.optint(0)+1;
-		LuaValue v = this.rawget(k);
-		return v.isnil()? NIL: varargsOf(valueOf(k),v);
-	}
-	
 	// ----------------- sort support -----------------------------
 	public void sort(final LuaValue comparator) {
 		super.sort( new TwoArgFunction() {

@@ -354,13 +354,12 @@ public class LuaTable extends LuaValue {
 	/**
 	 * Get the next element after a particular key in the 
 	 * contiguous array part of a table 
-	 * @return key,value or nil
+	 * @return key,value or none
 	 */
 	public Varargs inext(LuaValue key) {
-		int i = key.optint(0);
-		return i<0 || i>=array.length || array[i]==null? 
-				NIL: 
-				varargsOf(LuaInteger.valueOf(i+1),array[i]);
+		int k = key.checkint() + 1;
+		LuaValue v = rawget(k);
+		return v.isnil()? NONE: varargsOf(LuaInteger.valueOf(k),v);
 	}
 	
 	/** 
@@ -385,12 +384,10 @@ public class LuaTable extends LuaValue {
 	 * @param func
 	 */
 	public LuaValue foreachi(LuaValue func) {
-		Varargs n;
-		LuaValue k = NIL;
-		LuaValue v;
-		while ( !(k = ((n = inext(k)).arg1())).isnil() )
-			if ( ! (v = func.call(k, n.arg(2))).isnil() )
-				return v;
+		LuaValue v,r;
+		for ( int k=0; !(v = rawget(++k)).isnil(); )
+			if ( ! (r = func.call(valueOf(k), v)).isnil() )
+				return r;
 		return NIL;
 	}
 	
