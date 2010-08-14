@@ -88,10 +88,10 @@ public class lua {
 						// input script - defer to last stage
 						break;
 					case 'b':
-						Lua2Java.install();
+						LuaJC.install();
 						break;
 					case 'j':
-						LuaJC.install();
+						Lua2Java.install();
 						break;
 					case 'l':
 						if ( ++i >= args.length )
