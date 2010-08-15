@@ -1,0 +1,70 @@
+<project default="all">
+
+	<import file="build.xml"/>
+
+	<available file="luaj-jse-2.0.jar" property="luaj2.lib.exists"/>			
+	<available file="lib/jill-1.0.1.jar" property="jill.lib.exists"/>			
+	<available file="lib/kahlua.jar" property="kahlua.lib.exists"/>			
+	<available file="lib/mochalua-1.0.jar" property="mochalua.lib.exists"/>			
+
+	<target name="luaj2-lib" unless="luaj2.lib.exists">
+		<antcall target="jar-jse"/>
+	</target>
+	
+	<target name="jill-lib" unless="jill.lib.exists">
+		<mkdir dir="lib"/>
+		<get src="http://jillcode.googlecode.com/files/jill-1.0.1.zip" 
+			dest="lib/jill-1.0.1.zip"/>
+		<unzip src="lib/jill-1.0.1.zip" dest="lib" overwrite="true"/>
+		<ant dir="lib/jill-1.0.1" target="compile"/>
+		<jar destfile="lib/jill-1.0.1.jar" basedir="lib/jill-1.0.1/compiled"/>
+	</target>
+	
+	<target name="kahlua-lib" unless="kahlua.lib.exists">
+		<get src="http://kahlua.googlecode.com/files/kahlua.jar"
+			dest="lib/kahlua.jar"/>
+	</target>
+	
+	<target name="mochalua-lib" unless="mochalua.lib.exists">
+		<get src="http://mochalua.googlecode.com/files/Mochalua%201.0.jar"
+			dest="lib/mochalua-1.0.jar"/>
+	</target>
+
+	<target name="perf-libs" depends="luaj1-lib,luaj2-lib,bcel-lib,jill-lib,kahlua-lib,mochalua-lib"/>
+		
+	<macrodef name="perftest">
+		<attribute name="program" default="lua"/>
+		<attribute name="luaprog" default="fannkuch.lua 10"/>
+		<attribute name="basedir" default="test/lua/perf/"/>
+		<sequential>
+			<echo level="info">------ @{program} @{luaprog}</echo>
+			<exec executable="bash">
+				<arg value="-c"/>
+				<arg value="time @{program} @{basedir}@{luaprog}"/>
+			</exec>
+	   </sequential>
+	</macrodef>
+
+	
+	<macrodef name="testcase">
+		<attribute name="luaprog" default="fannkuch.lua 10"/>
+		<sequential>
+			<echo level="info">=========== @{luaprog} =============</echo>
+			<perftest program="java -version" luaprog="" basedir=""/>
+			<perftest program="lua" luaprog="@{luaprog}"/>
+			<!-- <perftest program="java -cp lib/luaj-j2se-1.0.4.jar lua" luaprog="@{luaprog}"/> -->
+			<perftest program="java -cp luaj-jse-2.0.jar lua" luaprog="@{luaprog}"/>
+			<perftest program="java -cp luaj-jse-2.0.jar lua -j" luaprog="@{luaprog}"/>
+			<perftest program="java -cp luaj-jse-2.0.jar\\;lib/bcel-5.2.jar lua -b" luaprog="@{luaprog}"/>
+	   </sequential>
+	</macrodef>
+
+	<target name="alltests">
+		<testcase luaprog="binarytrees.lua 15"/>
+		<testcase luaprog="nsieve.lua 9"/>
+		<testcase luaprog="fannkuch.lua 10"/>
+		<testcase luaprog="nbody.lua 1000000"/>
+	</target>
+	
+	<target name="all" depends="alltests"/>
+</project>

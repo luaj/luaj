@@ -72,6 +72,56 @@ at improving on the 1.0 vm in the following aspects.
 <li>Improved weak table support, including weak keys. 
 </ul>
 
+<h2>Performance</h2>
+Good performance is a major goal of luaj.  
+The following table provides measured execution times on a subset of benchmarks from 
+<a href="http://shootout.alioth.debian.org/">the computer language benchmarks game</a>  
+in comparison with the standard C distribution. 
+<table cellspacing="10"><tr><td><table>
+<tr valign="top">
+	<td><u>Language</td>
+	<td><u>Project</td>
+	<td><u>Version</td>
+	<td rowspan="6">&nbsp;&nbsp;</td>
+	<td colspan="4" align="center"><u>Execution&nbsp;time&nbsp;(sec)</td>
+	<td rowspan="6">&nbsp;&nbsp;</td>
+	<td><u>Sample&nbsp;command</td>
+	</tr>
+<tr valign="top"><td colspan="3"></td>
+	<td><em>binarytrees 15</em></td>
+	<td><em>nsieve 9</em></td>
+	<td><em>fannkuch 10</em></td>
+	<td><em>nbody 1e6</em></td>
+	</tr>
+<tr valign="top"><td>C</td><td>lua</td><td>5.1.4</td>
+	<td>17.637</td>
+	<td>5.477</td>
+	<td>16.044</td>
+	<td>15.201</td>
+	<td>lua fannkuch.lua 10</td></tr>
+<tr valign="top"><td rowspan="3">Java</td><td>luaj (interpreted)</td><td>2.0</td>
+	<td>18.355</td>
+	<td>18.339</td>
+	<td>33.953</td>
+	<td>48.088</td>
+	<td>java -cp luaj-jse-2.0.jar lua fannkuch.lua 10</td></tr>
+<tr valign="top"><td>luaj -j (lua2java)</td><td>2.0</td>
+	<td>4.463</td>
+	<td>13.789</td>
+	<td>5.884</td>
+	<td>16.701</td>
+	<td>java -cp luaj-jse-2.0.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
+<tr valign="top"><td>luaj -b (luajc)</td><td>2.0</td>
+	<td>2.980</td>
+	<td>11.274</td>
+	<td>5.073</td>
+	<td>16.794</td>
+	<td>java -cp luaj-jse-2.0.jar;bcel-5.2.jar lua <b>-b</b> fannkuch.lua 10</td></tr>
+</table></td></tr></table>
+Luaj in interpreted mode performs well for the benchmarks, and even better when source-to-source (lua2java) 
+or bytecode-to-bytecode (luajc) compilers are used, and actually executes <em>faster</em> than 
+C-based lua in some cases.
+
 <h1>2 - <a name="2">Simple Examples</a></h1>
 
 <h2>Run a lua script in Java SE</h2>
@@ -118,6 +168,12 @@ The output <em>hello.java</em> is Java source, that implements the logic in hell
 Once <em>hello.java</em> is compiled into <em>hello.class</em> it can be required and used in place of the original lua script, but with better performance.  
 There are no additional dependencies for compiling or running source-to-source compiled lua. 
 
+<p>
+Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-j</em></b> option when run in JDK 1.5 or higher:
+<pre>
+	java -cp lib/luaj-jse-2.0.jar lua -j examples/lua/hello.lua
+</pre>
+
 <h2>Compile lua bytecode to java bytecode</h2>
 
 <p>
@@ -134,8 +190,12 @@ The output <em>hello.class</em> is Java bytecode, should run and produce the sam
 There is no runtime dependency on the bcel library, 
 but the compiled classes must be in the class path at runtime, unless runtime jit-compiling via luajc and bcel are desired (see later sections).
 
+<p>
+Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-b</em></b> option and providing the <em>bcel</em> library in the class path:
 <pre>
+	java -cp &quot;lib/luaj-jse-2.0.jar;lib/bcel-5.2.jar&quot; lua -b examples/lua/hello.lua
 </pre>
+
 
 <h2>Run a script in a Java Application</h2>
 
