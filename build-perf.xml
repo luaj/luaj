@@ -61,9 +61,9 @@
 
 	<target name="alltests">
 		<testcase luaprog="binarytrees.lua 15"/>
-		<testcase luaprog="nsieve.lua 9"/>
 		<testcase luaprog="fannkuch.lua 10"/>
 		<testcase luaprog="nbody.lua 1000000"/>
+		<testcase luaprog="nsieve.lua 9"/>
 	</target>
 	
 	<target name="all" depends="alltests"/>

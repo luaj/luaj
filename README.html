@@ -79,48 +79,99 @@ The following table provides measured execution times on a subset of benchmarks 
 in comparison with the standard C distribution. 
 <table cellspacing="10"><tr><td><table>
 <tr valign="top">
-	<td><u>Language</td>
 	<td><u>Project</td>
 	<td><u>Version</td>
-	<td rowspan="6">&nbsp;&nbsp;</td>
-	<td colspan="4" align="center"><u>Execution&nbsp;time&nbsp;(sec)</td>
-	<td rowspan="6">&nbsp;&nbsp;</td>
+	<td><u>Mode</td>
+	<td rowspan="9">&nbsp;&nbsp;</td>
+	<td colspan="4" align="center"><u>Benchmark&nbsp;execution&nbsp;time&nbsp;(sec)</td>
+	<td rowspan="9">&nbsp;&nbsp;</td>
+	<td><u>Language</td>
 	<td><u>Sample&nbsp;command</td>
 	</tr>
-<tr valign="top"><td colspan="3"></td>
+<tr valign="top">
+	<td colspan="2"></td>
+	<td></td>
 	<td><em>binarytrees 15</em></td>
-	<td><em>nsieve 9</em></td>
 	<td><em>fannkuch 10</em></td>
 	<td><em>nbody 1e6</em></td>
+	<td><em>nsieve 9</em></td>
 	</tr>
-<tr valign="top"><td>C</td><td>lua</td><td>5.1.4</td>
-	<td>17.637</td>
-	<td>5.477</td>
-	<td>16.044</td>
-	<td>15.201</td>
-	<td>lua fannkuch.lua 10</td></tr>
-<tr valign="top"><td rowspan="3">Java</td><td>luaj (interpreted)</td><td>2.0</td>
-	<td>18.355</td>
-	<td>18.339</td>
-	<td>33.953</td>
-	<td>48.088</td>
-	<td>java -cp luaj-jse-2.0.jar lua fannkuch.lua 10</td></tr>
-<tr valign="top"><td>luaj -j (lua2java)</td><td>2.0</td>
-	<td>4.463</td>
-	<td>13.789</td>
-	<td>5.884</td>
-	<td>16.701</td>
-	<td>java -cp luaj-jse-2.0.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
-<tr valign="top"><td>luaj -b (luajc)</td><td>2.0</td>
+<tr valign="top">
+	<td>luaj</td>
+	<td>2.0</td>
+	<td>-b (luajc)</td>
 	<td>2.980</td>
-	<td>11.274</td>
 	<td>5.073</td>
 	<td>16.794</td>
+	<td>11.274</td>
+	<td>Java</td>
 	<td>java -cp luaj-jse-2.0.jar;bcel-5.2.jar lua <b>-b</b> fannkuch.lua 10</td></tr>
+<tr valign="top">
+	<td></td>
+	<td></td>
+	<td>-j (lua2java)</td>
+	<td>4.463</td>
+	<td>5.884</td>
+	<td>16.701</td>
+	<td>13.789</td>
+	<td></td>
+	<td>java -cp luaj-jse-2.0.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
+<tr valign="top">
+	<td></td>
+	<td></td>
+	<td>(interpreted)</td>
+	<td>18.355</td>
+	<td>33.953</td>
+	<td>48.088</td>
+	<td>18.339</td>
+	<td></td>
+	<td>java -cp luaj-jse-2.0.jar lua fannkuch.lua 10</td></tr>
+<tr valign="top">
+	<td>lua</td>
+	<td>5.1.4</td>
+	<td></td>
+	<td>17.637</td>
+	<td>16.044</td>
+	<td>15.201</td>
+	<td>5.477</td>
+	<td>C</td>
+	<td>lua fannkuch.lua 10</td></tr>
+<tr valign="top">
+	<td>jill</td>
+	<td>1.0.1</td>
+	<td></td>
+	<td>44.512</td>
+	<td>54.630</td>
+	<td>72.172</td>
+	<td>20.779</td>
+	<td>Java</td>
+	<td></td></tr>
+<tr valign="top">
+	<td>kahlua</td>
+	<td>1.0</td>
+	<td>jse</td>
+	<td>22.963</td>
+	<td>63.277</td>
+	<td>68.223</td>
+	<td>21.529</td>
+	<td>Java</td>
+	<td></td></tr>
+<tr valign="top">
+	<td>mochalua</td>
+	<td>1.0</td>
+	<td></td>
+	<td>50.457</td>
+	<td>70.368</td>
+	<td>82.868</td>
+	<td>41.262</td>
+	<td>Java</td>
+	<td></td></tr>
 </table></td></tr></table>
+
 Luaj in interpreted mode performs well for the benchmarks, and even better when source-to-source (lua2java) 
-or bytecode-to-bytecode (luajc) compilers are used, and actually executes <em>faster</em> than 
-C-based lua in some cases.
+or bytecode-to-bytecode (luajc) compilers are used, 
+and actually executes <em>faster</em> than C-based lua in some cases.  
+It is also faster than Java-lua implementations Jill, Kahlua, and Mochalua for all benchmarks tested.  
 
 <h1>2 - <a name="2">Simple Examples</a></h1>
 
