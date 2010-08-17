@@ -37,11 +37,13 @@ Freely available under the terms of the
 &middot;
 <a href="#5">luaj api</a>
 &middot;
-<a href="#6">building</a>
+<a href="#6">parser</a>
 &middot;
-<a href="#7">downloads</a>
+<a href="#7">building</a>
 &middot;
-<a href="#8">release notes</a>
+<a href="#8">downloads</a>
+&middot;
+<a href="#9">release notes</a>
 
 <!-- ====================================================================== -->
 <p>
@@ -348,7 +350,7 @@ that are needed and omitting the line:
 </pre>
 
 
-<h2>Including the lua-source-to-Java-source compiler</h2>
+<h2>Including the Lua2Java lua-source-to-Java-source compiler</h2>
 
 <p>
 To compile from lua sources to Java sources for all lua loaded at runtime, 
@@ -361,7 +363,7 @@ install the Lua2Java compiler <em>after</em> globals have been created using:
 This uses the system Java compiler to compile from Java source to Java bytecode, 
 and cannot compile lua binary files containing lua bytecode at runtime. 
 
-<h2>Including the lua-bytecode-to-Java-bytecode compiler</h2>
+<h2>Including the LuaJC lua-bytecode-to-Java-bytecode compiler</h2>
 
 <p>
 To compile from lua to Java bytecode for all lua loaded at runtime, 
@@ -376,7 +378,7 @@ This will compile all lua bytecode into Java bytecode, regardless of if they are
 lua source or lua binary files.
 
 <p>
-The <em>bcel</em> library must be on the class path for this to work.
+The requires <em>bcel</em> to be on the class path, and the ClassLoader of JSE or CDC.  
 
 <h1>3 - <a name="3">Concepts</a></h1>
 
@@ -605,7 +607,46 @@ To allow for arguments, or return multiple values, extend one of the other base 
 <h2>Closures</h2>
 Closures still exist in this framework, but are optional, and are only used to implement lua bytecode execution.  
 
-<h1>6 - <a name="6">Building and Testing</a></h1>
+<h1>6 - <a name="6">Parser</a></h1>
+
+<h2>Javacc Grammar</h2>
+A Javacc grammarwas developed to simplify the creation of Java-based parsers for the lua language.
+The grammar is specified for <a href="https://javacc.dev.java.net/">javacc version 5.0</a> because that tool generates standalone 
+parsers that do not require a separate runtime.     
+
+<p>
+A plain undecorated grammer that can be used for validation is available in <a href="grammar/Lua51.jj">grammar/Lua51.jj</a>
+while a grammar that generates a typed parse tree is in  <a href="grammar/LuaParser.jj">grammar/LuaParser.jj</a>
+
+<h2>Creating a Parse Tree from Lua Source</h2>
+The default lu compiler does a single-pass compile of lua source to lua bytecode, so no explicit parse tree is produced.  
+
+<p>
+To simplify the creation of abstract syntax trees from lua sources, the LuaParser class is generated as part of the JME build.  
+To use it, provide an input stream, and invoke the root generator, which will return a Chunk if the file is valid, 
+or throw a ParseException if there is a syntax error.
+
+<p>
+For example, to parse a file and print all variable names, use code like:
+<pre>
+	try {
+		String file = "main.lua";
+		LuaParser parser = new LuaParser(new FileInputStream(file));
+		Chunk chunk = parser.Chunk();
+		chunk.accept( new Visitor() {
+			public void visit(Exp.NameExp exp) {
+				System.out.println("Name in use: "+exp.name.name);
+			}
+		} );
+	} catch ( ParseException e ) {
+		System.out.println( "parse failed: "+e );
+	}
+</pre> 
+
+<p>
+See the <a href="docs/api/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
+
+<h1>7 - <a name="7">Building and Testing</a></h1>
 
 <h2>Building the jars</h2>
 An ant file is included in the root directory which builds the libraries by default.
@@ -640,7 +681,7 @@ A build script for running unit tests and producing code coverage statistics is 
 
 It relies on the cobertura code coverage library.
 
-<h1>7 - <a name="7">Downloads</a></h1>
+<h1>8 - <a name="8">Downloads</a></h1>
 
 <h2>Downloads and Project Pages</h2>
 Downloads for version 1.0.3 are currently hosted on SourceForge.  
@@ -658,7 +699,7 @@ and LuaForge:
 	<a href="http://luaforge.net/frs/?group_id=457">LuaForge Luaj Project Area</a>
 </pre>
 
-<h1>8 - <a name="8">Release Notes</a></h1>
+<h1>9 - <a name="9">Release Notes</a></h1>
 
 <h2>Main Changes by Version</h2>
 <table cellspacing="10"><tr><td><table cellspacing="4">
