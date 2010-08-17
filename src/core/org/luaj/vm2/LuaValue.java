@@ -168,7 +168,6 @@ public class LuaValue extends Varargs {
 	protected LuaValue typerror(String expected) { throw new LuaError(expected+" expected, got "+typename()); }
 	protected LuaValue unimplemented(String fun) { throw new LuaError("'"+fun+"' not implemented for "+typename()); }
 	protected LuaValue illegal(String op,String typename) { throw new LuaError("illegal operation '"+op+"' for "+typename); }
-	protected LuaValue callerror() { throw new LuaError("attempt to call "+typename()); }
 	protected LuaValue lenerror() { throw new LuaError("attempt to get length of "+typename()); }
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on "+typename()); }
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
@@ -214,10 +213,10 @@ public class LuaValue extends Varargs {
 	public void setfenv(LuaValue env) { typerror("function or thread"); }
 		
 	// function calls
-	public LuaValue call() { return callerror(); }
-	public LuaValue call(LuaValue arg) { return callerror(); }
-	public LuaValue call(LuaValue arg1, LuaValue arg2) { return callerror(); }
-	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return callerror(); }
+	public LuaValue call() { return callmt().call(this); }
+	public LuaValue call(LuaValue arg) { return callmt().call(this,arg); }
+	public LuaValue call(LuaValue arg1, LuaValue arg2) { return callmt().call(this,arg1,arg2); }
+	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return callmt().invoke(LuaValue.varargsOf(new LuaValue[]{this,arg1,arg2,arg3})).arg1(); }
 	public LuaValue method(String name) { return this.get(name).call(this); }
 	public LuaValue method(LuaValue name) { return this.get(name).call(this); }
 	public LuaValue method(String name, LuaValue arg) { return this.get(name).call(this,arg); }
@@ -225,7 +224,7 @@ public class LuaValue extends Varargs {
 	public LuaValue method(String name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public LuaValue method(LuaValue name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public Varargs invoke() { return invoke(NONE); }
-	public Varargs invoke(Varargs args) { return callerror(); }
+	public Varargs invoke(Varargs args) { return callmt().invoke(args); }
 	public Varargs invoke(LuaValue arg,Varargs varargs) { return invoke(varargsOf(arg,varargs)); }
 	public Varargs invoke(LuaValue arg1,LuaValue arg2,Varargs varargs) { return invoke(varargsOf(arg1,arg2,varargs)); }
 	public Varargs invoke(LuaValue[] args) { return invoke(varargsOf(args)); }
@@ -236,7 +235,10 @@ public class LuaValue extends Varargs {
 	public Varargs invokemethod(LuaValue name, Varargs args) { return get(name).invoke(varargsOf(this,args)); }
 	public Varargs invokemethod(String name, LuaValue[] args) { return get(name).invoke(varargsOf(this,varargsOf(args))); }
 	public Varargs invokemethod(LuaValue name, LuaValue[] args) { return get(name).invoke(varargsOf(this,varargsOf(args))); }
-
+	protected LuaValue callmt() {
+		return checkmetatag(CALL, "attempt to call ");
+	}
+	
 	// unary operators
 	public LuaValue not()  { return FALSE;  }
 	public LuaValue neg()  { return aritherror("neg");  }
@@ -415,6 +417,13 @@ public class LuaValue extends Varargs {
     		return NIL;
     	return mt.rawget(tag);
     }
+    
+	protected LuaValue checkmetatag(LuaValue tag, String reason) {
+		LuaValue h = this.metatag(tag);
+		if ( h.isnil() )
+			throw new LuaError(reason+typename());
+		return h;
+	}
     
     private void indexerror() {
 		error( "attempt to index ? (a "+typename()+" value)" );
