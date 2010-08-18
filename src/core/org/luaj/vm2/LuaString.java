@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Hashtable;
 
+import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.StringLib;
 
 public class LuaString extends LuaValue {
@@ -108,24 +109,33 @@ public class LuaString extends LuaValue {
 	}
 
 	// unary operators
-	public LuaValue neg() { return checkarith().neg(); }
+	public LuaValue neg() { return valueOf(-checkarith()); }
 
 	// basic binary arithmetic
-	public LuaValue   add( LuaValue rhs )      { return checkarith().add(rhs); }
-	public LuaValue   add( double lhs )   { return checkarith().add(lhs); }
-	public LuaValue   sub( LuaValue rhs )      { return checkarith().sub(rhs); }
-	public LuaValue   subFrom( double lhs ) { return checkarith().subFrom(lhs); }
-	public LuaValue   mul( LuaValue rhs )      { return checkarith().mul(rhs); }
-	public LuaValue   mul( double lhs ) { return checkarith().mul(lhs); }
-	public LuaValue   mul( int lhs )    { return checkarith().mul(lhs); }
-	public LuaValue   pow( LuaValue rhs )      { return checkarith().pow(rhs); }
-	public LuaValue   powWith( double lhs ) { return checkarith().powWith(lhs); }
-	public LuaValue   powWith( int lhs )    { return checkarith().powWith(lhs); }
-	public LuaValue   div( LuaValue rhs )      { return checkarith().div(rhs); }
-	public LuaValue   divInto( double lhs ) { return checkarith().divInto(lhs); }
-	public LuaValue   mod( LuaValue rhs )      { return checkarith().mod(rhs); }
-	public LuaValue   modFrom( double lhs ) { return checkarith().modFrom(lhs); }
-
+	public LuaValue   add( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(ADD,rhs): rhs.add(d); }
+	public LuaValue   add( double rhs )        { return valueOf( checkarith() + rhs ); }
+	public LuaValue   add( int rhs )           { return valueOf( checkarith() + rhs ); }
+	public LuaValue   sub( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(SUB,rhs): rhs.subFrom(d); }
+	public LuaValue   sub( double rhs )        { return valueOf( checkarith() - rhs ); }
+	public LuaValue   sub( int rhs )           { return valueOf( checkarith() - rhs ); }
+	public LuaValue   subFrom( double lhs )    { return valueOf( lhs - checkarith() ); }
+	public LuaValue   mul( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(MUL,rhs): rhs.mul(d); }
+	public LuaValue   mul( double rhs )        { return valueOf( checkarith() * rhs ); }
+	public LuaValue   mul( int rhs )           { return valueOf( checkarith() * rhs ); }
+	public LuaValue   pow( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(POW,rhs): rhs.powWith(d); }
+	public LuaValue   pow( double rhs )        { return MathLib.dpow(checkarith(),rhs); }
+	public LuaValue   pow( int rhs )           { return MathLib.dpow(checkarith(),rhs); }
+	public LuaValue   powWith( double lhs )    { return MathLib.dpow(lhs, checkarith()); }
+	public LuaValue   powWith( int lhs )       { return MathLib.dpow(lhs, checkarith()); }
+	public LuaValue   div( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(DIV,rhs): rhs.divInto(d); }
+	public LuaValue   div( double rhs )        { return LuaDouble.ddiv(checkarith(),rhs); }
+	public LuaValue   div( int rhs )           { return LuaDouble.ddiv(checkarith(),rhs); }
+	public LuaValue   divInto( double lhs )    { return LuaDouble.ddiv(lhs, checkarith()); }
+	public LuaValue   mod( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(MOD,rhs): rhs.modFrom(d); }
+	public LuaValue   mod( double rhs )        { return LuaDouble.dmod(checkarith(), rhs); }
+	public LuaValue   mod( int rhs )           { return LuaDouble.dmod(checkarith(), rhs); }
+	public LuaValue   modFrom( double lhs )    { return LuaDouble.dmod(lhs, checkarith()); }
+	
 	// relational operators, these only work with other strings
 	public LuaValue   lt( LuaValue rhs )         { return rhs.strcmp(this)>0? LuaValue.TRUE: FALSE; }
 	public boolean lt_b( LuaValue rhs )       { return rhs.strcmp(this)>0; }
@@ -160,56 +170,67 @@ public class LuaString extends LuaValue {
 	}
 	
 	/** Check for number in arithmetic, or throw aritherror */
-	private LuaValue checkarith() { 
-		LuaValue v = tonumber(10);
-		return v.isnil()? aritherror(): v;
+	private double checkarith() { 
+		double d = scannumber(10);
+		if ( Double.isNaN(d) ) 
+			aritherror();
+		return d;
 	}
 	
 	public int checkint() {
-		return checknumber().toint(); 
+		return (int) (long) checkdouble();
 	}
 	public LuaInteger checkinteger() {
-		return checknumber().checkinteger(); 
+		return valueOf(checkint());
 	}
 	public long checklong() {
-		return checknumber().tolong();
+		return (long) checkdouble();
 	}
 	public double checkdouble() {
-		return checknumber().todouble();
+		double d = scannumber(10);
+		if ( Double.isNaN(d) )
+			argerror("number");
+		return d;
 	}
 	public LuaNumber checknumber() {
-		LuaValue n = tonumber(10);
-		if ( ! n.isnumber() )
-			argerror("number");
-		return (LuaNumber) n;
+		return valueOf(checkdouble());
 	}
 	public LuaNumber checknumber(String msg) {
-		LuaValue n = tonumber(10);
-		if ( ! n.isnumber() )
-			argerror(msg);
-		return (LuaNumber) n;
+		double d = scannumber(10);
+		if ( Double.isNaN(d) )
+			argerror("number");
+		return valueOf(d);
 	}
 	public LuaValue tonumber() {
 		return tonumber(10);
 	}
 
 	public boolean isnumber() {
-		return ! tonumber(10).isnil();
+		double d = scannumber(10);
+		return ! Double.isNaN(d);
 	}
 	
 	public boolean isint() {
-		return tonumber(10).isint();
+		double d = scannumber(10);
+		if ( Double.isNaN(d) ) 
+			return false;
+		int i = (int) d;
+		return i == d;
 	}
 
 	public boolean islong() { 
-		return tonumber(10).islong(); 
+		double d = scannumber(10);
+		if ( Double.isNaN(d) ) 
+			return false;
+		long l = (long) d;
+		return l == d;
 	}
 	
 	public byte    tobyte()        { return (byte) toint(); }
 	public char    tochar()        { return (char) toint(); }
-	public double  todouble()      { LuaValue n=tonumber(10); return n.isnil()? 0: n.todouble(); }
+	public double  todouble()      { double d=scannumber(10); return Double.isNaN(d)? 0: d; }
 	public float   tofloat()       { return (float) todouble(); }
-	public int     toint()         { LuaValue n=tonumber(10); return n.isnil()? 0: n.toint(); }
+	public int     toint()         { return (int) tolong(); }
 	public long    tolong()        { return (long) todouble(); }
 	public short   toshort()       { return (short) toint(); }
 
@@ -467,44 +488,53 @@ public class LuaString extends LuaValue {
 	 * @return IntValue, DoubleValue, or NIL depending on the content of the string. 
 	 */
 	public LuaValue tonumber( int base ) {
+		double d = scannumber( base );
+		return Double.isNaN(d)? NIL: valueOf(d);
+	}
+	
+	/** 
+	 * Convert to a number in a base, or return Double.NaN if not a number.
+	 */
+	public double scannumber( int base ) {
 		if ( base >= 2 && base <= 36 ) {
 			int i=m_offset,j=m_offset+m_length;
 			while ( i<j && m_bytes[i]==' ' ) ++i;
 			while ( i<j && m_bytes[j-1]==' ' ) --j;
-			if ( i>=j ) return FALSE;
+			if ( i>=j )
+				return Double.NaN;
 			if ( ( base == 10 || base == 16 ) && ( m_bytes[i]=='0' && i+1<j && (m_bytes[i+1]=='x'||m_bytes[i+1]=='X') ) ) {
 				base = 16;
 				i+=2;
 			}
-			LuaValue l = scanlong( base, i, j );
-			return l!=NIL? l: base==10? scandouble(i,j): NIL;
+			double l = scanlong( base, i, j );
+			return Double.isNaN(l) && base==10? scandouble(i,j): l;
 		}
 		
-		return NIL;
+		return Double.NaN;
 	}
 	
 	/**
-	 * Scan and convert a long value, or return NIL if not found.
-	 * @return DoubleValue, IntValue, or NIL depending on what is found.
+	 * Scan and convert a long value, or return Double.NaN if not found.
+	 * @return DoubleValue, IntValue, or Double.NaN depending on what is found.
 	 */
-	private LuaValue scanlong( int base, int start, int end ) {
+	private double scanlong( int base, int start, int end ) {
 		long x = 0;
 		boolean neg = (m_bytes[start] == '-');
 		for ( int i=(neg?start+1:start); i<end; i++ ) {
 			int digit = m_bytes[i] - (base<=10||(m_bytes[i]>='0'&&m_bytes[i]<='9')? '0':
 					m_bytes[i]>='A'&&m_bytes[i]<='Z'? ('A'-10): ('a'-10));
 			if ( digit < 0 || digit >= base )
-				return NIL;		
+				return Double.NaN;		
 			x = x * base + digit;
 		}
-		return valueOf(neg? -x: x);
+		return neg? -x: x;
 	}
 	
 	/**
-	 * Scan and convert a double value, or return NIL if not a double.
-	 * @return DoubleValue, IntValue, or NIL depending on what is found.
+	 * Scan and convert a double value, or return Double.NaN if not a double.
+	 * @return DoubleValue, IntValue, or Double.NaN depending on what is found.
 	 */
-	private LuaValue scandouble(int start, int end) {
+	private double scandouble(int start, int end) {
 		if ( end>start+64 ) end=start+64;
 		for ( int i=start; i<end; i++ ) {
 			switch ( m_bytes[i] ) {
@@ -516,17 +546,17 @@ public class LuaString extends LuaValue {
 			case '5': case '6': case '7': case '8': case '9':
 				break;
 			default:
-				return NIL;
+				return Double.NaN;
 			}
 		}
 		char [] c = new char[end-start];
 		for ( int i=start; i<end; i++ )
 			c[i-start] = (char) m_bytes[i];
 		try {
-			return valueOf( Double.parseDouble(new String(c)));
+			return Double.parseDouble(new String(c));
 		} catch ( Exception e ) {			
+			return Double.NaN;
 		}
-		return NIL;
 	}
 
 }

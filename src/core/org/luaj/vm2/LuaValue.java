@@ -66,6 +66,12 @@ public class LuaValue extends Varargs {
 	public static final LuaString CALL        = valueOf("__call");
 	public static final LuaString MODE        = valueOf("__mode");	
 	public static final LuaString METATABLE   = valueOf("__metatable");
+	public static final LuaString ADD         = valueOf("__add");	
+	public static final LuaString SUB         = valueOf("__sub");	
+	public static final LuaString DIV         = valueOf("__div");	
+	public static final LuaString MUL         = valueOf("__mul");	
+	public static final LuaString POW         = valueOf("__pow");	
+	public static final LuaString MOD         = valueOf("__mod");	
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
 	private static int MAXSTACK = 250;
@@ -261,30 +267,36 @@ public class LuaValue extends Varargs {
 	public boolean neq_b( int val )        { return ! eq_b(val); }
 
 	// arithmetic operators
-	public LuaValue   add( LuaValue rhs )        { return aritherror("add"); }
+	public LuaValue   add( LuaValue rhs )        { return arithmt(ADD,rhs); }
 	public LuaValue   add(double rhs)         { return aritherror("add"); }
 	public LuaValue   add(int rhs)            { return add((double)rhs); }
-	public LuaValue   sub( LuaValue rhs )        { return aritherror("sub"); }
+	public LuaValue   sub( LuaValue rhs )        { return arithmt(SUB,rhs); }
 	public LuaValue   sub( double rhs )        { return aritherror("sub"); }
 	public LuaValue   sub( int rhs )        { return aritherror("sub"); }
 	public LuaValue   subFrom(double lhs)     { return aritherror("sub"); }
 	public LuaValue   subFrom(int lhs)        { return subFrom((double)lhs); }
-	public LuaValue   mul( LuaValue rhs )        { return aritherror("mul"); }
+	public LuaValue   mul( LuaValue rhs )        { return arithmt(MUL,rhs); }
 	public LuaValue   mul(double rhs)         { return aritherror("mul"); }
 	public LuaValue   mul(int rhs)            { return mul((double)rhs); }
-	public LuaValue   pow( LuaValue rhs )        { return aritherror("pow"); }
+	public LuaValue   pow( LuaValue rhs )        { return arithmt(POW,rhs); }
 	public LuaValue   pow( double rhs )        { return aritherror("pow"); }
 	public LuaValue   pow( int rhs )        { return aritherror("pow"); }
 	public LuaValue   powWith(double lhs)     { return aritherror("mul"); }
 	public LuaValue   powWith(int lhs)        { return powWith((double)lhs); }
-	public LuaValue   div( LuaValue rhs )        { return aritherror("div"); }
+	public LuaValue   div( LuaValue rhs )        { return arithmt(DIV,rhs); }
 	public LuaValue   div( double rhs )        { return aritherror("div"); }
 	public LuaValue   div( int rhs )        { return aritherror("div"); }
 	public LuaValue   divInto(double lhs)     { return aritherror("divInto"); }
-	public LuaValue   mod( LuaValue rhs )        { return aritherror("mod"); }
+	public LuaValue   mod( LuaValue rhs )        { return arithmt(MOD,rhs); }
 	public LuaValue   mod( double rhs )        { return aritherror("mod"); }
 	public LuaValue   mod( int rhs )        { return aritherror("mod"); }
 	public LuaValue   modFrom(double lhs)     { return aritherror("modFrom"); }
+	protected LuaValue arithmt(LuaValue tag, LuaValue op2) {
+		LuaValue h = this.metatag(tag);
+		if ( h.isnil() )
+			h = op2.checkmetatag(tag, "attempt to perform arithmetic on ");
+		return h.call( this, op2 );
+	}
 	
 	// relational operators
 	public LuaValue   lt( LuaValue rhs )         { return compareerror(rhs); }
