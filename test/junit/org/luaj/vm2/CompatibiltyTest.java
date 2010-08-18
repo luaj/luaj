@@ -49,6 +49,7 @@ public class CompatibiltyTest extends TestSuite {
 		public void testIoLib()         { runTest("iolib");     }
 		public void testManyUpvals()    { runTest("manyupvals"); }
 		public void testMathLib()       { runTest("mathlib"); }
+		public void testMetatags()      { runTest("metatags"); }
 		public void testOsLib()         { runTest("oslib"); }
 		public void testStringLib()     { runTest("stringlib"); }
 		public void testTableLib()      { runTest("tablelib"); }

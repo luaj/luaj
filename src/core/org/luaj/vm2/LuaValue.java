@@ -216,7 +216,7 @@ public class LuaValue extends Varargs {
 	public LuaValue call() { return callmt().call(this); }
 	public LuaValue call(LuaValue arg) { return callmt().call(this,arg); }
 	public LuaValue call(LuaValue arg1, LuaValue arg2) { return callmt().call(this,arg1,arg2); }
-	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return callmt().invoke(LuaValue.varargsOf(new LuaValue[]{this,arg1,arg2,arg3})).arg1(); }
+	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) { return callmt().invoke(new LuaValue[]{this,arg1,arg2,arg3}).arg1(); }
 	public LuaValue method(String name) { return this.get(name).call(this); }
 	public LuaValue method(LuaValue name) { return this.get(name).call(this); }
 	public LuaValue method(String name, LuaValue arg) { return this.get(name).call(this,arg); }
@@ -224,7 +224,7 @@ public class LuaValue extends Varargs {
 	public LuaValue method(String name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public LuaValue method(LuaValue name, LuaValue arg1, LuaValue arg2) { return this.get(name).call(this,arg1,arg2); }
 	public Varargs invoke() { return invoke(NONE); }
-	public Varargs invoke(Varargs args) { return callmt().invoke(args); }
+	public Varargs invoke(Varargs args) { return callmt().invoke(this,args); }
 	public Varargs invoke(LuaValue arg,Varargs varargs) { return invoke(varargsOf(arg,varargs)); }
 	public Varargs invoke(LuaValue arg1,LuaValue arg2,Varargs varargs) { return invoke(varargsOf(arg1,arg2,varargs)); }
 	public Varargs invoke(LuaValue[] args) { return invoke(varargsOf(args)); }

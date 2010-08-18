@@ -557,6 +557,7 @@ public class DebugLib extends VarArgFunction {
 				case TBOOLEAN:  LuaBoolean.s_metatable  = mt; break;
 				case TSTRING:   LuaString.s_metatable   = mt; break;
 				case TFUNCTION: LuaFunction.s_metatable = mt; break;
+				case TTHREAD:   LuaThread.s_metatable   = mt; break;
 				default: object.setmetatable( mt );
 			}
 			return LuaValue.TRUE;
