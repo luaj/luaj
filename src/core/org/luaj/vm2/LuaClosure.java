@@ -26,8 +26,6 @@ import org.luaj.vm2.lib.DebugLib;
 public class LuaClosure extends LuaFunction {
 	private static final UpValue[] NOUPVALUES = new UpValue[0];
 	
-	public LuaValue s_metatable;
-
 	public final Prototype p;
 	public final UpValue[] upValues;
 	

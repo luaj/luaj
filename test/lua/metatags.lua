@@ -3,7 +3,7 @@ local anumber   = 111
 local aboolean  = false
 local afunction = function() end
 local athread   = coroutine.create( afunction )
-local values = { athread, aboolean, afunction, athread }
+local values = { anumber, aboolean, afunction, athread }
 for i=1,#values do
 	print( debug.getmetatable( values[i] ) )
 end
@@ -13,7 +13,14 @@ tostring = function(o)
 	return (t=='thread' or t=='function') and t or ts(o)
 end
 
-local buildbin = function(name)
+local buildunop = function(name)
+	return function(a)
+		print( 'mt.__'..name..'()', type(a), a )
+		return '__'..name..'-result'
+	end
+end
+
+local buildbinop = function(name)
 	return function(a,b)
 		print( 'mt.__'..name..'()', type(a), type(b), a, b )
 		return '__'..name..'-result'
@@ -25,12 +32,14 @@ local mt = {
 		print( 'mt.__call()', type(a), type(b), type(c), b, c )
 		return '__call-result'
 	end,
-	__add=buildbin('add'),
-	__sub=buildbin('sub'),
-	__mul=buildbin('mul'),
-	__div=buildbin('div'),
-	__pow=buildbin('pow'),
-	__mod=buildbin('mod'),
+	__add=buildbinop('add'),
+	__sub=buildbinop('sub'),
+	__mul=buildbinop('mul'),
+	__div=buildbinop('div'),
+	__pow=buildbinop('pow'),
+	__mod=buildbinop('mod'),
+	__unm=buildunop('unm'),
+	__len=buildunop('neg'),
 }
 
 -- pcall a function and check for a pattern in the error string
@@ -80,10 +89,22 @@ for i=1,#groups do
 	print( debug.setmetatable( a, nil ) )
 end
 
-
-
-print( '---- final metatables' )
-for i=1,#values do 
-	print( debug.getmetatable( values[i] ) )
+print( '---- __len' )
+values = { aboolean, afunction, athread }
+for i=1,#values do
+	print( type(values[i]), 'before', ecall( 'attempt to get length of ', function() return #values[i] end ) )
+	print( debug.setmetatable( values[i], mt ) )
+	print( type(values[i]), 'after', pcall( function() return #values[i] end ) )
+	print( debug.setmetatable( values[i], nil ) )
 end
+
+print( '---- __neg' )
+values = { aboolean, afunction, athread, "abcd" }
+for i=1,#values do
+	print( type(values[i]), 'before', ecall( 'attempt to get length of ', function() return #values[i] end ) )
+	print( debug.setmetatable( values[i], mt ) )
+	print( type(values[i]), 'after', pcall( function() return #values[i] end ) )
+	print( debug.setmetatable( values[i], nil ) )
+end
+
 	

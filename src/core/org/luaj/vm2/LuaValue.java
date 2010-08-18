@@ -64,14 +64,16 @@ public class LuaValue extends Varargs {
 	public static final LuaString INDEX       = valueOf("__index");
 	public static final LuaString NEWINDEX    = valueOf("__newindex");
 	public static final LuaString CALL        = valueOf("__call");
-	public static final LuaString MODE        = valueOf("__mode");	
+	public static final LuaString MODE        = valueOf("__mode");
 	public static final LuaString METATABLE   = valueOf("__metatable");
-	public static final LuaString ADD         = valueOf("__add");	
-	public static final LuaString SUB         = valueOf("__sub");	
-	public static final LuaString DIV         = valueOf("__div");	
-	public static final LuaString MUL         = valueOf("__mul");	
-	public static final LuaString POW         = valueOf("__pow");	
-	public static final LuaString MOD         = valueOf("__mod");	
+	public static final LuaString ADD         = valueOf("__add");
+	public static final LuaString SUB         = valueOf("__sub");
+	public static final LuaString DIV         = valueOf("__div");
+	public static final LuaString MUL         = valueOf("__mul");
+	public static final LuaString POW         = valueOf("__pow");
+	public static final LuaString MOD         = valueOf("__mod");
+	public static final LuaString UNM         = valueOf("__unm");
+	public static final LuaString LEN         = valueOf("__len");
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
 	private static int MAXSTACK = 250;
@@ -247,9 +249,9 @@ public class LuaValue extends Varargs {
 	
 	// unary operators
 	public LuaValue not()  { return FALSE;  }
-	public LuaValue neg()  { return aritherror("neg");  }
-	public LuaValue len()  { return lenerror(); }
-	public int length() { error("attempt to get length of "+typename()); return 0; }
+	public LuaValue neg()  { return checkmetatag(UNM, "attempt to perform arithmetic on ").call(this);  }
+	public LuaValue len()  { return checkmetatag(LEN, "attempt to get length of ").call(this);  }
+	public int length()    { return len().toint(); }
 	public LuaValue getn() { return typerror("getn"); }
 	
 	// object equality, used for key comparison

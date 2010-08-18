@@ -109,7 +109,7 @@ public class LuaString extends LuaValue {
 	}
 
 	// unary operators
-	public LuaValue neg() { return valueOf(-checkarith()); }
+	public LuaValue neg() { double d = scannumber(10); return Double.isNaN(d)? super.neg(): valueOf(-d); }
 
 	// basic binary arithmetic
 	public LuaValue   add( LuaValue rhs )      { double d = scannumber(10); return Double.isNaN(d)? arithmt(ADD,rhs): rhs.add(d); }
