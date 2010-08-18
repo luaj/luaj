@@ -43,6 +43,8 @@ local mt = {
 		return 'mt.__tostring('..type(a)..','..type(b)..')'
 	end,
 	__metatable={},
+	__index=buildop('index'),
+	__newindex=buildop('newindex'),
 }
 
 -- pcall a function and check for a pattern in the error string
@@ -175,6 +177,24 @@ for i=1,#values do
 	print( type(a), 'before', pcall( function() return debug.getmetatable(a), getmetatable(a) end ) )
 	print( debug.setmetatable( a, mt ) )
 	print( type(a), 'after', pcall( function() return debug.getmetatable(a), getmetatable(a) end ) )
+	print( debug.setmetatable( a, nil ) )
+end
+
+print( '---- __index, __newindex' )
+values = { aboolean, anumber, afunction, athread }
+for i=1,#values do
+	local a = values[i]
+	print( type(a), 'before', ecall( 'attempt to index', function() return a.foo end ) )
+	print( type(a), 'before', ecall( 'attempt to index', function() return a[123] end ) )
+	print( type(a), 'before', ecall( 'index', function() a.foo = 'bar' end ) )
+	print( type(a), 'before', ecall( 'index', function() a[123] = 'bar' end ) )
+	print( type(a), 'before', ecall( 'attempt to index', function() return a:foo() end ) )
+	print( debug.setmetatable( a, mt ) )
+	print( type(a), 'after', pcall( function() return a.foo end ) )
+	print( type(a), 'after', pcall( function() return a[123] end ) )
+	print( type(a), 'after', pcall( function() a.foo = 'bar' end ) )
+	print( type(a), 'after', pcall( function() a[123] = 'bar' end ) )
+	print( type(a), 'after', ecall( 'attempt to call', function() return a:foo() end ) )
 	print( debug.setmetatable( a, nil ) )
 end
 
