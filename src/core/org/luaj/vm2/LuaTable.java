@@ -120,14 +120,10 @@ public class LuaTable extends LuaValue {
 	}
 	
 	public LuaValue getmetatable() {
-		if ( m_metatable!=null )
-			return m_metatable.rawget(METATABLE).optvalue(m_metatable);
 		return m_metatable;
 	}
 	
 	public LuaValue setmetatable(LuaValue metatable) {
-		if ( m_metatable!=null && !m_metatable.rawget(METATABLE).isnil() )
-			error("cannot change a protected metatable");
 		m_metatable = metatable;
 		LuaValue mode;
 		if ( m_metatable!=null && (mode=m_metatable.rawget(MODE)).isstring() ) {

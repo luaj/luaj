@@ -204,7 +204,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 3: // "getmetatable", // ( object ) -> table
 			{
 				LuaValue mt = args.checkvalue(1).getmetatable();
-				return mt!=null? mt: NIL;
+				return mt!=null? mt.rawget(METATABLE).optvalue(mt): NIL;
 			}
 			case 4: // "load", // ( func [,chunkname] ) -> chunk | nil, msg
 			{
@@ -294,12 +294,19 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 			case 16: { // "setmetatable", // (table, metatable) -> table
 				final LuaValue t = args.arg1();
+				final LuaValue mt0 = t.getmetatable();
+				if ( mt0!=null && !mt0.rawget(METATABLE).isnil() )
+					error("cannot change a protected metatable");
 				final LuaValue mt = args.checkvalue(2);
 				return t.setmetatable(mt.isnil()? null: mt.checktable());
 			}
 			case 17: { // "tostring", // (e) -> value
 				LuaValue arg = args.checkvalue(1);
-				return arg.type() == LuaValue.TSTRING? arg: valueOf(arg.tojstring());
+				LuaValue h = arg.metatag(TOSTRING);
+				if ( ! h.isnil() ) return h.call(arg);
+				LuaValue v = arg.tostring();
+				if ( ! v.isnil() ) return v;
+				return valueOf(arg.tojstring());
 			}
 			case 18: { // "tonumber", // (e [,base]) -> value
 				LuaValue arg1 = args.checkvalue(1);

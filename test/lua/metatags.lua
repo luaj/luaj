@@ -11,7 +11,7 @@ local ts = tostring
 local tb,count = {},0
 tostring = function(o)
 	local t = type(o)
-	if t~='thread' and t~='function' then return ts(o) end
+	if t~='thread' and t~='function' and t~='table' then return ts(o) end
 	if not tb[o] then
 		count = count + 1
 		tb[o] = t..'.'..count
@@ -19,36 +19,30 @@ tostring = function(o)
 	return tb[o]
 end
 
-local buildunop = function(name)
-	return function(a)
-		print( 'mt.__'..name..'()', type(a), a )
-		return '__'..name..'-result'
-	end
-end
-
-local buildbinop = function(name)
-	return function(a,b)
-		print( 'mt.__'..name..'()', type(a), type(b), a, b )
+local buildop = function(name)
+	return function(a,b,c)
+		print( 'mt.__'..name..'()', a, b, c )
 		return '__'..name..'-result'
 	end
 end
 
 local mt = {
-	__call=function(a,b,c) 
-		print( 'mt.__call()', type(a), type(b), type(c), b, c )
-		return '__call-result'
+	__call=buildop('call'),
+	__add=buildop('add'),
+	__sub=buildop('sub'),
+	__mul=buildop('mul'),
+	__div=buildop('div'),
+	__pow=buildop('pow'),
+	__mod=buildop('mod'),
+	__unm=buildop('unm'),
+	__len=buildop('neg'),
+	__eq=buildop('eq'),
+	__lt=buildop('lt'),
+	__le=buildop('le'),
+	__tostring=function(a,b)
+		return 'mt.__tostring('..type(a)..','..type(b)..')'
 	end,
-	__add=buildbinop('add'),
-	__sub=buildbinop('sub'),
-	__mul=buildbinop('mul'),
-	__div=buildbinop('div'),
-	__pow=buildbinop('pow'),
-	__mod=buildbinop('mod'),
-	__unm=buildunop('unm'),
-	__len=buildunop('neg'),
-	__eq=buildbinop('eq'),
-	__lt=buildbinop('lt'),
-	__le=buildbinop('le'),
+	__metatable={},
 }
 
 -- pcall a function and check for a pattern in the error string
@@ -60,51 +54,53 @@ end
 
 print( '---- __call' )
 for i=1,#values do
-	print( type(values[i]), 'before', ecall( 'attempt to call', function() return values[i]('a','b') end ) )
-	print( debug.setmetatable( values[i], mt ) )
-	print( type(values[i]), 'after', pcall( function() return values[i]() end ) )
-	print( type(values[i]), 'after', pcall( function() return values[i]('a') end ) )
-	print( type(values[i]), 'after', pcall( function() return values[i]('a','b') end ) )
-	print( type(values[i]), 'after', pcall( function() return values[i]('a','b','c') end ) )
-	print( type(values[i]), 'after', pcall( function() return values[i]('a','b','c','d') end ) )
-	print( debug.setmetatable( values[i], nil ) )
+	local a = values[i]
+	print( type(a), 'before', ecall( 'attempt to call', function() return a('a','b') end ) )
+	print( debug.setmetatable( a, mt ) )
+	print( type(a), 'after', pcall( function() return a() end ) )
+	print( type(a), 'after', pcall( function() return a('a') end ) )
+	print( type(a), 'after', pcall( function() return a('a','b') end ) )
+	print( type(a), 'after', pcall( function() return a('a','b','c') end ) )
+	print( type(a), 'after', pcall( function() return a('a','b','c','d') end ) )
+	print( debug.setmetatable( a, nil ) )
 end
 
 print( '---- __add, __sub, __mul, __div, __pow, __mod' )
 local groups = { {aboolean, aboolean}, {aboolean, athread}, {aboolean, afunction}, {aboolean, "abc"} }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return a+b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return b+a end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return a-b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return b-a end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return a*b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return b*a end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return a^b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return b^a end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return a%b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to perform arithmetic', function() return b%a end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a+b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return b+a end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a-b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return b-a end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a*b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return b*a end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a^b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return b^a end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a%b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return b%a end ) )
 	print( debug.setmetatable( a, mt ) )
-	print( type(values[i]), 'after', pcall( function() return a+b end ) )
-	print( type(values[i]), 'after', pcall( function() return b+a end ) )
-	print( type(values[i]), 'after', pcall( function() return a-b end ) )
-	print( type(values[i]), 'after', pcall( function() return b-a end ) )
-	print( type(values[i]), 'after', pcall( function() return a*b end ) )
-	print( type(values[i]), 'after', pcall( function() return b*a end ) )
-	print( type(values[i]), 'after', pcall( function() return a^b end ) )
-	print( type(values[i]), 'after', pcall( function() return b^a end ) )
-	print( type(values[i]), 'after', pcall( function() return a%b end ) )
-	print( type(values[i]), 'after', pcall( function() return b%a end ) )
+	print( type(a), type(b), 'after', pcall( function() return a+b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b+a end ) )
+	print( type(a), type(b), 'after', pcall( function() return a-b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b-a end ) )
+	print( type(a), type(b), 'after', pcall( function() return a*b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b*a end ) )
+	print( type(a), type(b), 'after', pcall( function() return a^b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b^a end ) )
+	print( type(a), type(b), 'after', pcall( function() return a%b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b%a end ) )
 	print( debug.setmetatable( a, nil ) )
 end
 
 print( '---- __len' )
 values = { aboolean, afunction, athread }
 for i=1,#values do
-	print( type(values[i]), 'before', ecall( 'attempt to get length of ', function() return #values[i] end ) )
-	print( debug.setmetatable( values[i], mt ) )
-	print( type(values[i]), 'after', pcall( function() return #values[i] end ) )
-	print( debug.setmetatable( values[i], nil ) )
+	local a = values[i]
+	print( type(a), 'before', ecall( 'attempt to get length of ', function() return #a end ) )
+	print( debug.setmetatable( a, mt ) )
+	print( type(a), 'after', pcall( function() return #a end ) )
+	print( debug.setmetatable( a, nil ) )
 end
 
 print( '---- __neg' )
@@ -123,41 +119,62 @@ local groups
 groups = { {afunction, bfunction}, {true, true}, {true, false}, {afunction, bfunction}, {athread, bthread}, }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
-	print( type(values[i]), 'before', pcall( function() return a==b end ) )
-	print( type(values[i]), 'before', pcall( function() return a~=b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a<b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a<=b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a>b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a>=b end ) )
+	print( type(a), type(b), 'before', pcall( function() return a==b end ) )
+	print( type(a), type(b), 'before', pcall( function() return a~=b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a<b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a<=b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a>b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a>=b end ) )
 	print( debug.setmetatable( a, mt ) )
 	print( debug.setmetatable( b, mt ) )
-	print( type(values[i]), 'after', pcall( function() return a==b end ) )
-	print( type(values[i]), 'after', pcall( function() return a~=b end ) )
-	print( type(values[i]), 'after', pcall( function() return a<b end ) )
-	print( type(values[i]), 'after', pcall( function() return a<=b end ) )
-	print( type(values[i]), 'after', pcall( function() return a>b end ) )
-	print( type(values[i]), 'after', pcall( function() return a>=b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a==b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a~=b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a<b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a<=b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a>b end ) )
+	print( type(a), type(b), 'after', pcall( function() return a>=b end ) )
 	print( debug.setmetatable( a, nil ) )
 	print( debug.setmetatable( b, nil ) )
 end
+
 print( '---- __eq, __lt, __le, different types' )
 groups = { {aboolean, athread}, }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
-	print( type(values[i]), 'before', pcall( function() return a==b end ) )
-	print( type(values[i]), 'before', pcall( function() return a~=b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a<b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a<=b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a>b end ) )
-	print( type(values[i]), 'before', ecall( 'attempt to compare', function() return a>=b end ) )
+	print( type(a), type(b), 'before', pcall( function() return a==b end ) )
+	print( type(a), type(b), 'before', pcall( function() return a~=b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a<b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a<=b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a>b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to compare', function() return a>=b end ) )
 	print( debug.setmetatable( a, mt ) )
 	print( debug.setmetatable( b, mt ) )
-	print( type(values[i]), 'after-a', pcall( function() return a==b end ) )
-	print( type(values[i]), 'after-a', pcall( function() return a~=b end ) )
-	print( type(values[i]), 'after-a', ecall( 'attempt to compare', function() return a<b end ) )
-	print( type(values[i]), 'after-a', ecall( 'attempt to compare', function() return a<=b end ) )
-	print( type(values[i]), 'after-a', ecall( 'attempt to compare', function() return a>b end ) )
-	print( type(values[i]), 'after-a', ecall( 'attempt to compare', function() return a>=b end ) )
+	print( type(a), type(b), 'after-a', pcall( function() return a==b end ) )
+	print( type(a), type(b), 'after-a', pcall( function() return a~=b end ) )
+	print( type(a), type(b), 'after-a', ecall( 'attempt to compare', function() return a<b end ) )
+	print( type(a), type(b), 'after-a', ecall( 'attempt to compare', function() return a<=b end ) )
+	print( type(a), type(b), 'after-a', ecall( 'attempt to compare', function() return a>b end ) )
+	print( type(a), type(b), 'after-a', ecall( 'attempt to compare', function() return a>=b end ) )
 	print( debug.setmetatable( a, nil ) )
 	print( debug.setmetatable( b, nil ) )
 end
+
+print( '---- __tostring' )
+values = { aboolean, afunction, athread }
+for i=1,#values do
+	local a = values[i]
+	print( debug.setmetatable( a, mt ) )
+	print( type(a), 'after', pcall( function() return ts(a) end ) )
+	print( debug.setmetatable( a, nil ) )
+end
+
+print( '---- __metatable' )
+values = { aboolean, afunction, athread }
+for i=1,#values do
+	local a = values[i]
+	print( type(a), 'before', pcall( function() return debug.getmetatable(a), getmetatable(a) end ) )
+	print( debug.setmetatable( a, mt ) )
+	print( type(a), 'after', pcall( function() return debug.getmetatable(a), getmetatable(a) end ) )
+	print( debug.setmetatable( a, nil ) )
+end
+

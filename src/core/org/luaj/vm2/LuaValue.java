@@ -77,6 +77,7 @@ public class LuaValue extends Varargs {
 	public static final LuaString EQ          = valueOf("__eq");
 	public static final LuaString LT          = valueOf("__lt");
 	public static final LuaString LE          = valueOf("__le");
+	public static final LuaString TOSTRING    = valueOf("__tostring");
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
 	private static int MAXSTACK = 250;
