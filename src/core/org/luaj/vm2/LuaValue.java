@@ -74,6 +74,9 @@ public class LuaValue extends Varargs {
 	public static final LuaString MOD         = valueOf("__mod");
 	public static final LuaString UNM         = valueOf("__unm");
 	public static final LuaString LEN         = valueOf("__len");
+	public static final LuaString EQ          = valueOf("__eq");
+	public static final LuaString LT          = valueOf("__lt");
+	public static final LuaString LE          = valueOf("__le");
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
 	private static int MAXSTACK = 250;
@@ -255,19 +258,27 @@ public class LuaValue extends Varargs {
 	public LuaValue getn() { return typerror("getn"); }
 	
 	// object equality, used for key comparison
-	public boolean equals(Object obj)        { return this == obj; } 
+	public boolean equals(Object obj)         { return this == obj; } 
 	
 	// arithmetic equality
-	public LuaValue   eq( LuaValue val )         { return valueOf(eq_b(val)); }
-	public boolean eq_b( LuaValue val )       { return this == val; }
-	public boolean eq_b( LuaString val )       { return this == val; }
-	public boolean eq_b( double val )      { return false; }
-	public boolean eq_b( int val )         { return false; }
-	public LuaValue   neq( LuaValue val )        { return valueOf(!eq_b(val)); }
-	public boolean neq_b( LuaValue val )      { return ! eq_b(val); }
-	public boolean neq_b( double val )     { return ! eq_b(val); }
-	public boolean neq_b( int val )        { return ! eq_b(val); }
-
+	public LuaValue   eq( LuaValue val )      { return eqmt(val); }
+	public boolean eq_b( LuaValue val )       { return this == val; } 
+	public boolean eq_b( LuaString val )      { return false; }
+	public boolean eq_b( double val )         { return false; }
+	public boolean eq_b( int val )            { return false; }
+	public LuaValue   neq( LuaValue val )     { return eq(val).not(); }
+	public boolean neq_b( LuaValue val )      { return this != val; }
+	public boolean neq_b( double val )        { return ! eq_b(val); }
+	public boolean neq_b( int val )           { return ! eq_b(val); }
+	public LuaValue eqmt( LuaValue op2 )      { 
+		if ( type() != op2.type() ) 
+			return FALSE;
+		if ( eq_b(op2) )
+			return TRUE;
+		LuaValue h = metatag(EQ);
+		return !h.isnil() && h == op2.metatag(EQ)? h.call(this,op2): FALSE;
+	}
+	
 	// arithmetic operators
 	public LuaValue   add( LuaValue rhs )        { return arithmt(ADD,rhs); }
 	public LuaValue   add(double rhs)         { return aritherror("add"); }
@@ -301,31 +312,40 @@ public class LuaValue extends Varargs {
 	}
 	
 	// relational operators
-	public LuaValue   lt( LuaValue rhs )         { return compareerror(rhs); }
+	public LuaValue   lt( LuaValue rhs )         { return comparemt(LT,rhs); }
 	public LuaValue   lt( double rhs )         { return compareerror("number"); }
 	public LuaValue   lt( int rhs )         { return compareerror("number"); }
-	public boolean lt_b( LuaValue rhs )       { compareerror(rhs); return false; }
+	public boolean lt_b( LuaValue rhs )     { return comparemt(LT,rhs).toboolean(); }
 	public boolean lt_b( int rhs )         { compareerror("number"); return false; }
 	public boolean lt_b( double rhs )      { compareerror("number"); return false; }
-	public LuaValue   lteq( LuaValue rhs )       { return compareerror(rhs); }
+	public LuaValue   lteq( LuaValue rhs )       { return comparemt(LE,rhs); }
 	public LuaValue   lteq( double rhs )       { return compareerror("number"); }
 	public LuaValue   lteq( int rhs )       { return compareerror("number"); }
-	public boolean lteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
+	public boolean lteq_b( LuaValue rhs )     { return comparemt(LE,rhs).toboolean(); }
 	public boolean lteq_b( int rhs )       { compareerror("number"); return false; }
 	public boolean lteq_b( double rhs )    { compareerror("number"); return false; }
-	public LuaValue   gt( LuaValue rhs )         { return compareerror(rhs); }
+	public LuaValue   gt( LuaValue rhs )         { return rhs.comparemt(LE,this); }
 	public LuaValue   gt( double rhs )         { return compareerror("number"); }
 	public LuaValue   gt( int rhs )         { return compareerror("number"); }
-	public boolean gt_b( LuaValue rhs )       { compareerror(rhs); return false; }
+	public boolean gt_b( LuaValue rhs )       { return rhs.comparemt(LE,this).toboolean(); }
 	public boolean gt_b( int rhs )         { compareerror("number"); return false; }
 	public boolean gt_b( double rhs )      { compareerror("number"); return false; }
-	public LuaValue   gteq( LuaValue rhs )       { return compareerror("number"); }
+	public LuaValue   gteq( LuaValue rhs )       { return rhs.comparemt(LT,this); }
 	public LuaValue   gteq( double rhs )         { return compareerror("number"); }
 	public LuaValue   gteq( int rhs )         { return valueOf(todouble() >= rhs); }
-	public boolean gteq_b( LuaValue rhs )     { compareerror(rhs); return false; }
+	public boolean gteq_b( LuaValue rhs )     { return rhs.comparemt(LT,this).toboolean(); }
 	public boolean gteq_b( int rhs )       { compareerror("number"); return false; }
 	public boolean gteq_b( double rhs )    { compareerror("number"); return false; }
-
+	public LuaValue comparemt( LuaValue tag, LuaValue op1 ) { 
+		if ( type() == op1.type() ) { 
+			LuaValue h = metatag(tag);
+			if ( !h.isnil() && h == op1.metatag(tag) )
+				return h.call(this, op1);
+		}
+		return error("attempt to compare "+typename());
+	}
+	
+	
 	// string comparison
 	public int strcmp( LuaValue rhs )         { error("attempt to compare "+typename()); return 0; }
 	public int strcmp( LuaString rhs )      { error("attempt to compare "+typename()); return 0; }
