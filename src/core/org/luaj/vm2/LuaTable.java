@@ -286,6 +286,18 @@ public class LuaTable extends LuaValue {
 	public LuaValue len()  { 
 		return LuaInteger.valueOf(length());
 	}
+
+	public LuaValue eq( LuaValue rhs ) {
+		return rhs.eq_b(this)? TRUE: FALSE; 
+	}
+	
+	public boolean eq_b( LuaValue rhs ) { 
+		return rhs.eq_b(this); 
+	}
+	
+	public boolean eq_b( LuaTable val ) { 
+		return this == val || val.eqmt_b(this); 
+	}
 	
 	public int maxn() {
 		int n = 0;

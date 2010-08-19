@@ -96,14 +96,23 @@ public class LuaUserdata extends LuaValue {
 	}
 
 	public boolean equals( Object val ) {
+		if ( this == val )
+			return true;
 		if ( ! (val instanceof LuaUserdata) )
 			return false;
 		LuaUserdata u = (LuaUserdata) val;
 		return m_instance.equals(u.m_instance);
 	}
 	
-	public boolean eq_b( LuaValue val ) {
-		return equals(val);
+	public LuaValue eq( LuaValue rhs ) {
+		return rhs.eq_b(this)? TRUE: FALSE; 
 	}
-
+	
+	public boolean eq_b( LuaValue rhs ) { 
+		return rhs.eq_b(this); 
+	}
+	
+	public boolean eq_b( LuaUserdata val ) { 
+		return this == val || m_instance.equals(val.m_instance) || val.eqmt_b(this); 
+	}
 }

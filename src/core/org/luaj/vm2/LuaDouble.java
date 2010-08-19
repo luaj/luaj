@@ -75,7 +75,8 @@ public class LuaDouble extends LuaNumber {
 	public boolean equals(Object o) { return o instanceof LuaDouble? ((LuaDouble)o).v == v: false; }
 	
 	// arithmetic equality
-	public boolean eq_b( LuaValue rhs )       { return rhs.eq_b(v); }
+	public LuaValue eq( LuaValue rhs )     { return rhs.eq_b(v)? TRUE: FALSE; }
+	public boolean eq_b( LuaValue rhs )    { return rhs.eq_b(v); }
 	public boolean eq_b( double rhs )      { return v == rhs; }
 	public boolean eq_b( int rhs )         { return v == rhs; }
 	

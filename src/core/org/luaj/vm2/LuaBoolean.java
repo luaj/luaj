@@ -69,5 +69,5 @@ public class LuaBoolean extends LuaValue {
 	
 	public LuaValue getmetatable() { 
 		return s_metatable; 
-	}
+	}	
 }

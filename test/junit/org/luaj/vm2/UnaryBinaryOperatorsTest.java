@@ -176,6 +176,15 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		// check arithmetic equality among different types
 		assertEquals(ia.eq(sa),LuaValue.FALSE);
 		assertEquals(sa.eq(ia),LuaValue.FALSE);
+
+		// equals with mismatched types
+		LuaValue t = new LuaTable();
+		assertEquals(ia.eq(t),LuaValue.FALSE);
+		assertEquals(t.eq(ia),LuaValue.FALSE);
+		assertEquals(ia.eq(LuaValue.FALSE),LuaValue.FALSE);
+		assertEquals(LuaValue.FALSE.eq(ia),LuaValue.FALSE);
+		assertEquals(ia.eq(LuaValue.NIL),LuaValue.FALSE);
+		assertEquals(LuaValue.NIL.eq(ia),LuaValue.FALSE);
 	}
 	
 	public void testEqDouble() {
@@ -191,6 +200,15 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		// check arithmetic equality among different types
 		assertEquals(da.eq(sa),LuaValue.FALSE);
 		assertEquals(sa.eq(da),LuaValue.FALSE);
+
+		// equals with mismatched types
+		LuaValue t = new LuaTable();
+		assertEquals(da.eq(t),LuaValue.FALSE);
+		assertEquals(t.eq(da),LuaValue.FALSE);
+		assertEquals(da.eq(LuaValue.FALSE),LuaValue.FALSE);
+		assertEquals(LuaValue.FALSE.eq(da),LuaValue.FALSE);
+		assertEquals(da.eq(LuaValue.NIL),LuaValue.FALSE);
+		assertEquals(LuaValue.NIL.eq(da),LuaValue.FALSE);
 	}
 	
 	public void testAdd() {

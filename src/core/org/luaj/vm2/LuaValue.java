@@ -262,22 +262,20 @@ public class LuaValue extends Varargs {
 	public boolean equals(Object obj)         { return this == obj; } 
 	
 	// arithmetic equality
-	public LuaValue   eq( LuaValue val )      { return eqmt(val); }
+	public LuaValue  eq( LuaValue val )       { return eq_b(val)? TRUE: FALSE; }
 	public boolean eq_b( LuaValue val )       { return this == val; } 
+	public boolean eq_b( LuaTable val )       { return false; }
+	public boolean eq_b( LuaUserdata val )    { return false; }
 	public boolean eq_b( LuaString val )      { return false; }
 	public boolean eq_b( double val )         { return false; }
 	public boolean eq_b( int val )            { return false; }
-	public LuaValue   neq( LuaValue val )     { return eq(val).not(); }
-	public boolean neq_b( LuaValue val )      { return this != val; }
+	public LuaValue   neq( LuaValue val )     { return eq_b(val)? FALSE: TRUE; }
+	public boolean neq_b( LuaValue val )      { return ! eq_b(val); }
 	public boolean neq_b( double val )        { return ! eq_b(val); }
 	public boolean neq_b( int val )           { return ! eq_b(val); }
-	public LuaValue eqmt( LuaValue op2 )      { 
-		if ( type() != op2.type() ) 
-			return FALSE;
-		if ( eq_b(op2) )
-			return TRUE;
+	protected boolean eqmt_b( LuaValue op2 )      { 
 		LuaValue h = metatag(EQ);
-		return !h.isnil() && h == op2.metatag(EQ)? h.call(this,op2): FALSE;
+		return !h.isnil() && h==op2.metatag(EQ)? h.call(this,op2).toboolean(): false;
 	}
 	
 	// arithmetic operators

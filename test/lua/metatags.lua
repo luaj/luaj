@@ -3,7 +3,8 @@ local anumber   = 111
 local aboolean  = false
 local afunction = function() end
 local athread   = coroutine.create( afunction )
-local values = { anumber, aboolean, afunction, athread }
+local atable    = {}
+local values = { anumber, aboolean, afunction, athread, atable }
 for i=1,#values do
 	print( debug.getmetatable( values[i] ) )
 end
@@ -68,7 +69,7 @@ for i=1,#values do
 end
 
 print( '---- __add, __sub, __mul, __div, __pow, __mod' )
-local groups = { {aboolean, aboolean}, {aboolean, athread}, {aboolean, afunction}, {aboolean, "abc"} }
+local groups = { {aboolean, aboolean}, {aboolean, athread}, {aboolean, afunction}, {aboolean, "abc"}, {aboolean, atable} }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
 	print( type(a), type(b), 'before', ecall( 'attempt to perform arithmetic', function() return a+b end ) )
@@ -106,7 +107,7 @@ for i=1,#values do
 end
 
 print( '---- __neg' )
-values = { aboolean, afunction, athread, "abcd" }
+values = { aboolean, afunction, athread, "abcd", atable }
 for i=1,#values do
 	print( type(values[i]), 'before', ecall( 'attempt to get length of ', function() return #values[i] end ) )
 	print( debug.setmetatable( values[i], mt ) )
@@ -118,7 +119,7 @@ print( '---- __eq, __lt, __le, same types' )
 local bfunction = function() end
 local bthread = coroutine.create( bfunction )
 local groups 
-groups = { {afunction, bfunction}, {true, true}, {true, false}, {afunction, bfunction}, {athread, bthread}, }
+groups = { {afunction, bfunction}, {true, true}, {true, false}, {afunction, bfunction}, {athread, bthread}, {atable, atable}, {atable, {}} }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
 	print( type(a), type(b), 'before', pcall( function() return a==b end ) )
@@ -162,7 +163,7 @@ for i=1,#groups do
 end
 
 print( '---- __tostring' )
-values = { aboolean, afunction, athread }
+values = { aboolean, afunction, athread, atable, "abc" }
 for i=1,#values do
 	local a = values[i]
 	print( debug.setmetatable( a, mt ) )
@@ -171,7 +172,7 @@ for i=1,#values do
 end
 
 print( '---- __metatable' )
-values = { aboolean, afunction, athread }
+values = { aboolean, afunction, athread, atable, "abc" }
 for i=1,#values do
 	local a = values[i]
 	print( type(a), 'before', pcall( function() return debug.getmetatable(a), getmetatable(a) end ) )
