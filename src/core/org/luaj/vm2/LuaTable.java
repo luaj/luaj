@@ -296,7 +296,7 @@ public class LuaTable extends LuaValue {
 	}
 	
 	public boolean eq_b( LuaTable val ) { 
-		return this == val || val.eqmt_b(this); 
+		return this == val || (m_metatable!=null && val.eqmt_b(this)); 
 	}
 	
 	public int maxn() {

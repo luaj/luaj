@@ -113,6 +113,6 @@ public class LuaUserdata extends LuaValue {
 	}
 	
 	public boolean eq_b( LuaUserdata val ) { 
-		return this == val || m_instance.equals(val.m_instance) || val.eqmt_b(this); 
+		return this == val || m_instance.equals(val.m_instance) || (m_metatable!=null && val.eqmt_b(this)); 
 	}
 }
