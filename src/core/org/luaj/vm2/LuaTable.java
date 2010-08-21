@@ -561,12 +561,19 @@ public class LuaTable extends LuaValue {
 		array[j] = a;
 	}
 	
-	/** @deprecated - count via iteration instead */
+	/** This may be deprecated in a future release.  
+	 * It is recommended to count via iteration over next() instead */
 	public int keyCount() {
-		return keys().length;		
+		LuaValue k = LuaValue.NIL;
+		for ( int i=0; true; i++ ) {
+			Varargs n = next(k);
+			if ( (k = n.arg1()).isnil() )
+				return i;
+		}
 	}
 	
-	/** @deprecated - use next() instead */
+	/** This may be deprecated in a future release.  
+	 * It is recommended to use next() instead */
 	public LuaValue[] keys() {
 		Vector l = new Vector();
 		LuaValue k = LuaValue.NIL;

@@ -146,9 +146,6 @@ public class LuaValue extends Varargs {
 	public Object      optuserdata(Class c, Object defval) { argerror(c.getName()); return null;  }
 	public LuaValue    optvalue(LuaValue defval)           { return this; }
 
-	/** @deprecated - use optjstring() instead */
-	public String      optString(String defval)            { return optjstring(defval);  }
-
 	// argument type checks
 	public boolean     checkboolean()          { argerror("boolean");   return false; }
 	public LuaClosure  checkclosure()          { argerror("closure");   return null;  }
@@ -167,10 +164,6 @@ public class LuaValue extends Varargs {
 	public Object      checkuserdata(Class c)  { argerror("userdata");  return null; }
 	public LuaValue    checknotnil()           { return this; }
 	public LuaValue    checkvalidkey()         { return this; }
-
-	
-	/** @deprecated - use checkjstring() instead */
-	public String      checkString()          { return checkjstring(); }
 	
 	// errors
 	public static LuaValue error(String message) { throw new LuaError(message); }
@@ -359,14 +352,8 @@ public class LuaValue extends Varargs {
 	public LuaValue   or( LuaValue rhs )       { return this.toboolean()? this: rhs; }
 	
 	// for loop helpers
-	/** @deprecated - used during development only */
-	public boolean testfor_b(LuaValue limit, boolean stepgtzero) { return stepgtzero? lteq_b(limit): gteq_b(limit); }
 	/** used in for loop only */
 	public boolean testfor_b(LuaValue limit, LuaValue step) { return step.gt_b(0)? lteq_b(limit): gteq_b(limit); }
-	/** @deprecated - used in samples only */
-	public boolean testfor_b(LuaValue limit) { return lteq(limit).toboolean(); }
-	/** @deprecated - used in samples only, use add(1) instead */
-	public LuaValue incr() { return add(ONE); }
 	
 	// lua number/string conversion
 	public LuaString strvalue()     { typerror("strValue"); return null; }

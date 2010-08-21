@@ -91,9 +91,6 @@ public abstract class Varargs {
 	public Object       optuserdata(int i, Class c, Object defval) { return arg(i).optuserdata(c,defval); }
 	public LuaValue     optvalue(int i, LuaValue defval)           { return i>0 && i<=narg()? arg(i): defval; }
 
-	/** @deprecated - use optjstring() instead */
-	public String       optString(int i, String defval)            { return optjstring(i,defval); }
-	
 	// required argument types 
 	public boolean      checkboolean(int i)          { return arg(i).checkboolean(); }
 	public LuaClosure   checkclosure(int i)          { return arg(i).checkclosure(); }
@@ -112,9 +109,6 @@ public abstract class Varargs {
 	public LuaValue     checkvalue(int i)            { return i<=narg()? arg(i): LuaValue.argerror(i,"value expected"); }
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
-	/** @deprecated - use checkjstring() instead */
-	public String       checkString(int i)           { return checkjstring(i); }
-
 	public void         argcheck(boolean test, int i, String msg) { if (!test) LuaValue.argerror(i,msg); }
 	
 	public boolean isnoneornil(int i) {
