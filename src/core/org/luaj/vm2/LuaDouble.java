@@ -148,11 +148,7 @@ public class LuaDouble extends LuaNumber {
 	
 	// string comparison
 	public int strcmp( LuaString rhs )      { typerror("attempt to compare number with string"); return 0; }
-	
-	// concatenation
-	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(Double.toString(v)); }
-	public String concatTo_s(String lhs)   { return lhs + v; }
-		
+			
 	public String tojstring() {
 		/*
 		if ( v == 0.0 ) { // never occurs in J2me 

@@ -155,8 +155,15 @@ public class LuaString extends LuaValue {
 	public boolean gteq_b( double rhs )    { typerror("attempt to compare string with number"); return false; }
 
 	// concatenation
-	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(tojstring()); }
-	public String concatTo_s(String lhs)   { return lhs + tojstring(); }
+	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
+	public Buffer   concat(Buffer rhs)        { return rhs.prepend(this); }
+	public LuaValue concatTo(LuaNumber lhs)   { return concatTo(lhs.strvalue()); }
+	public LuaValue concatTo(LuaString lhs)   { 
+		byte[] b = new byte[lhs.m_length+this.m_length];
+		System.arraycopy(lhs.m_bytes, lhs.m_offset, b, 0, lhs.m_length);
+		System.arraycopy(this.m_bytes, this.m_offset, b, lhs.m_length, this.m_length);
+		return new LuaString(b, 0, b.length);
+	}
 
 	// string comparison 
 	public int strcmp(LuaValue lhs)           { return -lhs.strcmp(this); }

@@ -165,10 +165,6 @@ public class LuaInteger extends LuaNumber {
 	// string comparison
 	public int strcmp( LuaString rhs )      { typerror("attempt to compare number with string"); return 0; }
 	
-	// concatenation
-	public String concat_s(LuaValue rhs)      { return rhs.concatTo_s(Integer.toString(v)); }
-	public String concatTo_s(String lhs)   { return lhs + v; }
-	
 	public int checkint() { 
 		return v; 
 	}

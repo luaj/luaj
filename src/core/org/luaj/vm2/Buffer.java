@@ -28,9 +28,12 @@ package org.luaj.vm2;
  */
 public final class Buffer {
 	private static final int DEFAULT_CAPACITY = 64;
+	private static final byte[] NOBYTES = {};
 
 	private byte[] bytes;
 	private int length;
+	private int offset;
+	private LuaValue value;
 	
 	public Buffer() {
 		this(DEFAULT_CAPACITY);
@@ -39,63 +42,98 @@ public final class Buffer {
 	public Buffer( int initialCapacity ) {
 		bytes = new byte[ initialCapacity ];
 		length = 0;
+		offset = 0;
+		value = null;
 	}
 	
-	public final String tojstring() {
-		return LuaString.valueOf(bytes, 0, length).tojstring();
+	public Buffer(LuaValue value) {
+		bytes = NOBYTES;
+		length = offset = 0;
+		this.value = value;
 	}
 	
-	public final Buffer append( byte b ) {
-		ensureCapacity( length + 1 );
-		bytes[ length++ ] = b;
+	public LuaValue value() {
+		return value != null? value: this.tostring();
+	}
+
+	public Buffer setvalue(LuaValue value) {
+		bytes = NOBYTES;
+		offset = length = 0;
+		this.value = value;
 		return this;
 	}
 	
+	public final LuaString tostring() {
+		realloc( length, 0 );
+		return LuaString.valueOf( bytes, offset, length );
+	}
+	
+	public String tojstring() {
+		return value().tojstring();
+	}
+	
+	public String toString() {
+		return tojstring();
+	}
+
+	public final Buffer append( byte b ) {
+		makeroom( 0, 1 );
+		bytes[ offset + length++ ] = b;
+		return this;
+	}
+
 	public final Buffer append( LuaValue val ) {
-		if ( ! val.isstring() ) 
-			val.error("attempt to concatenate a '"+val.typename()+"' value");
 		append( val.strvalue() );
 		return this;
 	}
 	
 	public final Buffer append( LuaString str ) {
-		final int alen = str.length();
-		ensureCapacity( length + alen );
-		str.copyInto( 0, bytes, length, alen );
-		length += alen;
+		final int n = str.m_length;
+		makeroom( 0, n );
+		str.copyInto( 0, bytes, offset + length, n );
+		length += n;
 		return this;
 	}
 	
 	public final Buffer append( String str ) {
 		char[] chars = str.toCharArray();
-		final int alen = LuaString.lengthAsUtf8( chars );
-		ensureCapacity( length + alen );
-		LuaString.encodeToUtf8( chars, bytes, length );
-		length += alen;
+		final int n = LuaString.lengthAsUtf8( chars );
+		makeroom( 0, n );
+		LuaString.encodeToUtf8( chars, bytes, offset + length );
+		length += n;
+		return this;
+	}
+
+	public Buffer prepend(LuaString s) {
+		int n = s.m_length;
+		makeroom( n, 0 );
+		System.arraycopy( s.m_bytes, s.m_offset, bytes, offset-n, n );
+		offset -= n;
+		length += n;
+		value = null;
 		return this;
 	}
 	
-	public final void setLength( int length ) {
-		ensureCapacity( length );
-		this.length = length;
+	public final void makeroom( int nbefore, int nafter ) {
+		if ( value != null ) {
+			LuaString s = value.strvalue();
+			value = null;
+			bytes = new byte[nbefore+s.m_length+nafter];
+			length = s.m_length;
+			offset = nbefore;
+			System.arraycopy(s.m_bytes, s.m_offset, bytes, offset, length);
+		} else if ( offset+length+nafter > bytes.length || offset<nbefore ) {
+			realloc( Math.max(nbefore+length+nafter,length*2), nbefore );
+		}
 	}
 	
-	public final LuaString tostring() {
-		return LuaString.valueOf( realloc( bytes, length ) );
+	private final void realloc( int newSize, int newOffset ) {
+		if ( newSize != bytes.length ) {
+			byte[] newBytes = new byte[ newSize ];
+			System.arraycopy( bytes, offset, newBytes, newOffset, length );
+			bytes = newBytes;
+			offset = newOffset;
+		}
 	}
-	
-	public final void ensureCapacity( int minSize ) {
-		if ( minSize > bytes.length )
-			realloc( minSize );
-	}
-	
-	private final void realloc( int minSize ) {
-		bytes = realloc( bytes, Math.max( bytes.length * 2, minSize ) ); 
-	}
-	
-	private final static byte[] realloc( byte[] b, int newSize ) {
-		byte[] newBytes = new byte[ newSize ];
-		System.arraycopy( b, 0, newBytes, 0, Math.min( b.length, newSize ) );
-		return newBytes;
-	}
+
 }

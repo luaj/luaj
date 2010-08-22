@@ -78,6 +78,7 @@ public class LuaValue extends Varargs {
 	public static final LuaString LT          = valueOf("__lt");
 	public static final LuaString LE          = valueOf("__le");
 	public static final LuaString TOSTRING    = valueOf("__tostring");
+	public static final LuaString CONCAT      = valueOf("__concat");
 	public static final LuaString EMPTYSTRING = valueOf("");
 	
 	private static int MAXSTACK = 250;
@@ -343,9 +344,20 @@ public class LuaValue extends Varargs {
 	public int strcmp( LuaString rhs )      { error("attempt to compare "+typename()); return 0; }
 
 	// concatenation
-	public LuaValue   concat( LuaValue rhs )      { return valueOf(concat_s(rhs)); }
-	public String  concat_s( LuaValue rhs )    { error("attempt to concatenate "+this.typename()); return null; }
-	public String  concatTo_s( String lhs ) { error("attempt to concatenate "+this.typename()); return null;  }
+	public LuaValue concat(LuaValue rhs)      { return this.concatmt(rhs); }
+	public LuaValue concatTo(LuaNumber lhs)   { return lhs.concatmt(this); }
+	public LuaValue concatTo(LuaString lhs)   { return lhs.concatmt(this); }
+	public Buffer   buffer()                  { return new Buffer(this); }
+	public Buffer   concat(Buffer rhs)        {
+		return rhs.setvalue(checkmetatag(CONCAT,"attempt to concatenate ").call(this, rhs.value()));
+	}
+	public LuaValue concatmt(LuaValue rhs) {
+		LuaValue h=metatag(CONCAT);
+		LuaValue v=this;
+		if ( h.isnil() || (h=(v=rhs).metatag(CONCAT)).isnil())
+			v.typerror("attempt to concatenate ");
+		return h.call(this,rhs);
+	}
 	
 	// boolean operators
 	public LuaValue   and( LuaValue rhs )      { return this.toboolean()? rhs: this; }
@@ -576,6 +588,5 @@ public class LuaValue extends Varargs {
 			return v1; 
 		}
 	}
-
 
 }

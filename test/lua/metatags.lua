@@ -46,6 +46,7 @@ local mt = {
 	__metatable={},
 	__index=buildop('index'),
 	__newindex=buildop('newindex'),
+	__concat=buildop('concat'),
 }
 
 -- pcall a function and check for a pattern in the error string
@@ -118,8 +119,9 @@ end
 print( '---- __eq, __lt, __le, same types' )
 local bfunction = function() end
 local bthread = coroutine.create( bfunction )
+local btable = {}
 local groups 
-groups = { {afunction, bfunction}, {true, true}, {true, false}, {afunction, bfunction}, {athread, bthread}, {atable, atable}, {atable, {}} }
+groups = { {true, true}, {true, false}, {afunction, bfunction}, {athread, bthread}, {atable, atable}, {atable, btable} }
 for i=1,#groups do
 	local a,b = groups[i][1], groups[i][2]
 	print( type(a), type(b), 'before', pcall( function() return a==b end ) )
@@ -196,6 +198,35 @@ for i=1,#values do
 	print( type(a), 'after', pcall( function() a.foo = 'bar' end ) )
 	print( type(a), 'after', pcall( function() a[123] = 'bar' end ) )
 	print( type(a), 'after', ecall( 'attempt to call', function() return a:foo() end ) )
+	print( debug.setmetatable( a, nil ) )
+end
+
+print( '---- __concat' )
+groups = { {atable, afunction}, {afunction, atable}, {123, nil}, {nil, 123} }
+local s,t,u = 'sss',777
+local concatresult = setmetatable( { '__concat-result' }, { 
+	__tostring=function() 
+		return 'concat-string-result' 
+	end } )
+local concatmt = {
+	__concat=function(a,b)
+		print( 'mt.__concat('..type(a)..','..type(b)..')', a, b )
+		return concatresult
+	end
+}	
+for i=1,#groups do
+	local a,b = groups[i][1], groups[i][2]
+	print( type(a), type(b), 'before', ecall( 'attempt to concatenate ', function() return a..b end ) )
+	print( type(a), type(b), 'before', ecall( 'attempt to concatenate ', function() return b..a end ) )
+	print( type(a), type(s), type(t), 'before', ecall( 'attempt to concatenate ', function() return a..s..t end ) )
+	print( type(s), type(a), type(t), 'before', ecall( 'attempt to concatenate ', function() return s..a..t end ) )
+	print( type(s), type(t), type(a), 'before', ecall( 'attempt to concatenate ', function() return s..t..a end ) )
+	print( debug.setmetatable( a, concatmt ) )
+	print( type(a), type(b), 'after', pcall( function() return a..b end ) )
+	print( type(a), type(b), 'after', pcall( function() return b..a end ) )
+	print( type(a), type(s), type(t), 'before', pcall( function() return a..s..t end ) )
+	print( type(s), type(a), type(t), 'before', ecall( 'attempt to concatenate ', function() return s..a..t end ) )
+	print( type(s), type(t), type(a), 'before', ecall( 'attempt to concatenate ', function() return s..t..a end ) )
 	print( debug.setmetatable( a, nil ) )
 end
 

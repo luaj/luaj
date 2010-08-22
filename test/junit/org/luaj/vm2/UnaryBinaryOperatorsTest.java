@@ -572,4 +572,78 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		assertEquals(t, aaa.lteq(aaa));
 		assertEquals(t, aaa.gteq(aaa));
 	}
+	
+	public void testBuffer() {
+		LuaValue abc = LuaValue.valueOf("abcdefghi").substring(0,3);
+		LuaValue def = LuaValue.valueOf("abcdefghi").substring(3,6);
+		LuaValue ghi = LuaValue.valueOf("abcdefghi").substring(6,9);
+		LuaValue n123 = LuaValue.valueOf(123);
+
+		// basic append
+		Buffer b = new Buffer(); assertEquals( "", b.value().tojstring() );
+		b.append(def); assertEquals( "def", b.value().tojstring() );
+		b.append(abc); assertEquals( "defabc", b.value().tojstring() );
+		b.append(ghi); assertEquals( "defabcghi", b.value().tojstring() );
+		b.append(n123); assertEquals( "defabcghi123", b.value().tojstring() );		
+
+		// basic prepend
+		b = new Buffer(); assertEquals( "", b.value().tojstring() );
+		b.prepend(def.strvalue()); assertEquals( "def", b.value().tojstring() );
+		b.prepend(ghi.strvalue()); assertEquals( "ghidef", b.value().tojstring() );
+		b.prepend(abc.strvalue()); assertEquals( "abcghidef", b.value().tojstring() );
+		b.prepend(n123.strvalue()); assertEquals( "123abcghidef", b.value().tojstring() );
+
+		// mixed append, prepend
+		b = new Buffer(); assertEquals( "", b.value().tojstring() );
+		b.append(def); assertEquals( "def", b.value().tojstring() );
+		b.append(abc); assertEquals( "defabc", b.value().tojstring() );
+		b.prepend(ghi.strvalue()); assertEquals( "ghidefabc", b.value().tojstring() );
+		b.prepend(n123.strvalue()); assertEquals( "123ghidefabc", b.value().tojstring() );		
+		b.append(def); assertEquals( "123ghidefabcdef", b.value().tojstring() );
+		b.append(abc); assertEquals( "123ghidefabcdefabc", b.value().tojstring() );
+		b.prepend(ghi.strvalue()); assertEquals( "ghi123ghidefabcdefabc", b.value().tojstring() );
+		b.prepend(n123.strvalue()); assertEquals( "123ghi123ghidefabcdefabc", b.value().tojstring() );		
+		
+		// value
+		b = new Buffer(def); assertEquals( "def", b.value().tojstring() );
+		b.append(abc); assertEquals( "defabc", b.value().tojstring() );
+		b.prepend(ghi.strvalue()); assertEquals( "ghidefabc", b.value().tojstring() );
+		b.setvalue(def); assertEquals( "def", b.value().tojstring() );
+		b.prepend(ghi.strvalue()); assertEquals( "ghidef", b.value().tojstring() );
+		b.append(abc); assertEquals( "ghidefabc", b.value().tojstring() );
+	}
+	
+	public void testConcat() {
+		LuaValue abc = LuaValue.valueOf("abcdefghi").substring(0,3);
+		LuaValue def = LuaValue.valueOf("abcdefghi").substring(3,6);
+		LuaValue ghi = LuaValue.valueOf("abcdefghi").substring(6,9);
+		LuaValue n123 = LuaValue.valueOf(123);
+		
+		assertEquals( "abc", abc.tojstring() );
+		assertEquals( "def", def.tojstring() );
+		assertEquals( "ghi", ghi.tojstring() );
+		assertEquals( "123", n123.tojstring() );
+		assertEquals( "abcabc", abc.concat(abc).tojstring() );
+		assertEquals( "defghi", def.concat(ghi).tojstring() );
+		assertEquals( "ghidef", ghi.concat(def).tojstring() );
+		assertEquals( "ghidefabcghi", ghi.concat(def).concat(abc).concat(ghi).tojstring() );
+		assertEquals( "123def", n123.concat(def).tojstring() );
+		assertEquals( "def123", def.concat(n123).tojstring() );
+	}
+	
+	public void testConcatBuffer() {
+		LuaValue abc = LuaValue.valueOf("abcdefghi").substring(0,3);
+		LuaValue def = LuaValue.valueOf("abcdefghi").substring(3,6);
+		LuaValue ghi = LuaValue.valueOf("abcdefghi").substring(6,9);
+		LuaValue n123 = LuaValue.valueOf(123);
+		Buffer b;
+
+		b = new Buffer(def); assertEquals( "def", b.value().tojstring() );
+		b = ghi.concat(b); assertEquals( "ghidef", b.value().tojstring() );
+		b = abc.concat(b); assertEquals( "abcghidef", b.value().tojstring() );
+		b = n123.concat(b); assertEquals( "123abcghidef", b.value().tojstring() );
+		b.setvalue(n123);
+		b = def.concat(b); assertEquals( "def123", b.value().tojstring() );
+		b = abc.concat(b); assertEquals( "abcdef123", b.value().tojstring() );
+	}
 }

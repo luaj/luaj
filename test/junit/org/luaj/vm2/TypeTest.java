@@ -1116,23 +1116,23 @@ public class TypeTest extends TestCase {
 	}
 	
 	public void testCheckJavaString() {
-		throwsErrorReq( somenil, "checkString" );
-		throwsErrorReq( sometrue, "checkString" );
-		throwsErrorReq( somefalse, "checkString" );
+		throwsErrorReq( somenil, "checkjstring" );
+		throwsErrorReq( sometrue, "checkjstring" );
+		throwsErrorReq( somefalse, "checkjstring" );
 		assertEquals( String.valueOf(zero), zero.checkjstring() );
 		assertEquals( String.valueOf(intint), intint.checkjstring() );
 		assertEquals( String.valueOf(longdouble), longdouble.checkjstring() );
 		assertEquals( String.valueOf(doubledouble), doubledouble.checkjstring() );
-		throwsErrorReq( somefunc, "checkString" );
-		throwsErrorReq( someclosure, "checkString" );
+		throwsErrorReq( somefunc, "checkjstring" );
+		throwsErrorReq( someclosure, "checkjstring" );
 		assertEquals( samplestringstring, stringstring.checkjstring() );
 		assertEquals( samplestringint, stringint.checkjstring() );
 		assertEquals( samplestringlong, stringlong.checkjstring() );
 		assertEquals( samplestringdouble, stringdouble.checkjstring() );
-		throwsErrorReq( thread, "checkString" );
-		throwsErrorReq( table, "checkString" );
-		throwsErrorReq( userdataobj, "checkString" );
-		throwsErrorReq( userdatacls, "checkString" );
+		throwsErrorReq( thread, "checkjstring" );
+		throwsErrorReq( table, "checkjstring" );
+		throwsErrorReq( userdataobj, "checkjstring" );
+		throwsErrorReq( userdatacls, "checkjstring" );
 	}
 	
 	public void testCheckLuaString() {
