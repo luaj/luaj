@@ -25,6 +25,7 @@ import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
 
 import junit.framework.TestCase;
 
@@ -645,5 +646,58 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		b.setvalue(n123);
 		b = def.concat(b); assertEquals( "def123", b.value().tojstring() );
 		b = abc.concat(b); assertEquals( "abcdef123", b.value().tojstring() );
+	}
+	
+	public void testConcatMetatag() {
+		LuaValue def = LuaValue.valueOf("abcdefghi").substring(3,6);
+		LuaValue ghi = LuaValue.valueOf("abcdefghi").substring(6,9);
+		LuaValue tru = LuaValue.TRUE;
+		LuaValue fal = LuaValue.FALSE;
+		LuaValue tbl = new LuaTable();
+		LuaValue uda = new LuaUserdata(new Object());
+		try {
+			// always use left argument
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { 
+					LuaValue.CONCAT, new TwoArgFunction() {
+						public LuaValue call(LuaValue lhs, LuaValue rhs) {
+							return lhs;
+						}
+					} } );
+			assertEquals( tru, tru.concat(tbl) );
+			assertEquals( tbl, tbl.concat(tru) );
+			assertEquals( tru, tru.concat(new Buffer(tbl)).value() );
+			assertEquals( tbl, tbl.concat(new Buffer(tru)).value() );
+			assertEquals( fal, fal.concat(tbl.concat(new Buffer(tru))).value() );
+			assertEquals( uda, uda.concat(tru.concat(new Buffer(tbl))).value() );
+			try { tru.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tru); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.concat(new Buffer(def)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(new Buffer(tru)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { fal.concat(def.concat(new Buffer(tru))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { ghi.concat(tru.concat(new Buffer(def))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			// always use right argument
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { 
+					LuaValue.CONCAT, new TwoArgFunction() {
+						public LuaValue call(LuaValue lhs, LuaValue rhs) {
+							return rhs;
+						}
+					} } );
+			assertEquals( tbl, tru.concat(tbl) );
+			assertEquals( tru, tbl.concat(tru) );
+			assertEquals( tbl, tru.concat(new Buffer(tbl)).value() );
+			assertEquals( tru, tbl.concat(new Buffer(tru)).value() );
+			assertEquals( tru, uda.concat(tbl.concat(new Buffer(tru))).value() );
+			assertEquals( tbl, fal.concat(tru.concat(new Buffer(tbl))).value() );
+			try { tru.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tru); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.concat(new Buffer(def)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(new Buffer(tru)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { uda.concat(def.concat(new Buffer(tru))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { fal.concat(tru.concat(new Buffer(def))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			
+		} finally { 
+			LuaBoolean.s_metatable = null;
+		}
 	}
 }

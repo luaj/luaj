@@ -179,6 +179,7 @@ public class LuaValue extends Varargs {
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
 	protected LuaValue compareerror(String rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs); }
 	protected LuaValue compareerror(LuaValue rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs.typename()); }
+	protected LuaValue concaterror() { throw new LuaError("attempt to concatenate "+typename()); }
 	
 	// table operations
 	public LuaValue get( LuaValue key ) { return gettable(this,key); }
@@ -344,18 +345,17 @@ public class LuaValue extends Varargs {
 	public int strcmp( LuaString rhs )      { error("attempt to compare "+typename()); return 0; }
 
 	// concatenation
-	public LuaValue concat(LuaValue rhs)      { return this.concatmt(rhs); }
-	public LuaValue concatTo(LuaNumber lhs)   { return lhs.concatmt(this); }
-	public LuaValue concatTo(LuaString lhs)   { return lhs.concatmt(this); }
+	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
+	public LuaValue concatTo(LuaValue lhs)    { return lhs.concatmt(this); }
+	public LuaValue concatTo(LuaNumber lhs)   { return concaterror(); }
+	public LuaValue concatTo(LuaString lhs)   { return concaterror(); }
 	public Buffer   buffer()                  { return new Buffer(this); }
-	public Buffer   concat(Buffer rhs)        {
-		return rhs.setvalue(checkmetatag(CONCAT,"attempt to concatenate ").call(this, rhs.value()));
-	}
+	public Buffer   concat(Buffer rhs)        { return rhs.setvalue(concat(rhs.value())); }
 	public LuaValue concatmt(LuaValue rhs) {
 		LuaValue h=metatag(CONCAT);
 		LuaValue v=this;
-		if ( h.isnil() || (h=(v=rhs).metatag(CONCAT)).isnil())
-			v.typerror("attempt to concatenate ");
+		if ( h.isnil() && (h=(v=rhs).metatag(CONCAT)).isnil())
+			return v.concaterror();
 		return h.call(this,rhs);
 	}
 	

@@ -236,14 +236,14 @@ public class LuaClosure extends LuaFunction {
 					b = i>>>23;
 					c = (i>>14)&0x1ff;
 					{
-						LuaValue r = stack[c-1].concat(stack[c]);
-						if ( (c-=2) >= b ) {
-							Buffer sb = r.buffer();
-							while ( c>=b )
-								sb = stack[c--].concat(sb);
-							r = sb.value();
+						if ( c > b+1 ) {
+							Buffer sb = stack[c].buffer();
+							while ( --c>=b ) 
+								sb = stack[c].concat(sb);
+							stack[a] = sb.value();
+						} else {
+							stack[a] = stack[c-1].concat(stack[c]);
 						}
-						stack[a] = r;
 					}
 					continue;
 					

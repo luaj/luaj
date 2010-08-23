@@ -157,6 +157,7 @@ public class LuaString extends LuaValue {
 	// concatenation
 	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
 	public Buffer   concat(Buffer rhs)        { return rhs.prepend(this); }
+	public LuaValue concatTo(LuaValue lhs)    { return lhs.concaterror(); }
 	public LuaValue concatTo(LuaNumber lhs)   { return concatTo(lhs.strvalue()); }
 	public LuaValue concatTo(LuaString lhs)   { 
 		byte[] b = new byte[lhs.m_length+this.m_length];
