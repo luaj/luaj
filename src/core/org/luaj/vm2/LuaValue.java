@@ -347,15 +347,14 @@ public class LuaValue extends Varargs {
 	// concatenation
 	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
 	public LuaValue concatTo(LuaValue lhs)    { return lhs.concatmt(this); }
-	public LuaValue concatTo(LuaNumber lhs)   { return concaterror(); }
-	public LuaValue concatTo(LuaString lhs)   { return concaterror(); }
+	public LuaValue concatTo(LuaNumber lhs)   { return lhs.concatmt(this); }
+	public LuaValue concatTo(LuaString lhs)   { return lhs.concatmt(this); }
 	public Buffer   buffer()                  { return new Buffer(this); }
 	public Buffer   concat(Buffer rhs)        { return rhs.setvalue(concat(rhs.value())); }
 	public LuaValue concatmt(LuaValue rhs) {
 		LuaValue h=metatag(CONCAT);
-		LuaValue v=this;
-		if ( h.isnil() && (h=(v=rhs).metatag(CONCAT)).isnil())
-			return v.concaterror();
+		if ( h.isnil() && (h=rhs.metatag(CONCAT)).isnil())
+			return (isstring()? rhs: this).concaterror();
 		return h.call(this,rhs);
 	}
 	

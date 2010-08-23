@@ -665,16 +665,18 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 					} } );
 			assertEquals( tru, tru.concat(tbl) );
 			assertEquals( tbl, tbl.concat(tru) );
-			assertEquals( tru, tru.concat(new Buffer(tbl)).value() );
-			assertEquals( tbl, tbl.concat(new Buffer(tru)).value() );
-			assertEquals( fal, fal.concat(tbl.concat(new Buffer(tru))).value() );
-			assertEquals( uda, uda.concat(tru.concat(new Buffer(tbl))).value() );
-			try { tru.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { def.concat(tru); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tru.concat(new Buffer(def)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { def.concat(new Buffer(tru)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { fal.concat(def.concat(new Buffer(tru))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { ghi.concat(tru.concat(new Buffer(def))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tru, tru.concat(tbl) );
+			assertEquals( tbl, tbl.concat(tru) );
+			assertEquals( tru, tru.concat(tbl.buffer()).value() );
+			assertEquals( tbl, tbl.concat(tru.buffer()).value() );
+			assertEquals( fal, fal.concat(tbl.concat(tru.buffer())).value() );
+			assertEquals( uda, uda.concat(tru.concat(tbl.buffer())).value() );
+			try { tbl.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl.concat(def.buffer()).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tbl.buffer()).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { uda.concat(def.concat(tbl.buffer())).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { ghi.concat(tbl.concat(def.buffer())).value(); fail("did not throw error"); } catch ( LuaError le ) { };
 
 			// always use right argument
 			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { 
@@ -685,16 +687,16 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 					} } );
 			assertEquals( tbl, tru.concat(tbl) );
 			assertEquals( tru, tbl.concat(tru) );
-			assertEquals( tbl, tru.concat(new Buffer(tbl)).value() );
-			assertEquals( tru, tbl.concat(new Buffer(tru)).value() );
-			assertEquals( tru, uda.concat(tbl.concat(new Buffer(tru))).value() );
-			assertEquals( tbl, fal.concat(tru.concat(new Buffer(tbl))).value() );
-			try { tru.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { def.concat(tru); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tru.concat(new Buffer(def)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { def.concat(new Buffer(tru)).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { uda.concat(def.concat(new Buffer(tru))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { fal.concat(tru.concat(new Buffer(def))).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tbl, tru.concat(tbl.buffer()).value() );
+			assertEquals( tru, tbl.concat(tru.buffer()).value() );
+			assertEquals( tru, uda.concat(tbl.concat(tru.buffer())).value() );
+			assertEquals( tbl, fal.concat(tru.concat(tbl.buffer())).value() );
+			try { tbl.concat(def); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl.concat(def.buffer()).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { def.concat(tbl.buffer()).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { uda.concat(def.concat(tbl.buffer())).value(); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { uda.concat(tbl.concat(def.buffer())).value(); fail("did not throw error"); } catch ( LuaError le ) { };
 			
 		} finally { 
 			LuaBoolean.s_metatable = null;
