@@ -109,7 +109,6 @@ public class JavaBuilder {
 	private static final Type[] ARG_TYPES_STRING = { Type.STRING };
 	private static final Type[] ARG_TYPES_CHARARRAY = { TYPE_CHARARRAY };
 	private static final Type[] ARG_TYPES_VARARGS_INT =  { TYPE_VARARGS, Type.INT };	
-	private static final Type[] ARG_TYPES_LUASTRING = { TYPE_LUASTRING };
 	private static final Type[] ARG_TYPES_INT_LUAVALUE = { Type.INT, TYPE_LUAVALUE };
 	private static final Type[] ARG_TYPES_INT_VARARGS = { Type.INT, TYPE_VARARGS };
 	private static final Type[] ARG_TYPES_LUAVALUE_VARARGS = { TYPE_LUAVALUE, TYPE_VARARGS };
@@ -121,6 +120,7 @@ public class JavaBuilder {
 	private static final Type[] ARG_TYPES_LUAVALUE_LUAVALUE = { TYPE_LUAVALUE, TYPE_LUAVALUE };
 	private static final Type[] ARG_TYPES_INT_INT = { Type.INT, Type.INT };
 	private static final Type[] ARG_TYPES_LUAVALUE = { TYPE_LUAVALUE };
+	private static final Type[] ARG_TYPES_BUFFER = { TYPE_BUFFER };
 
 	// names, arg types for main prototype classes
 	private static final String[]     SUPER_NAME_N   = { STR_FUNC0, STR_FUNC1, STR_FUNC2, STR_FUNC3, STR_FUNCV, };
@@ -773,14 +773,19 @@ public class JavaBuilder {
 		append(factory.createInvoke(STR_LUAVALUE, "rawsetlist", Type.VOID, ARG_TYPES_INT_VARARGS, Constants.INVOKEVIRTUAL));
 	}
 
-	public void newBuffer() {
-		append(factory.createNew(TYPE_BUFFER));
-		append(InstructionConstants.DUP);
-		append(factory.createInvoke(STR_BUFFER, "<init>", Type.VOID, Type.NO_ARGS, Constants.INVOKESPECIAL));
+	public void concatvalue() {
+        append(factory.createInvoke(STR_LUAVALUE, "concat", TYPE_LUAVALUE, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
+	}
+	
+	public void concatbuffer() {
+        append(factory.createInvoke(STR_LUAVALUE, "concat", TYPE_BUFFER, ARG_TYPES_BUFFER, Constants.INVOKEVIRTUAL));
 	}
 
-	public void appendBuffer() {
-        append(factory.createInvoke(STR_LUAVALUE, "checkstring", TYPE_LUASTRING, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
-        append(factory.createInvoke(STR_BUFFER, "append", TYPE_BUFFER, ARG_TYPES_LUASTRING, Constants.INVOKEVIRTUAL));
+	public void tobuffer() {
+        append(factory.createInvoke(STR_LUAVALUE, "buffer", TYPE_BUFFER, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
+	}
+
+	public void tovalue() {
+        append(factory.createInvoke(STR_BUFFER, "value", TYPE_LUAVALUE, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
 	}
 }

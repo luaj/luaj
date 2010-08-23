@@ -350,7 +350,7 @@ public class LuaValue extends Varargs {
 	public LuaValue concatTo(LuaNumber lhs)   { return lhs.concatmt(this); }
 	public LuaValue concatTo(LuaString lhs)   { return lhs.concatmt(this); }
 	public Buffer   buffer()                  { return new Buffer(this); }
-	public Buffer   concat(Buffer rhs)        { return rhs.setvalue(concat(rhs.value())); }
+	public Buffer   concat(Buffer rhs)        { return rhs.concatTo(this); }
 	public LuaValue concatmt(LuaValue rhs) {
 		LuaValue h=metatag(CONCAT);
 		if ( h.isnil() && (h=rhs.metatag(CONCAT)).isnil())

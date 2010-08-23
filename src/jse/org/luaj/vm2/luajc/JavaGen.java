@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.luajc;
 
+import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.Prototype;
 
@@ -180,12 +181,16 @@ public class JavaGen {
 					break;
 					
 				case Lua.OP_CONCAT: /*	A B C	R(A):= R(B).. ... ..R(C)			*/
-					builder.newBuffer();
-					while ( b<=c ) {
-						builder.loadLocal(pc, b++);
-						builder.appendBuffer();
+					for ( int k=b; k<=c; k++ )
+						builder.loadLocal(pc, k);					
+					if ( c > b+1 ) {
+						builder.tobuffer();
+						for ( int k=c; --k>=b; )
+							builder.concatbuffer();
+						builder.tovalue();
+					} else {
+						builder.concatvalue();
 					}
-					builder.tostring();
 					builder.storeLocal(pc, a);
 					break;
 					

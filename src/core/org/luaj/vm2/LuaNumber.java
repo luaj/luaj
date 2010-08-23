@@ -63,7 +63,7 @@ public class LuaNumber extends LuaValue {
 	}
 
 	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
-	public Buffer   concat(Buffer rhs)        { return concat(rhs.value()).buffer(); }
+	public Buffer   concat(Buffer rhs)        { return rhs.concatTo(this); }
 	public LuaValue concatTo(LuaNumber lhs)   { return strvalue().concatTo(lhs.strvalue()); }
 	public LuaValue concatTo(LuaString lhs)   { return strvalue().concatTo(lhs); }
 

@@ -104,6 +104,18 @@ public final class Buffer {
 		return this;
 	}
 
+	public Buffer concatTo(LuaValue lhs) {
+		return setvalue(lhs.concat(value()));
+	}
+
+	public Buffer concatTo(LuaString lhs) {
+		return value!=null? setvalue(lhs.concat(value)): prepend(lhs);
+	}
+
+	public Buffer concatTo(LuaNumber lhs) {
+		return value!=null? setvalue(lhs.concat(value)): prepend(lhs.strvalue());
+	}
+
 	public Buffer prepend(LuaString s) {
 		int n = s.m_length;
 		makeroom( n, 0 );

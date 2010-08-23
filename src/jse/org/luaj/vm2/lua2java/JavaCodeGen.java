@@ -583,14 +583,19 @@ public class JavaCodeGen {
 			case Lua.OP_NEQ: out(evalLuaValue(exp.lhs)+".neq("+evalLuaValue(exp.rhs)+")"); return;
 			case Lua.OP_CONCAT: 
 				if ( isConcatExp(exp.rhs) ) {
-					out( "new Buffer().append("+evalLuaValue(exp.lhs)+")" );
+					out( evalLuaValue(exp.lhs) );
 					Exp e = exp.rhs;
-					for ( ; isConcatExp(e); e=((BinopExp)e).rhs ) 
-						out( ".append("+evalLuaValue(((BinopExp)e).lhs)+")" );
-					out( ".append("+evalLuaValue(e)+")" );
-					out( ".tostring()" );
-				} else
-					out(evalLuaValue(exp.lhs)+".concat("+evalLuaValue(exp.rhs)+")"); 
+					String close = "";
+					for ( ; isConcatExp(e); e=((BinopExp)e).rhs ) { 
+						out( ".concat("+evalLuaValue(((BinopExp)e).lhs) );
+						close += ')';
+					}
+					out( ".concat("+evalLuaValue(e)+".buffer())" );
+					out( close );
+					out( ".value()" );
+				} else {
+					out(evalLuaValue(exp.lhs)+".concat("+evalLuaValue(exp.rhs)+")");
+				}
 				return;
 			default: throw new IllegalStateException("unknown bin op:"+exp.op);
 			}
