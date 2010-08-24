@@ -345,7 +345,7 @@ public class LuaValue extends Varargs {
 	public int strcmp( LuaString rhs )      { error("attempt to compare "+typename()); return 0; }
 
 	// concatenation
-	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
+	public LuaValue concat(LuaValue rhs)      { return this.concatmt(rhs); }
 	public LuaValue concatTo(LuaValue lhs)    { return lhs.concatmt(this); }
 	public LuaValue concatTo(LuaNumber lhs)   { return lhs.concatmt(this); }
 	public LuaValue concatTo(LuaString lhs)   { return lhs.concatmt(this); }

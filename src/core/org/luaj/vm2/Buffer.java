@@ -109,11 +109,11 @@ public final class Buffer {
 	}
 
 	public Buffer concatTo(LuaString lhs) {
-		return value!=null? setvalue(lhs.concat(value)): prepend(lhs);
+		return value!=null&&!value.isstring()? setvalue(lhs.concat(value)): prepend(lhs);
 	}
 
 	public Buffer concatTo(LuaNumber lhs) {
-		return value!=null? setvalue(lhs.concat(value)): prepend(lhs.strvalue());
+		return value!=null&&!value.isstring()? setvalue(lhs.concat(value)): prepend(lhs.strvalue());
 	}
 
 	public Buffer prepend(LuaString s) {
@@ -125,17 +125,19 @@ public final class Buffer {
 		value = null;
 		return this;
 	}
-	
+
 	public final void makeroom( int nbefore, int nafter ) {
 		if ( value != null ) {
 			LuaString s = value.strvalue();
 			value = null;
-			bytes = new byte[nbefore+s.m_length+nafter];
 			length = s.m_length;
 			offset = nbefore;
+			bytes = new byte[nbefore+length+nafter];
 			System.arraycopy(s.m_bytes, s.m_offset, bytes, offset, length);
 		} else if ( offset+length+nafter > bytes.length || offset<nbefore ) {
-			realloc( Math.max(nbefore+length+nafter,length*2), nbefore );
+			int n = nbefore+length+nafter;
+			int m = n<32? 32: n<length*2? length*2: n;
+			realloc( m, nbefore==0? 0: m-length-nafter );
 		}
 	}
 	
