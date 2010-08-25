@@ -256,9 +256,9 @@ public class LuaValue extends Varargs {
 	public boolean equals(Object obj)         { return this == obj; } 
 	
 	// arithmetic equality with metatag processing
-	public LuaValue   eq( LuaValue val )      { return eq_b(val)? TRUE: FALSE; }
-	public boolean  eq_b( LuaValue val )      { return false; } 
-	public LuaValue  neq( LuaValue val )      { return eq_b(val)? FALSE: TRUE;  }
+	public LuaValue   eq( LuaValue val )      { return this == val? TRUE: FALSE; }
+	public boolean  eq_b( LuaValue val )      { return this == val; } 
+	public LuaValue  neq( LuaValue val )      { return  eq_b(val)? FALSE: TRUE;  }
 	public boolean neq_b( LuaValue val )      { return !eq_b(val); }
 
 	// equality without metatag processing
@@ -272,10 +272,6 @@ public class LuaValue extends Varargs {
 	public static final boolean eqmtcall(LuaValue lhs, LuaValue lhsmt, LuaValue rhs, LuaValue rhsmt) {
 		LuaValue h = lhsmt.rawget(EQ);
 		return h.isnil() || h!=rhsmt.rawget(EQ)? false: h.call(lhs,rhs).toboolean();
-	}
-	public static final boolean eqmtcall(LuaValue lhs, LuaValue rhs, LuaValue sharedmt) {
-		LuaValue h = sharedmt.rawget(EQ);
-		return h.isnil()? false: h.call(lhs,rhs).toboolean();
 	}
 	
 	// arithmetic operators

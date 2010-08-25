@@ -83,8 +83,4 @@ public class LuaNil extends LuaValue {
 	public Object      optuserdata(Object defval)          { return defval; }
 	public Object      optuserdata(Class c, Object defval) { return defval; }
 	public LuaValue    optvalue(LuaValue defval)           { return defval; }
-	
-	// equality
-	public LuaValue   eq( LuaValue val )      { return this == val? TRUE: FALSE; }
-	public boolean  eq_b( LuaValue val )      { return this == val; } 
 }

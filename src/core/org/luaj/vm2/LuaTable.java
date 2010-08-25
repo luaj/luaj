@@ -577,6 +577,7 @@ public class LuaTable extends LuaValue {
 	}
 	
 	// equality w/ metatable processing
+	public LuaValue eq( LuaValue val ) {  return eq_b(val)? TRUE: FALSE; }
 	public boolean eq_b( LuaValue val )  {
 		if ( this == val ) return true;
 		if ( m_metatable == null || !val.istable() ) return false;

@@ -70,9 +70,4 @@ public class LuaBoolean extends LuaValue {
 	public LuaValue getmetatable() { 
 		return s_metatable; 
 	}
-	
-	// equality
-	public boolean eq_b( LuaValue val ) {
-		return this == val || (s_metatable!=null && val.isboolean() && LuaValue.eqmtcall(this, val, s_metatable)); 
-	}
 }

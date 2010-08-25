@@ -298,17 +298,8 @@ public class LuaString extends LuaValue {
 	}
 
 	// equality w/ metatable processing
-	public boolean eq_b( LuaValue val ) {
-		if ( val.raweq(this) ) return true;
-		if ( s_metatable == null || val.type()!=TSTRING || s_inmeta) return false;
-		s_inmeta = true;
-		try {
-			return LuaValue.eqmtcall(val, this, s_metatable); 			
-		} finally { 
-			s_inmeta = false;
-		}
-	}
-	private static boolean s_inmeta = false;
+	public LuaValue eq( LuaValue val )    { return val.raweq(this)? TRUE: FALSE; }
+	public boolean eq_b( LuaValue val )   { return val.raweq(this); }
 	
 	// equality w/o metatable processing
 	public boolean raweq( LuaValue val ) {

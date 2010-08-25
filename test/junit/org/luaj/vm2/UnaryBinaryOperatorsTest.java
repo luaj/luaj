@@ -235,6 +235,10 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		LuaValue tbl = new LuaTable();
 		LuaValue tbl2 = new LuaTable();
 		LuaValue tbl3 = new LuaTable();
+		LuaValue uda  = new LuaUserdata(new Object());
+		LuaValue udb  = new LuaUserdata(uda.touserdata());
+		LuaValue uda2 = new LuaUserdata(new Object());
+		LuaValue uda3 = new LuaUserdata(uda.touserdata());
 		LuaValue nilb = LuaValue.valueOf( LuaValue.NIL.toboolean() );
 		LuaValue oneb = LuaValue.valueOf( LuaValue.ONE.toboolean() );
 		assertEquals( LuaValue.FALSE, nilb );
@@ -247,26 +251,30 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			LuaString.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } );
 			tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
 			tbl2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			uda.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			udb.setmetatable(uda.getmetatable());
+			uda2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
 			// diff metatag function
 			tbl3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			uda3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
 			
-			// same type, same value, does not invoke metatag op
+			// primitive types or same valu do not invoke metatag as per C implementation
 			assertEquals( tru, tru.eq(tru) );
-			assertEquals( tru, tbl.eq(tbl) );
 			assertEquals( tru, one.eq(one) );
-			// same type, different value, same metatag op.  comparabile via metatag op
-			assertEquals( nilb, tbl.eq(tbl2) );
-			assertEquals( nilb, tbl2.eq(tbl) );
-			assertEquals( nilb, tru.eq(fal) );
-			assertEquals( nilb, fal.eq(tru) );
-			assertEquals( nilb, zer.eq(one) );
-			assertEquals( nilb, one.eq(zer) );
-			assertEquals( nilb, pi.eq(ee) );
-			assertEquals( nilb, ee.eq(pi) );
-			assertEquals( nilb, pi.eq(one) );
-			assertEquals( nilb, one.eq(pi) );
-			assertEquals( nilb, abc.eq(def) );
-			assertEquals( nilb, def.eq(abc) );
+			assertEquals( tru, abc.eq(abc) );
+			assertEquals( tru, tbl.eq(tbl) );
+			assertEquals( tru, uda.eq(uda) );
+			assertEquals( tru, uda.eq(udb) );
+			assertEquals( fal, tru.eq(fal) );
+			assertEquals( fal, fal.eq(tru) );
+			assertEquals( fal, zer.eq(one) );
+			assertEquals( fal, one.eq(zer) );
+			assertEquals( fal, pi.eq(ee) );
+			assertEquals( fal, ee.eq(pi) );
+			assertEquals( fal, pi.eq(one) );
+			assertEquals( fal, one.eq(pi) );
+			assertEquals( fal, abc.eq(def) );
+			assertEquals( fal, def.eq(abc) );
 			// different types.  not comparable
 			assertEquals( fal, fal.eq(tbl) );
 			assertEquals( fal, tbl.eq(fal) );
@@ -276,9 +284,20 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			assertEquals( fal, one.eq(fal) );
 			assertEquals( fal, abc.eq(one) );
 			assertEquals( fal, one.eq(abc) );
+			assertEquals( fal, tbl.eq(uda) );
+			assertEquals( fal, uda.eq(tbl) );
+			// same type, same value, does not invoke metatag op
+			assertEquals( tru, tbl.eq(tbl) );
+			// same type, different value, same metatag op.  comparabile via metatag op
+			assertEquals( nilb, tbl.eq(tbl2) );
+			assertEquals( nilb, tbl2.eq(tbl) );
+			assertEquals( nilb, uda.eq(uda2) );
+			assertEquals( nilb, uda2.eq(uda) );
 			// same type, different metatag ops.  not comparable
 			assertEquals( fal, tbl.eq(tbl3) );
 			assertEquals( fal, tbl3.eq(tbl) );
+			assertEquals( fal, uda.eq(uda3) );
+			assertEquals( fal, uda3.eq(uda) );
 
 			// always use right argument
 			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } );
@@ -286,26 +305,30 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			LuaString.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } );
 			tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
 			tbl2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			uda.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			udb.setmetatable(uda.getmetatable());
+			uda2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
 			// diff metatag function
 			tbl3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			uda3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
 			
-			// same type, same value, does not invoke metatag op
+			// primitive types or same value do not invoke metatag as per C implementation
 			assertEquals( tru, tru.eq(tru) );
-			assertEquals( tru, tbl.eq(tbl) );
 			assertEquals( tru, one.eq(one) );
-			// same type, different value, same metatag op.  comparabile via metatag op
-			assertEquals( oneb, tbl.eq(tbl2) );
-			assertEquals( oneb, tbl2.eq(tbl) );
-			assertEquals( oneb, tru.eq(fal) );
-			assertEquals( oneb, fal.eq(tru) );
-			assertEquals( oneb, zer.eq(one) );
-			assertEquals( oneb, one.eq(zer) );
-			assertEquals( oneb, pi.eq(ee) );
-			assertEquals( oneb, ee.eq(pi) );
-			assertEquals( oneb, pi.eq(one) );
-			assertEquals( oneb, one.eq(pi) );
-			assertEquals( oneb, abc.eq(def) );
-			assertEquals( oneb, def.eq(abc) );
+			assertEquals( tru, abc.eq(abc) );
+			assertEquals( tru, tbl.eq(tbl) );
+			assertEquals( tru, uda.eq(uda) );
+			assertEquals( tru, uda.eq(udb) );
+			assertEquals( fal, tru.eq(fal) );
+			assertEquals( fal, fal.eq(tru) );
+			assertEquals( fal, zer.eq(one) );
+			assertEquals( fal, one.eq(zer) );
+			assertEquals( fal, pi.eq(ee) );
+			assertEquals( fal, ee.eq(pi) );
+			assertEquals( fal, pi.eq(one) );
+			assertEquals( fal, one.eq(pi) );
+			assertEquals( fal, abc.eq(def) );
+			assertEquals( fal, def.eq(abc) );
 			// different types.  not comparable
 			assertEquals( fal, fal.eq(tbl) );
 			assertEquals( fal, tbl.eq(fal) );
@@ -315,9 +338,20 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			assertEquals( fal, one.eq(fal) );
 			assertEquals( fal, abc.eq(one) );
 			assertEquals( fal, one.eq(abc) );
+			assertEquals( fal, tbl.eq(uda) );
+			assertEquals( fal, uda.eq(tbl) );
+			// same type, same value, does not invoke metatag op
+			assertEquals( tru, tbl.eq(tbl) );
+			// same type, different value, same metatag op.  comparabile via metatag op
+			assertEquals( oneb, tbl.eq(tbl2) );
+			assertEquals( oneb, tbl2.eq(tbl) );
+			assertEquals( oneb, uda.eq(uda2) );
+			assertEquals( oneb, uda2.eq(uda) );
 			// same type, different metatag ops.  not comparable
 			assertEquals( fal, tbl.eq(tbl3) );
 			assertEquals( fal, tbl3.eq(tbl) );
+			assertEquals( fal, uda.eq(uda3) );
+			assertEquals( fal, uda3.eq(uda) );
 			
 		} finally { 
 			LuaBoolean.s_metatable = null;

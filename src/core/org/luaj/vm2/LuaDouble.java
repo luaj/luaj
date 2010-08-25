@@ -75,7 +75,8 @@ public class LuaDouble extends LuaNumber {
 	public boolean equals(Object o) { return o instanceof LuaDouble? ((LuaDouble)o).v == v: false; }
 	
 	// equality w/ metatable processing
-	public boolean eq_b( LuaValue val )   { return val.raweq(v) || (s_metatable!=null && val.type()==TNUMBER && LuaValue.eqmtcall(val, this, s_metatable)); }
+	public LuaValue eq( LuaValue val )        { return val.raweq(v)? TRUE: FALSE; }
+	public boolean eq_b( LuaValue val )       { return val.raweq(v); }
 
 	// equality w/o metatable processing
 	public boolean raweq( LuaValue val )      { return val.raweq(v); }

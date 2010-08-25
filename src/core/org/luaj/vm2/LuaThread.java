@@ -242,9 +242,4 @@ public class LuaThread extends LuaValue implements Runnable {
 		}
 		
 	}
-
-	// equality
-	public boolean eq_b( LuaValue val ) {
-		return this == val || (s_metatable!=null && val.isthread() && LuaValue.eqmtcall(this, val, s_metatable)); 
-	}
 }

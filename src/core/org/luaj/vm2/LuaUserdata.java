@@ -105,8 +105,8 @@ public class LuaUserdata extends LuaValue {
 	}
 
 	// equality w/ metatable processing
-	public LuaValue eq( LuaValue val )     { return val.eq_b(this)? TRUE: FALSE; } 
-	public boolean eq_b( LuaUserdata val ) { 
+	public LuaValue eq( LuaValue val )     { return eq_b(val)? TRUE: FALSE; } 
+	public boolean eq_b( LuaValue val ) { 
 		if ( val.raweq(this) ) return true;
 		if ( m_metatable == null || !val.isuserdata() ) return false;
 		LuaValue valmt = val.getmetatable();

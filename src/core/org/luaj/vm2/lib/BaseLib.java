@@ -303,9 +303,11 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 17: { // "tostring", // (e) -> value
 				LuaValue arg = args.checkvalue(1);
 				LuaValue h = arg.metatag(TOSTRING);
-				if ( ! h.isnil() ) return h.call(arg);
+				if ( ! h.isnil() ) 
+					return h.call(arg);
 				LuaValue v = arg.tostring();
-				if ( ! v.isnil() ) return v;
+				if ( ! v.isnil() ) 
+					return v;
 				return valueOf(arg.tojstring());
 			}
 			case 18: { // "tonumber", // (e [,base]) -> value

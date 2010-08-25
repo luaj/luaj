@@ -67,9 +67,4 @@ public class LuaFunction extends LuaValue {
 	public void setfenv(LuaValue env) {
 		this.env = env!=null? env: NIL;
 	}
-	
-	// equality
-	public boolean eq_b( LuaValue val ) {
-		return this == val || (s_metatable!=null && val.isfunction() && LuaValue.eqmtcall(this, val, s_metatable)); 
-	}
 }
