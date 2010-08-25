@@ -103,16 +103,15 @@ public class LuaUserdata extends LuaValue {
 		LuaUserdata u = (LuaUserdata) val;
 		return m_instance.equals(u.m_instance);
 	}
-	
-	public LuaValue eq( LuaValue rhs ) {
-		return rhs.eq_b(this)? TRUE: FALSE; 
+
+	// equality without metatag processing
+	public boolean raweq( LuaValue val )      { return val.raweq(this); }
+	public boolean raweq( LuaUserdata val )   { 
+		return this == val || m_instance.equals(val.m_instance); 
 	}
 	
-	public boolean eq_b( LuaValue rhs ) { 
-		return rhs.eq_b(this); 
-	}
-	
-	public boolean eq_b( LuaUserdata val ) { 
-		return this == val || m_instance.equals(val.m_instance) || (m_metatable!=null && val.eqmt_b(this)); 
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val )    { 
+		return m_metatable!=null && val.isuserdata()? LuaValue.eqmtcall(this, m_metatable, val, val.getmetatable()): false; 
 	}
 }

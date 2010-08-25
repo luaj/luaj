@@ -255,21 +255,30 @@ public class LuaValue extends Varargs {
 	// object equality, used for key comparison
 	public boolean equals(Object obj)         { return this == obj; } 
 	
-	// arithmetic equality
-	public LuaValue  eq( LuaValue val )       { return this == val || eq_b(val)? TRUE: FALSE; }
-	public boolean eq_b( LuaValue val )       { return this == val || (type() == val.type() && eqmt_b(val)); } 
-	public boolean eq_b( LuaTable val )       { return false; }
-	public boolean eq_b( LuaUserdata val )    { return false; }
-	public boolean eq_b( LuaString val )      { return false; }
-	public boolean eq_b( double val )         { return false; }
-	public boolean eq_b( int val )            { return false; }
-	public LuaValue   neq( LuaValue val )     { return eq_b(val)? FALSE: TRUE; }
-	public boolean neq_b( LuaValue val )      { return ! eq_b(val); }
-	public boolean neq_b( double val )        { return ! eq_b(val); }
-	public boolean neq_b( int val )           { return ! eq_b(val); }
-	protected boolean eqmt_b( LuaValue op2 )      { 
-		LuaValue h = metatag(EQ);
-		return !h.isnil() && h==op2.metatag(EQ)? h.call(this,op2).toboolean(): false;
+	// arithmetic equality with metatag processing
+	public LuaValue   eq( LuaValue val )      { return raweq(val) || eqmt(val)? TRUE: FALSE; }
+	public LuaValue  neq( LuaValue val )      { return raweq(val) || eqmt(val)? FALSE: TRUE;  }
+	public boolean  eq_b( LuaValue val )      { return raweq(val) || eqmt(val); } 
+	public boolean neq_b( LuaValue val )      { return !(raweq(val) || eqmt(val)); }
+
+	// equality without metatag processing
+	public boolean raweq( LuaValue val )      { return this == val; }
+	public boolean raweq( LuaUserdata val )   { return false; }
+	public boolean raweq( LuaString val )     { return false; }
+	public boolean raweq( double val )        { return false; }
+	public boolean raweq( int val )           { return false; }
+
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val )       { return false; }
+	public static final boolean eqmtcall(LuaValue lhs, LuaValue lhsmt, LuaValue rhs, LuaValue rhsmt) {
+		if ( lhsmt == null || rhsmt == null ) return false;
+		LuaValue h = lhsmt.rawget(EQ);
+		return h.isnil() || h!=rhsmt.rawget(EQ)? false: h.call(lhs,rhs).toboolean();
+	}
+	public static final boolean eqmtcall(LuaValue lhs, LuaValue rhs, LuaValue sharedmt) {
+		if ( sharedmt == null ) return false;
+		LuaValue h = sharedmt.rawget(EQ);
+		return h.isnil()? false: h.call(lhs,rhs).toboolean();
 	}
 	
 	// arithmetic operators

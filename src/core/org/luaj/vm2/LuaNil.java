@@ -83,4 +83,9 @@ public class LuaNil extends LuaValue {
 	public Object      optuserdata(Object defval)          { return defval; }
 	public Object      optuserdata(Class c, Object defval) { return defval; }
 	public LuaValue    optvalue(LuaValue defval)           { return defval; }
+	
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val ) { 
+		return s_metatable!=null && val.isnil()? LuaValue.eqmtcall(this, val, s_metatable): false; 
+	}	
 }

@@ -243,5 +243,9 @@ public class LuaThread extends LuaValue implements Runnable {
 		
 	}
 
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val ) { 
+		return s_metatable!=null && val.isthread()? LuaValue.eqmtcall(this, val, s_metatable): false; 
+	}	
 
 }

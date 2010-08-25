@@ -286,18 +286,6 @@ public class LuaTable extends LuaValue {
 	public LuaValue len()  { 
 		return LuaInteger.valueOf(length());
 	}
-
-	public LuaValue eq( LuaValue rhs ) {
-		return rhs.eq_b(this)? TRUE: FALSE; 
-	}
-	
-	public boolean eq_b( LuaValue rhs ) { 
-		return rhs.eq_b(this); 
-	}
-	
-	public boolean eq_b( LuaTable val ) { 
-		return this == val || (m_metatable!=null && val.eqmt_b(this)); 
-	}
 	
 	public int maxn() {
 		int n = 0;
@@ -426,7 +414,7 @@ public class LuaTable extends LuaValue {
 		// This loop is guaranteed to terminate as long as we never allow the
 		// table to get 100% full.
 		LuaValue k;
-		while ( ( k = hashKeys[i] ) != null && !k.eq_b(key) ) {
+		while ( ( k = hashKeys[i] ) != null && !k.raweq(key) ) {
 			i = ( i + 1 ) % hashKeys.length;
 		}
 		return i;
@@ -586,5 +574,10 @@ public class LuaTable extends LuaValue {
 		LuaValue[] a = new LuaValue[l.size()];
 		l.copyInto(a);
 		return a;
+	}
+	
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val )    { 
+		return m_metatable!=null && val.istable()? LuaValue.eqmtcall(this, m_metatable, val, val.getmetatable()): false; 
 	}
 }

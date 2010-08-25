@@ -137,7 +137,7 @@ public class WeakTable extends LuaTable {
 					return 0;
 			}
 			else {
-				if ( k.eq_b(key) )
+				if ( k.raweq(key) )
 					return i;
 				i = ( i + 1 ) % hashKeys.length;
 			}
@@ -205,9 +205,9 @@ public class WeakTable extends LuaTable {
 			return o!=null? (LuaValue)o: NIL;
 		}
 		
-		public boolean eq_b(LuaValue rhs) {
+		public boolean raweq(LuaValue rhs) {
 			Object o = ref.get();
-			return o!=null && rhs.eq_b((LuaValue)o);
+			return o!=null && rhs.raweq((LuaValue)o);
 		}
 		
 		public boolean isweaknil() {
@@ -233,11 +233,11 @@ public class WeakTable extends LuaTable {
 			return o!=null? userdataOf(o,mt): NIL;
 		}
 		
-		public boolean eq_b(LuaValue rhs) {
+		public boolean raweq(LuaValue rhs) {
 			if ( ! rhs.isuserdata() )
 				return false;
 			LuaValue v = (LuaValue) ref.get();
-			if ( v != null && v.eq_b(rhs) )
+			if ( v != null && v.raweq(rhs) )
 				return true;
 			return rhs.touserdata() == ob.get();
 		}
@@ -287,14 +287,10 @@ public class WeakTable extends LuaTable {
 			return keyhash;
 		}
 		
-		public boolean eq_b(LuaValue rhs) {
-			//return rhs.eq_b(weakkey.strongvalue());
-			return weakkey.eq_b(rhs);
+		public boolean raweq(LuaValue rhs) {
+			//return rhs.raweq(weakkey.strongvalue());
+			return weakkey.raweq(rhs);
 		}
-		
-		public boolean eq_b( LuaString rhs )      { return false; }
-		public boolean eq_b( double val )         { return false; }
-		public boolean eq_b( int val )            { return false; }
 		
 		public boolean isweaknil() {
 			return weakkey.isweaknil() || weakvalue.isweaknil();

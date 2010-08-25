@@ -69,5 +69,10 @@ public class LuaBoolean extends LuaValue {
 	
 	public LuaValue getmetatable() { 
 		return s_metatable; 
-	}	
+	}
+	
+	// __eq metatag processing
+	public boolean eqmt( LuaValue val )    { 
+		return s_metatable!=null && val.isboolean()? LuaValue.eqmtcall(this, val, s_metatable): false; 
+	}
 }
