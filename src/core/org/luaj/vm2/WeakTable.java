@@ -271,8 +271,7 @@ public class WeakTable extends LuaTable {
 		}
 
 		public int type() {
-			illegal("type","weak entry");
-			return 0;
+			return TNONE;
 		}
 
 		public String typename() {
@@ -292,6 +291,10 @@ public class WeakTable extends LuaTable {
 			//return rhs.eq_b(weakkey.strongvalue());
 			return weakkey.eq_b(rhs);
 		}
+		
+		public boolean eq_b( LuaString rhs )      { return false; }
+		public boolean eq_b( double val )         { return false; }
+		public boolean eq_b( int val )            { return false; }
 		
 		public boolean isweaknil() {
 			return weakkey.isweaknil() || weakvalue.isweaknil();

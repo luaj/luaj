@@ -105,7 +105,7 @@ public class LuaInteger extends LuaNumber {
 	public boolean equals(Object o) { return o instanceof LuaInteger? ((LuaInteger)o).v == v: false; }
 	
 	// arithmetic equality
-	public LuaValue eq( LuaValue rhs )     { return rhs.eq_b(v)? TRUE: FALSE; }
+	public LuaValue eq( LuaValue rhs )     { return rhs.eq_b(v) || rhs.type()==TNUMBER && eqmt_b(rhs)? TRUE: FALSE; }
 	public boolean eq_b( LuaValue rhs )    { return rhs.eq_b(v); }
 	public boolean eq_b( double rhs )      { return v == rhs; }
 	public boolean eq_b( int rhs )         { return v == rhs; }

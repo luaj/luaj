@@ -313,7 +313,7 @@ public class LuaString extends LuaValue {
 	}
 	
 	public boolean eq_b( LuaValue val ) {
-		return val.eq_b( this );
+		return val == this || (val.type()==TSTRING && val.eq_b(this));
 	}
 	
 	public static boolean equals( LuaString a, int i, LuaString b, int j, int n ) {

@@ -21,13 +21,11 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-import org.luaj.vm2.LuaDouble;
-import org.luaj.vm2.LuaInteger;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.TwoArgFunction;
+import java.lang.reflect.InvocationTargetException;
 
 import junit.framework.TestCase;
+
+import org.luaj.vm2.lib.TwoArgFunction;
 
 /**
  * Tests of basic unary and binary operators on main value types.
@@ -212,6 +210,123 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		assertEquals(LuaValue.NIL.eq(da),LuaValue.FALSE);
 	}
 	
+	private static final TwoArgFunction RETURN_NIL = new TwoArgFunction() {
+		public LuaValue call(LuaValue lhs, LuaValue rhs) {
+			return NIL;
+		}
+	};
+	
+	private static final TwoArgFunction RETURN_ONE = new TwoArgFunction() {
+		public LuaValue call(LuaValue lhs, LuaValue rhs) {
+			return ONE;
+		}
+	};
+	
+	
+	public void testEqualsMetatag() {
+		LuaValue tru = LuaValue.TRUE;
+		LuaValue fal = LuaValue.FALSE;
+		LuaValue zer = LuaValue.ZERO;
+		LuaValue one = LuaValue.ONE;
+		LuaValue abc = LuaValue.valueOf("abcdef").substring(0,3);
+		LuaValue def = LuaValue.valueOf("abcdef").substring(3,6);
+		LuaValue pi  = LuaValue.valueOf(Math.PI);
+		LuaValue ee  = LuaValue.valueOf(Math.E);
+		LuaValue tbl = new LuaTable();
+		LuaValue tbl2 = new LuaTable();
+		LuaValue tbl3 = new LuaTable();
+		LuaValue nilb = LuaValue.valueOf( LuaValue.NIL.toboolean() );
+		LuaValue oneb = LuaValue.valueOf( LuaValue.ONE.toboolean() );
+		assertEquals( LuaValue.FALSE, nilb );
+		assertEquals( LuaValue.TRUE, oneb );
+		LuaValue smt = LuaString.s_metatable;
+		try {
+			// always return nil0
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } );
+			LuaNumber.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } );
+			LuaString.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } );
+			tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			tbl2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			// diff metatag function
+			tbl3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			
+			// same type, same value, does not invoke metatag op
+			assertEquals( tru, tru.eq(tru) );
+			assertEquals( tru, tbl.eq(tbl) );
+			assertEquals( tru, one.eq(one) );
+			// same type, different value, same metatag op.  comparabile via metatag op
+			assertEquals( nilb, tbl.eq(tbl2) );
+			assertEquals( nilb, tbl2.eq(tbl) );
+			assertEquals( nilb, tru.eq(fal) );
+			assertEquals( nilb, fal.eq(tru) );
+			assertEquals( nilb, zer.eq(one) );
+			assertEquals( nilb, one.eq(zer) );
+			assertEquals( nilb, pi.eq(ee) );
+			assertEquals( nilb, ee.eq(pi) );
+			assertEquals( nilb, pi.eq(one) );
+			assertEquals( nilb, one.eq(pi) );
+			assertEquals( nilb, abc.eq(def) );
+			assertEquals( nilb, def.eq(abc) );
+			// different types.  not comparable
+			assertEquals( fal, fal.eq(tbl) );
+			assertEquals( fal, tbl.eq(fal) );
+			assertEquals( fal, tbl.eq(one) );
+			assertEquals( fal, one.eq(tbl) );
+			assertEquals( fal, fal.eq(one) );
+			assertEquals( fal, one.eq(fal) );
+			assertEquals( fal, abc.eq(one) );
+			assertEquals( fal, one.eq(abc) );
+			// same type, different metatag ops.  not comparable
+			assertEquals( fal, tbl.eq(tbl3) );
+			assertEquals( fal, tbl3.eq(tbl) );
+
+			// always use right argument
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } );
+			LuaNumber.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } );
+			LuaString.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } );
+			tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			tbl2.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_ONE, } ));
+			// diff metatag function
+			tbl3.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.EQ, RETURN_NIL, } ));
+			
+			// same type, same value, does not invoke metatag op
+			assertEquals( tru, tru.eq(tru) );
+			assertEquals( tru, tbl.eq(tbl) );
+			assertEquals( tru, one.eq(one) );
+			// same type, different value, same metatag op.  comparabile via metatag op
+			assertEquals( oneb, tbl.eq(tbl2) );
+			assertEquals( oneb, tbl2.eq(tbl) );
+			assertEquals( oneb, tru.eq(fal) );
+			assertEquals( oneb, fal.eq(tru) );
+			assertEquals( oneb, zer.eq(one) );
+			assertEquals( oneb, one.eq(zer) );
+			assertEquals( oneb, pi.eq(ee) );
+			assertEquals( oneb, ee.eq(pi) );
+			assertEquals( oneb, pi.eq(one) );
+			assertEquals( oneb, one.eq(pi) );
+			assertEquals( oneb, abc.eq(def) );
+			assertEquals( oneb, def.eq(abc) );
+			// different types.  not comparable
+			assertEquals( fal, fal.eq(tbl) );
+			assertEquals( fal, tbl.eq(fal) );
+			assertEquals( fal, tbl.eq(one) );
+			assertEquals( fal, one.eq(tbl) );
+			assertEquals( fal, fal.eq(one) );
+			assertEquals( fal, one.eq(fal) );
+			assertEquals( fal, abc.eq(one) );
+			assertEquals( fal, one.eq(abc) );
+			// same type, different metatag ops.  not comparable
+			assertEquals( fal, tbl.eq(tbl3) );
+			assertEquals( fal, tbl3.eq(tbl) );
+			
+		} finally { 
+			LuaBoolean.s_metatable = null;
+			LuaNumber.s_metatable = null;
+			LuaString.s_metatable = smt;
+		}
+	}
+		
+	
 	public void testAdd() {
 		LuaValue ia=LuaValue.valueOf(111), ib=LuaValue.valueOf(44);
 		LuaValue da=LuaValue.valueOf(55.25), db=LuaValue.valueOf(3.5);
@@ -236,7 +351,7 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		assertEquals(133.125,ia.add(sa).todouble());
 		assertEquals(133.125,sa.add(ia).todouble());
 		assertEquals(77.375, da.add(sa).todouble());
-		assertEquals(77.375, sa.add(da).todouble());		
+		assertEquals(77.375, sa.add(da).todouble());
 	}
 	
 	public void testSub() {
@@ -338,6 +453,155 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		assertEquals(luaMod(1.5,.25),   sa.mod(da).todouble());		
 	}
 
+	public void testArithErrors() {
+		LuaValue ia=LuaValue.valueOf(111), ib=LuaValue.valueOf(44);
+		LuaValue da=LuaValue.valueOf(55.25), db=LuaValue.valueOf(3.5);
+		LuaValue sa=LuaValue.valueOf("22.125"), sb=LuaValue.valueOf("7.25");
+
+		String[] ops = { "add", "sub", "mul", "div", "mod", "pow" };
+		LuaValue[] vals = { LuaValue.NIL, LuaValue.TRUE, LuaValue.tableOf() };
+		LuaValue[] numerics = { LuaValue.valueOf(111), LuaValue.valueOf(55.25), LuaValue.valueOf("22.125") }; 
+		for ( int i=0; i<ops.length; i++ ) {
+			for ( int j=0; j<vals.length; j++ ) {
+				for ( int k=0; k<numerics.length; k++ ) {
+					checkArithError( vals[j], numerics[k], ops[i], vals[j].typename() );
+					checkArithError( numerics[k], vals[j], ops[i], vals[j].typename() );
+				}
+			}
+		}
+	}
+	
+	private void checkArithError(LuaValue a, LuaValue b, String op, String type) {
+		try {
+			LuaValue.class.getMethod(op, new Class[] { LuaValue.class }).invoke(a, new Object[] { b });
+		} catch ( InvocationTargetException ite ) {
+			String actual = ite.getTargetException().getMessage();
+			if ( (!actual.startsWith("attempt to perform arithmetic")) || actual.indexOf(type)<0 ) 
+				fail( "("+a.typename()+","+op+","+b.typename()+") reported '"+actual+"'" );
+		} catch ( Exception e ) {
+			fail( "("+a.typename()+","+op+","+b.typename()+") threw "+e );
+		}
+	}
+	
+	private static final TwoArgFunction RETURN_LHS = new TwoArgFunction() {
+		public LuaValue call(LuaValue lhs, LuaValue rhs) {
+			return lhs;
+		}
+	};
+	
+	private static final TwoArgFunction RETURN_RHS = new TwoArgFunction() {
+		public LuaValue call(LuaValue lhs, LuaValue rhs) {
+			return rhs;
+		}
+	};
+	
+	public void testArithMetatag() {
+		LuaValue tru = LuaValue.TRUE;
+		LuaValue fal = LuaValue.FALSE;
+		LuaValue tbl = new LuaTable();
+		LuaValue tbl2 = new LuaTable();
+		try {
+			try { tru.add(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.mul(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.div(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.pow(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.mod(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			
+			// always use left argument
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.ADD, RETURN_LHS, } );
+			assertEquals( tru, tru.add(fal) );
+			assertEquals( tru, tru.add(tbl) );
+			assertEquals( tbl, tbl.add(tru) );
+			try { tbl.add(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.SUB, RETURN_LHS, } );
+			assertEquals( tru, tru.sub(fal) );
+			assertEquals( tru, tru.sub(tbl) );
+			assertEquals( tbl, tbl.sub(tru) );
+			try { tbl.sub(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.add(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.MUL, RETURN_LHS, } );
+			assertEquals( tru, tru.mul(fal) );
+			assertEquals( tru, tru.mul(tbl) );
+			assertEquals( tbl, tbl.mul(tru) );
+			try { tbl.mul(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.DIV, RETURN_LHS, } );
+			assertEquals( tru, tru.div(fal) );
+			assertEquals( tru, tru.div(tbl) );
+			assertEquals( tbl, tbl.div(tru) );
+			try { tbl.div(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.POW, RETURN_LHS, } );
+			assertEquals( tru, tru.pow(fal) );
+			assertEquals( tru, tru.pow(tbl) );
+			assertEquals( tbl, tbl.pow(tru) );
+			try { tbl.pow(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.MOD, RETURN_LHS, } );
+			assertEquals( tru, tru.mod(fal) );
+			assertEquals( tru, tru.mod(tbl) );
+			assertEquals( tbl, tbl.mod(tru) );
+			try { tbl.mod(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			
+			// always use right argument
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.ADD, RETURN_RHS, } );
+			assertEquals( fal, tru.add(fal) );
+			assertEquals( tbl, tru.add(tbl) );
+			assertEquals( tru, tbl.add(tru) );
+			try { tbl.add(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.SUB, RETURN_RHS, } );
+			assertEquals( fal, tru.sub(fal) );
+			assertEquals( tbl, tru.sub(tbl) );
+			assertEquals( tru, tbl.sub(tru) );
+			try { tbl.sub(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.add(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.MUL, RETURN_RHS, } );
+			assertEquals( fal, tru.mul(fal) );
+			assertEquals( tbl, tru.mul(tbl) );
+			assertEquals( tru, tbl.mul(tru) );
+			try { tbl.mul(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.DIV, RETURN_RHS, } );
+			assertEquals( fal, tru.div(fal) );
+			assertEquals( tbl, tru.div(tbl) );
+			assertEquals( tru, tbl.div(tru) );
+			try { tbl.div(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.POW, RETURN_RHS, } );
+			assertEquals( fal, tru.pow(fal) );
+			assertEquals( tbl, tru.pow(tbl) );
+			assertEquals( tru, tbl.pow(tru) );
+			try { tbl.pow(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.MOD, RETURN_RHS, } );
+			assertEquals( fal, tru.mod(fal) );
+			assertEquals( tbl, tru.mod(tbl) );
+			assertEquals( tru, tbl.mod(tru) );
+			try { tbl.mod(tbl2); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tru.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+
+		} finally { 
+			LuaBoolean.s_metatable = null;
+		}
+	}
+	
+	
 	public void testCompareStrings() {
 		// these are lexical compare!
 		LuaValue sa=LuaValue.valueOf("-1.5");
@@ -459,6 +723,90 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		assertEquals(1.5!=.25,   sa.neq_b(da));		
 	}
 
+
+	public void testCompareErrors() {
+		LuaValue ia=LuaValue.valueOf(111), ib=LuaValue.valueOf(44);
+		LuaValue da=LuaValue.valueOf(55.25), db=LuaValue.valueOf(3.5);
+		LuaValue sa=LuaValue.valueOf("22.125"), sb=LuaValue.valueOf("7.25");
+
+		String[] ops = { "lt", "lteq",  };		
+		LuaValue[] vals = { LuaValue.NIL, LuaValue.TRUE, LuaValue.tableOf() };
+		LuaValue[] numerics = { LuaValue.valueOf(111), LuaValue.valueOf(55.25), LuaValue.valueOf("22.125") }; 
+		for ( int i=0; i<ops.length; i++ ) {
+			for ( int j=0; j<vals.length; j++ ) {
+				for ( int k=0; k<numerics.length; k++ ) {
+					checkCompareError( vals[j], numerics[k], ops[i], vals[j].typename() );
+					checkCompareError( numerics[k], vals[j], ops[i], vals[j].typename() );
+				}
+			}
+		}
+	}
+	
+	private void checkCompareError(LuaValue a, LuaValue b, String op, String type) {
+		try {
+			LuaValue.class.getMethod(op, new Class[] { LuaValue.class }).invoke(a, new Object[] { b });
+		} catch ( InvocationTargetException ite ) {
+			String actual = ite.getTargetException().getMessage();
+			if ( (!actual.startsWith("attempt to compare")) || actual.indexOf(type)<0 ) 
+				fail( "("+a.typename()+","+op+","+b.typename()+") reported '"+actual+"'" );
+		} catch ( Exception e ) {
+			fail( "("+a.typename()+","+op+","+b.typename()+") threw "+e );
+		}
+	}
+	
+	public void testCompareMetatag() {
+		LuaValue tru = LuaValue.TRUE;
+		LuaValue fal = LuaValue.FALSE;
+		LuaValue tbl = new LuaTable();
+		LuaValue tbl2 = new LuaTable();
+		LuaValue tbl3 = new LuaTable();
+		try {
+			// always use left argument
+			LuaValue mt = LuaValue.tableOf( new LuaValue[] { 
+					LuaValue.LT, RETURN_LHS, 
+					LuaValue.LE, RETURN_RHS, 
+					} );
+			LuaBoolean.s_metatable = mt;
+			tbl.setmetatable(mt);
+			tbl2.setmetatable(mt);
+			assertEquals( tru, tru.lt(fal) );
+			assertEquals( fal, fal.lt(tru) );
+			assertEquals( tbl, tbl.lt(tbl2) );
+			assertEquals( tbl2, tbl2.lt(tbl) );
+			try { tbl.lt(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl3.lt(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( fal, tru.lteq(fal) );
+			assertEquals( tru, fal.lteq(tru) );
+			assertEquals( tbl2, tbl.lteq(tbl2) );
+			assertEquals( tbl, tbl2.lteq(tbl) );
+			try { tbl.lteq(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl3.lteq(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+
+			// always use right argument
+			mt = LuaValue.tableOf( new LuaValue[] { 
+					LuaValue.LT, RETURN_RHS,
+					LuaValue.LE, RETURN_LHS } );
+			LuaBoolean.s_metatable = mt;
+			tbl.setmetatable(mt);
+			tbl2.setmetatable(mt);
+			assertEquals( fal, tru.lt(fal) );
+			assertEquals( tru, fal.lt(tru) );
+			assertEquals( tbl2, tbl.lt(tbl2) );
+			assertEquals( tbl, tbl2.lt(tbl) );
+			try { tbl.lt(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl3.lt(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tru, tru.lteq(fal) );
+			assertEquals( fal, fal.lteq(tru) );
+			assertEquals( tbl, tbl.lteq(tbl2) );
+			assertEquals( tbl2, tbl2.lteq(tbl) );
+			try { tbl.lteq(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
+			try { tbl3.lteq(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			
+		} finally { 
+			LuaBoolean.s_metatable = null;
+		}
+	}
+		
 	public void testAnd() {
 		LuaValue ia=LuaValue.valueOf(3), ib=LuaValue.valueOf(4);
 		LuaValue da=LuaValue.valueOf(.25), db=LuaValue.valueOf(.5);
@@ -657,12 +1005,7 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		LuaValue uda = new LuaUserdata(new Object());
 		try {
 			// always use left argument
-			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { 
-					LuaValue.CONCAT, new TwoArgFunction() {
-						public LuaValue call(LuaValue lhs, LuaValue rhs) {
-							return lhs;
-						}
-					} } );
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.CONCAT, RETURN_LHS } );
 			assertEquals( tru, tru.concat(tbl) );
 			assertEquals( tbl, tbl.concat(tru) );
 			assertEquals( tru, tru.concat(tbl) );
@@ -679,12 +1022,7 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			try { ghi.concat(tbl.concat(def.buffer())).value(); fail("did not throw error"); } catch ( LuaError le ) { };
 
 			// always use right argument
-			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { 
-					LuaValue.CONCAT, new TwoArgFunction() {
-						public LuaValue call(LuaValue lhs, LuaValue rhs) {
-							return rhs;
-						}
-					} } );
+			LuaBoolean.s_metatable = LuaValue.tableOf( new LuaValue[] { LuaValue.CONCAT, RETURN_RHS } );
 			assertEquals( tbl, tru.concat(tbl) );
 			assertEquals( tru, tbl.concat(tru) );
 			assertEquals( tbl, tru.concat(tbl.buffer()).value() );
@@ -702,4 +1040,35 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			LuaBoolean.s_metatable = null;
 		}
 	}
+
+	public void testConcatErrors() {
+		LuaValue ia=LuaValue.valueOf(111), ib=LuaValue.valueOf(44);
+		LuaValue da=LuaValue.valueOf(55.25), db=LuaValue.valueOf(3.5);
+		LuaValue sa=LuaValue.valueOf("22.125"), sb=LuaValue.valueOf("7.25");
+
+		String[] ops = { "concat" };		
+		LuaValue[] vals = { LuaValue.NIL, LuaValue.TRUE, LuaValue.tableOf() };
+		LuaValue[] numerics = { LuaValue.valueOf(111), LuaValue.valueOf(55.25), LuaValue.valueOf("22.125") }; 
+		for ( int i=0; i<ops.length; i++ ) {
+			for ( int j=0; j<vals.length; j++ ) {
+				for ( int k=0; k<numerics.length; k++ ) {
+					checkConcatError( vals[j], numerics[k], ops[i], vals[j].typename() );
+					checkConcatError( numerics[k], vals[j], ops[i], vals[j].typename() );
+				}
+			}
+		}
+	}
+	
+	private void checkConcatError(LuaValue a, LuaValue b, String op, String type) {
+		try {
+			LuaValue.class.getMethod(op, new Class[] { LuaValue.class }).invoke(a, new Object[] { b });
+		} catch ( InvocationTargetException ite ) {
+			String actual = ite.getTargetException().getMessage();
+			if ( (!actual.startsWith("attempt to concatenate")) || actual.indexOf(type)<0 ) 
+				fail( "("+a.typename()+","+op+","+b.typename()+") reported '"+actual+"'" );
+		} catch ( Exception e ) {
+			fail( "("+a.typename()+","+op+","+b.typename()+") threw "+e );
+		}
+	}
+	
 }

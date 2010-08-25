@@ -179,7 +179,6 @@ public class LuaValue extends Varargs {
 	protected LuaValue aritherror(String fun) { throw new LuaError("attempt to perform arithmetic '"+fun+"' on "+typename()); }
 	protected LuaValue compareerror(String rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs); }
 	protected LuaValue compareerror(LuaValue rhs) { throw new LuaError("attempt to compare "+typename()+" with "+rhs.typename()); }
-	protected LuaValue concaterror() { throw new LuaError("attempt to concatenate "+typename()); }
 	
 	// table operations
 	public LuaValue get( LuaValue key ) { return gettable(this,key); }
@@ -257,8 +256,8 @@ public class LuaValue extends Varargs {
 	public boolean equals(Object obj)         { return this == obj; } 
 	
 	// arithmetic equality
-	public LuaValue  eq( LuaValue val )       { return eq_b(val)? TRUE: FALSE; }
-	public boolean eq_b( LuaValue val )       { return this == val; } 
+	public LuaValue  eq( LuaValue val )       { return this == val || eq_b(val)? TRUE: FALSE; }
+	public boolean eq_b( LuaValue val )       { return this == val || (type() == val.type() && eqmt_b(val)); } 
 	public boolean eq_b( LuaTable val )       { return false; }
 	public boolean eq_b( LuaUserdata val )    { return false; }
 	public boolean eq_b( LuaString val )      { return false; }
@@ -300,8 +299,11 @@ public class LuaValue extends Varargs {
 	public LuaValue   modFrom(double lhs)     { return aritherror("modFrom"); }
 	protected LuaValue arithmt(LuaValue tag, LuaValue op2) {
 		LuaValue h = this.metatag(tag);
-		if ( h.isnil() )
-			h = op2.checkmetatag(tag, "attempt to perform arithmetic on ");
+		if ( h.isnil() ) {
+			h = op2.metatag(tag);
+			if ( h.isnil() )
+				error( "attempt to perform arithmetic "+tag+" on "+typename()+" and "+op2.typename() );
+		}
 		return h.call( this, op2 );
 	}
 	
@@ -336,7 +338,7 @@ public class LuaValue extends Varargs {
 			if ( !h.isnil() && h == op1.metatag(tag) )
 				return h.call(this, op1);
 		}
-		return error("attempt to compare "+typename());
+		return error("attempt to compare "+tag+" on "+typename()+" and "+op1.typename());
 	}
 	
 	
@@ -354,7 +356,7 @@ public class LuaValue extends Varargs {
 	public LuaValue concatmt(LuaValue rhs) {
 		LuaValue h=metatag(CONCAT);
 		if ( h.isnil() && (h=rhs.metatag(CONCAT)).isnil())
-			return (isstring()? rhs: this).concaterror();
+			error("attempt to concatenate "+typename()+" and "+rhs.typename());
 		return h.call(this,rhs);
 	}
 	
