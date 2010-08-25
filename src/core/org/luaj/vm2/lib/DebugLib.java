@@ -352,7 +352,7 @@ public class DebugLib extends VarArgFunction {
 			return;
 		DebugInfo di = ds.getDebugInfo();
 		if(TRACE)Print.printState(di.closure, pc, di.stack, top, di.varargs);		
-		ds.getDebugInfo().bytecode( pc, extras, top );
+		di.bytecode( pc, extras, top );
 		if ( ds.hookcount > 0 ) {
 			if ( ++ds.hookcodes >= ds.hookcount ) {
 				ds.hookcodes = 0;

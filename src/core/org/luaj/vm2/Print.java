@@ -365,9 +365,13 @@ public class Print extends Lua {
 				break;
 			case LuaValue.TUSERDATA:
 				Object o = v.touserdata();
-				String n = o.getClass().getName();
-				n = n.substring(n.lastIndexOf('.')+1);
-				ps.print( n+": "+Integer.toHexString(o.hashCode()) );
+				if ( o != null ) {
+					String n = o.getClass().getName();
+					n = n.substring(n.lastIndexOf('.')+1);
+					ps.print( n+": "+Integer.toHexString(o.hashCode()) );
+				} else {
+					ps.print( v.toString() );
+				}
 				break;
 			default:
 				ps.print(v.tojstring());
