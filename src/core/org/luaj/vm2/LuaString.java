@@ -297,11 +297,27 @@ public class LuaString extends LuaValue {
 		return false;
 	}
 
+	// equality w/ metatable processing
+	public boolean eq_b( LuaValue val ) {
+		if ( val.raweq(this) ) return true;
+		if ( s_metatable == null || val.type()!=TSTRING || s_inmeta) return false;
+		s_inmeta = true;
+		try {
+			return LuaValue.eqmtcall(val, this, s_metatable); 			
+		} finally { 
+			s_inmeta = false;
+		}
+	}
+	private static boolean s_inmeta = false;
+	
+	// equality w/o metatable processing
 	public boolean raweq( LuaValue val ) {
-		return (this == val) || val.raweq(this);
+		return val.raweq(this);
 	}
 	
 	public boolean raweq( LuaString s ) { 
+		if ( this == s )
+			return true;
 		if ( s.m_length != m_length )
 			return false;
 		if ( s.m_bytes == m_bytes && s.m_offset == m_offset )
@@ -314,11 +330,6 @@ public class LuaString extends LuaValue {
 		return true;
 	}
 
-	// metatag equality
-	public boolean eqmt( LuaValue val )       { 
-		return s_metatable!=null && val.type()==TSTRING? LuaValue.eqmtcall(this, val, s_metatable): false;
-	}
-	
 	public static boolean equals( LuaString a, int i, LuaString b, int j, int n ) {
 		return equals( a.m_bytes, a.m_offset + i, b.m_bytes, b.m_offset + j, n );
 	}

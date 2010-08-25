@@ -104,10 +104,13 @@ public class LuaInteger extends LuaNumber {
 	// object equality, used for key comparison
 	public boolean equals(Object o) { return o instanceof LuaInteger? ((LuaInteger)o).v == v: false; }
 	
-	// arithmetic equality
-	public boolean raweq( LuaValue val )      { return val.raweq(v); }
-	public boolean raweq( double val )        { return v == val; }
-	public boolean raweq( int val )           { return v == val; }
+	// equality w/ metatable processing
+	public boolean eq_b( LuaValue val )   { return val.raweq(v) || (s_metatable!=null && val.type()==TNUMBER && LuaValue.eqmtcall(val, this, s_metatable)); }
+	
+	// equality w/o metatable processing
+	public boolean raweq( LuaValue val )  { return val.raweq(v); }
+	public boolean raweq( double val )    { return v == val; }
+	public boolean raweq( int val )       { return v == val; }
 	
 	// arithmetic operators
 	public LuaValue   add( LuaValue rhs )        { return rhs.add(v); }

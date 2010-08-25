@@ -576,8 +576,11 @@ public class LuaTable extends LuaValue {
 		return a;
 	}
 	
-	// __eq metatag processing
-	public boolean eqmt( LuaValue val )    { 
-		return m_metatable!=null && val.istable()? LuaValue.eqmtcall(this, m_metatable, val, val.getmetatable()): false; 
+	// equality w/ metatable processing
+	public boolean eq_b( LuaValue val )  {
+		if ( this == val ) return true;
+		if ( m_metatable == null || !val.istable() ) return false;
+		LuaValue valmt = val.getmetatable();
+		return valmt!=null && LuaValue.eqmtcall(this, m_metatable, val, valmt); 
 	}
 }

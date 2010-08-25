@@ -256,10 +256,10 @@ public class LuaValue extends Varargs {
 	public boolean equals(Object obj)         { return this == obj; } 
 	
 	// arithmetic equality with metatag processing
-	public LuaValue   eq( LuaValue val )      { return raweq(val) || eqmt(val)? TRUE: FALSE; }
-	public LuaValue  neq( LuaValue val )      { return raweq(val) || eqmt(val)? FALSE: TRUE;  }
-	public boolean  eq_b( LuaValue val )      { return raweq(val) || eqmt(val); } 
-	public boolean neq_b( LuaValue val )      { return !(raweq(val) || eqmt(val)); }
+	public LuaValue   eq( LuaValue val )      { return eq_b(val)? TRUE: FALSE; }
+	public boolean  eq_b( LuaValue val )      { return false; } 
+	public LuaValue  neq( LuaValue val )      { return eq_b(val)? FALSE: TRUE;  }
+	public boolean neq_b( LuaValue val )      { return !eq_b(val); }
 
 	// equality without metatag processing
 	public boolean raweq( LuaValue val )      { return this == val; }
@@ -269,14 +269,11 @@ public class LuaValue extends Varargs {
 	public boolean raweq( int val )           { return false; }
 
 	// __eq metatag processing
-	public boolean eqmt( LuaValue val )       { return false; }
 	public static final boolean eqmtcall(LuaValue lhs, LuaValue lhsmt, LuaValue rhs, LuaValue rhsmt) {
-		if ( lhsmt == null || rhsmt == null ) return false;
 		LuaValue h = lhsmt.rawget(EQ);
 		return h.isnil() || h!=rhsmt.rawget(EQ)? false: h.call(lhs,rhs).toboolean();
 	}
 	public static final boolean eqmtcall(LuaValue lhs, LuaValue rhs, LuaValue sharedmt) {
-		if ( sharedmt == null ) return false;
 		LuaValue h = sharedmt.rawget(EQ);
 		return h.isnil()? false: h.call(lhs,rhs).toboolean();
 	}

@@ -104,10 +104,19 @@ public class LuaUserdata extends LuaValue {
 		return m_instance.equals(u.m_instance);
 	}
 
-	// equality without metatag processing
+	// equality w/ metatable processing
+	public LuaValue eq( LuaValue val )     { return val.eq_b(this)? TRUE: FALSE; } 
+	public boolean eq_b( LuaUserdata val ) { 
+		if ( val.raweq(this) ) return true;
+		if ( m_metatable == null || !val.isuserdata() ) return false;
+		LuaValue valmt = val.getmetatable();
+		return valmt!=null && LuaValue.eqmtcall(this, m_metatable, val, valmt); 
+	}
+	
+	// equality w/o metatable processing
 	public boolean raweq( LuaValue val )      { return val.raweq(this); }
-	public boolean raweq( LuaUserdata val )   { 
-		return this == val || m_instance.equals(val.m_instance); 
+	public boolean raweq( LuaUserdata val )   {
+		return this == val || (m_metatable == val.m_metatable && m_instance.equals(val.m_instance)); 
 	}
 	
 	// __eq metatag processing

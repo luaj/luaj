@@ -68,8 +68,8 @@ public class LuaFunction extends LuaValue {
 		this.env = env!=null? env: NIL;
 	}
 	
-	// __eq metatag processing
-	public boolean eqmt( LuaValue val ) { 
-		return s_metatable!=null && val.isfunction()? LuaValue.eqmtcall(this, val, s_metatable): false; 
-	}	
+	// equality
+	public boolean eq_b( LuaValue val ) {
+		return this == val || (s_metatable!=null && val.isfunction() && LuaValue.eqmtcall(this, val, s_metatable)); 
+	}
 }

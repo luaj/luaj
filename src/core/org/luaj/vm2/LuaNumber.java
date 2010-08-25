@@ -67,8 +67,4 @@ public class LuaNumber extends LuaValue {
 	public LuaValue concatTo(LuaNumber lhs)   { return strvalue().concatTo(lhs.strvalue()); }
 	public LuaValue concatTo(LuaString lhs)   { return strvalue().concatTo(lhs); }
 
-	// __eq metatag processing
-	public boolean eqmt( LuaValue val ) { 
-		return s_metatable!=null && val.isnumber()? LuaValue.eqmtcall(this, val, s_metatable): false; 
-	}	
 }
