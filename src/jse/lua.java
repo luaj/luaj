@@ -52,6 +52,7 @@ public class lua {
 		"  -v       show version information\n" +
 		"  -j      	use lua2java source-to-source compiler\n" +
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
+		"  -n      	nodebug - do not load debug library by default\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -64,13 +65,11 @@ public class lua {
 	
 	public static void main( String[] args ) throws IOException {
 
-		// new lua state
-		_G = JsePlatform.debugGlobals();
-		
 		// process args
 		boolean interactive = (args.length == 0);
 		boolean versioninfo = false;
 		boolean processing = true;
+		boolean nodebug = false;
 		try {
 			// stateful argument processing
 			for ( int i=0; i<args.length; i++ ) {
@@ -104,6 +103,9 @@ public class lua {
 					case 'v':
 						versioninfo = true;
 						break;
+					case 'n':
+						nodebug = true;
+						break;
 					case '-':
 						if ( args[i].length() > 2 )
 							usageExit();
@@ -115,6 +117,9 @@ public class lua {
 					}
 				}
 			}
+
+			// new lua state
+			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
 			
 			// echo version
 			if ( versioninfo )
