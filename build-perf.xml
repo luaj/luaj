@@ -30,7 +30,7 @@
 			dest="lib/mochalua-1.0.jar"/>
 	</target>
 
-	<target name="perf-libs" depends="luaj1-lib,luaj2-lib,bcel-lib,jill-lib,kahlua-lib,mochalua-lib"/>
+	<target name="perf-libs" depends="luaj2-lib,bcel-lib,jill-lib,kahlua-lib,mochalua-lib"/>
 		
 	<macrodef name="perftest">
 		<attribute name="program" default="lua"/>
@@ -52,8 +52,7 @@
 			<echo level="info">=========== @{luaprog} =============</echo>
 			<perftest program="java -version" luaprog="" basedir=""/>
 			<perftest program="lua" luaprog="@{luaprog}"/>
-			<!-- <perftest program="java -cp lib/luaj-j2se-1.0.4.jar lua" luaprog="@{luaprog}"/> -->
-			<perftest program="java -cp luaj-jse-2.0.jar lua" luaprog="@{luaprog}"/>
+			<perftest program="java -cp luaj-jse-2.0.jar lua -n" luaprog="@{luaprog}"/>
 			<perftest program="java -cp luaj-jse-2.0.jar lua -j" luaprog="@{luaprog}"/>
 			<perftest program="java -cp luaj-jse-2.0.jar\\;lib/bcel-5.2.jar lua -b" luaprog="@{luaprog}"/>
 	   </sequential>

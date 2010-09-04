@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Vector;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
@@ -70,6 +71,9 @@ public class lua {
 		boolean versioninfo = false;
 		boolean processing = true;
 		boolean nodebug = false;
+		boolean luajc = false;
+		boolean lua2java = false;
+		Vector libs = null;
 		try {
 			// stateful argument processing
 			for ( int i=0; i<args.length; i++ ) {
@@ -87,15 +91,16 @@ public class lua {
 						// input script - defer to last stage
 						break;
 					case 'b':
-						LuaJC.install();
+						luajc = true;
 						break;
 					case 'j':
-						Lua2Java.install();
+						lua2java = true;
 						break;
 					case 'l':
 						if ( ++i >= args.length )
 							usageExit();
-						loadLibrary( args[i] );
+						libs = libs!=null? libs: new Vector();
+						libs.addElement( args[i] );
 						break;
 					case 'i':
 						interactive = true;
@@ -118,12 +123,16 @@ public class lua {
 				}
 			}
 
-			// new lua state
-			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
-			
 			// echo version
 			if ( versioninfo )
 				System.out.println(version);
+			
+			// new lua state
+			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
+			if ( luajc ) LuaJC.install();
+			if ( lua2java) Lua2Java.install();
+			for ( int i=0, n=libs!=null? libs.size(): 0; i<n; i++ )
+				loadLibrary( (String) libs.elementAt(i) );
 			
 			// input script processing
 			processing = true;
