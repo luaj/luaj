@@ -368,8 +368,7 @@ public class LuajavaLib extends VarArgFunction {
 		int besti = 0;
 		for ( int i=0, size=cons.length; i<size; i++ ) {
 			Constructor con = cons[i];
-			int paramType = LuajavaLib.paramTypeFromSig(paramssig, 0);
-			int s = CoerceLuaToJava.scoreParamTypes(paramType, con.getParameterTypes());
+			int s = CoerceLuaToJava.scoreParamTypes(paramssig, con.getParameterTypes());
 			if ( s < bests ) {
 				 bests = s;
 				 besti = i;
