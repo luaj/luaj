@@ -21,8 +21,11 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-public class LuaBoolean extends LuaValue {
+public final class LuaBoolean extends LuaValue {
 
+	static final LuaBoolean _TRUE = new LuaBoolean(true);
+	static final LuaBoolean _FALSE = new LuaBoolean(false);
+	
 	public static LuaValue s_metatable;
 	
 	public final boolean v;

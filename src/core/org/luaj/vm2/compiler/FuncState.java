@@ -461,11 +461,11 @@ public class FuncState extends LuaC {
 	}
 
 	int boolK(boolean b) {
-		return this.addk((b ? LuaValue.TRUE : LuaBoolean.FALSE));
+		return this.addk((b ? LuaValue.TRUE : LuaValue.FALSE));
 	}
 
 	int nilK() {
-		return this.addk(LuaNil.NIL);
+		return this.addk(LuaValue.NIL);
 	}
 
 	void setreturns(expdesc e, int nresults) {

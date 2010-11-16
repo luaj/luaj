@@ -52,10 +52,10 @@ public class LuaValue extends Varargs {
 		"value",
 	};
 	
-	public static final LuaValue   NIL       = new LuaNil();
-	public static final LuaBoolean TRUE      = new LuaBoolean(true);
-	public static final LuaBoolean FALSE     = new LuaBoolean(false);
-	public static final LuaValue   NONE      = new None();
+	public static final LuaValue   NIL       = LuaNil._NIL;
+	public static final LuaBoolean TRUE      = LuaBoolean._TRUE;
+	public static final LuaBoolean FALSE     = LuaBoolean._FALSE;
+	public static final LuaValue   NONE      = None._NONE;
 	public static final LuaNumber  ZERO      = LuaInteger.valueOf(0);
 	public static final LuaNumber  ONE       = LuaInteger.valueOf(1);
 	public static final LuaNumber  MINUSONE  = LuaInteger.valueOf(-1);
@@ -521,6 +521,7 @@ public class LuaValue extends Varargs {
 
 	// empty varargs
 	private static final class None extends LuaNil {
+		static None _NONE = new None();
 		public LuaValue arg(int i) { return NIL; }
 		public int narg() { return 0; }
 		public LuaValue arg1() { return NIL; }
