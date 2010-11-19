@@ -861,7 +861,7 @@ public class FuncState extends LuaC {
 			r = null;
 			break;
 		}
-		if (Double.NaN == r.todouble())
+		if ( Double.isNaN(r.todouble()) )
 			return false; /* do not attempt to produce NaN */
 		e1.u.setNval( r );
 		return true;
