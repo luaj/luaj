@@ -16,7 +16,7 @@
 Getting Started with LuaJ
 
 </h1>
-James Roseborough, Ian Farmer, Version 2.0.1
+James Roseborough, Ian Farmer, Version 2.0.2
 <p>
 <small>
 Copyright &copy; 2009-2010 Luaj.org.
@@ -106,7 +106,7 @@ in comparison with the standard C distribution.
 	<td>16.794</td>
 	<td>11.274</td>
 	<td>Java</td>
-	<td>java -cp luaj-jse-2.0.1.jar;bcel-5.2.jar lua <b>-b</b> fannkuch.lua 10</td></tr>
+	<td>java -cp luaj-jse-2.0.2.jar;bcel-5.2.jar lua <b>-b</b> fannkuch.lua 10</td></tr>
 <tr valign="top">
 	<td></td>
 	<td></td>
@@ -116,7 +116,7 @@ in comparison with the standard C distribution.
 	<td>16.701</td>
 	<td>13.789</td>
 	<td></td>
-	<td>java -cp luaj-jse-2.0.1.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
+	<td>java -cp luaj-jse-2.0.2.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
 <tr valign="top">
 	<td></td>
 	<td></td>
@@ -126,7 +126,7 @@ in comparison with the standard C distribution.
 	<td>36.894</td>
 	<td>15.163</td>
 	<td></td>
-	<td>java -cp luaj-jse-2.0.1.jar lua -n fannkuch.lua 10</td></tr>
+	<td>java -cp luaj-jse-2.0.2.jar lua -n fannkuch.lua 10</td></tr>
 <tr valign="top">
 	<td>lua</td>
 	<td>5.1.4</td>
@@ -182,7 +182,7 @@ It is also faster than Java-lua implementations Jill, Kahlua, and Mochalua for a
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-2.0.1.jar lua examples/lua/hello.lua
+	java -cp lib/luaj-jse-2.0.2.jar lua examples/lua/hello.lua
 </pre>
 
 <p>
@@ -197,8 +197,8 @@ You should see the following output:
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-2.0.1.jar luac examples/lua/hello.lua
-	java -cp lib/luaj-jse-2.0.1.jar lua luac.out
+	java -cp lib/luaj-jse-2.0.2.jar luac examples/lua/hello.lua
+	java -cp lib/luaj-jse-2.0.2.jar lua luac.out
 </pre>
 
 <p>
@@ -210,9 +210,9 @@ The compiled output "luac.out" is lua bytecode and should run and produce the sa
 Luaj can compile to lua source code to Java source code:
 
 <pre>
-	java -cp lib/luaj-jse-2.0.1.jar lua2java -s examples/lua -d . hello.lua
-	javac -cp lib/luaj-jse-2.0.1.jar hello.java
-	java -cp &quot;lib/luaj-jse-2.0.1.jar;.&quot; lua -l hello
+	java -cp lib/luaj-jse-2.0.2.jar lua2java -s examples/lua -d . hello.lua
+	javac -cp lib/luaj-jse-2.0.2.jar hello.java
+	java -cp &quot;lib/luaj-jse-2.0.2.jar;.&quot; lua -l hello
 </pre>
 
 <p>
@@ -223,7 +223,7 @@ There are no additional dependencies for compiling or running source-to-source c
 <p>
 Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-j</em></b> option when run in JDK 1.5 or higher:
 <pre>
-	java -cp lib/luaj-jse-2.0.1.jar lua -j examples/lua/hello.lua
+	java -cp lib/luaj-jse-2.0.2.jar lua -j examples/lua/hello.lua
 </pre>
 
 <h2>Compile lua bytecode to java bytecode</h2>
@@ -233,8 +233,8 @@ Luaj can compile lua sources or binaries directly to java bytecode if the bcel l
 
 <pre>
 	ant bcel-lib
-	java -cp &quot;lib/luaj-jse-2.0.1.jar;lib/bcel-5.2.jar&quot; luajc -s examples/lua -d . hello.lua
-	java -cp &quot;lib/luaj-jse-2.0.1.jar;.&quot; lua -l hello
+	java -cp &quot;lib/luaj-jse-2.0.2.jar;lib/bcel-5.2.jar&quot; luajc -s examples/lua -d . hello.lua
+	java -cp &quot;lib/luaj-jse-2.0.2.jar;.&quot; lua -l hello
 </pre>
 
 <p>
@@ -245,7 +245,7 @@ but the compiled classes must be in the class path at runtime, unless runtime ji
 <p>
 Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-b</em></b> option and providing the <em>bcel</em> library in the class path:
 <pre>
-	java -cp &quot;lib/luaj-jse-2.0.1.jar;lib/bcel-5.2.jar&quot; lua -b examples/lua/hello.lua
+	java -cp &quot;lib/luaj-jse-2.0.2.jar;lib/bcel-5.2.jar&quot; lua -b examples/lua/hello.lua
 </pre>
 
 
@@ -270,7 +270,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jse-2.0.1.jar</b> in your class path.
+You must include the library <b>lib/luaj-jse-2.0.2.jar</b> in your class path.
 
 <h2>Run a script in a MIDlet</h2>
 
@@ -297,7 +297,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jme-2.0.1.jar</b> in your midlet jar.
+You must include the library <b>lib/luaj-jme-2.0.2.jar</b> in your midlet jar.
 
 <p>
 An ant script to build and run the midlet is in
@@ -325,7 +325,7 @@ The standard use of JSR-233 scripting engines may be used:
 All standard aspects of script engines including compiled statements should be supported.
 
 <p>
-You must include the library <b>lib/luaj-jse-2.0.1.jar</b> in your class path.
+You must include the library <b>lib/luaj-jse-2.0.2.jar</b> in your class path.
 
 <p>
 A working example may be found in
@@ -494,7 +494,7 @@ The following lua script will open a swiing frame on Java SE:
 <p>
 See a longer sample in <em>examples/lua/swingapp.lua</em> for details, or try running it using: 
 <pre>
-	java -cp lib/luaj-jse-2.0.1.jar lua examples/lua/swingapp.lua
+	java -cp lib/luaj-jse-2.0.2.jar lua examples/lua/swingapp.lua
 </pre>
 
 <p>
@@ -707,6 +707,9 @@ and LuaForge:
 <tr valign="top"><td>&nbsp;&nbsp;<b>2.0.1</b></td><td><ul>
 <li>Improve correctness of singleton construction related to static initialization
 <li>Fix nan-related error in constant folding logic that was failing on some JVMs
+</ul></td></tr>
+<tr valign="top"><td>&nbsp;&nbsp;<b>2.0.2</b></td><td><ul>
+<li>Not yet released
 </ul></td></tr>
 </table>
 
