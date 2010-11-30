@@ -122,7 +122,12 @@
 	</target>
 	
 	<target name="jar-jse" depends="compile">
-		<jar destfile="${jar.name.jse}" basedir="build/jse/classes"/>
+		<jar destfile="${jar.name.jse}">
+		    <fileset dir="build/jse/classes"/>
+		    <fileset dir="src/jse/">
+				<include name="META-INF/services/**"/>
+		    </fileset>
+		</jar>
 	</target>
 
 	<target name="doc">
