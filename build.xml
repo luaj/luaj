@@ -77,7 +77,7 @@
 		<copy todir="build/jse/src">
 			<fileset dir="src/core"/>
 			<filterchain>
-				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jme ${version}"'/></tokenfilter>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jse ${version}"'/></tokenfilter>
 			</filterchain>
 		</copy>
 		<copy todir="build/jse/src">
