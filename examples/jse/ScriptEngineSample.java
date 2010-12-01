@@ -7,6 +7,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 
 public class ScriptEngineSample {
     
@@ -36,12 +37,19 @@ public class ScriptEngineSample {
             b.put("x", 3);
             System.out.println( "eval: "+cs.eval(b) );
             System.out.println( "y="+b.get("y") );
-            
+
+            SimpleBindings sb = new SimpleBindings();
+            sb.put("x", 144);
+            System.out.println( "eval: "+cs.eval(sb) );
+            System.out.println( "y="+sb.get("y") );
+
             try {
             	e.eval("\n\nbogus example\n\n");
             } catch ( ScriptException se ) {
             	System.out.println("script threw ScriptException as expected, message is '"+se.getMessage()+"'");
             }
+            
+            
         } catch (ScriptException ex) {
             ex.printStackTrace();
         }
