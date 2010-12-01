@@ -25,10 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -37,6 +33,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
 import org.luaj.vm2.LoadState;
@@ -44,8 +41,11 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
+import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
@@ -121,12 +121,12 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
     
     public void put(String key, Object value) {
 		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
-		((LuaBindings)b).put(key, value);
+		b.put(key, value);
     }
     
     public Object get(String key) {
 		Bindings b = getBindings(ScriptContext.ENGINE_SCOPE);
-		return ((LuaBindings)b).get(key);
+		return b.get(key);
     }
 
     public Bindings getBindings(int scope) {
@@ -138,7 +138,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
     }
     
     public Bindings createBindings() {
-        return new LuaBindings( _G );
+        return new SimpleBindings();
     }
     
     public ScriptContext getContext() {
@@ -168,8 +168,8 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 					return new CompiledScript() {
 						public Object eval(ScriptContext context) throws ScriptException {
 					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-					        LuaBindings lb = (LuaBindings) b;
-							LuaClosure c = new LuaClosure( p, lb.env );
+					        LuaValue env = newBindingsBackedEnv(b);
+							LuaClosure c = new LuaClosure( p, env );
 							return c.invoke(LuaValue.NONE);
 						}
 						public ScriptEngine getEngine() {
@@ -181,14 +181,14 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 					return new CompiledScript() {
 						public Object eval(ScriptContext context) throws ScriptException {
 					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-					        LuaBindings lb = (LuaBindings) b;
+					        LuaValue env = newBindingsBackedEnv(b);
 					        LuaFunction lf;
 							try {
 						        lf = (LuaFunction) c.newInstance();
 							} catch (Exception e) {
 								throw new ScriptException("instantiation failed: "+e.toString());
 							}
-					        lf.setfenv(lb.env);
+					        lf.setfenv(env);
 							return lf.invoke(LuaValue.NONE);
 						}
 						public ScriptEngine getEngine() {
@@ -206,30 +206,59 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		}
 	}
 	
-	// ------ lua bindings -----
-	private static final class LuaBindings implements Bindings {
-		private LuaValue env;
-		private LuaValue mt;
-		private LuaBindings( LuaValue _G ) {
-			mt = LuaValue.tableOf();
-			mt.set( LuaValue.INDEX, _G );
-			clear();
+	// ------ lua bindings -----	private static final class BindingsBackedEnv extends LuaTable {
+	public LuaTable newBindingsBackedEnv(Bindings b) {
+		LuaTable t = new LuaTable();
+		LuaTable mt = new LuaTable(0,2);
+		mt.set(LuaValue.INDEX, new BindindsIndexFunction(b));
+		mt.set(LuaValue.NEWINDEX, new BindingsNewindexFunction(b));
+		t.setmetatable(mt);
+		return t;
+	}
+	
+    private static final class BindingsNewindexFunction extends ThreeArgFunction {
+		private final Bindings b;
+
+		private BindingsNewindexFunction(Bindings b) {
+			this.b = b;
 		}
-		public void clear() {
-			env = LuaValue.tableOf();
-			env.setmetatable(mt);
+
+		public LuaValue call(LuaValue tbl, LuaValue key, LuaValue val) {
+			String k = key.tojstring();
+			if ( val.isnil() )
+				b.remove(k);
+			else
+				b.put(k, toJava(val));
+			return NIL;
 		}
+
 		private Object toJava(LuaValue v) {
 			switch ( v.type() ) {
 			case LuaValue.TNIL: return null;
 			case LuaValue.TSTRING: return v.tojstring();
 			case LuaValue.TUSERDATA: return v.checkuserdata(Object.class);
-			case LuaValue.TNUMBER: return v.isinttype()? new Integer(v.toint()): new Double(v.todouble());
+			case LuaValue.TNUMBER: return v.isinttype()? (Object) new Integer(v.toint()): (Object) new Double(v.todouble());
 			default: 
 				throw new java.lang.UnsupportedOperationException(
 					"LuaBindings cannot convert lua type '"+v.typename()+"' to Java");
 			}
 		}
+	}
+
+	private final class BindindsIndexFunction extends TwoArgFunction {
+		private final Bindings b;
+
+		private BindindsIndexFunction(Bindings b) {
+			this.b = b;
+		}
+
+		public LuaValue call(LuaValue tbl, LuaValue key) {
+			String k = key.tojstring();
+			if ( b.containsKey(k) )
+				return toLua(b.get(k));
+			return _G.get(key);
+		}
+
 		private LuaValue toLua(Object javaValue) {
 			if ( javaValue instanceof Number ) {
 				return LuaValue.valueOf(((Number)javaValue).doubleValue());
@@ -241,59 +270,11 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 				return LuaValue.userdataOf(javaValue);
 			}
 		}
-		public boolean containsKey(Object key) {
-			return ! env.get(toLua(key)).isnil();
-		}
-		public Object get(Object key) {
-			return toJava(env.get(toLua(key)));
-		}
-		public Object put(String name, Object value) {
-			LuaValue key = toLua(name);
-			Object result = toJava(env.get(key));
-			env.set(key, toLua(value));
-			return result;
-		}
-		public void putAll(Map<? extends String, ? extends Object> toMerge) {
-			for ( Iterator it=toMerge.entrySet().iterator(); it.hasNext(); ) {
-				Map.Entry<String, Object> e = (Map.Entry<String, Object>) it.next();
-				put( e.getKey(), e.getValue() );
-			}
-		}
-		public Object remove(Object javakey) {
-			LuaValue key = toLua(javakey);
-			Object result = toJava(env.get(key));
-			env.set(key, LuaValue.NIL);
-			return result;
-		}
-		public boolean containsValue(Object value) {
-			throw new java.lang.UnsupportedOperationException(
-				"containsValue() not supported for LuaBindings");
-		}
-		public Set<java.util.Map.Entry<String, Object>> entrySet() {
-			throw new java.lang.UnsupportedOperationException(
-				"entrySet() not supported for LuaBindings");
-		}
-		public boolean isEmpty() {
-			throw new java.lang.UnsupportedOperationException(
-				"isEmpty() not supported for LuaBindings");
-		}
-		public Set<String> keySet() {
-			throw new java.lang.UnsupportedOperationException(
-				"keySet() not supported for LuaBindings");
-		}
-		public int size() {
-			throw new java.lang.UnsupportedOperationException(
-				"size() not supported for LuaBindings");
-		}
-		public Collection<Object> values() {
-			throw new java.lang.UnsupportedOperationException(
-				"values() not supported for LuaBindings");
-		}	
 	}
-	
+
 	// ------ convert char stream to byte stream for lua compiler ----- 
 
-    private final class Utf8Encoder extends InputStream {
+	private final class Utf8Encoder extends InputStream {
 		private final Reader r;
 		private final int[] buf = new int[2];
 		private int n;
