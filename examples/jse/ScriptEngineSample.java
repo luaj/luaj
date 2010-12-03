@@ -43,6 +43,18 @@ public class ScriptEngineSample {
             System.out.println( "eval: "+cs.eval(sb) );
             System.out.println( "y="+sb.get("y") );
 
+            cs = ((Compilable)e).compile(
+            		"print( 'luajava', luajava )\n" +
+//            		"_G.lua2java = require( 'org.luaj.vm2.lib.jse.LuajavaLib' )\n" +
+//            		"print( 'lua2java', lua2java )\n" +
+//            		"print( 'lua2java.newInstance', lua2java.newInstance )\n" +
+            		"test = luajava.newInstance(\"java.lang.String\", \"test\")\n" +
+            		"return test:toString()");
+            b = e.createBindings();
+            System.out.println( "eval: "+cs.eval(b) );
+            Object t = b.get("test");
+            System.out.println( "t="+t );
+            
             try {
             	e.eval("\n\nbogus example\n\n");
             } catch ( ScriptException se ) {
