@@ -46,6 +46,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
@@ -231,17 +232,9 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 			}
 		}
 		private LuaValue toLua(Object javaValue) {
-			if ( javaValue instanceof Number ) {
-				return LuaValue.valueOf(((Number)javaValue).doubleValue());
-			} else if ( javaValue instanceof String ) {
-				return LuaValue.valueOf(javaValue.toString());
-			} else if ( javaValue == null ) {
-				return LuaValue.NIL; 
-			} else if ( javaValue instanceof LuaValue ) {
-				return (LuaValue) javaValue;
-			} else {
-				return LuaValue.userdataOf(javaValue);
-			}
+			return javaValue == null? LuaValue.NIL:
+				javaValue instanceof LuaValue? (LuaValue) javaValue:
+				CoerceJavaToLua.coerce(javaValue);
 		}
 		public void copyGlobalsToBindings() {
 			LuaValue[] keys = t.keys();

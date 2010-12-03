@@ -9,6 +9,8 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
+import org.luaj.vm2.LuaValue;
+
 public class ScriptEngineSample {
     
     public static void main(String [] args) {
@@ -43,28 +45,73 @@ public class ScriptEngineSample {
             System.out.println( "eval: "+cs.eval(sb) );
             System.out.println( "y="+sb.get("y") );
 
-            cs = ((Compilable)e).compile(
-            		"print( 'luajava', luajava )\n" +
-//            		"_G.lua2java = require( 'org.luaj.vm2.lib.jse.LuajavaLib' )\n" +
-//            		"print( 'lua2java', lua2java )\n" +
-//            		"print( 'lua2java.newInstance', lua2java.newInstance )\n" +
-            		"test = luajava.newInstance(\"java.lang.String\", \"test\")\n" +
-            		"return test:toString()");
-            b = e.createBindings();
-            System.out.println( "eval: "+cs.eval(b) );
-            Object t = b.get("test");
-            System.out.println( "t="+t );
-            
             try {
             	e.eval("\n\nbogus example\n\n");
             } catch ( ScriptException se ) {
             	System.out.println("script threw ScriptException as expected, message is '"+se.getMessage()+"'");
             }
             
+            testClientBindings(e);
+            testUserClasses(e);
             
         } catch (ScriptException ex) {
             ex.printStackTrace();
         }
     }
 
+    public static class SomeUserClass {
+    	public String toString() {
+    		return "user-class-instance-"+this.hashCode();
+    	}
+    }
+    
+    public static void testClientBindings(ScriptEngine e) throws ScriptException {
+        CompiledScript cs = ((Compilable)e).compile(
+        		"print( 'somejavaint', type(somejavaint), somejavaint )\n" +
+        		"print( 'somejavadouble', type(somejavadouble), somejavadouble )\n" +
+        		"print( 'somejavastring', type(somejavastring), somejavastring )\n" +
+        		"print( 'somejavaobject', type(somejavaobject), somejavaobject )\n" +
+        		"print( 'somejavaarray', type(somejavaarray), somejavaarray, somejavaarray[1] )\n" +
+        		"someluaint = 444\n" +
+        		"someluadouble = 555.666\n" +
+        		"someluastring = 'def'\n" +
+        		"someluauserdata = somejavaobject\n" +
+        		"someluatable = { 999, 111 }\n" +
+        		"someluafunction = function(x) print( 'hello, world', x ) return 678 end\n" +
+        		"" );
+        Bindings b = e.createBindings();
+        b.put("somejavaint", 111);
+        b.put("somejavadouble", 222.333);
+        b.put("somejavastring", "abc");
+        b.put("somejavaobject", new SomeUserClass());
+        b.put("somejavaarray", new int[] { 777, 888 } );
+        System.out.println( "eval: "+cs.eval(b) );
+        Object someluaint = b.get("someluaint");
+        Object someluadouble = b.get("someluaint");
+        Object someluastring = b.get("someluastring");
+        Object someluauserdata = b.get("someluauserdata");
+        Object someluatable = b.get("someluatable");
+        Object someluafunction = b.get("someluafunction");
+        System.out.println( "someluaint: "+someluaint.getClass()+" "+someluaint );
+        System.out.println( "someluadouble: "+someluadouble.getClass()+" "+someluadouble );
+        System.out.println( "someluastring: "+someluastring.getClass()+" "+someluastring );
+        System.out.println( "someluauserdata: "+someluauserdata.getClass()+" "+someluauserdata );
+        System.out.println( "someluatable: "+someluatable.getClass()+" "+someluatable );
+        System.out.println( "someluafunction: "+someluafunction.getClass()+" "+someluafunction );
+        System.out.println( "someluafunction(345): "+((LuaValue) someluafunction).call(LuaValue.valueOf(345)) );
+    }
+
+    public static void testUserClasses(ScriptEngine e) throws ScriptException {
+        CompiledScript cs = ((Compilable)e).compile(
+        		"test = test or luajava.newInstance(\"java.lang.String\", \"test\")\n" +
+        		"print( 'test', type(test), test, tostring(test) )\n" +
+        		"return test:toString()");
+        Bindings b = e.createBindings();
+        Object resultstring = cs.eval(b);
+        b.put("test", new SomeUserClass());
+        Object resultuserclass = cs.eval(b);
+        System.out.println( "eval(string): "+resultstring.getClass()+" "+resultstring );
+        System.out.println( "eval(userclass): "+resultuserclass.getClass()+" "+resultuserclass );        
+    }
+    
 }
