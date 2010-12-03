@@ -221,8 +221,8 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 			this.copyBindingsToGlobals();
 		}
 		public void copyBindingsToGlobals() {
-			for ( Iterator<String> i = b.keySet().iterator(); i.hasNext(); ) {
-				String key = i.next();
+			for ( Iterator i = b.keySet().iterator(); i.hasNext(); ) {
+				String key = (String) i.next();
 				Object val = b.get(key);
 				LuaValue luakey = toLua(key);
 				LuaValue luaval = toLua(val);
