@@ -17,6 +17,11 @@ public class ScriptEngineSample {
         ScriptEngineManager sem = new ScriptEngineManager();
         ScriptEngine e = sem.getEngineByExtension(".lua");
         ScriptEngineFactory f = e.getFactory();
+
+        // uncomment to enable the lua-to-java bytecode compiler 
+        // (require bcel library in class path)
+        // org.luaj.vm2.luajc.LuaJC.install();
+    	
         System.out.println( "Engine name: " +f.getEngineName() );
         System.out.println( "Engine Version: " +f.getEngineVersion() );
         System.out.println( "LanguageName: " +f.getLanguageName() );
@@ -51,6 +56,7 @@ public class ScriptEngineSample {
             	System.out.println("script threw ScriptException as expected, message is '"+se.getMessage()+"'");
             }
             
+            testEngineBindings(e);
             testClientBindings(e);
             testUserClasses(e);
             
@@ -65,7 +71,13 @@ public class ScriptEngineSample {
     	}
     }
     
+    public static void testEngineBindings(ScriptEngine e) throws ScriptException {
+    	testBindings(e, e.createBindings());
+    }
     public static void testClientBindings(ScriptEngine e) throws ScriptException {
+    	testBindings(e, new SimpleBindings());
+    }
+    public static void testBindings(ScriptEngine e, Bindings b) throws ScriptException {
         CompiledScript cs = ((Compilable)e).compile(
         		"print( 'somejavaint', type(somejavaint), somejavaint )\n" +
         		"print( 'somejavadouble', type(somejavadouble), somejavadouble )\n" +
@@ -79,7 +91,6 @@ public class ScriptEngineSample {
         		"someluatable = { 999, 111 }\n" +
         		"someluafunction = function(x) print( 'hello, world', x ) return 678 end\n" +
         		"" );
-        Bindings b = e.createBindings();
         b.put("somejavaint", 111);
         b.put("somejavadouble", 222.333);
         b.put("somejavastring", "abc");

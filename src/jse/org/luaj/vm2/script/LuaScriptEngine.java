@@ -157,47 +157,30 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 	public CompiledScript compile(String script) throws ScriptException {
 		return compile(new StringReader(script));
 	}
-
+	
 	public CompiledScript compile(Reader reader) throws ScriptException {
 		try {
 	    	InputStream ris = new Utf8Encoder(reader);
 	    	try {
 	    		final LuaFunction f = LoadState.load(ris, "script", null);
 	    		if ( f.isclosure() ) {
-	    			LuaClosure c = f.checkclosure();
-	    			final Prototype p = c.p;
-					return new CompiledScript() {
-						public Object eval(ScriptContext context) throws ScriptException {
-					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-					        BindingsEnv env = new BindingsEnv(b);
-							LuaClosure c = new LuaClosure( p, env.t );
-							Varargs result = c.invoke(LuaValue.NONE);
-							env.copyGlobalsToBindings();
-							return result;
-						}
-						public ScriptEngine getEngine() {
-							return LuaScriptEngine.this;
+	    			// most compiled functions are closures with prototypes 
+	    			final Prototype p = f.checkclosure().p;
+					return new CompiledScriptImpl() {
+						protected LuaFunction newFunctionInstance() {
+							return new LuaClosure( p, null );
 						}
 					};
 	    		} else {
+	    			// when luajc is used, functions are java class instances
 	    			final Class c = f.getClass();
-					return new CompiledScript() {
-						public Object eval(ScriptContext context) throws ScriptException {
-					        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-					        BindingsEnv env = new BindingsEnv(b);
-					        LuaFunction lf;
+					return new CompiledScriptImpl() {
+						protected LuaFunction newFunctionInstance() throws ScriptException {
 							try {
-						        lf = (LuaFunction) c.newInstance();
+						        return (LuaFunction) c.newInstance();
 							} catch (Exception e) {
 								throw new ScriptException("instantiation failed: "+e.toString());
 							}
-					        lf.setfenv(env.t);
-					        Varargs result = lf.invoke(LuaValue.NONE);
-							env.copyGlobalsToBindings();
-							return result;
-						}
-						public ScriptEngine getEngine() {
-							return LuaScriptEngine.this;
 						}
 					};	    			
 	    		}
@@ -211,14 +194,29 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		}
 	}
 	
-	// ------ lua bindings -----	private static final class BindingsBackedEnv extends LuaTable {
-	public class BindingsEnv {
+	abstract protected class CompiledScriptImpl extends CompiledScript {
+		abstract protected LuaFunction newFunctionInstance() throws ScriptException; 
+		public ScriptEngine getEngine() {
+			return LuaScriptEngine.this;
+		}
+		public Object eval(ScriptContext context) throws ScriptException {
+	        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
+	        LuaFunction f = newFunctionInstance();
+	        ClientBindings cb = new ClientBindings(b);
+	        f.setfenv(cb.env);
+			Varargs result = f.invoke(LuaValue.NONE);
+			cb.copyGlobalsToBindings();
+			return result;
+		}
+	}
+	
+	public class ClientBindings {
 		public final Bindings b;
-		public final LuaTable t;
-		public BindingsEnv( Bindings b ) {
+		public final LuaTable env;
+		public ClientBindings( Bindings b ) {
 			this.b = b;
-			this.t = new LuaTable();
-			t.setmetatable(LuaTable.tableOf(new LuaValue[] { LuaValue.INDEX, _G }));
+			this.env = new LuaTable();
+			env.setmetatable(LuaTable.tableOf(new LuaValue[] { LuaValue.INDEX, _G }));
 			this.copyBindingsToGlobals();
 		}
 		public void copyBindingsToGlobals() {
@@ -227,7 +225,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 				Object val = b.get(key);
 				LuaValue luakey = toLua(key);
 				LuaValue luaval = toLua(val);
-				t.set(luakey, luaval);
+				env.set(luakey, luaval);
 				i.remove();
 			}
 		}
@@ -237,10 +235,10 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 				CoerceJavaToLua.coerce(javaValue);
 		}
 		public void copyGlobalsToBindings() {
-			LuaValue[] keys = t.keys();
+			LuaValue[] keys = env.keys();
 			for ( int i=0; i<keys.length; i++ ) {
 				LuaValue luakey = keys[i];
-				LuaValue luaval = t.get(luakey);
+				LuaValue luaval = env.get(luakey);
 				String key = luakey.tojstring();
 				Object val = toJava( luaval );
 				b.put(key,val);
