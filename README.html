@@ -513,17 +513,22 @@ The <em>lua</em> connand line tool includes <em>luajava</em>.
 <h1>5 - <a name="5">LuaJ API</a></h1>
 
 <h2>API Javadoc</h2>
-The distribution now contains javadoc for the main classes in the LuaJ API.
+The javadoc for the main classes in the LuaJ API are on line at
 <pre>
-	 <a href="docs/api/index.html">docs/api/index.html</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/index.html">http://luaj.sourceforge.net/api/2.0</a>
+</pre>
+
+You can also build a local version from sources using 
+<pre>
+	 ant doc
 </pre>
 
 <h2>LuaValue and Varargs</h2>
 All lua value manipulation is now organized around 
-<a href="docs/api/org/luaj/vm2/LuaValue.html">LuaValue</a>
+<a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/LuaValue.html">LuaValue</a>
 which exposes the majority of interfaces used for lua computation.  
 <pre>
-	 <a href="docs/api/org/luaj/vm2/LuaValue.html">org.luaj.vm2.LuaValue</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/LuaValue.html">org.luaj.vm2.LuaValue</a>
 </pre>
 
 <h3>Common Functions</h3>
@@ -546,12 +551,12 @@ Some commonly used functions and constants include:
 </pre>
 
 <h2>Varargs</h2>
-The interface <a href="docs/api/org/luaj/vm2/Varargs.html">Varargs</a> provides an abstraction for 
+The interface <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/Varargs.html">Varargs</a> provides an abstraction for 
 both a variable argument list and multiple return values.  
 For convenience, <em>LuaValue</em> implements <em>Varargs</em> so a single value can be supplied anywhere 
 variable arguments are expected.      
 <pre>
-	 <a href="docs/api/org/luaj/vm2/Varargs.html">org.luaj.vm2.Varargs</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/Varargs.html">org.luaj.vm2.Varargs</a>
 </pre>
 
 <h3>Common Functions</h3>
@@ -565,18 +570,18 @@ variable arguments are expected.
 	optlong(int n,long d);  // return n if a long, d if no argument, or error if not a long
 </pre>
  
-See the <a href="docs/api/org/luaj/vm2/Varargs.html">Varargs</a> API for a complete list.
+See the <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/Varargs.html">Varargs</a> API for a complete list.
  
 <h2>LibFunction</h2>
 The simplest way to implement a function is to choose a base class based on the number of arguments to the function.
 LuaJ provides 5 base classes for this purpose, depending if the function has 0, 1, 2, 3 or variable arguments, 
 and if it provide multiple return values.   
 <pre>
-	 <a href="docs/api/org/luaj/vm2/lib/ZeroArgFunction.html">org.luaj.vm2.lib.ZeroArgFunction</a>
-	 <a href="docs/api/org/luaj/vm2/lib/OneArgFunction.html">org.luaj.vm2.lib.OneArgFunction</a>
-	 <a href="docs/api/org/luaj/vm2/lib/TwoArgFunction.html">org.luaj.vm2.lib.TwoArgFunction</a>
-	 <a href="docs/api/org/luaj/vm2/lib/ThreeArgFunction.html">org.luaj.vm2.lib.ThreeArgFunction</a>
-	 <a href="docs/api/org/luaj/vm2/lib/VarArgFunction.html">org.luaj.vm2.lib.VarArgFunction</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/lib/ZeroArgFunction.html">org.luaj.vm2.lib.ZeroArgFunction</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/lib/OneArgFunction.html">org.luaj.vm2.lib.OneArgFunction</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/lib/TwoArgFunction.html">org.luaj.vm2.lib.TwoArgFunction</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/lib/ThreeArgFunction.html">org.luaj.vm2.lib.ThreeArgFunction</a>
+	 <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/lib/VarArgFunction.html">org.luaj.vm2.lib.VarArgFunction</a>
 </pre>
 
 Each of these functions has an abstract method that must be implemented, 
@@ -650,7 +655,7 @@ For example, to parse a file and print all variable names, use code like:
 </pre> 
 
 <p>
-See the <a href="docs/api/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
+See the <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
 
 <h1>7 - <a name="7">Building and Testing</a></h1>
 
