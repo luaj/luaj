@@ -244,4 +244,27 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( "foo-nil", v.arrayargsMethod("foo", null) );
 	}
 	
+	public void testBigNum() {
+		String script = 
+			"bigNumA = luajava.newInstance('java.math.BigDecimal','12345678901234567890');\n" +
+			"bigNumB = luajava.newInstance('java.math.BigDecimal','12345678901234567890');\n" +
+			"bigNumC = bigNumA:multiply(bigNumB);\n" +
+			//"print(bigNumA:toString())\n" +
+			//"print(bigNumB:toString())\n" +
+			//"print(bigNumC:toString())\n" +
+			"return bigNumA:toString(), bigNumB:toString(), bigNumC:toString()";
+		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		if ( ! chunk.arg1().toboolean() )
+			fail( chunk.arg(2).toString() );
+		Varargs results = chunk.arg1().invoke();
+		int nresults = results.narg();
+		String sa = results.tojstring(1);
+		String sb = results.tojstring(2);
+		String sc = results.tojstring(3);
+		assertEquals( 3, nresults );
+		assertEquals( "12345678901234567890", sa );
+		assertEquals( "12345678901234567890", sb );
+		assertEquals( "152415787532388367501905199875019052100", sc );
+	}
+	
 }
