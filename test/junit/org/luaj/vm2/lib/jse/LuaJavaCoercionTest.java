@@ -266,5 +266,31 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( "12345678901234567890", sb );
 		assertEquals( "152415787532388367501905199875019052100", sc );
 	}
+
+	public static class A {
+		public String set( int foo ) {
+			return "from set(int) "+foo;
+		}
+		public String set( String foo ) {
+			return "from set(String) "+foo;
+		}
+		public String get() {
+			return "bar";
+		}
+	}
+	
+	public void testOverloadedJavaMethods() {
+		String script = 
+			"a = luajava.newInstance('"+A.class.getName()+"');\n" +
+			"return a:set(a:get())";
+		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		if ( ! chunk.arg1().toboolean() )
+			fail( chunk.arg(2).toString() );
+		Varargs results = chunk.arg1().invoke();
+		int nresults = results.narg();
+		String sa = results.tojstring(1);
+		assertEquals( 1, nresults );
+		assertEquals( "from set(String) bar", sa );
+	}
 	
 }

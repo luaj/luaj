@@ -174,10 +174,12 @@ public class CoerceLuaToJava {
 			} 
 			public int score(int paramType) {
 				switch ( paramType ) {
-				case LuaValue.TUSERDATA:
+				case LuaValue.TSTRING:
 					return 0;
-				default: 
+				case LuaValue.TUSERDATA:
 					return 1;
+				default: 
+					return 2;
 				}
 			}
 		};
@@ -202,8 +204,10 @@ public class CoerceLuaToJava {
 			} 
 			public int score(int paramType) {
 				switch ( paramType ) {
-				case LuaValue.TSTRING:
+				case LuaValue.TUSERDATA:
 					return 0;
+				case LuaValue.TSTRING:
+					return 1;
 				default: 
 					return 0x10;
 				}
@@ -238,7 +242,8 @@ public class CoerceLuaToJava {
 		if ( co != null ) {
 			int b = LuajavaLib.paramBaseTypeFromParamType(paramType);
 			int d = LuajavaLib.paramDepthFromParamType(paramType);
-			return co.score( b ) * d;
+			int s = co.score(b);
+			return s * (d+1);
 		}
 		if ( c.isArray() ) {
 			Class typ = c.getComponentType();
