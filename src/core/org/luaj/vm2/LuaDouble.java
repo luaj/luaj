@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -23,15 +23,55 @@ package org.luaj.vm2;
 
 import org.luaj.vm2.lib.MathLib;
 
+/**
+ * Extension of {@link LuaNumber} which can hold a Java double as its value. 
+ * <p>
+ * These instance are not instantiated directly by clients, but indirectly 
+ * via the static functions {@link LuaValue#valueOf(int)} or {@link LuaValue#valueOf(double)}
+ * functions.  This ensures that values which can be represented as int 
+ * are wrapped in {@link LuaInteger} instead of {@link LuaDouble}.  
+ * <p>
+ * Almost all API's implemented in LuaDouble are defined and documented in {@link LuaValue}.
+ * <p>
+ * However the constants {@link #NAN}, {@link #POSINF}, {@link #NEGINF},
+ * {@link #JSTR_NAN}, {@link #JSTR_POSINF}, and {@link #JSTR_NEGINF} may be useful 
+ * when dealing with Nan or Infinite values. 
+ * <p>
+ * LuaDouble also defines functions for handling the unique math rules of lua devision and modulo in
+ * <ul>
+ * <li>{@link #ddiv(double, double)}</li>
+ * <li>{@link #ddiv_d(double, double)}</li>
+ * <li>{@link #dmod(double, double)}</li>
+ * <li>{@link #dmod_d(double, double)}</li>
+ * </ul> 
+ * <p>
+ * @see LuaValue
+ * @see LuaNumber
+ * @see LuaInteger
+ * @see LuaValue#valueOf(int)
+ * @see LuaValue#valueOf(double)
+ */
 public class LuaDouble extends LuaNumber {
 
+	/** Constant LuaDouble representing NaN (not a number) */
 	public static final LuaDouble NAN    = new LuaDouble( Double.NaN );
+	
+	/** Constant LuaDouble representing positive infinity */
 	public static final LuaDouble POSINF = new LuaDouble( Double.POSITIVE_INFINITY );
+	
+	/** Constant LuaDouble representing negative infinity */
 	public static final LuaDouble NEGINF = new LuaDouble( Double.NEGATIVE_INFINITY );
+	
+	/** Constant String representation for NaN (not a number), "nan" */
 	public static final String JSTR_NAN    = "nan";
+	
+	/** Constant String representation for positive infinity, "inf" */
 	public static final String JSTR_POSINF = "inf";
+
+	/** Constant String representation for negative infinity, "-inf" */
 	public static final String JSTR_NEGINF = "-inf";
 	
+	/** The value being held by this instance. */
 	final double v;
 
 	public static LuaNumber valueOf(double d) {
@@ -107,18 +147,46 @@ public class LuaDouble extends LuaNumber {
 	public LuaValue   mod( int rhs )        { return LuaDouble.dmod(v,rhs); }
 	public LuaValue   modFrom( double lhs )   { return LuaDouble.dmod(lhs,v); }
 	
-	/** lua division is always double, specific values for singularities */
+	
+	/** Divide two double numbers according to lua math, and return a {@link LuaValue} result.
+	 * @param lhs Left-hand-side of the division.
+	 * @param rhs Right-hand-side of the division.
+	 * @return {@link LuaValue} for the result of the division, 
+	 * taking into account positive and negiative infinity, and Nan
+	 * @see #ddiv_d(double, double) 
+	 */
 	public static LuaValue ddiv(double lhs, double rhs) {
 		return rhs!=0? valueOf( lhs / rhs ): lhs>0? POSINF: lhs==0? NAN: NEGINF;	
 	}
+	
+	/** Divide two double numbers according to lua math, and return a double result.
+	 * @param lhs Left-hand-side of the division.
+	 * @param rhs Right-hand-side of the division.
+	 * @return Value of the division, taking into account positive and negative infinity, and Nan
+	 * @see #ddiv(double, double)
+	 */
 	public static double ddiv_d(double lhs, double rhs) {
 		return rhs!=0? lhs / rhs: lhs>0? Double.POSITIVE_INFINITY: lhs==0? Double.NaN: Double.NEGATIVE_INFINITY;	
 	}
 	
-	/** lua module is always wrt double. */
+	/** Take modulo double numbers according to lua math, and return a {@link LuaValue} result.
+	 * @param lhs Left-hand-side of the modulo.
+	 * @param rhs Right-hand-side of the modulo.
+	 * @return {@link LuaValue} for the result of the modulo, 
+	 * using lua's rules for modulo
+	 * @see #dmod_d(double, double) 
+	 */
 	public static LuaValue dmod(double lhs, double rhs) {
 		return rhs!=0? valueOf( lhs-rhs*Math.floor(lhs/rhs) ): NAN;
 	}
+
+	/** Take modulo for double numbers according to lua math, and return a double result.
+	 * @param lhs Left-hand-side of the modulo.
+	 * @param rhs Right-hand-side of the modulo.
+	 * @return double value for the result of the modulo, 
+	 * using lua's rules for modulo
+	 * @see #dmod(double, double)
+	 */
 	public static double dmod_d(double lhs, double rhs) {
 		return rhs!=0? lhs-rhs*Math.floor(lhs/rhs): Double.NaN;
 	}

@@ -23,6 +23,23 @@ package org.luaj.vm2;
 
 import org.luaj.vm2.lib.MathLib;
 
+/**
+ * Extension of {@link LuaNumber} which can hold a Java int as its value. 
+ * <p>
+ * These instance are not instantiated directly by clients, but indirectly 
+ * via the static functions {@link LuaValue#valueOf(int)} or {@link LuaValue#valueOf(double)}
+ * functions.  This ensures that policies regarding pooling of instances are 
+ * encapsulated.  
+ * <p>
+ * There are no API's specific to LuaInteger that are useful beyond what is already 
+ * exposed in {@link LuaValue}.
+ * 
+ * @see LuaValue
+ * @see LuaNumber
+ * @see LuaDouble
+ * @see LuaValue#valueOf(int)
+ * @see LuaValue#valueOf(double)
+ */
 public class LuaInteger extends LuaNumber {
 
 	private static final LuaInteger[] intValues = new LuaInteger[512];
@@ -35,6 +52,13 @@ public class LuaInteger extends LuaNumber {
 		return i<=255 && i>=-256? intValues[i+256]: new LuaInteger(i);
 	};
 	
+	 // TODO consider moving this to LuaValue
+	/** Return a LuaNumber that represents the value provided
+	 * @param l long value to represent.
+	 * @return LuaNumber that is eithe LuaInteger or LuaDouble representing l
+	 * @see LuaValue#valueOf(int)
+	 * @see LuaValue#valueOf(double)
+	 */
 	public static LuaNumber valueOf(long l) {
 		int i = (int) l;
 		return l==i? (i<=255 && i>=-256? intValues[i+256]: 
@@ -42,9 +66,13 @@ public class LuaInteger extends LuaNumber {
 			(LuaNumber) LuaDouble.valueOf(l);
 	}
 	
+	/** The value being held by this instance. */
 	public final int v;
 	
-	/** package protected constructor, @see IntValue.valueOf(int) */
+	/** 
+	 * Package protected constructor. 
+	 * @see LuaValue#valueOf(int)
+	 **/
 	LuaInteger(int i) {
 		this.v = i;
 	}

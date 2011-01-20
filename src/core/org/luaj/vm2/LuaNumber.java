@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Luaj.org. All rights reserved.
+ * Copyright (c) 2009-2011 Luaj.org. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,19 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
+/** 
+ * Base class for representing numbers as lua values directly. 
+ * <p>
+ * The main subclasses are {@link LuaInteger} which holds values that fit in a java int, 
+ * and {@link LuaDouble} which holds all other number values.
+ * @see LuaInteger
+ * @see LuaDouble
+ * 
+ */
 abstract
 public class LuaNumber extends LuaValue {
 
+	/** Shared static metatable for all number values represented in lua. */
 	public static LuaValue s_metatable;
 	
 	public int type() {

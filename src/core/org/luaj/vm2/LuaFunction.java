@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Luaj.org. All rights reserved.
+ * Copyright (c) 2009-2011 Luaj.org. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,18 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
+/** 
+ * Base class for functions implemented in Java. 
+ * <p>
+ * Direct subclass include {@link LibFunction} which is the base class for 
+ * all built-in library functions coded in Java, 
+ * and {@link LuaClosure}, which represents a lua closure 
+ * whose bytecode is interpreted when the function is invoked.    
+ */
 abstract
 public class LuaFunction extends LuaValue {
 	
+	/** Shared static metatable for all functions and closures. */
 	public static LuaValue s_metatable;
 
 	protected LuaValue env;
