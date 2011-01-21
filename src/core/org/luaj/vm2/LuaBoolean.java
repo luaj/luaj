@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Luaj.org. All rights reserved.
+ * Copyright (c) 2009-2011 Luaj.org. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,36 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
+/**
+ * Extension of {@link LuaValue} which can hold a Java boolean as its value. 
+ * <p>
+ * These instance are not instantiated directly by clients.  
+ * Instead, there are exactly twon instances of this class, 
+ * {@link LuaValue#TRUE} and {@link LuaValue#FALSE} 
+ * representing the lua values {@code true} and {@link false}.
+ * The function {@link LuaValue#valueOf(boolean)} will always 
+ * return one of these two values. 
+ * <p>
+ * Any {@link LuaValue} can be converted to its equivalent 
+ * boolean representation using {@link LuaValue#toboolean()}
+ * <p>
+ * @see LuaValue
+ * @see LuaValue#valueOf(boolean)
+ * @see LuaValue#TRUE
+ * @see LuaValue#FALSE
+ */
 public final class LuaBoolean extends LuaValue {
 
+	/** The singleton instance representing lua {@code true} */
 	static final LuaBoolean _TRUE = new LuaBoolean(true);
+	
+	/** The singleton instance representing lua {@code false} */
 	static final LuaBoolean _FALSE = new LuaBoolean(false);
 	
+	/** Shared static metatable for boolean values represented in lua. */
 	public static LuaValue s_metatable;
-	
+
+	/** The value of the boolean */
 	public final boolean v;
 
 	LuaBoolean(boolean b) {
@@ -50,6 +73,10 @@ public final class LuaBoolean extends LuaValue {
 		return v ? FALSE : LuaValue.TRUE;
 	}
 
+	/**
+	 * Return the boolean value for this boolean
+	 * @return value as a Java boolean
+	 */
 	public boolean booleanValue() {
 		return v;
 	}

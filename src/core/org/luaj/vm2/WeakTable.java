@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Luaj.org. All rights reserved.
+ * Copyright (c) 2009-2011 Luaj.org. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,46 @@ import java.lang.ref.WeakReference;
 
 import org.luaj.vm2.lib.TwoArgFunction;
 
+/**
+ * Subclass of {@link LuaTable} that provides weak key and weak value semantics. 
+ * <p> 
+ * Normally these are not created directly, but indirectly when changing the mode 
+ * of a {@link LuaTable} as lua script executes.  
+ * <p>
+ * However, calling the constructors directly when weak tables are required from 
+ * Java will reduce overhead.  
+ */
 public class WeakTable extends LuaTable {
 	private boolean weakkeys,weakvalues;
 	
+	/** 
+	 * Construct a table with weak keys, weak values, or both
+	 * @param weakkeys true to let the table have weak keys
+	 * @param weakvalues true to let the table have weak values
+	 */
 	public WeakTable(boolean weakkeys, boolean weakvalues) {
 		this(weakkeys, weakvalues, 0, 0);
 	}
+
+	/** 
+	 * Construct a table with weak keys, weak values, or both, and an initial capacity
+	 * @param weakkeys true to let the table have weak keys
+	 * @param weakvalues true to let the table have weak values
+	 * @param narray capacity of array part
+	 * @param nhash capacity of hash part
+	 */
 	protected WeakTable(boolean weakkeys, boolean weakvalues, int narray, int nhash) {
 		super(narray, nhash);
 		this.weakkeys = weakkeys;
 		this.weakvalues = weakvalues;
 	}
+
+	/** 
+	 * Construct a table with weak keys, weak values, or both, and a source of initial data
+	 * @param weakkeys true to let the table have weak keys
+	 * @param weakvalues true to let the table have weak values
+	 * @param source {@link LuaTable} containing the initial elements
+	 */
 	protected WeakTable(boolean weakkeys, boolean weakvalues, LuaTable source) {
 		this(weakkeys, weakvalues, source.getArrayLength(), source.getHashLength());
 		Varargs n;
@@ -49,6 +78,11 @@ public class WeakTable extends LuaTable {
 		super.presize(narray);
 	}
 
+	/** 
+	 * Presize capacity of both array and hash parts.
+	 * @param narray capacity of array part
+	 * @param nhash capacity of hash part
+	 */
 	public void presize(int narray, int nhash) {
 		super.presize(narray, nhash);
 	}
@@ -67,6 +101,11 @@ public class WeakTable extends LuaTable {
 		return this;
 	}
 	
+	/**
+	 * Self-sent message to convert a value to its weak counterpart
+	 * @param value value to convert
+	 * @return {@link LuaValue} that is a strong or weak reference, depending on type of {@code value}
+	 */
 	LuaValue weaken( LuaValue value ) {
 		switch ( value.type() ) {
 			case LuaValue.TFUNCTION:
@@ -85,8 +124,7 @@ public class WeakTable extends LuaTable {
 			value = weaken( value );
 		super.rawset(key, value);
 	}
-
-	/** caller must ensure key is not nil */
+	
 	public void rawset( LuaValue key, LuaValue value ) {
 		if ( weakvalues )
 			value = weaken( value );
@@ -114,6 +152,9 @@ public class WeakTable extends LuaTable {
 		return super.rawget(key).strongvalue();
 	}
 
+	/** Get the hash value for a key 
+	 * key the key to look up 
+	 * */
 	protected LuaValue hashget(LuaValue key) {
 		if ( hashEntries > 0 ) {
 			int i = hashFindSlot(key);
@@ -179,6 +220,9 @@ public class WeakTable extends LuaTable {
 		} );
 	}
 
+	/** Internal class to implement weak values. 
+	 * @see WeakTable
+	 */
 	static class WeakValue extends LuaValue {
 		final WeakReference ref;
 
@@ -215,6 +259,9 @@ public class WeakTable extends LuaTable {
 		}
 	}
 	
+	/** Internal class to implement weak userdata values. 
+	 * @see WeakTable
+	 */
 	static final class WeakUserdata extends WeakValue {
 		private final WeakReference ob;
 		private final LuaValue mt;
@@ -247,6 +294,9 @@ public class WeakTable extends LuaTable {
 		}
 	}
 
+	/** Internal class to implement weak table entries. 
+	 * @see WeakTable
+	 */
 	static final class WeakEntry extends LuaValue {
 		final LuaValue weakkey;
 		LuaValue weakvalue;

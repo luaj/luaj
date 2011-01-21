@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2010 Luaj.org. All rights reserved.
+* Copyright (c) 2010-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,25 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
+/**
+ * Subclass of {@link Varargs} that represents a lua tail call 
+ * in a Java library function execution environment. 
+ * <p>
+ * Since Java doesn't have direct support for tail calls, 
+ * any lua function whose {@link Prototype} contains the 
+ * {@link Lua#OP_TAILCALL} bytecode needs a mechanism 
+ * for tail calls when converting lua-bytecode to java-bytecode.
+ * <p>
+ * The tail call holds the next function and arguments, 
+ * and the client a call to {@link #eval()} executes the function
+ * repeatedly until the tail calls are completed. 
+ * <p>
+ * Normally, users of luaj need not concern themselves with the 
+ * details of this mechanism, as it is built into the core 
+ * execution framework. 
+ * @see Prototype 
+ * @see LuaJC
+ */
 public class TailcallVarargs extends Varargs {
 
 	private LuaValue func;

@@ -23,26 +23,90 @@ package org.luaj.vm2;
 
 import java.util.Vector;
 
+/**
+ * Subclass of {@link LuaValue} for representing lua tables. 
+ * <p>
+ * Almost all API's implemented in {@link LuaTable} are defined and documented in {@link LuaValue}.
+ * <p>
+ * If a table is needed, the one of the type-checking functions can be used such as
+ * {@link #istable()}, 
+ * {@link #checktable()}, or
+ * {@link #opttable(LuaTable)} 
+ * <p>
+ * The main table operations are defined on {@link LuaValue} 
+ * for getting and setting values with and without metatag processing:
+ * <ul>
+ * <li>{@link #get(LuaValue)}</li>  
+ * <li>{@link #set(LuaValue,LuaValue)}</li>  
+ * <li>{@link #rawget(LuaValue)}</li>  
+ * <li>{@link #rawset(LuaValue,LuaValue)}</li>
+ * <li>plus overloads such as {@link #get(String)}, {@link #get(int)}, and so on</li>  
+ * </ul>
+ * <p>
+ * To iterate over key-value pairs from Java, use
+ * <pre> {@code
+ * LuaValue k = LuaValue.NIL;
+ * while ( true ) {
+ *    Varargs n = table.next(k);
+ *    if ( (k = n.arg1()).isnil() )
+ *       break;
+ *    LuaValue v = n.arg(2)
+ *    process( k, v )
+ * }</pre>
+ * 
+ * <p>
+ * As with other types, {@link LuaTable} instances should be constructed via one of the table constructor 
+ * methods on {@link LuaValue}:
+ * <ul>
+ * <li>{@link LuaValue#tableOf()} empty table</li>
+ * <li>{@link LuaValue#tableOf(int, int)} table with capacity</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[])} initialize array part</li>
+ * <li>{@link LuaValue#tableOf(Varargs, int)} initialize array part</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[])} initialize array and named parts</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)} initialize array and named parts</li>
+ * </ul>
+ */
 public class LuaTable extends LuaValue {
 	private static final int      MIN_HASH_CAPACITY = 2;
 	private static final LuaString N = valueOf("n");
 	
+	/** the array values */
 	protected LuaValue[] array;
+	
+	/** the hash keys */
 	protected LuaValue[] hashKeys;
+	
+	/** the hash values */
 	protected LuaValue[] hashValues;
+	
+	/** the number of hash entries */
 	protected int hashEntries;
+	
+	/** metatable for this table, or null */
 	protected LuaValue m_metatable;
 	
+	/** Construct empty table */
 	public LuaTable() {
 		array = NOVALS;
 		hashKeys = NOVALS;
 		hashValues = NOVALS;
 	}
 	
+	/** 
+	 * Construct table with preset capacity.
+	 * @param narray capacity of array part
+	 * @param nhash capacity of hash part
+	 */
 	public LuaTable(int narray, int nhash) {
 		presize(narray, nhash);
 	}
-	
+
+	/**
+	 * Construct table with named and unnamed parts. 
+	 * @param named Named elements in order {@code key-a, value-a, key-b, value-b, ... }
+	 * @param unnamed Unnamed elements in order {@code value-1, value-2, ... } 
+	 * @param lastarg Additional unnamed values beyond {@code unnamed.length}
+	 */
 	public LuaTable(LuaValue[] named, LuaValue[] unnamed, Varargs lastarg) {
 		int nn = (named!=null? named.length: 0);
 		int nu = (unnamed!=null? unnamed.length: 0);
@@ -58,10 +122,19 @@ public class LuaTable extends LuaValue {
 				rawset(named[i], named[i+1]);
 	}
 
+	/**
+	 * Construct table of unnamed elements. 
+	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... } 
+	 */
 	public LuaTable(Varargs varargs) {
 		this(varargs,1);
 	}
 
+	/**
+	 * Construct table of unnamed elements. 
+	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... }
+	 * @param firstarg the index in varargs of the first argument to include in the table 
+	 */
 	public LuaTable(Varargs varargs, int firstarg) {
 		int nskip = firstarg-1;
 		int n = Math.max(varargs.narg()-nskip,0);
@@ -105,16 +178,25 @@ public class LuaTable extends LuaValue {
 		hashEntries = 0;
 	}
 
+	/** Resize the table */
 	private static LuaValue[] resize( LuaValue[] old, int n ) {
 		LuaValue[] v = new LuaValue[n];
 		System.arraycopy(old, 0, v, 0, old.length);
 		return v;
 	}
 	
+	/** 
+	 * Get the length of the array part of the table. 
+	 * @return length of the array part, does not relate to count of objects in the table. 
+	 */
 	protected int getArrayLength() {
 		return array.length;
 	}
 
+	/** 
+	 * Get the length of the hash part of the table. 
+	 * @return length of the hash part, does not relate to count of objects in the table. 
+	 */
 	protected int getHashLength() {
 		return hashValues.length;
 	}
@@ -135,6 +217,12 @@ public class LuaTable extends LuaValue {
 		return this;
 	}
 	
+	/** 
+	 * Change the mode of a table
+	 * @param weakkeys true to make the table have weak keys going forward
+	 * @param weakvalues true to make the table have weak values going forward
+	 * @return {@code this} or a new {@link WeakTable} if the mode change requires copying.
+	 */
 	protected LuaTable changemode(boolean weakkeys, boolean weakvalues) {
 		if ( weakkeys || weakvalues )
 			return new WeakTable(weakkeys, weakvalues, this);
@@ -197,6 +285,7 @@ public class LuaTable extends LuaValue {
 			hashset( key, value );
 	}
 
+	/** Set an array element */
 	private boolean arrayset( int key, LuaValue value ) {
 		if ( key>0 && key<=array.length ) {
 			array[key-1] = (value.isnil()? null: value);
@@ -208,7 +297,8 @@ public class LuaTable extends LuaValue {
 		}
 		return false;
 	}
-	
+
+	/** Expand the array part */
 	private void expandarray() {
 		int n = array.length;
 		int m = Math.max(2,n*2);
@@ -223,6 +313,11 @@ public class LuaTable extends LuaValue {
 		}
 	}
 
+	/** Remove the element at a position in a list-table
+	 *  
+	 * @param pos the position to remove
+	 * @return The removed item, or {@link #NONE} if not removed
+	 */
 	public LuaValue remove(int pos) {
 		if ( pos == 0 )
 			pos = length();
@@ -234,6 +329,11 @@ public class LuaTable extends LuaValue {
 		return v.isnil()? NONE: v;
 	}
 
+	/** Insert an element at a position in a list-table
+	 *  
+	 * @param pos the position to remove
+	 * @param value The value to insert
+	 */
 	public void insert(int pos, LuaValue value) {
 		if ( pos == 0 )
 			pos = length()+1;
@@ -244,6 +344,13 @@ public class LuaTable extends LuaValue {
 		}
 	}
 
+	/** Concatenate the contents of a table efficiently, using {@link Buffer}
+	 * 
+	 * @param sep {@link LuaString} separater to apply between elements
+	 * @param i the first element index
+	 * @param j the last element index, inclusive
+	 * @return {@link LuaString} value of the concatenation
+	 */
 	public LuaValue concat(LuaString sep, int i, int j) {
 		Buffer  sb = new Buffer ();
 		if ( i<=j ) {
@@ -263,9 +370,6 @@ public class LuaTable extends LuaValue {
 		return ZERO;
 	}
 
-	/**
-	 * Get the length of this table, as lua defines it.
-	 */
 	public int length() {
 		int a = getArrayLength();
 		int n = a+1,m=0;
@@ -287,6 +391,11 @@ public class LuaTable extends LuaValue {
 		return LuaInteger.valueOf(length());
 	}
 	
+	/** Return table.maxn() as defined by lua 5.0.
+	 * <p>
+	 * Provided for compatibility, not a scalable operation. 
+	 * @return value for maxn
+	 */
 	public int maxn() {
 		int n = 0;
 		for ( int i=0; i<array.length; i++ )
@@ -303,10 +412,6 @@ public class LuaTable extends LuaValue {
 		return n;
 	}
 
-	/**
-	 * Get the next element after a particular key in the table 
-	 * @return key,value or nil
-	 */
 	/**
 	 * Get the next element after a particular key in the table 
 	 * @return key,value or nil
@@ -388,8 +493,11 @@ public class LuaTable extends LuaValue {
 	}
 	
 
-	// ======================= hashset =================
-
+	/**
+	 * Set a hashtable value
+	 * @param key key to set
+	 * @param value value to set
+	 */
 	public void hashset(LuaValue key, LuaValue value) {
 		if ( value.isnil() )
 			hashRemove(key);
@@ -408,6 +516,11 @@ public class LuaTable extends LuaValue {
 		}
 	}
 	
+	/** 
+	 * Find the hashtable slot to use
+	 * @param key key to look for
+	 * @return slot to use
+	 */
 	public int hashFindSlot(LuaValue key) {		
 		int i = ( key.hashCode() & 0x7FFFFFFF ) % hashKeys.length;
 		
@@ -437,6 +550,10 @@ public class LuaTable extends LuaValue {
 		}
 	}
 	
+	/**
+	 * Clear a particular slot in the table
+	 * @param i slot to clear.
+	 */
 	protected void hashClearSlot( int i ) {
 		if ( hashKeys[ i ] != null ) {
 			
@@ -497,6 +614,9 @@ public class LuaTable extends LuaValue {
 	//
 	// Only sorts the contiguous array part. 
 	//
+	/** Sort the table using a comparator.
+	 * @param comparator {@link LuaValue} to be called to compare elements.
+	 */
 	public void sort(LuaValue comparator) {
 		int n = array.length;
 		while ( n > 0 && array[n-1] == null )
@@ -550,7 +670,9 @@ public class LuaTable extends LuaValue {
 	}
 	
 	/** This may be deprecated in a future release.  
-	 * It is recommended to count via iteration over next() instead */
+	 * It is recommended to count via iteration over next() instead
+	 * @return count of keys in the table 
+	 * */
 	public int keyCount() {
 		LuaValue k = LuaValue.NIL;
 		for ( int i=0; true; i++ ) {
@@ -561,7 +683,9 @@ public class LuaTable extends LuaValue {
 	}
 	
 	/** This may be deprecated in a future release.  
-	 * It is recommended to use next() instead */
+	 * It is recommended to use next() instead 
+	 * @return array of keys in the table 
+	 * */
 	public LuaValue[] keys() {
 		Vector l = new Vector();
 		LuaValue k = LuaValue.NIL;

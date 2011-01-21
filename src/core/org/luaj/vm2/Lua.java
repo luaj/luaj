@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,10 @@ package org.luaj.vm2;
 
 
 /**
- * Constants for lua limits and opcodes
+ * Constants for lua limits and opcodes. 
+ * <p>
+ * This is a direct translation of C lua distribution header file constants
+ * for bytecode creation and processing.  
  */
 public class Lua {
 	/** version is supplied by ant build task */

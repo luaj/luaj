@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -25,17 +25,25 @@ import org.luaj.vm2.lib.DebugLib;
 
 /**
  * RuntimeException that is thrown and caught in response to a lua error. 
- * This error does not indicate any problem with the normal functioning 
- * of the Lua VM, but rather indicates that the lua script being interpreted
- * has encountered a lua error, eigher via LuaState.error() or lua error() calls. 
- *  
+ * <p>
+ * {@link LuaError} is used wherever a lua call to {@code error()} 
+ * would be used within a script.
+ * <p>
+ * Since it is an unchecked exception inheriting from {@link RuntimeException},
+ * Java method signatures do notdeclare this exception, althoug it can 
+ * be thrown on almost any luaj Java operation.
+ * This is analagous to the fact that any lua script can throw a lua error at any time.
+ * <p>   
  */
 public class LuaError extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
 	private String traceback;
 
-	/** Run the error hook if there is one */
+	/**
+	 *  Run the error hook if there is one
+	 *  @param msg the message to use in error hook processing. 
+	 * */
 	private static String errorHook(String msg) {
 		LuaThread thread = LuaThread.getRunning();
 		if ( thread.err != null ) { 
@@ -54,11 +62,10 @@ public class LuaError extends RuntimeException {
 	
 	private Throwable cause;
 	
-	/**
-	 * Construct a LuaErrorException in response to a Throwable that was caught
-	 * indicating a problem with the VM rather than the lua code.
-	 *  
-	 * All errors generated from lua code should throw LuaError(String) instead. 
+	/** Construct LuaError when a program exception occurs. 
+	 * <p> 
+	 * All errors generated from lua code should throw LuaError(String) instead.
+	 * @param cause the Throwable that caused the error, if known.  
 	 */
 	public LuaError(Throwable cause) {
 		super( errorHook( addFileLine( "vm error: "+cause ) ) );
@@ -67,8 +74,7 @@ public class LuaError extends RuntimeException {
 	}
 
 	/**
-	 * Construct a LuaError with a specific message indicating a problem 
-	 * within the lua code itself such as an argument type error.
+	 * Construct a LuaError with a specific message.  
 	 *  
 	 * @param message message to supply
 	 */
@@ -78,6 +84,7 @@ public class LuaError extends RuntimeException {
 	}		
 
 	/**
+	 * Construct a LuaError with a message, and level to draw line number information from.
 	 * @param message message to supply
 	 * @param level where to supply line info from in call stack
 	 */
@@ -86,7 +93,11 @@ public class LuaError extends RuntimeException {
 		this.traceback = DebugLib.traceback(1);
 	}	
 
-	/** Add file and line info to a message at a particular level */
+	/** 
+	 * Add file and line info to a message at a particular level 
+	 * @param message the String message to use
+	 * @param level where to supply line info from in call stack
+	 * */
 	private static String addFileLine( String message, int level ) {
 		if ( message == null ) return null;
 		if ( level == 0 ) return message;
@@ -94,19 +105,15 @@ public class LuaError extends RuntimeException {
 		return fileline!=null? fileline+": "+message: message;		
 	}
 
-	/** Add file and line info for the nearest enclosing closure */
+	/** Add file and line info for the nearest enclosing closure
+	 * @param message the String message to use
+	 * */
 	private static String addFileLine( String message ) {
 		if ( message == null ) return null;
 		String fileline = DebugLib.fileline();
 		return fileline!=null? fileline+": "+message: message;		
 	}
 	
-//	/** Get the message, including source line info if there is any */
-//	public String getMessage() {		
-//		String msg = super.getMessage();
-//		return msg!=null && traceback!=null? traceback+": "+msg: msg;
-//	}
-
 	/** Print the message and stack trace */
 	public void printStackTrace() {
 		System.out.println( toString() );

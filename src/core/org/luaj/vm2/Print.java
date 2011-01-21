@@ -24,6 +24,11 @@ package org.luaj.vm2;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+/**
+ * Debug helper class to pretty-print lua bytecodes. 
+ * @see Prototype
+ * @see LuaClosure 
+ */
 public class Print extends Lua {
 
 	/** opcode names */
@@ -131,6 +136,10 @@ public class Print extends Lua {
 		printValue( ps, f.k[i] );
 	}
 
+	/** 
+	 * Print the code in a prototype
+	 * @param f the {@link Prototype}
+	 */
 	public static void printCode(Prototype f) {
 		int[] code = f.code;
 		int pc, n = code.length;
@@ -140,10 +149,21 @@ public class Print extends Lua {
 		}
 	}
 
+	/** 
+	 * Print an opcode in a prototype
+	 * @param f the {@link Prototype}
+	 * @param pc the program counter to look up and print
+	 */
 	public static void printOpCode(Prototype f, int pc) {
 		printOpCode(ps,f,pc);
 	}
 	
+	/** 
+	 * Print an opcode in a prototype
+	 * @param ps the {@link PrintStream} to print to
+	 * @param f the {@link Prototype}
+	 * @param pc the program counter to look up and print
+	 */
 	public static void printOpCode(PrintStream ps, Prototype f, int pc) {
 		int[] code = f.code;
 		int i = code[pc];
@@ -334,7 +354,15 @@ public class Print extends Lua {
 		if ( !b ) 
 			throw new NullPointerException("_assert failed");
 	}
-	
+
+	/**
+	 * Print the state of a {@link LuaClosure} that is being executed
+	 * @param cl the {@link LuaClosure} 
+	 * @param pc the program counter
+	 * @param stack the stack of {@link LuaValue}
+	 * @param top the top of the stack
+	 * @param varargs any {@link Varargs} value that may apply
+	 */
 	public static void printState(LuaClosure cl, int pc, LuaValue[] stack, int top, Varargs varargs) {
 		// print opcode into buffer
 		PrintStream previous = ps;

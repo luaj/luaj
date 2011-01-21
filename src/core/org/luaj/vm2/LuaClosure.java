@@ -21,8 +21,74 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.luaj.vm2.LoadState.LuaCompiler;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.DebugLib;
 
+/**
+ * Extension of {@link LuaFunction} which executes lua bytecode. 
+ * <p>
+ * A {@link LuaClosure} is a combination of a {@link Prototype} 
+ * and a {@link LuaValue} to use as an environment for execution. 
+ * <p>
+ * There are three main ways {@link LuaClosure} instances are created:
+ * <ul> 
+ * <li>Construct an instance using {@link #LuaClosure(Prototype, LuaValue)}</li>
+ * <li>Construct it indirectly by loading a chunk via {@link LuaCompiler#load(java.io.InputStream, String, LuaValue)}
+ * <li>Execute the lua bytecode {@link Lua#OP_CLOSURE} as part of bytecode processing
+ * </ul>
+ * <p>
+ * To construct it directly, the {@link Prototype} is typically created via a compiler such as {@link LuaC}:
+ * <pre> {@code
+ * InputStream is = new ByteArrayInputStream("print('hello,world').getBytes());
+ * Prototype p = LuaC.instance.compile(is, "script");
+ * LuaValue _G = JsePlatform.standardGlobals()
+ * LuaClosure f = new LuaClosure(p, _G);
+ * }</pre> 
+ * <p>
+ * To construct it indirectly, the {@link LuaC} compiler may be used, 
+ * which implements the {@link LuaCompiler} interface: 
+ * <pre> {@code
+ * LuaFunction f = LuaC.instance.load(is, "script", _G);
+ * }</pre>
+ * <p>
+ * Typically, a closure that has just been loaded needs to be initialized by executing it, 
+ * and its return value can be saved if needed:
+ * <pre> {@code
+ * LuaValue r = f.call();
+ * _G.set( "mypkg", r ) 
+ * }</pre>
+ * <p> 
+ * In the preceding, the loaded value is typed as {@link LuaFunction} 
+ * to allow for the possibility of other compilers such as {@link LuaJC}
+ * producing {@link LuaFunction} directly without 
+ * creating a {@link Prototype} or {@link LuaClosure}.
+ * <p> 
+ * Since a {@link LuaClosure} is a {@link LuaFunction} which is a {@link LuaValue}, 
+ * all the value operations can be used directly such as:
+ * <ul>
+ * <li>{@link LuaValue#setfenv(LuaValue)}</li>
+ * <li>{@link LuaValue#call()}</li>
+ * <li>{@link LuaValue#call(LuaValue)}</li>
+ * <li>{@link LuaValue#invoke()}</li>
+ * <li>{@link LuaValue#invoke(Varargs)}</li>
+ * <li>{@link LuaValue#method(String)}</li>
+ * <li>{@link LuaValue#method(String,LuaValue)}</li>
+ * <li>{@link LuaValue#invokemethod(String)}</li>
+ * <li>{@link LuaValue#invokemethod(String,Varargs)}</li>
+ * <li> ...</li> 
+ * </ul>
+ * @see LuaValue
+ * @see LuaFunction
+ * @see LuaValue#isclosure()
+ * @see LuaValue#checkclosure()
+ * @see LuaValue#optclosure(LuaClosure)
+ * @see LoadState
+ * @see LoadState#compiler
+ */
 public class LuaClosure extends LuaFunction {
 	private static final UpValue[] NOUPVALUES = new UpValue[0];
 	

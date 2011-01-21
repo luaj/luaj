@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -31,12 +32,44 @@ import java.util.Hashtable;
 import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.StringLib;
 
+/**
+ * Subclass of {@link LuaValue} for representing lua strings. 
+ * <p>
+ * Because lua string values are more nearly sequences of bytes than 
+ * sequences of characters or unicode code points, the {@link LuaString}
+ * implementation holds the string value in an internal byte array.  
+ * <p>
+ * {@link LuaString} values are generally not mutable once constructed, 
+ * so multiple {@link LuaString} values can chare a single byte array.
+ * <p>
+ * Currently {@link LuaString}s are pooled via a centrally managed weak table.
+ * To ensure that as many string values as possible take advantage of this, 
+ * Constructors are not exposed directly.  As with number, booleans, and nil, 
+ * instance construction should be via {@link LuaValue#valueOf(byte[])} or similar API.
+ * <p>
+ * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed. 
+ * The functions 
+ * {@link LuaString#lengthAsUtf8(char[]),
+ * {@link LuaString#encodeToUtf8(char[], byte[], int)}, and 
+ * {@link LuaString#decodeAsUtf8(byte[], int, int) 
+ * are used to convert back and forth between UTF8 byte arrays and character arrays.
+ * 
+ * @see LuaValue
+ * @see LuaValue#valueOf(String)
+ * @see LuaValue#valueOf(byte[])
+ */
 public class LuaString extends LuaValue {
 
+	/** The singleton instance representing lua {@code true} */
 	public static LuaValue s_metatable;
 
+	/** The bytes for the string */
 	public final byte[] m_bytes;
+	
+	/** The offset into the byte array, 0 means start at the first byte */
 	public final int    m_offset;
+	
+	/** The number of bytes that comprise this string */
 	public final int    m_length;
 
 	private static final Hashtable index_java = new Hashtable();
@@ -49,7 +82,13 @@ public class LuaString extends LuaValue {
 	private final static void index_set(Hashtable indextable, Object key, LuaString value) {
 		indextable.put(key, new WeakReference(value));
 	}
-	
+
+	/**
+	 * Get a {@link LuaString} instance whose bytes match 
+	 * the supplied Java String using the UTF8 encoding. 
+	 * @param string Java String containing characters to encode as UTF8
+	 * @return {@link LuaString} with UTF8 bytes corresponding to the supplied String
+	 */
 	public static LuaString valueOf(String string) {
 		LuaString s = index_get( index_java, string );
 		if ( s != null ) return s;
@@ -60,11 +99,29 @@ public class LuaString extends LuaValue {
 		index_set( index_java, string, s );
 		return s;
 	}
-	
+
+	// TODO: should this be deprecated or made private?
+	/** Construct a {@link LuaString} around a byte array without copying the contents.
+	 * <p>
+	 * The array is used directly after this is called, so clients must not change contents.
+	 * <p>
+	 * @param bytes byte buffer
+	 * @param off offset into the byte buffer
+	 * @param len length of the byte buffer
+	 * @return {@link LuaString} wrapping the byte buffer
+	 */
 	public static LuaString valueOf(byte[] bytes, int off, int len) { 
 		return new LuaString(bytes, off, len);
 	}
 	
+	/** Construct a {@link LuaString} using the supplied characters as byte values.
+	 * <p>
+	 * Only th elow-order 8-bits of each character are used, the remainder is ignored. 
+	 * <p>
+	 * This is most useful for constructing byte sequences that do not conform to UTF8. 
+	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array. 
+	 * @return {@link LuaString} wrapping a copy of the byte buffer 
+	 */
 	public static LuaString valueOf(char[] bytes) {
 		int n = bytes.length;
 		byte[] b = new byte[n];
@@ -73,10 +130,27 @@ public class LuaString extends LuaValue {
 		return valueOf(b, 0, n);
 	}
 	
+	
+	/** Construct a {@link LuaString} around a byte array without copying the contents.
+	 * <p>
+	 * The array is used directly after this is called, so clients must not change contents.
+	 * <p>
+	 * @param bytes byte buffer
+	 * @return {@link LuaString} wrapping the byte buffer
+	 */
 	public static LuaString valueOf(byte[] bytes) {
 		return valueOf(bytes, 0, bytes.length);
 	}
 	
+	/** Construct a {@link LuaString} around a byte array without copying the contents.
+	 * <p>
+	 * The array is used directly after this is called, so clients must not change contents.
+	 * <p>
+	 * @param bytes byte buffer
+	 * @param offset offset into the byte buffer
+	 * @param length length of the byte buffer
+	 * @return {@link LuaString} wrapping the byte buffer
+	 */
 	private LuaString(byte[] bytes, int offset, int length) {
 		this.m_bytes = bytes;
 		this.m_offset = offset;
@@ -364,18 +438,29 @@ public class LuaString extends LuaValue {
 		return this;
 	}
 	
+	/** Convert value to an input stream.
+	 * 
+	 * @return {@link InputStream} whose data matches the bytes in this {@link LuaString}
+	 */
 	public InputStream toInputStream() {
 		return new ByteArrayInputStream(m_bytes, m_offset, m_length);
 	}
 	
 	/**
-	 * Copy the bytes of the string into the given byte array.
+	 * Copy the bytes of the string into the given byte array. 
+	 * @param strOffset offset from which to copy
+	 * @param bytes destination byte array
+	 * @param arrayOffset offset in destination
+	 * @param len number of bytes to copy
 	 */
 	public void copyInto( int strOffset, byte[] bytes, int arrayOffset, int len ) {
 		System.arraycopy( m_bytes, m_offset+strOffset, bytes, arrayOffset, len );
 	}
 	
-	/** Java version of strpbrk, which is a terribly named C function. */
+	/** Java version of strpbrk - find index of any byte that in an accept string.
+	 * @param accept {@link LuaString} containing characters to look for.
+	 * @return index of first match in the {@code accept} string, or -1 if not found.
+	 */
 	public int indexOfAny( LuaString accept ) {
 		final int ilimit = m_offset + m_length;
 		final int jlimit = accept.m_offset + accept.m_length;
@@ -389,6 +474,12 @@ public class LuaString extends LuaValue {
 		return -1;
 	}
 	
+	/**
+	 * Find the index of a byte starting at a point in this string
+	 * @param b the byte to look for
+	 * @param start the first index in the string
+	 * @return index of first match found, or -1 if not found.
+	 */
 	public int indexOf( byte b, int start ) {
 		for ( int i=0, j=m_offset+start; i < m_length; ++i ) {
 			if ( m_bytes[j++] == b )
@@ -397,6 +488,12 @@ public class LuaString extends LuaValue {
 		return -1;
 	}
 	
+	/**
+	 * Find the index of a string starting at a point in this string
+	 * @param s the string to search for
+	 * @param start the first index in the string
+	 * @return index of first match found, or -1 if not found.
+	 */
 	public int indexOf( LuaString s, int start ) {
 		final int slen = s.length();
 		final int limit = m_offset + m_length - slen;
@@ -408,6 +505,11 @@ public class LuaString extends LuaValue {
 		return -1;
 	}
 	
+	/**
+	 * Find the last index of a string in this string
+	 * @param s the string to search for
+	 * @return index of last match found, or -1 if not found.
+	 */
 	public int lastIndexOf( LuaString s ) {
 		final int slen = s.length();
 		final int limit = m_offset + m_length - slen;
@@ -419,10 +521,17 @@ public class LuaString extends LuaValue {
 		return -1;
 	}
 
-	// --------------------- utf8 conversion -------------------------
-	
+
 	/**
-	 * Convert to Java String interpreting as utf8 characters 
+	 * Convert to Java String interpreting as utf8 characters. 
+	 * 
+	 * @param bytes byte array in UTF8 encoding to convert
+	 * @param offset starting index in byte array
+	 * @param length number of bytes to convert
+	 * @return Java String corresponding to the value of bytes interpreted using UTF8 
+	 * @see #lengthAsUtf8(char[])
+	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #isValidUtf8()
 	 */
 	public static String decodeAsUtf8(byte[] bytes, int offset, int length) {
 		int i,j,n,b;
@@ -444,6 +553,11 @@ public class LuaString extends LuaValue {
 	
 	/**
 	 * Count the number of bytes required to encode the string as UTF-8.
+	 * @param chars Array of unicode characters to be encoded as UTF-8
+	 * @return count of bytes needed to encode using UTF-8
+	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #decodeAsUtf8(byte[], int, int)
+	 * @see #isValidUtf8()
 	 */
 	public static int lengthAsUtf8(char[] chars) {		
 		int i,b;
@@ -456,8 +570,16 @@ public class LuaString extends LuaValue {
 	
 	/**
 	 * Encode the given Java string as UTF-8 bytes, writing the result to bytes
-	 * starting at offset. The string should be measured first with lengthAsUtf8
+	 * starting at offset. 
+	 * <p>
+	 * The string should be measured first with lengthAsUtf8
 	 * to make sure the given byte array is large enough.
+	 * @param chars Array of unicode characters to be encoded as UTF-8
+	 * @param bytes byte array to hold the result
+	 * @param off offset into the byte array to start writing
+	 * @see #lengthAsUtf8(char[])
+	 * @see #decodeAsUtf8(byte[], int, int)
+	 * @see #isValidUtf8()
 	 */
 	public static void encodeToUtf8(char[] chars, byte[] bytes, int off) {
 		final int n = chars.length;
@@ -476,6 +598,12 @@ public class LuaString extends LuaValue {
 		}
 	}
 
+	/** Check that a byte sequence is valid UTF-8
+	 * @return true if it is valid UTF-8, otherwise false
+	 * @see #lengthAsUtf8(char[])
+	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #decodeAsUtf8(byte[], int, int)
+	 */
 	public boolean isValidUtf8() {
 		int i,j,n,b,e=0;
 		for ( i=m_offset,j=m_offset+m_length,n=0; i<j; ++n ) {
@@ -497,7 +625,9 @@ public class LuaString extends LuaValue {
 	
 	/** 
 	 * convert to a number using a supplied base, or NIL if it can't be converted
-	 * @return IntValue, DoubleValue, or NIL depending on the content of the string. 
+	 * @param base the base to use, such as 10
+	 * @return IntValue, DoubleValue, or NIL depending on the content of the string.
+	 * @see LuaValue#tonumber() 
 	 */
 	public LuaValue tonumber( int base ) {
 		double d = scannumber( base );
@@ -506,6 +636,8 @@ public class LuaString extends LuaValue {
 	
 	/** 
 	 * Convert to a number in a base, or return Double.NaN if not a number.
+	 * @param base the base to use, such as 10
+	 * @return double value if conversion is valid, or Double.NaN if not 
 	 */
 	public double scannumber( int base ) {
 		if ( base >= 2 && base <= 36 ) {
@@ -527,7 +659,11 @@ public class LuaString extends LuaValue {
 	
 	/**
 	 * Scan and convert a long value, or return Double.NaN if not found.
-	 * @return DoubleValue, IntValue, or Double.NaN depending on what is found.
+	 * @param base the base to use, such as 10
+	 * @param start the index to start searching from
+	 * @param end the first index beyond the search range
+	 * @return double value if conversion is valid, 
+	 * or Double.NaN if not
 	 */
 	private double scanlong( int base, int start, int end ) {
 		long x = 0;
@@ -544,7 +680,10 @@ public class LuaString extends LuaValue {
 	
 	/**
 	 * Scan and convert a double value, or return Double.NaN if not a double.
-	 * @return DoubleValue, IntValue, or Double.NaN depending on what is found.
+	 * @param start the index to start searching from
+	 * @param end the first index beyond the search range
+	 * @return double value if conversion is valid, 
+	 * or Double.NaN if not
 	 */
 	private double scandouble(int start, int end) {
 		if ( end>start+64 ) end=start+64;
