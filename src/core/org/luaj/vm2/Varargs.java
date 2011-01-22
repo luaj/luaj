@@ -37,13 +37,13 @@ package org.luaj.vm2;
  * such as  {@code LuaValue.varargsOf(LuaValue,Varargs)}
  * or by taking a portion of the args using {@code Varargs.subargs(int start)}
  * <p>
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue[])
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue, Varargs)
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue[], Varargs)
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue, LuaValue, Varargs)
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue[], int, int)
- * @see org.luaj.vm2.LuaValue#varargsOf(LuaValue[], int, int, Varargs)
- * @see org.luaj.vm2.LuaValue#subargs(int)
+ * @see LuaValue#varargsOf(LuaValue[])
+ * @see LuaValue#varargsOf(LuaValue, Varargs)
+ * @see LuaValue#varargsOf(LuaValue[], Varargs)
+ * @see LuaValue#varargsOf(LuaValue, LuaValue, Varargs)
+ * @see LuaValue#varargsOf(LuaValue[], int, int)
+ * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
+ * @see LuaValue#subargs(int)
  */
 public abstract class Varargs {
 

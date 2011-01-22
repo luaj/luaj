@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +30,45 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-
-
+/** 
+ * Abstract base class extending {@link LibFunction} which implements the 
+ * core of the lua standard {@code io} library.   
+ * <p> 
+ * It contains the implementation of the io library support that is common to
+ * the JSE and JME platforms. 
+ * In practice on of the concrete IOLib subclasses is chosen:  
+ * {@link org.luaj.vm2.lib.jse.JseIoLib} for the JSE platform, and 
+ * {@link org.luaj.vm2.lib.jme.JmeIoLib} for the JME platform.
+ * <p>
+ * The JSE implementation conforms almost completely to the C-based lua library, 
+ * while the JME implementation follows closely except in the area of random-access files, 
+ * which are difficult to support properly on JME. 
+ * <p> 
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * _G.load(new JseIoLib());
+ * LuaThread.setGlobals(_G);
+ * _G.load(new JseBaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new JseIoLib());
+ * _G.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see JseIoLib
+ * @see JmeIoLib
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
+ */
 abstract 
 public class IoLib extends OneArgFunction {
 

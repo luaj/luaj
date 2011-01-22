@@ -24,13 +24,39 @@ package org.luaj.vm2.lib;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
+/** Abstract base class for Java function implementations that take two arguments and 
+ * return one value. 
+ * <p>
+ * Subclasses need only implement {@link LuaValue#call(LuaValue,LuaValue,LuaValue)} to complete this class, 
+ * simplifying development.  
+ * All other uses of {@link #call()}, {@link #invoke(Varargs)},etc, 
+ * are routed through this method by this class, 
+ * dropping or extending arguments with {@code nil} values as required.
+ * <p>
+ * If more or less than three arguments are required,  
+ * or variable argument or variable return values, 
+ * then use one of the related function
+ * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link TwoArgFunction}, or {@link VarArgFunction}.
+ * <p>
+ * See {@link LibFunction} for more information on implementation libraries and library functions.
+ * @see #call(LuaValue,LuaValue,LuaValue)
+ * @see LibFunction
+ * @see ZeroArgFunction
+ * @see OneArgFunction
+ * @see TwoArgFunction
+ * @see VarArgFunction
+ */
 abstract public class ThreeArgFunction extends LibFunction {
 
 	abstract public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3);
 	
+	/** Default constructor */
 	public ThreeArgFunction() {
 	}
 	
+	/** Constructor with specific environment
+	 * @param env The environment to apply during constructon.
+	 */
 	public ThreeArgFunction( LuaValue env ) {
 		this.env = env;
 	}

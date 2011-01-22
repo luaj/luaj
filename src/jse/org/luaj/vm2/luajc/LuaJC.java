@@ -32,6 +32,30 @@ import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.compiler.LuaC;
 
+/**
+ * Implementation of {@link LuaCompiler} which does direct 
+ * lua-to-java-bytecode compiling. 
+ * <p>
+ * This requires the bcel library to be on the class path to work as expected.  
+ * If the library is not found, the default {@link LuaC} lua-to-lua-bytecode 
+ * compiler will be used.  
+ * <p>
+ * The compiler should be installed as part of globals initialization, 
+ * and before any scripts or lua code is executed. 
+ * A typical example is to install it following the globals creation, 
+ * as in the following:
+ * <pre> {@code
+ * LuaValue _G = JsePlatform.standardGlobals();
+ * LuaJC.install();
+ * LoadState.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
+ * } </pre>
+ * @see LuaCompiler
+ * @see LuaC
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see BaseLib
+ * @see LuaValue
+ */
 public class LuaJC implements LuaCompiler {
 
 	private static final String NON_IDENTIFIER = "[^a-zA-Z0-9_$/.\\-]";

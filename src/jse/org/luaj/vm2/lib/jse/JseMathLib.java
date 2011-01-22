@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,39 @@
 package org.luaj.vm2.lib.jse;
 
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.MathLib;
+import org.luaj.vm2.lib.LibFunction;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
-/**
- * Math library implementation for use on JSE platform.
- * 
- * Implements all "math" functions, including platform-specific
- * overrides for pow() and exp()
+/** 
+ * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
+ * library. 
+ * <p> 
+ * It contains all lua math functions, including those not available on the JME platform.  
+ * See {@link org.luaj.lib.MathLib} for the exception list.  
+ * <p>
+ * Typically, this library is included as part of a call to 
+ * {@link JsePlatform#standardGlobals()} 
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new JseBaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new JseMathLib());
+ * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see JseMathLib
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
 public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	

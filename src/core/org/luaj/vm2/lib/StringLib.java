@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,33 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.DumpState;
 
+/** 
+ * Subclass of {@link LibFunction} which implements the lua standard {@code string} 
+ * library. 
+ * 
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new StringLib());
+ * System.out.println( _G.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This is a direct port of the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
+ */
 public class StringLib extends OneArgFunction {
 
 	public static LuaTable instance;

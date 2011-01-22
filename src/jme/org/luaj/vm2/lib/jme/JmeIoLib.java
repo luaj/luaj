@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,41 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 
 import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.IoLib;
+import org.luaj.vm2.lib.LibFunction;
 
-/**
- * Implementation of the lua io library based on CLDC 1.0 and StreamConnection.
- * 
- * Seek is not supported. 
+/** 
+ * Subclass of {@link IoLib} and therefore {@link LibFunction} which implements the lua standard {@code io} 
+ * library for the JSE platform. 
+ * <p> 
+ * The implementation of the is based on CLDC 1.0 and StreamConnection.
+ * However, seek is not supported. 
+ * <p>
+ * Typically, this library is included as part of a call to 
+ * {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new JmeIoLib());
+ * _G.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see IoLib
+ * @see JseIoLib
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
 public class JmeIoLib extends IoLib {
 	

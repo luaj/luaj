@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,11 @@ import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 
-
+/**
+ * Helper class to coerce values from Java to lua within the luajava library. 
+ * 
+ * @see LuajavaLib
+ */
 public class CoerceJavaToLua {
 	
 	public static interface Coercion { 

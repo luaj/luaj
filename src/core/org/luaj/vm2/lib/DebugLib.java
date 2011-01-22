@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,34 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 
+/** 
+ * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
+ * library. 
+ * <p> 
+ * The debug library in luaj tries to emulate the behavior of the corresponding C-based lua library.
+ * To do this, it must maintain a separate stack of calls to {@link LuaClosure} and {@link LibFunction} 
+ * instances.  
+ * Especially when lua-to-java bytecode compiling is being used
+ * via a {@link LuaCompiler} such as {@link LuaJC}, 
+ * this cannot be done in all cases.  
+ * <p> 
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#debugGlobals()} or {@link JmePlatform#debugGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * _G.load(new DebugLib());
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.9">http://www.lua.org/manual/5.1/manual.html#5.9</a>
+ */
 public class DebugLib extends VarArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));

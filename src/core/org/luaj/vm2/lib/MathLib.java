@@ -29,11 +29,50 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /** 
- * Base math library with JME support.  
- * 
- * For j2se support use org.luaj.lib.j2se.MathLib
- * 
- * @see org.luaj.vm2.lib.jse.JseMathLib
+ * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
+ * library. 
+ * <p> 
+ * It contains only the math library support that is possible on JME.  
+ * For a more complete implementation based on math functions specific to JSE 
+ * use {@link org.luaj.vm2.lib.jse.JseMathLib}. 
+ * In Particular the following math functions are <b>not</b> implemented by this library:
+ * <ul>
+ * <li>acos</li>
+ * <li>asin</li>
+ * <li>atan</li>
+ * <li>cosh</li>
+ * <li>log</li>
+ * <li>log10</li>
+ * <li>sinh</li>
+ * <li>tanh</li>
+ * <li>atan2</li>
+ * </ul>
+ * <p>
+ * The implementations of {@code exp()} and {@code pow()} are constructed by 
+ * hand for JME, so will be slower and less accurate than when executed on the JSE platform.
+ * <p> 
+ * Typically, this library is included as part of a call to either 
+ * {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new MathLib());
+ * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see JseMathLib
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
 public class MathLib extends OneArgFunction {
 	

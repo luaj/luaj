@@ -36,7 +36,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LoadState.LuaCompiler;
 
-
 /**
  * Compiler for Lua.
  * <p>
@@ -49,6 +48,20 @@ import org.luaj.vm2.LoadState.LuaCompiler;
  * initialized chunks, which is an interface common to 
  * lua bytecode compiling and java bytecode compiling. 
  * <p> 
+ * Teh {@link LuaC} compiler is installed by default by both the 
+ * {@link JsePlatform} and {@link JmePlatform} classes, 
+ * so in the following example, the default {@link LuaC} compiler 
+ * will be used:
+ * <pre> {@code
+ * LuaValue _G = JsePlatform.standardGlobals();
+ * LoadState.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
+ * } </pre>
+ * @see LuaCompiler
+ * @see LuaJC
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see BaseLib
+ * @see LuaValue
  * @see LuaCompiler
  * @see Prototype
  */

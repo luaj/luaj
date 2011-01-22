@@ -28,6 +28,7 @@ package org.luaj.vm2;
  * and {@link LuaDouble} which holds all other number values.
  * @see LuaInteger
  * @see LuaDouble
+ * @see LuaValue
  * 
  */
 abstract

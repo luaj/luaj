@@ -25,14 +25,44 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+
 /**
-* Class to manage loading of {@link Prototype} instances. 
+* Class to manage loading of {@link Prototype} instances.
 * <p>
+* The {@link LoadState} class exposes one main function, 
+* namely {@link #load(InputStream, String, LuaValue)}, 
+* to be used to load code from a particular input stream.  
+* <p>
+* A simple pattern for loading and executing code is
+* <pre> {@code
+* LuaValue _G = JsePlatform.standardGlobals();
+* LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
+* } </pre>
+* This should work regardless of which {@link LuaCompiler}
+* has been installed.
+* <p>
+*  
+* Prior to loading code, a compiler should be installed. 
+* <p>
+* By default, when using {@link JsePlatform} or {@JmePlatform}
+* to construct globals, the {@link LuaC} compiler is installed. 
+* <p>
+* To override the default compiler with, say, the {@link LuaJC}
+* lua-to-java bytecode compiler, install it before loading, 
+* for example:
+* <pre> {@code
+* LuaValue _G = JsePlatform.standardGlobals();
+* LuaJC.install();
+* LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
+* } </pre>
+* 
 * @see LuaCompiler
 * @see LuaClosure
 * @see LuaFunction
 * @see LoadState#compiler
 * @see LoadState#load(InputStream, String, LuaValue)
+* @see LuaC
+* @see LuaJC
 */
 public class LoadState {
 	

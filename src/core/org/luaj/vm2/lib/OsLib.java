@@ -28,23 +28,49 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /**
- * Base implementation of OsLib, with simplified stub functions
+ * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
+ * <p>
+ * It is a usable base with simplified stub functions
  * for library functions that cannot be implemented uniformly 
  * on Jse and Jme.   
- * 
  * <p>
  * This can be installed as-is on either platform, or extended 
  * and refined to be used in a complete Jse implementation.
- * 
- * <p>Contains limited implementations of features not supported well on Jme:
- * <bl>
- * <li>execute()</li>
- * <li>remove()</li>
- * <li>rename()</li>
- * <li>tmpname()</li>
- * </bl>
- *
- * @see org.luaj.vm2.lib.jse.JseOsLib
+ * <p>
+ * Because the nature of the {@code os} library is to encapsulate 
+ * os-specific features, the behavior of these functions varies considerably 
+ * from their counterparts in the C platform.  
+ * <p>
+ * The following functions have limited implementations of features 
+ * that are not supported well on Jme:
+ * <ul>
+ * <li>{@code execute()}</li>
+ * <li>{@code remove()}</li>
+ * <li>{@code rename()}</li>
+ * <li>{@code tmpname()}</li>
+ * </ul>
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new OsLib());
+ * System.out.println( _G.get("os").get("time").call() );
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+  * @see LibFunction
+ * @see JseOsLib
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
 public class OsLib extends VarArgFunction {
 	public static String TMP_PREFIX    = ".luaj";

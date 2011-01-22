@@ -23,10 +23,38 @@ package org.luaj.vm2;
 
 import org.luaj.vm2.lib.DebugLib;
 
-
-
 /** 
- * Implementation of lua coroutines using Java Threads
+ * Subclass of {@link LuaValue} that implements 
+ * a lua coroutine thread using Java Threads.
+ * <p>
+ * A LuaThread is typically created in response to a scripted call to 
+ * {@code coroutine.create()}
+ * <p>
+ * The threads must be initialized with the globals, so that 
+ * the global environment may be passed along according to rules of lua. 
+ * This is done via a call to {@link #setGlobals(LuaValue)} 
+ * at some point during globals initialization.
+ * See {@link BaseLib} for additional documentation and example code.  
+ * <p> 
+ * The utility classes {@link JsePlatform} and {@link JmePlatform} 
+ * see to it that this initialization is done properly.  
+ * For this reason it is highly recommended to use one of these classes
+ * when initializing globals. 
+ * <p>
+ * The behavior of coroutine threads matches closely the behavior 
+ * of C coroutine library.  However, because of the use of Java threads 
+ * to manage call state, it is possible to yield from anywhere in luaj. 
+ * On the other hand, if a {@link LuaThread} is created, then yields 
+ * without ever entering a completed state, then the garbage collector 
+ * may not be able to determine that the thread needs to be collected, 
+ * and this could cause a memory and resource leak.  It is recommended
+ * that all coroutines that are created are resumed until they are in 
+ * a completed state. 
+ *   
+ * @see LuaValue
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see CoroutineLib
  */
 public class LuaThread extends LuaValue implements Runnable {
 	
@@ -68,6 +96,11 @@ public class LuaThread extends LuaValue implements Runnable {
 	LuaThread() {		
 	}
 	
+	/** 
+	 * Create a LuaThread around a function and environment
+	 * @param func The function to execute
+	 * @param env The environment to apply to the thread
+	 */
 	public LuaThread(LuaValue func, LuaValue env) {	
 		this.env = env;
 		this.func = func;
@@ -109,37 +142,66 @@ public class LuaThread extends LuaValue implements Runnable {
 		return STATUS_NAMES[status];
 	}
 
+	/**
+	 * Get the currently running thread. 
+	 * @return {@link LuaThread} that is currenly running
+	 */
 	public static LuaThread getRunning() {
 		return running_thread;
 	}
 	
+	/**
+	 * Test if this is the main thread 
+	 * @return true if this is the main thread
+	 */
 	public static boolean isMainThread(LuaThread r) {		
 		return r == mainthread;
 	}
 	
-	/** Set the globals of the current thread */
+	/** 
+	 * Set the globals of the current thread.
+	 * <p>
+	 * This must be done once before any other code executes.
+	 * @param globals The global variables for the main ghread. 
+	 */
 	public static void setGlobals(LuaValue globals) {
 		running_thread.env = globals;
 	}
 	
-	/** Get the current thread's environment */
+	/** Get the current thread's environment 
+	 * @return {@link LuaValue} containing the global variables of the current thread.
+	 */
 	public static LuaValue getGlobals() {
 		LuaValue e = running_thread.env;
 		return e!=null? e: LuaValue.error("LuaThread.setGlobals() not initialized");
 	}
-	
+
+	/**
+	 * Callback used at the beginning of a call
+	 * @param function Function being called
+	 * @see DebugLib
+	 */
 	public static final void onCall(LuaFunction function) {
 		running_thread.callstack[running_thread.calls++] = function;
 		if (DebugLib.DEBUG_ENABLED) 
 			DebugLib.debugOnCall(running_thread, running_thread.calls, function);
 	}
 	
+	/**
+	 * Callback used at the end of a call
+	 * @see DebugLib
+	 */
 	public static final void onReturn() {
 		running_thread.callstack[--running_thread.calls] = null;
 		if (DebugLib.DEBUG_ENABLED) 
 			DebugLib.debugOnReturn(running_thread, running_thread.calls);
 	}
 
+	/**
+	 * Get number of calls in stack
+	 * @return number of calls in current call stack
+	 * @see DebugLib
+	 */
 	public static int getCallstackDepth() {
 		return running_thread.calls;
 	}
@@ -170,6 +232,11 @@ public class LuaThread extends LuaValue implements Runnable {
 		}
 	}
 	
+	/** Yield this thread with arguments 
+	 * 
+	 * @param args The arguments to send as return values to {@link #resume(Varargs)}
+	 * @return {@link Varargs} provided as arguments to {@link #resume(Varargs)}
+	 */
 	public Varargs yield(Varargs args) {
 		synchronized ( this ) {
 			if ( status != STATUS_RUNNING )
@@ -189,7 +256,11 @@ public class LuaThread extends LuaValue implements Runnable {
 		}
 	}
 
-	/** Start or resume this thread */
+	/** Start or resume this thread 
+	 * 
+	 * @param args The arguments to send as return values to {@link #yield(Varargs)}
+	 * @return {@link Varargs} provided as arguments to {@link #yield(Varargs)}
+	 */
 	public Varargs resume(Varargs args) {
 
 		synchronized ( this ) {

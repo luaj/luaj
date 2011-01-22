@@ -29,22 +29,12 @@ package org.luaj.vm2;
  * This allows Java clients to deal essentially with one type for all Java values, namely {@link LuaValue}.
  * <p>
  * Constructors are provided as static methods for common Java types, such as 
- * {@link LuaValue#valueOf(int)} or {@link LuaValue#valueOf(String)}.  
- * Primarily this is used to encourage instance pooling for small integers or short strings. 
+ * {@link LuaValue#valueOf(int)} or {@link LuaValue#valueOf(String)} 
+ * to allow for instance pooling. 
  * <p> 
  * Constants are defined for the lua values 
- * {@link LuaValue#NIL}, {@link LuaValue#TRUE}, and {@link LuaValue#FALSE}. 
- * A constant {@link LuaValue#NONE} is defined which is a {@link Varargs} list having no values.  
- * Predefined constants exist for the standard lua type constants 
- * {@link TNIL}, {@link TBOOLEAN}, {@link TLIGHTUSERDATA}, {@link TNUMBER}, {@link TSTRING}, 
- * {@link TTABLE}, {@link TFUNCTION}, {@link TUSERDATA}, {@link TTHREAD},
- * extended lua type constants 
- * {@link TINT}, {@link TNONE}, {@link TVALUE},
- * as well as for the  metatags  
- * {@link INDEX}, {@link NEWINDEX}, {@link CALL}, {@link MODE}, {@link METATABLE},   
- * {@link ADD}, {@link SUB}, {@link DIV}, {@link MUL}, {@link POW},   
- * {@link MOD}, {@link UNM}, {@link LEN}, {@link EQ}, {@link LT},   
- * {@link LE}, {@link TOSTRING}, {@link CONCAT} as well as 
+ * {@link #NIL}, {@link #TRUE}, and {@link #FALSE}. 
+ * A constant {@link #NONE} is defined which is a {@link Varargs} list having no values.
  * <p> 
  * Operations are performed on values directly via their Java methods.  
  * For example, the following code divides two numbers:
@@ -75,16 +65,47 @@ package org.luaj.vm2;
  * print.call( r.arg(1), r.arg(2) );
  * } </pre>
  * <p>
+ * To load and run a script, {@link LoadState} is used:
+ * <pre> {@code
+ * LoadState.load( new FileInputStream("main.lua"), "main.lua", globals ).call();
+ * } </pre>
+ * <p>
+ * although {@code require} could also be used: 
+ * <pre> {@code
+ * globals.get("require").call(LuaValue.valueOf("main"));
+ * } </pre>
+ * For this to work the file must be in the current directory, or in the class path, 
+ * dependening on the platform.  
+ * See {@link JsePlatform} and {@link JmePlatform} for details. 
+ * <p>
  * In general a {@link LuaError} may be thrown on any operation when the  
  * types supplied to any operation are illegal from a lua perspective. 
  * Examples could be attempting to concatenate a NIL value, or attempting arithmetic 
  * on values that are not number.  
  * <p>
- * When a {@link LuaTable} is required by an api, a table constructor such as {@link tableOf()} 
- * can be used, or the type may be coerced via {@link checktable()} or {@link opttable(LuaValue)}.
- * Constructors exist to create pre-initialized tables such as {@link LuaValue#tableOf(LuaValue[])} 
- * for lists, {@link LuaValue#tableOf(LuaValue[], LuaValue[])} for hashtables, 
- * or {@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)} for mixed tables.   
+ * There are several methods for preinitializing tables, such as:
+ * <ul>
+ * <li>{@link #listOf(LuaValue[])} for unnamed elements</li>
+ * <li>{@link #tableOf(LuaValue[])} for named elements</li>
+ * <li>{@link #tableOf(LuaValue[], LuaValue[], Varargs)} for mixtures</li>
+ * </ul>
+ * <p>  
+ * Predefined constants exist for the standard lua type constants 
+ * {@link TNIL}, {@link TBOOLEAN}, {@link TLIGHTUSERDATA}, {@link TNUMBER}, {@link TSTRING}, 
+ * {@link TTABLE}, {@link TFUNCTION}, {@link TUSERDATA}, {@link TTHREAD},
+ * and extended lua type constants 
+ * {@link TINT}, {@link TNONE}, {@link TVALUE}
+ * <p> 
+ * Predefined constants exist for all strings used as metatags:  
+ * {@link INDEX}, {@link NEWINDEX}, {@link CALL}, {@link MODE}, {@link METATABLE},   
+ * {@link ADD}, {@link SUB}, {@link DIV}, {@link MUL}, {@link POW},   
+ * {@link MOD}, {@link UNM}, {@link LEN}, {@link EQ}, {@link LT},   
+ * {@link LE}, {@link TOSTRING}, and {@link CONCAT}.
+ * 
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see LoadState 
+ * @see Varargs
  */
 abstract
 public class LuaValue extends Varargs {

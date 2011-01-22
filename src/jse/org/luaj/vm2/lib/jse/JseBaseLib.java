@@ -26,16 +26,45 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.BaseLib;
+import org.luaj.vm2.lib.LibFunction;
+import org.luaj.vm2.lib.ResourceFinder;
 
 /** 
- * Base library implementation, targeted for JSE platforms.  
- * 
- * Implements the same library functions as org.luaj.lib.BaseLib, 
- * but looks in the current directory for files loaded via 
- * loadfile(), dofile() and require(). 
- *  
- * @see org.luaj.vm2.lib.jse.JseBaseLib
+ * Subclass of {@link BaseLib} and {@link LibFunction} which implements the lua basic library functions
+ * and provides a directory based {@link ResourceFinder} as the {@link #FINDER}. 
+ * <p>
+ * Since JME has no file system by default, {@link BaseLib} implements 
+ * {@link ResourceFinder} using {@link Class#getResource(String)}. 
+ * The {@link JseBaseLib} implements {@link FINDER} by scanning the current directory
+ * first, then falling back to   {@link Class#getResource(String)} if that fails.
+ * Otherwise, the behavior is the same as that of {@link BaseLib}.  
+ * <p>  
+ * Typically, this library is included as part of a call to 
+ * {@link JsePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new JseBaseLib());
+ * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This is a direct port of the corresponding library in C.
+ * @see BaseLib
+ * @see ResourceFinder
+ * @see #FINDER
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
+
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
 	/** Construct a JSE base library instance */

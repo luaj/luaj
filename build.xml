@@ -5,6 +5,7 @@
 	
 	<property name="jar.name.jme" value="luaj-jme-${version}.jar"/>
 	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
+	<property name="jar.name.jse.sources" value="luaj-jse.sources-${version}.jar"/>
 
 	<import file="wtk.xml"/>
 
@@ -130,6 +131,12 @@
 		</jar>
 	</target>
 
+	<target name="jar-jse-sources" depends="compile">
+		<jar destfile="${jar.name.jse.sources}">
+		    <fileset dir="build/jse/src"/>
+		</jar>
+	</target>
+
 	<target name="doc">
 		<delete dir="docs/api"/>
 		<mkdir dir="docs/api"/>
@@ -190,6 +197,6 @@
 			basedir="build" includes="luaj-${version}/**"/>
 	</target>
 	
-	<target name="all" depends="clean,jar-jme,jar-jse"/>
+	<target name="all" depends="clean,jar-jme,jar-jse,jar-jse-sources"/>
 		
 </project>

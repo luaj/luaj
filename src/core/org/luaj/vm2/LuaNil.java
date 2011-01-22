@@ -34,7 +34,8 @@ package org.luaj.vm2;
  * the recommended approach is to use the method {@link LuaValue#isnil()} 
  * instead.  By using that any ambiguities between 
  * {@link LuaValue#NIL} and {@link LuaValue#NONE} are avoided.
- * 
+ * @see LuaValue
+ * @see LuaValue#NIL
  */
 public class LuaNil extends LuaValue {
 	

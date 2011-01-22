@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2007 LuaJ. All rights reserved.
+* Copyright (c) 2007-2011 LuaJ. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,34 @@ import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
+/** 
+ * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine} 
+ * library. 
+ * <p> 
+ * The coroutine library in luaj has the same behavior as the
+ * coroutine library in C, but is implemented using Java Threads to maintain 
+ * the call state between invocations.  Therefore it can be yielded from anywhere, 
+ * similar to the "Coco" yield-from-anywhere patch available for C-based lua.
+ * However, coroutines that are yielded but never resumed to complete their execution
+ * may not be collected by the garbage collector. 
+ * <p> 
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * _G.load(new CoroutineLib());
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
+ */
 public class CoroutineLib extends VarArgFunction {
 	
 	private static final int INIT    = 0;

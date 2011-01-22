@@ -60,11 +60,14 @@ import java.util.Vector;
  * <ul>
  * <li>{@link LuaValue#tableOf()} empty table</li>
  * <li>{@link LuaValue#tableOf(int, int)} table with capacity</li>
- * <li>{@link LuaValue#tableOf(LuaValue[])} initialize array part</li>
- * <li>{@link LuaValue#tableOf(Varargs, int)} initialize array part</li>
+ * <li>{@link LuaValue#listOf(LuaValue[])} initialize array part</li>
+ * <li>{@link LuaValue#listOf(LuaValue[], Varargs)} initialize array part</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[])} initialize named hash part</li>
+ * <li>{@link LuaValue#tableOf(Varargs, int)} initialize named hash part</li>
  * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[])} initialize array and named parts</li>
  * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)} initialize array and named parts</li>
  * </ul>
+ * @see LuaValue
  */
 public class LuaTable extends LuaValue {
 	private static final int      MIN_HASH_CAPACITY = 2;

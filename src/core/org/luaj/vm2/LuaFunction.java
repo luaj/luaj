@@ -28,6 +28,9 @@ package org.luaj.vm2;
  * all built-in library functions coded in Java, 
  * and {@link LuaClosure}, which represents a lua closure 
  * whose bytecode is interpreted when the function is invoked.    
+ * @see LuaValue
+ * @see LibFunction
+ * @see LuaClosure
  */
 abstract
 public class LuaFunction extends LuaValue {

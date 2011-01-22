@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2010 Luaj.org. All rights reserved.
+* Copyright (c) 2010-2011 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,38 @@ import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-
+/** 
+ * Subclass of {@link LibFunction} which implements the lua standard package and module 
+ * library functions. 
+ * 
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * System.out.println( _G.get("require").call(LuaValue.valueOf("hyperbolic")) );
+ * } </pre>
+ * In practice, the first 4 lines of the above are minimal requirements to get 
+ * and initialize a globals table capable of basic reqire, print, and other functions, 
+ * so it is much more convenient to use the {@link JsePlatform} and {@link JmePlatform} 
+ * utility classes instead.  
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * However, the default filesystem search semantics are different and delegated to the bas library 
+ * as outlined in the {@link BaseLib} and {@link JseBaseLib} documetnation. 
+ * @see LibFunction
+ * @see BaseLib
+ * @see JseBaseLib
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.3">http://www.lua.org/manual/5.1/manual.html#5.3</a>
+ */
 public class PackageLib extends OneArgFunction {
 
 	public static String DEFAULT_LUA_PATH = "?.lua";

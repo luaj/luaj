@@ -22,10 +22,6 @@
 package org.luaj.vm2.lib.jse;
 
 
-/** LuaJava-like bindings to Java scripting. 
- * 
- * TODO: coerce types on way in and out, pick method base on arg count ant types.
- */
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -43,11 +39,48 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.LibFunction;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 
+/** 
+ * Subclass of {@link LibFunction} which implements the features of the luajava package. 
+ * <p> 
+ * Luajava is an approach to mixing lua and java using simple functions that bind 
+ * java classes and methods to lua dynamically.  The API is documented on the 
+ * <a href="http://www.keplerproject.org/luajava/">luajava</a> documentation pages.
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * LuaC.install();
+ * _G.load(new BaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new LuajavaLib());
+ * _G.get("loadstring").call( LuaValue.valueOf( 
+ * 		"sys = luajava.bindClass('java.lang.System')\n"+
+ * 		"print ( sys:currentTimeMillis() )\n" ) ).call(); 
+ * } </pre>
+ * This example is not intended to be realistic - only to show how the {@link LuajavaLib} 
+ * may be initialized by hand.  In practice, the {@code luajava} library is available 
+ * on all JSE platforms via the call to {@link JsePlatform#standardGlobals()}
+ * and the luajava api's are simply invoked from lua.    
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see LuaC
+ * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
+ */
 public class LuajavaLib extends VarArgFunction {
 	
 	static final int INIT           = 0;

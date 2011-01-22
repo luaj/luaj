@@ -33,19 +33,41 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /** 
- * Base library implementation, targeted for JME platforms.
- * 
- * BaseLib instances are typically used as the initial globals table 
- * when creating a new uniqued runtime context.  
- * 
- * Since JME has no file system by default, dofile and loadfile use the 
- * FINDER instance to find resource files.  The default loader chain
- * in PackageLib will use these as well.  
- * 
- * For an implementation that looks in the current directory on JSE, 
- * use org.luaj.lib.j2se.BaseLib instead.
- *  
- * @see org.luaj.vm2.lib.jse.JseBaseLib
+ * Subclass of {@link LibFunction} which implements the lua basic library functions. 
+ * <p>
+ * This contains all library functions listed as "basic functions" in the lua documentation for JME. 
+ * The functions dofile and loadfile use the 
+ * {@link #FINDER} instance to find resource files.
+ * Since JME has no file system by default, {@link BaseLib} implements 
+ * {@link ResourceFinder} using {@link Class#getResource(String)}, 
+ * which is the closest equivalent on JME.     
+ * The default loader chain in {@link PackageLib} will use these as well.
+ * <p>  
+ * To use basic library functions that include a {@link ResourceFinder} based on 
+ * directory lookup, use {@link JseBaseLib} instead. 
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JmePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new BaseLib());
+ * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * This is a direct port of the corresponding library in C.
+ * @see JseBaseLib
+ * @see ResourceFinder
+ * @see #FINDER
+ * @see LibFunction
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
 public class BaseLib extends OneArgFunction implements ResourceFinder {
 	public static final String VERSION = "Luaj 2.0";

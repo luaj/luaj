@@ -23,18 +23,46 @@ package org.luaj.vm2.lib.jse;
 import java.io.File;
 import java.io.IOException;
 
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.LibFunction;
+
 /**
- * Implementation of the lua os library for J2se.
- * 
- * <p>Implements features specific to the J2se environment:
- * <bl>
- * <li>execute()</li>
- * <li>remove()</li>
- * <li>rename()</li>
- * <li>tmpname()</li>
- * </bl>
- * 
- * @see org.luaj.vm2.lib.OsLib
+ * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
+ * <p>
+ * This contains more complete implementations of the following functions 
+ * using features that are specific to JSE:   
+ * <ul>
+ * <li>{@code execute()}</li>
+ * <li>{@code remove()}</li>
+ * <li>{@code rename()}</li>
+ * <li>{@code tmpname()}</li>
+ * </ul>
+ * <p>
+ * Because the nature of the {@code os} library is to encapsulate 
+ * os-specific features, the behavior of these functions varies considerably 
+ * from their counterparts in the C platform.  
+ * <p>
+ * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()}
+ * <p>
+ * To instantiate and use it directly, 
+ * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * LuaTable _G = new LuaTable();
+ * LuaThread.setGlobals(_G);
+ * _G.load(new JseBaseLib());
+ * _G.load(new PackageLib());
+ * _G.load(new JseOsLib());
+ * System.out.println( _G.get("os").get("time").call() );
+ * } </pre>
+ * Doing so will ensure the library is properly initialized 
+ * and loaded into the globals table. 
+ * <p>
+ * @see LibFunction
+ * @see OsLib
+ * @see JsePlatform
+ * @see JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
 public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	
