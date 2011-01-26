@@ -1325,17 +1325,18 @@ public class LuaValue extends Varargs {
 	 * <p>
 	 * To iterate over integer keys in a table you can use
 	 * <pre> {@code
-	 * LuaValue k = LuaValue.NIL;
-	 * while ( true ) {
-	 *    Varargs n = table.inext(k);
-	 *    if ( (k = n.arg1()).isnil() )
-	 *       break;
-	 *    LuaValue v = n.arg(2)
-	 *    process( k, v )
-	 * }</pre>
+	 *   LuaValue k = LuaValue.NIL;
+	 *   while ( true ) {
+	 *      Varargs n = table.inext(k);
+	 *      if ( (k = n.arg1()).isnil() )
+	 *         break;
+	 *      LuaValue v = n.arg(2)
+	 *      process( k, v )
+	 *   }
+	 * } </pre>
 	 * @param index {@link LuaInteger} value identifying a key to start from, 
 	 * or {@link NIL} to start at the beginning
-	 * @return {@link Varargs} containing {key,value} for the next entry, 
+	 * @return {@link Varargs} containing {@code (key,value)} for the next entry, 
 	 * or {@link NONE} if there are no more.
 	 * @throws LuaError if {@code this} is not a table, or the supplied key is invalid.
 	 * @see LuaTable

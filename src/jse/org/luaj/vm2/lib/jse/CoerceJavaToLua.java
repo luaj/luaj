@@ -31,12 +31,38 @@ import org.luaj.vm2.LuaValue;
 
 /**
  * Helper class to coerce values from Java to lua within the luajava library. 
+ * <p>
+ * This class is primarily used by the {@link LuajavaLib}, 
+ * but can also be used directly when working with Java/lua bindings. 
+ * <p>
+ * To coerce scalar types, the various, generally the {@code valueOf(type)} methods 
+ * on {@link LuaValue} may be used:
+ * <ul>
+ * <li>{@link LuaValue#valueOf(boolean)}</li>
+ * <li>{@link LuaValue#valueOf(byte[])}</li>
+ * <li>{@link LuaValue#valueOf(double)}</li>
+ * <li>{@link LuaValue#valueOf(int)}</li>
+ * <li>{@link LuaValue#valueOf(String)}</li>
+ * </ul>
+ * <p>
+ * To coerce arrays of objects and lists, the {@code listOf(..)} and {@code tableOf(...)} methods 
+ * on {@link LuaValue} may be used:
+ * <ul>
+ * <li>{@link LuaValue#listOf(LuaValue[])}</li>
+ * <li>{@link LuaValue#listOf(LuaValue[], org.luaj.vm2.Varargs)}</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[])}</li>
+ * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], org.luaj.vm2.Varargs)}</li>
+ * </ul>
+ * The method {@link CoerceJavaToLua#coerce(Object)} looks as the type and dimesioning 
+ * of the argument and tries to guess the best fit for corrsponding lua scalar, 
+ * table, or table of tables. 
  * 
+ * @see CoerceJavaToLua#coerce(Object)
  * @see LuajavaLib
  */
 public class CoerceJavaToLua {
 	
-	public static interface Coercion { 
+	static interface Coercion { 
 		public LuaValue coerce( Object javaValue );
 	};
 	
@@ -82,6 +108,22 @@ public class CoerceJavaToLua {
 		COERCIONS.put( String.class, stringCoercion );
 	}
 
+	/**
+	 * Coerse a Java object to a corresponding lua value. 
+	 * <p>
+	 * Integral types {@code boolean}, {@code byte},  {@code char}, and {@code int} 
+	 * will become {@link LuaInteger};
+	 * {@code long}, {@code float}, and {@code double} will become {@link LuaDouble};
+	 * {@code String} and {@code byte[]} will become {@link LuaString}; 
+	 * other types will become {@link LuaUserdata}.
+	 * @param o Java object needing conversion
+	 * @return {@link LuaValue} corresponding to the supplied Java value. 
+	 * @see LuaValue
+	 * @see LuaInteger
+	 * @see LuaDouble
+	 * @see LuaString
+	 * @see LuaUserdata
+	 */
 	public static LuaValue coerce(Object o) {
 		if ( o == null )
 			return LuaValue.NIL;

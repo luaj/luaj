@@ -31,12 +31,34 @@ import org.luaj.vm2.Varargs;
 
 /**
  * Helper class to coerce values from lua to Java within the luajava library. 
+ * <p>
+ * This class is primarily used by the {@link LuajavaLib}, 
+ * but can also be used directly when working with Java/lua bindings. 
+ * <p>
+ * To coerce to specific Java values, generally the {@code toType()} methods 
+ * on {@link LuaValue} may be used:
+ * <ul>
+ * <li>{@link LuaValue#toboolean()}</li>
+ * <li>{@link LuaValue#tobyte()}</li>
+ * <li>{@link LuaValue#tochar()}</li>
+ * <li>{@link LuaValue#toshort()}</li>
+ * <li>{@link LuaValue#toint()}</li>
+ * <li>{@link LuaValue#tofloat()}</li>
+ * <li>{@link LuaValue#todouble()}</li>
+ * <li>{@link LuaValue#tojstring()}</li>
+ * <li>{@link LuaValue#touserdata()}</li>
+ * <li>{@link LuaValue#touserdata(Class)}</li>
+ * </ul>
+ * <p>
+ * For data in lua tables, the various methods on {@link LuaTable} can be used directly 
+ * to convert data to something more useful.
  * 
  * @see LuajavaLib
+ * @see CoerceJavaToLua
  */
 public class CoerceLuaToJava {
 
-	public static interface Coercion { 
+	static interface Coercion { 
 		public Object coerce( LuaValue value );
 		public int score( int paramType );
 	};

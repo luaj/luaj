@@ -5,7 +5,7 @@
 	
 	<property name="jar.name.jme" value="luaj-jme-${version}.jar"/>
 	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
-	<property name="jar.name.jse.sources" value="luaj-jse.sources-${version}.jar"/>
+	<property name="jar.name.sources" value="luaj-sources-${version}.jar"/>
 
 	<import file="wtk.xml"/>
 
@@ -132,7 +132,8 @@
 	</target>
 
 	<target name="jar-jse-sources" depends="compile">
-		<jar destfile="${jar.name.jse.sources}">
+		<jar destfile="${jar.name.sources}">
+		    <fileset dir="build/jme/src"/>
 		    <fileset dir="build/jse/src"/>
 		</jar>
 	</target>
@@ -140,14 +141,15 @@
 	<target name="doc">
 		<delete dir="docs/api"/>
 		<mkdir dir="docs/api"/>
-		<javadoc packagenames="org.luaj.vm2.*"
-				sourcepath="src/core"
-				defaultexcludes="yes"
+		<javadoc defaultexcludes="yes"
 				destdir="docs/api"
 				author="true"
 				version="true"
 				use="true"
 				windowtitle="Luaj API">
+		    <fileset dir="src/core" defaultexcludes="yes" includes="org/luaj/vm2/*.java,org/luaj/vm2/compiler/LuaC.java,org/luaj/vm2/lib/*.java"/>
+		    <fileset dir="src/jse" defaultexcludes="yes" includes="org/luaj/vm2/lib/jse/*.java,org/luaj/vm2/luajc/LuaJC.java"/>
+		    <fileset dir="src/jme" defaultexcludes="yes" includes="org/luaj/vm2/lib/jme/*.java"/>
 			<doctitle><![CDATA[<h1>Luaj API</h1>]]></doctitle>
 			<bottom><![CDATA[<i>Copyright &#169; 2007-2008 Luaj.org. All Rights Reserved.</i>]]></bottom>
 			<tag name="todo" scope="all" description="To do:"/>
@@ -157,7 +159,7 @@
 		</javadoc>
 	</target>
 	
-	<target name="dist" depends="all">
+	<target name="dist" depends="all,doc">
 		<delete dir="build/luaj-${version}"/>
 		<mkdir dir="build/luaj-${version}/src"/>
 		<mkdir dir="build/luaj-${version}/lib"/>
@@ -192,6 +194,9 @@
 				<include name=".classpath"/>
 				<include name=".project"/>
 		    </fileset>		
+		</copy>
+		<copy todir="build/luaj-${version}/docs">
+			<fileset dir="docs"/>
 		</copy>
 		<zip destfile="luaj-${version}.zip" 
 			basedir="build" includes="luaj-${version}/**"/>
