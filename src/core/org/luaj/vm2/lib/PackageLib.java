@@ -126,7 +126,7 @@ public class PackageLib extends OneArgFunction {
 		return env;
 	}
 
-	public static final class PkgLib1 extends OneArgFunction {
+	static final class PkgLib1 extends OneArgFunction {
 		PackageLib lib;
 		public PkgLib1(LuaValue env,String name, int opcode, PackageLib lib) {
 			this.env = env;
@@ -151,7 +151,7 @@ public class PackageLib extends OneArgFunction {
 		}
 	}
 
-	public static final class PkgLibV extends VarArgFunction {
+	static final class PkgLibV extends VarArgFunction {
 		PackageLib lib;
 		public PkgLibV(LuaValue env,String name, int opcode, PackageLib lib) {
 			this.env = env;

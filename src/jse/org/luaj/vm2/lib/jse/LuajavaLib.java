@@ -123,14 +123,14 @@ public class LuajavaLib extends VarArgFunction {
 				return t;
 			}
 			case BINDCLASS: {
-				final Class clazz = Class.forName(args.checkjstring(1));
+				final Class clazz = classForName(args.checkjstring(1));
 				return toUserdata( clazz, clazz );
 			}
 			case NEWINSTANCE:
 			case NEW: {
 				// get constructor
 				final LuaValue c = args.checkvalue(1); 
-				final Class clazz = (opcode==NEWINSTANCE? Class.forName(c.tojstring()): (Class) c.checkuserdata(Class.class));
+				final Class clazz = (opcode==NEWINSTANCE? classForName(c.tojstring()): (Class) c.checkuserdata(Class.class));
 				final Varargs consargs = args.subargs(2);
 				final long paramssig = LuajavaLib.paramsSignatureOf( consargs );
 				final Constructor con = resolveConstructor( clazz, paramssig );
@@ -153,7 +153,7 @@ public class LuajavaLib extends VarArgFunction {
 				// get the interfaces
 				final Class[] ifaces = new Class[niface];
 				for ( int i=0; i<niface; i++ ) 
-					ifaces[i] = Class.forName(args.checkjstring(i+1));
+					ifaces[i] = classForName(args.checkjstring(i+1));
 				
 				// create the invocation handler
 				InvocationHandler handler = new InvocationHandler() {
@@ -193,7 +193,7 @@ public class LuajavaLib extends VarArgFunction {
 				// get constructor
 				String classname = args.checkjstring(1);
 				String methodname = args.checkjstring(2);
-				Class clazz = Class.forName(classname);
+				Class clazz = classForName(classname);
 				Method method = clazz.getMethod(methodname, new Class[] {});
 				Object result = method.invoke(clazz, new Object[] {});
 				if ( result instanceof LuaValue ) {
@@ -212,6 +212,11 @@ public class LuajavaLib extends VarArgFunction {
 		} catch (Exception e) {
 			throw new LuaError(e);
 		}
+	}
+
+	// load classes using app loader to allow luaj to be used as an extension
+	protected Class classForName(String name) throws ClassNotFoundException {
+		return Class.forName(name, true, ClassLoader.getSystemClassLoader());
 	}
 
 	// params signature is

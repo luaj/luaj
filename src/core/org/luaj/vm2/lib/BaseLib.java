@@ -155,7 +155,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		return c.getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
 	}
 
-	public static final class BaseLib2 extends TwoArgFunction {
+	static final class BaseLib2 extends TwoArgFunction {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			switch ( opcode ) {
 			case 0: // "collectgarbage", // ( opt [,arg] ) -> value
@@ -202,7 +202,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	    return f;
 	}
 
-	public static final class BaseLibV extends VarArgFunction {
+	static final class BaseLibV extends VarArgFunction {
 		public BaseLib baselib;
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {

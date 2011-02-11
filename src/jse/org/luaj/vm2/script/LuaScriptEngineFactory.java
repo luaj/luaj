@@ -22,7 +22,6 @@
 package org.luaj.vm2.script;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.script.ScriptEngine;
@@ -33,7 +32,10 @@ import javax.script.ScriptEngineFactory;
  */
 public class LuaScriptEngineFactory implements ScriptEngineFactory {
     
- 	private static final String FILEEXT = ".lua";
+ 	private static final String [] EXTENSIONS = {
+ 		"lua",
+ 		".lua",
+ 	};
     
     private static final String [] MIMETYPES = {
         "text/plain",
@@ -54,7 +56,7 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
 
     
     public LuaScriptEngineFactory() {
-        extensions = Collections.nCopies(1, FILEEXT);
+        extensions = Arrays.asList(EXTENSIONS);
         mimeTypes = Arrays.asList(MIMETYPES);
         names = Arrays.asList(NAMES);
     }

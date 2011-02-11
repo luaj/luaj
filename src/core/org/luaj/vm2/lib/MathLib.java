@@ -104,7 +104,7 @@ public class MathLib extends OneArgFunction {
 		return t;
 	}
 
-	public static final class MathLib1 extends OneArgFunction {
+	static final class MathLib1 extends OneArgFunction {
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) {
 			case 0: return valueOf(Math.abs(arg.checkdouble())); 
@@ -122,7 +122,7 @@ public class MathLib extends OneArgFunction {
 		}
 	}
 	
-	public static final class MathLib2 extends TwoArgFunction {
+	static final class MathLib2 extends TwoArgFunction {
 		protected MathLib mathlib;
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			switch ( opcode ) {
@@ -189,7 +189,7 @@ public class MathLib extends OneArgFunction {
 		return p;
 	}
 
-	public static final class MathLibV extends VarArgFunction {
+	static final class MathLibV extends VarArgFunction {
 		protected MathLib mathlib;
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {

@@ -267,30 +267,82 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( "152415787532388367501905199875019052100", sc );
 	}
 
-	public static class A {
-		public String set( int foo ) {
-			return "from set(int) "+foo;
-		}
-		public String set( String foo ) {
-			return "from set(String) "+foo;
-		}
-		public String get() {
-			return "bar";
-		}
+	public static class A {		
+	}
+	public static class B extends A{
+		public String set( Object x ) { return "set(Object) "; }
+		public String set( String x ) { return "set(String) "+x; }
+		public String set( A x ) { return "set(A) "; }
+		public String set( B x ) { return "set(B) "; }
+		public String set( C x ) { return "set(C) "; }
+		public String set( byte x ) { return "set(byte) "+x; }
+		public String set( char x ) { return "set(char) "+x; }
+		public String set( short x ) { return "set(short) "+x; }
+		public String set( int x ) { return "set(int) "+x; }
+		public String set( long x ) { return "set(long) "+x; }
+		public String set( float x ) { return "set(float) "+x; }
+		public String set( double x ) { return "set(double) "+x; }
+
+		public String setr( double x ) { return "setr(double) "+x; }
+		public String setr( float x ) { return "setr(float) "+x; }
+		public String setr( long x ) { return "setr(long) "+x; }
+		public String setr( int x ) { return "setr(int) "+x; }
+		public String setr( short x ) { return "setr(short) "+x; }
+		public String setr( char x ) { return "setr(char) "+x; }
+		public String setr( byte x ) { return "setr(byte) "+x; }
+		public String setr( C x ) { return "setr(C) "; }
+		public String setr( B x ) { return "setr(B) "; }
+		public String setr( A x ) { return "setr(A) "; }
+		public String setr( String x ) { return "setr(String) "+x; }
+		public String setr( Object x ) { return "setr(Object) "; }
+		
+		public Object getObject() { return new Object(); }
+		public String getString() { return "abc"; }
+		public A getA() { return new A(); }
+		public B getB() { return new B(); }
+		public C getC() { return new C(); }
+		public byte getbyte() { return 1; }
+		public char getchar() { return 2; }
+		public short getshort() { return 3; }
+		public int getint() { return 4; }
+		public long getlong() { return 5; }
+		public float getfloat() { return 6.5f; }
+		public double getdouble() { return 7.5; }
+	}
+	public static class C extends B {		
 	}
 	
-	public void testOverloadedJavaMethods() {
+	public void testOverloadedJavaMethodObject() { doOverloadedMethodTest( "Object", "" ); }
+	public void testOverloadedJavaMethodString() { doOverloadedMethodTest( "String", "abc" ); }
+	public void testOverloadedJavaMethodA() { doOverloadedMethodTest( "A", "" ); }
+	public void testOverloadedJavaMethodB() { doOverloadedMethodTest( "B", "" ); }
+	public void testOverloadedJavaMethodC() { doOverloadedMethodTest( "C", "" ); }
+	public void testOverloadedJavaMethodByte() { doOverloadedMethodTest( "byte", "1" ); }
+	public void testOverloadedJavaMethodChar() { doOverloadedMethodTest( "char", "2" ); }
+	public void testOverloadedJavaMethodShort() { doOverloadedMethodTest( "short", "3" ); }
+	public void testOverloadedJavaMethodInt() { doOverloadedMethodTest( "int", "4" ); }
+	public void testOverloadedJavaMethodLong() { doOverloadedMethodTest( "long", "5" ); }
+	public void testOverloadedJavaMethodFloat() { doOverloadedMethodTest( "float", "6.5" ); }
+	public void testOverloadedJavaMethodDouble() { doOverloadedMethodTest( "double", "7.5" ); }
+
+	private void doOverloadedMethodTest( String typename, String value ) {
 		String script = 
-			"a = luajava.newInstance('"+A.class.getName()+"');\n" +
-			"return a:set(a:get())";
+			"local a = luajava.newInstance('"+B.class.getName()+"');\n" +
+			"local b = a:set(a:get"+typename+"())\n" +
+			"local c = a:setr(a:get"+typename+"())\n" +
+			"return b,c";
 		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
 		if ( ! chunk.arg1().toboolean() )
 			fail( chunk.arg(2).toString() );
 		Varargs results = chunk.arg1().invoke();
 		int nresults = results.narg();
-		String sa = results.tojstring(1);
-		assertEquals( 1, nresults );
-		assertEquals( "from set(String) bar", sa );
+		assertEquals( 2, nresults );
+		LuaValue b = results.arg(1);
+		LuaValue c = results.arg(2);
+		String sb = b.tojstring();
+		String sc = c.tojstring();
+		assertEquals( "set("+typename+") "+value, sb );
+		assertEquals( "setr("+typename+") "+value, sc );
 	}
 	
 }

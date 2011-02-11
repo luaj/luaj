@@ -82,7 +82,7 @@ public class StringLib extends OneArgFunction {
 		return t;
 	}
 	
-	public static final class StringLib1 extends OneArgFunction {
+	static final class StringLib1 extends OneArgFunction {
 		public LuaValue call(LuaValue arg) {
 			switch ( opcode ) { 
 			case 0: return dump(arg); // dump (function)
@@ -95,7 +95,7 @@ public class StringLib extends OneArgFunction {
 		}
 	}
 
-	public static final class StringLibV extends VarArgFunction {
+	static final class StringLibV extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
 			case 0: return StringLib.byte_( args );
@@ -319,7 +319,7 @@ public class StringLib extends OneArgFunction {
 	
 	private static final String FLAGS = "-+ #0";
 	
-	private static class FormatDesc {
+	static class FormatDesc {
 		
 		private boolean leftAdjust;
 		private boolean zeroPad;
@@ -810,7 +810,7 @@ public class StringLib extends OneArgFunction {
 		CHAR_TABLE['\f'] |= MASK_SPACE;
 	};
 	
-	private static class MatchState {
+	static class MatchState {
 		final LuaString s;
 		final LuaString p;
 		final Varargs args;

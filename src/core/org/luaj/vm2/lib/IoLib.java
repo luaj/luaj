@@ -247,7 +247,7 @@ public class IoLib extends OneArgFunction {
 			((IoLibV) t.get(k[i])).iolib = this;
 	}
 	
-	public static final class IoLibV extends VarArgFunction {
+	static final class IoLibV extends VarArgFunction {
 		public IoLib iolib;
 		public IoLibV() {
 		}

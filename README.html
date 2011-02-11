@@ -714,19 +714,23 @@ and LuaForge:
 <h2>Main Changes by Version</h2>
 <table cellspacing="10"><tr><td><table cellspacing="4">
 <tr valign="top"><td>&nbsp;&nbsp;<b>2.0</b></td><td><ul>
-<li>Initial release of 2.0 version  
+<li>Initial release of 2.0 version </li>  
 </ul></td></tr>
 <tr valign="top"><td>&nbsp;&nbsp;<b>2.0.1</b></td><td><ul>
-<li>Improve correctness of singleton construction related to static initialization
-<li>Fix nan-related error in constant folding logic that was failing on some JVMs
-<li>JSR-223 fixes: add META-INF/services entry in jse jar, improve bindings implementation
+<li>Improve correctness of singleton construction related to static initialization </li>
+<li>Fix nan-related error in constant folding logic that was failing on some JVMs </li>
+<li>JSR-223 fixes: add META-INF/services entry in jse jar, improve bindings implementation </li>
 </ul></td></tr>
 <tr valign="top"><td>&nbsp;&nbsp;<b>2.0.2</b></td><td><ul>
-<li>JSR-223 bindings change: non Java-primitives will now be passed as LuaValue 
-<li>Fix selection logic when picking from functions with same name
+<li>JSR-223 bindings change: non Java-primitives will now be passed as LuaValue </li> 
+<li>JSR-223 enhancement: allow both ".lua" and "lua" as extensions in getScriptEngine() </li>
+<li>Improve selection logic when binding to overloaded functions using luajava</li>
+<li>Enhance javadoc, put it <a href="http://luaj.sourceforge.net/api/2.0/index.html">online</a> 
+and <a href="docs/api/index.html">in distribution</a> 
+</li>
+<li>Add lib/luaj-sources-2.0.2.jar for easier integration into an IDE such as Netbeans </li>
 </ul></td></tr>
 </table>
-
 <h2>Known Issues</h2>
 <ul>
 <li>debug code may not be completely removed by some obfuscators

@@ -83,7 +83,7 @@ public class TableLib extends OneArgFunction {
 		return NIL;
 	}
 
-	public static final class TableLibV extends VarArgFunction {
+	static final class TableLibV extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
 			case 0: { // "remove" (table [, pos]) -> removed-ele
