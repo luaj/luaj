@@ -27,8 +27,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
@@ -38,7 +36,6 @@ import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.LibFunction;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.VarArgFunction;
-import org.luaj.vm2.lib.jme.JmePlatform;
 
 /** 
  * Subclass of {@link LibFunction} which implements the features of the luajava package. 
@@ -70,8 +67,8 @@ import org.luaj.vm2.lib.jme.JmePlatform;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LuaC
  * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
  */
@@ -92,16 +89,7 @@ public class LuajavaLib extends VarArgFunction {
 		"loadLib",
 	};
 	
-	static final Map classMetatables = new HashMap(); 
-
 	static final int METHOD_MODIFIERS_VARARGS = 0x80;
-
-	static final LuaValue LENGTH = valueOf("length");
-	
-	static final Map consCache = new HashMap();
-	static final Map consIndex = new HashMap();
-	static final Map methCache = new HashMap();
-	static final Map methIndex = new HashMap();
 
 	public LuajavaLib() {
 	}

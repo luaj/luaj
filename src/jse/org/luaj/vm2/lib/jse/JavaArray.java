@@ -41,7 +41,7 @@ public class JavaArray extends LuaUserdata {
 	
 	public LuaValue get(LuaValue key) {
 		if ( key.equals(LENGTH) )
-			return CoerceJavaToLua.coerce(Array.getLength(m_instance));
+			return valueOf(Array.getLength(m_instance));
 		if ( key.isint() ) {
 			int i = key.toint() - 1;
 			return i>=0 && i<Array.getLength(m_instance)?

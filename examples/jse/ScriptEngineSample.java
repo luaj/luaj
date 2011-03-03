@@ -116,7 +116,7 @@ public class ScriptEngineSample {
         CompiledScript cs = ((Compilable)e).compile(
         		"test = test or luajava.newInstance(\"java.lang.String\", \"test\")\n" +
         		"print( 'test', type(test), test, tostring(test) )\n" +
-        		"return test:toString()");
+        		"return tostring(test)");
         Bindings b = e.createBindings();
         Object resultstring = cs.eval(b);
         b.put("test", new SomeUserClass());
