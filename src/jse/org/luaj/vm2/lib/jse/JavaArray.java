@@ -29,9 +29,15 @@ import org.luaj.vm2.LuaValue;
 /**
  * LuaValue that represents a Java instance of array type.
  * <p>
- * Can get elements by their integer key index, as well as the length. 
+ * Can get elements by their integer key index, as well as the length.
+ * <p>
+ * This class is not used directly.  
+ * It is returned by calls to {@link CoerceJavaToLua#coerce(Object)} 
+ * when an array is supplied.
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
-public class JavaArray extends LuaUserdata {
+class JavaArray extends LuaUserdata {
 
 	static final LuaValue LENGTH = valueOf("length");
 	

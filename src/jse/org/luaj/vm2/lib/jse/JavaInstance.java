@@ -31,8 +31,14 @@ import org.luaj.vm2.LuaValue;
  * LuaValue that represents a Java instance.
  * <p>
  * Will respond to get() and set() by returning field values or methods. 
+ * <p>
+ * This class is not used directly.  
+ * It is returned by calls to {@link CoerceJavaToLua#coerce(Object)} 
+ * when a subclass of Object is supplied.
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
-public class JavaInstance extends LuaUserdata {
+class JavaInstance extends LuaUserdata {
 
 	JavaClass jclass;
 	

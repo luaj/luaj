@@ -33,15 +33,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
 
 /**
  * LuaValue that represents a Java class.
  * <p>
  * Will respond to get() and set() by returning field values, or java methods. 
+ * <p>
+ * This class is not used directly.  
+ * It is returned by calls to {@link CoerceJavaToLua#coerce(Object)} 
+ * when a Class is supplied.
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
-public class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
+class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 
 	static final Map classes = Collections.synchronizedMap(new HashMap());
 

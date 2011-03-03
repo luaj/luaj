@@ -29,7 +29,14 @@ import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
  * Java method or constructor.
  * <p>
  * Primarily handles argument coercion for parameter lists including scoring of compatibility and 
- * java varargs handling. 
+ * java varargs handling.
+ * <p>
+ * This class is not used directly.  
+ * It is an abstract base class for {@link JavaConstructor} and {@link JavaMethod}.
+ * @see JavaConstructor
+ * @see JavaMethod
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
 abstract
 class JavaMember extends VarArgFunction {

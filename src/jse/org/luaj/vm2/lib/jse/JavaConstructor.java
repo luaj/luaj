@@ -37,8 +37,14 @@ import org.luaj.vm2.lib.VarArgFunction;
  * <p>
  * May be called with arguments to return a JavaInstance 
  * created by calling the constructor.  
+ * <p>
+ * This class is not used directly.  
+ * It is returned by calls to {@link JavaClass#new(LuaValue key)} 
+ * when the value of key is "new".
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
-public class JavaConstructor extends JavaMember {
+class JavaConstructor extends JavaMember {
 
 	static final Map constructors = Collections.synchronizedMap(new HashMap());
 	
@@ -71,6 +77,15 @@ public class JavaConstructor extends JavaMember {
 		}
 	}
 
+	/**
+	 * LuaValue that represents an overloaded Java constructor.
+	 * <p>
+	 * On invocation, will pick the best method from the list, and invoke it.
+	 * <p>
+	 * This class is not used directly.  
+	 * It is returned by calls to calls to {@link JavaClass#get(LuaValue key)} 
+	 * when key is "new" and there is more than one public constructor.
+	 */
 	static class Overload extends VarArgFunction {
 		final JavaConstructor[] constructors; 
 		public Overload(JavaConstructor[] c) {

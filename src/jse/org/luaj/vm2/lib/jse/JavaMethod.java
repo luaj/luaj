@@ -31,14 +31,19 @@ import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
 
 /**
  * LuaValue that represents a Java method.
  * <p>
- * Can be invoked. 
+ * Can be invoked via call(LuaValue...) and related methods. 
+ * <p>
+ * This class is not used directly.  
+ * It is returned by calls to calls to {@link JavaInstance#get(LuaValue key)} 
+ * when a method is named.
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  */
-public class JavaMethod extends JavaMember {
+class JavaMethod extends JavaMember {
 
 	static final Map methods = Collections.synchronizedMap(new HashMap());
 	
@@ -94,7 +99,11 @@ public class JavaMethod extends JavaMember {
 	/**
 	 * LuaValue that represents an overloaded Java method.
 	 * <p>
-	 * On invocation, will pick the best method fromi the list, and invoke it.
+	 * On invocation, will pick the best method from the list, and invoke it.
+	 * <p>
+	 * This class is not used directly.  
+	 * It is returned by calls to calls to {@link JavaInstance#get(LuaValue key)} 
+	 * when an overloaded method is named.
 	 */
 	static class Overload extends LuaFunction {
 
