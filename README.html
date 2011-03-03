@@ -724,10 +724,10 @@ and LuaForge:
 <tr valign="top"><td>&nbsp;&nbsp;<b>2.0.2</b></td><td><ul>
 <li>JSR-223 bindings change: non Java-primitives will now be passed as LuaValue </li> 
 <li>JSR-223 enhancement: allow both ".lua" and "lua" as extensions in getScriptEngine() </li>
+<li>JSR-223 fix: use system class loader to support using luaj as JRE extension </li>
 <li>Improve selection logic when binding to overloaded functions using luajava</li>
-<li>Enhance javadoc, put it <a href="http://luaj.sourceforge.net/api/2.0/index.html">online</a> 
-and <a href="docs/api/index.html">in distribution</a> 
-</li>
+<li>Enhance javadoc, put it <a href="docs/api/index.html">in distribution</a> and <a href="http://luaj.sourceforge.net/api/2.0/index.html">on line</a></li>
+<li>Major refactor of luajava type coercion logic, improve method selection.</li> 
 <li>Add lib/luaj-sources-2.0.2.jar for easier integration into an IDE such as Netbeans </li>
 </ul></td></tr>
 </table>

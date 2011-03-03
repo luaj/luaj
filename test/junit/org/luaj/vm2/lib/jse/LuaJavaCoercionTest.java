@@ -33,10 +33,10 @@ public class LuaJavaCoercionTest extends TestCase {
 
 	public void testLuaIntToJavaInt() {
 		LuaInteger i = LuaInteger.valueOf(777);
-		Object o = CoerceLuaToJava.coerceArg(i, int.class);
+		Object o = CoerceLuaToJava.coerce(i, int.class);
 		assertEquals( Integer.class, o.getClass() );
 		assertEquals( 777, ((Number)o).intValue() );
-		o = CoerceLuaToJava.coerceArg(i, Integer.class);
+		o = CoerceLuaToJava.coerce(i, Integer.class);
 		assertEquals( Integer.class, o.getClass() );
 		assertEquals( new Integer(777), o );
 	}
@@ -50,7 +50,7 @@ public class LuaJavaCoercionTest extends TestCase {
 
 	public void testLuaStringToJavaString() {
 		LuaString s = LuaValue.valueOf("777");
-		Object o = CoerceLuaToJava.coerceArg(s, String.class);
+		Object o = CoerceLuaToJava.coerce(s, String.class);
 		assertEquals( String.class, o.getClass() );
 		assertEquals( "777", o );
 	}
@@ -58,8 +58,7 @@ public class LuaJavaCoercionTest extends TestCase {
 	public void testJavaIntArrayToLuaTable() {
 		int[] i = { 222, 333 };
 		LuaValue v = CoerceJavaToLua.coerce(i);
-		assertEquals( LuaUserdata.class, v.getClass() );
-		assertNotNull( v.getmetatable() );
+		assertEquals( JavaArray.class, v.getClass() );
 		assertEquals( LuaInteger.valueOf(222), v.get(ONE) );
 		assertEquals( LuaInteger.valueOf(333), v.get(TWO) );
 		assertEquals( TWO, v.get(LENGTH));
@@ -90,7 +89,7 @@ public class LuaJavaCoercionTest extends TestCase {
 		t.set(1, LuaInteger.valueOf(222) );
 		t.set(2, LuaInteger.valueOf(333) );
 		int[] i = null;
-		Object o = CoerceLuaToJava.coerceArg(t, int[].class);
+		Object o = CoerceLuaToJava.coerce(t, int[].class);
 		assertEquals( int[].class, o.getClass() );
 		i = (int[]) o;
 		assertEquals( 2, i.length );
@@ -98,48 +97,52 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( 333, i[1] );
 	}
 	
-
-	public void testArrayParamScoring() {
+	public void testIntArrayScoringTables() {
+		int a = 5;
+		LuaValue la = LuaInteger.valueOf(a);
+		LuaTable tb = new LuaTable();
+		tb.set( 1, la );
+		LuaTable tc = new LuaTable();
+		tc.set( 1, tb );
+		
+		int saa = CoerceLuaToJava.getCoercion(int.class).score(la);
+		int sab = CoerceLuaToJava.getCoercion(int[].class).score(la);
+		int sac = CoerceLuaToJava.getCoercion(int[][].class).score(la);
+		assertTrue( saa < sab );
+		assertTrue( saa < sac );
+		int sba = CoerceLuaToJava.getCoercion(int.class).score(tb);
+		int sbb = CoerceLuaToJava.getCoercion(int[].class).score(tb);
+		int sbc = CoerceLuaToJava.getCoercion(int[][].class).score(tb);
+		assertTrue( sbb < sba );
+		assertTrue( sbb < sbc );
+		int sca = CoerceLuaToJava.getCoercion(int.class).score(tc);
+		int scb = CoerceLuaToJava.getCoercion(int[].class).score(tc);
+		int scc = CoerceLuaToJava.getCoercion(int[][].class).score(tc);
+		assertTrue( scc < sca );
+		assertTrue( scc < scb );
+	}
+	
+	public void testIntArrayScoringUserdata() {
 		int a = 5;
 		int[] b = { 44, 66 };
 		int[][] c = { { 11, 22 }, { 33, 44 } };
-		LuaValue la = LuaInteger.valueOf(a);
-		LuaTable tb = new LuaTable();
-		LuaTable tc = new LuaTable();
 		LuaValue va = CoerceJavaToLua.coerce(a);
 		LuaValue vb = CoerceJavaToLua.coerce(b);
 		LuaValue vc = CoerceJavaToLua.coerce(c);
-		tc.set( 1, new LuaTable() );
-		
-		int saa = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(la), new Class[] { int.class } );
-		int sab = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(la), new Class[] { int[].class } );
-		int sac = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(la), new Class[] { int[][].class } );
-		assertTrue( saa < sab );
-		assertTrue( saa < sac );
-		int sba = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tb), new Class[] { int.class } );
-		int sbb = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tb), new Class[] { int[].class } );
-		int sbc = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tb), new Class[] { int[][].class } );
-		assertTrue( sbb < sba );
-		assertTrue( sbb < sbc );
-		int sca = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tc), new Class[] { int.class } );
-		int scb = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tc), new Class[] { int[].class } );
-		int scc = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(tc), new Class[] { int[][].class } );
-		assertTrue( scc < sca );
-		assertTrue( scc < scb );
-		
-		int vaa = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(va), new Class[] { int.class } );
-		int vab = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(va), new Class[] { int[].class } );
-		int vac = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(va), new Class[] { int[][].class } );
+			
+		int vaa = CoerceLuaToJava.getCoercion(int.class).score(va);
+		int vab = CoerceLuaToJava.getCoercion(int[].class).score(va);
+		int vac = CoerceLuaToJava.getCoercion(int[][].class).score(va);
 		assertTrue( vaa < vab );
 		assertTrue( vaa < vac );
-		int vba = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vb), new Class[] { int.class } );
-		int vbb = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vb), new Class[] { int[].class } );
-		int vbc = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vb), new Class[] { int[][].class } );
+		int vba = CoerceLuaToJava.getCoercion(int.class).score(vb);
+		int vbb = CoerceLuaToJava.getCoercion(int[].class).score(vb);
+		int vbc = CoerceLuaToJava.getCoercion(int[][].class).score(vb);
 		assertTrue( vbb < vba );
 		assertTrue( vbb < vbc );
-		int vca = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vc), new Class[] { int.class } );
-		int vcb = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vc), new Class[] { int[].class } );
-		int vcc = CoerceLuaToJava.scoreParamTypes( LuajavaLib.paramsSignatureOf(vc), new Class[] { int[][].class } );
+		int vca = CoerceLuaToJava.getCoercion(int.class).score(vc);
+		int vcb = CoerceLuaToJava.getCoercion(int[].class).score(vc);
+		int vcc = CoerceLuaToJava.getCoercion(int[][].class).score(vc);
 		assertTrue( vcc < vca );
 		assertTrue( vcc < vcb );
 	}
@@ -151,27 +154,30 @@ public class LuaJavaCoercionTest extends TestCase {
 		public String sample(int[][] a) { return "int-array-array-args "+a[0][0]+","+a[0][1]+","+a[1][0]+","+a[1][1]; }
 	}
 	
-	
-	public void testIntArrayParameterMatching() {
+	public void testMatchVoidArgs() {
 		LuaValue v = CoerceJavaToLua.coerce(new SampleClass());
-		
-		// get sample field, call with no arguments
 		LuaValue result = v.method("sample");
 		assertEquals( "void-args", result.toString() );
-		
-		// get sample field, call with one arguments
+	}
+	
+	public void testMatchIntArgs() {
+		LuaValue v = CoerceJavaToLua.coerce(new SampleClass());
 		LuaValue arg = CoerceJavaToLua.coerce(new Integer(123));
-		result = v.method("sample",arg);
+		LuaValue result = v.method("sample",arg);
 		assertEquals( "int-args 123", result.toString() );
-		
-		// get sample field, call with array argument
-		arg = CoerceJavaToLua.coerce(new int[]{345,678});
-		result = v.method("sample",arg);
+	}
+	
+	public void testMatchIntArrayArgs() {
+		LuaValue v = CoerceJavaToLua.coerce(new SampleClass());
+		LuaValue arg = CoerceJavaToLua.coerce(new int[]{345,678});
+		LuaValue result = v.method("sample",arg);
 		assertEquals( "int-array-args 345,678", result.toString() );
-		
-		// get sample field, call with two-d array argument
-		arg = CoerceJavaToLua.coerce(new int[][]{{22,33},{44,55}});
-		result = v.method("sample",arg);
+	}
+	
+	public void testMatchIntArrayArrayArgs() {
+		LuaValue v = CoerceJavaToLua.coerce(new SampleClass());
+		LuaValue arg = CoerceJavaToLua.coerce(new int[][]{{22,33},{44,55}});
+		LuaValue result = v.method("sample",arg);
 		assertEquals( "int-array-array-args 22,33,44,55", result.toString() );
 	}
 	
@@ -188,7 +194,8 @@ public class LuaJavaCoercionTest extends TestCase {
 	}
 	
 	public void testExceptionMessage() {
-		String script = "return pcall( luajava.bindClass( \""+SomeClass.class.getName()+"\").someMethod )";
+		String script = "local c = luajava.bindClass( \""+SomeClass.class.getName()+"\" )\n" +
+				"return pcall( c.someMethod, c )";
 		Varargs vresult = _G.get("loadstring").call(LuaValue.valueOf(script)).invoke(LuaValue.NONE);
 		LuaValue status = vresult.arg1();
 		LuaValue message = vresult.arg(2);
@@ -198,7 +205,7 @@ public class LuaJavaCoercionTest extends TestCase {
 	}
 
 	public void testLuaErrorCause() {
-		String script = "luajava.bindClass( \""+SomeClass.class.getName()+"\").someMethod()";
+		String script = "luajava.bindClass( \""+SomeClass.class.getName()+"\"):someMethod()";
 		LuaValue chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
 		try {
 			chunk.invoke(LuaValue.NONE);
@@ -267,16 +274,20 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( "152415787532388367501905199875019052100", sc );
 	}
 
-	public static class A {		
+	public interface IA {}
+	public interface IB extends IA {}
+	public interface IC extends IB {}
+	
+	public static class A implements IA {		
 	}
-	public static class B extends A{
+	public static class B extends A implements IB {
 		public String set( Object x ) { return "set(Object) "; }
 		public String set( String x ) { return "set(String) "+x; }
 		public String set( A x ) { return "set(A) "; }
 		public String set( B x ) { return "set(B) "; }
 		public String set( C x ) { return "set(C) "; }
 		public String set( byte x ) { return "set(byte) "+x; }
-		public String set( char x ) { return "set(char) "+x; }
+		public String set( char x ) { return "set(char) "+(int)x; }
 		public String set( short x ) { return "set(short) "+x; }
 		public String set( int x ) { return "set(int) "+x; }
 		public String set( long x ) { return "set(long) "+x; }
@@ -288,7 +299,7 @@ public class LuaJavaCoercionTest extends TestCase {
 		public String setr( long x ) { return "setr(long) "+x; }
 		public String setr( int x ) { return "setr(int) "+x; }
 		public String setr( short x ) { return "setr(short) "+x; }
-		public String setr( char x ) { return "setr(char) "+x; }
+		public String setr( char x ) { return "setr(char) "+(int)x; }
 		public String setr( byte x ) { return "setr(byte) "+x; }
 		public String setr( C x ) { return "setr(C) "; }
 		public String setr( B x ) { return "setr(B) "; }
@@ -298,18 +309,21 @@ public class LuaJavaCoercionTest extends TestCase {
 		
 		public Object getObject() { return new Object(); }
 		public String getString() { return "abc"; }
+		public byte[] getbytearray() { return new byte[] { 1, 2, 3 }; }
 		public A getA() { return new A(); }
 		public B getB() { return new B(); }
 		public C getC() { return new C(); }
 		public byte getbyte() { return 1; }
-		public char getchar() { return 2; }
-		public short getshort() { return 3; }
-		public int getint() { return 4; }
-		public long getlong() { return 5; }
+		public char getchar() { return 65000; }
+		public short getshort() { return -32000; }
+		public int getint() { return 100000; }
+		public long getlong() { return 50000000000L; }
 		public float getfloat() { return 6.5f; }
-		public double getdouble() { return 7.5; }
+		public double getdouble() { return Math.PI; }
 	}
-	public static class C extends B {		
+	public static class C extends B implements IC {		
+	}
+	public static class D extends C implements IA {		
 	}
 	
 	public void testOverloadedJavaMethodObject() { doOverloadedMethodTest( "Object", "" ); }
@@ -318,12 +332,12 @@ public class LuaJavaCoercionTest extends TestCase {
 	public void testOverloadedJavaMethodB() { doOverloadedMethodTest( "B", "" ); }
 	public void testOverloadedJavaMethodC() { doOverloadedMethodTest( "C", "" ); }
 	public void testOverloadedJavaMethodByte() { doOverloadedMethodTest( "byte", "1" ); }
-	public void testOverloadedJavaMethodChar() { doOverloadedMethodTest( "char", "2" ); }
-	public void testOverloadedJavaMethodShort() { doOverloadedMethodTest( "short", "3" ); }
-	public void testOverloadedJavaMethodInt() { doOverloadedMethodTest( "int", "4" ); }
-	public void testOverloadedJavaMethodLong() { doOverloadedMethodTest( "long", "5" ); }
+	public void testOverloadedJavaMethodChar() { doOverloadedMethodTest( "char", "65000" ); }
+	public void testOverloadedJavaMethodShort() { doOverloadedMethodTest( "short", "-32000" ); }
+	public void testOverloadedJavaMethodInt() { doOverloadedMethodTest( "int", "100000" ); }
+	public void testOverloadedJavaMethodLong() { doOverloadedMethodTest( "long", "50000000000" ); }
 	public void testOverloadedJavaMethodFloat() { doOverloadedMethodTest( "float", "6.5" ); }
-	public void testOverloadedJavaMethodDouble() { doOverloadedMethodTest( "double", "7.5" ); }
+	public void testOverloadedJavaMethodDouble() { doOverloadedMethodTest( "double", "3.141592653589793" ); }
 
 	private void doOverloadedMethodTest( String typename, String value ) {
 		String script = 
@@ -344,5 +358,50 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( "set("+typename+") "+value, sb );
 		assertEquals( "setr("+typename+") "+value, sc );
 	}
+
+	public void testClassInheritanceLevels() {
+		assertEquals( 0, CoerceLuaToJava.inheritanceLevels(Object.class, Object.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(Object.class, String.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(Object.class, A.class) );
+		assertEquals( 2, CoerceLuaToJava.inheritanceLevels(Object.class, B.class) );
+		assertEquals( 3, CoerceLuaToJava.inheritanceLevels(Object.class, C.class) );
+		
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(A.class, Object.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(A.class, String.class) );
+		assertEquals( 0, CoerceLuaToJava.inheritanceLevels(A.class, A.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(A.class, B.class) );
+		assertEquals( 2, CoerceLuaToJava.inheritanceLevels(A.class, C.class) );
+		
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(B.class, Object.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(B.class, String.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(B.class, A.class) );
+		assertEquals( 0, CoerceLuaToJava.inheritanceLevels(B.class, B.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(B.class, C.class) );
+		
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(C.class, Object.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(C.class, String.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(C.class, A.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(C.class, B.class) );
+		assertEquals( 0, CoerceLuaToJava.inheritanceLevels(C.class, C.class) );
+	}
 	
+	public void testInterfaceInheritanceLevels() {
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IA.class, A.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IB.class, B.class) );
+		assertEquals( 2, CoerceLuaToJava.inheritanceLevels(IA.class, B.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IC.class, C.class) );
+		assertEquals( 2, CoerceLuaToJava.inheritanceLevels(IB.class, C.class) );
+		assertEquals( 3, CoerceLuaToJava.inheritanceLevels(IA.class, C.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IA.class, D.class) );
+		assertEquals( 2, CoerceLuaToJava.inheritanceLevels(IC.class, D.class) );
+		assertEquals( 3, CoerceLuaToJava.inheritanceLevels(IB.class, D.class) );
+
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IB.class, A.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IC.class, A.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IC.class, B.class) );
+		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IB.class, IA.class) );
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IA.class, IB.class) );
+		
+	}
 }
+

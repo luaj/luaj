@@ -91,7 +91,7 @@ public class LuaUserdata extends LuaValue {
 	}
 	
 	public void set( LuaValue key, LuaValue value ) {
-		if ( m_metatable!=null && ! settable(this,key,value) )
+		if ( m_metatable==null || ! settable(this,key,value) )
 			error( "cannot set "+key+" for userdata" );
 	}
 

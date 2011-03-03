@@ -21,12 +21,15 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 
 /**
@@ -103,6 +106,7 @@ public class CoerceJavaToLua {
 		COERCIONS.put( Character.class, charCoercion );
 		COERCIONS.put( Short.class, intCoercion );
 		COERCIONS.put( Integer.class, intCoercion );
+		COERCIONS.put( Long.class, doubleCoercion );
 		COERCIONS.put( Float.class, doubleCoercion );
 		COERCIONS.put( Double.class, doubleCoercion );
 		COERCIONS.put( String.class, stringCoercion );
@@ -129,9 +133,25 @@ public class CoerceJavaToLua {
 			return LuaValue.NIL;
 		Class clazz = o.getClass();
 		Coercion c = (Coercion) COERCIONS.get( clazz );
-		if ( c != null )
-			return c.coerce( o );
-		return LuajavaLib.toUserdata( o, clazz );
+		if ( c == null ) {
+			c = o instanceof Class? JavaClass.forClass((Class)o):
+				clazz.isArray()? arrayCoercion:
+				instanceCoercion;
+			COERCIONS.put( clazz, c );
+		}
+		return c.coerce(o);
 	}
 
+	static final Coercion instanceCoercion = new Coercion() {
+		public LuaValue coerce(Object javaValue) {
+			return new JavaInstance(javaValue);
+		}
+	};
+	
+	// should be userdata? 
+	static final Coercion arrayCoercion = new Coercion() {
+		public LuaValue coerce(Object javaValue) {
+			return new JavaArray(javaValue);
+		}
+	};	
 }
