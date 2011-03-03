@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.luaj.vm2.LoadState;
+import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
@@ -70,7 +71,6 @@ import org.luaj.vm2.Varargs;
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
 public class BaseLib extends OneArgFunction implements ResourceFinder {
-	public static final String VERSION = "Luaj 2.0";
 	
 	public static BaseLib instance;
 	
@@ -128,7 +128,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	
 	public LuaValue call(LuaValue arg) {
 		env.set( "_G", env );
-		env.set( "_VERSION", VERSION );
+		env.set( "_VERSION", Lua._VERSION );
 		bind( env, BaseLib2.class, LIB2_KEYS );
 		bind( env, BaseLibV.class, LIBV_KEYS ); 
 		

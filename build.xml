@@ -72,13 +72,13 @@
 			<fileset dir="src/core"/>
 			<fileset dir="src/jme"/>
 			<filterchain>
-				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jme ${version}"'/></tokenfilter>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jme ${version}"'/></tokenfilter>
 			</filterchain>
 		</copy>
 		<copy todir="build/jse/src">
 			<fileset dir="src/core"/>
 			<filterchain>
-				<tokenfilter><replacestring from='"Luaj 0.0"' to='"luaj-jse ${version}"'/></tokenfilter>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jse ${version}"'/></tokenfilter>
 			</filterchain>
 		</copy>
 		<copy todir="build/jse/src">
