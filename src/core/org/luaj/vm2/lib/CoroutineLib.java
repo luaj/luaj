@@ -99,10 +99,7 @@ public class CoroutineLib extends VarArgFunction {
 				return valueOf( args.checkthread(1).getStatus() );
 			}
 			case YIELD: {
-				final LuaThread r = LuaThread.getRunning();
-				if ( LuaThread.isMainThread( r ) )
-					error("main thread can't yield");
-				return r.yield( args );
+				return LuaThread.yield( args );
 			}
 			case WRAP: {
 				final LuaValue func = args.checkfunction(1);

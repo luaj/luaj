@@ -95,3 +95,31 @@ step(111,222,333)
 step()
 step(111)
 step(111,222,333)
+
+-- test loops in resume calls
+b = coroutine.create( function( arg )
+	while ( true ) do
+		print( '  b-resumed', arg, b == coroutine.running() )
+		print( '  b-b', coroutine.status(b) ) 
+		print( '  b-c', coroutine.status(c) ) 
+		print( '  b-resume-b',coroutine.resume( b, 'b-arg-for-b' ) )
+		print( '  b-resume-c',coroutine.resume( c, 'b-arg-for-c' ) )
+		arg = coroutine.yield( 'b-rslt' )
+	end
+end )
+c = coroutine.create( function( arg )
+	for i=1,3 do
+		print( '    c-resumed', arg, c == coroutine.running() )
+		print( '    c-b', coroutine.status(b) ) 
+		print( '    c-c', coroutine.status(c) ) 
+		print( '    c-resume-b',coroutine.resume( b, 'b-arg-for-b' ) )
+		print( '    c-resume-c',coroutine.resume( c, 'b-arg-for-c' ) )
+		arg = coroutine.yield( 'c-rslt' )
+	end
+end )
+for i=1,3 do
+	print( 'main-b', coroutine.status(b) )
+	print( 'main-c', coroutine.status(c) )
+	print( 'main-resume-b',coroutine.resume( b, 'main-arg-for-b' ) )
+	print( 'main-resume-c',coroutine.resume( c, 'main-arg-for-c' ) )
+end
