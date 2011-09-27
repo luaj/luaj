@@ -135,6 +135,35 @@ abstract public class WeakTableTest extends TableTest {
 			collectGarbage();
 			assertEquals( null, origval.get() );
 		}
+		
+		public void testNext() {
+			LuaTable t = new WeakTable(true, true);
+			
+			LuaValue key = LuaValue.userdataOf(new MyData(111));
+			LuaValue val = LuaValue.userdataOf(new MyData(222));
+			LuaValue key2 = LuaValue.userdataOf(new MyData(333));
+			LuaValue val2 = LuaValue.userdataOf(new MyData(444));
+			LuaValue key3 = LuaValue.userdataOf(new MyData(555));
+			LuaValue val3 = LuaValue.userdataOf(new MyData(666));
+			
+			// set up the table
+			t.set( key, val );
+			t.set( key2, val2 );
+			t.set( key3, val3 );
+			
+			// forget one of the keys
+			key2 = null;
+			val2 = null;
+			collectGarbage();
+			
+			// table should have 2 entries
+			int size = 0;
+			for ( LuaValue k = t.next(LuaValue.NIL).arg1(); !k.isnil();
+					k = t.next(k).arg1() ) {
+				size++;
+			}
+			assertEquals(2, size);
+		}
 	}
 	
 	public static class WeakKeyValueTableTest extends WeakTableTest {
@@ -193,5 +222,33 @@ abstract public class WeakTableTest extends TableTest {
 			assertEquals( null, origval2.get() );
 			assertEquals( null, origkey3.get() );
 		}
-	}	
+		
+		public void testReplace() {
+			LuaTable t = new WeakTable(true, true);
+			
+			LuaValue key = LuaValue.userdataOf(new MyData(111));
+			LuaValue val = LuaValue.userdataOf(new MyData(222));
+			LuaValue key2 = LuaValue.userdataOf(new MyData(333));
+			LuaValue val2 = LuaValue.userdataOf(new MyData(444));
+			LuaValue key3 = LuaValue.userdataOf(new MyData(555));
+			LuaValue val3 = LuaValue.userdataOf(new MyData(666));
+			
+			// set up the table
+			t.set( key, val );
+			t.set( key2, val2 );
+			t.set( key3, val3 );
+			
+			LuaValue val4 = LuaValue.userdataOf(new MyData(777));
+			t.set( key2, val4 );
+			
+			// table should have 3 entries
+			int size = 0;
+			for ( LuaValue k = t.next(LuaValue.NIL).arg1();
+				  !k.isnil() && size < 1000;
+				  k = t.next(k).arg1() ) {
+				size++;
+			}
+			assertEquals(3, size);
+		}
+	}
 }

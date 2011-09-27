@@ -178,7 +178,7 @@ public class WeakTable extends LuaTable {
 					return 0;
 			}
 			else {
-				if ( k.raweq(key) )
+				if ( k.raweq(key.strongkey()) )
 					return i;
 				i = ( i + 1 ) % hashKeys.length;
 			}
@@ -204,7 +204,7 @@ public class WeakTable extends LuaTable {
 			LuaValue ks = k.strongkey();
 			LuaValue vs = n.arg(2).strongvalue();
 			if ( ks.isnil() || vs.isnil() ) {
-				super.rawset(ks, NIL);
+				super.rawset(k, NIL);
 			} else {
 				return varargsOf(ks,vs);
 			}
