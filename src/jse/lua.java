@@ -33,6 +33,7 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
@@ -138,12 +139,10 @@ public class lua {
 			processing = true;
 			for ( int i=0; i<args.length; i++ ) {
 				if ( ! processing || ! args[i].startsWith("-") ) {
-					setGlobalArg( _G, args, i );
-					processScript( new FileInputStream(args[i]), args[i] );
+					processScript( new FileInputStream(args[i]), args[i], args, i );
 					break;
 				} else if ( "-".equals( args[i] ) ) {
-					setGlobalArg( _G, args, i );
-					processScript( System.in, "=stdin" );
+					processScript( System.in, "=stdin", args, i );
 					break;
 				} else {
 					switch ( args[i].charAt(1) ) {
@@ -152,8 +151,7 @@ public class lua {
 						break;
 					case 'e':
 						++i;
-						setGlobalArg( _G, args, i );
-						processScript( new ByteArrayInputStream(args[i].getBytes()), "string" );
+						processScript( new ByteArrayInputStream(args[i].getBytes()), "string", args, i );
 						break;
 					case '-':
 						processing = false;
@@ -169,13 +167,6 @@ public class lua {
 			System.err.println( ioe.toString() );
 			System.exit(-2);
 		}
-	}
-
-	private static void setGlobalArg(LuaValue _g2, String[] args, int i) {
-		LuaTable arg = LuaValue.tableOf();
-		for ( int j=0; j<args.length; j++ )
-			arg.set( j-i, LuaValue.valueOf(args[j]) );
-		_G.set( "arg", arg );
 	}
 
 	private static void loadLibrary( String libname ) throws IOException {
@@ -195,7 +186,7 @@ public class lua {
 		}
 	}
 	
-	private static void processScript( InputStream script, String chunkname ) throws IOException {
+	private static void processScript( InputStream script, String chunkname, String[] args, int firstarg ) throws IOException {
 		try {
 			LuaFunction c;
 			try {
@@ -203,14 +194,21 @@ public class lua {
 			} finally {
 				script.close();
 			}
-			c.invoke( LuaValue.valueOf(chunkname) );
+			Varargs scriptargs = (args!=null? setGlobalArg(args, firstarg): LuaValue.NONE);
+			c.invoke( scriptargs );
 		} catch ( Throwable t ) {
 			t.printStackTrace( System.err );
 		}
 	}
 
-	private static final String[] NOARGS = {};
-	
+	private static Varargs setGlobalArg(String[] args, int i) {
+		LuaTable arg = LuaValue.tableOf();
+		for ( int j=0; j<args.length; j++ )
+			arg.set( j-i, LuaValue.valueOf(args[j]) );
+		_G.set( "arg", arg );
+		return _G.get("unpack").invoke(arg);
+	}
+
 	private static void interactiveMode( ) throws IOException {
 		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in ) );
 		while ( true ) {
@@ -219,7 +217,7 @@ public class lua {
 			String line = reader.readLine();
 			if ( line == null )
 				return;
-			processScript( new ByteArrayInputStream(line.getBytes()), "=stdin" );
+			processScript( new ByteArrayInputStream(line.getBytes()), "=stdin", null, 0 );
 		}
 	}
 }
