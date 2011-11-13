@@ -633,8 +633,49 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 		} finally { 
 			LuaBoolean.s_metatable = null;
 		}
-	}
+	}	
 	
+	public void testArithMetatagNumberTable() {
+		LuaValue zero = LuaValue.ZERO;
+		LuaValue one = LuaValue.ONE;
+		LuaValue tbl = new LuaTable();
+
+		try { tbl.add(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.add(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.ADD, RETURN_ONE, } ));
+		assertEquals( one, tbl.add(zero) );
+		assertEquals( one, zero.add(tbl) );
+
+		try { tbl.sub(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.sub(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.SUB, RETURN_ONE, } ));
+		assertEquals( one, tbl.sub(zero) );
+		assertEquals( one, zero.sub(tbl) );
+
+		try { tbl.mul(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.mul(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.MUL, RETURN_ONE, } ));
+		assertEquals( one, tbl.mul(zero) );
+		assertEquals( one, zero.mul(tbl) );
+		
+		try { tbl.div(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.div(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.DIV, RETURN_ONE, } ));
+		assertEquals( one, tbl.div(zero) );
+		assertEquals( one, zero.div(tbl) );
+
+		try { tbl.pow(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.pow(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.POW, RETURN_ONE, } ));
+		assertEquals( one, tbl.pow(zero) );
+		assertEquals( one, zero.pow(tbl) );
+
+		try { tbl.mod(zero); fail("did not throw error"); } catch ( LuaError le ) { };
+		try { zero.mod(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+		tbl.setmetatable(LuaValue.tableOf( new LuaValue[] { LuaValue.MOD, RETURN_ONE, } ));
+		assertEquals( one, tbl.mod(zero) );
+		assertEquals( one, zero.mod(tbl) );
+	}
 	
 	public void testCompareStrings() {
 		// these are lexical compare!

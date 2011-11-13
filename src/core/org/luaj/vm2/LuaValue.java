@@ -2161,27 +2161,23 @@ public class LuaValue extends Varargs {
 	public LuaValue   add( LuaValue rhs )        { return arithmt(ADD,rhs); }
 	
 	/** Add: Perform numeric add operation with another value 
-	 * of double type without metatag processing
+	 * of double type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #add(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the add with
 	 * @return  value of {@code (this + rhs)} if this is numeric  
 	 * @throws LuaError if {@code this} is not a number or string convertible to number  
 	 * @see #add(LuaValue)
 	 */
-	public LuaValue   add(double rhs)         { return aritherror("add"); }
+	public LuaValue   add(double rhs)         { return arithmtwith(ADD,rhs); }
 	
 	/** Add: Perform numeric add operation with another value 
-	 * of int type without metatag processing
+	 * of int type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #add(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the add with
 	 * @return  value of {@code (this + rhs)} if this is numeric  
@@ -2207,12 +2203,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   sub( LuaValue rhs )        { return arithmt(SUB,rhs); }
 	
 	/** Subtract: Perform numeric subtract operation with another value 
-	 * of double type without metatag processing
+	 * of double type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #sub(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the subtract with
 	 * @return  value of {@code (this - rhs)} if this is numeric  
@@ -2222,12 +2216,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   sub( double rhs )        { return aritherror("sub"); }
 	
 	/** Subtract: Perform numeric subtract operation with another value 
-	 * of int type without metatag processing
+	 * of int type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #sub(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the subtract with
 	 * @return  value of {@code (this - rhs)} if this is numeric  
@@ -2237,12 +2229,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   sub( int rhs )        { return aritherror("sub"); }
 	
 	/** Reverse-subtract: Perform numeric subtract operation from an int value 
-	 * without metatag processing
+	 * with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #sub(LuaValue)} must be used
 	 * 
 	 * @param lhs The left-hand-side value from which to perform the subtraction
 	 * @return  value of {@code (lhs - this)} if this is numeric 
@@ -2251,7 +2241,7 @@ public class LuaValue extends Varargs {
 	 * @see #sub(double)
 	 * @see #sub(int)
 	 */
-	public LuaValue   subFrom(double lhs)     { return aritherror("sub"); }
+	public LuaValue   subFrom(double lhs)     { return arithmtwith(SUB,lhs); }
 	
 	/** Reverse-subtract: Perform numeric subtract operation from a double value 
 	 * without metatag processing
@@ -2287,27 +2277,23 @@ public class LuaValue extends Varargs {
 	public LuaValue   mul( LuaValue rhs )        { return arithmt(MUL,rhs); }
 	
 	/** Multiply: Perform numeric multiply operation with another value 
-	 * of double type without metatag processing
+	 * of double type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #mul(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the multiply with
 	 * @return  value of {@code (this * rhs)} if this is numeric  
 	 * @throws LuaError if {@code this} is not a number or string convertible to number  
 	 * @see #mul(LuaValue)
 	 */
-	public LuaValue   mul(double rhs)         { return aritherror("mul"); }
+	public LuaValue   mul(double rhs)         { return arithmtwith(MUL,rhs); }
 	
 	/** Multiply: Perform numeric multiply operation with another value 
-	 * of int type without metatag processing
+	 * of int type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #mul(LuaValue)} must be used
 	 * 
 	 * @param rhs The right-hand-side value to perform the multiply with
 	 * @return  value of {@code (this * rhs)} if this is numeric  
@@ -2332,12 +2318,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   pow( LuaValue rhs )        { return arithmt(POW,rhs); }
 	
 	/** Raise to power: Raise this value to a power 
-	 * of double type without metatag processing
+	 * of double type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #pow(LuaValue)} must be used
 	 * 
 	 * @param rhs The power to raise this value to
 	 * @return  value of {@code (this ^ rhs)} if this is numeric  
@@ -2347,12 +2331,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   pow( double rhs )        { return aritherror("pow"); }
 	
 	/** Raise to power: Raise this value to a power 
-	 * of int type without metatag processing
+	 * of int type with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #pow(LuaValue)} must be used
 	 * 
 	 * @param rhs The power to raise this value to
 	 * @return  value of {@code (this ^ rhs)} if this is numeric  
@@ -2362,12 +2344,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   pow( int rhs )        { return aritherror("pow"); }
 	
 	/** Reverse-raise to power: Raise another value of double type to this power 
-	 * without metatag processing
+	 * with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #pow(LuaValue)} must be used
 	 * 
 	 * @param lhs The left-hand-side value which will be raised to this power
 	 * @return  value of {@code (lhs ^ this)} if this is numeric 
@@ -2376,15 +2356,13 @@ public class LuaValue extends Varargs {
 	 * @see #pow(double)
 	 * @see #pow(int)
 	 */
-	public LuaValue   powWith(double lhs)     { return aritherror("mul"); }
+	public LuaValue   powWith(double lhs)     { return arithmtwith(POW,lhs); }
 	
 	/** Reverse-raise to power: Raise another value of double type to this power 
-	 * without metatag processing
+	 * with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #pow(LuaValue)} must be used
 	 * 
 	 * @param lhs The left-hand-side value which will be raised to this power
 	 * @return  value of {@code (lhs ^ this)} if this is numeric 
@@ -2442,12 +2420,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   div( int rhs )        { return aritherror("div"); }
 	
 	/** Reverse-divide: Perform numeric divide operation into another value 
-	 * without metatag processing
+	 * with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #div(LuaValue)} must be used
 	 * 
 	 * @param lhs The left-hand-side value which will be divided by this
 	 * @return  value of {@code (lhs / this)} if this is numeric 
@@ -2456,7 +2432,7 @@ public class LuaValue extends Varargs {
 	 * @see #div(double)
 	 * @see #div(int)
 	 */
-	public LuaValue   divInto(double lhs)     { return aritherror("divInto"); }
+	public LuaValue   divInto(double lhs)     { return arithmtwith(DIV,lhs); }
 	
 	/** Modulo: Perform numeric modulo operation with another value 
 	 * of unknown type, 
@@ -2505,12 +2481,10 @@ public class LuaValue extends Varargs {
 	public LuaValue   mod( int rhs )        { return aritherror("mod"); }
 	
 	/** Reverse-modulo: Perform numeric modulo operation from another value 
-	 * without metatag processing
+	 * with metatag processing
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber}
 	 * or derive from {@link LuaString} and be convertible to a number
-	 * <p>
-	 * For metatag processing {@link #mod(LuaValue)} must be used
 	 * 
 	 * @param lhs The left-hand-side value which will be modulo'ed by this
 	 * @return  value of {@code (lhs % this)} if this is numeric 
@@ -2519,7 +2493,7 @@ public class LuaValue extends Varargs {
 	 * @see #mod(double)
 	 * @see #mod(int)
 	 */
-	public LuaValue   modFrom(double lhs)     { return aritherror("modFrom"); }
+	public LuaValue   modFrom(double lhs)     { return arithmtwith(MOD,lhs); }
 	
 	/** Perform metatag processing for arithmetic operations. 
 	 * <p>
@@ -2550,6 +2524,34 @@ public class LuaValue extends Varargs {
 				error( "attempt to perform arithmetic "+tag+" on "+typename()+" and "+op2.typename() );
 		}
 		return h.call( this, op2 );
+	}
+	
+	/** Perform metatag processing for arithmetic operations when the left-hand-side is a number. 
+	 * <p>
+	 * Finds the supplied metatag value for {@code this} and invokes it, 
+	 * or throws {@link LuaError} if neither is defined. 
+	 * @param tag The metatag to look up
+	 * @param op1 The value of the left-hand-side to perform the operation with
+	 * @return {@link LuaValue} resulting from metatag processing
+	 * @throws LuaError if metatag was not defined for either operand 
+	 * @see #add(LuaValue)
+	 * @see #sub(LuaValue)
+	 * @see #mul(LuaValue)
+	 * @see #pow(LuaValue)
+	 * @see #div(LuaValue)
+	 * @see #mod(LuaValue)
+	 * @see #ADD
+	 * @see #SUB
+	 * @see #MUL
+	 * @see #POW
+	 * @see #DIV
+	 * @see #MOD
+	 */
+	protected LuaValue arithmtwith(LuaValue tag, double op1) {
+		LuaValue h = metatag(tag);
+		if ( h.isnil() )
+			error( "attempt to perform arithmetic "+tag+" on number and "+typename() );
+		return h.call( LuaValue.valueOf(op1), this );
 	}
 	
 	/** Less than: Perform numeric or string comparison with another value 
