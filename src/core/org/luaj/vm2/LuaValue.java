@@ -1305,7 +1305,7 @@ public class LuaValue extends Varargs {
 	 *       break;
 	 *    LuaValue v = n.arg(2)
 	 *    process( k, v )
-	 * }</pre>
+	 * }}</pre>
 	 * @param index {@link LuaInteger} value identifying a key to start from, 
 	 * or {@link NIL} to start at the beginning
 	 * @return {@link Varargs} containing {key,value} for the next entry, 

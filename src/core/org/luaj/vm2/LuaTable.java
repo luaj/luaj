@@ -52,7 +52,7 @@ import java.util.Vector;
  *       break;
  *    LuaValue v = n.arg(2)
  *    process( k, v )
- * }</pre>
+ * }}</pre>
  * 
  * <p>
  * As with other types, {@link LuaTable} instances should be constructed via one of the table constructor 
