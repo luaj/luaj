@@ -45,14 +45,15 @@
 	</target>
 	
 	<target name="javacc-lib" unless="javacc.lib.exists">
-		<get src="https://javacc.dev.java.net/files/documents/17/138912/javacc-5.0.zip"
-			dest="lib/javacc-5.0.zip"/>
-		<unzip src="lib/javacc-5.0.zip" dest="lib" overwrite="true">
+		<get src="http://java.net/projects/javacc/downloads/download/javacc-5.0.tar.gz"
+			dest="lib/javacc-5.0.tar.gz"/>
+		<gunzip src="lib/javacc-5.0.tar.gz" dest="lib/javacc-5.0.tar"/>
+		<untar src="lib/javacc-5.0.tar" dest="lib" overwrite="true">
 		    <patternset>
 		        <include name="**/javacc.jar"/>
 		    </patternset>
 		    <mapper type="flatten"/>
-		</unzip>
+		</untar>
 	</target>
 
 	<target name="parser" depends="javacc-lib">
