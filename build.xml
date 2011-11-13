@@ -7,8 +7,6 @@
 	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
 	<property name="jar.name.sources" value="luaj-sources-${version}.jar"/>
 
-	<import file="wtk.xml"/>
-
 	<target name="clean">
 		<delete dir="build"/>
 		<delete>
@@ -16,13 +14,26 @@
 		</delete>
 	</target>
 
+	<available file="lib/midpapi20.jar" property="midpapi.lib.exists"/>
 	<available file="lib/bcel-5.2.jar" property="bcel.lib.exists"/>			
-	<available file="lib/luaj-j2se-1.0.4.jar" property="luaj1.lib.exists"/>			
 	<available file="lib/javacc.jar" property="javacc.lib.exists"/>			
+
+	<target name="wtk-libs" unless="midpapi.lib.exists">
+		<mkdir dir="lib"/>
+		<get src="http://luaj.sourceforge.net/lib/wtk-2.5.2-api.tar.gz" 
+			dest="lib/wtk-2.5.2-api.tar.gz"/>
+		<gunzip src="lib/wtk-2.5.2-api.tar.gz" dest="lib/wtk-2.5.2-api.tar"/>
+		<untar src="lib/wtk-2.5.2-api.tar" dest="lib" overwrite="true">
+		    <patternset>
+		        <include name="**/*.jar"/>
+		    </patternset>
+		    <mapper type="flatten"/>
+		</untar>
+	</target>
 
 	<target name="bcel-lib" unless="bcel.lib.exists">
 		<mkdir dir="lib"/>
-		<get src="http://archive.apache.org/dist/jakarta/bcel/binaries/bcel-5.2.tar.gz" 
+		<get src="http://luaj.sourceforge.net/lib/bcel-5.2.tar.gz" 
 			dest="lib/bcel-5.2.tar.gz"/>
 		<gunzip src="lib/bcel-5.2.tar.gz" dest="lib/bcel-5.2.tar"/>
 		<untar src="lib/bcel-5.2.tar" dest="lib" overwrite="true">
@@ -33,19 +44,8 @@
 		</untar>
 	</target>
 	
-	<target name="luaj1-lib" unless="luaj1.lib.exists">
-		<get src="http://downloads.sourceforge.net/project/luaj/luaj-1.0/1.0.4/luaj-1.0.4.zip"
-			dest="lib/luaj-1.0.4.zip"/>
-		<unzip src="lib/luaj-1.0.4.zip" dest="lib" overwrite="true">
-		    <patternset>
-		        <include name="**/*.jar"/>
-		    </patternset>
-		    <mapper type="flatten"/>
-		</unzip>
-	</target>
-	
 	<target name="javacc-lib" unless="javacc.lib.exists">
-		<get src="http://java.net/projects/javacc/downloads/download/javacc-5.0.tar.gz"
+		<get src="http://luaj.sourceforge.net/lib/javacc-5.0.tar.gz"
 			dest="lib/javacc-5.0.tar.gz"/>
 		<gunzip src="lib/javacc-5.0.tar.gz" dest="lib/javacc-5.0.tar"/>
 		<untar src="lib/javacc-5.0.tar" dest="lib" overwrite="true">
@@ -62,7 +62,7 @@
 		</java>
 	</target>
 		
-	<target name="compile" depends="wtk-or-fail,bcel-lib">
+	<target name="compile" depends="wtk-libs,bcel-lib">
 		<delete dir="build/jme/src"/>
 		<delete dir="build/jse/src"/>
 		<mkdir dir="build/jme/src"/>
@@ -103,6 +103,11 @@
 				<tokenfilter><replacestring from='&lt;LuaString,String&gt;' to=''/></tokenfilter>
 			</filterchain>
 		</copy>
+		<path id="wtk-libs">
+			<pathelement path="lib/cldcapi11.jar"/>
+			<pathelement path="lib/midpapi20.jar"/>
+			<pathelement path="lib/mmapi.jar"/>
+		</path>
 		<javac destdir="build/jme/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
 			srcdir="build/jme/src"/>
 		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
