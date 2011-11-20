@@ -1,8 +1,6 @@
 <project default="all">
 	<property file="version.properties"/>
-	
-	<property environment="env"/>
-	
+		
 	<property name="jar.name.jme" value="luaj-jme-${version}.jar"/>
 	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
 	<property name="jar.name.sources" value="luaj-sources-${version}.jar"/>
@@ -14,47 +12,7 @@
 		</delete>
 	</target>
 
-	<available file="lib/midpapi20.jar" property="midpapi.lib.exists"/>
-	<available file="lib/bcel-5.2.jar" property="bcel.lib.exists"/>			
-	<available file="lib/javacc.jar" property="javacc.lib.exists"/>			
-
-	<target name="wtk-libs" unless="midpapi.lib.exists">
-		<mkdir dir="lib"/>
-		<get src="http://luaj.sourceforge.net/lib/wtk-2.5.2-api.tar.gz" 
-			dest="lib/wtk-2.5.2-api.tar.gz"/>
-		<gunzip src="lib/wtk-2.5.2-api.tar.gz" dest="lib/wtk-2.5.2-api.tar"/>
-		<untar src="lib/wtk-2.5.2-api.tar" dest="lib" overwrite="true">
-		    <patternset>
-		        <include name="**/*.jar"/>
-		    </patternset>
-		    <mapper type="flatten"/>
-		</untar>
-	</target>
-
-	<target name="bcel-lib" unless="bcel.lib.exists">
-		<mkdir dir="lib"/>
-		<get src="http://luaj.sourceforge.net/lib/bcel-5.2.tar.gz" 
-			dest="lib/bcel-5.2.tar.gz"/>
-		<gunzip src="lib/bcel-5.2.tar.gz" dest="lib/bcel-5.2.tar"/>
-		<untar src="lib/bcel-5.2.tar" dest="lib" overwrite="true">
-		    <patternset>
-		        <include name="**/*.jar"/>
-		    </patternset>
-		    <mapper type="flatten"/>
-		</untar>
-	</target>
-	
-	<target name="javacc-lib" unless="javacc.lib.exists">
-		<get src="http://luaj.sourceforge.net/lib/javacc-5.0.tar.gz"
-			dest="lib/javacc-5.0.tar.gz"/>
-		<gunzip src="lib/javacc-5.0.tar.gz" dest="lib/javacc-5.0.tar"/>
-		<untar src="lib/javacc-5.0.tar" dest="lib" overwrite="true">
-		    <patternset>
-		        <include name="**/javacc.jar"/>
-		    </patternset>
-		    <mapper type="flatten"/>
-		</untar>
-	</target>
+	<import file="build-libs.xml"/>
 
 	<target name="parser" depends="javacc-lib">
 		<java classname="javacc" classpath="lib/javacc.jar">
@@ -192,6 +150,7 @@
 		<copy todir="build/luaj-${version}">
 		    <fileset dir=".">
 				<include name="build.xml"/>
+				<include name="build-libs.xml"/>
 				<include name="build-coverage.xml"/>
 				<include name="version.properties"/>
 				<include name="wtk.xml"/>
