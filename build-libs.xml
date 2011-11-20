@@ -7,6 +7,7 @@
 	<available file="lib/antenna-bin-1.2.0-beta.jar" property="antenna.lib.exists"/>			
 	<available file="lib/junit.jar" property="junit.lib.exists"/>
 	<available file="lib/cobertura.jar" property="cobertura.lib.exists"/>
+	<available file="lib/microemulator.jar" property="microemulator.lib.exists"/>
 
 	<macrodef name="download">
 		<attribute name="zipname"/>
@@ -44,6 +45,9 @@
 	</target>
 	<target name="cobertura-lib" unless="cobertura.lib.exists">
 		<download zipname="cobertura-1.9.4.1-bin"/>
+	</target>
+	<target name="microemulator-lib" unless="microemulator.lib.exists">
+		<download zipname="microemulator-2.0.4" jars="**/microemulator.jar"/>
 	</target>
 
 	<target name="all-libs" depends="wtk-libs,bcel-lib,javacc-lib,proguard-lib,antenna-lib,junit-lib,cobertura-lib"/>

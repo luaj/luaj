@@ -1,16 +1,9 @@
 <?xml version="1.0"?>
 <project name="sample" default="all" basedir=".">
+	<property file="version.properties"/>
 
-	<!-- find wtk -->
-	<property environment="env"/>
-	<property name="env.WTK_HOME" value="c:\WTK-2.2" />
-	<property name="wtk.home" value="${env.WTK_HOME}" />
-	<echo level="info">wtk.home: ${wtk.home}</echo>
-	
-	<!-- set wtk parameters -->
-    <property name="wtk.cldc.version" value="1.1"/>
-    <property name="wtk.midp.version" value="2.0"/>
-    <taskdef resource="antenna.properties"/>
+	<!-- find libs -->
+	<import file="build-libs.xml"/>
 	
 	<!-- main script -->
 	<property name="script.name"  value="hello"/>
@@ -26,8 +19,7 @@
         <mkdir dir="build/classes"/>
 	</target>
 	
-	<target name="tools" depends="dirs">
-		<ant antfile="build.xml" target="bcel-lib"/>
+	<target name="tools" depends="dirs,bcel-lib,wtk-libs,microemulator-lib">
 		<javac destdir="build/tool" classpath="lib/bcel-5.2.jar">
 			<src path="src/core"/>
 			<src path="src/jse"/>
@@ -43,7 +35,7 @@
 	</target>
 
 	<!-- compile script into java bytecode -->
-	<target name="luajc" depends="tools">
+	<target name="luajc" depends="tools,wtk-libs">
 		<java classname="luajc" classpath="build/tool:lib/bcel-5.2.jar">
 			<arg line="-verbose"/>
 			<arg line="-srcdir ${script.dir}"/>
@@ -52,51 +44,68 @@
 		</java>
 	</target>
 	
-	<target name="classes" depends="dirs">
-        <wtkbuild srcdir="src/core"     destdir="build/classes" preverify="false"/>
-        <wtkbuild srcdir="src/jme"      destdir="build/classes" preverify="false"/>
-		<wtkbuild srcdir="examples/jme" destdir="build/classes" preverify="false"/>
+	<target name="classes" depends="dirs,wtk-libs">
+		<mkdir dir="build/midlet/src"/>
+		<copy todir="build/midlet/src">
+			<fileset dir="src/core"/>
+			<fileset dir="src/jme"/>
+			<fileset dir="examples/jme"/>
+			<filterchain>
+				<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jme ${version}"'/></tokenfilter>
+			</filterchain>
+		</copy>
+		<path id="wtk-libs">
+			<pathelement path="lib/cldcapi11.jar"/>
+			<pathelement path="lib/midpapi20.jar"/>
+			<pathelement path="lib/mmapi.jar"/>
+		</path>
+		<javac destdir="build/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
+			srcdir="build/midlet/src"/>
+	</target>
+
+	<target name="jar" depends="luajc,classes">
+		 <jar destfile="build/sample-plain.jar"
+		       basedir="build/classes"/>
 	</target>
 		
-    <target name="jad" depends="classes">
-		<wtkjad jadfile="build/sample.jad"
-			manifest="build/MANIFEST.MF"
-			name="LuaJ Sample Midlet"
-			vendor="luaj.org"
-			version="0.1" >
-		    <midlet name="LuaJ Sample Midlet" class="SampleMIDlet"/>
-			<attribute name="script" value="${script.name}"/>
-		</wtkjad>
+	<target name="obf" depends="jar,proguard-lib">
+		<taskdef resource="proguard/ant/task.properties" classpath="lib/proguard.jar" />
+		<proguard>
+			-injars      build/sample-plain.jar
+			-outjars     build/sample.jar
+			-libraryjars lib/midpapi20.jar
+			-libraryjars lib/cldcapi11.jar
+			-overloadaggressively
+			-repackageclasses ''
+			-microedition
+
+			-keep public class SampleMIDlet			
+			-keep public class * extends org.luaj.vm2.LuaValue
+		</proguard>		 
+	</target>
+		
+    <target name="jad" depends="obf">
+    	<length file="build/sample.jar" property="sample.jar.length" />
+    	<echo level="info">Jar file length is ${sample.jar.length}</echo>
+    	<manifest file="build/sample.jad">
+    	    <attribute name="Built-By" value="luaj-${version}"/>
+    	    <attribute name="MIDlet-Name" value="Luaj ${script.name}"/>
+    	    <attribute name="MIDlet-Version" value="${version}"/>
+    	    <attribute name="MIDlet-Vendor" value="luaj.org"/>
+    	    <attribute name="MIDlet-Description" value="Luaj Sample Midlet"/>
+    	    <attribute name="MIDlet-1" value="${script.name}-${version}, , SampleMIDlet"/>
+      	    <attribute name="MIDlet-Jar-URL" value="sample.jar"/>
+      	    <attribute name="MIDlet-Jar-Size" value="${sample.jar.length}"/>
+        	<attribute name="script" value="${script.name}"/>
+    	</manifest>
     </target>
 
-	<target name="jar" depends="luajc,classes,jad">
-        <wtkpackage jarfile="build/sample.jar"
-                    jadfile="build/sample.jad"
-                    obfuscate="false"
-                    preverify="false"
-                    autoversion="true">
-            <fileset dir="build/classes"/>
-        </wtkpackage>
-	</target>
-	
-	<target name="obf" depends="jar">
-        <wtkobfuscate jarfile="build/sample.jar"
-					  jadfile="build/sample.jad">
-        	<preserve class="${script.name}"/>
-			<argument value="-printmapping build/mapping.txt"/>
-			<argument value="-repackageclasses"/>
-        	<argument value="-allowaccessmodification"/>
-			<argument value='""'/>
-   		</wtkobfuscate>
-	</target>
+	<target name="package" depends="jad,jar,obf"/>
 
-	<target name="package" depends="jad,jar,obf">
-		<wtkpreverify jarfile="build/sample.jar"
-                      jadfile="build/sample.jad"/>
-    </target>
-
-	<target name="run" depends="package">
-		<wtkrun jadfile="build/sample.jad" device="DefaultColorPhone"/>
+	<target name="run" depends="jad,jar,obf,microemulator-lib">
+		<java jar="lib/microemulator.jar" fork="true">
+			<arg path="build/sample.jad"/>
+		</java>
 	</target>
 	
 	<target name="all" depends="clean,package,run"/>
