@@ -413,28 +413,26 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	
 	
 	private static class StringInputStream extends InputStream {
-		LuaValue func;
+		final LuaValue func;
 		byte[] bytes; 
-		int offset;
+		int offset, remaining = 0;
 		StringInputStream(LuaValue func) {
 			this.func = func;
 		}
 		public int read() throws IOException {
-			if ( func == null ) return -1;
-			if ( bytes == null ) {
+			if ( remaining <= 0 ) {
 				LuaValue s = func.call();
-				if ( s.isnil() ) {
-					func = null;
-					bytes = null;
+				if ( s.isnil() )
 					return -1;
-				}
-				bytes = s.tojstring().getBytes();
-				offset = 0;
+				LuaString ls = s.strvalue();
+				bytes = ls.m_bytes;
+				offset = ls.m_offset;
+				remaining = ls.m_length;
+				if (remaining <= 0)
+					return -1;
 			}
-			if ( offset >= bytes.length )
-				return -1;
+			--remaining;
 			return bytes[offset++];
-			
 		}
 	}
 }

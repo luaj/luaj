@@ -95,6 +95,23 @@ public class OrphanedThreadTest extends TestCase {
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
+	public void testCollectOrphanedLoadCloasureThread() throws Exception {
+		String script =
+			"t = { \"print \", \"'hello, \", \"world'\", }\n" +
+			"i = 0\n" +
+			"arg = ...\n" +
+			"f = function()\n" +
+			"	i = i + 1\n" +
+			"   print('in load-closure, arg is', arg, 'next is', t[i])\n" +
+			"   arg = coroutine.yield(1)\n" +
+			"	return t[i]\n" +
+		    "end\n" +
+			"load(f)()\n";
+		LuaC.install();
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", env);
+		doTest(LuaValue.TRUE, LuaValue.ONE);
+	}
+
 	private void doTest(LuaValue status2, LuaValue value2) throws Exception {
 		luathread = new LuaThread(function, env);
 		luathr_ref = new WeakReference(luathread);
@@ -103,11 +120,11 @@ public class OrphanedThreadTest extends TestCase {
 		
 		// resume two times
 		Varargs a = luathread.resume(LuaValue.valueOf("foo"));
-		assertEquals(LuaValue.TRUE, a.arg1());
 		assertEquals(LuaValue.ONE, a.arg(2));
+		assertEquals(LuaValue.TRUE, a.arg1());
 		a = luathread.resume(LuaValue.valueOf("bar"));
-		assertEquals(status2, a.arg1());
 		assertEquals(value2, a.arg(2));
+		assertEquals(status2, a.arg1());
 		
 		// drop strong references
 		luathread = null;
