@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import java.lang.ref.WeakReference;
+
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
@@ -244,7 +246,7 @@ public class DebugLib extends VarArgFunction {
 	
 	/** DebugState is associated with a Thread */
 	static class DebugState {
-		private final LuaThread thread;
+		private final WeakReference thread_ref;
 		private int debugCalls = 0;
 		private DebugInfo[] debugInfo = new DebugInfo[LuaThread.MAX_CALLSTACK+1];
 		private LuaValue hookfunc;
@@ -252,7 +254,7 @@ public class DebugLib extends VarArgFunction {
 		private int hookcount,hookcodes;
 		private int line;
 		DebugState(LuaThread thread) {
-			this.thread = thread;
+			this.thread_ref = new WeakReference(thread);
 		}
 		public DebugInfo nextInfo() {
 			DebugInfo di = debugInfo[debugCalls];
@@ -318,7 +320,8 @@ public class DebugLib extends VarArgFunction {
 			return new DebugInfo(func);
 		}
 		public String tojstring() {
-			return DebugLib.traceback(thread, 0);
+			LuaThread thread = (LuaThread) thread_ref.get();
+			return thread != null? DebugLib.traceback(thread, 0): "orphaned thread";
 		}
 	}
 	

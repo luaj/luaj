@@ -79,11 +79,11 @@ abstract public class VarArgFunction extends LibFunction {
 	 * @param args the arguments to the function call.
 	 */
 	public Varargs invoke(Varargs args) {
-		LuaThread.onCall(this);
+		LuaThread.CallStack cs = LuaThread.onCall(this);
 		try {
 			return this.onInvoke(args).eval();
 		} finally {
-			LuaThread.onReturn();
+			cs.onReturn();
 		}
 	}
 

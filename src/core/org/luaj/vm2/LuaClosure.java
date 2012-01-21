@@ -197,7 +197,7 @@ public class LuaClosure extends LuaFunction {
 			DebugLib.debugSetupCall(varargs, stack);
 
 		// process instructions
-		LuaThread.onCall( this ); 
+		LuaThread.CallStack cs = LuaThread.onCall( this ); 
 		try {
 			while ( true ) {
 				if (DebugLib.DEBUG_ENABLED) 
@@ -500,11 +500,10 @@ public class LuaClosure extends LuaFunction {
 			}
 		} catch ( LuaError le ) {
 			throw le;
-		} catch ( Throwable t ) {
-			LuaError le = new LuaError(t);
-			throw le;
+		} catch ( Exception e ) {
+			throw new LuaError(e);
 		} finally {
-			LuaThread.onReturn();
+			cs.onReturn();
 			if ( openups != null )
 				for ( int u=openups.length; --u>=0; )
 					if ( openups[u] != null )

@@ -47,7 +47,7 @@ public class AllTests {
 		vm.addTestSuite(MetatableTest.class);
 		vm.addTestSuite(LuaOperationsTest.class);
 		vm.addTestSuite(StringTest.class);
-		vm.addTestSuite(LuaThreadTest.class);
+		vm.addTestSuite(OrphanedThreadTest.class);
 		suite.addTest(vm);
 
 		// table tests

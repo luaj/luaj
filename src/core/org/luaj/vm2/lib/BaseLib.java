@@ -18,11 +18,13 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
-******************************************************************************/package org.luaj.vm2.lib;
+******************************************************************************/
+package org.luaj.vm2.lib;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.lang.ref.WeakReference;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
@@ -249,20 +251,20 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			case 7: // "pcall", // (f, arg1, ...) -> status, result1, ...
 			{
 				LuaValue func = args.checkvalue(1);
-				LuaThread.onCall(this);
+				LuaThread.CallStack cs = LuaThread.onCall(this);
 				try {
 					return pcall(func,args.subargs(2),null);
 				} finally {
-					LuaThread.onReturn();
+					cs.onReturn();
 				}
 			}
 			case 8: // "xpcall", // (f, err) -> result1, ...				
 			{
-				LuaThread.onCall(this);
+				LuaThread.CallStack cs = LuaThread.onCall(this);
 				try {
 					return pcall(args.arg1(),NONE,args.checkvalue(2));
 				} finally {
-					LuaThread.onReturn();
+					cs.onReturn();
 				}
 			}
 			case 9: // "print", // (...) -> void
@@ -358,13 +360,18 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 
 	public static Varargs pcall(LuaValue func, Varargs args, LuaValue errfunc) {
 		try {
-			LuaThread thread = LuaThread.getRunning();
-			LuaValue olderr = thread.err;
-			try {
-				thread.err = errfunc;
+			if (errfunc == null) {
 				return varargsOf(LuaValue.TRUE, func.invoke(args));
-			} finally {
-				thread.err = olderr;
+			} else {
+				LuaValue preverr = LuaThread.setErrorFunc(errfunc);
+				WeakReference ref = new WeakReference(LuaThread.getRunning());
+				try {
+					return varargsOf(LuaValue.TRUE, func.invoke(args));
+				} finally {
+					LuaThread lt = (LuaThread) ref.get();
+					if (lt != null)
+						lt.err = preverr;
+				}
 			}
 		} catch ( LuaError le ) {
 			String m = le.getMessage();
