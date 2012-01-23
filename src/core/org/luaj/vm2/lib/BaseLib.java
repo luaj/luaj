@@ -24,7 +24,6 @@ package org.luaj.vm2.lib;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.lang.ref.WeakReference;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
@@ -359,24 +358,17 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	}
 
 	public static Varargs pcall(LuaValue func, Varargs args, LuaValue errfunc) {
+		LuaValue olderr = LuaThread.setErrorFunc(errfunc);
 		try {
-			if (errfunc == null) {
-				return varargsOf(LuaValue.TRUE, func.invoke(args));
-			} else {
-				LuaValue preverr = LuaThread.setErrorFunc(errfunc);
-				WeakReference ref = new WeakReference(LuaThread.getRunning());
-				try {
-					return varargsOf(LuaValue.TRUE, func.invoke(args));
-				} finally {
-					LuaThread lt = (LuaThread) ref.get();
-					if (lt != null)
-						lt.err = preverr;
-				}
-			}
+			Varargs result =  varargsOf(LuaValue.TRUE, func.invoke(args));
+			LuaThread.setErrorFunc(olderr);
+			return result;
 		} catch ( LuaError le ) {
+			LuaThread.setErrorFunc(olderr);
 			String m = le.getMessage();
 			return varargsOf(FALSE, m!=null? valueOf(m): NIL);
 		} catch ( Exception e ) {
+			LuaThread.setErrorFunc(olderr);
 			String m = e.getMessage();
 			return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 		}
