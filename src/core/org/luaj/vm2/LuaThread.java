@@ -339,9 +339,9 @@ public class LuaThread extends LuaValue {
 		 * @see DebugLib
 		 */
 		public final void onReturn() {
+			functions[--calls] = null;
 			if (DebugLib.DEBUG_ENABLED) 
 				DebugLib.debugOnReturn(running_thread, calls);
-			functions[--calls] = null;
 		}
 		
 		/**
