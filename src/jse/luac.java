@@ -172,8 +172,8 @@ public class luac {
 	            DumpState.dump(chunk, out, stripdebug, numberformat, littleendian);
 	        }
 	        
-		} catch ( Throwable t ) {
-			t.printStackTrace( System.err );
+		} catch ( Exception e ) {
+			e.printStackTrace( System.err );
 		} finally {
 			script.close();
 		}

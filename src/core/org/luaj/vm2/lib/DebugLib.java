@@ -286,8 +286,8 @@ public class DebugLib extends VarArgFunction {
 				} finally {
 					ds.popInfo(n);
 				}
-			} catch ( Throwable  t ) {
-				t.printStackTrace();
+			} catch ( Exception e ) {
+				e.printStackTrace();
 			} finally {
 				inhook = false;
 			}
@@ -302,7 +302,7 @@ public class DebugLib extends VarArgFunction {
 		DebugInfo getDebugInfo() {
 			try {
 				return debugInfo[debugCalls-1];
-			} catch ( Throwable t ) {
+			} catch ( Exception e ) {
 				if ( debugCalls <= 0 )
 					return debugInfo[debugCalls++] = new DebugInfo();
 				return null;

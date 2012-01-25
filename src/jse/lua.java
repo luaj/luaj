@@ -196,8 +196,8 @@ public class lua {
 			}
 			Varargs scriptargs = (args!=null? setGlobalArg(args, firstarg): LuaValue.NONE);
 			c.invoke( scriptargs );
-		} catch ( Throwable t ) {
-			t.printStackTrace( System.err );
+		} catch ( Exception e ) {
+			e.printStackTrace( System.err );
 		}
 	}
 

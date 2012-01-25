@@ -206,8 +206,8 @@ public class lua2java {
 			pw.close();
 			out.close();
 			in.close();
-		} catch ( Throwable t ) {
-			t.printStackTrace( System.err );
+		} catch ( Exception e ) {
+			e.printStackTrace( System.err );
 		}
 	}
 }

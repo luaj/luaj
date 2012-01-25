@@ -189,8 +189,8 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 			} finally { 
 				ris.close();
 			}
-		} catch ( Throwable t ) {
-			throw new ScriptException("eval threw "+t.toString());
+		} catch ( Exception e ) {
+			throw new ScriptException("eval threw "+e.toString());
 		}
 	}
 	

@@ -228,17 +228,17 @@ public class luajc {
                 		Object o = c.newInstance();
                 		if ( verbose )
     	        			System.out.println("    loaded "+classname+" as "+o );
-	        		} catch ( Throwable th ) {
+	        		} catch ( Exception ex ) {
 	        			System.out.flush();
-	        			System.err.println("    failed to load "+classname+": "+th );
+	        			System.err.println("    failed to load "+classname+": "+ex );
 	        			System.err.flush();
 	        		}
             	}
         	}
         	
-		} catch ( Throwable t ) {
-			System.err.println("    failed to load "+inf.srcfilename+": "+t );
-			t.printStackTrace( System.err );
+		} catch ( Exception e ) {
+			System.err.println("    failed to load "+inf.srcfilename+": "+e );
+			e.printStackTrace( System.err );
 			System.err.flush();
 		}
 	}
