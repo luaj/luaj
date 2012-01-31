@@ -63,6 +63,11 @@ class JavaMethod extends JavaMember {
 	private JavaMethod(Method m) {
 		super( m.getParameterTypes(), m.getModifiers() );
 		this.method = m;
+		try {
+			if (!m.isAccessible())
+				m.setAccessible(true);
+		} catch (SecurityException s) {
+		}
 	}
 
 	public LuaValue call() {

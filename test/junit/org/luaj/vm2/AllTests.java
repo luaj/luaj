@@ -32,6 +32,7 @@ import org.luaj.vm2.compiler.DumpLoadEndianIntTest;
 import org.luaj.vm2.compiler.RegressionTests;
 import org.luaj.vm2.compiler.SimpleTests;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
+import org.luaj.vm2.lib.jse.LuajavaAccessibleMembersTest;
 import org.luaj.vm2.lib.jse.LuajavaClassMembersTest;
 import org.luaj.vm2.vm1.Luajvm1CompatibilityTest;
 
@@ -74,6 +75,7 @@ public class AllTests {
 		
 		// library tests
 		TestSuite lib = new TestSuite("Library Tests");
+		lib.addTestSuite(LuajavaAccessibleMembersTest.class);
 		lib.addTestSuite(LuajavaClassMembersTest.class);
 		lib.addTestSuite(LuaJavaCoercionTest.class);
 		lib.addTestSuite(RequireClassTest.class);

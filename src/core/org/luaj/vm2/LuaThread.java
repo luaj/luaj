@@ -47,12 +47,12 @@ import org.luaj.vm2.lib.DebugLib;
  * The behavior of coroutine threads matches closely the behavior 
  * of C coroutine library.  However, because of the use of Java threads 
  * to manage call state, it is possible to yield from anywhere in luaj. 
- * On the other hand, if a {@link LuaThread} is created, then yields 
- * without ever entering a completed state, then the garbage collector 
- * may not be able to determine that the thread needs to be collected, 
- * and this could cause a memory and resource leak.  It is recommended
- * that all coroutines that are created are resumed until they are in 
- * a completed state. 
+ * <p>
+ * Each Java thread wakes up at regular intervals and checks a weak reference
+ * to determine if it can ever be resumed.  If not, it throws 
+ * {@link OrphanedThread} which is an {@link java.lang.Error}. 
+ * Applications should not catch {@link OrphanedThread}, because it can break
+ * the thread safety of luaj.
  *   
  * @see LuaValue
  * @see JsePlatform
@@ -64,7 +64,10 @@ public class LuaThread extends LuaValue {
 	public static LuaValue s_metatable;
 
 	public static int coroutine_count = 0;
-	
+
+	/** Interval at which to check for lua threads that are no longer referenced. 
+	 * This can be changed by Java startup code if desired.
+	 */
 	static long thread_orphan_check_interval = 30000;
 	
 	private static final int STATUS_INITIAL       = 0;

@@ -76,9 +76,17 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 		if ( fields == null ) {
 			Map m = new HashMap();
 			Field[] f = ((Class)m_instance).getFields();
-			for ( int i=0; i<f.length; i++ ) 
-				if ( Modifier.isPublic(f[i].getModifiers()) )
-					m.put( LuaValue.valueOf(f[i].getName()), f[i] );
+			for ( int i=0; i<f.length; i++ ) {
+				Field fi = f[i];
+				if ( Modifier.isPublic(fi.getModifiers()) ) {
+					m.put( LuaValue.valueOf(fi.getName()), fi );
+					try {
+						if (!fi.isAccessible())
+							fi.setAccessible(true);
+					} catch (SecurityException s) {
+					}
+				}
+			}
 			fields = m;
 		}
 		return (Field) fields.get(key);
