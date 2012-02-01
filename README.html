@@ -19,7 +19,7 @@ Getting Started with LuaJ
 James Roseborough, Ian Farmer, Version 2.0.3
 <p>
 <small>
-Copyright &copy; 2009-2010 Luaj.org.
+Copyright &copy; 2009-2012 Luaj.org.
 Freely available under the terms of the
 <a href="http://sourceforge.net/dbimage.php?id=196142">Luaj license</a>.
 </small>
@@ -189,6 +189,12 @@ From the main distribution directory line type:
 You should see the following output:
 <pre>
 	hello, world
+</pre>
+
+To see how luaj can be used to acccess most Java API's including swing, try:
+
+<pre>
+	java -cp lib/luaj-jse-2.0.3.jar lua examples/lua/swingapp.lua
 </pre>
 
 <h2>Compile lua source to lua bytecode</h2>
@@ -501,7 +507,7 @@ The <em>JsePlatform.standardGlobals()</em> includes the <em>luajava</em> library
 It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
 
 <p>
-The following lua script will open a swiing frame on Java SE:
+The following lua script will open a swing frame on Java SE:
 <pre>
 	jframe = luajava.bindClass( "javax.swing.JFrame" )
 	frame = luajava.newInstance( "javax.swing.JFrame", "Texts" );
@@ -511,7 +517,8 @@ The following lua script will open a swiing frame on Java SE:
 </pre>
 
 <p>
-See a longer sample in <em>examples/lua/swingapp.lua</em> for details, or try running it using: 
+See a longer sample in <em>examples/lua/swingapp.lua</em> for details, including a simple animation loop, rendering graphics, mouse and key handling, and image loading. 
+Or try running it using: 
 <pre>
 	java -cp lib/luaj-jse-2.0.3.jar lua examples/lua/swingapp.lua
 </pre>
