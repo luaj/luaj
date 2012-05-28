@@ -13,6 +13,7 @@
 		<attribute name="zipname"/>
 		<attribute name="jars" default="**/*.jar"/>
 		<sequential>
+			<mkdir dir="lib"/>
 			<get src="http://luaj.sourceforge.net/lib/@{zipname}.tar.gz" 
 				dest="lib/@{zipname}.tar.gz"/>
 			<gunzip src="lib/@{zipname}.tar.gz" dest="lib/@{zipname}.tar"/>
