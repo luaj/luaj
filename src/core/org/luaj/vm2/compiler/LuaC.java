@@ -34,6 +34,7 @@ import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
+import org.luaj.vm2.Upvaldesc;
 import org.luaj.vm2.LoadState.LuaCompiler;
 
 /**
@@ -83,7 +84,7 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 	
 	public static final int MAXSTACK = 250;
-	static final int LUAI_MAXUPVALUES = 60;
+	static final int LUAI_MAXUPVAL = 0xff;
 	static final int LUAI_MAXVARS = 200;
 	static final int NO_REG		 = MAXARG_A;
 	
@@ -106,6 +107,10 @@ public class LuaC extends Lua implements LuaCompiler {
 		i.set( ( i.get() & (MASK_NOT_OP)) | ((o << POS_OP) & MASK_OP) );
 	}
 	
+	static void SETARG_A(int[] code, int index, int u) {
+		code[index] = (code[index] & (MASK_NOT_A)) | ((u << POS_A) & MASK_A);
+	}
+
 	static void SETARG_A(InstructionPtr i,int u) {
 		i.set( ( i.get() & (MASK_NOT_A)) | ((u << POS_A) & MASK_A) );
 	}
@@ -169,6 +174,31 @@ public class LuaC extends Lua implements LuaCompiler {
 		return a;
 	}
 
+	static Upvaldesc[] realloc(Upvaldesc[] v, int n) {
+		Upvaldesc[] a = new Upvaldesc[n];
+		if ( v != null )
+			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
+		return a;
+	}
+
+	static LexState.Vardesc[] realloc(LexState.Vardesc[] v, int n) {
+		LexState.Vardesc[] a = new LexState.Vardesc[n];
+		if ( v != null )
+			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
+		return a;
+	}
+
+	static LexState.Labeldesc[] grow(LexState.Labeldesc[] v, int min_n) {
+		return v == null ? new LexState.Labeldesc[2] : v.length <= min_n ? v : realloc(v, v.length*2); 
+	}
+	
+	static LexState.Labeldesc[] realloc(LexState.Labeldesc[] v, int n) {
+		LexState.Labeldesc[] a = new LexState.Labeldesc[n];
+		if ( v != null )
+			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
+		return a;
+	}
+
 	static int[] realloc(int[] v, int n) {
 		int[] a = new int[n];
 		if ( v != null )
@@ -206,23 +236,22 @@ public class LuaC extends Lua implements LuaCompiler {
 			(new LuaC(new Hashtable())).luaY_parser(firstByte, stream, name);
 	}
 
+
 	/** Parse the input */
 	private Prototype luaY_parser(int firstByte, InputStream z, String name) {
 		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
+		lexstate.fs = funcstate;
 		lexstate.setinput( this, firstByte, z, (LuaString) LuaValue.valueOf(name) );
-		lexstate.open_func(funcstate);
 		/* main func. is always vararg */
-		funcstate.f.is_vararg = LuaC.VARARG_ISVARARG;
+		funcstate.f = new Prototype();
 		funcstate.f.source = (LuaString) LuaValue.valueOf(name);
-		lexstate.next(); /* read first token */
-		lexstate.chunk();
-		lexstate.check(LexState.TK_EOS);
-		lexstate.close_func();
+		lexstate.mainfunc(funcstate);
 		LuaC._assert (funcstate.prev == null);
-		LuaC._assert (funcstate.f.nups == 0);
-		LuaC._assert (lexstate.fs == null);
+		/* all scopes should be correctly finished */
+		LuaC._assert (lexstate.dyd == null 
+				|| (lexstate.dyd.n_actvar == 0 && lexstate.dyd.n_gt == 0 && lexstate.dyd.n_label == 0));
 		return funcstate.f;
 	}
 

@@ -122,20 +122,6 @@ public class JavaGen {
 					builder.storeLocal( pc, a );
 					break;
 					
-				case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
-					builder.loadEnv();
-					builder.loadConstant( p.k[bx] );
-					builder.getTable();
-					builder.storeLocal( pc, a );
-					break;
-					
-				case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
-					builder.loadEnv();
-					builder.loadConstant( p.k[bx] );
-					builder.loadLocal( pc, a );
-					builder.setTable();
-					break;
-	
 				case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
 					builder.loadNil();
 					for ( ; a<=b; a++ ) {
@@ -145,6 +131,13 @@ public class JavaGen {
 					}
 					break;
 					
+				case Lua.OP_GETTABUP: /*	A B C	R(A) := UpValue[B][RK(C)]			*/
+					builder.loadUpvalue( b );
+					loadLocalOrConstant( p, builder, pc, c );
+					builder.getTable();
+					builder.storeLocal( pc, a );
+					break;
+
 				case Lua.OP_GETTABLE: /*	A B C	R(A):= R(B)[RK(C)]				*/
 					builder.loadLocal( pc, b );
 					loadLocalOrConstant( p, builder, pc, c );
@@ -152,6 +145,13 @@ public class JavaGen {
 					builder.storeLocal( pc, a );
 					break;
 					
+				case Lua.OP_SETTABUP: /*	A B C	UpValue[A][RK(B)] := RK(C)			*/
+					builder.loadUpvalue( a );
+					loadLocalOrConstant( p, builder, pc, b );
+					loadLocalOrConstant( p, builder, pc, c );
+					builder.setTable();
+					break;
+	
 				case Lua.OP_SETTABLE: /*	A B C	R(A)[RK(B)]:= RK(C)				*/
 					builder.loadLocal( pc, a );
 					loadLocalOrConstant( p, builder, pc, b );
@@ -342,6 +342,9 @@ public class JavaGen {
 					builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+1+sbx);
 					break;
 				
+				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
+					throw new RuntimeException("Unimplemented OP_TFORCALL");
+					
 				case Lua.OP_TFORLOOP: /*
 									 * A C R(A+3), ... ,R(A+2+C):= R(A)(R(A+1),
 									 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
@@ -395,14 +398,11 @@ public class JavaGen {
 					}
 					break;
 					
-				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
-					break;
-					
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 				{
 					Prototype newp = p.p[bx];
 					String protoname = closureName(classname, bx);
-					int nup = newp.nups;
+					int nup = newp.upvalues.length;
 					builder.closureCreate( protoname );
 					if ( nup > 0 )
 						builder.dup();

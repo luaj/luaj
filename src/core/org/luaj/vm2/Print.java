@@ -136,6 +136,11 @@ public class Print extends Lua {
 		printValue( ps, f.k[i] );
 	}
 
+	static void printUpvalue(PrintStream ps, Upvaldesc u) {
+		ps.print( u.idx + " " );
+		printValue( ps, u.name );
+	}
+
 	/** 
 	 * Print the code in a prototype
 	 * @param f the {@link Prototype}
@@ -211,12 +216,12 @@ public class Print extends Lua {
 		case OP_SETUPVAL:
 			ps.print("  ; ");
 			if ( f.upvalues.length > b )
-				printValue(ps, f.upvalues[b]);
+				printUpvalue(ps, f.upvalues[b]);
 			else
 				ps.print( "-" );
 			break;
-		case OP_GETGLOBAL:
-		case OP_SETGLOBAL:
+		case OP_GETTABUP:
+		case OP_SETTABUP:
 			ps.print("  ; ");
 			printConstant( ps, f, bx );
 			break;

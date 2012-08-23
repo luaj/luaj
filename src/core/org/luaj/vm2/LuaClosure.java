@@ -21,9 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.DebugLib;
@@ -101,15 +98,17 @@ public class LuaClosure extends LuaFunction {
 	}
 	/** Supply the initial environment */
 	public LuaClosure(Prototype p, LuaValue env) {
-		super( env );
-		this.p = p;
-		this.upValues = p.nups>0? new UpValue[p.nups]: NOUPVALUES;
+		this(p, p.upvalues.length, env);
 	}
 	
-	protected LuaClosure(int nupvalues, LuaValue env) {
+	protected LuaClosure(Prototype p, int nupvalues, LuaValue env) {
 		super( env );
-		this.p = null;
-		this.upValues = nupvalues>0? new UpValue[nupvalues]: NOUPVALUES;
+		this.p = p;
+		switch (nupvalues) {
+		case 0: this.upValues = NOUPVALUES; break;
+		case 1: this.upValues = new UpValue[] { new UpValue(new LuaValue[1], 0) }; this.upValues[0].setValue(env); break;
+		default: this.upValues = new UpValue[nupvalues]; break;
+		}
 	}
 	
 	public boolean isclosure() {
@@ -233,16 +232,16 @@ public class LuaClosure extends LuaFunction {
 	                stack[a] = upValues[i>>>23].getValue();
 	                continue;
 					
-				case Lua.OP_GETGLOBAL: /*	A Bx	R(A):= Gbl[Kst(Bx)]				*/
-	                stack[a] = env.get(k[i>>>14]);
+				case Lua.OP_GETTABUP: /*	A B C	R(A) := UpValue[B][RK(C)]			*/
+					stack[a] = upValues[i>>>23].getValue().get((c=(i>>14)&0x1ff)>0xff? k[c&0x0ff]: stack[c]);
 					continue;
-					
+	                
 				case Lua.OP_GETTABLE: /*	A B C	R(A):= R(B)[RK(C)]				*/
 	                stack[a] = stack[i>>>23].get((c=(i>>14)&0x1ff)>0xff? k[c&0x0ff]: stack[c]);
 					continue;
 					
-				case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
-	                env.set(k[i>>>14], stack[a]);
+				case Lua.OP_SETTABUP: /*	A B C	UpValue[A][RK(B)] := RK(C)			*/
+	                upValues[a].getValue().set(((b=i>>>23)>0xff? k[b&0x0ff]: stack[b]), (c=(i>>14)&0x1ff)>0xff? k[c&0x0ff]: stack[c]);
 					continue;
 					
 				case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
@@ -422,7 +421,11 @@ public class LuaClosure extends LuaFunction {
 						pc += (i>>>14)-0x1ffff;
 					}
 					continue;
-					
+
+				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
+					v = stack[a].invoke(varargsOf(stack[a+1],stack[a+2]));
+					continue;
+
 				case Lua.OP_TFORLOOP: /*
 									 * A C R(A+3), ... ,R(A+2+C):= R(A)(R(A+1),
 									 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
@@ -462,21 +465,12 @@ public class LuaClosure extends LuaFunction {
 					}
 					continue;
 					
-				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
-					for ( b=openups.length; --b>=a; )
-						if ( openups[b]!=null ) {
-							openups[b].close();
-							openups[b] = null;
-						}
-					continue;
-					
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 					{
 						Prototype newp = p.p[i>>>14];
 						LuaClosure newcl = new LuaClosure(newp, env);
-						for ( int j=0, nup=newp.nups; j<nup; ++j ) {
+						for ( int j=0, nup=newp.upvalues.length; j<nup; ++j ) {
 							i = code[pc++];
-							//b = B(i);
 							b = i>>>23;
 							newcl.upValues[j] = (i&4) != 0? 
 									upValues[b]:
@@ -496,6 +490,12 @@ public class LuaClosure extends LuaFunction {
 							stack[a+j-1] = varargs.arg(j);
 					}
 					continue;				
+
+				case Lua.OP_EXTRAARG:
+					throw new java.lang.IllegalArgumentException("Uexecutable opcode: OP_EXTRAARG");
+
+				default:
+					throw new java.lang.IllegalArgumentException("Illegal opcode: " + (i & 0x3f));
 				}
 			}
 		} catch ( LuaError le ) {

@@ -177,14 +177,24 @@ public class DumpState {
 		for (i = 0; i < n; i++)
 			dumpFunction(f.p[i], f.source);
 	}
-	
+
+	void dumpUpvalues(final Prototype f) throws IOException {
+		int n = f.upvalues.length;
+		dumpInt(n);
+		for (int i = 0; i < n; i++) {
+			writer.writeByte(f.upvalues[i].instack ? 1 : 0);
+			writer.writeByte(f.upvalues[i].idx);
+		}
+	}
+
 	void dumpDebug(final Prototype f) throws IOException {
 		int i, n;
-		n = (strip) ? 0 : f.lineinfo.length;
+		dumpString(strip ? null: f.source);
+		n = strip ? 0 : f.lineinfo.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++)
 			dumpInt(f.lineinfo[i]);
-		n = (strip) ? 0 : f.locvars.length;
+		n = strip ? 0 : f.locvars.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++) {
 			LocVars lvi = f.locvars[i];
@@ -192,10 +202,10 @@ public class DumpState {
 			dumpInt(lvi.startpc);
 			dumpInt(lvi.endpc);
 		}
-		n = (strip) ? 0 : f.upvalues.length;
+		n = strip ? 0 : f.upvalues.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++)
-			dumpString(f.upvalues[i]);
+			dumpString(f.upvalues[i].name);
 	}
 	
 	void dumpFunction(final Prototype f, final LuaString string) throws IOException {
@@ -205,12 +215,12 @@ public class DumpState {
 			dumpString(f.source);
 		dumpInt(f.linedefined);
 		dumpInt(f.lastlinedefined);
-		dumpChar(f.nups);
 		dumpChar(f.numparams);
 		dumpChar(f.is_vararg);
 		dumpChar(f.maxstacksize);
 		dumpCode(f);
 		dumpConstants(f);
+		dumpUpvalues(f);
 		dumpDebug(f);
 	}
 

@@ -164,7 +164,7 @@ public class ProtoInfo {
 				case Lua.OP_LOADK:/*	A Bx	R(A) := Kst(Bx)					*/
 				case Lua.OP_LOADBOOL:/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
 				case Lua.OP_GETUPVAL: /*	A B	R(A) := UpValue[B]				*/
-				case Lua.OP_GETGLOBAL: /*	A Bx	R(A) := Gbl[Kst(Bx)]				*/
+				case Lua.OP_GETTABUP: /*	A B C	R(A) := UpValue[B][RK(C)]			*/
 				case Lua.OP_NEWTABLE: /*	A B C	R(A) := {} (size = B,C)				*/
 					a = Lua.GETARG_A( ins );
 					v[a][pc] = new VarInfo(a,pc);
@@ -200,6 +200,13 @@ public class ProtoInfo {
 					b = Lua.GETARG_B( ins );
 					c = Lua.GETARG_C( ins );
 					v[a][pc].isreferenced = true;
+					if (!Lua.ISK(b)) v[b][pc].isreferenced = true;
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					break;
+
+				case Lua.OP_SETTABUP: /*	A B C	UpValue[A][RK(B)] := RK(C)			*/
+					b = Lua.GETARG_B( ins );
+					c = Lua.GETARG_C( ins );
 					if (!Lua.ISK(b)) v[b][pc].isreferenced = true;
 					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
 					break;
@@ -295,6 +302,7 @@ public class ProtoInfo {
 						v[a+i][pc].isreferenced = true;
 					break;
 					
+				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
 				case Lua.OP_TFORLOOP: /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
 				                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
 					a = Lua.GETARG_A( ins );
@@ -311,7 +319,7 @@ public class ProtoInfo {
 				case Lua.OP_CLOSURE: /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_Bx( ins );
-					nups = prototype.p[b].nups;
+					nups = prototype.p[b].upvalues.length;
 					for ( int k=1; k<=nups; ++k ) {
 						int i = prototype.code[pc+k];
 						if ( (i&4) == 0 ) {
@@ -324,12 +332,7 @@ public class ProtoInfo {
 						propogateVars( v, pc, pc+k );
 					pc += nups;
 					break;
-				case Lua.OP_CLOSE: /*	A 	close all variables in the stack up to (>=) R(A)*/
-					a = Lua.GETARG_A( ins );
-					for ( ; a<m; a++ )
-						v[a][pc] = VarInfo.INVALID;
-					break;
-	
+
 				case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_B( ins );
@@ -338,7 +341,6 @@ public class ProtoInfo {
 						v[a+i][pc].isreferenced = true;
 					break;
 					
-				case Lua.OP_SETGLOBAL: /*	A Bx	Gbl[Kst(Bx)]:= R(A)				*/
 				case Lua.OP_SETUPVAL: /*	A B	UpValue[B]:= R(A)				*/
 				case Lua.OP_TEST: /*	A C	if not (R(A) <=> C) then pc++			*/ 
 					a = Lua.GETARG_A( ins );
@@ -402,9 +404,9 @@ public class ProtoInfo {
 			if ( Lua.GET_OPCODE(code[pc]) == Lua.OP_CLOSURE ) {
 				int bx = Lua.GETARG_Bx(code[pc]);
 				Prototype newp = prototype.p[bx];
-				UpvalInfo[] newu = newp.nups>0? new UpvalInfo[newp.nups]: null;
+				UpvalInfo[] newu = new UpvalInfo[newp.upvalues.length];
 				String newname = name + "$" + bx;
-				for ( int j=0; j<newp.nups; ++j ) {
+				for ( int j=0; j<newp.upvalues.length; ++j ) {
 					int i = code[++pc];
 					int b = Lua.GETARG_B(i);
 					newu[j] = (i&4) != 0? upvals[b]: findOpenUp(pc,b);

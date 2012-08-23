@@ -31,7 +31,7 @@ package org.luaj.vm2;
 public class Lua {
 	/** version is supplied by ant build task */
 	public static final String _VERSION = "Luaj 0.0";
-
+	
 	/** use return values from previous op */
 	public static final int LUA_MULTRET = -1;
 
@@ -64,6 +64,7 @@ public class Lua {
 	public static final int	iABC = 0;
 	public static final int	iABx = 1;
 	public static final int	iAsBx = 2;
+	public static final int	iAx = 3;
 
 
 	/*
@@ -73,6 +74,7 @@ public class Lua {
 	public static final int SIZE_B		= 9;
 	public static final int SIZE_Bx		= (SIZE_C + SIZE_B);
 	public static final int SIZE_A		= 8;
+	public static final int SIZE_Ax		= (SIZE_C + SIZE_B + SIZE_A);
 
 	public static final int SIZE_OP		= 6;
 
@@ -81,6 +83,7 @@ public class Lua {
 	public static final int POS_C		= (POS_A + SIZE_A);
 	public static final int POS_B		= (POS_C + SIZE_C);
 	public static final int POS_Bx		= POS_C;
+	public static final int POS_Ax		= POS_A;
 
 
 	public static final int MAX_OP          = ((1<<SIZE_OP)-1);
@@ -89,6 +92,7 @@ public class Lua {
 	public static final int MAXARG_C        = ((1<<SIZE_C)-1);
 	public static final int MAXARG_Bx       = ((1<<SIZE_Bx)-1);
 	public static final int MAXARG_sBx      = (MAXARG_Bx>>1);     	/* `sBx' is signed */
+	public static final int MAXARG_Ax       = ((1<<SIZE_Ax)-1);
 
 	public static final int MASK_OP = ((1<<SIZE_OP)-1)<<POS_OP; 
 	public static final int MASK_A  = ((1<<SIZE_A)-1)<<POS_A; 
@@ -111,6 +115,10 @@ public class Lua {
 
 	public static int GETARG_A(int i) {
 		return (i >> POS_A) & MAXARG_A;
+	}
+
+	public static int GETARG_Ax(int i) {
+		return (i >> POS_Ax) & MAXARG_Ax;
 	}
 
 	public static int GETARG_B(int i) {
@@ -177,59 +185,62 @@ public class Lua {
 	------------------------------------------------------------------------*/
 	public static final int OP_MOVE = 0;/*	A B	R(A) := R(B)					*/
 	public static final int OP_LOADK = 1;/*	A Bx	R(A) := Kst(Bx)					*/
-	public static final int OP_LOADBOOL = 2;/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
-	public static final int OP_LOADNIL = 3; /*	A B	R(A) := ... := R(B) := nil			*/
-	public static final int OP_GETUPVAL = 4; /*	A B	R(A) := UpValue[B]				*/
+	public static final int OP_LOADKX = 2;/*	A 	R(A) := Kst(extra arg)					*/
+	public static final int OP_LOADBOOL = 3;/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
+	public static final int OP_LOADNIL = 4; /*	A B	R(A) := ... := R(B) := nil			*/
+	public static final int OP_GETUPVAL = 5; /*	A B	R(A) := UpValue[B]				*/
 
-	public static final int OP_GETGLOBAL = 5; /*	A Bx	R(A) := Gbl[Kst(Bx)]				*/
-	public static final int OP_GETTABLE = 6; /*	A B C	R(A) := R(B)[RK(C)]				*/
+	public static final int OP_GETTABUP = 6; /*	A B C	R(A) := UpValue[B][RK(C)]			*/
+	public static final int OP_GETTABLE = 7; /*	A B C	R(A) := R(B)[RK(C)]				*/
 
-	public static final int OP_SETGLOBAL = 7; /*	A Bx	Gbl[Kst(Bx)] := R(A)				*/
-	public static final int OP_SETUPVAL = 8; /*	A B	UpValue[B] := R(A)				*/
-	public static final int OP_SETTABLE = 9; /*	A B C	R(A)[RK(B)] := RK(C)				*/
+	public static final int OP_SETTABUP = 8; /*	A B C	UpValue[A][RK(B)] := RK(C)			*/
+	public static final int OP_SETUPVAL = 9; /*	A B	UpValue[B] := R(A)				*/
+	public static final int OP_SETTABLE = 10; /*	A B C	R(A)[RK(B)] := RK(C)				*/
 
-	public static final int OP_NEWTABLE = 10; /*	A B C	R(A) := {} (size = B,C)				*/
+	public static final int OP_NEWTABLE = 11; /*	A B C	R(A) := {} (size = B,C)				*/
 
-	public static final int OP_SELF = 11; /*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
+	public static final int OP_SELF = 12; /*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
 
-	public static final int OP_ADD = 12; /*	A B C	R(A) := RK(B) + RK(C)				*/
-	public static final int OP_SUB = 13; /*	A B C	R(A) := RK(B) - RK(C)				*/
-	public static final int OP_MUL = 14; /*	A B C	R(A) := RK(B) * RK(C)				*/
-	public static final int OP_DIV = 15; /*	A B C	R(A) := RK(B) / RK(C)				*/
-	public static final int OP_MOD = 16; /*	A B C	R(A) := RK(B) % RK(C)				*/
-	public static final int OP_POW = 17; /*	A B C	R(A) := RK(B) ^ RK(C)				*/
-	public static final int OP_UNM = 18; /*	A B	R(A) := -R(B)					*/
-	public static final int OP_NOT = 19; /*	A B	R(A) := not R(B)				*/
-	public static final int OP_LEN = 20; /*	A B	R(A) := length of R(B)				*/
+	public static final int OP_ADD = 13; /*	A B C	R(A) := RK(B) + RK(C)				*/
+	public static final int OP_SUB = 14; /*	A B C	R(A) := RK(B) - RK(C)				*/
+	public static final int OP_MUL = 15; /*	A B C	R(A) := RK(B) * RK(C)				*/
+	public static final int OP_DIV = 16; /*	A B C	R(A) := RK(B) / RK(C)				*/
+	public static final int OP_MOD = 17; /*	A B C	R(A) := RK(B) % RK(C)				*/
+	public static final int OP_POW = 18; /*	A B C	R(A) := RK(B) ^ RK(C)				*/
+	public static final int OP_UNM = 19; /*	A B	R(A) := -R(B)					*/
+	public static final int OP_NOT = 20; /*	A B	R(A) := not R(B)				*/
+	public static final int OP_LEN = 21; /*	A B	R(A) := length of R(B)				*/
 
-	public static final int OP_CONCAT = 21; /*	A B C	R(A) := R(B).. ... ..R(C)			*/
+	public static final int OP_CONCAT = 22; /*	A B C	R(A) := R(B).. ... ..R(C)			*/
 
-	public static final int OP_JMP = 22; /*	sBx	pc+=sBx					*/
+	public static final int OP_JMP = 23; /*	sBx	pc+=sBx					*/
+	public static final int OP_EQ = 24; /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
+	public static final int OP_LT = 25; /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
+	public static final int OP_LE = 26; /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
 
-	public static final int OP_EQ = 23; /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
-	public static final int OP_LT = 24; /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
-	public static final int OP_LE = 25; /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
+	public static final int OP_TEST = 27; /*	A C	if not (R(A) <=> C) then pc++			*/ 
+	public static final int OP_TESTSET = 28; /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
 
-	public static final int OP_TEST = 26; /*	A C	if not (R(A) <=> C) then pc++			*/ 
-	public static final int OP_TESTSET = 27; /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
+	public static final int OP_CALL = 29; /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
+	public static final int OP_TAILCALL = 30; /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
+	public static final int OP_RETURN = 31; /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
 
-	public static final int OP_CALL = 28; /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
-	public static final int OP_TAILCALL = 29; /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
-	public static final int OP_RETURN = 30; /*	A B	return R(A), ... ,R(A+B-2)	(see note)	*/
-
-	public static final int OP_FORLOOP = 31; /*	A sBx	R(A)+=R(A+2);
+	public static final int OP_FORLOOP = 32; /*	A sBx	R(A)+=R(A+2);
 				if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }*/
-	public static final int OP_FORPREP = 32; /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
+	public static final int OP_FORPREP = 33; /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
 
-	public static final int OP_TFORLOOP = 33; /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
+	public static final int OP_TFORCALL = 34; /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
+	public static final int OP_TFORLOOP = 35; /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
 	                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
-	public static final int OP_SETLIST = 34; /*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
+	public static final int OP_SETLIST = 36; /*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
 
-	public static final int OP_CLOSE = 35; /*	A 	close all variables in the stack up to (>=) R(A)*/
-	public static final int OP_CLOSURE = 36; /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
-	public static final int OP_VARARG = 37; /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/
-	
-	public static final int NUM_OPCODES	= OP_VARARG + 1;
+	public static final int OP_CLOSURE = 37; /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
+
+	public static final int OP_VARARG = 38; /*	A B	R(A), R(A+1), ..., R(A+B-1) = vararg		*/
+
+	public static final int OP_EXTRAARG = 39; /* Ax	extra (larger) argument for previous opcode	*/
+
+	public static final int NUM_OPCODES	= OP_EXTRAARG + 1;
 
 	/* pseudo-opcodes used in parsing only.  */
 	public static final int OP_GT  = 63; // > 
@@ -277,12 +288,13 @@ public class Lua {
 	  /*   T        A           B             C          mode		   opcode	*/
 		 (0<<7) | (1<<6) | (OpArgR<<4) | (OpArgN<<2) | (iABC),		/* OP_MOVE */
 		 (0<<7) | (1<<6) | (OpArgK<<4) | (OpArgN<<2) | (iABx),		/* OP_LOADK */
+		 (0<<7) | (1<<6) | (OpArgN<<4) | (OpArgN<<2) | (iABx),		/* OP_LOADKX */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgU<<2) | (iABC),		/* OP_LOADBOOL */
-		 (0<<7) | (1<<6) | (OpArgR<<4) | (OpArgN<<2) | (iABC),		/* OP_LOADNIL */
+		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABC),		/* OP_LOADNIL */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABC),		/* OP_GETUPVAL */
-		 (0<<7) | (1<<6) | (OpArgK<<4) | (OpArgN<<2) | (iABx),		/* OP_GETGLOBAL */
+		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgK<<2) | (iABC),		/* OP_GETTABUP */
 		 (0<<7) | (1<<6) | (OpArgR<<4) | (OpArgK<<2) | (iABC),		/* OP_GETTABLE */
-		 (0<<7) | (0<<6) | (OpArgK<<4) | (OpArgN<<2) | (iABx),		/* OP_SETGLOBAL */
+		 (0<<7) | (0<<6) | (OpArgK<<4) | (OpArgK<<2) | (iABC),		/* OP_SETTABUP */
 		 (0<<7) | (0<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABC),		/* OP_SETUPVAL */
 		 (0<<7) | (0<<6) | (OpArgK<<4) | (OpArgK<<2) | (iABC),		/* OP_SETTABLE */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgU<<2) | (iABC),		/* OP_NEWTABLE */
@@ -301,18 +313,19 @@ public class Lua {
 		 (1<<7) | (0<<6) | (OpArgK<<4) | (OpArgK<<2) | (iABC),		/* OP_EQ */
 		 (1<<7) | (0<<6) | (OpArgK<<4) | (OpArgK<<2) | (iABC),		/* OP_LT */
 		 (1<<7) | (0<<6) | (OpArgK<<4) | (OpArgK<<2) | (iABC),		/* OP_LE */
-		 (1<<7) | (1<<6) | (OpArgR<<4) | (OpArgU<<2) | (iABC),		/* OP_TEST */
+		 (1<<7) | (0<<6) | (OpArgN<<4) | (OpArgU<<2) | (iABC),		/* OP_TEST */
 		 (1<<7) | (1<<6) | (OpArgR<<4) | (OpArgU<<2) | (iABC),		/* OP_TESTSET */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgU<<2) | (iABC),		/* OP_CALL */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgU<<2) | (iABC),		/* OP_TAILCALL */
 		 (0<<7) | (0<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABC),		/* OP_RETURN */
 		 (0<<7) | (1<<6) | (OpArgR<<4) | (OpArgN<<2) | (iAsBx),		/* OP_FORLOOP */
 		 (0<<7) | (1<<6) | (OpArgR<<4) | (OpArgN<<2) | (iAsBx),		/* OP_FORPREP */
-		 (1<<7) | (0<<6) | (OpArgN<<4) | (OpArgU<<2) | (iABC),		/* OP_TFORLOOP */
+		 (0<<7) | (0<<6) | (OpArgN<<4) | (OpArgU<<2) | (iABC),		/* OP_TFORCALL */
+		 (1<<7) | (1<<6) | (OpArgR<<4) | (OpArgN<<2) | (iAsBx),		/* OP_TFORLOOP */
 		 (0<<7) | (0<<6) | (OpArgU<<4) | (OpArgU<<2) | (iABC),		/* OP_SETLIST */
-		 (0<<7) | (0<<6) | (OpArgN<<4) | (OpArgN<<2) | (iABC),		/* OP_CLOSE */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABx),		/* OP_CLOSURE */
 		 (0<<7) | (1<<6) | (OpArgU<<4) | (OpArgN<<2) | (iABC),		/* OP_VARARG */
+		 (0<<7) | (0<<6) | (OpArgU<<4) | (OpArgU<<2) | (iAx),		/* OP_EXTRAARG */
 	  };
 
 	public static int getOpMode(int m) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009-2011 Luaj.org. All rights reserved.
+* Copyright (c) 2012 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,20 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-/**
- * Data class to hold debug information relating to local variables for a {@link Prototype}
- */
-public class LocVars {
-	/** The local variable name */
-	public LuaString varname;
+public class Upvaldesc {
+
+	/* upvalue name (for debug information) */
+	public final LuaString name;
 	
-	/** The instruction offset when the variable comes into scope */ 
-	public int startpc;
+	/* whether it is in stack */
+	public final boolean instack;
 	
-	/** The instruction offset when the variable goes out of scope */ 
-	public int endpc;
+	/* index of upvalue (in stack or in outer function's list) */
+	public final short idx;
 	
-	/**
-	 * Construct a LocVars instance. 
-	 * @param varname The local variable name
-	 * @param startpc The instruction offset when the variable comes into scope
-	 * @param endpc The instruction offset when the variable goes out of scope
-	 */
-	public LocVars(LuaString varname, int startpc, int endpc) {
-		this.varname = varname;
-		this.startpc = startpc;
-		this.endpc = endpc;
-	}
-	
-	public String tojstring() {
-		return varname+" "+startpc+"-"+endpc;
+	public Upvaldesc(LuaString name, boolean instack, int idx) {
+		this.name = name;
+		this.instack = instack;
+		this.idx = (short) idx;
 	}
 }

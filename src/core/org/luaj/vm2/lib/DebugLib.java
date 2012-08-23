@@ -123,6 +123,7 @@ public class DebugLib extends VarArgFunction {
 	private static final LuaString COUNT      = valueOf("count");  
 	private static final LuaString RETURN     = valueOf("return");  
 	private static final LuaString TAILRETURN = valueOf("tail return");
+	private static final LuaString CONSTANT   = valueOf("constant");  
 	
 	private static final LuaString FUNC            = valueOf("func");  
 	private static final LuaString NUPS            = valueOf("nups");  
@@ -219,7 +220,7 @@ public class DebugLib extends VarArgFunction {
 		public LuaString[] getfunckind() {
 			if ( closure == null || pc<0 ) return null;
 			int stackpos = (closure.p.code[pc] >> 6) & 0xff; 
-			return getobjname(this, stackpos);
+			return getobjname(this, pc, stackpos);
 		}
 		public String sourceline() {
 			if ( closure == null ) return func.tojstring();
@@ -500,7 +501,7 @@ public class DebugLib extends VarArgFunction {
 					break;
 				}
 				case 'u': {
-					info.set(NUPS, valueOf(c!=null? c.p.nups: 0));
+					info.set(NUPS, valueOf(c!=null? c.p.upvalues.length: 0));
 					break;
 				}
 				case 'n': {
@@ -604,7 +605,7 @@ public class DebugLib extends VarArgFunction {
 	static LuaString findupvalue(LuaClosure c, int up) {
 		if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
-				return c.p.upvalues[up-1];
+				return c.p.upvalues[up-1].name;
 			else
 				return LuaString.valueOf( "."+up );
 		}
@@ -720,40 +721,53 @@ public class DebugLib extends VarArgFunction {
 
 	
 	// return StrValue[] { name, namewhat } if found, null if not
-	static LuaString[] getobjname(DebugInfo di, int stackpos) {
-		LuaString name;
-		if (di.closure != null) { /* a Lua function? */
-			Prototype p = di.closure.p;
-			int pc = di.pc; // currentpc(L, ci);
-			int i;// Instruction i;
-			name = p.getlocalname(stackpos + 1, pc);
-			if (name != null) /* is a local? */
-				return new LuaString[] { name, LOCAL };
-			i = symbexec(p, pc, stackpos); /* try symbolic execution */
-			lua_assert(pc != -1);
+	static LuaString[] getobjname(DebugInfo di, int lastpc, int reg) {
+		if (di.closure == null)
+			return null;  /* Not a Lua function? */
+
+		Prototype p = di.closure.p;
+		int pc = di.pc; // currentpc(L, ci);
+		LuaString name = p.getlocalname(reg + 1, pc);
+		if (name != null) /* is a local? */
+			return new LuaString[] { name, LOCAL };
+
+		/* else try symbolic execution */
+		pc = findsetreg(p, lastpc, reg);
+		if (pc != -1) { /* could find instruction? */
+			int i = p.code[pc];
 			switch (Lua.GET_OPCODE(i)) {
-			case Lua.OP_GETGLOBAL: {
-				int g = Lua.GETARG_Bx(i); /* global index */
-				// lua_assert(p.k[g].isString());
-				return new LuaString[] { p.k[g].strvalue(), GLOBAL };
-			}
 			case Lua.OP_MOVE: {
 				int a = Lua.GETARG_A(i);
 				int b = Lua.GETARG_B(i); /* move from `b' to `a' */
 				if (b < a)
-					return getobjname(di, b); /* get name for `b' */
+					return getobjname(di, pc, b); /* get name for `b' */
 				break;
 			}
+			case Lua.OP_GETTABUP:
 			case Lua.OP_GETTABLE: {
 				int k = Lua.GETARG_C(i); /* key index */
+				int t = Lua.GETARG_Bx(i); /* table index */
+		        LuaString vn = (Lua.GET_OPCODE(i) == Lua.OP_GETTABLE)  /* name of indexed variable */
+	                    ? p.getlocalname(t + 1, pc)
+	                    : (t < p.upvalues.length ? p.upvalues[t].name : QMARK);
 				name = kname(p, k);
-				return new LuaString[] { name, FIELD };
+				return new LuaString[] { name, vn.eq_b(ENV)? GLOBAL: FIELD };
 			}
 			case Lua.OP_GETUPVAL: {
 				int u = Lua.GETARG_B(i); /* upvalue index */
-				name = u < p.upvalues.length ? p.upvalues[u] : QMARK;
+				name = u < p.upvalues.length ? p.upvalues[u].name : QMARK;
 				return new LuaString[] { name, UPVALUE };
 			}
+		    case Lua.OP_LOADK:
+		    case Lua.OP_LOADKX: {
+		        int b = (Lua.GET_OPCODE(i) == Lua.OP_LOADK) ? Lua.GETARG_Bx(i)
+		                                 : Lua.GETARG_Ax(p.code[pc + 1]);
+		        if (p.k[b].isstring()) {
+		          name = p.k[b].strvalue();
+		          return new LuaString[] { name, CONSTANT };
+		        }
+		        break;
+		    }
 			case Lua.OP_SELF: {
 				int k = Lua.GETARG_C(i); /* key index */
 				name = kname(p, k);
@@ -782,7 +796,7 @@ public class DebugLib extends VarArgFunction {
 		lua_assert(pt.numparams + (pt.is_vararg & Lua.VARARG_HASARG) <= pt.maxstacksize);
 		lua_assert((pt.is_vararg & Lua.VARARG_NEEDSARG) == 0
 				|| (pt.is_vararg & Lua.VARARG_HASARG) != 0);
-		if (!(pt.upvalues.length <= pt.nups)) return false;
+//		if (!(pt.upvalues.length <= pt.nups)) return false;
 		if (!(pt.lineinfo.length == pt.code.length || pt.lineinfo.length == 0)) return false;
 		if (!(Lua.GET_OPCODE(pt.code[pt.code.length - 1]) == Lua.OP_RETURN)) return false;
 		return true;
@@ -816,162 +830,51 @@ public class DebugLib extends VarArgFunction {
 		return true;
 	}
 
-
-	// return last instruction, or 0 if error
-	static int symbexec(Prototype pt, int lastpc, int reg) {
-		int pc;
-		int last; /* stores position of last instruction that changed `reg' */
-		last = pt.code.length - 1; /*
-									 * points to final return (a `neutral'
-									 * instruction)
-									 */
-		if (!(precheck(pt))) return 0;
-		for (pc = 0; pc < lastpc; pc++) {
-			int i = pt.code[pc];
-			int op = Lua.GET_OPCODE(i);
-			int a = Lua.GETARG_A(i);
-			int b = 0;
-			int c = 0;
-			if (!(op < Lua.NUM_OPCODES)) return 0;
-			if (!checkreg(pt, a)) return 0;
-			switch (Lua.getOpMode(op)) {
-			case Lua.iABC: {
-				b = Lua.GETARG_B(i);
-				c = Lua.GETARG_C(i);
-				if (!(checkArgMode(pt, b, Lua.getBMode(op)))) return 0;
-				if (!(checkArgMode(pt, c, Lua.getCMode(op)))) return 0;
-				break;
-			}
-			case Lua.iABx: {
-				b = Lua.GETARG_Bx(i);
-				if (Lua.getBMode(op) == Lua.OpArgK)
-					if (!(b < pt.k.length)) return 0;
-				break;
-			}
-			case Lua.iAsBx: {
-				b = Lua.GETARG_sBx(i);
-				if (Lua.getBMode(op) == Lua.OpArgR) {
-					int dest = pc + 1 + b;
-					if (!(0 <= dest && dest < pt.code.length)) return 0;
-					if (dest > 0) {
-						/* cannot jump to a setlist count */
-						int d = pt.code[dest - 1];
-						if ((Lua.GET_OPCODE(d) == Lua.OP_SETLIST && Lua.GETARG_C(d) == 0)) return 0;
-					}
-				}
-				break;
-			}
-			}
-			if (Lua.testAMode(op)) {
-				if (a == reg)
-					last = pc; /* change register `a' */
-			}
-			if (Lua.testTMode(op)) {
-				if (!(pc + 2 < pt.code.length)) return 0; /* check skip */
-				if (!(Lua.GET_OPCODE(pt.code[pc + 1]) == Lua.OP_JMP)) return 0;
-			}
-			switch (op) {
-			case Lua.OP_LOADBOOL: {
-				if (!(c == 0 || pc + 2 < pt.code.length)) return 0; /* check its jump */
-				break;
-			}
-			case Lua.OP_LOADNIL: {
-				if (a <= reg && reg <= b)
-					last = pc; /* set registers from `a' to `b' */
-				break;
-			}
-			case Lua.OP_GETUPVAL:
-			case Lua.OP_SETUPVAL: {
-				if (!(b < pt.nups)) return 0;
-				break;
-			}
-			case Lua.OP_GETGLOBAL:
-			case Lua.OP_SETGLOBAL: {
-				if (!(pt.k[b].isstring())) return 0;
-				break;
-			}
-			case Lua.OP_SELF: {
-				if (!checkreg(pt, a + 1)) return 0;
-				if (reg == a + 1)
-					last = pc;
-				break;
-			}
-			case Lua.OP_CONCAT: {
-				if (!(b < c)) return 0; /* at least two operands */
-				break;
-			}
-			case Lua.OP_TFORLOOP: {
-				if (!(c >= 1)) return 0; /* at least one result (control variable) */
-				if (!checkreg(pt, a + 2 + c)) return 0; /* space for results */
-				if (reg >= a + 2)
-					last = pc; /* affect all regs above its base */
-				break;
-			}
-			case Lua.OP_FORLOOP:
-			case Lua.OP_FORPREP:
-				if (!checkreg(pt, a + 3)) return 0;
-				/* go through */
-			case Lua.OP_JMP: {
-				int dest = pc + 1 + b;
-				/* not full check and jump is forward and do not skip `lastpc'? */
-				if (reg != Lua.NO_REG && pc < dest && dest <= lastpc)
-					pc += b; /* do the jump */
-				break;
-			}
-			case Lua.OP_CALL:
-			case Lua.OP_TAILCALL: {
-				if (b != 0) {
-					if (!checkreg(pt, a + b - 1)) return 0;
-				}
-				c--; /* c = num. returns */
-				if (c == Lua.LUA_MULTRET) {
-					if (!(checkopenop(pt, pc))) return 0;
-				} else if (c != 0)
-					if (!checkreg(pt, a + c - 1)) return 0;
-				if (reg >= a)
-					last = pc; /* affect all registers above base */
-				break;
-			}
-			case Lua.OP_RETURN: {
-				b--; /* b = num. returns */
-				if (b > 0)
-					if (!checkreg(pt, a + b - 1)) return 0;
-				break;
-			}
-			case Lua.OP_SETLIST: {
-				if (b > 0)
-					if (!checkreg(pt, a + b)) return 0;
-				if (c == 0)
-					pc++;
-				break;
-			}
-			case Lua.OP_CLOSURE: {
-				int nup, j;
-				if (!(b < pt.p.length)) return 0;
-				nup = pt.p[b].nups;
-				if (!(pc + nup < pt.code.length)) return 0;
-				for (j = 1; j <= nup; j++) {
-					int op1 = Lua.GET_OPCODE(pt.code[pc + j]);
-					if (!(op1 == Lua.OP_GETUPVAL || op1 == Lua.OP_MOVE)) return 0;
-				}
-				if (reg != Lua.NO_REG) /* tracing? */
-					pc += nup; /* do not 'execute' these pseudo-instructions */
-				break;
-			}
-			case Lua.OP_VARARG: {
-				if (!((pt.is_vararg & Lua.VARARG_ISVARARG) != 0
-						&& (pt.is_vararg & Lua.VARARG_NEEDSARG) == 0)) return 0;
-				b--;
-				if (b == Lua.LUA_MULTRET)
-					if (!(checkopenop(pt, pc))) return 0;
-				if (!checkreg(pt, a + b - 1)) return 0;
-				break;
-			}
-			default:
-				break;
-			}
-		}
-		return pt.code[last];
+	/*
+	** try to find last instruction before 'lastpc' that modified register 'reg'
+	*/
+	static int findsetreg (Prototype p, int lastpc, int reg) {
+	  int pc;
+	  int setreg = -1;  /* keep last instruction that changed 'reg' */
+	  for (pc = 0; pc < lastpc; pc++) {
+	    int i = p.code[pc];
+	    int op = Lua.GET_OPCODE(i);
+	    int a = Lua.GETARG_A(i);
+	    switch (op) {
+	      case Lua.OP_LOADNIL: {
+	        int b = Lua.GETARG_B(i);
+	        if (a <= reg && reg <= a + b)  /* set registers from 'a' to 'a+b' */
+	          setreg = pc;
+	        break;
+	      }
+	      case Lua.OP_TFORCALL: {
+	        if (reg >= a + 2) setreg = pc;  /* affect all regs above its base */
+	        break;
+	      }
+	      case Lua.OP_CALL:
+	      case Lua.OP_TAILCALL: {
+	        if (reg >= a) setreg = pc;  /* affect all registers above base */
+	        break;
+	      }
+	      case Lua.OP_JMP: {
+	        int b = Lua.GETARG_sBx(i);
+	        int dest = pc + 1 + b;
+	        /* jump is forward and do not skip `lastpc'? */
+	        if (pc < dest && dest <= lastpc)
+	          pc += b;  /* do the jump */
+	        break;
+	      }
+	      case Lua.OP_TEST: {
+	        if (reg == a) setreg = pc;  /* jumped code can change 'a' */
+	        break;
+	      }
+	      default:
+	        if (Lua.testAMode(op) && reg == a)  /* any instruction that set A */
+	          setreg = pc;
+	        break;
+	    }
+	  }
+	  return setreg;
 	}
-	
+
 }

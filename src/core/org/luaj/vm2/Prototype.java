@@ -42,10 +42,9 @@ public class Prototype {
 	public int[] lineinfo;
 	/* information about local variables */
 	public LocVars[] locvars;
-	/* upvalue names */
-	public LuaString[] upvalues;
+	/* upvalue information */
+	public Upvaldesc[] upvalues;
 	public LuaString  source;
-	public int nups;
 	public int linedefined;
 	public int lastlinedefined;
 	public int numparams;

@@ -196,7 +196,7 @@ public class JavaBuilder {
 		main = new InstructionList();
 
 		// create the fields
-		for ( int i=0; i<p.nups; i++ ) {
+		for ( int i=0; i<p.upvalues.length; i++ ) {
 			boolean isrw = pi.isReadWriteUpvalue( pi.upvals[i] ); 
 			Type uptype = isrw? (Type) TYPE_LOCALUPVALUE: (Type) TYPE_LUAVALUE;
 			FieldGen fg = new FieldGen(0, uptype, upvalueName(i), cp);

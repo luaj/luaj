@@ -187,7 +187,9 @@ public class LuaValue extends Varargs {
 	
 	/** LuaValue array constant with no values */
 	public static final LuaValue[] NOVALS    = {};
-	
+
+	/** The variable name of the environment. */
+	public static LuaString ENV               = valueOf("_ENV");
 
 	/** LuaString constant with value "__index" for use as metatag */
 	public static final LuaString INDEX       = valueOf("__index");

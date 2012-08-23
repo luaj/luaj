@@ -141,6 +141,7 @@ public class LoadState {
 	private static final Prototype[] NOPROTOS    = {};
 	private static final LocVars[]   NOLOCVARS   = {};
 	private static final LuaString[]  NOSTRVALUES = {};
+	private static final Upvaldesc[]  NOUPVALDESCS = {};
 	private static final int[]       NOINTS      = {};
 	
 	/** Read buffer */
@@ -282,12 +283,24 @@ public class LoadState {
 		f.p = protos;
 	}
 
+
+	void loadUpvalues(Prototype f) throws IOException {
+		int n = loadInt();
+		f.upvalues = n>0? new Upvaldesc[n]: NOUPVALDESCS;
+		for (int i=0; i<n; i++) {
+			boolean instack = is.readByte() != 0;
+			int idx = ((int) is.readByte()) & 0xff;
+			f.upvalues[i] = new Upvaldesc(null, instack, idx);
+		}
+	}
+
 	/**
-	 * Load the debug infor for a function prototype
+	 * Load the debug info for a function prototype
 	 * @param f the function Prototype
 	 * @throws IOException if there is an i/o exception
 	 */
 	void loadDebug( Prototype f ) throws IOException {
+		f.source = loadString();
 		f.lineinfo = loadIntArray();
 		int n = loadInt();
 		f.locvars = n>0? new LocVars[n]: NOLOCVARS;
@@ -299,10 +312,9 @@ public class LoadState {
 		}
 		
 		n = loadInt();
-		f.upvalues = n>0? new LuaString[n]: NOSTRVALUES;
-		for ( int i=0; i<n; i++ ) {
-			f.upvalues[i] = loadString();
-		}
+		f.upvalues = n>0? new Upvaldesc[n]: NOUPVALDESCS;
+		for ( int i=0; i<n; i++ )
+			f.upvalues[i] = new Upvaldesc(loadString(), false, i);
 	}
 
 	/** 
@@ -319,12 +331,12 @@ public class LoadState {
 			f.source = p;
 		f.linedefined = loadInt();
 		f.lastlinedefined = loadInt();
-		f.nups = is.readUnsignedByte();
 		f.numparams = is.readUnsignedByte();
 		f.is_vararg = is.readUnsignedByte();
 		f.maxstacksize = is.readUnsignedByte();
 		f.code = loadIntArray();
 		loadConstants(f);
+		loadUpvalues(f);
 		loadDebug(f);
 		
 		// TODO: add check here, for debugging purposes, I believe
