@@ -35,7 +35,6 @@ import org.luaj.vm2.compiler.SimpleTests;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
 import org.luaj.vm2.lib.jse.LuajavaAccessibleMembersTest;
 import org.luaj.vm2.lib.jse.LuajavaClassMembersTest;
-import org.luaj.vm2.vm1.Luajvm1CompatibilityTest;
 
 public class AllTests {
 
@@ -87,7 +86,6 @@ public class AllTests {
 		TestSuite compat = CompatibiltyTest.suite();
 		suite.addTest( compat );
 		compat.addTestSuite(ErrorsTest.class);
-		compat.addTestSuite(Luajvm1CompatibilityTest.class);
 		
 		return suite;
 	}
