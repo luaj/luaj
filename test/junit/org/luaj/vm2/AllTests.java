@@ -29,6 +29,7 @@ import org.luaj.vm2.WeakTableTest.WeakKeyValueTableTest;
 import org.luaj.vm2.WeakTableTest.WeakValueTableTest;
 import org.luaj.vm2.compiler.CompilerUnitTests;
 import org.luaj.vm2.compiler.DumpLoadEndianIntTest;
+import org.luaj.vm2.compiler.LuaParserTests;
 import org.luaj.vm2.compiler.RegressionTests;
 import org.luaj.vm2.compiler.SimpleTests;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
@@ -69,6 +70,7 @@ public class AllTests {
 		TestSuite compiler = new TestSuite("Lua Compiler Tests");
 		compiler.addTestSuite(CompilerUnitTests.class);
 		compiler.addTestSuite(DumpLoadEndianIntTest.class);
+		compiler.addTestSuite(LuaParserTests.class);
 		compiler.addTestSuite(RegressionTests.class);
 		compiler.addTestSuite(SimpleTests.class);
 		suite.addTest(compiler);

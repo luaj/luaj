@@ -46,10 +46,23 @@ abstract public class AbstractUnitTests extends TestCase {
         _G = JsePlatform.standardGlobals();
     }
 
+    protected String pathOfFile(String file) {
+        return jar + dir + "/" + file;
+    }
+    
+    protected InputStream inputStreamOfPath(String path) throws IOException {
+        URL url = new URL(path);
+        return url.openStream();
+    }
+    
+    protected InputStream inputStreamOfFile(String file) throws IOException {
+    	return inputStreamOfPath(pathOfFile(file));
+    }
+    
     protected void doTest(String file) {
         try {
             // load source from jar
-            String path = jar + dir + "/" + file;
+            String path = pathOfFile(file);
             byte[] lua = bytesFromJar(path);
 
             // compile in memory
@@ -83,8 +96,7 @@ abstract public class AbstractUnitTests extends TestCase {
     }
 
     protected byte[] bytesFromJar(String path) throws IOException {
-        URL url = new URL(path);
-        InputStream is = url.openStream();
+        InputStream is = inputStreamOfPath(path);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buffer = new byte[2048];
         int n;
