@@ -173,4 +173,8 @@ abstract public class Visitor {
 	}
 	public void visit(NameScope scope) {
 	}
+	public void visit(Stat.Goto gotostat) {
+	}
+	public void visit(Stat.Label label) {
+	}
 }

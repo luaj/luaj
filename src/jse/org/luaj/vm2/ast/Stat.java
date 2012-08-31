@@ -81,6 +81,34 @@ public class Stat {
 		return new IfThenElse(ifexp, ifblock, elseifexps, elseifblocks, elseblock);
 	}
 
+	public static Stat gotostat(String name) {
+		return new Goto(name);
+	}
+
+	public static Stat labelstat(String name) {
+		return new Label(name);
+	}
+
+	public static class Goto extends Stat {
+		public final String name;
+		public Goto(String name) {
+			this.name = name;
+		}
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+
+	public static class Label extends Stat {
+		public final String name;
+		public Label(String name) {
+			this.name = name;
+		}
+		public void accept(Visitor visitor) {
+			visitor.visit(this);
+		}
+	}
+
 	public static class Assign extends Stat {
 		public final List<VarExp> vars;
 		public final List<Exp> exps;
