@@ -51,57 +51,69 @@ public interface LuaParserConstants {
   /** RegularExpression Id. */
   int FUNCTION = 37;
   /** RegularExpression Id. */
-  int IF = 38;
+  int GOTO = 38;
   /** RegularExpression Id. */
-  int IN = 39;
+  int IF = 39;
   /** RegularExpression Id. */
-  int LOCAL = 40;
+  int IN = 40;
   /** RegularExpression Id. */
-  int NIL = 41;
+  int LOCAL = 41;
   /** RegularExpression Id. */
-  int NOT = 42;
+  int NIL = 42;
   /** RegularExpression Id. */
-  int OR = 43;
+  int NOT = 43;
   /** RegularExpression Id. */
-  int RETURN = 44;
+  int OR = 44;
   /** RegularExpression Id. */
-  int REPEAT = 45;
+  int RETURN = 45;
   /** RegularExpression Id. */
-  int THEN = 46;
+  int REPEAT = 46;
   /** RegularExpression Id. */
-  int TRUE = 47;
+  int THEN = 47;
   /** RegularExpression Id. */
-  int UNTIL = 48;
+  int TRUE = 48;
   /** RegularExpression Id. */
-  int WHILE = 49;
+  int UNTIL = 49;
   /** RegularExpression Id. */
-  int NAME = 50;
+  int WHILE = 50;
   /** RegularExpression Id. */
-  int NUMBER = 51;
+  int NAME = 51;
   /** RegularExpression Id. */
-  int FLOAT = 52;
+  int NUMBER = 52;
   /** RegularExpression Id. */
-  int DIGIT = 53;
+  int FLOAT = 53;
   /** RegularExpression Id. */
-  int EXP = 54;
+  int FNUM = 54;
   /** RegularExpression Id. */
-  int HEX = 55;
+  int DIGIT = 55;
   /** RegularExpression Id. */
-  int HEXDIGIT = 56;
+  int EXP = 56;
   /** RegularExpression Id. */
-  int STRING = 57;
+  int HEX = 57;
   /** RegularExpression Id. */
-  int CHARSTRING = 58;
+  int HEXNUM = 58;
   /** RegularExpression Id. */
-  int QUOTED = 59;
+  int HEXDIGIT = 59;
   /** RegularExpression Id. */
-  int DECIMAL = 60;
+  int HEXEXP = 60;
   /** RegularExpression Id. */
-  int UNICODE = 61;
+  int STRING = 61;
   /** RegularExpression Id. */
-  int CHAR = 62;
+  int CHARSTRING = 62;
   /** RegularExpression Id. */
-  int LF = 63;
+  int QUOTED = 63;
+  /** RegularExpression Id. */
+  int DECIMAL = 64;
+  /** RegularExpression Id. */
+  int DBCOLON = 65;
+  /** RegularExpression Id. */
+  int SHEBANG = 66;
+  /** RegularExpression Id. */
+  int UNICODE = 67;
+  /** RegularExpression Id. */
+  int CHAR = 68;
+  /** RegularExpression Id. */
+  int LF = 69;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -168,6 +180,7 @@ public interface LuaParserConstants {
     "\"false\"",
     "\"for\"",
     "\"function\"",
+    "\"goto\"",
     "\"if\"",
     "\"in\"",
     "\"local\"",
@@ -183,14 +196,19 @@ public interface LuaParserConstants {
     "<NAME>",
     "<NUMBER>",
     "<FLOAT>",
+    "<FNUM>",
     "<DIGIT>",
     "<EXP>",
     "<HEX>",
+    "<HEXNUM>",
     "<HEXDIGIT>",
+    "<HEXEXP>",
     "<STRING>",
     "<CHARSTRING>",
     "<QUOTED>",
     "<DECIMAL>",
+    "\"::\"",
+    "<SHEBANG>",
     "<UNICODE>",
     "<CHAR>",
     "<LF>",

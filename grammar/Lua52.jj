@@ -1,5 +1,5 @@
 /** 
-* Javacc grammar for lua language version 5.1
+* Javacc grammar for lua language version 5.2
 *
 * Originally created for use in luaj, a Java implementation of the lua language
 * @see http://sourceforge.net/projects/luaj/
@@ -133,7 +133,7 @@ TOKEN :
 | < #QUOTED: <DECIMAL> | <UNICODE> | <CHAR> >
 | < #DECIMAL:   "\\" ["0"-"9"] (["0"-"9"])? (["0"-"9"])? >
 | < DBCOLON: "::" >
-| < SHEBANG: "#" ["!"," "] (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+| < SHEBANG: "#" ["!"," "] (~["\n","\r"])* (<LF>)? >
 | < #UNICODE: "\\" "u" <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> >
 | < #CHAR: "\\" (~[]) >
 | < #LF: ("\n" | "\r" | "\r\n") >

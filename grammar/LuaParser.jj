@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2010 Luaj.org. All rights reserved.
+* Copyright (c) 2010-2012 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 * THE SOFTWARE.
 ******************************************************************************/
 /**
-* Javacc grammar used to produce a parse tree.  
+* Javacc grammar used to produce a parse tree.  Based on lua 5.2 syntax.
 *
 */
 
@@ -123,6 +123,7 @@ TOKEN :
 | <FALSE: "false">
 | <FOR: "for">
 | <FUNCTION: "function">
+| <GOTO: "goto">
 | <IF: "if">
 | <IN: "in">
 | <LOCAL: "local">
@@ -143,17 +144,21 @@ TOKEN :
 {
   < NAME: ["a"-"z", "A"-"Z", "_"] (["a"-"z", "A"-"Z", "_", "0"-"9"])* >
 | < NUMBER: <HEX> | <FLOAT> >
-| < #FLOAT: (<DIGIT>)+ "." (<DIGIT>)* (<EXP>)? | "." (<DIGIT>)+ (<EXP>)? | (<DIGIT>)+ (<EXP>)? >
+| < #FLOAT: <FNUM> (<EXP>)? >
+| < #FNUM: (<DIGIT>)+ "." (<DIGIT>)* | "." (<DIGIT>)+ | (<DIGIT>)+ >
 | < #DIGIT: ["0"-"9"] >
 | < #EXP: ["e","E"] (["+","-"])? (<DIGIT>)+ >
-| < #HEX: "0" ["x","X"] (<HEXDIGIT>)+ >
+| < #HEX: "0" ["x","X"] <HEXNUM> (<HEXEXP>)? >
+| < #HEXNUM: (<HEXDIGIT>)+ "." (<HEXDIGIT>)* | "." (<HEXDIGIT>)+ | (<HEXDIGIT>)+ >
 | < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
+| < #HEXEXP: ["e","E","p","P"] (["+","-"])? (<DIGIT>)+ >
 | < STRING: "\"" (<QUOTED> | ~["\\","\""])* "\"" >
 | < CHARSTRING: "'" (<QUOTED> | ~["\\","'"])* "'" >
 | < #QUOTED: <DECIMAL> | <UNICODE> | <CHAR> >
 | < #DECIMAL:   "\\" ["0"-"9"] (["0"-"9"])? (["0"-"9"])? >
+| < DBCOLON: "::" >
+| < SHEBANG: "#" ["!"," "] (~["\n","\r"])* (<LF>)? >
 | < #UNICODE: "\\" "u" <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> >
-//| < #CHAR: "\\" ("a"|"b"|"f"|"n"|"r"|"t"|"v"|"["|"]"|"'"|"\""|"\\"|"0"|<LF>) >
 | < #CHAR: "\\" (~[]) >
 | < #LF: ("\n" | "\r" | "\r\n") >
 }
@@ -164,7 +169,7 @@ Chunk Chunk():
 	Block b;
 }
 {
-	b=Block() <EOF> { return new Chunk(b); }
+	( <SHEBANG> )? b=Block() <EOF> { return new Chunk(b); }
 }
 
 Block Block():
@@ -173,7 +178,7 @@ Block Block():
 	Stat s;
 }
 {
-	(s=Stat() (";")? {b.add(s);} )* (s=LastStat() (";")? {b.add(s);} )? { return b; } 
+	(s=Stat() {b.add(s);} )* (s=ReturnStat() {b.add(s);} )? { return b; } 
 }
 
 Stat Stat():
@@ -188,7 +193,11 @@ Stat Stat():
 	List<Exp> el=null;
 }
 {
-	<DO> b=Block() <END> { return Stat.block(b); }
+	";" { return null; }
+|	s=Label() { return s; } 
+|	<BREAK> { return Stat.breakstat(); }
+|	<GOTO> n=<NAME> { return Stat.gotostat(n.image); }
+|	<DO> b=Block() <END> { return Stat.block(b); }
 |	<WHILE> e=Exp() <DO> b=Block() <END> { return Stat.whiledo(e,b); }
 |	<REPEAT> b=Block() <UNTIL> e=Exp() { return Stat.repeatuntil(b,e); }
 |	s=IfThenElse() { return s; }
@@ -220,13 +229,20 @@ Stat IfThenElse():
 			{ return Stat.ifthenelse(e,b,el,bl,b3); }
 }
 
-Stat LastStat():
+Stat ReturnStat():
 {
 	List<Exp> el=null;
 }
 {
-	<BREAK> { return Stat.breakstat(); }
-|	<RETURN> ( el=ExpList() )? { return Stat.returnstat(el); }
+	<RETURN> ( el=ExpList() )? ( ";" )? { return Stat.returnstat(el); }
+}
+
+Stat Label():
+{
+	Token n;
+}
+{
+	<DBCOLON> n=<NAME> <DBCOLON> { return Stat.labelstat(n.image); }
 }
 
 Stat ExprStat():
@@ -347,7 +363,7 @@ Exp SimpleExp():
 |	s=Str()					{ return Exp.constant(s); }
 |	"..."					{ return Exp.varargs(); } 
 |	tc=TableConstructor()	{ return Exp.tableconstructor(tc); }
-|	fb=Function() 			{ return Exp.anonymousfunction(fb); }
+|	fb=FunctionCall() 		{ return Exp.anonymousfunction(fb); }
 |	e=PrimaryExp()			{ return e; } 
 }
 
@@ -373,7 +389,7 @@ Exp Exp():
 		(LOOKAHEAD(2) op=Binop() s=Exp() {e=Exp.binaryexp(e,op,s);} )* { return e; }
 }
 
-FuncBody Function():
+FuncBody FunctionCall():
 {
 	FuncBody fb;
 }

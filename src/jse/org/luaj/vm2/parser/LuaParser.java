@@ -26,9 +26,16 @@ public class LuaParser implements LuaParserConstants {
 /** Root production. */
   final public Chunk Chunk() throws ParseException {
         Block b;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case SHEBANG:
+      jj_consume_token(SHEBANG);
+      break;
+    default:
+      ;
+    }
     b = Block();
     jj_consume_token(0);
-                          {if (true) return new Chunk(b);}
+                                         {if (true) return new Chunk(b);}
     throw new Error("Missing return statement in function");
   }
 
@@ -38,47 +45,36 @@ public class LuaParser implements LuaParserConstants {
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case BREAK:
       case DO:
       case FOR:
       case FUNCTION:
+      case GOTO:
       case IF:
       case LOCAL:
       case REPEAT:
       case WHILE:
       case NAME:
-      case 69:
+      case DBCOLON:
+      case 70:
+      case 75:
         ;
         break;
       default:
         break label_1;
       }
       s = Stat();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
-        jj_consume_token(64);
-        break;
-      default:
-        ;
-      }
-                          b.add(s);
+                   b.add(s);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case BREAK:
     case RETURN:
-      s = LastStat();
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 64:
-        jj_consume_token(64);
-        break;
-      default:
-        ;
-      }
-                                                              b.add(s);
+      s = ReturnStat();
+                                                  b.add(s);
       break;
     default:
       ;
     }
-                                                                              {if (true) return b;}
+                                                                  {if (true) return b;}
     throw new Error("Missing return statement in function");
   }
 
@@ -92,6 +88,23 @@ public class LuaParser implements LuaParserConstants {
         List<Name> nl;
         List<Exp> el=null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 70:
+      jj_consume_token(70);
+              {if (true) return null;}
+      break;
+    case DBCOLON:
+      s = Label();
+                    {if (true) return s;}
+      break;
+    case BREAK:
+      jj_consume_token(BREAK);
+                  {if (true) return Stat.breakstat();}
+      break;
+    case GOTO:
+      jj_consume_token(GOTO);
+      n = jj_consume_token(NAME);
+                          {if (true) return Stat.gotostat(n.image);}
+      break;
     case DO:
       jj_consume_token(DO);
       b = Block();
@@ -121,13 +134,13 @@ public class LuaParser implements LuaParserConstants {
       if (jj_2_1(3)) {
         jj_consume_token(FOR);
         n = jj_consume_token(NAME);
-        jj_consume_token(65);
+        jj_consume_token(71);
         e = Exp();
-        jj_consume_token(66);
+        jj_consume_token(72);
         e2 = Exp();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 66:
-          jj_consume_token(66);
+        case 72:
+          jj_consume_token(72);
           e3 = Exp();
           break;
         default:
@@ -168,8 +181,8 @@ public class LuaParser implements LuaParserConstants {
               jj_consume_token(LOCAL);
               nl = NameList();
               switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-              case 65:
-                jj_consume_token(65);
+              case 71:
+                jj_consume_token(71);
                 el = ExpList();
                 break;
               default:
@@ -178,7 +191,7 @@ public class LuaParser implements LuaParserConstants {
                                                        {if (true) return Stat.localassignment(nl,el);}
               break;
             case NAME:
-            case 69:
+            case 75:
               s = ExprStat();
                        {if (true) return s;}
               break;
@@ -233,46 +246,51 @@ public class LuaParser implements LuaParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public Stat LastStat() throws ParseException {
+  final public Stat ReturnStat() throws ParseException {
         List<Exp> el=null;
+    jj_consume_token(RETURN);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case BREAK:
-      jj_consume_token(BREAK);
-                  {if (true) return Stat.breakstat();}
-      break;
-    case RETURN:
-      jj_consume_token(RETURN);
-      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case LONGSTRING0:
-      case LONGSTRING1:
-      case LONGSTRING2:
-      case LONGSTRING3:
-      case LONGSTRINGN:
-      case FALSE:
-      case FUNCTION:
-      case NIL:
-      case NOT:
-      case TRUE:
-      case NAME:
-      case NUMBER:
-      case STRING:
-      case CHARSTRING:
-      case 69:
-      case 73:
-      case 74:
-      case 77:
-      case 89:
-        el = ExpList();
-        break;
-      default:
-        ;
-      }
-                                     {if (true) return Stat.returnstat(el);}
+    case LONGSTRING0:
+    case LONGSTRING1:
+    case LONGSTRING2:
+    case LONGSTRING3:
+    case LONGSTRINGN:
+    case FALSE:
+    case FUNCTION:
+    case NIL:
+    case NOT:
+    case TRUE:
+    case NAME:
+    case NUMBER:
+    case STRING:
+    case CHARSTRING:
+    case 75:
+    case 79:
+    case 80:
+    case 83:
+    case 95:
+      el = ExpList();
       break;
     default:
-      jj_consume_token(-1);
-      throw new ParseException();
+      ;
     }
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case 70:
+      jj_consume_token(70);
+      break;
+    default:
+      ;
+    }
+                                              {if (true) return Stat.returnstat(el);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Stat Label() throws ParseException {
+        Token n;
+    jj_consume_token(DBCOLON);
+    n = jj_consume_token(NAME);
+    jj_consume_token(DBCOLON);
+                                       {if (true) return Stat.labelstat(n.image);}
     throw new Error("Missing return statement in function");
   }
 
@@ -281,8 +299,8 @@ public class LuaParser implements LuaParserConstants {
         Stat as=null;
     pe = PrimaryExp();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 65:
-    case 66:
+    case 71:
+    case 72:
       as = Assign(assertvarexp(pe));
       break;
     default:
@@ -300,17 +318,17 @@ public class LuaParser implements LuaParserConstants {
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 66:
+      case 72:
         ;
         break;
       default:
         break label_3;
       }
-      jj_consume_token(66);
+      jj_consume_token(72);
       ve = VarExp();
                             vl.add(ve);
     }
-    jj_consume_token(65);
+    jj_consume_token(71);
     el = ExpList();
                                                                 {if (true) return Stat.assignment(vl,el);}
     throw new Error("Missing return statement in function");
@@ -331,19 +349,19 @@ public class LuaParser implements LuaParserConstants {
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 67:
+      case 73:
         ;
         break;
       default:
         break label_4;
       }
-      jj_consume_token(67);
+      jj_consume_token(73);
       n = jj_consume_token(NAME);
                                 fn.adddot(n.image);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 68:
-      jj_consume_token(68);
+    case 74:
+      jj_consume_token(74);
       n = jj_consume_token(NAME);
                                 fn.method=n.image;
       break;
@@ -362,10 +380,10 @@ public class LuaParser implements LuaParserConstants {
       n = jj_consume_token(NAME);
                                           {if (true) return Exp.nameprefix(n.image);}
       break;
-    case 69:
-      jj_consume_token(69);
+    case 75:
+      jj_consume_token(75);
       e = Exp();
-      jj_consume_token(70);
+      jj_consume_token(76);
                                   {if (true) return Exp.parensprefix(e);}
       break;
     default:
@@ -396,19 +414,19 @@ public class LuaParser implements LuaParserConstants {
         Exp e;
         FuncArgs a;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 67:
-      jj_consume_token(67);
+    case 73:
+      jj_consume_token(73);
       n = jj_consume_token(NAME);
                                                   {if (true) return Exp.fieldop(lhs, n.image);}
       break;
-    case 71:
-      jj_consume_token(71);
+    case 77:
+      jj_consume_token(77);
       e = Exp();
-      jj_consume_token(72);
+      jj_consume_token(78);
                                                   {if (true) return Exp.indexop(lhs, e);}
       break;
-    case 68:
-      jj_consume_token(68);
+    case 74:
+      jj_consume_token(74);
       n = jj_consume_token(NAME);
       a = FuncArgs();
                                           {if (true) return Exp.methodop(lhs, n.image,a);}
@@ -420,8 +438,8 @@ public class LuaParser implements LuaParserConstants {
     case LONGSTRINGN:
     case STRING:
     case CHARSTRING:
-    case 69:
-    case 74:
+    case 75:
+    case 80:
       a = FuncArgs();
                                                   {if (true) return Exp.functionop(lhs, a);}
       break;
@@ -437,8 +455,8 @@ public class LuaParser implements LuaParserConstants {
         TableConstructor tc;
         LuaString s;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 69:
-      jj_consume_token(69);
+    case 75:
+      jj_consume_token(75);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case LONGSTRING0:
       case LONGSTRING1:
@@ -454,20 +472,20 @@ public class LuaParser implements LuaParserConstants {
       case NUMBER:
       case STRING:
       case CHARSTRING:
-      case 69:
-      case 73:
-      case 74:
-      case 77:
-      case 89:
+      case 75:
+      case 79:
+      case 80:
+      case 83:
+      case 95:
         el = ExpList();
         break;
       default:
         ;
       }
-      jj_consume_token(70);
+      jj_consume_token(76);
                                           {if (true) return FuncArgs.explist(el);}
       break;
-    case 74:
+    case 80:
       tc = TableConstructor();
                                           {if (true) return FuncArgs.tableconstructor(tc);}
       break;
@@ -500,7 +518,7 @@ public class LuaParser implements LuaParserConstants {
       } else {
         break label_6;
       }
-      jj_consume_token(66);
+      jj_consume_token(72);
       name = jj_consume_token(NAME);
                                                                                     nl.add(new Name(name.image));
     }
@@ -516,13 +534,13 @@ public class LuaParser implements LuaParserConstants {
     label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 66:
+      case 72:
         ;
         break;
       default:
         break label_7;
       }
-      jj_consume_token(66);
+      jj_consume_token(72);
       e = Exp();
                                             el.add(e);
     }
@@ -563,20 +581,20 @@ public class LuaParser implements LuaParserConstants {
       s = Str();
                                                   {if (true) return Exp.constant(s);}
       break;
-    case 73:
-      jj_consume_token(73);
+    case 79:
+      jj_consume_token(79);
                                                   {if (true) return Exp.varargs();}
       break;
-    case 74:
+    case 80:
       tc = TableConstructor();
                                   {if (true) return Exp.tableconstructor(tc);}
       break;
     case FUNCTION:
-      fb = Function();
+      fb = FunctionCall();
                                           {if (true) return Exp.anonymousfunction(fb);}
       break;
     case NAME:
-    case 69:
+    case 75:
       e = PrimaryExp();
                                           {if (true) return e;}
       break;
@@ -641,14 +659,14 @@ public class LuaParser implements LuaParserConstants {
     case NUMBER:
     case STRING:
     case CHARSTRING:
-    case 69:
-    case 73:
-    case 74:
+    case 75:
+    case 79:
+    case 80:
       e = SimpleExp();
       break;
     case NOT:
-    case 77:
-    case 89:
+    case 83:
+    case 95:
       op = Unop();
       s = Exp();
                                              e=Exp.unaryexp(op,s);
@@ -672,7 +690,7 @@ public class LuaParser implements LuaParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public FuncBody Function() throws ParseException {
+  final public FuncBody FunctionCall() throws ParseException {
         FuncBody fb;
     jj_consume_token(FUNCTION);
     fb = FuncBody();
@@ -683,16 +701,16 @@ public class LuaParser implements LuaParserConstants {
   final public FuncBody FuncBody() throws ParseException {
         ParList pl=null;
         Block b;
-    jj_consume_token(69);
+    jj_consume_token(75);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NAME:
-    case 73:
+    case 79:
       pl = ParList();
       break;
     default:
       ;
     }
-    jj_consume_token(70);
+    jj_consume_token(76);
     b = Block();
     jj_consume_token(END);
                                                     {if (true) return new FuncBody(pl,b);}
@@ -706,9 +724,9 @@ public class LuaParser implements LuaParserConstants {
     case NAME:
       nl = NameList();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 66:
-        jj_consume_token(66);
-        jj_consume_token(73);
+      case 72:
+        jj_consume_token(72);
+        jj_consume_token(79);
                                     v=true;
         break;
       default:
@@ -716,8 +734,8 @@ public class LuaParser implements LuaParserConstants {
       }
                                                    {if (true) return new ParList(nl,v);}
       break;
-    case 73:
-      jj_consume_token(73);
+    case 79:
+      jj_consume_token(79);
                  {if (true) return new ParList(null,true);} ;
       break;
     default:
@@ -730,7 +748,7 @@ public class LuaParser implements LuaParserConstants {
   final public TableConstructor TableConstructor() throws ParseException {
         TableConstructor tc = new TableConstructor();
         List<TableField> fl = null;
-    jj_consume_token(74);
+    jj_consume_token(80);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LONGSTRING0:
     case LONGSTRING1:
@@ -746,19 +764,19 @@ public class LuaParser implements LuaParserConstants {
     case NUMBER:
     case STRING:
     case CHARSTRING:
-    case 69:
-    case 71:
-    case 73:
-    case 74:
+    case 75:
     case 77:
-    case 89:
+    case 79:
+    case 80:
+    case 83:
+    case 95:
       fl = FieldList();
                               tc.fields=fl;
       break;
     default:
       ;
     }
-    jj_consume_token(75);
+    jj_consume_token(81);
                                                       {if (true) return tc;}
     throw new Error("Missing return statement in function");
   }
@@ -780,8 +798,8 @@ public class LuaParser implements LuaParserConstants {
                                                                    fl.add(f);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 64:
-    case 66:
+    case 70:
+    case 72:
       FieldSep();
       break;
     default:
@@ -795,18 +813,18 @@ public class LuaParser implements LuaParserConstants {
         Token name;
         Exp exp,rhs;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 71:
-      jj_consume_token(71);
+    case 77:
+      jj_consume_token(77);
       exp = Exp();
-      jj_consume_token(72);
-      jj_consume_token(65);
+      jj_consume_token(78);
+      jj_consume_token(71);
       rhs = Exp();
                                                   {if (true) return TableField.keyedField(exp,rhs);}
       break;
     default:
       if (jj_2_7(2)) {
         name = jj_consume_token(NAME);
-        jj_consume_token(65);
+        jj_consume_token(71);
         rhs = Exp();
                                                   {if (true) return TableField.namedField(name.image,rhs);}
       } else {
@@ -825,11 +843,11 @@ public class LuaParser implements LuaParserConstants {
         case NUMBER:
         case STRING:
         case CHARSTRING:
-        case 69:
-        case 73:
-        case 74:
-        case 77:
-        case 89:
+        case 75:
+        case 79:
+        case 80:
+        case 83:
+        case 95:
           rhs = Exp();
                                                   {if (true) return TableField.listField(rhs);}
           break;
@@ -844,11 +862,11 @@ public class LuaParser implements LuaParserConstants {
 
   final public void FieldSep() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 66:
-      jj_consume_token(66);
+    case 72:
+      jj_consume_token(72);
       break;
-    case 64:
-      jj_consume_token(64);
+    case 70:
+      jj_consume_token(70);
       break;
     default:
       jj_consume_token(-1);
@@ -858,56 +876,56 @@ public class LuaParser implements LuaParserConstants {
 
   final public int Binop() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 76:
-      jj_consume_token(76);
-                {if (true) return Lua.OP_ADD;}
-      break;
-    case 77:
-      jj_consume_token(77);
-                {if (true) return Lua.OP_SUB;}
-      break;
-    case 78:
-      jj_consume_token(78);
-                {if (true) return Lua.OP_MUL;}
-      break;
-    case 79:
-      jj_consume_token(79);
-                {if (true) return Lua.OP_DIV;}
-      break;
-    case 80:
-      jj_consume_token(80);
-                {if (true) return Lua.OP_POW;}
-      break;
-    case 81:
-      jj_consume_token(81);
-                {if (true) return Lua.OP_MOD;}
-      break;
     case 82:
       jj_consume_token(82);
-                {if (true) return Lua.OP_CONCAT;}
+                {if (true) return Lua.OP_ADD;}
       break;
     case 83:
       jj_consume_token(83);
-                {if (true) return Lua.OP_LT;}
+                {if (true) return Lua.OP_SUB;}
       break;
     case 84:
       jj_consume_token(84);
-                {if (true) return Lua.OP_LE;}
+                {if (true) return Lua.OP_MUL;}
       break;
     case 85:
       jj_consume_token(85);
-                {if (true) return Lua.OP_GT;}
+                {if (true) return Lua.OP_DIV;}
       break;
     case 86:
       jj_consume_token(86);
-                {if (true) return Lua.OP_GE;}
+                {if (true) return Lua.OP_POW;}
       break;
     case 87:
       jj_consume_token(87);
-                {if (true) return Lua.OP_EQ;}
+                {if (true) return Lua.OP_MOD;}
       break;
     case 88:
       jj_consume_token(88);
+                {if (true) return Lua.OP_CONCAT;}
+      break;
+    case 89:
+      jj_consume_token(89);
+                {if (true) return Lua.OP_LT;}
+      break;
+    case 90:
+      jj_consume_token(90);
+                {if (true) return Lua.OP_LE;}
+      break;
+    case 91:
+      jj_consume_token(91);
+                {if (true) return Lua.OP_GT;}
+      break;
+    case 92:
+      jj_consume_token(92);
+                {if (true) return Lua.OP_GE;}
+      break;
+    case 93:
+      jj_consume_token(93);
+                {if (true) return Lua.OP_EQ;}
+      break;
+    case 94:
+      jj_consume_token(94);
                 {if (true) return Lua.OP_NEQ;}
       break;
     case AND:
@@ -927,16 +945,16 @@ public class LuaParser implements LuaParserConstants {
 
   final public int Unop() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 77:
-      jj_consume_token(77);
+    case 83:
+      jj_consume_token(83);
                 {if (true) return Lua.OP_UNM;}
       break;
     case NOT:
       jj_consume_token(NOT);
                 {if (true) return Lua.OP_NOT;}
       break;
-    case 89:
-      jj_consume_token(89);
+    case 95:
+      jj_consume_token(95);
                 {if (true) return Lua.OP_LEN;}
       break;
     default:
@@ -988,142 +1006,18 @@ public class LuaParser implements LuaParserConstants {
     catch(LookaheadSuccess ls) { return true; }
   }
 
-  private boolean jj_3R_55() {
-    if (jj_scan_token(89)) return true;
-    return false;
-  }
-
-  private boolean jj_3_4() {
-    if (jj_scan_token(66)) return true;
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_54() {
-    if (jj_scan_token(NOT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_53() {
-    if (jj_scan_token(77)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_40() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_53()) {
-    jj_scanpos = xsp;
-    if (jj_3R_54()) {
-    jj_scanpos = xsp;
-    if (jj_3R_55()) return true;
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_69() {
-    if (jj_scan_token(LONGSTRINGN)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_68() {
-    if (jj_scan_token(LONGSTRING3)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_67() {
-    if (jj_scan_token(LONGSTRING2)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_66() {
-    if (jj_scan_token(LONGSTRING1)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_33() {
-    if (jj_scan_token(OR)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_65() {
-    if (jj_scan_token(LONGSTRING0)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_32() {
-    if (jj_scan_token(AND)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_64() {
-    if (jj_scan_token(CHARSTRING)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_31() {
-    if (jj_scan_token(88)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_63() {
-    if (jj_scan_token(STRING)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_58() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_63()) {
-    jj_scanpos = xsp;
-    if (jj_3R_64()) {
-    jj_scanpos = xsp;
-    if (jj_3R_65()) {
-    jj_scanpos = xsp;
-    if (jj_3R_66()) {
-    jj_scanpos = xsp;
-    if (jj_3R_67()) {
-    jj_scanpos = xsp;
-    if (jj_3R_68()) {
-    jj_scanpos = xsp;
-    if (jj_3R_69()) return true;
-    }
-    }
-    }
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_30() {
-    if (jj_scan_token(87)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_29() {
-    if (jj_scan_token(86)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_28() {
-    if (jj_scan_token(85)) return true;
-    return false;
-  }
-
   private boolean jj_3R_27() {
-    if (jj_scan_token(84)) return true;
+    if (jj_scan_token(90)) return true;
     return false;
   }
 
   private boolean jj_3R_26() {
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_25() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(88)) return true;
     return false;
   }
 
@@ -1133,7 +1027,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_24() {
-    if (jj_scan_token(81)) return true;
+    if (jj_scan_token(87)) return true;
     return false;
   }
 
@@ -1143,7 +1037,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_23() {
-    if (jj_scan_token(80)) return true;
+    if (jj_scan_token(86)) return true;
     return false;
   }
 
@@ -1153,17 +1047,17 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_22() {
-    if (jj_scan_token(79)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3R_49() {
-    if (jj_scan_token(73)) return true;
+    if (jj_scan_token(79)) return true;
     return false;
   }
 
   private boolean jj_3R_21() {
-    if (jj_scan_token(78)) return true;
+    if (jj_scan_token(84)) return true;
     return false;
   }
 
@@ -1179,7 +1073,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_20() {
-    if (jj_scan_token(77)) return true;
+    if (jj_scan_token(83)) return true;
     return false;
   }
 
@@ -1189,7 +1083,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_19() {
-    if (jj_scan_token(76)) return true;
+    if (jj_scan_token(82)) return true;
     return false;
   }
 
@@ -1291,9 +1185,9 @@ public class LuaParser implements LuaParserConstants {
   private boolean jj_3R_13() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(66)) {
+    if (jj_scan_token(72)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(64)) return true;
+    if (jj_scan_token(70)) return true;
     }
     return false;
   }
@@ -1305,7 +1199,7 @@ public class LuaParser implements LuaParserConstants {
 
   private boolean jj_3_7() {
     if (jj_scan_token(NAME)) return true;
-    if (jj_scan_token(65)) return true;
+    if (jj_scan_token(71)) return true;
     return false;
   }
 
@@ -1323,7 +1217,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_36() {
-    if (jj_scan_token(71)) return true;
+    if (jj_scan_token(77)) return true;
     return false;
   }
 
@@ -1348,11 +1242,11 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_57() {
-    if (jj_scan_token(74)) return true;
+    if (jj_scan_token(80)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_62()) jj_scanpos = xsp;
-    if (jj_scan_token(75)) return true;
+    if (jj_scan_token(81)) return true;
     return false;
   }
 
@@ -1367,11 +1261,11 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_41() {
-    if (jj_scan_token(69)) return true;
+    if (jj_scan_token(75)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_56()) jj_scanpos = xsp;
-    if (jj_scan_token(70)) return true;
+    if (jj_scan_token(76)) return true;
     return false;
   }
 
@@ -1399,19 +1293,19 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_17() {
-    if (jj_scan_token(68)) return true;
+    if (jj_scan_token(74)) return true;
     if (jj_scan_token(NAME)) return true;
     return false;
   }
 
   private boolean jj_3R_16() {
-    if (jj_scan_token(71)) return true;
+    if (jj_scan_token(77)) return true;
     if (jj_3R_12()) return true;
     return false;
   }
 
   private boolean jj_3R_15() {
-    if (jj_scan_token(67)) return true;
+    if (jj_scan_token(73)) return true;
     if (jj_scan_token(NAME)) return true;
     return false;
   }
@@ -1437,19 +1331,6 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3_2() {
-    if (jj_scan_token(LOCAL)) return true;
-    if (jj_scan_token(FUNCTION)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_scan_token(FOR)) return true;
-    if (jj_scan_token(NAME)) return true;
-    if (jj_scan_token(65)) return true;
-    return false;
-  }
-
   private boolean jj_3R_60() {
     if (jj_3R_70()) return true;
     return false;
@@ -1466,8 +1347,21 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
+  private boolean jj_3_2() {
+    if (jj_scan_token(LOCAL)) return true;
+    if (jj_scan_token(FUNCTION)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(FOR)) return true;
+    if (jj_scan_token(NAME)) return true;
+    if (jj_scan_token(71)) return true;
+    return false;
+  }
+
   private boolean jj_3R_73() {
-    if (jj_scan_token(69)) return true;
+    if (jj_scan_token(75)) return true;
     return false;
   }
 
@@ -1498,6 +1392,130 @@ public class LuaParser implements LuaParserConstants {
     jj_scanpos = xsp;
     if (jj_3R_35()) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3R_55() {
+    if (jj_scan_token(95)) return true;
+    return false;
+  }
+
+  private boolean jj_3_4() {
+    if (jj_scan_token(72)) return true;
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_54() {
+    if (jj_scan_token(NOT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_53() {
+    if (jj_scan_token(83)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_40() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_53()) {
+    jj_scanpos = xsp;
+    if (jj_3R_54()) {
+    jj_scanpos = xsp;
+    if (jj_3R_55()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_69() {
+    if (jj_scan_token(LONGSTRINGN)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_68() {
+    if (jj_scan_token(LONGSTRING3)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_67() {
+    if (jj_scan_token(LONGSTRING2)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_66() {
+    if (jj_scan_token(LONGSTRING1)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_33() {
+    if (jj_scan_token(OR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_65() {
+    if (jj_scan_token(LONGSTRING0)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_32() {
+    if (jj_scan_token(AND)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_64() {
+    if (jj_scan_token(CHARSTRING)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_31() {
+    if (jj_scan_token(94)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_63() {
+    if (jj_scan_token(STRING)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_58() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_63()) {
+    jj_scanpos = xsp;
+    if (jj_3R_64()) {
+    jj_scanpos = xsp;
+    if (jj_3R_65()) {
+    jj_scanpos = xsp;
+    if (jj_3R_66()) {
+    jj_scanpos = xsp;
+    if (jj_3R_67()) {
+    jj_scanpos = xsp;
+    if (jj_3R_68()) {
+    jj_scanpos = xsp;
+    if (jj_3R_69()) return true;
+    }
+    }
+    }
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_30() {
+    if (jj_scan_token(93)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_29() {
+    if (jj_scan_token(92)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_28() {
+    if (jj_scan_token(91)) return true;
     return false;
   }
 
