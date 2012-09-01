@@ -5,7 +5,6 @@
  */
 import java.io.*;
 
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ast.*;
 import org.luaj.vm2.ast.Exp.AnonFuncDef;
 import org.luaj.vm2.ast.Stat.FuncDef;
