@@ -107,13 +107,11 @@ public interface LuaParserConstants {
   /** RegularExpression Id. */
   int DBCOLON = 65;
   /** RegularExpression Id. */
-  int SHEBANG = 66;
+  int UNICODE = 66;
   /** RegularExpression Id. */
-  int UNICODE = 67;
+  int CHAR = 67;
   /** RegularExpression Id. */
-  int CHAR = 68;
-  /** RegularExpression Id. */
-  int LF = 69;
+  int LF = 68;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -208,10 +206,10 @@ public interface LuaParserConstants {
     "<QUOTED>",
     "<DECIMAL>",
     "\"::\"",
-    "<SHEBANG>",
     "<UNICODE>",
     "<CHAR>",
     "<LF>",
+    "\"#\"",
     "\";\"",
     "\"=\"",
     "\",\"",
@@ -237,7 +235,6 @@ public interface LuaParserConstants {
     "\">=\"",
     "\"==\"",
     "\"~=\"",
-    "\"#\"",
   };
 
 }

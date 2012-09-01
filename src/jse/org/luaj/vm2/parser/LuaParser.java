@@ -27,15 +27,16 @@ public class LuaParser implements LuaParserConstants {
   final public Chunk Chunk() throws ParseException {
         Block b;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case SHEBANG:
-      jj_consume_token(SHEBANG);
+    case 69:
+      jj_consume_token(69);
+                token_source.SwitchTo(IN_COMMENT);
       break;
     default:
       ;
     }
     b = Block();
     jj_consume_token(0);
-                                         {if (true) return new Chunk(b);}
+                                                                          {if (true) return new Chunk(b);}
     throw new Error("Missing return statement in function");
   }
 
@@ -264,11 +265,11 @@ public class LuaParser implements LuaParserConstants {
     case NUMBER:
     case STRING:
     case CHARSTRING:
+    case 69:
     case 75:
     case 79:
     case 80:
     case 83:
-    case 95:
       el = ExpList();
       break;
     default:
@@ -472,11 +473,11 @@ public class LuaParser implements LuaParserConstants {
       case NUMBER:
       case STRING:
       case CHARSTRING:
+      case 69:
       case 75:
       case 79:
       case 80:
       case 83:
-      case 95:
         el = ExpList();
         break;
       default:
@@ -665,8 +666,8 @@ public class LuaParser implements LuaParserConstants {
       e = SimpleExp();
       break;
     case NOT:
+    case 69:
     case 83:
-    case 95:
       op = Unop();
       s = Exp();
                                              e=Exp.unaryexp(op,s);
@@ -764,12 +765,12 @@ public class LuaParser implements LuaParserConstants {
     case NUMBER:
     case STRING:
     case CHARSTRING:
+    case 69:
     case 75:
     case 77:
     case 79:
     case 80:
     case 83:
-    case 95:
       fl = FieldList();
                               tc.fields=fl;
       break;
@@ -843,11 +844,11 @@ public class LuaParser implements LuaParserConstants {
         case NUMBER:
         case STRING:
         case CHARSTRING:
+        case 69:
         case 75:
         case 79:
         case 80:
         case 83:
-        case 95:
           rhs = Exp();
                                                   {if (true) return TableField.listField(rhs);}
           break;
@@ -953,8 +954,8 @@ public class LuaParser implements LuaParserConstants {
       jj_consume_token(NOT);
                 {if (true) return Lua.OP_NOT;}
       break;
-    case 95:
-      jj_consume_token(95);
+    case 69:
+      jj_consume_token(69);
                 {if (true) return Lua.OP_LEN;}
       break;
     default:
@@ -1004,6 +1005,11 @@ public class LuaParser implements LuaParserConstants {
     jj_la = xla; jj_lastpos = jj_scanpos = token;
     try { return !jj_3_7(); }
     catch(LookaheadSuccess ls) { return true; }
+  }
+
+  private boolean jj_3R_28() {
+    if (jj_scan_token(91)) return true;
+    return false;
   }
 
   private boolean jj_3R_27() {
@@ -1396,7 +1402,7 @@ public class LuaParser implements LuaParserConstants {
   }
 
   private boolean jj_3R_55() {
-    if (jj_scan_token(95)) return true;
+    if (jj_scan_token(69)) return true;
     return false;
   }
 
@@ -1511,11 +1517,6 @@ public class LuaParser implements LuaParserConstants {
 
   private boolean jj_3R_29() {
     if (jj_scan_token(92)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_28() {
-    if (jj_scan_token(91)) return true;
     return false;
   }
 
