@@ -14,20 +14,6 @@ import org.luaj.vm2.parser.*;
 
 public class SampleParser {
 	
-	// Sample ParseException subclass that stores the file, line, and column info.
-	static public class FileLineColumnParseException extends ParseException {
-		private static final long serialVersionUID = 1L;
-		public final String file;
-		public final int line;
-		public final int column;
-		public FileLineColumnParseException(String file, int line, int column, String message) {
-			super(message);
-			this.file = file;
-			this.line = line;
-			this.column = column;
-		}
-	}
-	
 	static public void main(String[] args) {
 		if (args.length == 0) {
 			System.out.println("usage: SampleParser luafile");
@@ -38,16 +24,7 @@ public class SampleParser {
 			
 			// Create a custom LuaParser subclass that intercepts parse exceptions and 
 			// extracts the line and column number information from the parse token.
-			LuaParser parser = new LuaParser(new FileInputStream(file)) {
-				  /** Generate ParseException. */
-				  public ParseException generateParseException() {
-				    Token errortok = token.next;
-				    int line = errortok.beginLine;
-				    int column = errortok.beginColumn;
-				    String mess = (errortok.kind == 0) ? tokenImage[0] : errortok.image;
-				    return new FileLineColumnParseException(file, line, column, mess);
-				  }
-			};
+			LuaParser parser = new LuaParser(new FileInputStream(file));
 			
 			// Perform the parsing.
 			Chunk chunk = parser.Chunk();
@@ -77,16 +54,14 @@ public class SampleParser {
 				}
 			} );
 			
-		} catch ( FileLineColumnParseException e ) {
-			System.out.println( "Parse failed at identified line, column: "+e );
-			System.out.println( "File: "+e.file );
-			System.out.println( "Line: "+e.line );
-			System.out.println( "Column: "+e.column );
-			System.out.println( "Message: "+e.getMessage() );
-			
 		} catch ( ParseException e ) {
-			System.out.println( "Parse failed at unknown location: "+e );
-			e.printStackTrace();
+			System.out.println( "Parse failed : "+e );
+			System.out.println( "Begin Line: "+e.currentToken.beginColumn );
+			System.out.println( "Begin Column: "+e.currentToken.endColumn );
+			System.out.println( "End Line: "+e.currentToken.beginColumn );
+			System.out.println( "End Column: "+e.currentToken.endColumn );
+			System.out.println( "Token Image: '"+e.currentToken.image+"'" );
+			System.out.println( "Message: "+e.getMessage() );
 			
 		} catch ( IOException e ) {
 			System.out.println( "IOException occurred: "+e );
