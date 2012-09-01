@@ -5,6 +5,9 @@ import org.luaj.vm2.ast.*;
 import java.util.*;
 
 public class LuaParser implements LuaParserConstants {
+  static {
+        LuaValue.valueOf(true);
+  }
 
   public static void main(String args[]) throws ParseException {
     LuaParser parser = new LuaParser(System.in);
@@ -23,9 +26,33 @@ public class LuaParser implements LuaParserConstants {
         return (Exp.FuncCall) pe;
   }
 
+  public SimpleCharStream getCharStream() {
+        return jj_input_stream;
+  }
+
+  private long LineInfo() {
+        return ((long) jj_input_stream.getBeginLine() << 32) | jj_input_stream.getBeginColumn();
+  }
+
+  private void L(SyntaxElement e, long startinfo) {
+        e.beginLine = (int) (startinfo >> 32);
+        e.beginColumn = (short) startinfo;
+        e.endLine = token.endLine;
+        e.endColumn = (short) token.endColumn;
+  }
+
+  private void L(SyntaxElement e, Token starttoken) {
+        e.beginLine = starttoken.beginLine;
+        e.beginColumn = (short) starttoken.beginColumn;
+        e.endLine = token.endLine;
+        e.endColumn = (short) token.endColumn;
+  }
+
 /** Root production. */
   final public Chunk Chunk() throws ParseException {
         Block b;
+        Chunk c;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 69:
       jj_consume_token(69);
@@ -36,13 +63,14 @@ public class LuaParser implements LuaParserConstants {
     }
     b = Block();
     jj_consume_token(0);
-                                                                          {if (true) return new Chunk(b);}
+                                                                          c=new Chunk(b); L(c,i); {if (true) return c;}
     throw new Error("Missing return statement in function");
   }
 
   final public Block Block() throws ParseException {
         Block b = new Block();
         Stat s;
+        long i = LineInfo();
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -75,7 +103,7 @@ public class LuaParser implements LuaParserConstants {
     default:
       ;
     }
-                                                                  {if (true) return b;}
+                                                                  L(b,i); {if (true) return b;}
     throw new Error("Missing return statement in function");
   }
 
@@ -88,6 +116,7 @@ public class LuaParser implements LuaParserConstants {
         Token n;
         List<Name> nl;
         List<Exp> el=null;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 70:
       jj_consume_token(70);
@@ -95,22 +124,22 @@ public class LuaParser implements LuaParserConstants {
       break;
     case DBCOLON:
       s = Label();
-                    {if (true) return s;}
+                    L(s,i); {if (true) return s;}
       break;
     case BREAK:
       jj_consume_token(BREAK);
-                  {if (true) return Stat.breakstat();}
+                  s=Stat.breakstat(); L(s,i); {if (true) return s;}
       break;
     case GOTO:
       jj_consume_token(GOTO);
       n = jj_consume_token(NAME);
-                          {if (true) return Stat.gotostat(n.image);}
+                          s=Stat.gotostat(n.image); L(s,i); {if (true) return s;}
       break;
     case DO:
       jj_consume_token(DO);
       b = Block();
       jj_consume_token(END);
-                               {if (true) return Stat.block(b);}
+                               s=Stat.block(b); L(s,i); {if (true) return s;}
       break;
     case WHILE:
       jj_consume_token(WHILE);
@@ -118,18 +147,18 @@ public class LuaParser implements LuaParserConstants {
       jj_consume_token(DO);
       b = Block();
       jj_consume_token(END);
-                                               {if (true) return Stat.whiledo(e,b);}
+                                               s=Stat.whiledo(e,b); L(s,i); {if (true) return s;}
       break;
     case REPEAT:
       jj_consume_token(REPEAT);
       b = Block();
       jj_consume_token(UNTIL);
       e = Exp();
-                                             {if (true) return Stat.repeatuntil(b,e);}
+                                             s=Stat.repeatuntil(b,e); L(s,i); {if (true) return s;}
       break;
     case IF:
       s = IfThenElse();
-                         {if (true) return s;}
+                         L(s,i); {if (true) return s;}
       break;
     default:
       if (jj_2_1(3)) {
@@ -150,7 +179,7 @@ public class LuaParser implements LuaParserConstants {
         jj_consume_token(DO);
         b = Block();
         jj_consume_token(END);
-                                                                                                          {if (true) return Stat.fornumeric(n.image,e,e2,e3,b);}
+                                                                                                          s=Stat.fornumeric(n.image,e,e2,e3,b); L(s,i); {if (true) return s;}
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case FOR:
@@ -161,13 +190,13 @@ public class LuaParser implements LuaParserConstants {
           jj_consume_token(DO);
           b = Block();
           jj_consume_token(END);
-                                                                     {if (true) return Stat.forgeneric(nl,el,b);}
+                                                                     s=Stat.forgeneric(nl,el,b); L(s,i); {if (true) return s;}
           break;
         case FUNCTION:
           jj_consume_token(FUNCTION);
           fn = FuncName();
           fb = FuncBody();
-                                                 {if (true) return Stat.functiondef(fn,fb);}
+                                                 s=Stat.functiondef(fn,fb); L(s,i); {if (true) return s;}
           break;
         default:
           if (jj_2_2(2)) {
@@ -175,7 +204,7 @@ public class LuaParser implements LuaParserConstants {
             jj_consume_token(FUNCTION);
             n = jj_consume_token(NAME);
             fb = FuncBody();
-                                                                 {if (true) return Stat.localfunctiondef(n.image,fb);}
+                                                                 s=Stat.localfunctiondef(n.image,fb); L(s,i); {if (true) return s;}
           } else {
             switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
             case LOCAL:
@@ -189,12 +218,12 @@ public class LuaParser implements LuaParserConstants {
               default:
                 ;
               }
-                                                       {if (true) return Stat.localassignment(nl,el);}
+                                                       s=Stat.localassignment(nl,el); L(s,i); {if (true) return s;}
               break;
             case NAME:
             case 75:
               s = ExprStat();
-                       {if (true) return s;}
+                       L(s,i); {if (true) return s;}
               break;
             default:
               jj_consume_token(-1);
@@ -249,6 +278,8 @@ public class LuaParser implements LuaParserConstants {
 
   final public Stat ReturnStat() throws ParseException {
         List<Exp> el=null;
+        Stat s;
+        long i = LineInfo();
     jj_consume_token(RETURN);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LONGSTRING0:
@@ -282,7 +313,7 @@ public class LuaParser implements LuaParserConstants {
     default:
       ;
     }
-                                              {if (true) return Stat.returnstat(el);}
+                                              s=Stat.returnstat(el); L(s,i); {if (true) return s;}
     throw new Error("Missing return statement in function");
   }
 
@@ -296,18 +327,19 @@ public class LuaParser implements LuaParserConstants {
   }
 
   final public Stat ExprStat() throws ParseException {
-        Exp.PrimaryExp pe;
-        Stat as=null;
-    pe = PrimaryExp();
+        Exp.PrimaryExp p;
+        Stat s=null;
+        long i = LineInfo();
+    p = PrimaryExp();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 71:
     case 72:
-      as = Assign(assertvarexp(pe));
+      s = Assign(assertvarexp(p));
       break;
     default:
       ;
     }
-          {if (true) return as==null? Stat.functioncall(assertfunccall(pe)): as;}
+          if (s==null) { s=Stat.functioncall(assertfunccall(p)); } L(s,i); {if (true) return s;}
     throw new Error("Missing return statement in function");
   }
 
@@ -316,6 +348,8 @@ public class LuaParser implements LuaParserConstants {
         vl.add(v0);
         Exp.VarExp ve;
         List<Exp> el;
+        Stat s;
+        long i = LineInfo();
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -331,22 +365,22 @@ public class LuaParser implements LuaParserConstants {
     }
     jj_consume_token(71);
     el = ExpList();
-                                                                {if (true) return Stat.assignment(vl,el);}
+                                                                s=Stat.assignment(vl,el); L(s,i); {if (true) return s;}
     throw new Error("Missing return statement in function");
   }
 
   final public Exp.VarExp VarExp() throws ParseException {
-        Exp.PrimaryExp pe;
-    pe = PrimaryExp();
-                          {if (true) return assertvarexp(pe);}
+        Exp.PrimaryExp p;
+    p = PrimaryExp();
+                         {if (true) return assertvarexp(p);}
     throw new Error("Missing return statement in function");
   }
 
   final public FuncName FuncName() throws ParseException {
-        FuncName fn;
         Token n;
+        FuncName f;
     n = jj_consume_token(NAME);
-                  fn=new FuncName(n.image);
+                  f=new FuncName(n.image);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -358,34 +392,36 @@ public class LuaParser implements LuaParserConstants {
       }
       jj_consume_token(73);
       n = jj_consume_token(NAME);
-                                fn.adddot(n.image);
+                                f.adddot(n.image);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 74:
       jj_consume_token(74);
       n = jj_consume_token(NAME);
-                                fn.method=n.image;
+                                f.method=n.image;
       break;
     default:
       ;
     }
-                         {if (true) return fn;}
+                         L(f,n); {if (true) return f;}
     throw new Error("Missing return statement in function");
   }
 
   final public Exp.PrimaryExp PrefixExp() throws ParseException {
         Token n;
         Exp e;
+        Exp.PrimaryExp p;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NAME:
       n = jj_consume_token(NAME);
-                                          {if (true) return Exp.nameprefix(n.image);}
+                                          p=Exp.nameprefix(n.image); L(p,i); {if (true) return p;}
       break;
     case 75:
       jj_consume_token(75);
       e = Exp();
       jj_consume_token(76);
-                                  {if (true) return Exp.parensprefix(e);}
+                                  p=Exp.parensprefix(e); L(p,i); {if (true) return p;}
       break;
     default:
       jj_consume_token(-1);
@@ -395,8 +431,9 @@ public class LuaParser implements LuaParserConstants {
   }
 
   final public Exp.PrimaryExp PrimaryExp() throws ParseException {
-        Exp.PrimaryExp pe;
-    pe = PrefixExp();
+        Exp.PrimaryExp p;
+        long i = LineInfo();
+    p = PrefixExp();
     label_5:
     while (true) {
       if (jj_2_3(2)) {
@@ -404,9 +441,9 @@ public class LuaParser implements LuaParserConstants {
       } else {
         break label_5;
       }
-      pe = PostfixOp(pe);
+      p = PostfixOp(p);
     }
-                                                            {if (true) return pe;}
+                                                         L(p,i); {if (true) return p;}
     throw new Error("Missing return statement in function");
   }
 
@@ -414,23 +451,25 @@ public class LuaParser implements LuaParserConstants {
         Token n;
         Exp e;
         FuncArgs a;
+        Exp.PrimaryExp p;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 73:
       jj_consume_token(73);
       n = jj_consume_token(NAME);
-                                                  {if (true) return Exp.fieldop(lhs, n.image);}
+                                                  p=Exp.fieldop(lhs, n.image); L(p,i); {if (true) return p;}
       break;
     case 77:
       jj_consume_token(77);
       e = Exp();
       jj_consume_token(78);
-                                                  {if (true) return Exp.indexop(lhs, e);}
+                                                  p=Exp.indexop(lhs, e); L(p,i); {if (true) return p;}
       break;
     case 74:
       jj_consume_token(74);
       n = jj_consume_token(NAME);
       a = FuncArgs();
-                                          {if (true) return Exp.methodop(lhs, n.image,a);}
+                                          p=Exp.methodop(lhs, n.image,a); L(p,i); {if (true) return p;}
       break;
     case LONGSTRING0:
     case LONGSTRING1:
@@ -442,7 +481,7 @@ public class LuaParser implements LuaParserConstants {
     case 75:
     case 80:
       a = FuncArgs();
-                                                  {if (true) return Exp.functionop(lhs, a);}
+                                                  p=Exp.functionop(lhs, a); L(p,i); {if (true) return p;}
       break;
     default:
       jj_consume_token(-1);
@@ -455,6 +494,8 @@ public class LuaParser implements LuaParserConstants {
         List<Exp> el=null;
         TableConstructor tc;
         LuaString s;
+        FuncArgs a;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 75:
       jj_consume_token(75);
@@ -484,11 +525,11 @@ public class LuaParser implements LuaParserConstants {
         ;
       }
       jj_consume_token(76);
-                                          {if (true) return FuncArgs.explist(el);}
+                                          a=FuncArgs.explist(el); L(a,i); {if (true) return a;}
       break;
     case 80:
       tc = TableConstructor();
-                                          {if (true) return FuncArgs.tableconstructor(tc);}
+                                          a=FuncArgs.tableconstructor(tc); L(a,i); {if (true) return a;}
       break;
     case LONGSTRING0:
     case LONGSTRING1:
@@ -498,7 +539,7 @@ public class LuaParser implements LuaParserConstants {
     case STRING:
     case CHARSTRING:
       s = Str();
-                                                          {if (true) return FuncArgs.string(s);}
+                                                          a=FuncArgs.string(s); L(a,i); {if (true) return a;}
       break;
     default:
       jj_consume_token(-1);
@@ -508,10 +549,10 @@ public class LuaParser implements LuaParserConstants {
   }
 
   final public List<Name> NameList() throws ParseException {
-        List<Name> nl = new ArrayList<Name>();
+        List<Name> l = new ArrayList<Name>();
         Token name;
     name = jj_consume_token(NAME);
-                     nl.add(new Name(name.image));
+                     l.add(new Name(name.image));
     label_6:
     while (true) {
       if (jj_2_4(2)) {
@@ -521,17 +562,17 @@ public class LuaParser implements LuaParserConstants {
       }
       jj_consume_token(72);
       name = jj_consume_token(NAME);
-                                                                                    nl.add(new Name(name.image));
+                                                                                   l.add(new Name(name.image));
     }
-                                                                                                                       {if (true) return nl;}
+                                                                                                                     {if (true) return l;}
     throw new Error("Missing return statement in function");
   }
 
   final public List<Exp> ExpList() throws ParseException {
-        List<Exp> el = new ArrayList<Exp>();
+        List<Exp> l = new ArrayList<Exp>();
         Exp e;
     e = Exp();
-                 el.add(e);
+                 l.add(e);
     label_7:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -543,9 +584,9 @@ public class LuaParser implements LuaParserConstants {
       }
       jj_consume_token(72);
       e = Exp();
-                                            el.add(e);
+                                           l.add(e);
     }
-                                                            {if (true) return el;}
+                                                          {if (true) return l;}
     throw new Error("Missing return statement in function");
   }
 
@@ -553,24 +594,25 @@ public class LuaParser implements LuaParserConstants {
         Token n;
         LuaString s;
         Exp e;
-        TableConstructor tc;
-        FuncBody fb;
+        TableConstructor c;
+        FuncBody b;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NIL:
       jj_consume_token(NIL);
-                                                  {if (true) return Exp.constant(LuaValue.NIL);}
+                                                  e=Exp.constant(LuaValue.NIL); L(e,i); {if (true) return e;}
       break;
     case TRUE:
       jj_consume_token(TRUE);
-                                                  {if (true) return Exp.constant(LuaValue.TRUE);}
+                                                  e=Exp.constant(LuaValue.TRUE); L(e,i); {if (true) return e;}
       break;
     case FALSE:
       jj_consume_token(FALSE);
-                                                  {if (true) return Exp.constant(LuaValue.FALSE);}
+                                                  e=Exp.constant(LuaValue.FALSE); L(e,i); {if (true) return e;}
       break;
     case NUMBER:
       n = jj_consume_token(NUMBER);
-                                                  {if (true) return Exp.numberconstant(n.image);}
+                                                  e=Exp.numberconstant(n.image); L(e,i); {if (true) return e;}
       break;
     case LONGSTRING0:
     case LONGSTRING1:
@@ -580,19 +622,19 @@ public class LuaParser implements LuaParserConstants {
     case STRING:
     case CHARSTRING:
       s = Str();
-                                                  {if (true) return Exp.constant(s);}
+                                                  e=Exp.constant(s); L(e,i); {if (true) return e;}
       break;
     case 79:
       jj_consume_token(79);
-                                                  {if (true) return Exp.varargs();}
+                                                  e=Exp.varargs(); L(e,i); {if (true) return e;}
       break;
     case 80:
-      tc = TableConstructor();
-                                  {if (true) return Exp.tableconstructor(tc);}
+      c = TableConstructor();
+                                  e=Exp.tableconstructor(c); L(e,i); {if (true) return e;}
       break;
     case FUNCTION:
-      fb = FunctionCall();
-                                          {if (true) return Exp.anonymousfunction(fb);}
+      b = FunctionCall();
+                                          e=Exp.anonymousfunction(b); L(e,i); {if (true) return e;}
       break;
     case NAME:
     case 75:
@@ -646,6 +688,7 @@ public class LuaParser implements LuaParserConstants {
   final public Exp Exp() throws ParseException {
         Exp e,s;
         int op;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LONGSTRING0:
     case LONGSTRING1:
@@ -687,21 +730,24 @@ public class LuaParser implements LuaParserConstants {
       s = Exp();
                                                   e=Exp.binaryexp(e,op,s);
     }
-                                                                                 {if (true) return e;}
+                                                                                 L(e,i); {if (true) return e;}
     throw new Error("Missing return statement in function");
   }
 
   final public FuncBody FunctionCall() throws ParseException {
-        FuncBody fb;
+        FuncBody b;
+        long i = LineInfo();
     jj_consume_token(FUNCTION);
-    fb = FuncBody();
-                                   {if (true) return fb;}
+    b = FuncBody();
+                                  L(b,i); {if (true) return b;}
     throw new Error("Missing return statement in function");
   }
 
   final public FuncBody FuncBody() throws ParseException {
         ParList pl=null;
         Block b;
+        FuncBody f;
+        long i = LineInfo();
     jj_consume_token(75);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NAME:
@@ -714,30 +760,32 @@ public class LuaParser implements LuaParserConstants {
     jj_consume_token(76);
     b = Block();
     jj_consume_token(END);
-                                                    {if (true) return new FuncBody(pl,b);}
+                                                    f=new FuncBody(pl,b); L(f,i); {if (true) return f;}
     throw new Error("Missing return statement in function");
   }
 
   final public ParList ParList() throws ParseException {
-        List<Name> nl=null;
+        List<Name> l=null;
         boolean v=false;
+        ParList p;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case NAME:
-      nl = NameList();
+      l = NameList();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 72:
         jj_consume_token(72);
         jj_consume_token(79);
-                                    v=true;
+                                   v=true;
         break;
       default:
         ;
       }
-                                                   {if (true) return new ParList(nl,v);}
+                                                  p=new ParList(l,v); L(p,i); {if (true) return p;}
       break;
     case 79:
       jj_consume_token(79);
-                 {if (true) return new ParList(null,true);} ;
+                 p=new ParList(null,true); L(p,i); {if (true) return p;}
       break;
     default:
       jj_consume_token(-1);
@@ -747,8 +795,9 @@ public class LuaParser implements LuaParserConstants {
   }
 
   final public TableConstructor TableConstructor() throws ParseException {
-        TableConstructor tc = new TableConstructor();
-        List<TableField> fl = null;
+        TableConstructor c = new TableConstructor();
+        List<TableField> l = null;
+        long i = LineInfo();
     jj_consume_token(80);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LONGSTRING0:
@@ -771,22 +820,22 @@ public class LuaParser implements LuaParserConstants {
     case 79:
     case 80:
     case 83:
-      fl = FieldList();
-                              tc.fields=fl;
+      l = FieldList();
+                             c.fields=l;
       break;
     default:
       ;
     }
     jj_consume_token(81);
-                                                      {if (true) return tc;}
+                                                   L(c,i); {if (true) return c;}
     throw new Error("Missing return statement in function");
   }
 
   final public List<TableField> FieldList() throws ParseException {
-        List<TableField> fl = new ArrayList<TableField>();
+        List<TableField> l = new ArrayList<TableField>();
         TableField f;
     f = Field();
-                   fl.add(f);
+                   l.add(f);
     label_9:
     while (true) {
       if (jj_2_6(2)) {
@@ -796,7 +845,7 @@ public class LuaParser implements LuaParserConstants {
       }
       FieldSep();
       f = Field();
-                                                                   fl.add(f);
+                                                                  l.add(f);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 70:
@@ -806,13 +855,15 @@ public class LuaParser implements LuaParserConstants {
     default:
       ;
     }
-                                                                                                 {if (true) return fl;}
+                                                                                               {if (true) return l;}
     throw new Error("Missing return statement in function");
   }
 
   final public TableField Field() throws ParseException {
         Token name;
         Exp exp,rhs;
+        TableField f;
+        long i = LineInfo();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case 77:
       jj_consume_token(77);
@@ -820,14 +871,14 @@ public class LuaParser implements LuaParserConstants {
       jj_consume_token(78);
       jj_consume_token(71);
       rhs = Exp();
-                                                  {if (true) return TableField.keyedField(exp,rhs);}
+                                                  f=TableField.keyedField(exp,rhs); L(f,i); {if (true) return f;}
       break;
     default:
       if (jj_2_7(2)) {
         name = jj_consume_token(NAME);
         jj_consume_token(71);
         rhs = Exp();
-                                                  {if (true) return TableField.namedField(name.image,rhs);}
+                                                  f=TableField.namedField(name.image,rhs); L(f,i); {if (true) return f;}
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case LONGSTRING0:
@@ -850,7 +901,7 @@ public class LuaParser implements LuaParserConstants {
         case 80:
         case 83:
           rhs = Exp();
-                                                  {if (true) return TableField.listField(rhs);}
+                                                  f=TableField.listField(rhs); L(f,i); {if (true) return f;}
           break;
         default:
           jj_consume_token(-1);
@@ -1007,8 +1058,217 @@ public class LuaParser implements LuaParserConstants {
     catch(LookaheadSuccess ls) { return true; }
   }
 
+  private boolean jj_3R_43() {
+    if (jj_3R_58()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_42() {
+    if (jj_3R_57()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_41() {
+    if (jj_scan_token(75)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_56()) jj_scanpos = xsp;
+    if (jj_scan_token(76)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_38() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_41()) {
+    jj_scanpos = xsp;
+    if (jj_3R_42()) {
+    jj_scanpos = xsp;
+    if (jj_3R_43()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3_3() {
+    if (jj_3R_10()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_18() {
+    if (jj_3R_38()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_17() {
+    if (jj_scan_token(74)) return true;
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_16() {
+    if (jj_scan_token(77)) return true;
+    if (jj_3R_12()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_35() {
+    if (jj_3R_40()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_15() {
+    if (jj_scan_token(73)) return true;
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_10() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_15()) {
+    jj_scanpos = xsp;
+    if (jj_3R_16()) {
+    jj_scanpos = xsp;
+    if (jj_3R_17()) {
+    jj_scanpos = xsp;
+    if (jj_3R_18()) return true;
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_59() {
+    if (jj_scan_token(FUNCTION)) return true;
+    return false;
+  }
+
+  private boolean jj_3_5() {
+    if (jj_3R_11()) return true;
+    if (jj_3R_12()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_60() {
+    if (jj_3R_70()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_55() {
+    if (jj_scan_token(69)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_54() {
+    if (jj_scan_token(NOT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_53() {
+    if (jj_scan_token(83)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_40() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_53()) {
+    jj_scanpos = xsp;
+    if (jj_3R_54()) {
+    jj_scanpos = xsp;
+    if (jj_3R_55()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_34() {
+    if (jj_3R_39()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_12() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_34()) {
+    jj_scanpos = xsp;
+    if (jj_3R_35()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_73() {
+    if (jj_scan_token(75)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_33() {
+    if (jj_scan_token(OR)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_72() {
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_70() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_72()) {
+    jj_scanpos = xsp;
+    if (jj_3R_73()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(LOCAL)) return true;
+    if (jj_scan_token(FUNCTION)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_32() {
+    if (jj_scan_token(AND)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_31() {
+    if (jj_scan_token(94)) return true;
+    return false;
+  }
+
+  private boolean jj_3_4() {
+    if (jj_scan_token(72)) return true;
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_30() {
+    if (jj_scan_token(93)) return true;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(FOR)) return true;
+    if (jj_scan_token(NAME)) return true;
+    if (jj_scan_token(71)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_29() {
+    if (jj_scan_token(92)) return true;
+    return false;
+  }
+
   private boolean jj_3R_28() {
     if (jj_scan_token(91)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_69() {
+    if (jj_scan_token(LONGSTRINGN)) return true;
     return false;
   }
 
@@ -1017,8 +1277,18 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
+  private boolean jj_3R_68() {
+    if (jj_scan_token(LONGSTRING3)) return true;
+    return false;
+  }
+
   private boolean jj_3R_26() {
     if (jj_scan_token(89)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_67() {
+    if (jj_scan_token(LONGSTRING2)) return true;
     return false;
   }
 
@@ -1027,8 +1297,8 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_52() {
-    if (jj_3R_60()) return true;
+  private boolean jj_3R_66() {
+    if (jj_scan_token(LONGSTRING1)) return true;
     return false;
   }
 
@@ -1037,8 +1307,8 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_51() {
-    if (jj_3R_59()) return true;
+  private boolean jj_3R_65() {
+    if (jj_scan_token(LONGSTRING0)) return true;
     return false;
   }
 
@@ -1047,8 +1317,8 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_50() {
-    if (jj_3R_57()) return true;
+  private boolean jj_3R_64() {
+    if (jj_scan_token(CHARSTRING)) return true;
     return false;
   }
 
@@ -1057,8 +1327,33 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_49() {
-    if (jj_scan_token(79)) return true;
+  private boolean jj_3R_63() {
+    if (jj_scan_token(STRING)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_58() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_63()) {
+    jj_scanpos = xsp;
+    if (jj_3R_64()) {
+    jj_scanpos = xsp;
+    if (jj_3R_65()) {
+    jj_scanpos = xsp;
+    if (jj_3R_66()) {
+    jj_scanpos = xsp;
+    if (jj_3R_67()) {
+    jj_scanpos = xsp;
+    if (jj_3R_68()) {
+    jj_scanpos = xsp;
+    if (jj_3R_69()) return true;
+    }
+    }
+    }
+    }
+    }
+    }
     return false;
   }
 
@@ -1067,24 +1362,8 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_48() {
-    if (jj_3R_58()) return true;
-    return false;
-  }
-
-  private boolean jj_3_6() {
-    if (jj_3R_13()) return true;
-    if (jj_3R_14()) return true;
-    return false;
-  }
-
   private boolean jj_3R_20() {
     if (jj_scan_token(83)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_47() {
-    if (jj_scan_token(NUMBER)) return true;
     return false;
   }
 
@@ -1142,6 +1421,52 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
+  private boolean jj_3_6() {
+    if (jj_3R_13()) return true;
+    if (jj_3R_14()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_52() {
+    if (jj_3R_60()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_51() {
+    if (jj_3R_59()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_50() {
+    if (jj_3R_57()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_13() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_scan_token(72)) {
+    jj_scanpos = xsp;
+    if (jj_scan_token(70)) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_49() {
+    if (jj_scan_token(79)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_48() {
+    if (jj_3R_58()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_47() {
+    if (jj_scan_token(NUMBER)) return true;
+    return false;
+  }
+
   private boolean jj_3R_46() {
     if (jj_scan_token(FALSE)) return true;
     return false;
@@ -1188,16 +1513,6 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_13() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_scan_token(72)) {
-    jj_scanpos = xsp;
-    if (jj_scan_token(70)) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3R_37() {
     if (jj_3R_12()) return true;
     return false;
@@ -1227,23 +1542,18 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_61() {
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
   private boolean jj_3R_71() {
     if (jj_3R_14()) return true;
     return false;
   }
 
-  private boolean jj_3R_62() {
-    if (jj_3R_71()) return true;
+  private boolean jj_3R_61() {
+    if (jj_3R_12()) return true;
     return false;
   }
 
-  private boolean jj_3R_56() {
-    if (jj_3R_61()) return true;
+  private boolean jj_3R_62() {
+    if (jj_3R_71()) return true;
     return false;
   }
 
@@ -1256,267 +1566,8 @@ public class LuaParser implements LuaParserConstants {
     return false;
   }
 
-  private boolean jj_3R_43() {
-    if (jj_3R_58()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_42() {
-    if (jj_3R_57()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_41() {
-    if (jj_scan_token(75)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_56()) jj_scanpos = xsp;
-    if (jj_scan_token(76)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_38() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_41()) {
-    jj_scanpos = xsp;
-    if (jj_3R_42()) {
-    jj_scanpos = xsp;
-    if (jj_3R_43()) return true;
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3_3() {
-    if (jj_3R_10()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_18() {
-    if (jj_3R_38()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_17() {
-    if (jj_scan_token(74)) return true;
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_16() {
-    if (jj_scan_token(77)) return true;
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_15() {
-    if (jj_scan_token(73)) return true;
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_10() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_15()) {
-    jj_scanpos = xsp;
-    if (jj_3R_16()) {
-    jj_scanpos = xsp;
-    if (jj_3R_17()) {
-    jj_scanpos = xsp;
-    if (jj_3R_18()) return true;
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_35() {
-    if (jj_3R_40()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_60() {
-    if (jj_3R_70()) return true;
-    return false;
-  }
-
-  private boolean jj_3_5() {
-    if (jj_3R_11()) return true;
-    if (jj_3R_12()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_59() {
-    if (jj_scan_token(FUNCTION)) return true;
-    return false;
-  }
-
-  private boolean jj_3_2() {
-    if (jj_scan_token(LOCAL)) return true;
-    if (jj_scan_token(FUNCTION)) return true;
-    return false;
-  }
-
-  private boolean jj_3_1() {
-    if (jj_scan_token(FOR)) return true;
-    if (jj_scan_token(NAME)) return true;
-    if (jj_scan_token(71)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_73() {
-    if (jj_scan_token(75)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_72() {
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_70() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_72()) {
-    jj_scanpos = xsp;
-    if (jj_3R_73()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_34() {
-    if (jj_3R_39()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_12() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_34()) {
-    jj_scanpos = xsp;
-    if (jj_3R_35()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_55() {
-    if (jj_scan_token(69)) return true;
-    return false;
-  }
-
-  private boolean jj_3_4() {
-    if (jj_scan_token(72)) return true;
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_54() {
-    if (jj_scan_token(NOT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_53() {
-    if (jj_scan_token(83)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_40() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_53()) {
-    jj_scanpos = xsp;
-    if (jj_3R_54()) {
-    jj_scanpos = xsp;
-    if (jj_3R_55()) return true;
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_69() {
-    if (jj_scan_token(LONGSTRINGN)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_68() {
-    if (jj_scan_token(LONGSTRING3)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_67() {
-    if (jj_scan_token(LONGSTRING2)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_66() {
-    if (jj_scan_token(LONGSTRING1)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_33() {
-    if (jj_scan_token(OR)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_65() {
-    if (jj_scan_token(LONGSTRING0)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_32() {
-    if (jj_scan_token(AND)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_64() {
-    if (jj_scan_token(CHARSTRING)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_31() {
-    if (jj_scan_token(94)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_63() {
-    if (jj_scan_token(STRING)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_58() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_63()) {
-    jj_scanpos = xsp;
-    if (jj_3R_64()) {
-    jj_scanpos = xsp;
-    if (jj_3R_65()) {
-    jj_scanpos = xsp;
-    if (jj_3R_66()) {
-    jj_scanpos = xsp;
-    if (jj_3R_67()) {
-    jj_scanpos = xsp;
-    if (jj_3R_68()) {
-    jj_scanpos = xsp;
-    if (jj_3R_69()) return true;
-    }
-    }
-    }
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_30() {
-    if (jj_scan_token(93)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_29() {
-    if (jj_scan_token(92)) return true;
+  private boolean jj_3R_56() {
+    if (jj_3R_61()) return true;
     return false;
   }
 

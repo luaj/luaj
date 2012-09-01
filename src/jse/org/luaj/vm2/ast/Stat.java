@@ -26,7 +26,7 @@ import java.util.List;
 import org.luaj.vm2.ast.Exp.VarExp;
 
 abstract
-public class Stat {
+public class Stat extends SyntaxElement {
 	public abstract void accept(Visitor visitor);
 
 	public static Stat block(Block block) {

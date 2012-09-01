@@ -42,6 +42,9 @@ import org.luaj.vm2.ast.*;
 import java.util.*;
 
 public class LuaParser {
+  static {
+  	LuaValue.valueOf(true);
+  }
 
   public static void main(String args[]) throws ParseException {
     LuaParser parser = new LuaParser(System.in);
@@ -59,6 +62,29 @@ public class LuaParser {
 		throw new ParseException("expected function call");
 	return (Exp.FuncCall) pe; 
   }
+  
+  public SimpleCharStream getCharStream() {
+  	return jj_input_stream;
+  }
+  
+  private long LineInfo() {
+  	return ((long) jj_input_stream.getBeginLine() << 32) | jj_input_stream.getBeginColumn();
+  }
+
+  private void L(SyntaxElement e, long startinfo) {
+  	e.beginLine = (int) (startinfo >> 32);
+  	e.beginColumn = (short) startinfo;
+  	e.endLine = token.endLine;
+  	e.endColumn = (short) token.endColumn;
+  }
+
+  private void L(SyntaxElement e, Token starttoken) {
+  	e.beginLine = starttoken.beginLine;
+  	e.beginColumn = (short) starttoken.beginColumn;
+  	e.endLine = token.endLine;
+  	e.endColumn = (short) token.endColumn;
+  }
+  
 }
 
 PARSER_END(LuaParser)
@@ -166,18 +192,21 @@ TOKEN :
 Chunk Chunk():
 {
 	Block b;
+	Chunk c;
+	long i = LineInfo();
 }
 {
-	( "#" { token_source.SwitchTo(IN_COMMENT); } )? b=Block() <EOF> { return new Chunk(b); }
+	( "#" { token_source.SwitchTo(IN_COMMENT); } )? b=Block() <EOF> { c=new Chunk(b); L(c,i); return c; }
 }
 
 Block Block():
 {
 	Block b = new Block();
 	Stat s;
+	long i = LineInfo();
 }
 {
-	(s=Stat() {b.add(s);} )* (s=ReturnStat() {b.add(s);} )? { return b; } 
+	(s=Stat() {b.add(s);} )* (s=ReturnStat() {b.add(s);} )? { L(b,i); return b; } 
 }
 
 Stat Stat():
@@ -190,22 +219,23 @@ Stat Stat():
 	Token n;
 	List<Name> nl;
 	List<Exp> el=null;
+	long i = LineInfo();
 }
 {
 	";" { return null; }
-|	s=Label() { return s; } 
-|	<BREAK> { return Stat.breakstat(); }
-|	<GOTO> n=<NAME> { return Stat.gotostat(n.image); }
-|	<DO> b=Block() <END> { return Stat.block(b); }
-|	<WHILE> e=Exp() <DO> b=Block() <END> { return Stat.whiledo(e,b); }
-|	<REPEAT> b=Block() <UNTIL> e=Exp() { return Stat.repeatuntil(b,e); }
-|	s=IfThenElse() { return s; }
-|	LOOKAHEAD(3) <FOR> n=<NAME> "=" e=Exp() "," e2=Exp() ( "," e3=Exp() )? <DO> b=Block() <END>	{ return Stat.fornumeric(n.image,e,e2,e3,b); }
-|	<FOR> nl=NameList() <IN> el=ExpList() <DO> b=Block() <END> { return Stat.forgeneric(nl,el,b); }
-|	<FUNCTION> fn=FuncName() fb=FuncBody() { return Stat.functiondef(fn,fb); }
-|	LOOKAHEAD(2) <LOCAL> <FUNCTION> n=<NAME> fb=FuncBody() { return Stat.localfunctiondef(n.image,fb); }
-|	<LOCAL> nl=NameList() ( "=" el=ExpList() )?  { return Stat.localassignment(nl,el); }
-|	s=ExprStat() { return s; }
+|	s=Label() { L(s,i); return s; } 
+|	<BREAK> { s=Stat.breakstat(); L(s,i); return s; }
+|	<GOTO> n=<NAME> { s=Stat.gotostat(n.image); L(s,i); return s; }
+|	<DO> b=Block() <END> { s=Stat.block(b); L(s,i); return s; }
+|	<WHILE> e=Exp() <DO> b=Block() <END> { s=Stat.whiledo(e,b); L(s,i); return s; }
+|	<REPEAT> b=Block() <UNTIL> e=Exp() { s=Stat.repeatuntil(b,e); L(s,i); return s; }
+|	s=IfThenElse() { L(s,i); return s; }
+|	LOOKAHEAD(3) <FOR> n=<NAME> "=" e=Exp() "," e2=Exp() ( "," e3=Exp() )? <DO> b=Block() <END>	{ s=Stat.fornumeric(n.image,e,e2,e3,b); L(s,i); return s; }
+|	<FOR> nl=NameList() <IN> el=ExpList() <DO> b=Block() <END> { s=Stat.forgeneric(nl,el,b); L(s,i); return s; }
+|	<FUNCTION> fn=FuncName() fb=FuncBody() { s=Stat.functiondef(fn,fb); L(s,i); return s; }
+|	LOOKAHEAD(2) <LOCAL> <FUNCTION> n=<NAME> fb=FuncBody() { s=Stat.localfunctiondef(n.image,fb); L(s,i); return s; }
+|	<LOCAL> nl=NameList() ( "=" el=ExpList() )?  { s=Stat.localassignment(nl,el); L(s,i); return s; }
+|	s=ExprStat() { L(s,i); return s; }
 }
 
 Stat IfThenElse():
@@ -231,9 +261,11 @@ Stat IfThenElse():
 Stat ReturnStat():
 {
 	List<Exp> el=null;
+	Stat s;
+	long i = LineInfo();
 }
 {
-	<RETURN> ( el=ExpList() )? ( ";" )? { return Stat.returnstat(el); }
+	<RETURN> ( el=ExpList() )? ( ";" )? { s=Stat.returnstat(el); L(s,i); return s; }
 }
 
 Stat Label():
@@ -246,12 +278,13 @@ Stat Label():
 
 Stat ExprStat():
 {
-	Exp.PrimaryExp pe;
-	Stat as=null;
+	Exp.PrimaryExp p;
+	Stat s=null;
+	long i = LineInfo();
 }
 {
-	pe=PrimaryExp() ( as=Assign(assertvarexp(pe)) )?
-	{ return as==null? Stat.functioncall(assertfunccall(pe)): as; }
+	p=PrimaryExp() ( s=Assign(assertvarexp(p)) )?
+	{ if (s==null) { s=Stat.functioncall(assertfunccall(p)); } L(s,i); return s; }
 }
 
 Stat Assign(Exp.VarExp v0):
@@ -260,47 +293,52 @@ Stat Assign(Exp.VarExp v0):
 	vl.add(v0);
 	Exp.VarExp ve;
 	List<Exp> el;
+	Stat s;
+	long i = LineInfo();
 }
 {
-	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { return Stat.assignment(vl,el); }
+	( "," ve=VarExp() { vl.add(ve); } )* "=" el=ExpList() { s=Stat.assignment(vl,el); L(s,i); return s; }
 }
 
 Exp.VarExp VarExp():
 {
-	Exp.PrimaryExp pe;
+	Exp.PrimaryExp p;
 }
 {
-	pe=PrimaryExp() { return assertvarexp(pe); }	
+	p=PrimaryExp() { return assertvarexp(p); }	
 }
 
 FuncName FuncName():
 {
-	FuncName fn;
 	Token n;
+	FuncName f;
 }
 {
-	n=<NAME> {fn=new FuncName(n.image);} 
-		( "." n=<NAME> {fn.adddot(n.image);} )* 
-		( ":" n=<NAME> {fn.method=n.image;} )? 
-			{return fn;}
+	n=<NAME> {f=new FuncName(n.image);} 
+		( "." n=<NAME> {f.adddot(n.image);} )* 
+		( ":" n=<NAME> {f.method=n.image;} )? 
+			{L(f,n); return f;}
 }
 
 Exp.PrimaryExp PrefixExp():
 {
 	Token n;
 	Exp e;
+	Exp.PrimaryExp p;
+	long i = LineInfo();
 }
 {
-	n=<NAME>			{ return Exp.nameprefix(n.image); }
-|	"(" e=Exp() ")"		{ return Exp.parensprefix(e); }
+	n=<NAME>			{ p=Exp.nameprefix(n.image); L(p,i); return p; }
+|	"(" e=Exp() ")"		{ p=Exp.parensprefix(e); L(p,i); return p; }
 }
 
 Exp.PrimaryExp PrimaryExp(): 
 {	
-	Exp.PrimaryExp pe;
+	Exp.PrimaryExp p;
+	long i = LineInfo();
 }
 {
-	pe=PrefixExp() ( LOOKAHEAD(2) pe=PostfixOp(pe) )* { return pe; }
+	p=PrefixExp() ( LOOKAHEAD(2) p=PostfixOp(p) )* { L(p,i); return p; }
 }
 
 Exp.PrimaryExp PostfixOp(Exp.PrimaryExp lhs):
@@ -308,12 +346,14 @@ Exp.PrimaryExp PostfixOp(Exp.PrimaryExp lhs):
 	Token n;
 	Exp e;
 	FuncArgs a;
+	Exp.PrimaryExp p;
+	long i = LineInfo();
 }
 {
-	"." n=<NAME>				{ return Exp.fieldop(lhs, n.image); } 
-|	"[" e=Exp() "]"				{ return Exp.indexop(lhs, e); }
-|	":" n=<NAME> a=FuncArgs()	{ return Exp.methodop(lhs, n.image,a); } 
-|	a=FuncArgs() 				{ return Exp.functionop(lhs, a); }
+	"." n=<NAME>				{ p=Exp.fieldop(lhs, n.image); L(p,i); return p; } 
+|	"[" e=Exp() "]"				{ p=Exp.indexop(lhs, e); L(p,i); return p; }
+|	":" n=<NAME> a=FuncArgs()	{ p=Exp.methodop(lhs, n.image,a); L(p,i); return p; } 
+|	a=FuncArgs() 				{ p=Exp.functionop(lhs, a); L(p,i); return p; }
 }
 
 FuncArgs FuncArgs():
@@ -321,29 +361,31 @@ FuncArgs FuncArgs():
 	List<Exp> el=null;
 	TableConstructor tc;
 	LuaString s;
+	FuncArgs a;
+	long i = LineInfo();
 }
 {
-	"(" ( el=ExpList() )? ")"	{ return FuncArgs.explist(el); }
-|	tc=TableConstructor()		{ return FuncArgs.tableconstructor(tc); }
-|	s=Str()						{ return FuncArgs.string(s); }
+	"(" ( el=ExpList() )? ")"	{ a=FuncArgs.explist(el); L(a,i); return a; }
+|	tc=TableConstructor()		{ a=FuncArgs.tableconstructor(tc); L(a,i); return a; }
+|	s=Str()						{ a=FuncArgs.string(s); L(a,i); return a; }
 }
 
 List<Name> NameList():
 {
-	List<Name> nl = new ArrayList<Name>();
+	List<Name> l = new ArrayList<Name>();
 	Token name;
 }
 {
-	name=<NAME> {nl.add(new Name(name.image));} ( LOOKAHEAD(2) "," name=<NAME> {nl.add(new Name(name.image));} )* {return nl;}
+	name=<NAME> {l.add(new Name(name.image));} ( LOOKAHEAD(2) "," name=<NAME> {l.add(new Name(name.image));} )* {return l;}
 }
 
 List<Exp> ExpList():
 {
-	List<Exp> el = new ArrayList<Exp>();
+	List<Exp> l = new ArrayList<Exp>();
 	Exp e;
 }
 {
-	e=Exp() {el.add(e);} ( "," e=Exp() {el.add(e);} )* {return el;}
+	e=Exp() {l.add(e);} ( "," e=Exp() {l.add(e);} )* {return l;}
 }
 
 Exp SimpleExp():
@@ -351,18 +393,19 @@ Exp SimpleExp():
 	Token n;
 	LuaString s;
 	Exp e;
-	TableConstructor tc;
-	FuncBody fb;
+	TableConstructor c;
+	FuncBody b;
+	long i = LineInfo();
 }
 {
-	<NIL>					{ return Exp.constant(LuaValue.NIL); } 		
-|	<TRUE>					{ return Exp.constant(LuaValue.TRUE); }
-|	<FALSE>					{ return Exp.constant(LuaValue.FALSE); }
-|	n=<NUMBER>				{ return Exp.numberconstant(n.image); }
-|	s=Str()					{ return Exp.constant(s); }
-|	"..."					{ return Exp.varargs(); } 
-|	tc=TableConstructor()	{ return Exp.tableconstructor(tc); }
-|	fb=FunctionCall() 		{ return Exp.anonymousfunction(fb); }
+	<NIL>					{ e=Exp.constant(LuaValue.NIL); L(e,i); return e; } 		
+|	<TRUE>					{ e=Exp.constant(LuaValue.TRUE); L(e,i); return e; }
+|	<FALSE>					{ e=Exp.constant(LuaValue.FALSE); L(e,i); return e; }
+|	n=<NUMBER>				{ e=Exp.numberconstant(n.image); L(e,i); return e; }
+|	s=Str()					{ e=Exp.constant(s); L(e,i); return e; }
+|	"..."					{ e=Exp.varargs(); L(e,i); return e; } 
+|	c=TableConstructor()	{ e=Exp.tableconstructor(c); L(e,i); return e; }
+|	b=FunctionCall() 		{ e=Exp.anonymousfunction(b); L(e,i); return e; }
 |	e=PrimaryExp()			{ return e; } 
 }
 
@@ -382,66 +425,75 @@ Exp Exp():
 {
 	Exp e,s;
 	int op;
+	long i = LineInfo();
 }
 {
 	( e=SimpleExp() | op=Unop() s=Exp() {e=Exp.unaryexp(op,s);}) 
-		(LOOKAHEAD(2) op=Binop() s=Exp() {e=Exp.binaryexp(e,op,s);} )* { return e; }
+		(LOOKAHEAD(2) op=Binop() s=Exp() {e=Exp.binaryexp(e,op,s);} )* { L(e,i); return e; }
 }
 
 FuncBody FunctionCall():
 {
-	FuncBody fb;
+	FuncBody b;
+	long i = LineInfo();
 }
 {
-	<FUNCTION> fb=FuncBody() { return fb; }
+	<FUNCTION> b=FuncBody() { L(b,i); return b; }
 }
 
 FuncBody FuncBody():
 {
 	ParList pl=null;
 	Block b;
+	FuncBody f;
+	long i = LineInfo();
 }
 {
-	"(" ( pl=ParList() )? ")" b=Block() <END> { return new FuncBody(pl,b); }
+	"(" ( pl=ParList() )? ")" b=Block() <END> { f=new FuncBody(pl,b); L(f,i); return f; }
 }
 
 ParList ParList():
 {
-	List<Name> nl=null;
+	List<Name> l=null;
 	boolean v=false;
+	ParList p;
+	long i = LineInfo();
 }
 {
-	nl=NameList() ( "," "..." { v=true; } )? { return new ParList(nl,v); } 
-|	"..." {  return new ParList(null,true); ; }
+	l=NameList() ( "," "..." { v=true; } )? { p=new ParList(l,v); L(p,i); return p; } 
+|	"..." {  p=new ParList(null,true); L(p,i); return p; }
 }
 
 TableConstructor TableConstructor():
 {
-	TableConstructor tc = new TableConstructor();
-	List<TableField> fl = null;
+	TableConstructor c = new TableConstructor();
+	List<TableField> l = null;
+	long i = LineInfo();
 }
 {
-	"{" ( fl=FieldList() {tc.fields=fl;} )? "}" { return tc; }
+	"{" ( l=FieldList() {c.fields=l;} )? "}" { L(c,i); return c; }
 }
 
 List<TableField> FieldList():
 {
-	List<TableField> fl = new ArrayList<TableField>();
+	List<TableField> l = new ArrayList<TableField>();
 	TableField f;
 }
 {
-	f=Field() {fl.add(f);} (LOOKAHEAD(2) FieldSep() f=Field() {fl.add(f);})* (FieldSep())? { return fl; }
+	f=Field() {l.add(f);} (LOOKAHEAD(2) FieldSep() f=Field() {l.add(f);})* (FieldSep())? { return l; }
 }
 
 TableField Field():
 {
 	Token name;
 	Exp exp,rhs;
+	TableField f;
+	long i = LineInfo();
 }
 {
-	"[" exp=Exp() "]" "=" rhs=Exp()         { return TableField.keyedField(exp,rhs); }
-|	LOOKAHEAD(2) name=<NAME> "=" rhs=Exp()  { return TableField.namedField(name.image,rhs); }
-|	rhs=Exp()                               { return TableField.listField(rhs); }
+	"[" exp=Exp() "]" "=" rhs=Exp()         { f=TableField.keyedField(exp,rhs); L(f,i); return f; }
+|	LOOKAHEAD(2) name=<NAME> "=" rhs=Exp()  { f=TableField.namedField(name.image,rhs); L(f,i); return f; }
+|	rhs=Exp()                               { f=TableField.listField(rhs); L(f,i); return f; }
 }
 
 void FieldSep():

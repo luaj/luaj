@@ -21,7 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
-public class FuncBody {
+public class FuncBody extends SyntaxElement {
 	public ParList parlist;
 	public Block block;
 	public NameScope scope;

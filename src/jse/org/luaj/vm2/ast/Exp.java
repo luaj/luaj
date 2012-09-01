@@ -25,7 +25,7 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaValue;
 
 abstract
-public class Exp {
+public class Exp extends SyntaxElement {
 	abstract public void accept(Visitor visitor);
 
 	public static Exp constant(LuaValue value) {

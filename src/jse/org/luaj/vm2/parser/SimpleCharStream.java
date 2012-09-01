@@ -30,10 +30,10 @@ public class SimpleCharStream
   protected char[] buffer;
   protected int maxNextCharInd = 0;
   protected int inBuf = 0;
-  protected int tabSize = 8;
+  protected int tabSize = 1;
 
-  protected void setTabSize(int i) { tabSize = i; }
-  protected int getTabSize(int i) { return tabSize; }
+  public void setTabSize(int i) { tabSize = i; }
+  public int getTabSize(int i) { return tabSize; }
 
 
   protected void ExpandBuff(boolean wrapAround)

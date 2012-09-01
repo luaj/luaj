@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2010 Luaj.org. All rights reserved.
+* Copyright (c) 2012 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +21,20 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
-public class TableField extends SyntaxElement {
-
-	public final Exp index;
-	public final String name;
-	public final Exp rhs;
+/** Base class for syntax elements of the parse tree that appear in source files.
+ * The LuaParser class will fill these values out during parsing for use in 
+ * syntax highlighting, for example.
+ */
+public class SyntaxElement {
+	/** The line number on which the element begins. */
+	public int beginLine;
 	
-	public TableField(Exp index, String name, Exp rhs) {
-		this.index = index;
-		this.name = name;
-		this.rhs = rhs;
-	}
+	/** The column at which the element begins. */
+	public short beginColumn;
 	
-	public static TableField keyedField(Exp index, Exp rhs) {
-		return new TableField(index, null, rhs);
-	}
+	/** The line number on which the element ends. */
+	public int endLine;
 
-	public static TableField namedField(String name, Exp rhs) {
-		return new TableField(null, name, rhs);
-	}
-
-	public static TableField listField(Exp rhs) {
-		return new TableField(null, null, rhs);
-	}
-
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
-	}
+	/** The column at which the element ends. */
+	public short endColumn;
 }

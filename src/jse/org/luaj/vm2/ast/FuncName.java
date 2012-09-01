@@ -24,7 +24,7 @@ package org.luaj.vm2.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FuncName {
+public class FuncName extends SyntaxElement {
 	// example: a.b.c.d:e
 	
 	// initial base name: "a"

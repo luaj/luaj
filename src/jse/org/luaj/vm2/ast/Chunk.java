@@ -21,7 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.ast;
 
-public class Chunk {
+public class Chunk extends SyntaxElement {
 	public final Block block;
 	
 	public Chunk(Block b) {

@@ -5,13 +5,15 @@
  */
 import java.io.*;
 
-import org.luaj.vm2.*;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.ast.*;
+import org.luaj.vm2.ast.Exp.AnonFuncDef;
+import org.luaj.vm2.ast.Stat.FuncDef;
+import org.luaj.vm2.ast.Stat.LocalFuncDef;
 import org.luaj.vm2.parser.*;
 
 
 public class SampleParser {
-	static LuaValue NIL = LuaValue.NIL;  // Workaround needed to ensure classes load in right order.
 	
 	// Sample ParseException subclass that stores the file, line, and column info.
 	static public class FileLineColumnParseException extends ParseException {
@@ -51,9 +53,29 @@ public class SampleParser {
 			// Perform the parsing.
 			Chunk chunk = parser.Chunk();
 			
-			// Optionally recurse over the parse tree with a custom Visitor instance.
+			// Print out line info for all function definitions.
 			chunk.accept( new Visitor() {
-				// TODO: override Visitor methods here to perform actions on the parse tree.
+				public void visit(AnonFuncDef exp) {
+					System.out.println("Anonymous function definition at " 
+							+ exp.beginLine + "." + exp.beginColumn + "," 
+							+ exp.endLine + "." + exp.endColumn);
+				}
+
+				public void visit(FuncDef stat) {
+					System.out.println("Function definition '" + stat.name.name.name + "' at " 
+							+ stat.beginLine + "." + stat.beginColumn + "," 
+							+ stat.endLine + "." + stat.endColumn);
+
+					System.out.println("\tName location " 
+							+ stat.name.beginLine + "." + stat.name.beginColumn + "," 
+							+ stat.name.endLine + "." + stat.name.endColumn);
+				}
+
+				public void visit(LocalFuncDef stat) {
+					System.out.println("Local function definition '" + stat.name.name + "' at " 
+							+ stat.beginLine + "." + stat.beginColumn + "," 
+							+ stat.endLine + "." + stat.endColumn);
+				}
 			} );
 			
 		} catch ( FileLineColumnParseException e ) {

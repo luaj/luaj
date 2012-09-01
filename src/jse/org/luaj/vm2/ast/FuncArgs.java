@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.luaj.vm2.LuaString;
 
-public class FuncArgs {
+public class FuncArgs extends SyntaxElement {
 
 	public final List<Exp> exps;
 	
