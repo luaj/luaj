@@ -675,13 +675,22 @@ For example, to parse a file and print all variable names, use code like:
 		Chunk chunk = parser.Chunk();
 		chunk.accept( new Visitor() {
 			public void visit(Exp.NameExp exp) {
-				System.out.println("Name in use: "+exp.name.name);
+				System.out.println("Name in use: "+exp.name.name
+					+" line "+exp.beginLine
+					+" col "+exp.beginColumn);
 			}
 		} );
 	} catch ( ParseException e ) {
-		System.out.println( "parse failed: "+e );
+		System.out.println( "parse failed: "+e
+			+" line "+e.currentToken.beginLine
+			+" col "+e.currentToken.beginColumn);
 	}
 </pre> 
+
+An example that prints locations of all function definitions in a file may be found in
+<pre>
+	examples/jse/SampleParser.java
+</pre>
 
 <p>
 See the <a href="http://luaj.sourceforge.net/api/2.0/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
@@ -764,6 +773,7 @@ and LuaForge:
 <li>Add arithmetic metatag processing when left hand side is a number and right hand side has metatable </li>
 <li>Fix load(func) when mutiple string fragments are supplied by calls to func </li>
 <li>Allow access to public members of private inner classes where possible </li>
+<li>Add line and column info to org.luaj.vm2.ast parse tree elements generated using LuaParser </li>
 </ul></td></tr>
 </table></td></tr></table>
 
