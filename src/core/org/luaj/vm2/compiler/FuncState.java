@@ -214,8 +214,6 @@ public class FuncState extends LuaC {
 	void enterblock (BlockCnt bl, boolean isloop) {
 	  bl.isloop = isloop;
 	  bl.nactvar = nactvar;
-	  if (ls.dyd == null)
-		  ls.dyd = new LexState.Dyndata();
 	  bl.firstlabel = (short) ls.dyd.n_label;
 	  bl.firstgoto = (short) ls.dyd.n_gt;
 	  bl.upval = false;
