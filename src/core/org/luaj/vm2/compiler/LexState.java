@@ -103,12 +103,12 @@ public class LexState {
 	  VFALSE = 3,
 	  VK = 4,		/* info = index of constant in `k' */
 	  VKNUM = 5,	/* nval = numerical value */
-	  VLOCAL = 6,	/* info = local register */
-	  VUPVAL = 7,       /* info = index of upvalue in `upvalues' */
-	  VINDEXED = 8,	/* info = table register, aux = index register (or `k') */
-	  VJMP = 9,		/* info = instruction pc */
-	  VRELOCABLE = 10,	/* info = instruction pc */
-	  VNONRELOC = 11,	/* info = result register */
+	  VNONRELOC = 6,	/* info = result register */
+	  VLOCAL = 7,	/* info = local register */
+	  VUPVAL = 8,       /* info = index of upvalue in `upvalues' */
+	  VINDEXED = 9,	/* info = table register, aux = index register (or `k') */
+	  VJMP = 10,		/* info = instruction pc */
+	  VRELOCABLE = 11,	/* info = instruction pc */
 	  VCALL = 12,	/* info = instruction pc */
 	  VVARARG = 13;	/* info = instruction pc */
 	
@@ -699,6 +699,7 @@ public class LexState {
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
+		// System.out.println("---- next t.token " + t.token + " (" + txtToken(t.token) + ") " + linenumber );
 	}
 
 	void lookahead() {
@@ -1546,21 +1547,22 @@ public class LexState {
 		this.enterlevel();
 		uop = getunopr(this.t.token);
 		if (uop != OPR_NOUNOPR) {
+		    int line = linenumber;
 			this.next();
 			this.subexpr(v, UNARY_PRIORITY);
-			fs.prefix(uop, v);
+			fs.prefix(uop, v, line);
 		} else
 			this.simpleexp(v);
 		/* expand while operators have priorities higher than `limit' */
 		op = getbinopr(this.t.token);
 		while (op != OPR_NOBINOPR && priority[op].left > limit) {
 			expdesc v2 = new expdesc();
-			int nextop;
+			int line = linenumber;
 			this.next();
 			fs.infix(op, v);
 			/* read sub-expression with higher priority */
-			nextop = this.subexpr(v2, priority[op].right);
-			fs.posfix(op, v, v2);
+			int nextop = this.subexpr(v2, priority[op].right);
+			fs.posfix(op, v, v2, line);
 			op = nextop;
 		}
 		this.leavelevel();
@@ -1640,8 +1642,10 @@ public class LexState {
 			}
 		}
 		if (conflict) {
-			fs.codeABC(Lua.OP_MOVE, fs.freereg, v.u.info, 0); /* make copy */
-			fs.reserveregs(1);
+		    /* copy upvalue/local value to a temporary (in position 'extra') */
+		    int op = (v.k == VLOCAL) ? Lua.OP_MOVE : Lua.OP_GETUPVAL;
+		    fs.codeABC(op, extra, v.u.info, 0);
+		    fs.reserveregs(1);
 		}
 	}
 
@@ -1919,15 +1923,11 @@ public class LexState {
 	}
 
 	void localfunc() {
-		expdesc v = new expdesc();
 		expdesc b = new expdesc();
 		FuncState fs = this.fs;
 		this.new_localvar(this.str_checkname());
-		v.init(VLOCAL, fs.freereg);
-		fs.reserveregs(1);
 		this.adjustlocalvars(1);
 		this.body(b, false, this.linenumber);
-		fs.storevar(v, b);
 		/* debug information will only see the variable after this point! */
 		fs.getlocvar(fs.nactvar - 1).startpc = fs.pc;
 	}

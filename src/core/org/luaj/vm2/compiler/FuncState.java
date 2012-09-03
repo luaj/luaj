@@ -862,10 +862,15 @@ public class FuncState extends LuaC {
 		this.removevalues(e.t.i);
 	}
 
+	static boolean vkisinreg(int k) {
+		return ((k) == LexState.VNONRELOC || (k) == LexState.VLOCAL);
+	}
+
 	void indexed(expdesc t, expdesc k) {
 		t.u.ind_t = (short) t.u.info;
 		t.u.ind_idx = (short) this.exp2RK(k);
-		t.u.ind_vt = (short) ((t.k == LexState.VUPVAL) ? LexState.VUPVAL : LexState.VLOCAL);
+		LuaC._assert(t.k == LexState.VUPVAL || vkisinreg(t.k));
+		t.u.ind_vt = (short) ((t.k == LexState.VUPVAL) ? LexState.VUPVAL  : LexState.VLOCAL);
 		t.k = LexState.VINDEXED;
 	}
 
@@ -912,7 +917,7 @@ public class FuncState extends LuaC {
 		return true;
 	}
 
-	void codearith(int op, expdesc e1, expdesc e2) {
+	void codearith(int op, expdesc e1, expdesc e2, int line) {
 		if (constfolding(op, e1, e2))
 			return;
 		else {
@@ -928,6 +933,7 @@ public class FuncState extends LuaC {
 			}
 			e1.u.info = this.codeABC(op, 0, o1, o2);
 			e1.k = LexState.VRELOCABLE;
+			fixline(line);
 		}
 	}
 
@@ -947,14 +953,14 @@ public class FuncState extends LuaC {
 		e1.k = LexState.VJMP;
 	}
 
-	void prefix(int /* UnOpr */op, expdesc e) {
+	void prefix(int /* UnOpr */op, expdesc e, int line) {
 		expdesc e2 = new expdesc();
 		e2.init(LexState.VKNUM, 0);
 		switch (op) {
 		case LexState.OPR_MINUS: {
 			if (e.k == LexState.VK)
 				this.exp2anyreg(e); /* cannot operate on non-numeric constants */
-			this.codearith(OP_UNM, e, e2);
+			this.codearith(OP_UNM, e, e2, line);
 			break;
 		}
 		case LexState.OPR_NOT:
@@ -962,7 +968,7 @@ public class FuncState extends LuaC {
 			break;
 		case LexState.OPR_LEN: {
 			this.exp2anyreg(e); /* cannot operate on constants */
-			this.codearith(OP_LEN, e, e2);
+			this.codearith(OP_LEN, e, e2, line);
 			break;
 		}
 		default:
@@ -1002,7 +1008,7 @@ public class FuncState extends LuaC {
 	}
 
 
-	void posfix(int op, expdesc e1, expdesc e2) {
+	void posfix(int op, expdesc e1, expdesc e2, int line) {
 		switch (op) {
 		case LexState.OPR_AND: {
 			_assert (e1.t.i == LexState.NO_JUMP); /* list must be closed */
@@ -1031,27 +1037,27 @@ public class FuncState extends LuaC {
 				e1.u.info = e2.u.info;
 			} else {
 				this.exp2nextreg(e2); /* operand must be on the 'stack' */
-				this.codearith(OP_CONCAT, e1, e2);
+				this.codearith(OP_CONCAT, e1, e2, line);
 			}
 			break;
 		}
 		case LexState.OPR_ADD:
-			this.codearith(OP_ADD, e1, e2);
+			this.codearith(OP_ADD, e1, e2, line);
 			break;
 		case LexState.OPR_SUB:
-			this.codearith(OP_SUB, e1, e2);
+			this.codearith(OP_SUB, e1, e2, line);
 			break;
 		case LexState.OPR_MUL:
-			this.codearith(OP_MUL, e1, e2);
+			this.codearith(OP_MUL, e1, e2, line);
 			break;
 		case LexState.OPR_DIV:
-			this.codearith(OP_DIV, e1, e2);
+			this.codearith(OP_DIV, e1, e2, line);
 			break;
 		case LexState.OPR_MOD:
-			this.codearith(OP_MOD, e1, e2);
+			this.codearith(OP_MOD, e1, e2, line);
 			break;
 		case LexState.OPR_POW:
-			this.codearith(OP_POW, e1, e2);
+			this.codearith(OP_POW, e1, e2, line);
 			break;
 		case LexState.OPR_EQ:
 			this.codecomp(OP_EQ, 1, e1, e2);
