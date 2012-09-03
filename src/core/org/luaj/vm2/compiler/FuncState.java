@@ -28,6 +28,7 @@ import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaNil;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
 import org.luaj.vm2.LuaString;
@@ -511,8 +512,11 @@ public class FuncState extends LuaC {
 		return this.addk((b ? LuaValue.TRUE : LuaValue.FALSE));
 	}
 
+	static final LuaUserdata NIL_PROXY = new LuaUserdata(LuaValue.NIL);
+
 	int nilK() {
-		return this.addk(LuaValue.NIL);
+		/* cannot use nil as key; instead use table itself to represent nil */
+		return this.addk(NIL_PROXY);
 	}
 
 	void setreturns(expdesc e, int nresults) {
@@ -674,18 +678,21 @@ public class FuncState extends LuaC {
 	int exp2RK(expdesc e) {
 		this.exp2val(e);
 		switch (e.k) {
-		case LexState.VKNUM:
 		case LexState.VTRUE:
 		case LexState.VFALSE:
 		case LexState.VNIL: {
 			if (this.nk <= MAXINDEXRK) { /* constant fit in RK operand? */
 				e.u.info = (e.k == LexState.VNIL) ? this.nilK()
-						: (e.k == LexState.VKNUM) ? this.numberK(e.u.nval())
 								: this.boolK((e.k == LexState.VTRUE));
 				e.k = LexState.VK;
 				return RKASK(e.u.info);
 			} else
 				break;
+		}
+		case LexState.VKNUM: {
+		      e.u.info = this.numberK(e.u.nval());
+		      e.k = LexState.VK;
+		      /* go through */			
 		}
 		case LexState.VK: {
 			if (e.u.info <= MAXINDEXRK) /* constant fit in argC? */
@@ -767,19 +774,15 @@ public class FuncState extends LuaC {
 		int pc; /* pc of last jump */
 		this.dischargevars(e);
 		switch (e.k) {
+		case LexState.VJMP: {
+			this.invertjump(e);
+			pc = e.u.info;
+			break;
+		}
 		case LexState.VK:
 		case LexState.VKNUM:
 		case LexState.VTRUE: {
 			pc = LexState.NO_JUMP; /* always true; do nothing */
-			break;
-		}
-		case LexState.VFALSE: {
-			pc = this.jump(); /* always jump */
-			break;
-		}
-		case LexState.VJMP: {
-			this.invertjump(e);
-			pc = e.u.info;
 			break;
 		}
 		default: {

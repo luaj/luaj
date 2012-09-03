@@ -402,7 +402,7 @@ public class LexState {
 		while (true) {
 			if (check_next(expo))
 				check_next("+-");
-			if(isxdigit(current))
+			if(isxdigit(current) || current == '.')
 				save_and_next();
 			else
 				break;
@@ -699,7 +699,6 @@ public class LexState {
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
-		System.out.println("----- next t.token " + t.token + " (" + (t.token!=0? txtToken(t.token): "-")+") "+ linenumber );
 	}
 
 	void lookahead() {
@@ -1034,7 +1033,7 @@ public class LexState {
 	*/
 	void breaklabel () {
 		LuaString n = LuaString.valueOf("break");
-		int l = newlabelentry(LuaC.grow(dyd.label, dyd.n_label+1), dyd.n_label++, n, 0, fs.pc);
+		int l = newlabelentry(dyd.label=LuaC.grow(dyd.label, dyd.n_label+1), dyd.n_label++, n, 0, fs.pc);
 		findgotos(dyd.label[l]);
 	}
 
@@ -1787,10 +1786,15 @@ public class LexState {
 		this.block();
 		fs.leaveblock(); /* end of scope for declared variables */
 		fs.patchtohere(prep);
-		endfor = (isnum) ? fs.codeAsBx(Lua.OP_FORLOOP, base, NO_JUMP) : fs
-				.codeABC(Lua.OP_TFORLOOP, base, 0, nvars);
-		fs.fixline(line); /* pretend that `Lua.OP_FOR' starts the loop */
-		fs.patchlist((isnum ? endfor : fs.jump()), prep + 1);
+		if (isnum)  /* numeric for? */
+			endfor = fs.codeAsBx(Lua.OP_FORLOOP, base, NO_JUMP);
+		else {  /* generic for */
+			fs.codeABC(Lua.OP_TFORCALL, base, 0, nvars);
+			fs.fixline(line);
+			endfor = fs.codeAsBx(Lua.OP_TFORLOOP, base + 2, NO_JUMP);
+		}
+		fs.patchlist(endfor, prep + 1);
+		fs.fixline(line);
 	}
 
 
@@ -1990,7 +1994,6 @@ public class LexState {
 		FuncState fs = this.fs;
 		expdesc e = new expdesc();
 		int first, nret; /* registers with returned values */
-		this.next(); /* skip RETURN */
 		if (block_follow(true) || this.t.token == ';')
 			first = nret = 0; /* return no values */
 		else {
@@ -2014,10 +2017,12 @@ public class LexState {
 			}
 		}
 		fs.ret(first, nret);
+		testnext(';');  /* skip optional semicolon */
 	}
 
 	void statement() {
 		int line = this.linenumber; /* may be needed for error messages */
+		enterlevel();
 		switch (this.t.token) {
 		case ';': { /* stat -> ';' (empty statement) */
 			next(); /* skip ';' */
