@@ -223,7 +223,7 @@ public class Print extends Lua {
 		case OP_GETTABUP:
 		case OP_SETTABUP:
 			ps.print("  ; ");
-			printConstant( ps, f, bx );
+			printConstant( ps, f, b );
 			break;
 		case OP_GETTABLE:
 		case OP_SELF:

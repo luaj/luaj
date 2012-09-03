@@ -1064,14 +1064,9 @@ public class LexState {
 	}
 
 	void open_func (FuncState fs, BlockCnt bl) {
-		  LuaC L = this.L;
 		  Prototype f = new Prototype();
-		  if ( this.fs!=null )
-			  f.source = this.fs.f.source;
-		  fs.f = f;
 		  fs.prev = this.fs;  /* linked list of funcstates */
 		  fs.ls = this;
-		  fs.L = L;
 		  this.fs = fs;
 		  fs.pc = 0;
 		  fs.lasttarget = -1;
@@ -1079,6 +1074,7 @@ public class LexState {
 		  fs.freereg = 0;
 		  fs.nk = 0;
 		  fs.np = 0;
+		  fs.nups = 0;
 		  fs.nlocvars = 0;
 		  fs.nactvar = 0;
 		  fs.firstlocal = dyd.n_actvar;
@@ -1266,9 +1262,9 @@ public class LexState {
 		/* body -> `(' parlist `)' chunk END */
 		FuncState new_fs = new FuncState();
 		BlockCnt bl = new BlockCnt();
-		open_func(new_fs, bl);
 		new_fs.f = addprototype();
 		new_fs.f.linedefined = line;
+		open_func(new_fs, bl);
 		this.checknext('(');
 		if (needself) {
 			new_localvarliteral("self");

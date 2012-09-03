@@ -1109,6 +1109,7 @@ public class FuncState extends LuaC {
 	int codeABx(int o, int a, int bc) {
 		_assert (getOpMode(o) == iABx || getOpMode(o) == iAsBx);
 		_assert (getCMode(o) == OpArgN);
+		_assert (bc >= 0 && bc <= Lua.MAXARG_Bx);
 		return this.code(CREATE_ABx(o, a, bc), this.ls.lastline);
 	}
 
