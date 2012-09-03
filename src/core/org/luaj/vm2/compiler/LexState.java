@@ -966,7 +966,6 @@ public class LexState {
 	}
 
 	void closegoto(int g, Labeldesc label) {
-		int i;
 		FuncState fs = this.fs;
 		Labeldesc[] gl = this.dyd.gt;
 		Labeldesc gt = gl[g];
@@ -1046,8 +1045,24 @@ public class LexState {
 	                    ? "<"+gt.name+"> at line "+gt.line+" not inside a loop"
 	                    : "no visible label '"+gt.name+"' for <goto> at line "+gt.line);
 	  semerror(msg);
-	}	
-	
+	}
+
+	Prototype addprototype () {
+	  Prototype clp;
+	  Prototype f = fs.f;  /* prototype of current function */
+	  if (f.p == null || fs.np >= f.p.length) {
+	    f.p = LuaC.realloc(f.p, Math.max(1, fs.np * 2));
+	  }
+	  f.p[fs.np++] = clp = new Prototype();
+	  return clp;
+	}
+
+	void codeclosure (expdesc v) {
+	  FuncState fs = this.fs.prev;
+	  v.init(VRELOCABLE, fs.codeABx(LuaC.OP_CLOSURE, 0, fs.np - 1));
+	  fs.exp2nextreg(v);  /* fix it at stack top (for GC) */
+	}
+
 	void open_func (FuncState fs, BlockCnt bl) {
 		  LuaC L = this.L;
 		  Prototype f = new Prototype();
@@ -1066,6 +1081,7 @@ public class LexState {
 		  fs.np = 0;
 		  fs.nlocvars = 0;
 		  fs.nactvar = 0;
+		  fs.firstlocal = dyd.n_actvar;
 		  fs.bl = null;
 		  f.maxstacksize = 2;  /* registers 0/1 are always valid */
 		  fs.enterblock(bl,  false);
@@ -1074,24 +1090,18 @@ public class LexState {
 	void close_func() {
 		FuncState fs = this.fs;
 		Prototype f = fs.f;
-		fs.ret(0, 0);
-		fs.leaveblock();
 		fs.ret(0, 0); /* final return */
+		fs.leaveblock();
 		f.code = LuaC.realloc(f.code, fs.pc);
 		f.lineinfo = LuaC.realloc(f.lineinfo, fs.pc);
-		// f.sizelineinfo = fs.pc;
 		f.k = LuaC.realloc(f.k, fs.nk);
 		f.p = LuaC.realloc(f.p, fs.np);
 		f.locvars = LuaC.realloc(f.locvars, fs.nlocvars);
-		// f.sizelocvars = fs.nlocvars;
 		f.upvalues = LuaC.realloc(f.upvalues, fs.nups);
-		// LuaC._assert (CheckCode.checkcode(f));
 		LuaC._assert (fs.bl == null);
 		this.fs = fs.prev;
-//		L.top -= 2; /* remove table and prototype from the stack */
-		// /* last token read was anchored in defunct function; must reanchor it
-		// */
-		// if (fs!=null) ls.anchor_token();
+		// last token read was anchored in defunct function; must reanchor it
+		// ls.anchor_token();
 	}
 
 	/*============================================================*/
@@ -1257,6 +1267,7 @@ public class LexState {
 		FuncState new_fs = new FuncState();
 		BlockCnt bl = new BlockCnt();
 		open_func(new_fs, bl);
+		new_fs.f = addprototype();
 		new_fs.f.linedefined = line;
 		this.checknext('(');
 		if (needself) {
@@ -1268,6 +1279,7 @@ public class LexState {
 		this.statlist();
 		new_fs.f.lastlinedefined = this.linenumber;
 		this.check_match(TK_END, TK_FUNCTION, line);
+		this.codeclosure(e);
 		this.close_func();
 	}
 	
@@ -1645,8 +1657,8 @@ public class LexState {
 		if (this.testnext(',')) {  /* assignment -> `,' primaryexp assignment */
 		    LHS_assign nv = new LHS_assign();
 		    nv.prev = lh;
-		    this.primaryexp(nv.v);
-		    if (nv.v.k == VLOCAL)
+		    this.suffixedexp(nv.v);
+		    if (nv.v.k != VINDEXED)
 		      this.check_conflict(lh, nv.v);
 		    this.assignment(nv, nvars+1);
 		}
@@ -1706,19 +1718,17 @@ public class LexState {
 
 	void labelstat (LuaString label, int line) {
 		/* label -> '::' NAME '::' */
-		FuncState fs = this.fs;
-		Labeldesc[] ll = dyd.label;
 		int l;  /* index of new label being created */
-		fs.checkrepeated(ll, dyd.n_label, label);  /* check for repeated labels */
+		fs.checkrepeated(dyd.label, dyd.n_label, label);  /* check for repeated labels */
 		checknext(TK_DBCOLON);  /* skip double colon */
 		/* create new entry for this label */
-		l = newlabelentry(LuaC.grow(ll, dyd.n_label+1), dyd.n_label++, label, line, fs.pc);
+		l = newlabelentry(dyd.label=LuaC.grow(dyd.label, dyd.n_label+1), dyd.n_label++, label, line, fs.pc);
 		skipnoopstat();  /* skip other no-op statements */
 		if (block_follow(false)) {  /* label is last no-op statement in the block? */
 			/* assume that locals are already out of scope */
-			ll[l].nactvar = fs.bl.nactvar;
+			dyd.label[l].nactvar = fs.bl.nactvar;
 		}
-		findgotos(ll[l]);
+		findgotos(dyd.label[l]);
 }
 
 	

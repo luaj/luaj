@@ -197,10 +197,9 @@ public class FuncState extends LuaC {
 	void movegotosout(BlockCnt bl) {
 		int i = bl.firstgoto;
 		final LexState.Labeldesc[] gl = ls.dyd.gt;
-		final int n_gt = ls.dyd.n_gt;
 		/* correct pending gotos to current block and try to close it
 		   with visible labels */
-		while (i < n_gt) {
+		while (i < ls.dyd.n_gt) {
 			LexState.Labeldesc gt = gl[i];
 			if (gt.nactvar > bl.nactvar) {
 				if (bl.upval)

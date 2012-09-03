@@ -189,7 +189,7 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	static LexState.Labeldesc[] grow(LexState.Labeldesc[] v, int min_n) {
-		return v == null ? new LexState.Labeldesc[2] : v.length <= min_n ? v : realloc(v, v.length*2); 
+		return v == null ? new LexState.Labeldesc[2] : v.length < min_n ? realloc(v, v.length*2) : v; 
 	}
 	
 	static LexState.Labeldesc[] realloc(LexState.Labeldesc[] v, int n) {
