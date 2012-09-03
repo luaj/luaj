@@ -38,12 +38,13 @@ public class Print extends Lua {
 	public static final String[] OPNAMES = {
 		  "MOVE",
 		  "LOADK",
+		  "LOADKX",
 		  "LOADBOOL",
 		  "LOADNIL",
 		  "GETUPVAL",
-		  "GETGLOBAL",
+		  "GETTABUP",
 		  "GETTABLE",
-		  "SETGLOBAL",
+		  "SETTABUP",
 		  "SETUPVAL",
 		  "SETTABLE",
 		  "NEWTABLE",
@@ -69,11 +70,12 @@ public class Print extends Lua {
 		  "RETURN",
 		  "FORLOOP",
 		  "FORPREP",
+		  "TFORCALL",
 		  "TFORLOOP",
 		  "SETLIST",
-		  "CLOSE",
 		  "CLOSURE",
 		  "VARARG",
+		  "EXTRAARG",
 		  null,
 	};
 
@@ -215,15 +217,30 @@ public class Print extends Lua {
 		case OP_GETUPVAL:
 		case OP_SETUPVAL:
 			ps.print("  ; ");
-			if ( f.upvalues.length > b )
-				printUpvalue(ps, f.upvalues[b]);
-			else
-				ps.print( "-" );
+			printUpvalue(ps, f.upvalues[b]);
 			break;
 		case OP_GETTABUP:
+			ps.print("  ; ");
+			printUpvalue(ps, f.upvalues[b]);
+			ps.print(" ");
+			if (ISK(c))
+				printConstant(ps, f, INDEXK(c));
+			else
+				ps.print("-");
+			break;
 		case OP_SETTABUP:
 			ps.print("  ; ");
-			printConstant( ps, f, b );
+			printUpvalue(ps, f.upvalues[a]);
+			ps.print(" ");
+			if (ISK(b))
+				printConstant(ps, f, INDEXK(b));
+			else
+				ps.print("-");
+			ps.print(" ");
+			if (ISK(c))
+				printConstant(ps, f, INDEXK(c));
+			else
+				ps.print("-");
 			break;
 		case OP_GETTABLE:
 		case OP_SELF:

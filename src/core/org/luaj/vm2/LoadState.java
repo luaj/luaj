@@ -325,10 +325,10 @@ public class LoadState {
 	 */
 	public Prototype loadFunction(LuaString p) throws IOException {
 		Prototype f = new Prototype();
-//		this.L.push(f);
-		f.source = loadString();
-		if ( f.source == null )
-			f.source = p;
+////		this.L.push(f);
+//		f.source = loadString();
+//		if ( f.source == null )
+//			f.source = p;
 		f.linedefined = loadInt();
 		f.lastlinedefined = loadInt();
 		f.numparams = is.readUnsignedByte();
@@ -347,6 +347,15 @@ public class LoadState {
 		 return f;
 	}
 
+	static final byte[] LUAC_TAIL = {
+		(byte) 0x19,
+		(byte) 	0x93,
+		(byte) '\r',
+		(byte) '\n',
+		(byte) 0x1a,
+		(byte) '\n',
+	};
+	
 	/**
 	 * Load the lua chunk header values. 
 	 * @throws IOException if an i/o exception occurs. 
@@ -360,6 +369,9 @@ public class LoadState {
 		luacSizeofInstruction = is.readByte();
 		luacSizeofLuaNumber = is.readByte();
 		luacNumberFormat = is.readByte();
+		for (int i=0; i < LUAC_TAIL.length; ++i)
+			if (is.readByte() != LUAC_TAIL[i])
+				throw new LuaError("Unexpeted byte in luac tail of header, index="+i);
 	}
 
 	/**

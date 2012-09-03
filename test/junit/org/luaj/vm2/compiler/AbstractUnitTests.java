@@ -67,7 +67,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
             // compile in memory
             InputStream is = new ByteArrayInputStream(lua);
-            Prototype p = LuaC.instance.compile(is, "@" + dir + "/" + file);
+            Prototype p = LuaC.instance.compile(is, "@" + file);
             String actual = protoToString(p);
 
             // load expected value from jar

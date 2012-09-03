@@ -37,4 +37,8 @@ public class Upvaldesc {
 		this.instack = instack;
 		this.idx = (short) idx;
 	}
+	
+	public String toString() {
+		return idx + (instack? " instack ": " closed ") + String.valueOf(name); 
+	}
 }

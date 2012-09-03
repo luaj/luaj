@@ -314,6 +314,12 @@ public class LuaClosure extends LuaFunction {
 					
 				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
 					pc  += (i>>>14)-0x1ffff;
+					if (a > 0)
+						for (int j = 0; j < openups.length; ++j)
+							if (openups[j] != null && openups[j].index == a) {
+								openups[j].close();
+								openups[j] = null;
+							}
 					continue;
 					
 				case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
@@ -465,18 +471,18 @@ public class LuaClosure extends LuaFunction {
 					}
 					continue;
 					
-				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
+				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx])	*/
 					{
 						Prototype newp = p.p[i>>>14];
-						LuaClosure newcl = new LuaClosure(newp, env);
-						for ( int j=0, nup=newp.upvalues.length; j<nup; ++j ) {
-							i = code[pc++];
-							b = i>>>23;
-							newcl.upValues[j] = (i&4) != 0? 
-									upValues[b]:
-									openups[b]!=null? openups[b]: (openups[b]=new UpValue(stack,b));
+						LuaClosure ncl = new LuaClosure(newp, env);
+						Upvaldesc[] uv = newp.upvalues;
+						for ( int j=0, nup=uv.length; j<nup; ++j ) {
+							if (uv[j].instack)  /* upvalue refes to local variable? */
+								ncl.upValues[j] = findupval(stack, uv[j].idx, openups);
+							else  /* get upvalue from enclosing function */
+								ncl.upValues[j] = upValues[uv[j].idx];
 						}
-						stack[a] = newcl;
+						stack[a] = ncl;
 					}
 					continue;
 					
@@ -509,6 +515,20 @@ public class LuaClosure extends LuaFunction {
 					if ( openups[u] != null )
 						openups[u].close();
 		}
+	}
+
+	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
+		if (idx <= 0)
+			error("Upvalue index must be > 0");
+		final int n = openups.length;
+		for (int i = 0; i < n; ++i)
+			if (openups[i] != null && openups[i].index == idx)
+				return openups[i];
+		for (int i = 0; i < n; ++i)
+			if (openups[i] == null)
+				return openups[idx] = new UpValue(stack, idx);
+		this.error("No space for upvalue");
+		return null;
 	}
 
 	protected LuaValue getUpvalue(int i) {
