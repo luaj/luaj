@@ -553,7 +553,6 @@ public class LexState {
 	int llex(SemInfo seminfo) {
 		nbuff = 0;
 		while (true) {
-			System.out.println("llex current " + ((int) current) + "("+((char)current)+")");
 			switch (current) {
 			case '\n':
 			case '\r': {
@@ -700,6 +699,7 @@ public class LexState {
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
+		System.out.println("----- next t.token " + t.token + " (" + (t.token!=0? txtToken(t.token): "-")+") "+ linenumber );
 	}
 
 	void lookahead() {
@@ -1974,12 +1974,14 @@ public class LexState {
 		/* stat -> func | assignment */
 		FuncState fs = this.fs;
 		LHS_assign v = new LHS_assign();
-		this.primaryexp(v.v);
-		if (v.v.k == VCALL) /* stat -> func */
-			LuaC.SETARG_C(fs.getcodePtr(v.v), 1); /* call statement uses no results */
-		else { /* stat -> assignment */
+		this.suffixedexp(v.v);
+		if (t.token == '=' || t.token == ',') { /* stat -> assignment ? */
 			v.prev = null;
-			this.assignment(v, 1);
+			assignment(v, 1);
+		}
+		else {  /* stat -> func */
+			check_condition(v.v.k == VCALL, "syntax error");
+			LuaC.SETARG_C(fs.getcodePtr(v.v), 1);  /* call statement uses no results */
 		}
 	}
 
@@ -2014,35 +2016,38 @@ public class LexState {
 		fs.ret(first, nret);
 	}
 
-
-	boolean statement() {
+	void statement() {
 		int line = this.linenumber; /* may be needed for error messages */
 		switch (this.t.token) {
+		case ';': { /* stat -> ';' (empty statement) */
+			next(); /* skip ';' */
+			break;
+		}
 		case TK_IF: { /* stat -> ifstat */
 			this.ifstat(line);
-			return false;
+			break;
 		}
 		case TK_WHILE: { /* stat -> whilestat */
 			this.whilestat(line);
-			return false;
+			break;
 		}
 		case TK_DO: { /* stat -> DO block END */
 			this.next(); /* skip DO */
 			this.block();
 			this.check_match(TK_END, TK_DO, line);
-			return false;
+			break;
 		}
 		case TK_FOR: { /* stat -> forstat */
 			this.forstat(line);
-			return false;
+			break;
 		}
 		case TK_REPEAT: { /* stat -> repeatstat */
 			this.repeatstat(line);
-			return false;
+			break;
 		}
 		case TK_FUNCTION: {
 			this.funcstat(line); /* stat -> funcstat */
-			return false;
+			break;
 		}
 		case TK_LOCAL: { /* stat -> localstat */
 			this.next(); /* skip LOCAL */
@@ -2050,23 +2055,32 @@ public class LexState {
 				this.localfunc();
 			else
 				this.localstat();
-			return false;
+			break;
+		}
+		case TK_DBCOLON: { /* stat -> label */
+			next(); /* skip double colon */
+			labelstat(str_checkname(), line);
+			break;
 		}
 		case TK_RETURN: { /* stat -> retstat */
+		    next();  /* skip RETURN */
 			this.retstat();
-			return true; /* must be last statement */
+			break;
 		}
 		case TK_BREAK:
 		case TK_GOTO: { /* stat -> breakstat */
-			this.next(); /* skip BREAK */
 			this.gotostat(fs.jump());
-			return true; /* must be last statement */
+			break;
 		}
 		default: {
 			this.exprstat();
-			return false; /* to avoid warnings */
+			break;
 		}
 		}
+		LuaC._assert(fs.f.maxstacksize >= fs.freereg
+				&& fs.freereg >= fs.nactvar);
+		fs.freereg = fs.nactvar; /* free registers */
+		leavelevel();
 	}
 
 	void statlist() {
