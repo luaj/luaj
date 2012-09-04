@@ -699,7 +699,6 @@ public class LexState {
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
-		System.out.println("---- next t.token " + t.token + " (" + txtToken(t.token) + ") " + linenumber );
 	}
 
 	void lookahead() {
