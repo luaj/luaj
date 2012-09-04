@@ -25,28 +25,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LocVars;
+import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 
 
 public class DumpState {
-
-	/** mark for precompiled code (`<esc>Lua') */
-	public static final String LUA_SIGNATURE	= "\033Lua";
-
-	/** for header of binary files -- this is Lua 5.1 */
-	public static final int LUAC_VERSION		= 0x51;
-
-	/** for header of binary files -- this is the official format */
-	public static final int LUAC_FORMAT		= 0;
-
-	/** size of header of binary files */
-	public static final int LUAC_HEADERSIZE		= 12;
-
-	/** expected lua header bytes */
-	private static final byte[] LUAC_HEADER_SIGNATURE = { '\033', 'L', 'u', 'a' };
 
 	/** set true to allow integer compilation */
 	public static boolean ALLOW_INTEGER_CASTING = false;
@@ -133,6 +120,7 @@ public class DumpState {
 			final LuaValue o = k[i];
 			switch ( o.type() ) {
 			case LuaValue.TNIL:
+			case LuaValue.TUSERDATA:
 				writer.write(LuaValue.TNIL);
 				break;
 			case LuaValue.TBOOLEAN:
@@ -209,10 +197,10 @@ public class DumpState {
 	}
 	
 	void dumpFunction(final Prototype f, final LuaString string) throws IOException {
-		if ( f.source == null || f.source.equals(string) || strip )
-			dumpInt(0);
-		else
-			dumpString(f.source);
+//		if ( f.source == null || f.source.equals(string) || strip )
+//			dumpInt(0);
+//		else
+//			dumpString(f.source);
 		dumpInt(f.linedefined);
 		dumpInt(f.lastlinedefined);
 		dumpChar(f.numparams);
@@ -225,15 +213,16 @@ public class DumpState {
 	}
 
 	void dumpHeader() throws IOException {
-		writer.write( LUAC_HEADER_SIGNATURE );
-		writer.write( LUAC_VERSION );
-		writer.write( LUAC_FORMAT );
+		writer.write( LoadState.LUA_SIGNATURE );
+		writer.write( LoadState.LUAC_VERSION );
+		writer.write( LoadState.LUAC_FORMAT );
 		writer.write( IS_LITTLE_ENDIAN? 1: 0 );
 		writer.write( SIZEOF_INT );
 		writer.write( SIZEOF_SIZET );
 		writer.write( SIZEOF_INSTRUCTION );
 		writer.write( SIZEOF_LUA_NUMBER );
 		writer.write( NUMBER_FORMAT );
+		writer.write( LoadState.LUAC_TAIL );
 	}
 
 	/*

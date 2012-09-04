@@ -537,6 +537,7 @@ public class FuncState extends LuaC {
 	}
 
 	void dischargevars(expdesc e) {
+		System.out.println("   discharg vars e.k " + e.k);
 		switch (e.k) {
 		case LexState.VLOCAL: {
 			e.k = LexState.VNONRELOC;
@@ -663,6 +664,11 @@ public class FuncState extends LuaC {
 		}
 		this.exp2nextreg(e); /* default */
 		return e.u.info;
+	}
+
+	void exp2anyregup (expdesc e) {
+		if (e.k != LexState.VUPVAL || e.hasjumps())
+			exp2anyreg(e);
 	}
 
 	void exp2val(expdesc e) {
@@ -868,7 +874,7 @@ public class FuncState extends LuaC {
 		t.u.ind_t = (short) t.u.info;
 		t.u.ind_idx = (short) this.exp2RK(k);
 		LuaC._assert(t.k == LexState.VUPVAL || vkisinreg(t.k));
-		t.u.ind_vt = (short) ((t.k == LexState.VUPVAL) ? LexState.VUPVAL  : LexState.VLOCAL);
+		t.u.ind_vt = (short) ((t.k == LexState.VUPVAL) ? LexState.VUPVAL : LexState.VLOCAL);
 		t.k = LexState.VINDEXED;
 	}
 

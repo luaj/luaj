@@ -106,14 +106,18 @@ public class LoadState {
 	public static LuaCompiler compiler = null;
 
 	/** Signature byte indicating the file is a compiled binary chunk */
-	private static final byte[] LUA_SIGNATURE	= { '\033', 'L', 'u', 'a' };
+	public static final byte[] LUA_SIGNATURE	= { '\033', 'L', 'u', 'a' };
+
+	/** Data to catch conversion errors */
+	public static final byte[] LUAC_TAIL = { (byte) 0x19, (byte) 0x93, '\r', '\n', (byte) 0x1a, '\n', };
+	
 
 	/** Name for compiled chunks */
 	public static final String SOURCE_BINARY_STRING = "binary string";
 
 
-	/** for header of binary files -- this is Lua 5.1 */
-	public static final int LUAC_VERSION		= 0x51;
+	/** for header of binary files -- this is Lua 5.2 */
+	public static final int LUAC_VERSION		= 0x52;
 
 	/** for header of binary files -- this is the official format */
 	public static final int LUAC_FORMAT		= 0;
@@ -346,15 +350,6 @@ public class LoadState {
 		 return f;
 	}
 
-	static final byte[] LUAC_TAIL = {
-		(byte) 0x19,
-		(byte) 	0x93,
-		(byte) '\r',
-		(byte) '\n',
-		(byte) 0x1a,
-		(byte) '\n',
-	};
-	
 	/**
 	 * Load the lua chunk header values. 
 	 * @throws IOException if an i/o exception occurs. 

@@ -699,7 +699,7 @@ public class LexState {
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
-		// System.out.println("---- next t.token " + t.token + " (" + txtToken(t.token) + ") " + linenumber );
+		System.out.println("---- next t.token " + t.token + " (" + txtToken(t.token) + ") " + linenumber );
 	}
 
 	void lookahead() {
@@ -1109,7 +1109,7 @@ public class LexState {
 		/* fieldsel -> ['.' | ':'] NAME */
 		FuncState fs = this.fs;
 		expdesc key = new expdesc();
-		fs.exp2anyreg(v);
+		fs.exp2anyregup(v);
 		this.next(); /* skip the dot or colon */
 		this.checkname(key);
 		fs.indexed(v, key);
@@ -1384,7 +1384,7 @@ public class LexState {
 			}
 			case '[': { /* `[' exp1 `]' */
 				expdesc key = new expdesc();
-				fs.exp2anyreg(v);
+				fs.exp2anyregup(v);
 				this.yindex(key);
 				fs.indexed(v, key);
 				break;
