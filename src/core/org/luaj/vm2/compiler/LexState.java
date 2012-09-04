@@ -1065,7 +1065,6 @@ public class LexState {
 	}
 
 	void open_func (FuncState fs, BlockCnt bl) {
-		  Prototype f = new Prototype();
 		  fs.prev = this.fs;  /* linked list of funcstates */
 		  fs.ls = this;
 		  this.fs = fs;
@@ -1080,7 +1079,8 @@ public class LexState {
 		  fs.nactvar = 0;
 		  fs.firstlocal = dyd.n_actvar;
 		  fs.bl = null;
-		  f.maxstacksize = 2;  /* registers 0/1 are always valid */
+		  fs.f.source = this.source;
+		  fs.f.maxstacksize = 2;  /* registers 0/1 are always valid */
 		  fs.enterblock(bl,  false);
 	}
 

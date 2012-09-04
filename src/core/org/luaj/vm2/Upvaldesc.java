@@ -24,7 +24,7 @@ package org.luaj.vm2;
 public class Upvaldesc {
 
 	/* upvalue name (for debug information) */
-	public final LuaString name;
+	public LuaString name;
 	
 	/* whether it is in stack */
 	public final boolean instack;

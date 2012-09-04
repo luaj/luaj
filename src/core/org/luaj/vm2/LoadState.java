@@ -312,9 +312,8 @@ public class LoadState {
 		}
 		
 		n = loadInt();
-		f.upvalues = n>0? new Upvaldesc[n]: NOUPVALDESCS;
 		for ( int i=0; i<n; i++ )
-			f.upvalues[i] = new Upvaldesc(loadString(), false, i);
+			f.upvalues[i].name = loadString();
 	}
 
 	/** 

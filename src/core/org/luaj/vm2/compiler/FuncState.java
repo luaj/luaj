@@ -279,26 +279,24 @@ public class FuncState extends LuaC {
 	// =============================================================
 
 	void nil(int from, int n) {
-		InstructionPtr previous;
-		if (this.pc > this.lasttarget) { /* no jumps to current position? */
-			if (this.pc == 0) { /* function start? */
-				if (from >= this.nactvar)
-					return; /* positions are already clean */
-			} else {
-				previous = new InstructionPtr(this.f.code, this.pc - 1);
-				if (GET_OPCODE(previous.get()) == OP_LOADNIL) {
-					int pfrom = GETARG_A(previous.get());
-					int pto = GETARG_B(previous.get());
-					if (pfrom <= from && from <= pto + 1) { /* can connect both? */
-						if (from + n - 1 > pto)
-							SETARG_B(previous, from + n - 1);
-						return;
-					}
-				}
+		final int code_prev = f.code[pc - 1];
+		if (pc > 0 && GET_OPCODE(code_prev) == OP_LOADNIL) {
+			int l = from + n - 1; /* last register to set nil */
+			int pfrom = GETARG_A(code_prev);
+			int pl = pfrom + GETARG_B(code_prev);
+			if ((pfrom <= from && from <= pl + 1)
+					|| (from <= pfrom && pfrom <= l + 1)) { /* can connect both? */
+				if (pfrom < from)
+					from = pfrom; /* from = min(from, pfrom) */
+				if (pl > l)
+					l = pl; /* l = max(l, pl) */
+				InstructionPtr previous = new InstructionPtr(this.f.code, this.pc - 1);
+				SETARG_A(previous, from);
+				SETARG_B(previous, l - from);
+				return;
 			}
-		}
-		/* else no optimization */
-		this.codeABC(OP_LOADNIL, from, from + n - 1, 0); 
+		}  /* else go through */
+		this.codeABC(OP_LOADNIL, from, n - 1, 0); 
 	}
 
 
