@@ -357,9 +357,9 @@ public class LexState {
 		while ( s < c.length && isspace(c[s]))
 			++s;
 		// Check for negative sign
-		boolean neg = false;
+		double sgn = 1.0;
 		if (s < c.length && c[s] == '-') {
-			neg = true;
+			sgn = -1.0;
 			++s;
 		}
 		/* Check for "0x" */
@@ -372,14 +372,14 @@ public class LexState {
 		++s;
 
 		// read integer part.
-		long m = 0;
+		double m = 0;
 		int e = 0;
 		while (s < c.length && isxdigit(c[s]))
-			m = (m << 4) + hexvalue(c[s++]);
+			m = (m * 16) + hexvalue(c[s++]);
 		if (s < c.length && c[s] == '.') {
 			++s;  // skip dot
 			while (s < c.length && isxdigit(c[s])) {
-				m = (m << 4) + hexvalue(c[s++]);
+				m = (m * 16) + hexvalue(c[s++]);
 				e -= 4;  // Each fractional part shifts right by 2^4
 			}
 		}
@@ -397,7 +397,7 @@ public class LexState {
 				exp1 = -exp1;
 			e += exp1;
 		}
-		return e == 0 ? LuaValue.valueOf(m): LuaValue.valueOf(m * Math.pow(2.0, e));
+		return LuaValue.valueOf(sgn * m * Math.pow(2.0, e));
 	}
 	
 	boolean str2d(String str, SemInfo seminfo) {
