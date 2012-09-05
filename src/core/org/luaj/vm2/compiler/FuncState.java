@@ -279,23 +279,25 @@ public class FuncState extends LuaC {
 	// =============================================================
 
 	void nil(int from, int n) {
-		if (pc > 0 && GET_OPCODE(f.code[pc - 1]) == OP_LOADNIL) {
-			final int code_prev = f.code[pc - 1];
-			int l = from + n - 1; /* last register to set nil */
-			int pfrom = GETARG_A(code_prev);
-			int pl = pfrom + GETARG_B(code_prev);
-			if ((pfrom <= from && from <= pl + 1)
-					|| (from <= pfrom && pfrom <= l + 1)) { /* can connect both? */
-				if (pfrom < from)
-					from = pfrom; /* from = min(from, pfrom) */
-				if (pl > l)
-					l = pl; /* l = max(l, pl) */
-				InstructionPtr previous = new InstructionPtr(this.f.code, this.pc - 1);
-				SETARG_A(previous, from);
-				SETARG_B(previous, l - from);
-				return;
-			}
-		}  /* else go through */
+		int l = from + n - 1;  /* last register to set nil */
+		if (this.pc > this.lasttarget && pc > 0) {  /* no jumps to current position? */
+			final int previous_code = f.code[pc - 1];
+			if (GET_OPCODE(previous_code) == OP_LOADNIL) {
+				int pfrom = GETARG_A(previous_code);
+				int pl = pfrom + GETARG_B(previous_code);
+				if ((pfrom <= from && from <= pl + 1)
+						|| (from <= pfrom && pfrom <= l + 1)) { /* can connect both? */
+					if (pfrom < from)
+						from = pfrom; /* from = min(from, pfrom) */
+					if (pl > l)
+						l = pl; /* l = max(l, pl) */
+					InstructionPtr previous = new InstructionPtr(this.f.code, this.pc - 1);
+					SETARG_A(previous, from);
+					SETARG_B(previous, l - from);
+					return;
+				}
+			}  /* else go through */
+		}
 		this.codeABC(OP_LOADNIL, from, n - 1, 0); 
 	}
 
@@ -801,17 +803,13 @@ public class FuncState extends LuaC {
 		int pc; /* pc of last jump */
 		this.dischargevars(e);
 		switch (e.k) {
+		case LexState.VJMP: {
+			pc = e.u.info;
+			break;
+		}
 		case LexState.VNIL:
 		case LexState.VFALSE: {
 			pc = LexState.NO_JUMP; /* always false; do nothing */
-			break;
-		}
-		case LexState.VTRUE: {
-			pc = this.jump(); /* always jump */
-			break;
-		}
-		case LexState.VJMP: {
-			pc = e.u.info;
 			break;
 		}
 		default: {

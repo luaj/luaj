@@ -194,7 +194,7 @@ public class LexState {
 	private boolean isxdigit(int c) {
 		return (c >= '0' && c <= '9')
 				|| (c >= 'a' && c <= 'f')
-				|| (c >= 'F' && c <= 'F'); 
+				|| (c >= 'A' && c <= 'F'); 
 	}
 	
 	private boolean isspace(int c) {
@@ -351,46 +351,64 @@ public class LexState {
 				p[n] = to;
 	}
 
-	boolean str2d(String str, SemInfo seminfo) {
-		double d;
-		str = str.trim(); // TODO: get rid of this
-		if ( str.startsWith("0x") ) {
-			d = Long.parseLong(str.substring(2), 16);
+	LuaValue strx2number(String str, SemInfo seminfo) {
+		char[] c = str.toCharArray();
+		int s = 0;
+		while ( s < c.length && isspace(c[s]))
+			++s;
+		// Check for negative sign
+		boolean neg = false;
+		if (s < c.length && c[s] == '-') {
+			neg = true;
+			++s;
 		}
+		/* Check for "0x" */
+		if (s + 2 >= c.length )
+			return LuaValue.ZERO;
+		if (c[s++] != '0')
+			return LuaValue.ZERO;
+		if (c[s] != 'x' && c[s] != 'X')
+			return LuaValue.ZERO;
+		++s;
+
+		// read integer part.
+		long m = 0;
+		int e = 0;
+		while (s < c.length && isxdigit(c[s]))
+			m = (m << 4) + hexvalue(c[s++]);
+		if (s < c.length && c[s] == '.') {
+			++s;  // skip dot
+			while (s < c.length && isxdigit(c[s])) {
+				m = (m << 4) + hexvalue(c[s++]);
+				e -= 4;  // Each fractional part shifts right by 2^4
+			}
+		}
+		if (s < c.length && (c[s] == 'p' || c[s] == 'P')) {
+			++s;
+			int exp1 = 0;
+			boolean neg1 = false;
+			if (s < c.length && c[s] == '-') {
+				neg1 = true;
+				++s;
+			}
+			while (s < c.length && isdigit(c[s]))
+				exp1 = exp1 * 10 + c[s++] - '0';
+			if (neg1)
+				exp1 = -exp1;
+			e += exp1;
+		}
+		return e == 0 ? LuaValue.valueOf(m): LuaValue.valueOf(m * Math.pow(2.0, e));
+	}
+	
+	boolean str2d(String str, SemInfo seminfo) {
+		if (str.indexOf('n')>=0 || str.indexOf('N')>=0)
+			seminfo.r = LuaValue.ZERO;
+		else if (str.indexOf('x')>=0 || str.indexOf('X')>=0)
+			seminfo.r = strx2number(str, seminfo);
 		else
-			d = Double.parseDouble(str);
-		seminfo.r = LuaValue.valueOf(d);
+			seminfo.r = LuaValue.valueOf(Double.parseDouble(str.trim()));
 		return true;
 	}
-
-	//
-	// TODO: reexamine this source and see if it should be ported differently
-	//
-	// static void trydecpoint (LexState *ls, SemInfo *seminfo) {
-	//	  /* format error: try to update decimal point separator */
-	//	  struct lconv *cv = localeconv();
-	//	  char old = this.decpoint;
-	//	  this.decpoint = (cv ? cv->decimal_point[0] : '.');
-	//	  buffreplace(ls, old, this.decpoint);  /* try updated decimal separator */
-	//	  if (!luaO_str2d(luaZ_buffer(this.buff), &seminfo->r)) {
-	//	    /* format error with correct decimal point: no more options */
-	//	    buffreplace(ls, this.decpoint, '.');  /* undo change (for error message) */
-	//	    luaX_lexerror(ls, "malformed number", TK_NUMBER);
-	//	  }
-	//	}
-	//
-	/*
-	void trydecpoint(String str, SemInfo seminfo) {
-		NumberFormat nf = NumberFormat.getInstance();
-		try {
-			Number n = nf.parse(str);
-			double d = n.doubleValue();
-			seminfo.r = new LDouble(d);
-		} catch (ParseException e) {
-			lexerror("malformed number", TK_NUMBER);
-		}
-	}
-	*/
 
 	void read_numeral(SemInfo seminfo) {
 		String expo = "Ee";
@@ -478,6 +496,20 @@ public class LexState {
 			seminfo.ts = newstring(buff, 2 + sep, nbuff - 2 * (2 + sep));
 	}
 
+	int hexvalue(int c) {
+		return c <= '9'? c - '0': c <= 'F'? c + 10 - 'A': c + 10 - 'a';
+	}
+
+	int readhexaesc() {
+		nextChar();
+		int c1 = current;
+		nextChar();
+		int c2 = current;
+		if (!isxdigit(c1) || !isxdigit(c2))
+			lexerror("hexadecimal digit expected 'x"+((char)c1)+((char)c2), TK_STRING);
+		return (hexvalue(c1) << 4) + hexvalue(c2);
+	}
+
 	void read_string(int del, SemInfo seminfo) {
 		save_and_next();
 		while (current != del) {
@@ -514,6 +546,9 @@ public class LexState {
 				case 'v': /* vertical tab */
 					c = '\u000B';
 					break;
+				case 'x':
+					c = readhexaesc();
+					break;
 				case '\n': /* go through */
 				case '\r':
 					save('\n');
@@ -521,6 +556,14 @@ public class LexState {
 					continue;
 				case EOZ:
 					continue; /* will raise an error next loop */
+		        case 'z': {  /* zap following span of spaces */
+		              nextChar();  /* skip the 'z' */
+		              while (isspace(current)) {
+		            	  if (currIsNewline()) inclinenumber();
+		            	  else nextChar();
+		              }
+		              continue;
+		        }
 				default: {
 					if (!isdigit(current))
 						save_and_next(); /* handles \\, \", \', and \? */
