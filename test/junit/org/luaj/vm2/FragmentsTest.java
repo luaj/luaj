@@ -71,7 +71,7 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
+				LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
@@ -83,6 +83,7 @@ public class FragmentsTest extends TestSuite {
 					break;
 				default:
 					chunk = LuaC.instance.load( is, name, _G );
+					Print.print(((LuaClosure)chunk).p);
 					break;
 				}
 				Varargs actual = chunk.invoke();
@@ -109,35 +110,10 @@ public class FragmentsTest extends TestSuite {
 				"end\n");
 			
 		}
-	
-		public void testVarVarargsUseArg() {
-			runFragment( LuaValue.varargsOf( new LuaValue[] { 
-					LuaValue.valueOf("a"), 
-					LuaValue.valueOf(2), 
-					LuaValue.valueOf("b"), 
-					LuaValue.valueOf("c"), 
-					LuaValue.NIL }),
-				"function q(a,...)\n" +
-				"	return a,arg.n,arg[1],arg[2],arg[3]\n" +
-				"end\n" +
-				"return q('a','b','c')\n" );
-		}
-	
-		public void testVarVarargsUseBoth() {
-			runFragment( LuaValue.varargsOf( new LuaValue[] { 
-					LuaValue.valueOf("a"), 
-					LuaValue.valueOf("nil"), 
-					LuaValue.valueOf("b"), 
-					LuaValue.valueOf("c")}),
-				"function r(a,...)\n" +
-				"	return a,type(arg),...\n" +
-				"end\n" +
-				"return r('a','b','c')\n" );
-		}
-	
+			
 		public void testArgVarargsUseBoth() {
 			runFragment( LuaValue.varargsOf( new LuaValue[] { 
-					LuaValue.NIL, 
+					LuaValue.valueOf("a"), 
 					LuaValue.valueOf("b"), 
 					LuaValue.valueOf("c")}),
 				"function v(arg,...)\n" +
@@ -148,7 +124,7 @@ public class FragmentsTest extends TestSuite {
 		
 		public void testArgParamUseNone() {
 			// the name "arg" is treated specially, and ends up masking the argument value in 5.1 
-			runFragment( LuaValue.valueOf("table"), 
+			runFragment( LuaValue.valueOf("string"), 
 				"function v(arg,...)\n" +
 				"	return type(arg)\n" +
 				"end\n" +
@@ -197,22 +173,7 @@ public class FragmentsTest extends TestSuite {
 				"print( 'c=', c )\n" +
 				"return c\n" );		
 		}
-		
-		public void testNeedsArgAndHasArg() {
-			runFragment( LuaValue.varargsOf(LuaValue.valueOf(333),LuaValue.NIL,LuaValue.valueOf(222)), 
-				"function r(q,...)\n"+
-				"	local a=arg\n"+
-				"	return a and a[2]\n"+
-				"end\n" +
-				"function s(q,...)\n"+
-				"	local a=arg\n"+
-				"	local b=...\n"+
-				"	return a and a[2],b\n"+
-				"end\n" +
-				"return r(111,222,333),s(111,222,333)" );
-			
-		}
-		
+				
 		public void testNonAsciiStringLiterals() {
 			runFragment( LuaValue.valueOf("7,8,12,10,9,11,133,222"), 
 				"local a='\\a\\b\\f\\n\\t\\v\\133\\222'\n"+

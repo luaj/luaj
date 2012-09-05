@@ -426,22 +426,15 @@ public class LuaClosure extends LuaFunction {
 
 				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
 					v = stack[a].invoke(varargsOf(stack[a+1],stack[a+2]));
+					c = (i>>14) & 0x1ff;
+					while (--c >= 0)
+						stack[a+3+c] = v.arg(c+1);
 					continue;
 
-				case Lua.OP_TFORLOOP: /*
-									 * A C R(A+3), ... ,R(A+2+C):= R(A)(R(A+1),
-									 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
-									 * else pc++
-									 */
-					// TODO: stack call on for loop body, such as:   stack[a].call(ci);
-					v = stack[a].invoke(varargsOf(stack[a+1],stack[a+2]));
-					if ( (o=v.arg1()).isnil() )
-						++pc;
-					else {
-						stack[a+2] = stack[a+3] = o;
-						for ( c=(i>>14)&0x1ff; c>1; --c )
-							stack[a+2+c] = v.arg(c);
-						v = NONE; // todo: necessary? 
+				case Lua.OP_TFORLOOP: /* A sBx	if R(A) != nil then ps+= sBx */
+					if (!stack[a+1].isnil()) { /* continue loop? */
+						stack[a] = stack[a+1];  /* save control varible. */
+						pc += (i>>>14)-0x1ffff;
 					}
 					continue;
 					
@@ -514,15 +507,13 @@ public class LuaClosure extends LuaFunction {
 	}
 
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
-		if (idx <= 0)
-			error("Upvalue index must be > 0");
 		final int n = openups.length;
 		for (int i = 0; i < n; ++i)
 			if (openups[i] != null && openups[i].index == idx)
 				return openups[i];
 		for (int i = 0; i < n; ++i)
 			if (openups[i] == null)
-				return openups[idx] = new UpValue(stack, idx);
+				return openups[i] = new UpValue(stack, idx);
 		this.error("No space for upvalue");
 		return null;
 	}
