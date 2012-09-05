@@ -34,11 +34,6 @@ public class Lua {
 	
 	/** use return values from previous op */
 	public static final int LUA_MULTRET = -1;
-
-	/** masks for new-style vararg */
-	public static final int     VARARG_HASARG		= 1;
-	public static final int     VARARG_ISVARARG	= 2;
-	public static final int     VARARG_NEEDSARG	= 4;
 	
 	// from lopcodes.h
 

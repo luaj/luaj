@@ -881,6 +881,8 @@ public class FuncState extends LuaC {
 		LuaValue v1, v2, r;
 		if (!e1.isnumeral() || !e2.isnumeral())
 			return false;
+		if ((op == OP_DIV || op == OP_MOD) && e2.u.nval().eq_b(LuaValue.ZERO))
+			    return false;  /* do not attempt to divide by 0 */
 		v1 = e1.u.nval();
 		v2 = e2.u.nval();
 		switch (op) {
@@ -961,9 +963,12 @@ public class FuncState extends LuaC {
 		e2.init(LexState.VKNUM, 0);
 		switch (op) {
 		case LexState.OPR_MINUS: {
-			if (e.k == LexState.VK)
-				this.exp2anyreg(e); /* cannot operate on non-numeric constants */
-			this.codearith(OP_UNM, e, e2, line);
+			if (e.isnumeral())  /* minus constant? */
+				e.u.setNval(e.u.nval().neg());  /* fold it */
+		    else {
+		       this.exp2anyreg(e);
+		       this.codearith(OP_UNM, e, e2, line);
+		    }
 			break;
 		}
 		case LexState.OPR_NOT:

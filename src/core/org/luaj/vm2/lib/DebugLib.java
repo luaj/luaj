@@ -793,9 +793,7 @@ public class DebugLib extends VarArgFunction {
 
 	static boolean precheck(Prototype pt) {
 		if (!(pt.maxstacksize <= MAXSTACK)) return false;
-		lua_assert(pt.numparams + (pt.is_vararg & Lua.VARARG_HASARG) <= pt.maxstacksize);
-		lua_assert((pt.is_vararg & Lua.VARARG_NEEDSARG) == 0
-				|| (pt.is_vararg & Lua.VARARG_HASARG) != 0);
+		lua_assert(pt.numparams <= pt.maxstacksize);
 //		if (!(pt.upvalues.length <= pt.nups)) return false;
 		if (!(pt.lineinfo.length == pt.code.length || pt.lineinfo.length == 0)) return false;
 		if (!(Lua.GET_OPCODE(pt.code[pt.code.length - 1]) == Lua.OP_RETURN)) return false;

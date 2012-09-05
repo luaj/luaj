@@ -187,10 +187,6 @@ public class LuaClosure extends LuaFunction {
 		// upvalues are only possible when closures create closures
 		UpValue[] openups = p.p.length>0? new UpValue[stack.length]: null;
 		
-		// create varargs "arg" table
-		if ( p.is_vararg >= Lua.VARARG_NEEDSARG )
-			stack[p.numparams] = new LuaTable(varargs);
-
 		// debug wants args to this function
 		if (DebugLib.DEBUG_ENABLED) 
 			DebugLib.debugSetupCall(varargs, stack);

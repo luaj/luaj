@@ -757,13 +757,14 @@ public class LexState {
 		}
 
 		public void setvalue(expdesc other) {
+			this.f.i = other.f.i;
 			this.k = other.k;
-			this.u.info = other.u.info;
+			this.t.i = other.t.i;
+			this.u._nval = other.u._nval;
 			this.u.ind_idx = other.u.ind_idx;
 			this.u.ind_t = other.u.ind_t;
 			this.u.ind_vt = other.u.ind_vt;
-			this.t.i = other.t.i;
-			this.f.i = other.f.i;
+			this.u.info = other.u.info;
 		}
 	}
 
@@ -1253,7 +1254,7 @@ public class LexState {
 	    } while ((f.is_vararg==0) && this.testnext(','));
 	  }
 	  this.adjustlocalvars(nparams);
-	  f.numparams = (fs.nactvar - (f.is_vararg & LuaC.VARARG_HASARG));
+	  f.numparams = fs.nactvar;
 	  fs.reserveregs(fs.nactvar);  /* reserve register for parameters */
 	}
 
@@ -1279,7 +1280,7 @@ public class LexState {
 		this.close_func();
 	}
 	
-	int explist1(expdesc v) {
+	int explist(expdesc v) {
 		/* explist1 -> expr { `,' expr } */
 		int n = 1; /* at least one expression */
 		this.expr(v);
@@ -1292,20 +1293,17 @@ public class LexState {
 	}
 
 
-	void funcargs(expdesc f) {
+	void funcargs(expdesc f, int line) {
 		FuncState fs = this.fs;
 		expdesc args = new expdesc();
 		int base, nparams;
-		int line = this.linenumber;
 		switch (this.t.token) {
 		case '(': { /* funcargs -> `(' [ explist1 ] `)' */
-			if (line != this.lastline)
-				this.syntaxerror("ambiguous syntax (function call x new statement)");
 			this.next();
 			if (this.t.token == ')') /* arg list is empty? */
 				args.k = VVOID;
 			else {
-				this.explist1(args);
+				this.explist(args);
 				fs.setmultret(args);
 			}
 			this.check_match(')', '(', line);
@@ -1393,14 +1391,14 @@ public class LexState {
 				this.next();
 				this.checkname(key);
 				fs.self(v, key);
-				this.funcargs(v);
+				this.funcargs(v, line);
 				break;
 			}
 			case '(':
 			case TK_STRING:
 			case '{': { /* funcargs */
 				fs.exp2nextreg(v);
-				this.funcargs(v);
+				this.funcargs(v, line);
 				break;
 			}
 			default:
@@ -1441,7 +1439,6 @@ public class LexState {
 			FuncState fs = this.fs;
 			this.check_condition(fs.f.is_vararg!=0, "cannot use " + LUA_QL("...")
 					+ " outside a vararg function");
-			fs.f.is_vararg &= ~LuaC.VARARG_NEEDSARG; /* don't need 'arg' */
 			v.init(VVARARG, fs.codeABC(Lua.OP_VARARG, 0, 1, 0));
 			break;
 		}
@@ -1664,7 +1661,7 @@ public class LexState {
 		else {  /* assignment . `=' explist1 */
 		    int nexps;
 		    this.checknext('=');
-		    nexps = this.explist1(e);
+		    nexps = this.explist(e);
 		    if (nexps != nvars) {
 		      this.adjust_assign(nvars, nexps, e);
 		      if (nexps > nvars)
@@ -1848,7 +1845,7 @@ public class LexState {
 		}
 		this.checknext(TK_IN);
 		line = this.linenumber;
-		this.adjust_assign(3, this.explist1(e), e);
+		this.adjust_assign(3, this.explist(e), e);
 		fs.checkstack(3); /* extra space to call generator */
 		this.forbody(base, line, nvars - 3, false);
 	}
@@ -1942,7 +1939,7 @@ public class LexState {
 			++nvars;
 		} while (this.testnext(','));
 		if (this.testnext('='))
-			nexps = this.explist1(e);
+			nexps = this.explist(e);
 		else {
 			e.k = VVOID;
 			nexps = 0;
@@ -2002,7 +1999,7 @@ public class LexState {
 		if (block_follow(true) || this.t.token == ';')
 			first = nret = 0; /* return no values */
 		else {
-			nret = this.explist1(e); /* optional return values */
+			nret = this.explist(e); /* optional return values */
 			if (hasmultret(e.k)) {
 				fs.setmultret(e);
 				if (e.k == VCALL && nret == 1) { /* tail call? */

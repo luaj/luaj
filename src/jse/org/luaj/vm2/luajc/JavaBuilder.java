@@ -234,19 +234,10 @@ public class JavaBuilder {
 					storeLocal(-1, slot);
 				}
 			}
-			boolean needsarg = ((p.is_vararg & Lua.VARARG_NEEDSARG) != 0);
-			if ( needsarg ) {
-				append(new ALOAD(1));
-				append(new PUSH(cp, 1 + p.numparams));
-				append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, ARG_TYPES_VARARGS_INT, Constants.INVOKESTATIC));
-				storeLocal(-1, slot++ );
-			}
-			else if ( p.numparams > 0 ) {
-				append(new ALOAD(1));
-				append(new PUSH(cp, 1 + p.numparams));
-				append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
-				append(new ASTORE(1));
-			}
+			append(new ALOAD(1));
+			append(new PUSH(cp, 1 + p.numparams));
+			append(factory.createInvoke(STR_VARARGS, "subargs", TYPE_VARARGS, ARG_TYPES_INT, Constants.INVOKEVIRTUAL));
+			append(new ASTORE(1));
 		} else {
 			// fixed arg function between 0 and 3 arguments
 			for ( slot=0; slot<p.numparams; slot++ ) {
