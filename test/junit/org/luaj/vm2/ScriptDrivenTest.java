@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import junit.framework.TestCase;
 
@@ -138,6 +140,17 @@ public class ScriptDrivenTest extends TestCase {
 
 	private String getExpectedOutput(final String name) throws IOException,
 			InterruptedException {
+		String expectedOutput = loadFromFile(name);
+ 		if (expectedOutput == null) 
+ 			expectedOutput = loadFromZipfile(name);
+ 		if (expectedOutput == null) 
+ 			expectedOutput = executeLuaProcess(name);
+ 		if (expectedOutput == null) 
+ 			throw new IOException("Failed to get comparison output for "+name);
+ 		return expectedOutput;
+	}
+
+	private String loadFromFile(String name) throws IOException {
 		String expectedOutputName = basedir+"/"+name+"-expected.out";
 		File file = new File( expectedOutputName );
 		if ( file.exists() ) {
@@ -147,24 +160,57 @@ public class ScriptDrivenTest extends TestCase {
 			} finally {
 				is.close();
 			}
-		} else {
-			file = new File(basedir+"/"+name+".lua");
-			if ( !file.exists() )
-				fail("Could not load script for test case: " + name);
-			InputStream script = new FileInputStream(file);
-			// }
-			try {
-			    String luaCommand = System.getProperty("LUA_COMMAND");
-			    if ( luaCommand == null )
-			        luaCommand = "lua";
-			    String[] args = new String[] { luaCommand, "-", platform.toString() };
-				return collectProcessOutput(args, script);
-			} finally {
-				script.close();
+		}
+		return null;
+	}
+
+	private String loadFromZipfile(String name) throws IOException {
+		String zipfile = "luaj3.0-tests.zip";
+		try {
+	    	URL zip = null;
+			zip = getClass().getResource(zipfile);
+			if ( zip == null ) {
+		    	File file = new File(basedir+"/"+zipfile);
+				try {
+			    	if ( file.exists() )
+						zip = file.toURI().toURL();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
 			}
+			if ( zip == null )
+				return null;
+			String jar = "jar:" + zip.toExternalForm()+ "!/";
+			String path = jar + name + ".out";
+			URL url = new URL(path);
+			InputStream is = url.openStream();
+			try {
+				return readString(is);
+			} finally {
+				is.close();
+			}
+		} catch (Exception e) {
+			return null;
 		}
 	}
 
+
+	private String executeLuaProcess(String name) throws IOException, InterruptedException {
+		File sourcefile = new File(basedir+"/"+name+".lua");
+		if ( !sourcefile.exists() )
+			throw new IOException("Failed to find source file "+sourcefile);
+		InputStream script = new FileInputStream(sourcefile);
+		try {
+		    String luaCommand = System.getProperty("LUA_COMMAND");
+		    if ( luaCommand == null )
+		        luaCommand = "lua";
+		    String[] args = new String[] { luaCommand, "-", platform.toString() };
+			return collectProcessOutput(args, script);
+		} finally {
+			script.close();
+		}
+	}
+	
 	public static String collectProcessOutput(String[] cmd, final InputStream input)
 			throws IOException, InterruptedException {
 		Runtime r = Runtime.getRuntime();
