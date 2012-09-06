@@ -65,7 +65,7 @@ public class TableLib extends OneArgFunction {
 		LuaTable t = new LuaTable();
 		bind(t, TableLib.class, new String[] { "getn", "maxn", }, 1 );
 		bind(t, TableLibV.class, new String[] {
-			"remove", "concat", "insert", "sort", "foreach", "foreachi", } );
+			"remove", "concat", "insert", "sort", "foreach", "foreachi", "unpack", } );
 		env.set("table", t);
 		PackageLib.instance.LOADED.set("table", t);
 		return t;
@@ -116,6 +116,22 @@ public class TableLib extends OneArgFunction {
 			}
 			case 5: { // "foreachi" (table, func) -> void
 				return args.checktable(1).foreachi( args.checkfunction(2) );
+			}
+			case 6: // "unpack", // (list [,i [,j]]) -> result1, ...
+			{
+				int na = args.narg();
+				LuaTable t = args.checktable(1);
+				int n = t.length();
+				int i = na>=2? args.checkint(2): 1;
+				int j = na>=3? args.checkint(3): n;
+				n = j-i+1;
+				if ( n<0 ) return NONE;
+				if ( n==1 ) return t.get(i);
+				if ( n==2 ) return varargsOf(t.get(i),t.get(j));
+				LuaValue[] v = new LuaValue[n];
+				for ( int k=0; k<n; k++ )
+					v[k] = t.get(i+k);
+				return varargsOf(v);
 			}
 			}
 			return NONE;

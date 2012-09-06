@@ -76,51 +76,47 @@ public class PackageLib extends OneArgFunction {
 	public static PackageLib instance;
 	
 	/** Loader that loads from preload table if found there */
-	public LuaValue preload_loader;
+	public LuaValue preload_searcher;
 	
 	/** Loader that loads as a lua script using the LUA_PATH */
-	public LuaValue lua_loader;
+	public LuaValue lua_searcher;
 	
 	/** Loader that loads as a Java class.  Class must have public constructor and be a LuaValue */
-	public LuaValue java_loader;
+	public LuaValue java_searcher;
 	
-	private static final LuaString _M         = valueOf("_M");
-	private static final LuaString _NAME      = valueOf("_NAME");	
-	private static final LuaString _PACKAGE   = valueOf("_PACKAGE");	
-	private static final LuaString _DOT       = valueOf(".");
-	private static final LuaString _LOADERS   = valueOf("loaders");
-	private static final LuaString _LOADED    = valueOf("loaded");
-	private static final LuaString _LOADLIB   = valueOf("loadlib");
-	private static final LuaString _PRELOAD   = valueOf("preload");
-	private static final LuaString _PATH      = valueOf("path");
-	private static final LuaString _SEEALL    = valueOf("seeall");
-	private static final LuaString _SENTINEL  = valueOf("\u0001");
+	private static final LuaString _LOADED     = valueOf("loaded");
+	private static final LuaString _LOADLIB    = valueOf("loadlib");
+	private static final LuaString _PRELOAD    = valueOf("preload");
+	private static final LuaString _PATH       = valueOf("path");
+	private static final LuaString _SEARCHERS  = valueOf("searchers");
+	private static final LuaString _SEARCHPATH = valueOf("searchpath");
+	private static final LuaString _SENTINEL   = valueOf("\u0001");
 	
-	private static final int OP_MODULE         = 0;
-	private static final int OP_REQUIRE        = 1;
-	private static final int OP_LOADLIB        = 2;
-	private static final int OP_SEEALL         = 3;
-	private static final int OP_PRELOAD_LOADER = 4;
-	private static final int OP_LUA_LOADER     = 5;
-	private static final int OP_JAVA_LOADER    = 6;
-	
+	private static final int OP_REQUIRE          = 0;
+	private static final int OP_LOADLIB          = 1;
+	private static final int OP_SEARCHPATH       = 2;
+	private static final int OP_PRELOAD_SEARCHER = 3;
+	private static final int OP_LUA_SEARCHER     = 4;
+	private static final int OP_JAVA_SEARCHER    = 5;
+
+	private static final String FILE_SEP = System.getProperty("file.separator");
+
 	public PackageLib() {
 		instance = this;
 	}
 
 	public LuaValue call(LuaValue arg) {
 		env.set("require", new PkgLib1(env,"require",OP_REQUIRE,this));
-		env.set("module",  new PkgLibV(env,"module",OP_MODULE,this));
 		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
 				_PRELOAD, tableOf(),
 				_PATH,    valueOf(DEFAULT_LUA_PATH),
 				_LOADLIB, new PkgLibV(env,"loadlib",OP_LOADLIB,this),
-				_SEEALL,  new PkgLib1(env,"seeall",OP_SEEALL,this),
-				_LOADERS, listOf(new LuaValue[] {
-						preload_loader = new PkgLibV(env,"preload_loader", OP_PRELOAD_LOADER,this),
-						lua_loader     = new PkgLibV(env,"lua_loader", OP_LUA_LOADER,this),
-						java_loader    = new PkgLibV(env,"java_loader", OP_JAVA_LOADER,this),
+				_SEARCHPATH,  new PkgLibV(env,"searchpath",OP_SEARCHPATH,this),
+				_SEARCHERS, listOf(new LuaValue[] {
+						preload_searcher = new PkgLibV(env,"preload_searcher", OP_PRELOAD_SEARCHER,this),
+						lua_searcher     = new PkgLibV(env,"lua_searcher", OP_LUA_SEARCHER,this),
+						java_searcher    = new PkgLibV(env,"java_searcher", OP_JAVA_SEARCHER,this),
 				}) }) );
 		LOADED.set("package", PACKAGE);
 		return env;
@@ -138,14 +134,6 @@ public class PackageLib extends OneArgFunction {
 			switch ( opcode ) {
 			case OP_REQUIRE: 
 				return lib.require(arg);
-			case OP_SEEALL: { 
-				LuaTable t = arg.checktable();
-				LuaValue m = t.getmetatable();
-				if ( m == null )
-					t.setmetatable(m=tableOf());
-				m.set( INDEX, LuaThread.getGlobals() );
-				return NONE;
-			}
 			}
 			return NIL;
 		}
@@ -161,18 +149,24 @@ public class PackageLib extends OneArgFunction {
 		}
 		public Varargs invoke(Varargs args) {
 			switch ( opcode ) {
-			case OP_MODULE: 
-				return lib.module(args);
-			case OP_LOADLIB: 
+			case OP_LOADLIB: {
 				return loadlib(args);
-			case OP_PRELOAD_LOADER: {
-				return lib.loader_preload(args);
 			}
-			case OP_LUA_LOADER: {
-				return lib.loader_Lua(args);
+			case OP_PRELOAD_SEARCHER: {
+				return lib.searcher_preload(args);
 			}
-			case OP_JAVA_LOADER: {
-				return lib.loader_Java(args);
+			case OP_LUA_SEARCHER: {
+				return lib.searcher_Lua(args);
+			}
+			case OP_JAVA_SEARCHER: {
+				return lib.searcher_Java(args);
+			}
+			case OP_SEARCHPATH: {
+				String name = args.checkjstring(1);
+				String path = args.checkjstring(2);
+				String sep = args.optjstring(3, ".");
+				String rep = args.optjstring(4, FILE_SEP);
+				return lib.searchpath(name, path, sep, rep);
 			}
 			}
 			return NONE;
@@ -184,6 +178,7 @@ public class PackageLib extends OneArgFunction {
 		LOADED.set(name, value);
 	}
 
+
 	public void setLuaPath( String newLuaPath ) {
 		PACKAGE.set( _PATH, valueOf(newLuaPath) );
 	}
@@ -193,102 +188,7 @@ public class PackageLib extends OneArgFunction {
 	}
 	
 	
-	// ======================== Module, Package loading =============================
-	/**
-	 * module (name [, ...])
-	 * 
-	 * Creates a module. If there is a table in package.loaded[name], this table
-	 * is the module. Otherwise, if there is a global table t with the given
-	 * name, this table is the module. Otherwise creates a new table t and sets
-	 * it as the value of the global name and the value of package.loaded[name].
-	 * This function also initializes t._NAME with the given name, t._M with the
-	 * module (t itself), and t._PACKAGE with the package name (the full module
-	 * name minus last component; see below). Finally, module sets t as the new
-	 * environment of the current function and the new value of
-	 * package.loaded[name], so that require returns t.
-	 * 
-	 * If name is a compound name (that is, one with components separated by
-	 * dots), module creates (or reuses, if they already exist) tables for each
-	 * component. For instance, if name is a.b.c, then module stores the module
-	 * table in field c of field b of global a.
-	 * 
-	 * This function may receive optional options after the module name, where
-	 * each option is a function to be applied over the module.
-	 */
-	public Varargs module(Varargs args) {
-		LuaString modname = args.checkstring(1);
-		int n = args.narg();
-		LuaValue value = LOADED.get(modname);
-		LuaValue module;
-		if ( ! value.istable() ) { /* not found? */
-			
-		    /* try global variable (and create one if it does not exist) */
-			LuaValue globals = LuaThread.getGlobals();
-			module = findtable( globals, modname );
-			if ( module == null )
-				error( "name conflict for module '"+modname+"'" );
-			LOADED.set(modname, module);
-		} else {
-			module = (LuaTable) value;
-		}
-		
-		
-		/* check whether table already has a _NAME field */
-		LuaValue name = module.get(_NAME);
-		if ( name.isnil() ) {
-			modinit( module, modname );
-		}
-		
-		// set the environment of the current function
-		LuaFunction f = LuaThread.getCallstackFunction(1);
-		if ( f == null )
-			error("no calling function");
-		if ( ! f.isclosure() )
-			error("'module' not called from a Lua function");
-		f.setfenv(module);
-		
-		// apply the functions
-		for ( int i=2; i<=n; i++ )
-			args.arg(i).call( module );
-		
-		// returns no results
-		return NONE;
-	}
-
-	/**
-	 * 
-	 * @param table the table at which to start the search
-	 * @param fname the name to look up or create, such as "abc.def.ghi"
-	 * @return the table for that name, possible a new one, or null if a non-table has that name already. 
-	 */
-	private static final LuaValue findtable(LuaValue table, LuaString fname) {
-		int b, e=(-1);
-		do {
-			e = fname.indexOf(_DOT, b=e+1 );
-			if ( e < 0 )
-				e = fname.m_length;
-			LuaString key = fname.substring(b, e);
-			LuaValue val = table.rawget(key);
-			if ( val.isnil() ) { /* no such field? */
-				LuaTable field = new LuaTable(); /* new table for field */
-				table.set(key, field);
-				table = field;
-			} else if ( ! val.istable() ) {  /* field has a non-table value? */
-				return null;
-			} else {
-				table = val;
-			}
-		} while ( e < fname.m_length );
-		return table;
-	}
-
-	private static final void modinit(LuaValue module, LuaString modname) {
-		/* module._M = module */
-		module.set(_M, module);
-		int e = modname.lastIndexOf(_DOT);
-		module.set(_NAME, modname );
-		module.set(_PACKAGE, (e<0? EMPTYSTRING: modname.substring(0,e+1)) );
-	}
+	// ======================== Package loading =============================
 
 	/** 
 	 * require (modname)
@@ -326,7 +226,7 @@ public class PackageLib extends OneArgFunction {
 		}
 
 		/* else must load it; iterate over available loaders */
-		LuaTable tbl = PACKAGE.get(_LOADERS).checktable();
+		LuaTable tbl = PACKAGE.get(_SEARCHERS).checktable();
 		StringBuffer sb = new StringBuffer();
 		LuaValue chunk = null;
 		for ( int i=1; true; i++ ) {
@@ -358,7 +258,7 @@ public class PackageLib extends OneArgFunction {
 		return varargsOf(NIL, valueOf("dynamic libraries not enabled"), valueOf("absent"));
 	}
 
-	LuaValue loader_preload( Varargs args ) {
+	LuaValue searcher_preload( Varargs args ) {
 		LuaString name = args.checkstring(1);
 		LuaValue preload = PACKAGE.get(_PRELOAD).checktable();
 		LuaValue val = preload.get(name);
@@ -367,22 +267,40 @@ public class PackageLib extends OneArgFunction {
 			val;
 	}
 
-	LuaValue loader_Lua( Varargs args ) {
-		String name = args.checkjstring(1);
+	Varargs searcher_Lua( Varargs args ) {
+		LuaString name = args.checkstring(1);
 		InputStream is = null;
-		
-		
+				
 		// get package path
-		LuaValue pp = PACKAGE.get(_PATH);
-		if ( ! pp.isstring() ) 
+		LuaValue path = PACKAGE.get(_PATH);
+		if ( ! path.isstring() ) 
 			return valueOf("package.path is not a string");
-		String path = pp.tojstring();
+
+		// get the searchpath function. 	
+		LuaValue searchpath = PACKAGE.get(_SEARCHPATH);
+		Varargs v = searchpath.invoke(varargsOf(name, path));
+		
+		// Didd we get a result?
+		if (!v.isstring(1))
+			return v.arg(2).tostring();
+		LuaString filename = v.arg1().strvalue();
+
+		// Try to load the file.
+		v = BaseLib.loadFile(filename.tojstring(), "bt", LuaThread.getGlobals()); 
+		if ( v.arg1().isfunction() )
+			return LuaValue.varargsOf(v.arg1(), filename);
+		
+		// report error
+		return varargsOf(NIL, valueOf("'"+filename+"': "+v.arg(2).tojstring()));
+	}
+
+	public Varargs searchpath(String name, String path, String sep, String rep) {
 		
 		// check the path elements
 		int e = -1;
 		int n = path.length();
 		StringBuffer sb = null;
-		name = name.replace('.','/');
+		name = name.replace(sep.charAt(0), rep.charAt(0));
 		while ( e < n ) {
 			
 			// find next template
@@ -399,20 +317,22 @@ public class PackageLib extends OneArgFunction {
 				filename = template.substring(0,q) + name + template.substring(q+1);
 			}
 			
-			// try loading the file
-			Varargs v = BaseLib.loadFile(filename); 
-			if ( v.arg1().isfunction() )
-				return v.arg1();
+			// try opening the file
+			InputStream is = BaseLib.FINDER.findResource(filename);
+			if (is != null) {
+				try { is.close(); } catch ( java.io.IOException ioe ) {}
+				return valueOf(filename);
+			}
 			
 			// report error
 			if ( sb == null )
 				sb = new StringBuffer();
-			sb.append( "\n\t'"+filename+"': "+v.arg(2) );
+			sb.append( "\n\t"+filename );
 		}
-		return valueOf(sb.toString());
+		return varargsOf(NIL, valueOf(sb.toString()));
 	}
 	
-	LuaValue loader_Java( Varargs args ) {
+	LuaValue searcher_Java( Varargs args ) {
 		String name = args.checkjstring(1);
 		String classname = toClassname( name );
 		Class c = null;

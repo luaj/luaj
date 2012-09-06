@@ -393,7 +393,11 @@ public class LuaTable extends LuaValue {
 	public LuaValue len()  { 
 		return LuaInteger.valueOf(length());
 	}
-	
+
+	public int rawlen() { 
+		return length(); 
+	}
+
 	/** Return table.maxn() as defined by lua 5.0.
 	 * <p>
 	 * Provided for compatibility, not a scalable operation. 

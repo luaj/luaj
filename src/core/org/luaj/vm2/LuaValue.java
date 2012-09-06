@@ -2014,6 +2014,12 @@ public class LuaValue extends Varargs {
 	 */
 	public int length()    { return len().toint(); }
 	
+	/** Get raw length of table or string without metatag processing.
+	 * @return the length of the table or string.
+	 * @throws LuaError if {@code this} is not a table or string.
+	 */
+	public int rawlen() { typerror("table or string"); return 0; }
+
 	/** Implementation of lua 5.0 getn() function.
 	 * @return value of getn() as defined in lua 5.0 spec if {@code this} is a {@link LuaTable}
 	 * @throws LuaError if  {@code this} is not a {@link LuaTable}

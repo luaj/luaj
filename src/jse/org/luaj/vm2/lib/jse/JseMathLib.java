@@ -64,7 +64,7 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 		LuaValue t = super.call(arg);
 		bind( t, JseMathLib1.class, new String[] {
 			"acos", "asin", "atan", "cosh",  
-			"exp", "log", "log10", "sinh",  
+			"exp", "log", "sinh",  
 			"tanh" } );
 		bind( t, JseMathLib2.class, new String[] {
 			"atan2", "pow", } );
@@ -80,9 +80,8 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 			case 3: return valueOf(Math.cosh(arg.checkdouble())); 
 			case 4: return valueOf(Math.exp(arg.checkdouble())); 
 			case 5: return valueOf(Math.log(arg.checkdouble())); 
-			case 6: return valueOf(Math.log10(arg.checkdouble())); 
-			case 7: return valueOf(Math.sinh(arg.checkdouble())); 
-			case 8: return valueOf(Math.tanh(arg.checkdouble())); 
+			case 6: return valueOf(Math.sinh(arg.checkdouble())); 
+			case 7: return valueOf(Math.tanh(arg.checkdouble())); 
 			}
 			return NIL;
 		}

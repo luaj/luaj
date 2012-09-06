@@ -125,7 +125,7 @@ public class ScriptDrivenTest extends TestCase {
 				}
 			default:
 				script = new FileInputStream(file);
-				return LoadState.load(script, "=stdin", _G);
+				return LoadState.load(script, "=stdin", "bt", _G);
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace();

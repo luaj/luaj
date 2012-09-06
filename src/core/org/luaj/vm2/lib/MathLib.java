@@ -42,7 +42,6 @@ import org.luaj.vm2.Varargs;
  * <li>atan</li>
  * <li>cosh</li>
  * <li>log</li>
- * <li>log10</li>
  * <li>sinh</li>
  * <li>tanh</li>
  * <li>atan2</li>

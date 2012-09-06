@@ -123,7 +123,6 @@ public class FragmentsTest extends TestSuite {
 		}
 		
 		public void testArgParamUseNone() {
-			// the name "arg" is treated specially, and ends up masking the argument value in 5.1 
 			runFragment( LuaValue.valueOf("string"), 
 				"function v(arg,...)\n" +
 				"	return type(arg)\n" +

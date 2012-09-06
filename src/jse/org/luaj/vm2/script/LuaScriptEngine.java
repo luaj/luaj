@@ -162,7 +162,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		try {
 	    	InputStream ris = new Utf8Encoder(reader);
 	    	try {
-	    		final LuaFunction f = LoadState.load(ris, "script", null);
+	    		final LuaFunction f = LoadState.load(ris, "script", "bt", null);
 	    		if ( f.isclosure() ) {
 	    			// most compiled functions are closures with prototypes 
 	    			final Prototype p = f.checkclosure().p;

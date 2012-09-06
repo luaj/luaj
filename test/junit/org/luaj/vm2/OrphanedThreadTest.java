@@ -75,7 +75,7 @@ public class OrphanedThreadTest extends TestCase {
 			"print('leakage in closure.3, arg is '..arg)\n" +
 			"return 'done'\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -91,7 +91,7 @@ public class OrphanedThreadTest extends TestCase {
 			"end\n" +
 			"print( 'pcall-closre.result:', pcall( f, ... ) )\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -108,7 +108,7 @@ public class OrphanedThreadTest extends TestCase {
 		    "end\n" +
 			"load(f)()\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
 		doTest(LuaValue.TRUE, LuaValue.ONE);
 	}
 

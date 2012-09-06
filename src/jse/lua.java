@@ -30,10 +30,13 @@ import java.util.Vector;
 
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
@@ -55,6 +58,7 @@ public class lua {
 		"  -j      	use lua2java source-to-source compiler\n" +
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  -n      	nodebug - do not load debug library by default\n" +
+		"  -p       pretty-print the prototype\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -72,6 +76,7 @@ public class lua {
 		boolean versioninfo = false;
 		boolean processing = true;
 		boolean nodebug = false;
+		boolean print = false;
 		boolean luajc = false;
 		boolean lua2java = false;
 		Vector libs = null;
@@ -111,6 +116,9 @@ public class lua {
 						break;
 					case 'n':
 						nodebug = true;
+						break;
+					case 'p':
+						print = true;
 						break;
 					case '-':
 						if ( args[i].length() > 2 )
@@ -190,7 +198,14 @@ public class lua {
 		try {
 			LuaFunction c;
 			try {
-				c = LoadState.load(script, chunkname, _G);
+				c = LoadState.load(script, chunkname, "bt", _G);
+				if (c instanceof LuaClosure) {
+					LuaClosure closure = (LuaClosure) c;
+					Print.print(closure.p);
+					// DebugLib.DEBUG_ENABLED = true;
+				} else {
+					System.out.println( "Not a LuaClosure: "+c);
+				}
 			} finally {
 				script.close();
 			}

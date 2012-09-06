@@ -373,11 +373,12 @@ public class LoadState {
 	 * @param firstByte the first byte of the input stream
 	 * @param stream InputStream to read, after having read the first byte already
 	 * @param name Name to apply to the loaded chunk
+	 * @param mode "b" for binary only, "t" for text only, "bt" for binary or text.
 	 * @return {@link Prototype} that was loaded
 	 * @throws IllegalArgumentException if the signature is bac
 	 * @throws IOException if an IOException occurs
 	 */
-	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
+	public static LuaFunction load( InputStream stream, String name, String mode, LuaValue env ) throws IOException {
 		if ( compiler != null )
 			return compiler.load(stream, name, env);
 		else {

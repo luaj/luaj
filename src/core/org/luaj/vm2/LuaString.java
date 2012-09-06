@@ -420,6 +420,10 @@ public class LuaString extends LuaValue {
 		return m_length;
 	}
 
+	public int rawlen() {
+		return m_length;
+	}
+
 	public int luaByte(int index) {
 		return m_bytes[m_offset + index] & 0x0FF;
 	}

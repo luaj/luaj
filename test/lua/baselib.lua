@@ -152,6 +152,17 @@ printtables()
 print( 'pcall(rawset,t,"dd","zzz")', rawset(t,"dd","zzz"))
 printtables()
 
+-- rawlen
+print( 'pcall(rawlen, {})', pcall(rawlen, {}))
+print( 'pcall(rawlen, {"a"})', pcall(rawlen, {'a'}))
+print( 'pcall(rawlen, {"a","b"})', pcall(rawlen, {'a','b'}))
+print( 'pcall(rawlen, "")', pcall(rawlen, ""))
+print( 'pcall(rawlen, "a")', pcall(rawlen, 'a'))
+print( 'pcall(rawlen, "ab")', pcall(rawlen, 'ab'))
+print( 'pcall(rawlen, 1)', pcall(rawlen, 1))
+print( 'pcall(rawlen, nil)', pcall(rawlen, nil))
+print( 'pcall(rawlen)', pcall(rawlen))
+
 printtables()
 print( 's["ee"]="ppp"' ); s["ee"]="ppp"
 printtables()

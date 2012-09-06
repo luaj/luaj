@@ -108,7 +108,7 @@ public class DumpLoadEndianIntTest extends TestCase {
             
             // load again using compiler
             is = new ByteArrayInputStream(dumped);
-            f = LoadState.load(is, "dumped", _G);
+            f = LoadState.load(is, "dumped", "bt", _G);
             r = f.call();
             actual = r.tojstring();
             assertEquals( expectedPostDump, actual );

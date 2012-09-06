@@ -76,14 +76,12 @@ public class DebugLib extends VarArgFunction {
 
 	static final String[] NAMES = {
 		"debug",
-		"getfenv",
 		"gethook",
 		"getinfo",
 		"getlocal",
 		"getmetatable",
 		"getregistry",
 		"getupvalue",
-		"setfenv",
 		"sethook",
 		"setlocal",
 		"setmetatable",
@@ -93,19 +91,17 @@ public class DebugLib extends VarArgFunction {
 	
 	private static final int INIT        	= 0;
 	private static final int DEBUG        	= 1;
-	private static final int GETFENV        = 2;
-	private static final int GETHOOK        = 3;
-	private static final int GETINFO        = 4;
-	private static final int GETLOCAL       = 5;
-	private static final int GETMETATABLE 	= 6;
-	private static final int GETREGISTRY    = 7;
-	private static final int GETUPVALUE    	= 8;
-	private static final int SETFENV        = 9;
-	private static final int SETHOOK        = 10;
-	private static final int SETLOCAL 		= 11;
-	private static final int SETMETATABLE   = 12;
-	private static final int SETUPVALUE    	= 13;
-	private static final int TRACEBACK    	= 14;
+	private static final int GETHOOK        = 2;
+	private static final int GETINFO        = 3;
+	private static final int GETLOCAL       = 4;
+	private static final int GETMETATABLE 	= 5;
+	private static final int GETREGISTRY    = 6;
+	private static final int GETUPVALUE    	= 7;
+	private static final int SETHOOK        = 8;
+	private static final int SETLOCAL 		= 9;
+	private static final int SETMETATABLE   = 10;
+	private static final int SETUPVALUE    	= 11;
+	private static final int TRACEBACK    	= 12;
 
 	/* maximum stack for a Lua function */
 	private static final int MAXSTACK = 250;
@@ -153,14 +149,12 @@ public class DebugLib extends VarArgFunction {
 		switch ( opcode ) {
 		case INIT:         return init();
 		case DEBUG:        return _debug(args);
-		case GETFENV:      return _getfenv(args);
 		case GETHOOK:      return _gethook(args);
 		case GETINFO:      return _getinfo(args,this);
 		case GETLOCAL:     return _getlocal(args);
 		case GETMETATABLE: return _getmetatable(args);
 		case GETREGISTRY:  return _getregistry(args);
 		case GETUPVALUE:   return _getupvalue(args);
-		case SETFENV:      return _setfenv(args);
 		case SETHOOK:      return _sethook(args);
 		case SETLOCAL:     return _setlocal(args);
 		case SETMETATABLE: return _setmetatable(args);
@@ -438,19 +432,6 @@ public class DebugLib extends VarArgFunction {
 		return NONE;
 	}
 
-	static Varargs _getfenv(Varargs args) {
-		LuaValue object = args.arg1();
-		LuaValue env = object.getfenv();
-		return env!=null? env: LuaValue.NIL;
-	}
-
-	static Varargs _setfenv(Varargs args) {
-		LuaValue object = args.arg1();
-		LuaTable table = args.checktable(2);
-		object.setfenv(table);
-		return object;
-	}
-	
 	protected static Varargs _getinfo(Varargs args, LuaValue level0func) {
 		int a=1;
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): LuaThread.getRunning(); 

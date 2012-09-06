@@ -93,22 +93,6 @@ public class MathLibTest extends TestCase {
 		tryMathOp( "log", -9 ); 
 	}
 	
-	public void testLog10() {
-		supportedOnJ2me = false;
-		tryMathOp( "log10", 0.1 ); 
-		tryMathOp( "log10", .9 ); 
-		tryMathOp( "log10", 1. ); 
-		tryMathOp( "log10", 9 ); 
-		tryMathOp( "log10", 10 ); 
-		tryMathOp( "log10", 100 ); 
-		tryMathOp( "log10", -.1 ); 
-		tryMathOp( "log10", -.9 ); 
-		tryMathOp( "log10", -1. ); 
-		tryMathOp( "log10", -9 ); 
-		tryMathOp( "log10", -10 ); 
-		tryMathOp( "log10", -100 ); 
-	}
-	
 	public void testRad() {
 		tryMathOp( "rad", 0 ); 
 		tryMathOp( "rad", 0.1 ); 
