@@ -17,15 +17,15 @@ checkallerrors('collectgarbage',{{aboolean, atable, afunction, athread}},'string
 
 -- dofile
 banner('dofile')
-checkallpass('dofile', {})
-checkallpass('dofile', {{'test/lua/errors/args.lua'}})
-checkallerrors('dofile', {{'foo.bar'}}, 'cannot open foo.bar')
-checkallerrors('dofile', {nonstring}, 'bad argument')
+--checkallpass('dofile', {})
+--checkallpass('dofile', {{'test/lua/errors/args.lua'}})
+--checkallerrors('dofile', {{'foo.bar'}}, 'cannot open foo.bar')
+--checkallerrors('dofile', {nonstring}, 'bad argument')
 
 -- error
 banner('error')
-checkallerrors('error', {{'message'},{nil,0,1,2,n=4}}, 'message')
-checkallerrors('error', {{123},{nil,1,2,n=3}}, 123)
+--checkallerrors('error', {{'message'},{nil,0,1,2,n=4}}, 'message')
+--checkallerrors('error', {{123},{nil,1,2,n=3}}, 123)
 
 -- getfenv
 banner('getfenv')
@@ -50,11 +50,11 @@ checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument')
 
 -- loadfile
 banner('loadfile')
-checkallpass('loadfile', {})
-checkallpass('loadfile', {{'bogus'}})
-checkallpass('loadfile', {{'test/lua/errors/args.lua'}})
-checkallpass('loadfile', {{'args.lua'}})
-checkallerrors('loadfile', {nonstring}, 'bad argument')
+--checkallpass('loadfile', {})
+--checkallpass('loadfile', {{'bogus'}})
+--checkallpass('loadfile', {{'test/lua/errors/args.lua'}})
+--checkallpass('loadfile', {{'args.lua'}})
+--checkallerrors('loadfile', {nonstring}, 'bad argument')
 
 -- loadstring
 banner('loadstring')

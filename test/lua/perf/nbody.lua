@@ -115,7 +115,7 @@ end
 
 local N = tonumber(arg and arg[1]) or 1000
 local bodies = { Sun, Jupiter, Saturn, Uranus, Neptune }
-local nbody = table.getn(bodies)
+local nbody = #bodies
 
 offsetMomentum(bodies, nbody)
 io.write( string.format("%0.9f",energy(bodies, nbody)), "\n")
