@@ -163,7 +163,7 @@ public class DumpState {
 		n = f.p.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++)
-			dumpFunction(f.p[i], f.source);
+			dumpFunction(f.p[i]);
 	}
 
 	void dumpUpvalues(final Prototype f) throws IOException {
@@ -177,7 +177,10 @@ public class DumpState {
 
 	void dumpDebug(final Prototype f) throws IOException {
 		int i, n;
-		dumpString(strip ? null: f.source);
+		if (strip)
+			dumpInt(0);
+		else
+			dumpString(f.source);
 		n = strip ? 0 : f.lineinfo.length;
 		dumpInt(n);
 		for (i = 0; i < n; i++)
@@ -196,11 +199,7 @@ public class DumpState {
 			dumpString(f.upvalues[i].name);
 	}
 	
-	void dumpFunction(final Prototype f, final LuaString string) throws IOException {
-//		if ( f.source == null || f.source.equals(string) || strip )
-//			dumpInt(0);
-//		else
-//			dumpString(f.source);
+	void dumpFunction(final Prototype f) throws IOException {
 		dumpInt(f.linedefined);
 		dumpInt(f.lastlinedefined);
 		dumpChar(f.numparams);
@@ -231,7 +230,7 @@ public class DumpState {
 	public static int dump( Prototype f, OutputStream w, boolean strip ) throws IOException {
 		DumpState D = new DumpState(w,strip);
 		D.dumpHeader();
-		D.dumpFunction(f,null);
+		D.dumpFunction(f);
 		return D.status;
 	}
 
@@ -260,7 +259,7 @@ public class DumpState {
 		D.NUMBER_FORMAT = numberFormat;
 		D.SIZEOF_LUA_NUMBER = (numberFormat==NUMBER_FORMAT_INTS_ONLY? 4: 8);
 		D.dumpHeader();
-		D.dumpFunction(f,null);
+		D.dumpFunction(f);
 		return D.status;
 	}
 }
