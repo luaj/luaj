@@ -715,4 +715,31 @@ public class LuaTable extends LuaValue {
 		LuaValue valmt = val.getmetatable();
 		return valmt!=null && LuaValue.eqmtcall(this, m_metatable, val, valmt); 
 	}
+
+	/** Unpack all the elements of this table */
+	public Varargs unpack() {
+		return unpack(1, this.length());
+	}
+
+	/** Unpack all the elements of this table from element i */
+	public Varargs unpack(int i) {
+		return unpack(i, this.length());
+	}
+
+	/** Unpack the elements from i to j inclusive */
+	public Varargs unpack(int i, int j) {
+		int n = j + 1 - i;
+		switch (n) {
+		case 0: return NONE;
+		case 1: return get(i);
+		case 2: return varargsOf(get(i), get(i+1));
+		default:
+			if (n < 0)
+				return NONE;
+			LuaValue[] v = new LuaValue[n];
+			while (--n >= 0)
+				v[n] = get(i+n);
+			return varargsOf(v);
+		}
+	}
 }

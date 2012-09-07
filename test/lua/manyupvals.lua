@@ -33,5 +33,5 @@ t[200] = [[
 
 local s = table.concat(t)
 print(s)
-f = loadstring(s)
+f = load(s)
 f()

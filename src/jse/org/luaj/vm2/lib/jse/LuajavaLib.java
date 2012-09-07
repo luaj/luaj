@@ -56,7 +56,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * _G.load(new BaseLib());
  * _G.load(new PackageLib());
  * _G.load(new LuajavaLib());
- * _G.get("loadstring").call( LuaValue.valueOf( 
+ * _G.get("load").call( LuaValue.valueOf( 
  * 		"sys = luajava.bindClass('java.lang.System')\n"+
  * 		"print ( sys:currentTimeMillis() )\n" ) ).call(); 
  * } </pre>

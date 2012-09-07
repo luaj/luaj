@@ -205,6 +205,7 @@ public class lua {
 				} else {
 					System.out.println( "Not a LuaClosure: "+c);
 				}
+				Print.print(((LuaClosure)c).p);
 			} finally {
 				script.close();
 			}
@@ -219,8 +220,7 @@ public class lua {
 		LuaTable arg = LuaValue.tableOf();
 		for ( int j=0; j<args.length; j++ )
 			arg.set( j-i, LuaValue.valueOf(args[j]) );
-		_G.set( "arg", arg );
-		return _G.get("unpack").invoke(arg);
+		return arg.unpack();
 	}
 
 	private static void interactiveMode( ) throws IOException {

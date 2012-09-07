@@ -63,4 +63,13 @@ function table_set_nil_key(tbl,val) tbl[nil]=val end
 checkallpass('table_set',{sometable,notanil,anylua})
 checkallerrors('table_set_nil_key',{sometable,anylua},'table index')
 
+-- table.unpack
+banner('table.unpack')
+checkallpass('table.unpack',{sometable})
+checkallpass('table.unpack',{sometable,{3,'5'}})
+checkallpass('table.unpack',{sometable,{3,'5'},{1.25,'7'}})
+checkallerrors('table.unpack',{notatable,somenumber,somenumber},'bad argument')
+checkallerrors('table.unpack',{sometable,nonnumber,somenumber},'bad argument')
+checkallerrors('table.unpack',{sometable,somenumber,nonnumber},'bad argument')
+
 

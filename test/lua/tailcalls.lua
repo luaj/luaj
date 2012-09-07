@@ -63,8 +63,8 @@ local function all(f)
 	for n=0,3 do
 		t = {}
 		for m=1,5 do 
-			print( "--f, n, unpack(t)", f, n, unpack(t) )
-			print( pcall( f, n, unpack(t)) )
+			print( "--f, n, table.unpack(t)", f, n, table.unpack(t) )
+			print( pcall( f, n, table.unpack(t)) )
 			t[m] = m
 		end
 	end

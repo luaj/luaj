@@ -9,7 +9,7 @@ local function fannkuch(n)
     -- Print max. 30 permutations.
     if check < 30 then
       if not p[n] then return maxflips end	-- Catch n = 0, 1, 2.
-      io.write(unpack(p)); io.write("\n")
+      io.write(table.unpack(p)); io.write("\n")
       check = check + 1
     end
     -- Copy and flip.

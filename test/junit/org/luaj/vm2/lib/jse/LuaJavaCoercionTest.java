@@ -196,7 +196,7 @@ public class LuaJavaCoercionTest extends TestCase {
 	public void testExceptionMessage() {
 		String script = "local c = luajava.bindClass( \""+SomeClass.class.getName()+"\" )\n" +
 				"return pcall( c.someMethod, c )";
-		Varargs vresult = _G.get("loadstring").call(LuaValue.valueOf(script)).invoke(LuaValue.NONE);
+		Varargs vresult = _G.get("load").call(LuaValue.valueOf(script)).invoke(LuaValue.NONE);
 		LuaValue status = vresult.arg1();
 		LuaValue message = vresult.arg(2);
 		assertEquals( LuaValue.FALSE, status );		
@@ -206,7 +206,7 @@ public class LuaJavaCoercionTest extends TestCase {
 
 	public void testLuaErrorCause() {
 		String script = "luajava.bindClass( \""+SomeClass.class.getName()+"\"):someMethod()";
-		LuaValue chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		LuaValue chunk = _G.get("load").call(LuaValue.valueOf(script));
 		try {
 			chunk.invoke(LuaValue.NONE);
 			fail( "call should not have succeeded" );
@@ -235,7 +235,7 @@ public class LuaJavaCoercionTest extends TestCase {
 			"			) or '-nil')\n" +
 			"	end,\n" +
 			"} )\n";
-		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		Varargs chunk = _G.get("load").call(LuaValue.valueOf(script));
 		if ( ! chunk.arg1().toboolean() )
 			fail( chunk.arg(2).toString() );
 		LuaValue result = chunk.arg1().call();
@@ -260,7 +260,7 @@ public class LuaJavaCoercionTest extends TestCase {
 			//"print(bigNumB:toString())\n" +
 			//"print(bigNumC:toString())\n" +
 			"return bigNumA:toString(), bigNumB:toString(), bigNumC:toString()";
-		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		Varargs chunk = _G.get("load").call(LuaValue.valueOf(script));
 		if ( ! chunk.arg1().toboolean() )
 			fail( chunk.arg(2).toString() );
 		Varargs results = chunk.arg1().invoke();
@@ -345,7 +345,7 @@ public class LuaJavaCoercionTest extends TestCase {
 			"local b = a:set(a:get"+typename+"())\n" +
 			"local c = a:setr(a:get"+typename+"())\n" +
 			"return b,c";
-		Varargs chunk = _G.get("loadstring").call(LuaValue.valueOf(script));
+		Varargs chunk = _G.get("load").call(LuaValue.valueOf(script));
 		if ( ! chunk.arg1().toboolean() )
 			fail( chunk.arg(2).toString() );
 		Varargs results = chunk.arg1().invoke();

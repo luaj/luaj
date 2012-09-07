@@ -4,17 +4,6 @@ local e,f,g,h,s
 print( 'has debug', debug~=nil )
 if not debug then error( 'no debug' ) end
 
-print( '----- debug.getfenv, debug.setfenv' )
-f = function(a)
-	return 'f:'..tostring(a)..'|'..tostring(b)
-end
-s,e,g = pcall( debug.getfenv, f )
-print( s, type(e), type(g), (e==G), pcall( f, 'abc' ) )
-s,e,g = pcall( debug.setfenv, f, {b='def'} )
-print( s, type(e), type(g), (e==G), pcall( f, 'abc' ) )
-s,e,g = pcall( debug.getfenv, f )
-print( s, type(e), type(g), (e==G), pcall( f, 'abc' ) )
-
 
 print( '----- debug.getlocal, debug.setlocal' )
 h = function(v,i,n)

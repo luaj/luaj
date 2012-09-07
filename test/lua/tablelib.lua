@@ -164,8 +164,16 @@ testbothpairs(t)
 --]]
 
 -- tests of setlist table constructors
--- length and unpack are tested elsewhere
+-- length is tested elsewhere
 print('----- unpack tests -------')
+local unpack = table.unpack
+print( 'pcall(unpack)', pcall(unpack) );
+print( 'pcall(unpack,nil)', pcall(unpack,nil) );
+print( 'pcall(unpack,"abc")', pcall(unpack,"abc") );
+print( 'pcall(unpack,1)', pcall(unpack,1) );
+print( 'unpack({"aa"})', unpack({"aa"}) );
+print( 'unpack({"aa","bb"})', unpack({"aa","bb"}) );
+print( 'unpack({"aa","bb","cc"})', unpack({"aa","bb","cc"}) );
 local function a(...) return ... end
 print('unpack -',unpack({}))
 print('unpack a',unpack({'a'}))
@@ -195,6 +203,42 @@ print('unpack (..b)',unpack({a(nil, nil, 'b')},1,3))
 print('unpack (a..)',unpack({a('a', nil, nil)},1,3))
 print('unpack (.b.)',unpack({a(nil, 'b', nil)},1,3))
 print('unpack (...)',unpack({a(nil, nil, nil)},1,3))
+local t = {"aa","bb","cc","dd","ee","ff"}
+print( 'pcall(unpack,t)', pcall(unpack,t) );
+print( 'pcall(unpack,t,2)', pcall(unpack,t,2) );
+print( 'pcall(unpack,t,2,5)', pcall(unpack,t,2,5) );
+print( 'pcall(unpack,t,2,6)', pcall(unpack,t,2,6) );
+print( 'pcall(unpack,t,2,7)', pcall(unpack,t,2,7) );
+print( 'pcall(unpack,t,1)', pcall(unpack,t,1) );
+print( 'pcall(unpack,t,1,5)', pcall(unpack,t,1,5) );
+print( 'pcall(unpack,t,1,6)', pcall(unpack,t,1,6) );
+print( 'pcall(unpack,t,1,7)', pcall(unpack,t,1,7) );
+print( 'pcall(unpack,t,0)', pcall(unpack,t,0) );
+print( 'pcall(unpack,t,0,5)', pcall(unpack,t,0,5) );
+print( 'pcall(unpack,t,0,6)', pcall(unpack,t,0,6) );
+print( 'pcall(unpack,t,0,7)', pcall(unpack,t,0,7) );
+print( 'pcall(unpack,t,-1)', pcall(unpack,t,-1) );
+print( 'pcall(unpack,t,-1,5)', pcall(unpack,t,-1,5) );
+print( 'pcall(unpack,t,-1,6)', pcall(unpack,t,-1,6) );
+print( 'pcall(unpack,t,-1,7)', pcall(unpack,t,-1,7) );
+print( 'pcall(unpack,t,2,4)', pcall(unpack,t,2,4) );
+print( 'pcall(unpack,t,2,5)', pcall(unpack,t,2,5) );
+print( 'pcall(unpack,t,2,6)', pcall(unpack,t,2,6) );
+print( 'pcall(unpack,t,2,7)', pcall(unpack,t,2,7) );
+print( 'pcall(unpack,t,2,8)', pcall(unpack,t,2,8) );
+print( 'pcall(unpack,t,2,2)', pcall(unpack,t,2,0) );
+print( 'pcall(unpack,t,2,1)', pcall(unpack,t,2,0) );
+print( 'pcall(unpack,t,2,0)', pcall(unpack,t,2,0) );
+print( 'pcall(unpack,t,2,-1)', pcall(unpack,t,2,-1) );
+t[0] = 'zz'
+t[-1] = 'yy'
+t[-2] = 'xx'
+print( 'pcall(unpack,t,0)', pcall(unpack,t,0) );
+print( 'pcall(unpack,t,2,0)', pcall(unpack,t,2,0) );
+print( 'pcall(unpack,t,2,-1)', pcall(unpack,t,2,-1) );
+print( 'pcall(unpack,t,"3")', pcall(unpack,t,"3") );
+print( 'pcall(unpack,t,"a")', pcall(unpack,t,"a") );
+print( 'pcall(unpack,t,function() end)', pcall(unpack,t,function() end) );
 
 -- misc tests
 print('----- misc table initializer tests -------')

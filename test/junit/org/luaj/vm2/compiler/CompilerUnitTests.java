@@ -5,7 +5,7 @@ package org.luaj.vm2.compiler;
 public class CompilerUnitTests extends AbstractUnitTests {
 
     public CompilerUnitTests() {
-        super("lua5.2.1-tests.zip", "lua5.2.1-tests");
+        super("test/lua", "luaj3.0-tests.zip", "lua5.2.1-tests");
     }
 
     public void testAll()        { doTest("all.lua"); }

@@ -59,11 +59,11 @@ c,e = load(f)
 if c then print('load: ', pcall(c)) else print('load failed:', e) end
 
 -- loadfile
--- loadstring
+-- load
 local lst = "print(3+4); return 8"
-local chunk, err = loadstring( lst )
-print( 'loadstring("'..lst..'")', chunk, err )
-print( 'loadstring("'..lst..'")()', chunk() ) 
+local chunk, err = load( lst )
+print( 'load("'..lst..'")', chunk, err )
+print( 'load("'..lst..'")()', chunk() ) 
 
 -- pairs
 print( 'pcall(pairs)', pcall(pairs) )
@@ -98,7 +98,6 @@ print( 'la()', la() )
 function ga() return pcall(type) end
 print( 'ga()', ga() )
 
--- getfenv, setfenv: tested in setfenv.lua
 -- getmetatable, setmetatable
 ta = { aa1="aaa1", aa2="aaa2" }
 tb = { bb1="bbb1", bb2="bbb2" }
@@ -254,51 +253,6 @@ print( 'pcall(tostring,false)', pcall(tostring,false) )
 print( 'tostring(tostring)', type(tostring(tostring)) )
 print( 'tostring(function() end)', type(tostring(function() end)) )
 print( 'tostring({"one","two",a="aa",b="bb"})', type(tostring({"one","two",a="aa",b="bb"})) )
-
--- unpack
-print( 'pcall(unpack)', pcall(unpack) );
-print( 'pcall(unpack,nil)', pcall(unpack,nil) );
-print( 'pcall(unpack,"abc")', pcall(unpack,"abc") );
-print( 'pcall(unpack,1)', pcall(unpack,1) );
-print( 'unpack({"aa"})', unpack({"aa"}) );
-print( 'unpack({"aa","bb"})', unpack({"aa","bb"}) );
-print( 'unpack({"aa","bb","cc"})', unpack({"aa","bb","cc"}) );
-local t = {"aa","bb","cc","dd","ee","ff"}
-print( 'pcall(unpack,t)', pcall(unpack,t) );
-print( 'pcall(unpack,t,2)', pcall(unpack,t,2) );
-print( 'pcall(unpack,t,2,5)', pcall(unpack,t,2,5) );
-print( 'pcall(unpack,t,2,6)', pcall(unpack,t,2,6) );
-print( 'pcall(unpack,t,2,7)', pcall(unpack,t,2,7) );
-print( 'pcall(unpack,t,1)', pcall(unpack,t,1) );
-print( 'pcall(unpack,t,1,5)', pcall(unpack,t,1,5) );
-print( 'pcall(unpack,t,1,6)', pcall(unpack,t,1,6) );
-print( 'pcall(unpack,t,1,7)', pcall(unpack,t,1,7) );
-print( 'pcall(unpack,t,0)', pcall(unpack,t,0) );
-print( 'pcall(unpack,t,0,5)', pcall(unpack,t,0,5) );
-print( 'pcall(unpack,t,0,6)', pcall(unpack,t,0,6) );
-print( 'pcall(unpack,t,0,7)', pcall(unpack,t,0,7) );
-print( 'pcall(unpack,t,-1)', pcall(unpack,t,-1) );
-print( 'pcall(unpack,t,-1,5)', pcall(unpack,t,-1,5) );
-print( 'pcall(unpack,t,-1,6)', pcall(unpack,t,-1,6) );
-print( 'pcall(unpack,t,-1,7)', pcall(unpack,t,-1,7) );
-print( 'pcall(unpack,t,2,4)', pcall(unpack,t,2,4) );
-print( 'pcall(unpack,t,2,5)', pcall(unpack,t,2,5) );
-print( 'pcall(unpack,t,2,6)', pcall(unpack,t,2,6) );
-print( 'pcall(unpack,t,2,7)', pcall(unpack,t,2,7) );
-print( 'pcall(unpack,t,2,8)', pcall(unpack,t,2,8) );
-print( 'pcall(unpack,t,2,2)', pcall(unpack,t,2,0) );
-print( 'pcall(unpack,t,2,1)', pcall(unpack,t,2,0) );
-print( 'pcall(unpack,t,2,0)', pcall(unpack,t,2,0) );
-print( 'pcall(unpack,t,2,-1)', pcall(unpack,t,2,-1) );
-t[0] = 'zz'
-t[-1] = 'yy'
-t[-2] = 'xx'
-print( 'pcall(unpack,t,0)', pcall(unpack,t,0) );
-print( 'pcall(unpack,t,2,0)', pcall(unpack,t,2,0) );
-print( 'pcall(unpack,t,2,-1)', pcall(unpack,t,2,-1) );
-print( 'pcall(unpack,t,"3")', pcall(unpack,t,"3") );
-print( 'pcall(unpack,t,"a")', pcall(unpack,t,"a") );
-print( 'pcall(unpack,t,function() end)', pcall(unpack,t,function() end) );
 
 -- _VERSION
 print( '_VERSION', type(_VERSION) )

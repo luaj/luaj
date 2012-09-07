@@ -27,11 +27,6 @@ banner('error')
 --checkallerrors('error', {{'message'},{nil,0,1,2,n=4}}, 'message')
 --checkallerrors('error', {{123},{nil,1,2,n=3}}, 123)
 
--- getfenv
-banner('getfenv')
-checkallpass('getfenv', {{nil,print,function()end,0,1,2,n=5}})
-checkallerrors('getfenv', {{true,{},'abc'}}, 'bad argument')
-
 -- getmetatable
 banner('getmetatable')
 checkallpass('getmetatable', {notanil})
@@ -56,13 +51,13 @@ banner('loadfile')
 --checkallpass('loadfile', {{'args.lua'}})
 --checkallerrors('loadfile', {nonstring}, 'bad argument')
 
--- loadstring
-banner('loadstring')
-checkallpass('loadstring', {{'return'}})
-checkallpass('loadstring', {{'return'},{'mychunk'}})
-checkallpass('loadstring', {{'return a ... b'},{'mychunk'}},true)
-checkallerrors('loadstring', {notastring,{nil,astring,anumber,n=3}}, 'bad argument')
-checkallerrors('loadstring', {{'return'},{afunction,atable}}, 'bad argument')
+-- load
+banner('load')
+checkallpass('load', {{'return'}})
+checkallpass('load', {{'return'},{'mychunk'}})
+checkallpass('load', {{'return a ... b'},{'mychunk'}},true)
+checkallerrors('load', {notastring,{nil,astring,anumber,n=3}}, 'bad argument')
+checkallerrors('load', {{'return'},{afunction,atable}}, 'bad argument')
 
 -- next
 banner('next')
@@ -113,18 +108,6 @@ banner('select')
 checkallpass('select', {{anumber,'#'},anylua})
 checkallerrors('select', {notanumber}, 'bad argument')
 
--- setfenv
-banner('setfenv')
-local g = _G
-checkallpass('setfenv', {{function()end},sometable})
-checkallerrors('setfenv', {{-1, '-2'},{g}}, 'level must be non-negative')
-checkallerrors('setfenv', {{10, '11'},{g}}, 'invalid level')
-checkallerrors('setfenv', {{rawset},{g}}, 'cannot change environment of given object')
-checkallerrors('setfenv', {{atable,athread,aboolean,astring},{g}}, 'bad argument')
-checkallerrors('setfenv', {notafunction}, 'bad argument')
-checkallerrors('setfenv', {anylua}, 'bad argument')
-checkallerrors('setfenv', {{function()end},notatable}, 'bad argument')
-
 -- setmetatable
 banner('setmetatable')
 checkallpass('setmetatable', {sometable,sometable})
@@ -152,15 +135,6 @@ banner('type')
 checkallpass('type',{notanil})
 checkallpass('type',{anylua,{'anchor'}})
 checkallerrors('type',{},'bad argument')
-
--- unpack
-banner('unpack')
-checkallpass('unpack',{sometable})
-checkallpass('unpack',{sometable,{3,'5'}})
-checkallpass('unpack',{sometable,{3,'5'},{1.25,'7'}})
-checkallerrors('unpack',{notatable,somenumber,somenumber},'bad argument')
-checkallerrors('unpack',{sometable,nonnumber,somenumber},'bad argument')
-checkallerrors('unpack',{sometable,somenumber,nonnumber},'bad argument')
 
 -- xpcall
 banner('xpcall')

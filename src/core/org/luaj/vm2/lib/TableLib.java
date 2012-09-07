@@ -119,19 +119,12 @@ public class TableLib extends OneArgFunction {
 			}
 			case 6: // "unpack", // (list [,i [,j]]) -> result1, ...
 			{
-				int na = args.narg();
 				LuaTable t = args.checktable(1);
-				int n = t.length();
-				int i = na>=2? args.checkint(2): 1;
-				int j = na>=3? args.checkint(3): n;
-				n = j-i+1;
-				if ( n<0 ) return NONE;
-				if ( n==1 ) return t.get(i);
-				if ( n==2 ) return varargsOf(t.get(i),t.get(j));
-				LuaValue[] v = new LuaValue[n];
-				for ( int k=0; k<n; k++ )
-					v[k] = t.get(i+k);
-				return varargsOf(v);
+				switch (args.narg()) {
+				case 1: return t.unpack();
+				case 2: return t.unpack(args.checkint(2));
+				default: return t.unpack(args.checkint(2), args.checkint(3));
+				}
 			}
 			}
 			return NONE;

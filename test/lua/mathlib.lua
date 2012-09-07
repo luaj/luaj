@@ -100,9 +100,9 @@ end
 
 local function eval( expr, script )
 	script = script or ('return '..expr)
-	local s,a,b = loadstring( script, 'expr' )
+	local s,a,b = load( script, 'expr' )
 	if s then print( expr, pcall( s ) ) 
-	else print( expr, 'loadstring:', a ) end
+	else print( expr, 'load:', a ) end
 end
 
 -- misc tests
@@ -191,7 +191,7 @@ end
 -- random tests
 print("----------- Random number tests")
 local function testrandom(string,lo,hi)
-	local c,e = loadstring('return '..string)
+	local c,e = load('return '..string)
 	for i=1,5 do 
 		local s,e = pcall(c) 
 		if s then

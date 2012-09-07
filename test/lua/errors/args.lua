@@ -122,7 +122,7 @@ local function expand(argsets, typesets, ...)
 
 	local s,v = split(typesets)
 	for i=1,(v.n or #v) do
-		expand(argsets, s, v[i], unpack(arg,1,arg.n))
+		expand(argsets, s, v[i], table.unpack(arg,1,arg.n))
 	end
 	return argsets
 end
@@ -133,13 +133,13 @@ local function arglists(typesets)
 end
 
 function lookup( name ) 
-	return loadstring('return '..name)()
+	return load('return '..name)()
 end
 
 function invoke( name, arglist )
 	local s,c = pcall(lookup, name)
 	if not s then return s,c end
-	return pcall(c, unpack(arglist,1,arglist.n or #arglist))
+	return pcall(c, table.unpack(arglist,1,arglist.n or #arglist))
 end
 
 -- messages, banners

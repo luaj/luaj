@@ -80,10 +80,10 @@ local echo = function(msg,...)
 	return ... 
 end
 local echocr = function(...)
-	echo('(echocr) first args', unpack(arg,1,arg.n)) 
+	echo('(echocr) first args', table.unpack(arg,1,arg.n)) 
 	local a = arg
 	while true do
-		a = { echo( '(echoch) yield returns', coroutine.yield( unpack(a) ) ) }
+		a = { echo( '(echoch) yield returns', coroutine.yield( table.unpack(a) ) ) }
 	end
 end
 local c = coroutine.create( echocr )

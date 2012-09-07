@@ -144,7 +144,7 @@ strtests('lower', string.lower, s )
 strtests('upper', string.upper, s )
 strtests('reverse', string.reverse, s )
 strtests('char', string.char, 92, 60, 61, 93 )
-strtests('dump', string.dump, loadstring('print("hello, world")', 'sample') )
+strtests('dump', string.dump, load('print("hello, world")', 'sample') )
 
 
 -- floating point formats (not supported yet)
