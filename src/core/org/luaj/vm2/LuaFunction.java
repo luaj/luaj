@@ -38,16 +38,8 @@ public class LuaFunction extends LuaValue {
 	/** Shared static metatable for all functions and closures. */
 	public static LuaValue s_metatable;
 
-	protected LuaValue env;
+	public UpValue[] upValues;
 	
-	public LuaFunction() {
-		this.env = NIL;
-	}
-	
-	public LuaFunction(LuaValue env) {
-		this.env = env;
-	}
-
 	public int type() {
 		return TFUNCTION;
 	}
@@ -71,12 +63,9 @@ public class LuaFunction extends LuaValue {
 	public LuaValue getmetatable() { 
 		return s_metatable; 
 	}
-	
-	public LuaValue getfenv() {
-		return env;
-	}
 
-	public void setfenv(LuaValue env) {
-		this.env = env!=null? env: NIL;
+	public void initupvalue1(LuaValue env) {
+		if (upValues != null && upValues.length > 0)
+			upValues[0] = new UpValue(new LuaValue[] {env}, 0);
 	}
 }

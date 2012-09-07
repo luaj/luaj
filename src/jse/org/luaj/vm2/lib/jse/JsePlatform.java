@@ -87,6 +87,7 @@ public class JsePlatform {
 	 */
 	public static LuaTable standardGlobals() {
 		LuaTable _G = new LuaTable();
+		LuaValue._G = _G;
 		_G.load(new JseBaseLib());
 		_G.load(new PackageLib());
 		_G.load(new TableLib());
@@ -96,7 +97,6 @@ public class JsePlatform {
 		_G.load(new JseIoLib());
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
-		LuaThread.setGlobals(_G);
 		LuaC.install();
 		return _G;		
 	}

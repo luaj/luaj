@@ -112,7 +112,7 @@ public class OsLib extends VarArgFunction {
 	public OsLib() {
 	}
 
-	public LuaValue init() {
+	public LuaValue init(LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, this.getClass(), NAMES, CLOCK);
 		env.set("os", t);
@@ -124,7 +124,7 @@ public class OsLib extends VarArgFunction {
 		try {
 			switch ( opcode ) {
 			case INIT: 
-				return init();
+				return init(args.arg1());
 			case CLOCK:
 				return valueOf(clock());
 			case DATE: {

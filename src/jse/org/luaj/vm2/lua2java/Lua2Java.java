@@ -112,7 +112,6 @@ public class Lua2Java implements LuaCompiler {
 					Class clazz = cl.loadClass(className);
 					Object instance = clazz.newInstance();
 					LuaFunction value = (LuaFunction) instance;
-					value.setfenv( env );
 					return value;
 				} else {
 				}

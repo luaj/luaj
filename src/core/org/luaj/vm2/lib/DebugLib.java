@@ -136,7 +136,7 @@ public class DebugLib extends VarArgFunction {
 	public DebugLib() {
 	}
 	
-	private LuaTable init() {
+	private LuaTable init(LuaValue env) {
 		DEBUG_ENABLED = true;
 		LuaTable t = new LuaTable();
 		bind(t, DebugLib.class, NAMES, DEBUG);
@@ -147,7 +147,7 @@ public class DebugLib extends VarArgFunction {
 	
 	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
-		case INIT:         return init();
+		case INIT:         return init(args.arg1());
 		case DEBUG:        return _debug(args);
 		case GETHOOK:      return _gethook(args);
 		case GETINFO:      return _getinfo(args,this);

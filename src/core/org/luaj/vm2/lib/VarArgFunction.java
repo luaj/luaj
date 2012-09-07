@@ -51,7 +51,7 @@ abstract public class VarArgFunction extends LibFunction {
 	}
 	
 	public VarArgFunction( LuaValue env ) {
-		this.env = env;
+		throw new UnsupportedOperationException("Cannot supply env to constructor");
 	}
 	
 	public LuaValue call() {
@@ -71,30 +71,12 @@ abstract public class VarArgFunction extends LibFunction {
 	}
 
 	/** 
-	 * Override and implement for the best performance. 
+	 * Subclass responsibility. 
 	 * May not have expected behavior for tail calls. 
-	 * Should not be used if either:
-	 * - function needs to be used as a module
+	 * Should not be used if:
 	 * - function has a possibility of returning a TailcallVarargs
 	 * @param args the arguments to the function call.
 	 */
-	public Varargs invoke(Varargs args) {
-		LuaThread.CallStack cs = LuaThread.onCall(this);
-		try {
-			return this.onInvoke(args).eval();
-		} finally {
-			cs.onReturn();
-		}
-	}
-
-	/**
-	 * Override to provide a call implementation that runs in an environment
-	 * that can participate in setfenv, and behaves as expected 
-	 * when returning TailcallVarargs. 
-	 * @param args the arguments to the function call.
-	 */
-	public Varargs onInvoke(Varargs args) {
-		return invoke(args);
-	}
+	abstract public Varargs invoke(Varargs args);
 	
 } 

@@ -55,9 +55,9 @@ public class LuaOperationsTest extends TestCase {
 	private final LuaValue stringlong    = LuaValue.valueOf(samplestringlong);
 	private final LuaValue stringdouble  = LuaValue.valueOf(samplestringdouble);
 	private final LuaTable    table         = LuaValue.listOf( new LuaValue[] { LuaValue.valueOf("aaa"), LuaValue.valueOf("bbb") } );
-	private final LuaValue    somefunc      = new ZeroArgFunction(table) { public LuaValue call() { return NONE;}};
-	private final LuaThread   thread        = new LuaThread(somefunc,table);
-	private final Prototype   proto         = new Prototype();
+	private final LuaValue    somefunc      = new ZeroArgFunction() { public LuaValue call() { return NONE;}};
+	private final LuaThread   thread        = new LuaThread(somefunc);
+	private final Prototype   proto         = new Prototype(1);
 	private final LuaClosure  someclosure   = new LuaClosure(proto,table);
 	private final LuaUserdata userdataobj   = LuaValue.userdataOf(sampleobject);
 	private final LuaUserdata userdatacls   = LuaValue.userdataOf(sampledata);
@@ -127,55 +127,6 @@ public class LuaOperationsTest extends TestCase {
 		throwsLuaError( "length", userdataobj );
 		throwsLuaError( "length", userdatacls );
 	}
-	
-	public void testGetfenv() {
-		throwsLuaError( "getfenv", somenil );
-		throwsLuaError( "getfenv", sometrue );
-		throwsLuaError( "getfenv", somefalse );
-		throwsLuaError( "getfenv", zero );
-		throwsLuaError( "getfenv", intint );
-		throwsLuaError( "getfenv", longdouble );
-		throwsLuaError( "getfenv", doubledouble );
-		throwsLuaError( "getfenv", stringstring );
-		throwsLuaError( "getfenv", stringint );
-		throwsLuaError( "getfenv", stringlong );
-		throwsLuaError( "getfenv", stringdouble );
-		throwsLuaError( "getfenv", table );
-		assertTrue( table == thread.getfenv() );
-		assertTrue( table == someclosure.getfenv() );
-		assertTrue( table == somefunc.getfenv() );
-		throwsLuaError( "getfenv", userdataobj );
-		throwsLuaError( "getfenv", userdatacls );
-	}
-	
-	public void testSetfenv() {
-		LuaTable table2 = LuaValue.listOf( new LuaValue[] { 
-				LuaValue.valueOf("ccc"), 
-				LuaValue.valueOf("ddd") } );
-		throwsLuaError( "setfenv", somenil, table2 );
-		throwsLuaError( "setfenv", sometrue, table2 );
-		throwsLuaError( "setfenv", somefalse, table2 );
-		throwsLuaError( "setfenv", zero, table2 );
-		throwsLuaError( "setfenv", intint, table2 );
-		throwsLuaError( "setfenv", longdouble, table2 );
-		throwsLuaError( "setfenv", doubledouble, table2 );
-		throwsLuaError( "setfenv", stringstring, table2 );
-		throwsLuaError( "setfenv", stringint, table2 );
-		throwsLuaError( "setfenv", stringlong, table2 );
-		throwsLuaError( "setfenv", stringdouble, table2 );
-		throwsLuaError( "setfenv", table, table2 );
-		thread.setfenv(table2);
-		assertTrue( table2 == thread.getfenv() );
-		assertTrue( table == someclosure.getfenv() );
-		assertTrue( table == somefunc.getfenv() );
-		someclosure.setfenv(table2);
-		assertTrue( table2 == someclosure.getfenv() );
-		assertTrue( table == somefunc.getfenv() );
-		somefunc.setfenv(table2);
-		assertTrue( table2 == somefunc.getfenv() );
-		throwsLuaError( "setfenv", userdataobj, table2 );
-		throwsLuaError( "setfenv", userdatacls, table2 );
-	}
 
 	public Prototype createPrototype( String script, String name ) {
 		try {
@@ -206,56 +157,20 @@ public class LuaOperationsTest extends TestCase {
 
 		// function tests
 		{
-			LuaFunction f = new ZeroArgFunction(_G) { public LuaValue call() { return env.get("a");}};
+			LuaFunction f = new ZeroArgFunction() { public LuaValue call() { return _G.get("a");}};
 			assertEquals( aaa, f.call() );
-			f.setfenv(newenv);
-			assertEquals( newenv, f.getfenv() );
-			assertEquals( eee, f.call() );
 		}
 		
 		// closure tests
 		{
 			Prototype p = createPrototype( "return a\n", "closuretester" );
 			LuaClosure c = new LuaClosure(p, _G);
+			
+			// Test that a clusure with a custom enviroment uses that environment.
 			assertEquals( aaa, c.call() );
-			c.setfenv(newenv);
-			assertEquals( newenv, c.getfenv() );
+			c = new LuaClosure(p, newenv);
+			assertEquals( newenv, c.upValues[0].getValue() );
 			assertEquals( eee, c.call() );
-		}
-
-		// thread tests, functions created in threads inherit the thread's environment initially
-		// those closures created not in any other function get the thread's enviroment
-		Prototype p2 = createPrototype( "return loadstring('return a')", "threadtester" );
-		{
-			LuaThread t = new LuaThread(new LuaClosure(p2,_G), _G);
-			Varargs v = t.resume(LuaValue.NONE);
-			assertEquals(LuaValue.TRUE, v.arg(1) );
-			LuaValue f = v.arg(2);
-			assertEquals( LuaValue.TFUNCTION, f.type() );
-			assertEquals( aaa, f.call() );
-			assertEquals( _G, f.getfenv() );
-		}
-		{
-			// change the thread environment after creation!
-			LuaThread t = new LuaThread(new LuaClosure(p2,_G), _G);
-			t.setfenv(newenv);
-			Varargs v = t.resume(LuaValue.NONE);
-			assertEquals(LuaValue.TRUE, v.arg(1) );
-			LuaValue f = v.arg(2);
-			assertEquals( LuaValue.TFUNCTION, f.type() );
-			assertEquals( eee, f.call() );
-			assertEquals( newenv, f.getfenv() );
-		}
-		{
-			// let the closure have a different environment from the thread
-			Prototype p3 = createPrototype( "return function() return a end", "envtester" );
-			LuaThread t = new LuaThread(new LuaClosure(p3,newenv), _G);
-			Varargs v = t.resume(LuaValue.NONE);
-			assertEquals(LuaValue.TRUE, v.arg(1) );
-			LuaValue f = v.arg(2);
-			assertEquals( LuaValue.TFUNCTION, f.type() );
-			assertEquals( eee, f.call() );
-			assertEquals( newenv, f.getfenv() );
 		}
 	}
 }

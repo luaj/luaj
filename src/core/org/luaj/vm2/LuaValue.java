@@ -109,7 +109,11 @@ package org.luaj.vm2;
  */
 abstract
 public class LuaValue extends Varargs {
-
+	/** The default global environment.  This must be set before lua can be used. 
+	 * Typically, it is set as a side effect of calling one of 
+	 * JsePlatform.standardGlobals() or similar functions.
+	 */
+	public static LuaValue _G;
 	
 	/** Type enumeration constant for lua numbers that are ints, for compatibility with lua 5.1 number patch only */
 	public static final int TINT            = (-2);
@@ -1351,13 +1355,23 @@ public class LuaValue extends Varargs {
 	public Varargs inext(LuaValue index) { return typerror("table"); }
 	
 	/** 
-	 * Load a library instance by setting its environment to {@code this} 
+	 * Load a library instance by setting its environment to the global environment {@code LuaValue._G} 
 	 * and calling it, which should iniitalize the library instance and 
 	 * install itself into this instance. 
 	 * @param library The callable {@link LuaValue} to load into {@code this}
+	 * @return {@link LuaValue._G} containing the result of the initialization call.
+	 */
+	public LuaValue load(LuaValue library) { return load(library, _G); }
+
+	/** 
+	 * Load a library instance by setting its environment to {@code env} 
+	 * and calling it, which should iniitalize the library instance and 
+	 * install itself into this instance. 
+	 * @param library The callable {@link LuaValue} to load into {@code this}
+	 * @param env The {@link LuaValue} to use as the environment for the library.
 	 * @return {@link LuaValue} containing the result of the initialization call.
 	 */
-	public LuaValue load(LuaValue library) { library.setfenv(this); return library.call(); }
+	public LuaValue load(LuaValue library, LuaValue env) { return library.call(env); }
 
 	// varargs references
 	public LuaValue arg(int index) { return index==1? this: NIL; }
@@ -1393,26 +1407,7 @@ public class LuaValue extends Varargs {
 	 * @see LuaThread#s_metatable
 	 */
 	public LuaValue setmetatable(LuaValue metatable) { return argerror("table"); }
-	
-	/**
-	 * Get the environemnt for an instance. 
-	 * @return {@link LuaValue} currently set as the instances environent. 
-	 */
-	public LuaValue getfenv() { typerror("function or thread"); return null; }
-	
-	/**
-	 * Set the environment on an object.
-	 * <p>
-	 * Typically the environment is created once per application via a platform
-	 * helper method such as {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
-	 * However, any object can serve as an environment if it contains suitable metatag
-	 * values to implement {@link #get(LuaValue)} to provide the environment values.   
-	 * @param env {@link LuaValue} (typically a {@link LuaTable}) containing the environment.
-	 * @see org.luaj.vm2.lib.jme.JmePlatform
-	 * @see org.luaj.vm2.lib.jse.JsePlatform
-	 */
-	public void setfenv(LuaValue env) { typerror("function or thread"); }
-		
+			
 	/** Call {@link this} with 0 arguments, including metatag processing, 
 	 * and return only the first return value.
 	 * <p>

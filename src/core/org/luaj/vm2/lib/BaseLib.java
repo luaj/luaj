@@ -126,7 +126,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		instance = this;
 	}
 	
-	public LuaValue call(LuaValue arg) {
+	public LuaValue call(LuaValue env) {
 		env.set( "_G", env );
 		env.set( "_VERSION", Lua._VERSION );
 		bind( env, BaseLib1.class, LIB1_KEYS );
@@ -230,8 +230,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				args.argcheck(args.isstring(1) || args.isnil(1), 1, "filename must be string or nil");
 				String filename = args.isstring(1)? args.tojstring(1): null;
 				Varargs v = filename == null? 
-						BaseLib.loadStream( baselib.STDIN, "=stdin", "bt", LuaThread.getGlobals() ):
-						BaseLib.loadFile( args.checkjstring(1), "bt", LuaThread.getGlobals() );
+						BaseLib.loadStream( baselib.STDIN, "=stdin", "bt",LuaValue._G ):
+						BaseLib.loadFile( args.checkjstring(1), "bt",LuaValue._G );
 				return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();
 			}
 			case 2: // "load", // ( ld [, source [, mode [, env]]] ) -> chunk | nil, msg
@@ -240,7 +240,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				args.argcheck(ld.isstring() || ld.isfunction(), 1, "ld must be string or function");
 				String source = args.optjstring(2, ld.isstring()? ld.tojstring(): "=(load)");
 				String mode = args.optjstring(3, "bt");
-				LuaValue env = args.optvalue(4, LuaThread.getGlobals());
+				LuaValue env = args.optvalue(4,LuaValue._G);
 				return BaseLib.loadStream(ld.isstring()? ld.strvalue().toInputStream(): 
 					new StringInputStream(ld.checkfunction()), source, mode, env);
 			}
@@ -249,7 +249,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 				args.argcheck(args.isstring(1) || args.isnil(1), 1, "filename must be string or nil");
 				String filename = args.isstring(1)? args.tojstring(1): null;
 				String mode = args.optjstring(2, "bt");
-				LuaValue env = args.optvalue(3, LuaThread.getGlobals());
+				LuaValue env = args.optvalue(3,LuaValue._G);
 				return filename == null? 
 					BaseLib.loadStream( baselib.STDIN, "=stdin", mode, env ):
 					BaseLib.loadFile( filename, mode, env );
@@ -275,7 +275,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			}
 			case 6: // "print", // (...) -> void
 			{
-				LuaValue tostring = LuaThread.getGlobals().get("tostring"); 
+				LuaValue tostring =LuaValue._G.get("tostring"); 
 				for ( int i=1, n=args.narg(); i<=n; i++ ) {
 					if ( i>1 ) baselib.STDOUT.write( '\t' );
 					LuaString s = tostring.call( args.arg(i) ).strvalue();

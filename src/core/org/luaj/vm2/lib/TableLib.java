@@ -61,7 +61,7 @@ public class TableLib extends OneArgFunction {
 	public TableLib() {
 	}
 
-	private LuaTable init() {
+	private LuaTable init(LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, TableLib.class, new String[] { "getn", "maxn", }, 1 );
 		bind(t, TableLibV.class, new String[] {
@@ -74,7 +74,7 @@ public class TableLib extends OneArgFunction {
 	public LuaValue call(LuaValue arg) {
 		switch ( opcode ) {
 		case 0: // init library
-			return init();
+			return init(arg);
 		case 1:  // "getn" (table) -> number
 			return arg.checktable().getn();
 		case 2: // "maxn"  (table) -> number 

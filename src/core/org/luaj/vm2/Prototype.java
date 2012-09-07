@@ -51,6 +51,12 @@ public class Prototype {
 	public int is_vararg;
 	public int maxstacksize;
 
+
+	public Prototype() {}
+	
+	public Prototype(int n_upvalues) {
+		upvalues = new Upvaldesc[n_upvalues];
+	}
 	
 	public String toString() {
 		return source + ":" + linedefined+"-"+lastlinedefined;

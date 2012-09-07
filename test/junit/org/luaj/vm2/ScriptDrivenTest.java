@@ -119,7 +119,6 @@ public class ScriptDrivenTest extends TestCase {
 			case LUAJIT:
 				if ( nocompile ) {
 					LuaValue c = (LuaValue) Class.forName(name).newInstance();
-					c.setfenv(_G);
 					return c;
 				} else {
 					script = new FileInputStream(file);

@@ -58,7 +58,7 @@ abstract public class OneArgFunction extends LibFunction {
 	 * @param env The environment to apply during constructon.
 	 */
 	public OneArgFunction( LuaValue env ) {
-		this.env = env;
+		throw new UnsupportedOperationException("Cannot supply env to constructor");
 	}
 	
 	public final LuaValue call() {

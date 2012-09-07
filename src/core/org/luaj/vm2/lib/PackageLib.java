@@ -105,18 +105,18 @@ public class PackageLib extends OneArgFunction {
 		instance = this;
 	}
 
-	public LuaValue call(LuaValue arg) {
-		env.set("require", new PkgLib1(env,"require",OP_REQUIRE,this));
+	public LuaValue call(LuaValue env) {
+		env.set("require", new PkgLib1("require",OP_REQUIRE,this));
 		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
 				_PRELOAD, tableOf(),
 				_PATH,    valueOf(DEFAULT_LUA_PATH),
-				_LOADLIB, new PkgLibV(env,"loadlib",OP_LOADLIB,this),
-				_SEARCHPATH,  new PkgLibV(env,"searchpath",OP_SEARCHPATH,this),
+				_LOADLIB, new PkgLibV("loadlib",OP_LOADLIB,this),
+				_SEARCHPATH,  new PkgLibV("searchpath",OP_SEARCHPATH,this),
 				_SEARCHERS, listOf(new LuaValue[] {
-						preload_searcher = new PkgLibV(env,"preload_searcher", OP_PRELOAD_SEARCHER,this),
-						lua_searcher     = new PkgLibV(env,"lua_searcher", OP_LUA_SEARCHER,this),
-						java_searcher    = new PkgLibV(env,"java_searcher", OP_JAVA_SEARCHER,this),
+						preload_searcher = new PkgLibV("preload_searcher",OP_PRELOAD_SEARCHER, this),
+						lua_searcher     = new PkgLibV("lua_searcher",OP_LUA_SEARCHER, this),
+						java_searcher    = new PkgLibV("java_searcher",OP_JAVA_SEARCHER, this),
 				}) }) );
 		LOADED.set("package", PACKAGE);
 		return env;
@@ -124,8 +124,7 @@ public class PackageLib extends OneArgFunction {
 
 	static final class PkgLib1 extends OneArgFunction {
 		PackageLib lib;
-		public PkgLib1(LuaValue env,String name, int opcode, PackageLib lib) {
-			this.env = env;
+		public PkgLib1(String name, int opcode, PackageLib lib) {
 			this.name = name;
 			this.opcode = opcode;
 			this.lib = lib;
@@ -141,8 +140,7 @@ public class PackageLib extends OneArgFunction {
 
 	static final class PkgLibV extends VarArgFunction {
 		PackageLib lib;
-		public PkgLibV(LuaValue env,String name, int opcode, PackageLib lib) {
-			this.env = env;
+		public PkgLibV(String name,int opcode, PackageLib lib) {
 			this.name = name;
 			this.opcode = opcode;
 			this.lib = lib;
@@ -286,7 +284,7 @@ public class PackageLib extends OneArgFunction {
 		LuaString filename = v.arg1().strvalue();
 
 		// Try to load the file.
-		v = BaseLib.loadFile(filename.tojstring(), "bt", LuaThread.getGlobals()); 
+		v = BaseLib.loadFile(filename.tojstring(), "bt", LuaValue._G); 
 		if ( v.arg1().isfunction() )
 			return LuaValue.varargsOf(v.arg1(), filename);
 		
@@ -340,7 +338,6 @@ public class PackageLib extends OneArgFunction {
 		try {
 			c = Class.forName(classname);
 			v = (LuaValue) c.newInstance();
-			v.setfenv(env);
 			return v;
 		} catch ( ClassNotFoundException  cnfe ) {
 			return valueOf("\n\tno class '"+classname+"'" );

@@ -30,12 +30,9 @@ import org.luaj.vm2.Prototype;
 ******************************************************************************/
 public class JavaLoader extends ClassLoader {
 
-	private final LuaValue env;
-	
 	private Map<String,byte[]> unloaded = new HashMap<String,byte[]>();
 	
-	public JavaLoader( LuaValue env ) {
-		this.env = env;
+	public JavaLoader() {
 	}
 
 	public LuaFunction load( Prototype p, String classname, String filename ) {
@@ -49,10 +46,14 @@ public class JavaLoader extends ClassLoader {
 	}
 	
 	public LuaFunction load(String classname) {
+		return load(classname, LuaValue._G);
+	}
+	
+	public LuaFunction load(String classname, LuaValue env) {
 		try {
 			Class c = loadClass( classname );
 			LuaFunction v = (LuaFunction) c.newInstance();
-			v.setfenv(env);
+			v.initupvalue1(env);
 			return v;
 		} catch ( Exception e ) {
 			e.printStackTrace();

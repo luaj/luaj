@@ -34,7 +34,7 @@ public class Lua {
 	
 	/** use return values from previous op */
 	public static final int LUA_MULTRET = -1;
-	
+
 	// from lopcodes.h
 
 	/*===========================================================================

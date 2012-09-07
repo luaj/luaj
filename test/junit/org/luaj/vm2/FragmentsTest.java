@@ -71,18 +71,18 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
+				org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
 				case TEST_TYPE_LUA2JAVA: 
-					chunk = Lua2Java.instance.load(is,name,_G);
+					chunk = Lua2Java.instance.load(is,name,LuaValue._G);
 					break;
 				case TEST_TYPE_LUAJC:
-					chunk = LuaJC.getInstance().load(is,name,_G);
+					chunk = LuaJC.getInstance().load(is,name,LuaValue._G);
 					break;
 				default:
-					chunk = LuaC.instance.load( is, name, _G );
+					chunk = LuaC.instance.load( is, name, LuaValue._G );
 					Print.print(((LuaClosure)chunk).p);
 					break;
 				}

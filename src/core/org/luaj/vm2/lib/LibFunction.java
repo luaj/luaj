@@ -169,7 +169,6 @@ abstract public class LibFunction extends LuaFunction {
 				LibFunction f = (LibFunction) factory.newInstance();
 				f.opcode = firstopcode + i;
 				f.name = names[i];
-				f.env = env;
 				env.set(f.name, f);
 			}
 		} catch ( Exception e ) {

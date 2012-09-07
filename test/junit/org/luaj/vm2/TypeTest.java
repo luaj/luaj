@@ -26,8 +26,12 @@ import java.lang.reflect.InvocationTargetException;
 import junit.framework.TestCase;
 
 import org.luaj.vm2.lib.ZeroArgFunction;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class TypeTest extends TestCase {
+	static {
+		JsePlatform.debugGlobals();
+	}
 	
 	private final int sampleint = 77;
 	private final long samplelong = 123400000000L;
@@ -52,8 +56,8 @@ public class TypeTest extends TestCase {
 	private final LuaValue stringdouble  = LuaValue.valueOf(samplestringdouble);
 	private final LuaTable    table         = LuaValue.tableOf();
 	private final LuaFunction somefunc      = new ZeroArgFunction() { public LuaValue call() { return NONE;}};
-	private final LuaThread   thread        = new LuaThread(somefunc,table);
-	private final LuaClosure  someclosure   = new LuaClosure();
+	private final LuaThread   thread        = new LuaThread(somefunc);
+	private final LuaClosure  someclosure   = new LuaClosure(new Prototype());
 	private final LuaUserdata userdataobj   = LuaValue.userdataOf(sampleobject);
 	private final LuaUserdata userdatacls   = LuaValue.userdataOf(sampledata);
 	

@@ -83,7 +83,7 @@ public class MathLib extends OneArgFunction {
 		MATHLIB = this;
 	}
 
-	public LuaValue call(LuaValue arg) {
+	public LuaValue call(LuaValue env) {
 		LuaTable t = new LuaTable(0,30);
 		t.set( "pi", Math.PI );
 		t.set( "huge", LuaDouble.POSINF );

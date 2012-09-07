@@ -113,7 +113,7 @@ public class OrphanedThreadTest extends TestCase {
 	}
 
 	private void doTest(LuaValue status2, LuaValue value2) throws Exception {
-		luathread = new LuaThread(function, env);
+		luathread = new LuaThread(function);
 		luathr_ref = new WeakReference(luathread);
 		func_ref = new WeakReference(function);
 		assertNotNull(luathr_ref.get());		

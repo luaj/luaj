@@ -215,7 +215,7 @@ public class IoLib extends OneArgFunction {
 	public IoLib() {
 	}
 	
-	public LuaValue call(LuaValue arg) {
+	public LuaValue call(LuaValue env) {
 		
 		// io lib functions
 		LuaTable t = new LuaTable();
@@ -248,12 +248,13 @@ public class IoLib extends OneArgFunction {
 	}
 	
 	static final class IoLibV extends VarArgFunction {
+		private File f;
 		public IoLib iolib;
 		public IoLibV() {
 		}
-		public IoLibV(LuaValue env, String name, int opcode, IoLib iolib) {
+		public IoLibV(File f, String name, int opcode, IoLib iolib) {
 			super();
-			this.env = env;
+			this.f = f;
 			this.name = name;
 			this.opcode = opcode;
 			this.iolib = iolib;
@@ -283,7 +284,7 @@ public class IoLib extends OneArgFunction {
 				case FILE_WRITE:	return iolib._file_write(args.arg1(),args.subargs(2));
 
 				case IO_INDEX:		return iolib._io_index(args.arg(2));
-				case LINES_ITER:	return iolib._lines_iter(env);
+				case LINES_ITER:	return iolib._lines_iter(f);
 				}
 			} catch ( IOException ioe ) {
 				return errorresult(ioe);

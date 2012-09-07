@@ -101,6 +101,7 @@ public class JmePlatform {
 	 */
 	public static LuaTable standardGlobals() {
 		LuaTable _G = new LuaTable();
+		LuaValue._G = _G;
 		_G.load(new BaseLib());
 		_G.load(new PackageLib());
 		_G.load(new OsLib());
@@ -109,7 +110,6 @@ public class JmePlatform {
 		_G.load(new StringLib());
 		_G.load(new CoroutineLib());
 		_G.load(new JmeIoLib());
-		LuaThread.setGlobals(_G);
 		LuaC.install();
 		return _G;		
 	}

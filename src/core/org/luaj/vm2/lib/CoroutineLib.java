@@ -65,10 +65,16 @@ public class CoroutineLib extends VarArgFunction {
 	private static final int WRAP    = 6;
 	private static final int WRAPPED = 7;
 	
+	private LuaThread t;
+	
 	public CoroutineLib() {
 	}
 
-	private LuaTable init() {
+	private CoroutineLib(LuaThread t) {
+		this.t = t;
+	}
+	
+	private LuaTable init(LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, CoroutineLib.class, new  String[] {
 			"create", "resume", "running", "status", "yield", "wrap" },
@@ -81,11 +87,11 @@ public class CoroutineLib extends VarArgFunction {
 	public Varargs invoke(Varargs args) {
 		switch ( opcode ) {
 			case INIT: {
-				return init();
+				return init(args.arg1());
 			}
 			case CREATE: {
 				final LuaValue func = args.checkfunction(1);
-				return new LuaThread(func, LuaThread.getGlobals() );
+				return new LuaThread(func);
 			}
 			case RESUME: {
 				final LuaThread t = args.checkthread(1);
@@ -103,15 +109,13 @@ public class CoroutineLib extends VarArgFunction {
 			}
 			case WRAP: {
 				final LuaValue func = args.checkfunction(1);
-				final LuaThread thread = new LuaThread(func, func.getfenv());
-				CoroutineLib cl = new CoroutineLib();
-				cl.setfenv(thread);
+				final LuaThread thread = new LuaThread(func);
+				CoroutineLib cl = new CoroutineLib(thread);
 				cl.name = "wrapped";
 				cl.opcode = WRAPPED;
 				return cl;
 			}
 			case WRAPPED: {
-				final LuaThread t = (LuaThread) env;
 				final Varargs result = t.resume( args );
 				if ( result.arg1().toboolean() ) {
 					return result.subargs(2);

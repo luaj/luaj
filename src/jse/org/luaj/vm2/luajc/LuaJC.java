@@ -99,7 +99,7 @@ public class LuaJC implements LuaCompiler {
 		Prototype p = LuaC.instance.compile(stream, name);
 		String classname = toStandardJavaClassName( name );
 		String luaname = toStandardLuaFileName( name );
-		JavaLoader loader = new JavaLoader(env);
+		JavaLoader loader = new JavaLoader();
 		return loader.load(p, classname, luaname);
 	}
 	

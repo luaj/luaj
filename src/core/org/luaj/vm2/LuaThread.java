@@ -82,7 +82,6 @@ public class LuaThread extends LuaValue {
 		"normal", 
 		"dead",};
 	
-	private LuaValue env;
 	private final State state;
 
 	/** Field to hold state of error condition during debug hook function calls. */
@@ -112,11 +111,9 @@ public class LuaThread extends LuaValue {
 	/** 
 	 * Create a LuaThread around a function and environment
 	 * @param func The function to execute
-	 * @param env The environment to apply to the thread
 	 */
-	public LuaThread(LuaValue func, LuaValue env) {	
+	public LuaThread(LuaValue func) {	
 		LuaValue.assert_(func != null, "function cannot be null");
-		this.env = env;
 		state = new State(this, func);
 	}
 	
@@ -144,14 +141,6 @@ public class LuaThread extends LuaValue {
 		return s_metatable; 
 	}
 	
-	public LuaValue getfenv() {
-		return env;
-	}
-	
-	public void setfenv(LuaValue env) {
-		this.env = env;
-	}
-
 	public String getStatus() {
 		return STATUS_NAMES[state.status];
 	}
@@ -170,24 +159,6 @@ public class LuaThread extends LuaValue {
 	 */
 	public static boolean isMainThread(LuaThread r) {		
 		return r == main_thread;
-	}
-	
-	/** 
-	 * Set the globals of the current thread.
-	 * <p>
-	 * This must be done once before any other code executes.
-	 * @param globals The global variables for the main ghread. 
-	 */
-	public static void setGlobals(LuaValue globals) {
-		running_thread.env = globals;
-	}
-	
-	/** Get the current thread's environment 
-	 * @return {@link LuaValue} containing the global variables of the current thread.
-	 */
-	public static LuaValue getGlobals() {
-		LuaValue e = running_thread.env;
-		return e!=null? e: LuaValue.error("LuaThread.setGlobals() not initialized");
 	}
 
 	/**

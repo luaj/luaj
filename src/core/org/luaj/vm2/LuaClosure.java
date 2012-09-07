@@ -67,7 +67,6 @@ import org.luaj.vm2.lib.DebugLib;
  * Since a {@link LuaClosure} is a {@link LuaFunction} which is a {@link LuaValue}, 
  * all the value operations can be used directly such as:
  * <ul>
- * <li>{@link LuaValue#setfenv(LuaValue)}</li>
  * <li>{@link LuaValue#call()}</li>
  * <li>{@link LuaValue#call(LuaValue)}</li>
  * <li>{@link LuaValue#invoke()}</li>
@@ -90,24 +89,28 @@ public class LuaClosure extends LuaFunction {
 	private static final UpValue[] NOUPVALUES = new UpValue[0];
 	
 	public final Prototype p;
-	public final UpValue[] upValues;
 	
-	LuaClosure() {
-		p = null;
-		upValues = null;
+	/** Create a closure around a Prototype with the default global environment.
+	 * If the prototype has upvalues, the environment will be written into the first upvalue.
+	 * @param p the Prototype to construct this Closure for. 
+	 * @param env the environment to associate with the closure.
+	 */
+	public LuaClosure(Prototype p) {
+		this(p, LuaValue._G);
 	}
-	/** Supply the initial environment */
+	
+	/** Create a closure around a Prototype with a specific environment.
+	 * If the prototype has upvalues, the environment will be written into the first upvalue.
+	 * @param p the Prototype to construct this Closure for. 
+	 * @param env the environment to associate with the closure.
+	 */
 	public LuaClosure(Prototype p, LuaValue env) {
-		this(p, p.upvalues.length, env);
-	}
-	
-	protected LuaClosure(Prototype p, int nupvalues, LuaValue env) {
-		super( env );
 		this.p = p;
-		switch (nupvalues) {
-		case 0: this.upValues = NOUPVALUES; break;
-		case 1: this.upValues = new UpValue[] { new UpValue(new LuaValue[1], 0) }; this.upValues[0].setValue(env); break;
-		default: this.upValues = new UpValue[nupvalues]; break;
+		if (p.upvalues == null || p.upvalues.length == 0)
+			this.upValues = NOUPVALUES;
+		else {
+			this.upValues = new UpValue[p.upvalues.length];
+			this.upValues[0] = new UpValue(new LuaValue[] {env}, 0);
 		}
 	}
 	
@@ -463,7 +466,7 @@ public class LuaClosure extends LuaFunction {
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx])	*/
 					{
 						Prototype newp = p.p[i>>>14];
-						LuaClosure ncl = new LuaClosure(newp, env);
+						LuaClosure ncl = new LuaClosure(newp);
 						Upvaldesc[] uv = newp.upvalues;
 						for ( int j=0, nup=uv.length; j<nup; ++j ) {
 							if (uv[j].instack)  /* upvalue refes to local variable? */

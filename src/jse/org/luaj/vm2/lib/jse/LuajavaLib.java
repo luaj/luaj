@@ -98,6 +98,7 @@ public class LuajavaLib extends VarArgFunction {
 		try {
 			switch ( opcode ) {
 			case INIT: {
+				LuaValue env = args.arg1();
 				LuaTable t = new LuaTable();
 				bind( t, LuajavaLib.class, NAMES, BINDCLASS );
 				env.set("luajava", t);

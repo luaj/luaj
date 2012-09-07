@@ -203,7 +203,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 	        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
 	        LuaFunction f = newFunctionInstance();
 	        ClientBindings cb = new ClientBindings(b);
-	        f.setfenv(cb.env);
+	        f.initupvalue1(cb.env);
 			Varargs result = f.invoke(LuaValue.NONE);
 			cb.copyGlobalsToBindings();
 			return result;

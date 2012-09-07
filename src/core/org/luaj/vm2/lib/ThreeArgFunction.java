@@ -58,7 +58,7 @@ abstract public class ThreeArgFunction extends LibFunction {
 	 * @param env The environment to apply during constructon.
 	 */
 	public ThreeArgFunction( LuaValue env ) {
-		this.env = env;
+		throw new UnsupportedOperationException("Cannot supply env to constructor");
 	}
 	
 	public final LuaValue call() {

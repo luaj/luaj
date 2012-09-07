@@ -60,7 +60,7 @@ public class TestLuaJC {
 			} else {
 				chunk = (LuaValue) Class.forName("script").newInstance();
 			}
-			chunk.setfenv(_G);
+			//chunk.setfenv(_G);  // TODO: convert to setupvalue()? 
 	
 			// call with arguments
 			LuaValue[] vargs = new LuaValue[args.length];

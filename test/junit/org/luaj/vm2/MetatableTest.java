@@ -38,8 +38,8 @@ public class MetatableTest extends TestCase {
 	private final LuaValue    string        = LuaValue.valueOf(samplestring);
 	private final LuaTable    table         = LuaValue.tableOf();
 	private final LuaFunction function      = new ZeroArgFunction() { public LuaValue call() { return NONE;}};
-	private final LuaThread   thread        = new LuaThread(function,table);
-	private final LuaClosure  closure       = new LuaClosure();
+	private final LuaThread   thread        = new LuaThread(function);
+	private final LuaClosure  closure       = new LuaClosure(new Prototype());
 	private final LuaUserdata userdata      = LuaValue.userdataOf(sampleobject);
 	private final LuaUserdata userdatamt    = LuaValue.userdataOf(sampledata,table);
 	

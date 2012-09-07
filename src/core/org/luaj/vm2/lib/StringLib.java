@@ -66,7 +66,7 @@ public class StringLib extends OneArgFunction {
 	public StringLib() {
 	}
 
-	public LuaValue call(LuaValue arg) {
+	public LuaValue call(LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, StringLib1.class, new String[] {
 			"dump", "len", "lower", "reverse", "upper", } );

@@ -186,7 +186,6 @@ public class lua {
 			try {
 				// load as java class
 				LuaValue v = (LuaValue) Class.forName(libname).newInstance(); 
-				v.setfenv(_G);
 				v.call(slibname, _G);
 			} catch ( Exception f ) {
 				throw new IOException("loadLibrary("+libname+") failed: "+e+","+f );
