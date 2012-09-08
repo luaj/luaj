@@ -48,6 +48,10 @@ public class LuaNil extends LuaValue {
 	public int type() {
 		return LuaValue.TNIL;
 	}
+
+	public String toString() {
+		return "nil";		
+	}
 	
 	public String typename() {
 		return "nil";

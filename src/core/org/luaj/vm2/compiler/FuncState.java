@@ -21,18 +21,16 @@
 ******************************************************************************/
 package org.luaj.vm2.compiler;
 
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaDouble;
-import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaNil;
+import org.luaj.vm2.LuaDouble;
+import org.luaj.vm2.LuaInteger;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LexState.ConsControl;
 import org.luaj.vm2.compiler.LexState.expdesc;
 
@@ -489,7 +487,7 @@ public class FuncState extends LuaC {
 		final Prototype f = this.f;
 		if (f.k == null || nk + 1 >= f.k.length)
 			f.k = realloc( f.k, nk*2 + 1 );
-		f.k[this.nk++] = v;
+		f.k[this.nk++] = v.isuserdata()? LuaValue.NIL: v;
 		return idx;
 	}
 
