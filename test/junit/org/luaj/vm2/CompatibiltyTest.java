@@ -33,7 +33,7 @@ import org.luaj.vm2.luajc.LuaJC;
  */
 public class CompatibiltyTest extends TestSuite {
 
-	private static final String dir = "test/lua";
+	private static final String dir = "";
 	
 	abstract protected static class CompatibiltyTestSuite extends ScriptDrivenTest {	
 		LuaValue savedStringMetatable;

@@ -36,7 +36,7 @@ import org.luaj.vm2.lib.BaseLib;
  */
 public class ErrorsTest extends ScriptDrivenTest {
 
-	private static final String dir = "test/lua/errors";
+	private static final String dir = "errors/";
 
 	public ErrorsTest() {
 		super(ScriptDrivenTest.PlatformType.JSE, dir);

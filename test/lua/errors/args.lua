@@ -114,6 +114,7 @@ local function split(t)
 end
 
 local function expand(argsets, typesets, ...)	
+	local arg = {...} ; arg.n = #arg
 	local n = typesets and #typesets or 0
 	if n <= 0 then
 		table.insert(argsets,arg)
@@ -155,7 +156,7 @@ local function subbanner(name)
 end
 
 local function pack(s,...) 
-	return s,arg
+	return s,{...}
 end
 
 -- check that all combinations of arguments pass
