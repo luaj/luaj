@@ -38,7 +38,6 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.jse.JsePlatform;
-import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
 
 
@@ -55,7 +54,6 @@ public class lua {
 		"  -l name  require library 'name'\n" +
 		"  -i       enter interactive mode after executing 'script'\n" +
 		"  -v       show version information\n" +
-		"  -j      	use lua2java source-to-source compiler\n" +
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  -n      	nodebug - do not load debug library by default\n" +
 		"  -p       pretty-print the prototype\n" +
@@ -78,7 +76,6 @@ public class lua {
 		boolean nodebug = false;
 		boolean print = false;
 		boolean luajc = false;
-		boolean lua2java = false;
 		Vector libs = null;
 		try {
 			// stateful argument processing
@@ -98,9 +95,6 @@ public class lua {
 						break;
 					case 'b':
 						luajc = true;
-						break;
-					case 'j':
-						lua2java = true;
 						break;
 					case 'l':
 						if ( ++i >= args.length )
@@ -139,7 +133,6 @@ public class lua {
 			// new lua state
 			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
 			if ( luajc ) LuaJC.install();
-			if ( lua2java) Lua2Java.install();
 			for ( int i=0, n=libs!=null? libs.size(): 0; i<n; i++ )
 				loadLibrary( (String) libs.elementAt(i) );
 			

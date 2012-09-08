@@ -120,16 +120,6 @@ in comparison with the standard C distribution.
 <tr valign="top">
 	<td></td>
 	<td></td>
-	<td>-j (lua2java)</td>
-	<td>4.463</td>
-	<td>5.884</td>
-	<td>16.701</td>
-	<td>13.789</td>
-	<td></td>
-	<td>java -cp luaj-jse-3.0-alpha1.jar lua <b>-j</b> fannkuch.lua 10</td></tr>
-<tr valign="top">
-	<td></td>
-	<td></td>
 	<td>-n (interpreted)</td>
 	<td>12.838</td>
 	<td>23.290</td>
@@ -179,8 +169,8 @@ in comparison with the standard C distribution.
 	<td></td></tr>
 </table></td></tr></table>
 
-Luaj in interpreted mode performs well for the benchmarks, and even better when source-to-source (lua2java) 
-or bytecode-to-bytecode (luajc) compilers are used, 
+Luaj in interpreted mode performs well for the benchmarks, and even better when 
+the lua-to-java-bytecode (luajc) compiler is used, 
 and actually executes <em>faster</em> than C-based lua in some cases.  
 It is also faster than Java-lua implementations Jill, Kahlua, and Mochalua for all benchmarks tested.  
 
@@ -220,29 +210,8 @@ From the main distribution directory line type:
 <p>
 The compiled output "luac.out" is lua bytecode and should run and produce the same result.
 
-<h2>Compile lua source to java source</h2>
 
-<p>
-Luaj can compile to lua source code to Java source code:
-
-<pre>
-	java -cp lib/luaj-jse-3.0-alpha1.jar lua2java -s examples/lua -d . hello.lua
-	javac -cp lib/luaj-jse-3.0-alpha1.jar hello.java
-	java -cp &quot;lib/luaj-jse-3.0-alpha1.jar;.&quot; lua -l hello
-</pre>
-
-<p>
-The output <em>hello.java</em> is Java source, that implements the logic in hello.lua directly.
-Once <em>hello.java</em> is compiled into <em>hello.class</em> it can be required and used in place of the original lua script, but with better performance.  
-There are no additional dependencies for compiling or running source-to-source compiled lua. 
-
-<p>
-Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-j</em></b> option when run in JDK 1.5 or higher:
-<pre>
-	java -cp lib/luaj-jse-3.0-alpha1.jar lua -j examples/lua/hello.lua
-</pre>
-
-<h2>Compile lua bytecode to java bytecode</h2>
+<h2>Compile lua source or bytecode to java bytecode</h2>
 
 <p>
 Luaj can compile lua sources or binaries directly to java bytecode if the bcel library is on the class path. From the main distribution directory line type:
@@ -371,19 +340,6 @@ that are needed and omitting the line:
 	org.luaj.vm2.compiler.LuaC.install();
 </pre>
 
-
-<h2>Including the Lua2Java lua-source-to-Java-source compiler</h2>
-
-<p>
-To compile from lua sources to Java sources for all lua loaded at runtime, 
-install the Lua2Java compiler <em>after</em> globals have been created using:
-
-<pre>
-	org.luaj.vm2.jse.lua2java.Lua2Java.install();
-</pre>
-
-This uses the system Java compiler to compile from Java source to Java bytecode, 
-and cannot compile lua binary files containing lua bytecode at runtime. 
 
 <h2>Including the LuaJC lua-bytecode-to-Java-bytecode compiler</h2>
 
@@ -774,6 +730,7 @@ and LuaForge:
 <li>Fix load(func) when mutiple string fragments are supplied by calls to func </li>
 <li>Allow access to public members of private inner classes where possible </li>
 <li>Add line and column info to org.luaj.vm2.ast parse tree elements generated using LuaParser </li>
+<li>Drop support for lua source to java surce (lua2java) in favor of direct java bytecode output (luajc) </li>
 </ul></td></tr>
 </table></td></tr></table>
 

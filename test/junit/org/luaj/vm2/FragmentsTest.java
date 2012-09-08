@@ -28,7 +28,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
 
 /** 
@@ -40,7 +39,6 @@ public class FragmentsTest extends TestSuite {
 
 	static final int TEST_TYPE_LUAC     = 0;
 	static final int TEST_TYPE_LUAJC    = 1;
-	static final int TEST_TYPE_LUA2JAVA = 2;
 
 	public static class JseFragmentsTest extends FragmentsTestCase {
 		public JseFragmentsTest() { super(  TEST_TYPE_LUAC ); }
@@ -48,15 +46,10 @@ public class FragmentsTest extends TestSuite {
 	public static class LuaJCFragmentsTest extends FragmentsTestCase {
 		public LuaJCFragmentsTest() { super(  TEST_TYPE_LUAJC ); }
 	}
-	public static class Lua2JavaFragmentsTest extends FragmentsTestCase {
-		public Lua2JavaFragmentsTest() { super(  TEST_TYPE_LUA2JAVA ); }
-	}
-	
 	public static TestSuite suite() {
 		TestSuite suite = new TestSuite("Compiler Fragments Tests");
 		suite.addTest( new TestSuite( JseFragmentsTest.class,      "JSE Fragments Tests" ) );
 		suite.addTest( new TestSuite( LuaJCFragmentsTest.class,    "LuaJC Fragments Tests" ) );
-		suite.addTest( new TestSuite( Lua2JavaFragmentsTest.class, "Lua2Java Fragments Tests" ) );
 		return suite;
 	}
 	
@@ -75,9 +68,6 @@ public class FragmentsTest extends TestSuite {
 				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
-				case TEST_TYPE_LUA2JAVA: 
-					chunk = Lua2Java.instance.load(is,name,LuaValue._G);
-					break;
 				case TEST_TYPE_LUAJC:
 					chunk = LuaJC.getInstance().load(is,name,LuaValue._G);
 					break;

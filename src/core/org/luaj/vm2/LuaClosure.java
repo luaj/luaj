@@ -132,7 +132,6 @@ public class LuaClosure extends LuaFunction {
 	
 	public final LuaValue call() {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
-		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
 		return execute(stack,NONE).arg1();
 	}
 
@@ -313,12 +312,13 @@ public class LuaClosure extends LuaFunction {
 					
 				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
 					pc  += (i>>>14)-0x1ffff;
-					if (a > 0)
-						for (int j = 0; j < openups.length; ++j)
-							if (openups[j] != null && openups[j].index == a) {
-								openups[j].close();
-								openups[j] = null;
+					if (a > 0) {
+						for (--a, b = openups.length; --b>=0; )
+							if (openups[b] != null && openups[b].index >= a) {
+								openups[b].close();
+								openups[b] = null;
 							}
+					}
 					continue;
 					
 				case Lua.OP_EQ: /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
@@ -466,7 +466,7 @@ public class LuaClosure extends LuaFunction {
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx])	*/
 					{
 						Prototype newp = p.p[i>>>14];
-						LuaClosure ncl = new LuaClosure(newp);
+						LuaClosure ncl = new LuaClosure(newp, null);
 						Upvaldesc[] uv = newp.upvalues;
 						for ( int j=0, nup=uv.length; j<nup; ++j ) {
 							if (uv[j].instack)  /* upvalue refes to local variable? */

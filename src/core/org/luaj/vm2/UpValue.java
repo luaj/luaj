@@ -41,6 +41,10 @@ public final class UpValue {
 		this.array = stack;
 		this.index = index;
 	}
+
+	public String toString() {
+		return index + "/" + array.length + " " + array[index];
+	}
 	
 	/** 
 	 * Convert this upvalue to a Java String
@@ -71,7 +75,9 @@ public final class UpValue {
 	 * Close this upvalue so it is no longer on the stack
 	 */
 	public final void close() {
-		array = new LuaValue[] { array[index] };
+		LuaValue[] old = array;
+		array = new LuaValue[] { old[index] };
+		old[index] = null;
 		index = 0;
 	}
 }
