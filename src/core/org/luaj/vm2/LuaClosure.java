@@ -89,6 +89,8 @@ public class LuaClosure extends LuaFunction {
 	private static final UpValue[] NOUPVALUES = new UpValue[0];
 	
 	public final Prototype p;
+
+	public UpValue[] upValues;
 	
 	/** Create a closure around a Prototype with the default global environment.
 	 * If the prototype has upvalues, the environment will be written into the first upvalue.

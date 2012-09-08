@@ -21,9 +21,9 @@
 ******************************************************************************/
 package org.luaj.vm2.luajc;
 
-import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.Prototype;
+import org.luaj.vm2.Upvaldesc;
 
 /**
  * TODO: 
@@ -202,6 +202,11 @@ public class JavaGen {
 					break;
 					
 				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
+					if (a > 0) {
+						for (int i = a-1; i < pi.openups.length; ++i) {
+							builder.closeUpvalue(pc, i);
+						}
+					}
 					builder.addBranch(pc, JavaBuilder.BRANCH_GOTO, pc+1+sbx);
 					break;
 					
@@ -228,7 +233,7 @@ public class JavaGen {
 					builder.storeLocal( pc, a );
 					break;
 					
-				case Lua.OP_CALL: /*	A B C	R(A), ... ,R(A+C-2):= R(A)(R(A+1), ... ,R(A+B-1)) */
+				case Lua.OP_CALL: { /*	A B C	R(A), ... ,R(A+C-2):= R(A)(R(A+1), ... ,R(A+B-1)) */
 	
 					// load function
 					builder.loadLocal(pc, a);
@@ -279,6 +284,7 @@ public class JavaGen {
 						vresultbase = a;
 						builder.storeVarresult();
 						break;
+					}
 					}
 					break;
 					
@@ -343,43 +349,22 @@ public class JavaGen {
 					break;
 				
 				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
-					throw new RuntimeException("Unimplemented OP_TFORCALL");
-					
-				case Lua.OP_TFORLOOP: /*
-									 * A C R(A+3), ... ,R(A+2+C):= R(A)(R(A+1),
-									 * R(A+2)): if R(A+3) ~= nil then R(A+2)=R(A+3)
-									 * else pc++
-									 */
-					// v = stack[a].invoke(varargsOf(stack[a+1],stack[a+2]));
-					// if ( (o=v.arg1()).isnil() )
-					//	++pc;
 					builder.loadLocal(pc, a);
 					builder.loadLocal(pc, a+1);
 					builder.loadLocal(pc, a+2);
-					builder.invoke(2); // varresult on stack
-					builder.dup();
-					builder.storeVarresult();			
-					builder.arg( 1 );
-					builder.isNil();
-					builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+2);
-	
-					// a[2] = a[3] = v[1], leave varargs on stack
-					builder.createUpvalues(pc, a+3, c);
-					builder.loadVarresult();
-					if (c>=2)
-						builder.dup();
-					builder.arg( 1 );
-					builder.dup();
-					builder.storeLocal(pc, a+2);
-					builder.storeLocal(pc, a+3);
-					
-					// v[2]..v[c], use varargs from stack
-					for ( int j=2; j<=c; j++ ) {
-						if ( j<c )
+					builder.invoke(2);
+					for ( int i=1; i<=c; i++ ) {
+						if ( i < c )
 							builder.dup();
-						builder.arg( j );
-						builder.storeLocal(pc, a+2+j);
+						builder.arg( i );
+						builder.storeLocal(pc, a+2+i);
 					}
+					break;
+					
+				case Lua.OP_TFORLOOP:/* A sBx	if R(A) != nil then ps+= sBx */
+					builder.loadLocal(pc, a);
+					builder.isNil();
+					builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+1+sbx);
 					break;
 					
 				case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
@@ -401,25 +386,20 @@ public class JavaGen {
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 				{
 					Prototype newp = p.p[bx];
-					String protoname = closureName(classname, bx);
 					int nup = newp.upvalues.length;
+					String protoname = closureName(classname, bx);
 					builder.closureCreate( protoname );
 					if ( nup > 0 )
 						builder.dup();
 					builder.storeLocal( pc, a );
-					if ( nup > 0 ) {
-						for ( int up=0; up<nup; ++up ) {
-							if ( up+1 < nup )
-								builder.dup();
-							ins = p.code[pc+up+1];
-							b = Lua.GETARG_B(ins);
-							if ( (ins&4) != 0 ) {
-								builder.closureInitUpvalueFromUpvalue( protoname, up, b );
-							} else {
-								builder.closureInitUpvalueFromLocal( protoname, up, pc, b );
-							}
-						}
-						pc += nup;
+					for ( int up=0; up<nup; ++up ) {
+						if ( up+1 < nup )
+							builder.dup();
+						Upvaldesc u = newp.upvalues[up];
+						if (u.instack)
+							builder.closureInitUpvalueFromLocal( protoname, up, pc, u.idx );
+						else
+							builder.closureInitUpvalueFromUpvalue( protoname, up, u.idx );
 					}
 					break;
 				}				

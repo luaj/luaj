@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
+import org.luaj.vm2.Upvaldesc;
 
 /**
  * Prototype information for static single-assignment analysis
@@ -22,8 +23,10 @@ public class ProtoInfo {
 	public final UpvalInfo[] upvals;      // from outer scope
 	public final UpvalInfo[][] openups;   // per slot, upvalues allocated by this prototype
 	
+	// A main chunk proto info.
 	public ProtoInfo(Prototype p, String name) {
-		this(p,name,null);
+		// For the outer chunk, we have one upvalue which is the environment.
+		this(p,name,new UpvalInfo[] { new UpvalInfo() });
 	}
 	
 	private ProtoInfo(Prototype p, String name, UpvalInfo[] u) {
@@ -155,7 +158,7 @@ public class ProtoInfo {
 				if (  pc > b0.pc0 )
 					propogateVars( v, pc-1, pc );
 				
-				int a,b,c,nups;
+				int a,b,c;
 				int ins = prototype.code[pc];
 				int op = Lua.GET_OPCODE(ins);
 	
@@ -164,7 +167,6 @@ public class ProtoInfo {
 				case Lua.OP_LOADK:/*	A Bx	R(A) := Kst(Bx)					*/
 				case Lua.OP_LOADBOOL:/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
 				case Lua.OP_GETUPVAL: /*	A B	R(A) := UpValue[B]				*/
-				case Lua.OP_GETTABUP: /*	A B C	R(A) := UpValue[B][RK(C)]			*/
 				case Lua.OP_NEWTABLE: /*	A B C	R(A) := {} (size = B,C)				*/
 					a = Lua.GETARG_A( ins );
 					v[a][pc] = new VarInfo(a,pc);
@@ -235,6 +237,13 @@ public class ProtoInfo {
 					v[a][pc] = new VarInfo(a,pc);
 					break;
 					
+				case Lua.OP_GETTABUP: /*	A B C	R(A) := UpValue[B][RK(C)]			*/
+					a = Lua.GETARG_A( ins );
+					c = Lua.GETARG_C( ins );
+					if (!Lua.ISK(c)) v[c][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+
 				case Lua.OP_SELF: /*	A B C	R(A+1) := R(B); R(A) := R(B)[RK(C)]		*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_B( ins );
@@ -316,22 +325,16 @@ public class ProtoInfo {
 						v[a][pc] = VarInfo.INVALID;
 					break;
 					
-				case Lua.OP_CLOSURE: /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
+				case Lua.OP_CLOSURE: { /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_Bx( ins );
-					nups = prototype.p[b].upvalues.length;
-					for ( int k=1; k<=nups; ++k ) {
-						int i = prototype.code[pc+k];
-						if ( (i&4) == 0 ) {
-							b = Lua.GETARG_B(i);
-							v[b][pc].isreferenced = true;
-						}
-					}
+					Upvaldesc[] upvalues = prototype.p[b].upvalues;
+					for (int k = 0, nups = upvalues.length; k < nups; ++k)
+						if (upvalues[k].instack)
+							v[upvalues[k].idx][pc].isreferenced = true;
 					v[a][pc] = new VarInfo(a,pc);
-					for ( int k=1; k<=nups; k++ )
-						propogateVars( v, pc, pc+k );
-					pc += nups;
 					break;
+				}
 
 				case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/
 					a = Lua.GETARG_A( ins );
@@ -407,9 +410,8 @@ public class ProtoInfo {
 				UpvalInfo[] newu = new UpvalInfo[newp.upvalues.length];
 				String newname = name + "$" + bx;
 				for ( int j=0; j<newp.upvalues.length; ++j ) {
-					int i = code[++pc];
-					int b = Lua.GETARG_B(i);
-					newu[j] = (i&4) != 0? upvals[b]: findOpenUp(pc,b);
+					Upvaldesc u = newp.upvalues[j];
+					newu[j] = u.instack? findOpenUp(pc,u.idx) : upvals[u.idx];
 				}
 				subprotos[bx] = new ProtoInfo(newp, newname, newu);
 			}

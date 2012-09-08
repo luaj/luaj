@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
@@ -77,6 +76,11 @@ abstract public class VarArgFunction extends LibFunction {
 	 * - function has a possibility of returning a TailcallVarargs
 	 * @param args the arguments to the function call.
 	 */
-	abstract public Varargs invoke(Varargs args);
+	public Varargs invoke(Varargs args) {
+		return onInvoke(args).eval();
+	}
 	
+	public Varargs onInvoke(Varargs args) {
+		return invoke(args);
+	}
 } 

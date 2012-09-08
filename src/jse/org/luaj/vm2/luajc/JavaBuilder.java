@@ -250,6 +250,7 @@ public class JavaBuilder {
 		}
 		
 		// nil parameters 
+		// TODO: remove this for lua 5.2, not needed
 		for ( ; slot<p.maxstacksize; slot++ ) {
 			if ( pi.isInitialValueUsed(slot) ) {
 				loadNil();
@@ -279,7 +280,32 @@ public class JavaBuilder {
 		mg.setMaxStack();
 		cg.addMethod(mg.getMethod());
 		main.dispose();
+
+		// add initupvalue1(LuaValue env) to initialize environment for main chunk 
+		if (p.upvalues.length == 1 && superclassType == SUPERTYPE_VARARGS) {
+			MethodGen mg = new MethodGen( Constants.ACC_PUBLIC | Constants.ACC_FINAL, // access flags
+					Type.VOID, // return type
+					ARG_TYPES_LUAVALUE, // argument types
+					new String[] { "env" }, // arg names
+					"initupvalue1", 
+					STR_LUAVALUE, // method, defining class
+					main, cp);
+			boolean isrw = pi.isReadWriteUpvalue( pi.upvals[0] ); 
+			append(InstructionConstants.THIS);
+			append(new ALOAD(1));
+			if ( isrw ) {
+				append(factory.createInvoke(classname, "newupl", TYPE_LOCALUPVALUE,  ARG_TYPES_LUAVALUE, Constants.INVOKESTATIC));
+				append(factory.createFieldAccess(classname, upvalueName(0), TYPE_LOCALUPVALUE, Constants.PUTFIELD));
+			} else {
+				append(factory.createFieldAccess(classname, upvalueName(0), TYPE_LUAVALUE, Constants.PUTFIELD));
+			}
+			append(InstructionConstants.RETURN);
+			mg.setMaxStack();
+			cg.addMethod(mg.getMethod());
+			main.dispose();
+		}
 		
+
 		// convert to class bytes
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -418,11 +444,6 @@ public class JavaBuilder {
 		append(new PUSH(cp, b));
 		append(new PUSH(cp, c));
 		append(factory.createInvoke(STR_LUAVALUE, "tableOf", TYPE_LUATABLE, ARG_TYPES_INT_INT, Constants.INVOKESTATIC));
-	}
-
-	public void loadEnv() {
-		append(InstructionConstants.THIS);
-		append(factory.createFieldAccess(classname, "env", TYPE_LUAVALUE, Constants.GETFIELD));
 	}
 
 	public void loadVarargs() {
@@ -594,9 +615,6 @@ public class JavaBuilder {
 		append(factory.createNew(new ObjectType(protoname)));
 		append(InstructionConstants.DUP);
 		append(factory.createInvoke(protoname, "<init>", Type.VOID, Type.NO_ARGS, Constants.INVOKESPECIAL));
-		append(InstructionConstants.DUP);
-		loadEnv();
-		append(factory.createInvoke(STR_LUAVALUE, "setfenv", Type.VOID, ARG_TYPES_LUAVALUE, Constants.INVOKEVIRTUAL));
 	}
 
 	public void closureInitUpvalueFromUpvalue(String protoname, int newup, int upindex) {
@@ -778,5 +796,9 @@ public class JavaBuilder {
 
 	public void tovalue() {
         append(factory.createInvoke(STR_BUFFER, "value", TYPE_LUAVALUE, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
+	}
+
+	public void closeUpvalue(int pc, int i) {
+		// TODO: assign the upvalue location the value null;
 	}
 }

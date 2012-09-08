@@ -474,20 +474,23 @@ public class FuncState extends LuaC {
 			this.freereg(e.u.info);
 	}
 
+	static final LuaUserdata NIL_PROXY = new LuaUserdata(LuaValue.NIL);
+
 	int addk(LuaValue v) {
+		LuaValue key = v.isnil()? NIL_PROXY: v;
 		if (this.h == null) {
 			this.h = new LuaTable();
 		} else {
-			LuaValue idx = this.h.get(v);
+			LuaValue idx = this.h.get(key);
 			if (idx.isnumber())
 				return idx.toint();
 		}
 		int idx = this.nk;
-		this.h.set(v, LuaValue.valueOf(idx));
+		this.h.set(key, LuaValue.valueOf(idx));
 		final Prototype f = this.f;
 		if (f.k == null || nk + 1 >= f.k.length)
 			f.k = realloc( f.k, nk*2 + 1 );
-		f.k[this.nk++] = v.isuserdata()? LuaValue.NIL: v;
+		f.k[this.nk++] = v;
 		return idx;
 	}
 
@@ -509,11 +512,8 @@ public class FuncState extends LuaC {
 		return this.addk((b ? LuaValue.TRUE : LuaValue.FALSE));
 	}
 
-	static final LuaUserdata NIL_PROXY = new LuaUserdata(LuaValue.NIL);
-
 	int nilK() {
-		/* cannot use nil as key; instead use table itself to represent nil */
-		return this.addk(NIL_PROXY);
+		return this.addk(LuaValue.NIL);
 	}
 
 	void setreturns(expdesc e, int nresults) {
