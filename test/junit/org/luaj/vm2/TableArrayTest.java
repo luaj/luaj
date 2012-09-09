@@ -225,7 +225,6 @@ public class TableArrayTest extends TestCase {
 			LuaValue v = LuaString.valueOf( "Test Value! "+i );
 			t.set( i, v );
 			assertEquals( i, t.length() );
-			assertEquals( i, t.maxn() );
 		}
 	}
 
@@ -237,7 +236,6 @@ public class TableArrayTest extends TestCase {
 				t.set( i, LuaString.valueOf( "Test Value! "+i ) );
 			}
 			assertEquals( j, t.length() );
-			assertEquals( j, t.maxn() );
 		}
 	}
 	
@@ -247,7 +245,6 @@ public class TableArrayTest extends TestCase {
 		for ( int i = 1; i <= 32; ++i ) {
 			t.set( "str-"+i, LuaString.valueOf( "String Key Test Value! "+i ) );
 			assertEquals( 0, t.length() );
-			assertEquals( 0, t.maxn() );
 		}
 	}
 
@@ -258,7 +255,6 @@ public class TableArrayTest extends TestCase {
 			t.set( "str-"+i, LuaString.valueOf( "String Key Test Value! "+i ) );
 			t.set( i, LuaString.valueOf( "Int Key Test Value! "+i ) );
 			assertEquals( i, t.length() );
-			assertEquals( i, t.maxn() );
 		}
 	}
 

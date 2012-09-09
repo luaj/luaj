@@ -50,7 +50,7 @@ local function varargstest()
 		print("a,arg[1],arg[2],arg[3]",a,arg.n,arg[1],arg[2],arg[3])
 	end
 	function r(a,...)
-		print("a,arg",a,arg)
+		print("a,arg[1],arg[2],arg[3]",a,arg.n,arg[1],arg[2],arg[3])
 		print("a",a)
 		print("...",...)
 		print("...,a",...,a)

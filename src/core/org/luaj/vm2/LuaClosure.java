@@ -134,12 +134,16 @@ public class LuaClosure extends LuaFunction {
 	
 	public final LuaValue call() {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
+		for (int i = 0; i < p.numparams; ++i )
+			stack[i] = NIL;
 		return execute(stack,NONE).arg1();
 	}
 
 	public final LuaValue call(LuaValue arg) {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
 		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
+		for (int i = 1; i < p.numparams; ++i )
+			stack[i] = NIL;
 		switch ( p.numparams ) {
 		default: stack[0]=arg; return execute(stack,NONE).arg1();
 		case 0: return execute(stack,arg).arg1();
@@ -148,7 +152,8 @@ public class LuaClosure extends LuaFunction {
 	
 	public final LuaValue call(LuaValue arg1, LuaValue arg2) {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
-		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
+		for (int i = 2; i < p.numparams; ++i )
+			stack[i] = NIL;
 		switch ( p.numparams ) {
 		default: stack[0]=arg1; stack[1]=arg2; return execute(stack,NONE).arg1();
 		case 1: stack[0]=arg1; return execute(stack,arg2).arg1();
@@ -158,7 +163,8 @@ public class LuaClosure extends LuaFunction {
 
 	public final LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
-		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
+		for (int i = 3; i < p.numparams; ++i )
+			stack[i] = NIL;
 		switch ( p.numparams ) {
 		default: stack[0]=arg1; stack[1]=arg2; stack[2]=arg3; return execute(stack,NONE).arg1();
 		case 2: stack[0]=arg1; stack[1]=arg2; return execute(stack,arg3).arg1();
@@ -173,7 +179,6 @@ public class LuaClosure extends LuaFunction {
 	
 	public Varargs onInvoke(Varargs varargs) {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
-		System.arraycopy(NILS, 0, stack, 0, p.maxstacksize);
 		for ( int i=0; i<p.numparams; i++ )
 			stack[i] = varargs.arg(i+1);		
 		return execute(stack,p.is_vararg!=0? varargs.subargs(p.numparams+1): NONE);
@@ -223,8 +228,8 @@ public class LuaClosure extends LuaFunction {
 	                    pc++; /* skip next instruction (if C) */
 	                continue;
 	
-				case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
-					for ( b=i>>>23; a<=b; )
+				case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(A+B):= nil			*/
+					for ( b=i>>>23; b-->=0; )
 						stack[a++] = LuaValue.NIL;
 					continue;
 					

@@ -122,7 +122,7 @@ local fields = { 'source', 'short_src', 'what',
 	'currentline', 'linedefined', 'lastlinedefined', 
 	'nups', 'func', 'activelines' } 
 local printinfo = function(...)
-	for i,a in ipairs(arg) do
+	for i,a in ipairs({...}) do
 		if type(a) == 'table' then
 			for j,field in ipairs(fields) do
 				printfield( a, field)

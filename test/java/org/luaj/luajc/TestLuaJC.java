@@ -37,12 +37,7 @@ public class TestLuaJC {
 	// create the script
 	public static String name = "script";
 	public static String script =
-		"local t = a or nil\n"+
-		"local t\n" +
-		"b = function()\n"+
-		"	return t\n"+
-		"end\n"+
-		"return t\n"+
+		"_ENV={}; return _ENV\n"+
 		"";
 		
 	public static void main(String[] args) throws Exception {
@@ -51,6 +46,8 @@ public class TestLuaJC {
 			
 			// create an environment to run in
 			LuaTable _G = JsePlatform.standardGlobals();
+			System.out.println("_G: "+_G);
+			System.out.println("_G.print: "+_G.get("print"));
 			
 			// compile into a chunk, or load as a class
 			LuaValue chunk;
@@ -60,7 +57,6 @@ public class TestLuaJC {
 			} else {
 				chunk = (LuaValue) Class.forName("script").newInstance();
 			}
-			//chunk.setfenv(_G);  // TODO: convert to setupvalue()? 
 	
 			// call with arguments
 			LuaValue[] vargs = new LuaValue[args.length];

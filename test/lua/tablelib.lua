@@ -52,7 +52,7 @@ function eles(t,f)
 	return "{"..table.concat(all,',').."}"
 end
 
--- insert, maxn
+-- insert, len
 print( '-- insert, len tests' )
 local t = { "one", "two", "three", a='aaa', b='bbb', c='ccc' }
 
@@ -104,40 +104,6 @@ end
 sorttest{ "one", "two", "three" }
 sorttest{  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" }
 sorttest( {  "www", "vvv", "uuu", "ttt", "sss", "zzz", "yyy", "xxx" }, function(a,b) return b<a end)
-
--- getn
-t0 = {}
-t1 = { 'one', 'two', 'three' }
-t2 = { a1='aa', a2='bb', a3='cc' }
-t3 = { 'one', 'two', 'three', a1='aa', a2='bb', a3='cc' }
-print( 'getn('..eles(t0)..')', pcall( table.getn, t0 ) ) 
-print( 'getn('..eles(t1)..')', pcall( table.getn, t1 ) ) 
-print( 'getn('..eles(t2)..')', pcall( table.getn, t2 ) ) 
-print( 'getn('..eles(t3)..')', pcall( table.getn, t3 ) ) 
-
--- foreach
-function test( f, t, result, name ) 
-	status, value = pcall( f, t, function(...) 
-		print('  -- ',...)
-		print('  next',next(t,(...)))
-		return result 
-	end )
-	print( name, 's,v', status, value )
-end
-function testall( f, t, name ) 
-	test( f, t, nil, name..'nil' )
-	test( f, t, false, name..'fls' )
-	test( f, t, 100, name..'100' )
-end
-testall( table.foreach, t0, 'table.foreach('..eles(t0)..')' )
-testall( table.foreach, t1, 'table.foreach('..eles(t1)..')' )
-testall( table.foreach, t2, 'table.foreach('..eles(t2)..')' )
-testall( table.foreach, t3, 'table.foreach('..eles(t3)..')' )
-testall( table.foreachi, t0, 'table.foreachi('..eles(t0)..')' )
-testall( table.foreachi, t1, 'table.foreachi('..eles(t1)..')' )
-testall( table.foreachi, t2, 'table.foreachi('..eles(t2)..')' )
-testall( table.foreachi, t3, 'table.foreachi('..eles(t3)..')' )
-
 
 -- pairs, ipairs
 --[[

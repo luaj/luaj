@@ -228,7 +228,6 @@ public class TableTest extends TestCase {
 		for ( int i = 1; i <= 32; ++i ) {
 			t.set( i, LuaValue.valueOf( "Test Value! "+i ) );
 			assertEquals( i, t.length() );
-			assertEquals( i, t.maxn() );
 		}
 	}
 
@@ -240,7 +239,6 @@ public class TableTest extends TestCase {
 				t.set( i, LuaValue.valueOf( "Test Value! "+i ) );
 			}
 			assertEquals( j, t.length() );
-			assertEquals( j, t.maxn() );
 		}
 	}
 	
@@ -250,7 +248,6 @@ public class TableTest extends TestCase {
 		for ( int i = 1; i <= 32; ++i ) {
 			t.set( "str-"+i, LuaValue.valueOf( "String Key Test Value! "+i ) );
 			assertEquals( 0, t.length() );
-			assertEquals( 0, t.maxn() );
 		}
 	}
 
@@ -261,7 +258,6 @@ public class TableTest extends TestCase {
 			t.set( "str-"+i, LuaValue.valueOf( "String Key Test Value! "+i ) );
 			t.set( i, LuaValue.valueOf( "Int Key Test Value! "+i ) );
 			assertEquals( i, t.length() );
-			assertEquals( i, t.maxn() );
 		}
 	}
 

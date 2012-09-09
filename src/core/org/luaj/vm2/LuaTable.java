@@ -322,8 +322,11 @@ public class LuaTable extends LuaValue {
 	 * @return The removed item, or {@link #NONE} if not removed
 	 */
 	public LuaValue remove(int pos) {
+		int n = length();
 		if ( pos == 0 )
-			pos = length();
+			pos = n;
+		else if (pos > n)
+			return NONE;
 		LuaValue v = rawget(pos);
 		for ( LuaValue r=v; !r.isnil(); ) {
 			r = rawget(pos+1);
@@ -366,13 +369,6 @@ public class LuaTable extends LuaValue {
 		return sb.tostring();
 	}
 
-	public LuaValue getn() { 
-		for ( int n=getArrayLength(); n>0; --n )
-			if ( !rawget(n).isnil() )
-				return LuaInteger.valueOf(n);
-		return ZERO;
-	}
-
 	public int length() {
 		int a = getArrayLength();
 		int n = a+1,m=0;
@@ -396,27 +392,6 @@ public class LuaTable extends LuaValue {
 
 	public int rawlen() { 
 		return length(); 
-	}
-
-	/** Return table.maxn() as defined by lua 5.0.
-	 * <p>
-	 * Provided for compatibility, not a scalable operation. 
-	 * @return value for maxn
-	 */
-	public int maxn() {
-		int n = 0;
-		for ( int i=0; i<array.length; i++ )
-			if ( array[i] != null )
-				n = i+1;
-		for ( int i=0; i<hashKeys.length; i++ ) {
-			LuaValue v = hashKeys[i];
-			if ( v!=null && v.isinttype() ) {
-				int key = v.toint();
-				if ( key > n )
-					n = key;
-			}
-		}
-		return n;
 	}
 
 	/**
@@ -469,36 +444,6 @@ public class LuaTable extends LuaValue {
 		LuaValue v = rawget(k);
 		return v.isnil()? NONE: varargsOf(LuaInteger.valueOf(k),v);
 	}
-	
-	/** 
-	 * Call the supplied function once for each key-value pair
-	 * 
-	 * @param func function to call
-	 */
-	public LuaValue foreach(LuaValue func) {
-		Varargs n;
-		LuaValue k = NIL;
-		LuaValue v;
-		while ( !(k = ((n = next(k)).arg1())).isnil() )
-			if ( ! (v = func.call(k, n.arg(2))).isnil() )
-				return v;
-		return NIL;
-	}
-	
-	/** 
-	 * Call the supplied function once for each key-value pair 
-	 * in the contiguous array part
-	 * 
-	 * @param func
-	 */
-	public LuaValue foreachi(LuaValue func) {
-		LuaValue v,r;
-		for ( int k=0; !(v = rawget(++k)).isnil(); )
-			if ( ! (r = func.call(valueOf(k), v)).isnil() )
-				return r;
-		return NIL;
-	}
-	
 
 	/**
 	 * Set a hashtable value

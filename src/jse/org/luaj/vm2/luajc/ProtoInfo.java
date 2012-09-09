@@ -265,10 +265,10 @@ public class ProtoInfo {
 					v[a+3][pc] = new VarInfo(a+3,pc);
 					break;
 					
-				case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(B) := nil			*/
+				case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(A+B) := nil			*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_B( ins );
-					for ( ; a<=b; a++ )
+					for ( ; b-->=0; a++ )
 						v[a][pc] = new VarInfo(a,pc);
 					break;
 					

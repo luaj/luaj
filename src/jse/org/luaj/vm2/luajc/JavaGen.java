@@ -122,10 +122,10 @@ public class JavaGen {
 					builder.storeLocal( pc, a );
 					break;
 					
-				case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(B):= nil			*/
+				case Lua.OP_LOADNIL: /*	A B	R(A):= ...:= R(A+B):= nil			*/
 					builder.loadNil();
-					for ( ; a<=b; a++ ) {
-						if ( a < b ) 
+					for ( ; b>=0; a++, b-- ) {
+						if ( b > 0 ) 
 							builder.dup();
 						builder.storeLocal( pc, a );
 					}

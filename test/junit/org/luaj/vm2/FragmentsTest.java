@@ -87,6 +87,13 @@ public class FragmentsTest extends TestSuite {
 			}		
 		}
 		
+		public void testFirstArgNilExtended() {
+			runFragment( LuaValue.NIL, 
+				"function f1(a) print( 'f1:', a ) return a end\n" +
+				"b = f1()\n" + 
+				"return b" );
+		}
+
 		public void testForloopParamUpvalues() {
 			runFragment( LuaValue.varargsOf(new LuaValue[] { 
 					LuaValue.valueOf(77), 
@@ -119,7 +126,7 @@ public class FragmentsTest extends TestSuite {
 				"end\n" +
 				"return v('abc')\n" );		
 		}
-		
+
 		public void testSetlistVarargs() {
 			runFragment( LuaValue.valueOf("abc"),
 				"local f = function() return 'abc' end\n" +

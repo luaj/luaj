@@ -29,11 +29,6 @@ checkallpass('table.insert',{sometable,somei,notanil})
 checkallerrors('table.insert',{notatable,somestring},'bad argument')
 checkallerrors('table.insert',{sometable,notij,notanil},'bad argument')
 
--- table.maxn
-banner('table.maxn')
-checkallpass('table.maxn',{sometable})
-checkallerrors('table.maxn',{notatable},'bad argument')
-
 -- table.remove
 banner('table.remove')
 checkallpass('table.remove',{sometable})

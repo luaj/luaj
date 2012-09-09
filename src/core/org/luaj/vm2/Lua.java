@@ -182,7 +182,7 @@ public class Lua {
 	public static final int OP_LOADK = 1;/*	A Bx	R(A) := Kst(Bx)					*/
 	public static final int OP_LOADKX = 2;/*	A 	R(A) := Kst(extra arg)					*/
 	public static final int OP_LOADBOOL = 3;/*	A B C	R(A) := (Bool)B; if (C) pc++			*/
-	public static final int OP_LOADNIL = 4; /*	A B	R(A) := ... := R(B) := nil			*/
+	public static final int OP_LOADNIL = 4; /*	A B	R(A) := ... := R(A+B) := nil			*/
 	public static final int OP_GETUPVAL = 5; /*	A B	R(A) := UpValue[B]				*/
 
 	public static final int OP_GETTABUP = 6; /*	A B C	R(A) := UpValue[B][RK(C)]			*/

@@ -185,11 +185,6 @@ public class WeakTable extends LuaTable {
 		}
 		return i;
 	}
-	
-	public int maxn() {
-		return super.maxn();
-	}
-
 
 	/**
 	 * Get the next element after a particular key in the table 
