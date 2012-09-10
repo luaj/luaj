@@ -19,7 +19,7 @@ local singleargfunctions = {
 	}
 		
 local singleargposdomain = { 		 
-		'log', 'log10', 'sqrt', 'ceil', 
+		'log', 'sqrt', 'ceil', 
 	}
 		
 local twoargfunctions = { 

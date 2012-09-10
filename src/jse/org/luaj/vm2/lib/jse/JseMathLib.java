@@ -23,8 +23,6 @@ package org.luaj.vm2.lib.jse;
 
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.LibFunction;
-import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
@@ -60,42 +58,32 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
 	public JseMathLib() {}
 
-	public LuaValue call(LuaValue arg) {
-		LuaValue t = super.call(arg);
-		bind( t, JseMathLib1.class, new String[] {
-			"acos", "asin", "atan", "cosh",  
-			"exp", "log", "sinh",  
-			"tanh" } );
-		bind( t, JseMathLib2.class, new String[] {
-			"atan2", "pow", } );
-		return t;
+	public LuaValue call(LuaValue env) {
+		super.call(env);
+		LuaValue math = env.get("math");
+		math.set("acos", new acos());
+		math.set("asin", new asin());
+		math.set("atan", new atan());
+		math.set("atan2", new atan2());
+		math.set("cosh", new cosh());
+		math.set("exp", new exp());
+		math.set("log", new log());
+		math.set("pow", new pow());
+		math.set("sinh", new sinh());
+		math.set("tanh", new tanh());
+		return math;
 	}
 
-	public static final class JseMathLib1 extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			switch ( opcode ) {
-			case 0: return valueOf(Math.acos(arg.checkdouble())); 
-			case 1: return valueOf(Math.asin(arg.checkdouble())); 
-			case 2: return valueOf(Math.atan(arg.checkdouble())); 
-			case 3: return valueOf(Math.cosh(arg.checkdouble())); 
-			case 4: return valueOf(Math.exp(arg.checkdouble())); 
-			case 5: return valueOf(Math.log(arg.checkdouble())); 
-			case 6: return valueOf(Math.sinh(arg.checkdouble())); 
-			case 7: return valueOf(Math.tanh(arg.checkdouble())); 
-			}
-			return NIL;
-		}
-	}
-
-	public static final class JseMathLib2 extends TwoArgFunction {
-		public LuaValue call(LuaValue arg1, LuaValue arg2) {
-			switch ( opcode ) {
-			case 0: return valueOf(Math.atan2(arg1.checkdouble(), arg2.checkdouble()));
-			case 1: return valueOf(Math.pow(arg1.checkdouble(), arg2.checkdouble()));
-			}
-			return NIL;
-		}
-	}
+	static final class acos extends UnaryOp { protected double call(double d) { return Math.acos(d); } }
+	static final class asin extends UnaryOp { protected double call(double d) { return Math.asin(d); } }
+	static final class atan extends UnaryOp { protected double call(double d) { return Math.atan(d); } }
+	static final class atan2 extends BinaryOp { protected double call(double y, double x) { return Math.atan2(y, x); } }
+	static final class cosh extends UnaryOp { protected double call(double d) { return Math.cosh(d); } }
+	static final class exp extends UnaryOp { protected double call(double d) { return Math.exp(d); } }
+	static final class log extends UnaryOp { protected double call(double d) { return Math.log(d); } }
+	static final class pow extends BinaryOp { protected double call(double x, double y) { return Math.pow(x, y); } }
+	static final class sinh extends UnaryOp { protected double call(double d) { return Math.sinh(d); } }
+	static final class tanh extends UnaryOp { protected double call(double d) { return Math.tanh(d); } }
 
 	/** Faster, better version of pow() used by arithmetic operator ^ */
 	public double dpow_lib(double a, double b) {

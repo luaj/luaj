@@ -76,7 +76,7 @@ local ONEARG_JME = {
 }
 local ONEARG_JSE = {
 	"acos", "asin", "atan", "cosh",  
-	"log", "log10", "sinh", "tanh",
+	"log", "sinh", "tanh",
 }
 local TWOARGS_JME = {
 	"fmod", "ldexp", "pow", 

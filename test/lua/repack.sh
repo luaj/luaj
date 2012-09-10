@@ -24,7 +24,7 @@ for DIR in "errors" "perf" "."; do
 	FILES=`ls -1 *.lua | awk 'BEGIN { FS="." } ; { print $1 }'`
 	for FILE in $FILES ; do
 		echo 'executing' `pwd` $FILE
-   		lua ${FILE}.lua > ${FILE}.out
+   		lua ${FILE}.lua JSE > ${FILE}.out
 	done
 	cd ..
 done
