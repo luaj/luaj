@@ -45,7 +45,7 @@ import org.luaj.vm2.luajc.LuaJC;
  * lua command for use in java se environments.
  */
 public class lua {
-	private static final String version = Lua._VERSION + "Copyright (c) 2009 Luaj.org.org";
+	private static final String version = Lua._VERSION + "Copyright (c) 2012 Luaj.org.org";
 
 	private static final String usage = 
 		"usage: java -cp luaj-jse.jar lua [options] [script [args]].\n" +
@@ -56,7 +56,6 @@ public class lua {
 		"  -v       show version information\n" +
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  -n      	nodebug - do not load debug library by default\n" +
-		"  -p       pretty-print the prototype\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -110,9 +109,6 @@ public class lua {
 						break;
 					case 'n':
 						nodebug = true;
-						break;
-					case 'p':
-						print = true;
 						break;
 					case '-':
 						if ( args[i].length() > 2 )
@@ -191,28 +187,23 @@ public class lua {
 			LuaFunction c;
 			try {
 				c = LoadState.load(script, chunkname, "bt", _G);
-				if (c instanceof LuaClosure) {
-					LuaClosure closure = (LuaClosure) c;
-					Print.print(closure.p);
-					// DebugLib.DEBUG_ENABLED = true;
-				} else {
-					System.out.println( "Not a LuaClosure: "+c);
-				}
-				Print.print(((LuaClosure)c).p);
 			} finally {
 				script.close();
 			}
-			Varargs scriptargs = (args!=null? setGlobalArg(args, firstarg): LuaValue.NONE);
+			Varargs scriptargs = setGlobalArg(chunkname, args, firstarg, _G);
 			c.invoke( scriptargs );
 		} catch ( Exception e ) {
 			e.printStackTrace( System.err );
 		}
 	}
 
-	private static Varargs setGlobalArg(String[] args, int i) {
+	private static Varargs setGlobalArg(String chunkname, String[] args, int i, LuaValue _G) {
 		LuaTable arg = LuaValue.tableOf();
 		for ( int j=0; j<args.length; j++ )
 			arg.set( j-i, LuaValue.valueOf(args[j]) );
+		arg.set(0, LuaValue.valueOf(chunkname));
+		arg.set(-1, LuaValue.valueOf("luaj"));
+		_G.set("arg", arg);
 		return arg.unpack();
 	}
 
