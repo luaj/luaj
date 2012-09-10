@@ -133,10 +133,10 @@ testbothpairs(t)
 -- length is tested elsewhere
 print('----- unpack tests -------')
 local unpack = table.unpack
-print( 'pcall(unpack)', pcall(unpack) );
-print( 'pcall(unpack,nil)', pcall(unpack,nil) );
-print( 'pcall(unpack,"abc")', pcall(unpack,"abc") );
-print( 'pcall(unpack,1)', pcall(unpack,1) );
+print( 'pcall(unpack)', (pcall(unpack)) );
+print( 'pcall(unpack,nil)', (pcall(unpack,nil)) );
+print( 'pcall(unpack,"abc")', (pcall(unpack,"abc")) );
+print( 'pcall(unpack,1)', (pcall(unpack,1)) );
 print( 'unpack({"aa"})', unpack({"aa"}) );
 print( 'unpack({"aa","bb"})', unpack({"aa","bb"}) );
 print( 'unpack({"aa","bb","cc"})', unpack({"aa","bb","cc"}) );
@@ -203,8 +203,8 @@ print( 'pcall(unpack,t,0)', pcall(unpack,t,0) );
 print( 'pcall(unpack,t,2,0)', pcall(unpack,t,2,0) );
 print( 'pcall(unpack,t,2,-1)', pcall(unpack,t,2,-1) );
 print( 'pcall(unpack,t,"3")', pcall(unpack,t,"3") );
-print( 'pcall(unpack,t,"a")', pcall(unpack,t,"a") );
-print( 'pcall(unpack,t,function() end)', pcall(unpack,t,function() end) );
+print( 'pcall(unpack,t,"a")', (pcall(unpack,t,"a")) );
+print( 'pcall(unpack,t,function() end)', (pcall(unpack,t,function() end)) );
 
 -- misc tests
 print('----- misc table initializer tests -------')

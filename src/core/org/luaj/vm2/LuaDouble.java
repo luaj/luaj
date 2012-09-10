@@ -280,9 +280,7 @@ public class LuaDouble extends LuaNumber {
 		return LuaString.valueOf(tojstring());
 	}
 	
-	public LuaValue checkvalidkey() {
-		if ( Double.isNaN(v) )
-			throw new LuaError("table index expected, got nan");
-		return this; 
+	public boolean isvalidkey() {
+		return !Double.isNaN(v);
 	}	
 }

@@ -1027,13 +1027,12 @@ public class LuaValue extends Varargs {
 	 */
 	public LuaValue    checknotnil()           { return this; }
 	
-	/** Check that this is a valid key in a table index operation, or throw {@link LuaError} if not
-	 * @return {@code this} if valid as a table key
-	 * @throws LuaError if not valid as a table key
+	/** Return true if this is a valid key in a table index operation.
+	 * @return true if valid as a table key, otherwise false
 	 * @see #isnil()
 	 * @see #isinttype()
 	 */
-	public LuaValue    checkvalidkey()         { return this; }
+	public boolean isvalidkey()         { return true; }
 	
 	/** 
 	 * Throw a {@link LuaError} with a particular message

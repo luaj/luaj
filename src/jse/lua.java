@@ -198,6 +198,8 @@ public class lua {
 	}
 
 	private static Varargs setGlobalArg(String chunkname, String[] args, int i, LuaValue _G) {
+		if (args == null)
+			return LuaValue.NONE;
 		LuaTable arg = LuaValue.tableOf();
 		for ( int j=0; j<args.length; j++ )
 			arg.set( j-i, LuaValue.valueOf(args[j]) );

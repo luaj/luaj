@@ -58,66 +58,91 @@ import org.luaj.vm2.Varargs;
  */
 public class TableLib extends OneArgFunction {
 
-	public TableLib() {
-	}
-
-	private LuaTable init(LuaValue env) {
-		LuaTable t = new LuaTable();
-		bind(t, TableLib.class, new String[] {}, 1 );
-		bind(t, TableLibV.class, new String[] {
-			"remove", "concat", "insert", "sort", "unpack", } );
-		env.set("table", t);
-		PackageLib.instance.LOADED.set("table", t);
-		return t;
-	}
-	
-	public LuaValue call(LuaValue arg) {
-		switch ( opcode ) {
-		case 0: // init library
-			return init(arg);
-		}
+	public LuaValue call(LuaValue env) {
+		LuaTable table = new LuaTable();
+		table.set("concat", new concat());
+		table.set("insert", new insert());
+		table.set("pack", new pack());
+		table.set("remove", new remove());
+		table.set("sort", new sort());
+		table.set("unpack", new unpack());
+		env.set("table", table);
 		return NIL;
 	}
 
-	static final class TableLibV extends VarArgFunction {
-		public Varargs invoke(Varargs args) {
-			switch ( opcode ) {
-			case 0: { // "remove" (table [, pos]) -> removed-ele
-				LuaTable table = args.checktable(1);
-				int pos = args.narg()>1? args.checkint(2): 0;
-				return table.remove(pos);
-			}
-			case 1: { // "concat" (table [, sep [, i [, j]]]) -> string
-				LuaTable table = args.checktable(1);
-				return table.concat(
-						args.optstring(2,LuaValue.EMPTYSTRING),
-						args.optint(3,1),
-						args.isvalue(4)? args.checkint(4): table.length() );
-			}
-			case 2: { // "insert" (table, [pos,] value) -> prev-ele
-				final LuaTable table = args.checktable(1);
-				final int pos = args.narg()>2? args.checkint(2): 0;
-				final LuaValue value = args.arg( args.narg()>2? 3: 2 );
-				table.insert( pos, value );
-				return NONE;
-			}
-			case 3: { // "sort" (table [, comp]) -> void
-				LuaTable table = args.checktable(1);
-				LuaValue compare = (args.isnoneornil(2)? NIL: args.checkfunction(2));
-				table.sort( compare );
-				return NONE;
-			}
-			case 4: // "unpack", // (list [,i [,j]]) -> result1, ...
-			{
-				LuaTable t = args.checktable(1);
-				switch (args.narg()) {
-				case 1: return t.unpack();
-				case 2: return t.unpack(args.checkint(2));
-				default: return t.unpack(args.checkint(2), args.checkint(3));
-				}
-			}
-			}
+	static class TableLibFunction extends LibFunction {
+		public LuaValue call() {
+			return argerror(1, "table expected, got no value");
+		}
+	}
+	
+	// "concat" (table [, sep [, i [, j]]]) -> string
+	static class concat extends TableLibFunction {
+		public LuaValue call(LuaValue list) {
+			return list.checktable().concat(EMPTYSTRING,1,list.length());
+		}
+		public LuaValue call(LuaValue list, LuaValue sep) {
+			return list.checktable().concat(sep.checkstring(),1,list.length());
+		}
+		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i) {
+			return list.checktable().concat(sep.checkstring(),i.checkint(),list.length());
+		}
+		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i, LuaValue j) {
+			return list.checktable().concat(sep.checkstring(),i.checkint(),j.checkint());
+		}
+	}
+
+	// "insert" (table, [pos,] value) -> prev-ele
+	static class insert extends TableLibFunction {
+		public LuaValue call(LuaValue list) {
+			return argerror(2, "value expected");
+		}
+		public LuaValue call(LuaValue table, LuaValue value) {
+			table.checktable().insert(table.length()+1,value);
 			return NONE;
+		}
+		public LuaValue call(LuaValue table, LuaValue pos, LuaValue value) {
+			table.checktable().insert(pos.checkint(),value);
+			return NONE;
+		}
+	}
+	
+	// "pack" (...) -> table
+	static class pack extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			LuaValue t = tableOf(args, 1);
+			t.set("n", args.narg());
+			return t;
+		}
+	}
+
+	// "remove" (table [, pos]) -> removed-ele
+	static class remove extends TableLibFunction {
+		public LuaValue call(LuaValue list) {
+			return list.checktable().remove(0);
+		}
+		public LuaValue call(LuaValue list, LuaValue pos) {
+			return list.checktable().remove(pos.checkint());
+		}
+	}
+
+	// "sort" (table [, comp])
+	static class sort extends TwoArgFunction {
+		public LuaValue call(LuaValue table, LuaValue compare) {
+			table.checktable().sort(compare.isnil()? NIL: compare.checkfunction());
+			return NONE;
+		}
+	}
+
+	// "unpack", // (list [,i [,j]]) -> result1, ...
+	static class unpack extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			LuaTable t = args.checktable(1);
+			switch (args.narg()) {
+			case 1: return t.unpack();
+			case 2: return t.unpack(args.checkint(2));
+			default: return t.unpack(args.checkint(2), args.checkint(3));
+			}
 		}
 	}
 }

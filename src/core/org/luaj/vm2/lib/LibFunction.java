@@ -24,6 +24,7 @@ package org.luaj.vm2.lib;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 
 /**
  * Subclass of {@link LuaFunction} common to Java functions exposed to lua. 
@@ -189,5 +190,30 @@ abstract public class LibFunction extends LuaFunction {
 	/** Java code generation utility to allocate storage for upvalue, initialize with value */
 	protected static LuaValue[] newupl(LuaValue v) {
 		return new LuaValue[] { v };
+	}
+
+	public LuaValue call() {
+		return typerror("value");
+	}
+	public LuaValue call(LuaValue a) {
+		return call();
+	}
+	public LuaValue call(LuaValue a, LuaValue b) {
+		return call(a);
+	}
+	public LuaValue call(LuaValue a, LuaValue b, LuaValue c) {
+		return call(a,b);
+	}
+	public LuaValue call(LuaValue a, LuaValue b, LuaValue c, LuaValue d) {
+		return call(a,b,c);
+	}
+	public Varargs invoke(Varargs args) {
+		switch(args.narg()) {
+		case 0: return call();
+		case 1: return call(args.arg1());
+		case 2: return call(args.arg1(),args.arg(2));
+		case 3: return call(args.arg1(),args.arg(2),args.arg(3));
+		default: return call(args.arg1(),args.arg(2),args.arg(3),args.arg(4));
+		}
 	}
 } 

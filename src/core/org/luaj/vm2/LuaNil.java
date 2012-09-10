@@ -85,8 +85,8 @@ public class LuaNil extends LuaValue {
 		return argerror("value");
 	}
 	
-	public LuaValue checkvalidkey() {
-		return typerror("table index"); 
+	public boolean isvalidkey() {
+		return false;
 	}
 
 	// optional argument conversions - nil alwas falls badk to default value

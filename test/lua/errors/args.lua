@@ -114,7 +114,7 @@ local function split(t)
 end
 
 local function expand(argsets, typesets, ...)	
-	local arg = {...} ; arg.n = #arg
+	local arg = table.pack(...)
 	local n = typesets and #typesets or 0
 	if n <= 0 then
 		table.insert(argsets,arg)
