@@ -25,14 +25,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 
-import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.Prototype;
+import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.FuncState.BlockCnt;
+import org.luaj.vm2.lib.MathLib;
 
 
 public class LexState {
@@ -397,7 +398,7 @@ public class LexState {
 				exp1 = -exp1;
 			e += exp1;
 		}
-		return LuaValue.valueOf(sgn * m * Math.pow(2.0, e));
+		return LuaValue.valueOf(sgn * m * MathLib.dpow_d(2.0, e));
 	}
 	
 	boolean str2d(String str, SemInfo seminfo) {

@@ -49,10 +49,6 @@ abstract public class VarArgFunction extends LibFunction {
 	public VarArgFunction() {
 	}
 	
-	public VarArgFunction( LuaValue env ) {
-		throw new UnsupportedOperationException("Cannot supply env to constructor");
-	}
-	
 	public LuaValue call() {
 		return invoke(NONE).arg1();
 	}

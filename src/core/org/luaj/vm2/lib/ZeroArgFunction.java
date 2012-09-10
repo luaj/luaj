@@ -52,13 +52,6 @@ abstract public class ZeroArgFunction extends LibFunction {
 	public ZeroArgFunction() {
 	}
 	
-	/** Constructor with specific environment
-	 * @param env The environment to apply during constructon.
-	 */
-	public ZeroArgFunction( LuaValue env ) {
-		throw new UnsupportedOperationException("Cannot supply env to constructor");
-	}
-	
 	public LuaValue call(LuaValue arg) {
 		return call();
 	}

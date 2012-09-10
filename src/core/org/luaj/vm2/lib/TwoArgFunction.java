@@ -54,13 +54,6 @@ abstract public class TwoArgFunction extends LibFunction {
 	public TwoArgFunction() {
 	}
 	
-	/** Constructor with specific environment
-	 * @param env The environment to apply during constructon.
-	 */
-	public TwoArgFunction( LuaValue env ) {
-		throw new UnsupportedOperationException("Cannot supply env to constructor");
-	}
-	
 	public final LuaValue call() {
 		return call(NIL, NIL);
 	}
