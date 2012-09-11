@@ -32,7 +32,7 @@ cd lua
 
 # create new zipfile
 rm -f luaj3.0-tests.zip regressions
-zip -9 luaj3.0-tests.zip *.lua *.lc *.out */*.lua */*.lc */*.out
+zip luaj3.0-tests.zip *.lua *.lc *.out */*.lua */*.lc */*.out
 
 # cleanup
 rm *.out */*.lc */*.out

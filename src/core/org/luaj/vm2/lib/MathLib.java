@@ -155,9 +155,8 @@ public class MathLib extends OneArgFunction {
 	}
 	static final class ldexp extends BinaryOp {
 		protected double call(double x, double y) {
-			y += 1023.5;
-			long e = (long) ((0!=(1&((int)y)))? Math.floor(y): Math.ceil(y-1));
-			return x * Double.longBitsToDouble(e << 52);
+			// This is the behavior on os-x, windows differs in rounding behavior.
+			return x * Double.longBitsToDouble((((long) y) + 1023) << 52);
 		}
 	}
 	static final class pow extends BinaryOp {

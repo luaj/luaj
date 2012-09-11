@@ -203,7 +203,7 @@ public class LoadState {
 	 * @return the {@link LuaString} value laoded.  
 	 **/
 	LuaString loadString() throws IOException {
-		int size = loadInt();
+		int size = this.luacSizeofSizeT == 8? (int) loadInt64(): loadInt();
 		if ( size == 0 )
 			return null;
 		byte[] bytes = new byte[size];
