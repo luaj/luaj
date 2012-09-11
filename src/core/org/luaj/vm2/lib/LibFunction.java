@@ -193,7 +193,7 @@ abstract public class LibFunction extends LuaFunction {
 	}
 
 	public LuaValue call() {
-		return typerror("value");
+		return argerror(1,"value");
 	}
 	public LuaValue call(LuaValue a) {
 		return call();
