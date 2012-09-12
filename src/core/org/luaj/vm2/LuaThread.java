@@ -70,19 +70,19 @@ public class LuaThread extends LuaValue {
 	 */
 	static long thread_orphan_check_interval = 30000;
 	
-	private static final int STATUS_INITIAL       = 0;
-	private static final int STATUS_SUSPENDED     = 1;
-	private static final int STATUS_RUNNING       = 2;
-	private static final int STATUS_NORMAL        = 3;
-	private static final int STATUS_DEAD          = 4;
-	private static final String[] STATUS_NAMES = { 
+	public static final int STATUS_INITIAL       = 0;
+	public static final int STATUS_SUSPENDED     = 1;
+	public static final int STATUS_RUNNING       = 2;
+	public static final int STATUS_NORMAL        = 3;
+	public static final int STATUS_DEAD          = 4;
+	public static final String[] STATUS_NAMES = { 
 		"suspended", 
 		"suspended", 
 		"running", 
 		"normal", 
 		"dead",};
 	
-	private final State state;
+	public final State state;
 
 	/** Field to hold state of error condition during debug hook function calls. */
 	public LuaValue err;
@@ -154,14 +154,6 @@ public class LuaThread extends LuaValue {
 	}
 	
 	/**
-	 * Test if this is the main thread 
-	 * @return true if this is the main thread
-	 */
-	public static boolean isMainThread(LuaThread r) {		
-		return r == main_thread;
-	}
-
-	/**
 	 * Callback used at the beginning of a call to prepare for possible getfenv/setfenv calls
 	 * @param function Function being called
 	 * @return CallStack which is used to signal the return or a tail-call recursion
@@ -217,13 +209,13 @@ public class LuaThread extends LuaValue {
 		return state.lua_resume(this, args);
 	}
 
-	static class State implements Runnable {
+	public static class State implements Runnable {
 		final WeakReference lua_thread;
-		final LuaValue function;
+		public final LuaValue function;
 		Varargs args = LuaValue.NONE;
 		Varargs result = LuaValue.NONE;
 		String error = null;
-		int status = LuaThread.STATUS_INITIAL;
+		public int status = LuaThread.STATUS_INITIAL;
 
 		State(LuaThread lua_thread, LuaValue function) {
 			this.lua_thread = new WeakReference(lua_thread);
@@ -243,7 +235,7 @@ public class LuaThread extends LuaValue {
 			}
 		}
 
-		synchronized Varargs lua_resume(LuaThread new_thread, Varargs args) {
+		public synchronized Varargs lua_resume(LuaThread new_thread, Varargs args) {
 			LuaThread previous_thread = LuaThread.running_thread;
 			try {
 				LuaThread.running_thread = new_thread;
@@ -271,7 +263,7 @@ public class LuaThread extends LuaValue {
 			}
 		}
 
-		synchronized Varargs lua_yield(Varargs args) {
+		public synchronized Varargs lua_yield(Varargs args) {
 			try {
 				this.result = args;
 				this.status = STATUS_SUSPENDED;
@@ -335,5 +327,9 @@ public class LuaThread extends LuaValue {
 		LuaFunction getFunction(int level) {
 			return level>0 && level<=calls? functions[calls-level]: null;
 		}
+	}
+
+	public boolean isMainThread() {
+		return this.state.function == null;
 	}
 }

@@ -21,10 +21,13 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.jme.JmePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine} 
@@ -54,77 +57,94 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
  */
-public class CoroutineLib extends VarArgFunction {
-	
-	private static final int INIT    = 0;
-	private static final int CREATE  = 1;
-	private static final int RESUME  = 2;
-	private static final int RUNNING = 3;
-	private static final int STATUS  = 4;
-	private static final int YIELD   = 5;
-	private static final int WRAP    = 6;
-	private static final int WRAPPED = 7;
-	
-	private LuaThread t;
-	
-	public CoroutineLib() {
+public class CoroutineLib extends OneArgFunction {
+
+	static long thread_orphan_check_interval = 30000;
+
+	static int coroutine_count = 0;
+
+	public LuaValue call(LuaValue env) {
+		LuaTable coroutine = new LuaTable();
+		coroutine.set("create", new create());
+		coroutine.set("resume", new resume());
+		coroutine.set("running", new running());
+		coroutine.set("status", new status());
+		coroutine.set("yield", new yield());
+		coroutine.set("wrap", new wrap());
+		env.set("coroutine", coroutine);
+		env.get("package").get("loaded").set("coroutine", TRUE);
+		return coroutine;
 	}
 
-	private CoroutineLib(LuaThread t) {
-		this.t = t;
-	}
-	
-	private LuaTable init(LuaValue env) {
-		LuaTable t = new LuaTable();
-		bind(t, CoroutineLib.class, new  String[] {
-			"create", "resume", "running", "status", "yield", "wrap" },
-			CREATE);
-		env.set("coroutine", t);
-		PackageLib.instance.LOADED.set("coroutine", t);
-		return t;
-	}
-	
-	public Varargs invoke(Varargs args) {
-		switch ( opcode ) {
-			case INIT: {
-				return init(args.arg1());
-			}
-			case CREATE: {
-				final LuaValue func = args.checkfunction(1);
-				return new LuaThread(func);
-			}
-			case RESUME: {
-				final LuaThread t = args.checkthread(1);
-				return t.resume( args.subargs(2) );
-			}
-			case RUNNING: {
-				final LuaThread r = LuaThread.getRunning();
-				return LuaThread.isMainThread(r)? NIL: r;
-			}
-			case STATUS: {
-				return valueOf( args.checkthread(1).getStatus() );
-			}
-			case YIELD: {
-				return LuaThread.yield( args );
-			}
-			case WRAP: {
-				final LuaValue func = args.checkfunction(1);
-				final LuaThread thread = new LuaThread(func);
-				CoroutineLib cl = new CoroutineLib(thread);
-				cl.name = "wrapped";
-				cl.opcode = WRAPPED;
-				return cl;
-			}
-			case WRAPPED: {
-				final Varargs result = t.resume( args );
-				if ( result.arg1().toboolean() ) {
-					return result.subargs(2);
-				} else {
-					error( result.arg(2).tojstring() );
-				}
-			}
-			default:
-				return NONE;
+	final class create extends LibFunction {
+		public LuaValue call(LuaValue f) {
+			return new LuaThread(f.checkfunction());
 		}
+	}
+
+	final class resume extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			if (!(args.arg1() instanceof LuaThread)) argerror(1, "thread");
+			final LuaThread t = (LuaThread) args.arg1();
+			return resume( t, args.subargs(2) );
+		}
+	}
+
+	final class running extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			final LuaThread r = LuaThread.getRunning();
+			return varargsOf(r, valueOf(r.isMainThread()));
+		}
+	}
+
+	static final class status extends LibFunction {
+		public LuaValue call(LuaValue t) {
+			LuaThread lt = t.checkthread();
+			return valueOf( lt.getStatus() );
+		}
+	}
+	
+	final class yield extends VarArgFunction {
+		public Varargs invoke(Varargs args) {
+			return yield( args );
+		}
+	}
+
+	final class wrap extends LibFunction {
+		public LuaValue call(LuaValue f) {
+			final LuaValue func = f.checkfunction();
+			final LuaThread thread = new LuaThread(func);
+			return new wrapper(thread);
+		}
+	}
+
+	final class wrapper extends VarArgFunction {
+		final LuaThread luathread;
+		wrapper(LuaThread luathread) {
+			this.luathread = luathread;
+		}
+		public Varargs invoke(Varargs args) {
+			final Varargs result = resume(luathread, args);
+			if ( result.arg1().toboolean() ) {
+				return result.subargs(2);
+			} else {
+				return error( result.arg(2).tojstring() );
+			}
+		}
+	}
+
+	Varargs yield(Varargs args) {
+		final LuaThread.State s = LuaThread.getRunning().state;
+		if (s.function == null)
+			throw new LuaError("cannot yield main thread");
+		return s.lua_yield(args);
+	}
+
+	Varargs resume(LuaThread t, Varargs args) {
+		final LuaThread.State s = t.state;
+		if (s.status > LuaThread.STATUS_SUSPENDED)
+			return LuaValue.varargsOf(LuaValue.FALSE, 
+					LuaValue.valueOf("cannot resume "+(s.status==LuaThread.STATUS_DEAD? "dead": "non-suspended")+" coroutine"));
+		return s.lua_resume(t, args);
 	}
 }
