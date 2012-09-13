@@ -27,9 +27,6 @@ import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jme.JmePlatform;
-import org.luaj.vm2.lib.jse.JseMathLib;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
