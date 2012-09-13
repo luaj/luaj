@@ -27,6 +27,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.BaseLib;
+import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.MathLib;
@@ -72,6 +73,7 @@ import org.luaj.vm2.lib.TableLib;
  * <ul>
  * <li>{@link BaseLib}</li>
  * <li>{@link PackageLib}</li>
+ * <li>{@link Bit32Lib}</li>
  * <li>{@link TableLib}</li>
  * <li>{@link StringLib}</li>
  * <li>{@link CoroutineLib}</li>
@@ -104,6 +106,7 @@ public class JmePlatform {
 		LuaValue._G = _G;
 		_G.load(new BaseLib());
 		_G.load(new PackageLib());
+		_G.load(new Bit32Lib());
 		_G.load(new OsLib());
 		_G.load(new MathLib());
 		_G.load(new TableLib());
