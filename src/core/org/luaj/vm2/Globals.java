@@ -28,8 +28,6 @@ import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.ResourceFinder;
-import org.luaj.vm2.lib.jme.JmePlatform;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Global environment used by luaj.
@@ -64,8 +62,6 @@ public class Globals extends LuaTable {
 	public ResourceFinder FINDER;
 	
 	public LuaCompiler compiler = null;
-
-	public LuaThread.CallStack callstack = new LuaThread.CallStack();
 
 	public BaseLib baselib;
 	

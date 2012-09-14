@@ -153,7 +153,7 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			LuaValue func    = args.optfunction(a++, null);
 			LuaValue local   = args.checkvalue(a++);
-			return thread.globals.callstack.findCallFrame(func).getLocal(local.toint());
+			return thread.callstack.findCallFrame(func).getLocal(local.toint());
 		}
 	}
 
@@ -228,7 +228,7 @@ public class DebugLib extends OneArgFunction {
 			LuaValue func    = args.optfunction(a++, null);
 			LuaValue local   = args.checkvalue(a++);
 			LuaValue value   = args.checkvalue(a++);
-			return thread.globals.callstack.findCallFrame(func).setLocal(local.toint(), value);
+			return thread.callstack.findCallFrame(func).setLocal(local.toint(), value);
 		}
 	}
 
@@ -291,7 +291,7 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			String message = args.optjstring(a++, null);
 			int level = args.optint(a++,1);
-			String tb = globals.callstack.traceback(level-1);
+			String tb = thread.callstack.traceback(level-1);
 			return valueOf(message!=null? message+"\n"+tb: tb);
 		}
 	}
@@ -339,7 +339,7 @@ public class DebugLib extends OneArgFunction {
 		LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 		LuaValue func = args.arg(a++);
 		String what = args.optjstring(a++, "nSluf");
-		LuaThread.CallStack callstack = thread.globals.callstack;
+		LuaThread.CallStack callstack = thread.callstack;
 
 		// find the stack info
 		LuaThread.CallFrame frame;
@@ -376,7 +376,7 @@ public class DebugLib extends OneArgFunction {
 					break;
 				}
 				case 'l': {
-					int line = frame.getLine();
+					int line = frame.currentline();
 					info.set( CURRENTLINE, valueOf(line) );
 					break;
 				}
@@ -385,7 +385,7 @@ public class DebugLib extends OneArgFunction {
 					break;
 				}
 				case 'n': {
-					LuaString[] kind = getfunckind(frame.f);
+					LuaString[] kind = frame.getfunckind();
 					info.set(NAME, kind!=null? kind[0]: QMARK);
 					info.set(NAMEWHAT, kind!=null? kind[1]: EMPTYSTRING);
 					break;
@@ -394,18 +394,14 @@ public class DebugLib extends OneArgFunction {
 					info.set( FUNC, frame.f );
 					break;
 				}
-				/*
 				case 'L': {
 					LuaTable lines = new LuaTable();
 					info.set(ACTIVELINES, lines);
-					if ( c !+ null && c.luainfo != null ) {
-						int line = c.luainfo.currentline();
-						if ( line >= 0 )
-							lines.set(1, IntValue.valueOf(line));
-					}
+					int line = frame.currentline();
+					if ( line >= 0 )
+						lines.set(1, valueOf(line));
 					break;
 				}
-				*/
 			}
 		}
 		return info;
@@ -427,10 +423,68 @@ public class DebugLib extends OneArgFunction {
 		if (!x) throw new RuntimeException("lua_assert failed");
 	}	
 
-	private LuaString[] getfunckind(LuaFunction f) {
-		return null;
+	// return StrValue[] { name, namewhat } if found, null if not
+	public static LuaString[] getobjname(Prototype p, int lastpc, int reg) {
+		int pc = lastpc; // currentpc(L, ci);
+		LuaString name = p.getlocalname(reg + 1, pc);
+		if (name != null) /* is a local? */
+			return new LuaString[] { name, LOCAL };
+
+		/* else try symbolic execution */
+		pc = findsetreg(p, lastpc, reg);
+		if (pc != -1) { /* could find instruction? */
+			int i = p.code[pc];
+			switch (Lua.GET_OPCODE(i)) {
+			case Lua.OP_MOVE: {
+				int a = Lua.GETARG_A(i);
+				int b = Lua.GETARG_B(i); /* move from `b' to `a' */
+				if (b < a)
+					return getobjname(p, pc, b); /* get name for `b' */
+				break;
+			}
+			case Lua.OP_GETTABUP:
+			case Lua.OP_GETTABLE: {
+				int k = Lua.GETARG_C(i); /* key index */
+				int t = Lua.GETARG_Bx(i); /* table index */
+		        LuaString vn = (Lua.GET_OPCODE(i) == Lua.OP_GETTABLE)  /* name of indexed variable */
+	                    ? p.getlocalname(t + 1, pc)
+	                    : (t < p.upvalues.length ? p.upvalues[t].name : QMARK);
+				name = kname(p, k);
+				return new LuaString[] { name, vn.eq_b(ENV)? GLOBAL: FIELD };
+			}
+			case Lua.OP_GETUPVAL: {
+				int u = Lua.GETARG_B(i); /* upvalue index */
+				name = u < p.upvalues.length ? p.upvalues[u].name : QMARK;
+				return new LuaString[] { name, UPVALUE };
+			}
+		    case Lua.OP_LOADK:
+		    case Lua.OP_LOADKX: {
+		        int b = (Lua.GET_OPCODE(i) == Lua.OP_LOADK) ? Lua.GETARG_Bx(i)
+		                                 : Lua.GETARG_Ax(p.code[pc + 1]);
+		        if (p.k[b].isstring()) {
+		          name = p.k[b].strvalue();
+		          return new LuaString[] { name, CONSTANT };
+		        }
+		        break;
+		    }
+			case Lua.OP_SELF: {
+				int k = Lua.GETARG_C(i); /* key index */
+				name = kname(p, k);
+				return new LuaString[] { name, METHOD };
+			}
+			default:
+				break;
+			}
+		}
+		return null; /* no useful name found */
 	}
 
+	static LuaString kname(Prototype p, int c) {
+		if (Lua.ISK(c) && p.k[Lua.INDEXK(c)].isstring())
+			return p.k[Lua.INDEXK(c)].strvalue();
+		else
+			return QMARK;
+	}
 
 	/*
 	** try to find last instruction before 'lastpc' that modified register 'reg'

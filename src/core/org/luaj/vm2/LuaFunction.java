@@ -69,4 +69,10 @@ public class LuaFunction extends LuaValue {
 	 */
 	public void initupvalue1(LuaValue env) {
 	}
+
+	public String tojstring() {
+		String s = getClass().getName();
+		return "function: " + s.substring(s.lastIndexOf('.')+1);
+	}
+
 }

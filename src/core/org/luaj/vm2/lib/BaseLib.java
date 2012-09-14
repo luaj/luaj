@@ -208,11 +208,11 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	final class pcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkvalue(1);
-			globals.callstack.onCall(this);
+			globals.running_thread.callstack.onCall(this);
 			try {
 				return pcall(func,args.subargs(2),null);
 			} finally {
-				globals.callstack.onReturn();
+				globals.running_thread.callstack.onReturn();
 			}
 		}
 	}
@@ -350,11 +350,11 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	// "xpcall", // (f, err) -> result1, ...				
 	final class xpcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			globals.callstack.onCall(this);
+			globals.running_thread.callstack.onCall(this);
 			try {
 				return pcall(args.arg1(),NONE,args.checkvalue(2));
 			} finally {
-				globals.callstack.onReturn();
+				globals.running_thread.callstack.onReturn();
 			}
 		}
 	}

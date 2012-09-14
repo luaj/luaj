@@ -24,7 +24,6 @@ package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 
-import org.luaj.vm2.LuaThread.CallFrame;
 import org.luaj.vm2.lib.DebugLib;
 
 /** 
@@ -85,7 +84,7 @@ public class LuaThread extends LuaValue {
 	
 	public final State state;
 
-	final CallStack callstack = new CallStack();
+	public final CallStack callstack = new CallStack();
 	
 	public static final int        MAX_CALLSTACK = 256;
 	
@@ -360,38 +359,51 @@ public class LuaThread extends LuaValue {
 			if (DebugLib.DEBUG_ENABLED && DebugLib.TRACE & f.isclosure())
 				Print.printState(f.checkclosure(), pc, stack, top, v);
 		}
-		public int getLine() {
-			if (!f.isclosure())
-				return 0;
-			LuaClosure c = (LuaClosure) f;
-			Prototype p = c.p;
-			if (p.lineinfo == null || pc < 0 || pc >= p.lineinfo[pc])
-				return 0;
-			return p.lineinfo[pc];
-		}
 		public Varargs getLocal(int i) {
-			if (!f.isclosure())
-				return NONE;
-			LuaClosure c = (LuaClosure) f;
-			Prototype p = c.p;
-			if (i < 1 || i > stack.length)
-				if (p.locvars != null && p.locvars.length >= i)
-					return varargsOf(stack[i-1], p.locvars[i-1].varname);
-				else
-					return stack[i-1];
-			return NONE;
+			LuaString name = getlocalname(i);
+			if ( name != null )
+				return varargsOf( name, stack[i-1] );
+			else
+				return NIL;
 		}
 		public Varargs setLocal(int i, LuaValue value) {
-			if (!f.isclosure())
-				return NONE;
-			LuaClosure c = (LuaClosure) f;
-			Prototype p = c.p;
-			if (i < 1 || i > stack.length)
-				return NONE;
-			stack[i] = value;
-			if (p.locvars != null && p.locvars.length >= i)
-				return p.locvars[i-1].varname;
-			return NONE;
+			LuaString name = getlocalname(i);
+			if ( name != null ) {
+				stack[i-1] = value;
+				return name;
+			} else {
+				return NIL;
+			}
+		}
+		public int currentline() {
+			if ( !f.isclosure() ) return -1;
+			int[] li = ((LuaClosure)f).p.lineinfo;
+			return li==null || pc<0 || pc>=li.length? -1: li[pc]; 
+		}
+		public LuaString[] getfunckind() {
+			if ( !f.isclosure() || pc<0 ) return null;
+			Prototype p = ((LuaClosure)f).p;
+			int stackpos = (p.code[pc] >> 6) & 0xff; 
+			return DebugLib.getobjname(p, pc, stackpos);
+		}
+		public String sourceline() {
+			if ( !f.isclosure() ) return f.tojstring();
+			String s = ((LuaClosure)f).p.source.tojstring();
+			int line = currentline();
+			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
+		}
+		public String tracename() {
+			LuaString[] kind = getfunckind();
+			if ( kind == null )
+				return "function ?";
+			return "function "+kind[0].tojstring();
+		}
+		public LuaString getlocalname(int index) {
+			if ( !f.isclosure() ) return null;
+			return ((LuaClosure)f).p.getlocalname(index, pc);
+		}
+		public String tojstring() {
+			return tracename()+" "+sourceline();
 		}
 	}
 		

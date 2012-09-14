@@ -188,14 +188,14 @@ public class LuaClosure extends LuaFunction {
 		UpValue[] openups = p.p.length>0? new UpValue[p.p.length]: null;
 		
 		// debug wants args to this function
-		if (globals != null)
-			globals.callstack.onCall( this, varargs, stack ); 
+		if (DebugLib.DEBUG_ENABLED && globals != null)
+			globals.running_thread.callstack.onCall( this, varargs, stack ); 
 
 		// process instructions
 		try {
 			while ( true ) {
 				if (DebugLib.DEBUG_ENABLED && globals != null)
-					globals.callstack.onInstruction( pc, v, top ); 
+					globals.running_thread.callstack.onInstruction( pc, v, top ); 
 				
 				// pull out instruction
 				i = code[pc++];
@@ -502,8 +502,8 @@ public class LuaClosure extends LuaFunction {
 			processErrorHooks(le, p, pc);
 			throw le;
 		} finally {
-			if (globals != null)
-				globals.callstack.onReturn();
+			if (DebugLib.DEBUG_ENABLED && globals != null)
+				globals.running_thread.callstack.onReturn();
 			if ( openups != null )
 				for ( int u=openups.length; --u>=0; )
 					if ( openups[u] != null )
@@ -534,7 +534,7 @@ public class LuaClosure extends LuaFunction {
 			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
 		le.traceback = errorHook(le.getMessage());
 		if (DebugLib.DEBUG_ENABLED && globals != null && globals.debuglib != null)
-			le.traceback += globals.callstack.traceback(le.level);
+			le.traceback += globals.running_thread.callstack.traceback(le.level);
 	}
 	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
@@ -567,7 +567,7 @@ public class LuaClosure extends LuaFunction {
 		String msg = e.getMessage();
 		if ( msg == null ) return null;
 		if ( globals == null ) return msg;
-		LuaFunction f = globals.callstack.getFunction(1);
+		LuaFunction f = globals.running_thread.callstack.getFunction(1);
 		if ( ! (f instanceof LuaClosure) ) return msg;
 		LuaClosure c = (LuaClosure) f;
 		LuaString file = c.p.source != null ? c.p.source: valueOf("?");
