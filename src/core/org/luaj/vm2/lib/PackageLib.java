@@ -22,12 +22,10 @@
 package org.luaj.vm2.lib;
 
 import java.io.InputStream;
-import java.io.PrintStream;
 
-import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
@@ -67,14 +65,11 @@ public class PackageLib extends OneArgFunction {
 
 	public static String DEFAULT_LUA_PATH = "?.lua";
 
-	public InputStream    STDIN   = null;
-	public PrintStream    STDOUT  = System.out;
+	Globals globals;
+	
 	public LuaTable       LOADED;
 	public LuaTable       PACKAGE;
 
-	/** Most recent instance of PackageLib */
-	public static PackageLib instance;
-	
 	/** Loader that loads from preload table if found there */
 	public LuaValue preload_searcher;
 	
@@ -101,11 +96,10 @@ public class PackageLib extends OneArgFunction {
 
 	private static final String FILE_SEP = System.getProperty("file.separator");
 
-	public PackageLib() {
-		instance = this;
-	}
+	public PackageLib() {}
 
 	public LuaValue call(LuaValue env) {
+		globals = env.checkglobals();
 		env.set("require", new PkgLib1("require",OP_REQUIRE,this));
 		env.set( "package", PACKAGE=tableOf( new LuaValue[] {
 				_LOADED,  LOADED=tableOf(),
@@ -284,7 +278,7 @@ public class PackageLib extends OneArgFunction {
 		LuaString filename = v.arg1().strvalue();
 
 		// Try to load the file.
-		v = BaseLib.loadFile(filename.tojstring(), "bt", LuaValue._G); 
+		v = globals.loadFile(filename.tojstring()); 
 		if ( v.arg1().isfunction() )
 			return LuaValue.varargsOf(v.arg1(), filename);
 		
@@ -316,7 +310,7 @@ public class PackageLib extends OneArgFunction {
 			}
 			
 			// try opening the file
-			InputStream is = BaseLib.FINDER.findResource(filename);
+			InputStream is = globals.FINDER.findResource(filename);
 			if (is != null) {
 				try { is.close(); } catch ( java.io.IOException ioe ) {}
 				return valueOf(filename);

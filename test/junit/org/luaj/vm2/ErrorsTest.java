@@ -24,9 +24,6 @@ package org.luaj.vm2;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.BaseLib;
-
 
 /**
  * Test argument type check errors
@@ -47,7 +44,7 @@ public class ErrorsTest extends ScriptDrivenTest {
 	}
 
 	public void testBaseLibArgs()       { 
-		BaseLib.instance.STDIN = new InputStream() {
+		globals.STDIN = new InputStream() {
 			public int read() throws IOException {
 				return -1;
 			}

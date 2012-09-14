@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
@@ -73,36 +74,21 @@ import org.luaj.vm2.Varargs;
  */
 public class BaseLib extends OneArgFunction implements ResourceFinder {
 	
-	public static BaseLib instance;
-	
-	public InputStream STDIN  = null;
-	public PrintStream STDOUT = System.out;
-	public PrintStream STDERR = System.err;
-
-	/** 
-	 * Singleton file opener for this Java ClassLoader realm.
-	 * 
-	 * Unless set or changed elsewhere, will be set by the BaseLib that is created.
-	 */
-	public static ResourceFinder FINDER;
-	
-	/**
-	 * Construct a base libarary instance.
-	 */
-	public BaseLib() {
-		instance = this;
-	}
+	Globals globals;
 	
 	public LuaValue call(LuaValue env) {
+		globals = env.checkglobals();
+		globals.FINDER = this;
+		globals.baselib = this;
 		env.set( "_G", env );
 		env.set( "_VERSION", Lua._VERSION );
 		env.set("assert", new _assert());
 		env.set("collectgarbage", new collectgarbage());
-		env.set("dofile", new dofile(this));
+		env.set("dofile", new dofile());
 		env.set("error", new error());
 		env.set("getmetatable", new getmetatable());
 		env.set("load", new load());
-		env.set("loadfile", new loadfile(this));
+		env.set("loadfile", new loadfile());
 		env.set("pcall", new pcall());
 		env.set("print", new print(this));
 		env.set("rawequal", new rawequal());
@@ -121,9 +107,6 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		env.set("pairs", new pairs(next));
 		env.set("ipairs", new ipairs());
 		
-		// set the default resource finder if not set already
-		if ( FINDER == null )
-			FINDER = this;
 		return env;
 	}
 
@@ -132,8 +115,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	 * Tries to open the file as a resource, which can work for JSE and JME. 
 	 */
 	public InputStream findResource(String filename) {
-		Class c = getClass();
-		return c.getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
+		return getClass().getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
 	}
 
 	
@@ -168,17 +150,13 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	}
 
 	// "dofile", // ( filename ) -> result1, ...
-	static final class dofile extends VarArgFunction {
-		final BaseLib baselib;
-		dofile(BaseLib baselib) {
-			this.baselib = baselib;
-		}
+	final class dofile extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			args.argcheck(args.isstring(1) || args.isnil(1), 1, "filename must be string or nil");
 			String filename = args.isstring(1)? args.tojstring(1): null;
 			Varargs v = filename == null? 
-					BaseLib.loadStream( baselib.STDIN, "=stdin", "bt",LuaValue._G ):
-					BaseLib.loadFile( args.checkjstring(1), "bt",LuaValue._G );
+					loadStream( globals.STDIN, "=stdin", "bt", globals ):
+					loadFile( args.checkjstring(1), "bt", globals );
 			return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();			
 		}
 	}
@@ -201,63 +179,59 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 	}
 	// "load", // ( ld [, source [, mode [, env]]] ) -> chunk | nil, msg
-	static final class load extends VarArgFunction {
+	final class load extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue ld = args.arg1();
 			args.argcheck(ld.isstring() || ld.isfunction(), 1, "ld must be string or function");
 			String source = args.optjstring(2, ld.isstring()? ld.tojstring(): "=(load)");
 			String mode = args.optjstring(3, "bt");
-			LuaValue env = args.optvalue(4,LuaValue._G);
-			return BaseLib.loadStream(ld.isstring()? ld.strvalue().toInputStream(): 
+			LuaValue env = args.optvalue(4, globals);
+			return loadStream(ld.isstring()? ld.strvalue().toInputStream(): 
 				new StringInputStream(ld.checkfunction()), source, mode, env);
 		}
 	}
 
 	// "loadfile", // ( [filename [, mode [, env]]] ) -> chunk | nil, msg
-	static final class loadfile extends VarArgFunction {
-		final BaseLib baselib;
-		loadfile(BaseLib baselib) {
-			this.baselib = baselib;
-		}
+	final class loadfile extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			args.argcheck(args.isstring(1) || args.isnil(1), 1, "filename must be string or nil");
 			String filename = args.isstring(1)? args.tojstring(1): null;
 			String mode = args.optjstring(2, "bt");
-			LuaValue env = args.optvalue(3,LuaValue._G);
+			LuaValue env = args.optvalue(3, globals);
 			return filename == null? 
-				BaseLib.loadStream( baselib.STDIN, "=stdin", mode, env ):
-				BaseLib.loadFile( filename, mode, env );
+				loadStream( globals.STDIN, "=stdin", mode, env ):
+				loadFile( filename, mode, env );
 		}
 	}
 		
 	// "pcall", // (f, arg1, ...) -> status, result1, ...
-	static final class pcall extends VarArgFunction {
+	final class pcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkvalue(1);
-			LuaThread.CallStack cs = LuaThread.onCall(this);
+			globals.callstack.onCall(this);
 			try {
 				return pcall(func,args.subargs(2),null);
 			} finally {
-				cs.onReturn();
+				globals.callstack.onReturn();
 			}
 		}
 	}
 
 	// "print", // (...) -> void
-	static final class print extends VarArgFunction {
+	final class print extends VarArgFunction {
 		final BaseLib baselib;
 		print(BaseLib baselib) {
 			this.baselib = baselib;
 		}
 		public Varargs invoke(Varargs args) {
-			LuaValue tostring =LuaValue._G.get("tostring"); 
+			LuaValue tostring = globals.get("tostring"); 
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
-				if ( i>1 ) baselib.STDOUT.write( '\t' );
+				if ( i>1 ) globals.STDOUT.write( '\t' );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
 				int z = s.indexOf((byte)0, 0);
-				baselib.STDOUT.write( s.m_bytes, s.m_offset, z>=0? z: s.m_length );
+				globals.STDOUT.write( s.m_bytes, s.m_offset, z>=0? z: s.m_length );
 			}
-			baselib.STDOUT.println();
+			globals.STDOUT.println();
 			return NONE;
 		}
 	}
@@ -374,13 +348,13 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	}
 
 	// "xpcall", // (f, err) -> result1, ...				
-	static final class xpcall extends VarArgFunction {
+	final class xpcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			LuaThread.CallStack cs = LuaThread.onCall(this);
+			globals.callstack.onCall(this);
 			try {
 				return pcall(args.arg1(),NONE,args.checkvalue(2));
 			} finally {
-				cs.onReturn();
+				globals.callstack.onReturn();
 			}
 		}
 	}
@@ -418,18 +392,19 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 	}
 
-	public static Varargs pcall(LuaValue func, Varargs args, LuaValue errfunc) {
-		LuaValue olderr = LuaThread.setErrorFunc(errfunc);
+	public Varargs pcall(LuaValue func, Varargs args, LuaValue errorfunc) {
 		try {
-			Varargs result =  varargsOf(LuaValue.TRUE, func.invoke(args));
-			LuaThread.setErrorFunc(olderr);
-			return result;
+			LuaValue olderr = globals.errorfunc;
+			globals.errorfunc = errorfunc;
+			try {
+				return varargsOf(LuaValue.TRUE, func.invoke(args));
+			} finally {
+				globals.errorfunc = olderr;
+			}
 		} catch ( LuaError le ) {
-			LuaThread.setErrorFunc(olderr);
 			String m = le.getMessage();
 			return varargsOf(FALSE, m!=null? valueOf(m): NIL);
 		} catch ( Exception e ) {
-			LuaThread.setErrorFunc(olderr);
 			String m = e.getMessage();
 			return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 		}
@@ -441,8 +416,8 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	 * @param mode 
 	 * @return Varargs containing chunk, or NIL,error-text on error
 	 */
-	public static Varargs loadFile(String filename, String mode, LuaValue env) {
-		InputStream is = FINDER.findResource(filename);
+	public Varargs loadFile(String filename, String mode, LuaValue env) {
+		InputStream is = globals.FINDER.findResource(filename);
 		if ( is == null )
 			return varargsOf(NIL, valueOf("cannot open "+filename+": No such file or directory"));
 		try {
@@ -456,7 +431,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		}
 	}
 
-	public static Varargs loadStream(InputStream is, String chunkname, String mode, LuaValue env) {
+	public Varargs loadStream(InputStream is, String chunkname, String mode, LuaValue env) {
 		try {
 			if ( is == null )
 				return varargsOf(NIL, valueOf("not found: "+chunkname));

@@ -35,18 +35,14 @@ public class JavaLoader extends ClassLoader {
 	public JavaLoader() {
 	}
 
-	public LuaFunction load( Prototype p, String classname, String filename ) {
+	public LuaFunction load( Prototype p, String classname, String filename, LuaValue env ) {
 		JavaGen jg = new JavaGen( p, classname, filename );
-		return load( jg );
+		return load( jg, env );
 	}
 	
-	public LuaFunction load( JavaGen jg ) {
+	public LuaFunction load( JavaGen jg, LuaValue env ) {
 		include( jg );
-		return load( jg.classname );
-	}
-	
-	public LuaFunction load(String classname) {
-		return load(classname, LuaValue._G);
+		return load( jg.classname, env );
 	}
 	
 	public LuaFunction load(String classname, LuaValue env) {

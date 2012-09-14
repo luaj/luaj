@@ -67,16 +67,12 @@ import org.luaj.vm2.lib.LibFunction;
  */
 public class JseIoLib extends IoLib {
 
-	public JseIoLib() {
-		super();
-	}
-
 	protected File wrapStdin() throws IOException {
-		return new FileImpl(BaseLib.instance.STDIN);
+		return new FileImpl(globals.STDIN);
 	}
 	
 	protected File wrapStdout() throws IOException {
-		return new FileImpl(BaseLib.instance.STDOUT);
+		return new FileImpl(globals.STDOUT);
 	}
 	
 	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {

@@ -100,7 +100,7 @@ public class LuaJC implements LuaCompiler {
 		String classname = toStandardJavaClassName( name );
 		String luaname = toStandardLuaFileName( name );
 		JavaLoader loader = new JavaLoader();
-		return loader.load(p, classname, luaname);
+		return loader.load(p, classname, luaname, env);
 	}
 	
 	private static String toStandardJavaClassName( String luachunkname ) {

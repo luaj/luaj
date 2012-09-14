@@ -47,7 +47,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 	
 	private final PlatformType platform;
 	private final String subdir;
-	private LuaTable _G;
+	protected Globals globals;
 	
 	static final String zipdir = "test/lua/";
 	static final String zipfile = "luaj3.0-tests.zip";
@@ -63,10 +63,10 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 		default:
 		case JSE:
 		case LUAJIT:
-			_G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
+			globals = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 			break;
 		case JME:
-			_G = org.luaj.vm2.lib.jme.JmePlatform.debugGlobals();
+			globals = org.luaj.vm2.lib.jme.JmePlatform.standardGlobals();
 			break;
 		}
 	}
@@ -75,7 +75,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 	protected void setUp() throws Exception {
 		super.setUp();
 		initGlobals();
-		BaseLib.FINDER = this;
+		globals.FINDER = this;
 	}
 
 	// ResourceFinder implementation.
@@ -147,13 +147,13 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 		try {
 			// override print()
 			final ByteArrayOutputStream output = new ByteArrayOutputStream();
-			final PrintStream oldps = BaseLib.instance.STDOUT;
+			final PrintStream oldps = globals.STDOUT;
 			final PrintStream ps = new PrintStream( output );
-			BaseLib.instance.STDOUT = ps;
+			globals.STDOUT = ps;
 	
 			// run the script
 			try {
-				LuaValue chunk = loadScript(testName, _G);
+				LuaValue chunk = loadScript(testName, globals);
 				chunk.call(LuaValue.valueOf(platform.toString()));
 	
 				ps.flush();
@@ -164,7 +164,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 	
 				assertEquals(expectedOutput, actualOutput);
 			} finally {
-				BaseLib.instance.STDOUT = oldps;
+				globals.STDOUT = oldps;
 				ps.close();
 			}
 		} catch ( IOException ioe ) {

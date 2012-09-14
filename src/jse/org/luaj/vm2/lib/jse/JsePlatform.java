@@ -21,14 +21,16 @@
  ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
-import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
 import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.PackageLib;
+import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 
@@ -40,13 +42,13 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * A simple example of initializing globals and using them from Java is:
  * <pre> {@code
- * LuaValue _G = JsePlatform.standardGlobals();
+ * Globals _G = JsePlatform.standardGlobals();
  * _G.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
  * <pre> {@code
- * LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
+ * _G.load( new FileInputStream("main.lua"), "main.lua" ).call();
  * } </pre>
  * <p>
  * although {@code require} could also be used: 
@@ -58,6 +60,7 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * The standard globals will contain all standard libraries plus {@code luajava}:
  * <ul>
+ * <li>{@link Globals}</li>
  * <li>{@link JseBaseLib}</li>
  * <li>{@link PackageLib}</li>
  * <li>{@link Bit32Lib}</li>
@@ -87,9 +90,8 @@ public class JsePlatform {
 	 * @see JsePlatform
 	 * @see JmePlatform
 	 */
-	public static LuaTable standardGlobals() {
-		LuaTable _G = new LuaTable();
-		LuaValue._G = _G;
+	public static Globals standardGlobals() {
+		Globals _G = new Globals();
 		_G.load(new JseBaseLib());
 		_G.load(new PackageLib());
 		_G.load(new Bit32Lib());
@@ -101,6 +103,7 @@ public class JsePlatform {
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
 		LuaC.install();
+		_G.compiler = LuaC.instance;
 		return _G;		
 	}
 
@@ -112,8 +115,8 @@ public class JsePlatform {
 	 * @see JmePlatform
 	 * @see DebugLib
 	 */
-	public static LuaTable debugGlobals() {
-		LuaTable _G = standardGlobals();
+	public static Globals debugGlobals() {
+		Globals _G = standardGlobals();
 		_G.load(new DebugLib());
 		return _G;
 	}

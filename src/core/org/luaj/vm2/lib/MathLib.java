@@ -106,7 +106,7 @@ public class MathLib extends OneArgFunction {
 		math.set("sqrt", new sqrt());
 		math.set("tan", new tan());
 		env.set("math", math);
-		PackageLib.instance.LOADED.set("math", math);
+		env.get("package").get("loaded").set("math", math);
 		return math;
 	}
 	

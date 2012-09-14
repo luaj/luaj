@@ -64,15 +64,15 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
+				Globals _G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
 				case TEST_TYPE_LUAJC:
-					chunk = LuaJC.getInstance().load(is,name,LuaValue._G);
+					chunk = LuaJC.getInstance().load(is,name,_G);
 					break;
 				default:
-					chunk = LuaC.instance.load( is, name, LuaValue._G );
+					chunk = LuaC.instance.load( is, name, _G );
 					Print.print(((LuaClosure)chunk).p);
 					break;
 				}

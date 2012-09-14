@@ -102,7 +102,7 @@ public class LuajavaLib extends VarArgFunction {
 				LuaTable t = new LuaTable();
 				bind( t, LuajavaLib.class, NAMES, BINDCLASS );
 				env.set("luajava", t);
-				PackageLib.instance.LOADED.set("luajava", t);
+				env.get("package").get("loaded").set("luajava", t);
 				return t;
 			}
 			case BINDCLASS: {

@@ -21,8 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import org.luaj.vm2.LoadState.LuaCompiler;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.DebugLib;
 
 /**
@@ -92,14 +90,7 @@ public class LuaClosure extends LuaFunction {
 
 	public UpValue[] upValues;
 	
-	/** Create a closure around a Prototype with the default global environment.
-	 * If the prototype has upvalues, the environment will be written into the first upvalue.
-	 * @param p the Prototype to construct this Closure for. 
-	 * @param env the environment to associate with the closure.
-	 */
-	public LuaClosure(Prototype p) {
-		this(p, LuaValue._G);
-	}
+	final Globals globals;
 	
 	/** Create a closure around a Prototype with a specific environment.
 	 * If the prototype has upvalues, the environment will be written into the first upvalue.
@@ -114,6 +105,7 @@ public class LuaClosure extends LuaFunction {
 			this.upValues = new UpValue[p.upvalues.length];
 			this.upValues[0] = new UpValue(new LuaValue[] {env}, 0);
 		}
+		globals = env instanceof Globals? (Globals) env: null;	
 	}
 	
 	public boolean isclosure() {
@@ -184,7 +176,6 @@ public class LuaClosure extends LuaFunction {
 		return execute(stack,p.is_vararg!=0? varargs.subargs(p.numparams+1): NONE);
 	}
 	
-	
 	protected Varargs execute( LuaValue[] stack, Varargs varargs ) {
 		// loop through instructions
 		int i,a,b,c,pc=0,top=0;
@@ -194,18 +185,17 @@ public class LuaClosure extends LuaFunction {
 		LuaValue[] k = p.k;
 		
 		// upvalues are only possible when closures create closures
-		UpValue[] openups = p.p.length>0? new UpValue[stack.length]: null;
+		UpValue[] openups = p.p.length>0? new UpValue[p.p.length]: null;
 		
 		// debug wants args to this function
-		if (DebugLib.DEBUG_ENABLED) 
-			DebugLib.debugSetupCall(varargs, stack);
+		if (globals != null)
+			globals.callstack.onCall( this, varargs, stack ); 
 
 		// process instructions
-		LuaThread.CallStack cs = LuaThread.onCall( this ); 
 		try {
 			while ( true ) {
-				if (DebugLib.DEBUG_ENABLED) 
-					DebugLib.debugBytecode(pc, v, top);
+				if (DebugLib.DEBUG_ENABLED && globals != null)
+					globals.callstack.onInstruction( pc, v, top ); 
 				
 				// pull out instruction
 				i = code[pc++];
@@ -473,7 +463,7 @@ public class LuaClosure extends LuaFunction {
 				case Lua.OP_CLOSURE: /*	A Bx	R(A):= closure(KPROTO[Bx])	*/
 					{
 						Prototype newp = p.p[i>>>14];
-						LuaClosure ncl = new LuaClosure(newp, null);
+						LuaClosure ncl = new LuaClosure(newp, globals);
 						Upvaldesc[] uv = newp.upvalues;
 						for ( int j=0, nup=uv.length; j<nup; ++j ) {
 							if (uv[j].instack)  /* upvalue refes to local variable? */
@@ -504,11 +494,16 @@ public class LuaClosure extends LuaFunction {
 				}
 			}
 		} catch ( LuaError le ) {
+			if (le.traceback == null)
+				processErrorHooks(le, p, pc);
 			throw le;
 		} catch ( Exception e ) {
-			throw new LuaError(e);
+			LuaError le = new LuaError(e);
+			processErrorHooks(le, p, pc);
+			throw le;
 		} finally {
-			cs.onReturn();
+			if (globals != null)
+				globals.callstack.onReturn();
 			if ( openups != null )
 				for ( int u=openups.length; --u>=0; )
 					if ( openups[u] != null )
@@ -516,6 +511,32 @@ public class LuaClosure extends LuaFunction {
 		}
 	}
 
+	/**
+	 *  Run the error hook if there is one
+	 *  @param msg the message to use in error hook processing. 
+	 * */
+	String errorHook(String msg) {
+		if (globals == null || globals.errorfunc == null)
+			return msg;
+		LuaValue errfunc = globals.errorfunc;
+		globals.errorfunc = null;
+		try {
+			return errfunc.call( LuaValue.valueOf(msg) ).tojstring();
+		} catch ( Throwable t ) {
+			return "error in error handling";
+		} finally {
+			globals.errorfunc = errfunc;
+		}
+	}
+
+	private void processErrorHooks(LuaError le, Prototype p, int pc) {
+		le.fileline = (p.source != null? p.source.tojstring(): "?") + ":" 
+			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
+		le.traceback = errorHook(le.getMessage());
+		if (DebugLib.DEBUG_ENABLED && globals != null && globals.debuglib != null)
+			le.traceback += globals.callstack.traceback(le.level);
+	}
+	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
 		final int n = openups.length;
 		for (int i = 0; i < n; ++i)
@@ -535,4 +556,22 @@ public class LuaClosure extends LuaFunction {
 	protected void setUpvalue(int i, LuaValue v) {
 		upValues[i].setValue(v);
 	}
+	
+	
+	/** 
+	 * Add file and line info to a message at a particular level 
+	 * @param message the String message to use
+	 * @param level where to supply line info from in call stack
+	 * */
+	private String getFileLineMessage( Exception e, int pc ) {
+		String msg = e.getMessage();
+		if ( msg == null ) return null;
+		if ( globals == null ) return msg;
+		LuaFunction f = globals.callstack.getFunction(1);
+		if ( ! (f instanceof LuaClosure) ) return msg;
+		LuaClosure c = (LuaClosure) f;
+		LuaString file = c.p.source != null ? c.p.source: valueOf("?");
+		String line = c.p.lineinfo != null && pc < c.p.lineinfo.length? String.valueOf(c.p.lineinfo[pc]): "?";
+		return file.tojstring() + ": " + line;
+	}	
 }

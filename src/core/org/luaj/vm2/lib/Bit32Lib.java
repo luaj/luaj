@@ -42,7 +42,7 @@ public class Bit32Lib extends OneArgFunction {
 			"arshift", "lrotate", "lshift", "rrotate", "rshift"
 		});
 		env.set("bit32", t);
-		PackageLib.instance.LOADED.set("bit32", t);
+		env.get("package").get("loaded").set("bit32", t);
 		return t;
 	}
 

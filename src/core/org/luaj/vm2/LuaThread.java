@@ -24,6 +24,7 @@ package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 
+import org.luaj.vm2.LuaThread.CallFrame;
 import org.luaj.vm2.lib.DebugLib;
 
 /** 
@@ -60,7 +61,7 @@ import org.luaj.vm2.lib.DebugLib;
  * @see CoroutineLib
  */
 public class LuaThread extends LuaValue {
-	
+
 	public static LuaValue s_metatable;
 
 	public static int coroutine_count = 0;
@@ -84,37 +85,39 @@ public class LuaThread extends LuaValue {
 	
 	public final State state;
 
-	/** Field to hold state of error condition during debug hook function calls. */
-	public LuaValue err;
-	
 	final CallStack callstack = new CallStack();
 	
 	public static final int        MAX_CALLSTACK = 256;
 	
-	private static final LuaThread main_thread = new LuaThread();
-	
-	// state of running thread including call stack
-	private static LuaThread       running_thread    = main_thread;
-
 	/** Interval to check for LuaThread dereferencing.  */
 	public static int GC_INTERVAL = 30000;
 
 	/** Thread-local used by DebugLib to store debugging state.  */
 	public Object debugState;
 
+	public LuaValue hookfunc;
+	public boolean hookline;
+	public boolean hookcall;
+	public boolean hookrtrn;
+	public int hookcount;
+
+	public final Globals globals;
+
 	/** Private constructor for main thread only */
-	private LuaThread() {
-		state = new State(this, null);
+	public LuaThread(Globals globals) {
+		state = new State(globals, this, null);
 		state.status = STATUS_RUNNING;
+		this.globals = globals;
 	}
 	
 	/** 
 	 * Create a LuaThread around a function and environment
 	 * @param func The function to execute
 	 */
-	public LuaThread(LuaValue func) {	
+	public LuaThread(Globals globals, LuaValue func) {	
 		LuaValue.assert_(func != null, "function cannot be null");
-		state = new State(this, func);
+		state = new State(globals, this, func);
+		this.globals = globals;
 	}
 	
 	public int type() {
@@ -145,71 +148,20 @@ public class LuaThread extends LuaValue {
 		return STATUS_NAMES[state.status];
 	}
 
-	/**
-	 * Get the currently running thread. 
-	 * @return {@link LuaThread} that is currenly running
-	 */
-	public static LuaThread getRunning() {
-		return running_thread;
-	}
-	
-	/**
-	 * Callback used at the beginning of a call to prepare for possible getfenv/setfenv calls
-	 * @param function Function being called
-	 * @return CallStack which is used to signal the return or a tail-call recursion
-	 * @see DebugLib
-	 */
-	public static final CallStack onCall(LuaFunction function) {
-		CallStack cs = running_thread.callstack;
-		cs.onCall(function);
-		return cs;
+	public boolean isMainThread() {
+		return this.state.function == null;
 	}
 
-	/**
-	 * Get the function called as a specific location on the stack.
-	 * @param level 1 for the function calling this one, 2 for the next one.
-	 * @return LuaFunction on the call stack, or null if outside of range of active stack
-	 */
-	public static final LuaFunction getCallstackFunction(int level) {
-		return running_thread.callstack.getFunction(level);
-	}
-
-	/**
-	 * Replace the error function of the currently running thread.
-	 * @param errfunc the new error function to use.
-	 * @return the previous error function.
-	 */
-	public static LuaValue setErrorFunc(LuaValue errfunc) {
-		LuaValue prev = running_thread.err;
-		running_thread.err = errfunc;
-		return prev;
-	}
-
-	/** Yield the current thread with arguments 
-	 * 
-	 * @param args The arguments to send as return values to {@link #resume(Varargs)}
-	 * @return {@link Varargs} provided as arguments to {@link #resume(Varargs)}
-	 */
-	public static Varargs yield(Varargs args) {
-		State s = running_thread.state;
-		if (s.function == null)
-			throw new LuaError("cannot yield main thread");
-		return s.lua_yield(args);
-	}
-	
-	/** Start or resume this thread 
-	 * 
-	 * @param args The arguments to send as return values to {@link #yield(Varargs)}
-	 * @return {@link Varargs} provided as arguments to {@link #yield(Varargs)}
-	 */
 	public Varargs resume(Varargs args) {
-		if (this.state.status > STATUS_SUSPENDED)
+		final LuaThread.State s = this.state;
+		if (s.status > LuaThread.STATUS_SUSPENDED)
 			return LuaValue.varargsOf(LuaValue.FALSE, 
-					LuaValue.valueOf("cannot resume "+LuaThread.STATUS_NAMES[this.state.status]+" coroutine"));
-		return state.lua_resume(this, args);
+					LuaValue.valueOf("cannot resume "+(s.status==LuaThread.STATUS_DEAD? "dead": "non-suspended")+" coroutine"));
+		return s.lua_resume(this, args);
 	}
 
 	public static class State implements Runnable {
+		private final Globals globals;
 		final WeakReference lua_thread;
 		public final LuaValue function;
 		Varargs args = LuaValue.NONE;
@@ -217,7 +169,8 @@ public class LuaThread extends LuaValue {
 		String error = null;
 		public int status = LuaThread.STATUS_INITIAL;
 
-		State(LuaThread lua_thread, LuaValue function) {
+		State(Globals globals, LuaThread lua_thread, LuaValue function) {
+			this.globals = globals;
 			this.lua_thread = new WeakReference(lua_thread);
 			this.function = function;
 		}
@@ -236,9 +189,9 @@ public class LuaThread extends LuaValue {
 		}
 
 		public synchronized Varargs lua_resume(LuaThread new_thread, Varargs args) {
-			LuaThread previous_thread = LuaThread.running_thread;
+			LuaThread previous_thread = globals.running_thread;
 			try {
-				LuaThread.running_thread = new_thread;
+				globals.running_thread = new_thread;
 				this.args = args;
 				if (this.status == STATUS_INITIAL) {
 					this.status = STATUS_RUNNING; 
@@ -246,7 +199,8 @@ public class LuaThread extends LuaValue {
 				} else {
 					this.notify();
 				}
-				previous_thread.state.status = STATUS_NORMAL;
+				if (previous_thread != null)
+					previous_thread.state.status = STATUS_NORMAL;
 				this.status = STATUS_RUNNING;
 				this.wait();
 				return (this.error != null? 
@@ -255,11 +209,12 @@ public class LuaThread extends LuaValue {
 			} catch (InterruptedException ie) {
 				throw new OrphanedThread();
 			} finally {
-				running_thread = previous_thread;
-				running_thread.state.status =STATUS_RUNNING;
 				this.args = LuaValue.NONE;
 				this.result = LuaValue.NONE;
 				this.error = null;
+				globals.running_thread = previous_thread;
+				if (previous_thread != null)
+					globals.running_thread.state.status =STATUS_RUNNING;
 			}
 		}
 
@@ -287,17 +242,30 @@ public class LuaThread extends LuaValue {
 	}
 
 	public static class CallStack {
-		final LuaFunction[]     functions     = new LuaFunction[MAX_CALLSTACK];
-		int                     calls         = 0;
+		final CallFrame[] frame = new CallFrame[MAX_CALLSTACK];
+		int               calls  = 0;
+
+		CallStack() {
+			for (int i = 0; i < MAX_CALLSTACK; ++i)
+				frame[i] = new CallFrame();
+		}
 
 		/**
 		 * Method to indicate the start of a call
+		 * @param stack 
+		 * @param varargs 
 		 * @see DebugLib
 		 */
-		final void onCall(LuaFunction function) {
-			functions[calls++] = function;
-			if (DebugLib.DEBUG_ENABLED) 
-				DebugLib.debugOnCall(running_thread, calls, function);
+		public final void onCall(LuaFunction function) {
+			frame[calls++].set(function);
+//			if (DebugLib.DEBUG_ENABLED) 
+//				DebugLib.debugOnCall(globals.running_thread, calls, function);
+		}
+
+		public final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+			frame[calls++].set(function, varargs, stack);
+//			if (DebugLib.DEBUG_ENABLED) 
+//				DebugLib.debugOnCall(globals.running_thread, calls, function);
 		}
 		
 		/**
@@ -305,11 +273,15 @@ public class LuaThread extends LuaValue {
 		 * @see DebugLib
 		 */
 		public final void onReturn() {
-			functions[--calls] = null;
-			if (DebugLib.DEBUG_ENABLED) 
-				DebugLib.debugOnReturn(running_thread, calls);
+			frame[--calls].reset();
+//			if (DebugLib.DEBUG_ENABLED) 
+//				DebugLib.debugOnReturn(running_thread, calls);
 		}
 		
+		public final void onInstruction(int pc, Varargs v, int top) {
+			frame[calls-1].instr(pc, v, top);
+		}
+
 		/**
 		 * Get number of calls in stack
 		 * @return number of calls in current call stack
@@ -324,12 +296,103 @@ public class LuaThread extends LuaValue {
 		 * @param level # of levels back from the top of the stack.
 		 * @return LuaFunction, or null if beyond the stack limits.
 		 */
-		LuaFunction getFunction(int level) {
-			return level>0 && level<=calls? functions[calls-level]: null;
+		public LuaFunction getFunction(int level) {
+			return level>0 && level<=calls? frame[calls-level].f: null;
 		}
+
+		/**
+		 * Get the traceback starting at a specific level.
+		 * @param level
+		 * @return String containing the traceback.
+		 */
+		public String traceback(int level) {
+			StringBuffer sb = new StringBuffer();
+			sb.append( "stack traceback:" );
+			for (LuaFunction f = null; (f = getFunction(level)) != null; ++level) {
+				sb.append( "\n\t" );
+				sb.append( f.tostring() );
+				sb.append( "main chunk" );
+			}
+			return sb.toString();
+		}
+
+		public CallFrame getCallFrame(int level) {
+			if (level < 1 || level >= calls)
+				return null;
+			return frame[calls-level];
+		}
+
+		public CallFrame findCallFrame(LuaValue func) {
+			for (int i = 1; i <= calls; ++i)
+				if (frame[calls-i].f == func)
+					return frame[i];
+			return null;
+		}
+
 	}
 
-	public boolean isMainThread() {
-		return this.state.function == null;
+	public static class CallFrame {
+		public LuaFunction f;
+		int pc, top;
+		Varargs v;
+		LuaValue[] stack;
+		public void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+			this.f = function;
+			this.v = varargs;
+			this.stack = stack;
+		}
+		public void print() {
+			// TODO Auto-generated method stub
+			
+		}
+		public void set(LuaFunction function) {
+			this.f = function;
+		}
+		public void reset() {
+			this.f = null;
+			this.v = null;
+			this.stack = null;
+		}
+		public void instr(int pc, Varargs v, int top) {
+			this.pc = pc;
+			this.v = v;
+			this.top = top;
+			if (DebugLib.DEBUG_ENABLED && DebugLib.TRACE & f.isclosure())
+				Print.printState(f.checkclosure(), pc, stack, top, v);
+		}
+		public int getLine() {
+			if (!f.isclosure())
+				return 0;
+			LuaClosure c = (LuaClosure) f;
+			Prototype p = c.p;
+			if (p.lineinfo == null || pc < 0 || pc >= p.lineinfo[pc])
+				return 0;
+			return p.lineinfo[pc];
+		}
+		public Varargs getLocal(int i) {
+			if (!f.isclosure())
+				return NONE;
+			LuaClosure c = (LuaClosure) f;
+			Prototype p = c.p;
+			if (i < 1 || i > stack.length)
+				if (p.locvars != null && p.locvars.length >= i)
+					return varargsOf(stack[i-1], p.locvars[i-1].varname);
+				else
+					return stack[i-1];
+			return NONE;
+		}
+		public Varargs setLocal(int i, LuaValue value) {
+			if (!f.isclosure())
+				return NONE;
+			LuaClosure c = (LuaClosure) f;
+			Prototype p = c.p;
+			if (i < 1 || i > stack.length)
+				return NONE;
+			stack[i] = value;
+			if (p.locvars != null && p.locvars.length >= i)
+				return p.locvars[i-1].varname;
+			return NONE;
+		}
 	}
+		
 }

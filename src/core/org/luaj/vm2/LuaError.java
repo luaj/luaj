@@ -38,39 +38,28 @@ import org.luaj.vm2.lib.DebugLib;
 public class LuaError extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 	
-	private String traceback;
+	protected int level;
+	
+	protected String fileline;
+	
+	protected String traceback;
+	
+	protected Throwable cause;
 
-	/**
-	 *  Run the error hook if there is one
-	 *  @param msg the message to use in error hook processing. 
-	 * */
-	private static String errorHook(String msg) {
-		LuaThread thread = LuaThread.getRunning();
-		if ( thread.err != null ) { 
-			LuaValue errfunc = thread.err;
-			thread.err = null;
-			try {
-				return errfunc.call( LuaValue.valueOf(msg) ).tojstring();
-			} catch ( Throwable t ) {
-				return "error in error handling";
-			} finally {
-				thread.err = errfunc;
-			}
-		}
-		return msg;
+	public String getMessage() {
+		return (fileline != null? fileline + " ": "") 
+			+ (traceback != null? traceback: super.getMessage());
 	}
-	
-	private Throwable cause;
-	
+
 	/** Construct LuaError when a program exception occurs. 
 	 * <p> 
 	 * All errors generated from lua code should throw LuaError(String) instead.
 	 * @param cause the Throwable that caused the error, if known.  
 	 */
 	public LuaError(Throwable cause) {
-		super( errorHook( addFileLine( "vm error: "+cause ) ) );
+		super( "vm error: "+cause );
 		this.cause = cause;
-		this.traceback = DebugLib.traceback(1);
+		this.level = 1;
 	}
 
 	/**
@@ -79,8 +68,8 @@ public class LuaError extends RuntimeException {
 	 * @param message message to supply
 	 */
 	public LuaError(String message) {
-		super( errorHook( addFileLine( message ) ) );
-		this.traceback = DebugLib.traceback(1);
+		super( message );
+		this.level = 1;
 	}		
 
 	/**
@@ -89,37 +78,10 @@ public class LuaError extends RuntimeException {
 	 * @param level where to supply line info from in call stack
 	 */
 	public LuaError(String message, int level) {
-		super( errorHook( addFileLine( message, level ) ) );
-		this.traceback = DebugLib.traceback(1);
+		super( message );
+		this.level = level;
 	}	
 
-	/** 
-	 * Add file and line info to a message at a particular level 
-	 * @param message the String message to use
-	 * @param level where to supply line info from in call stack
-	 * */
-	private static String addFileLine( String message, int level ) {
-		if ( message == null ) return null;
-		if ( level == 0 ) return message;
-		String fileline = DebugLib.fileline(level-1);
-		return fileline!=null? fileline+": "+message: message;		
-	}
-
-	/** Add file and line info for the nearest enclosing closure
-	 * @param message the String message to use
-	 * */
-	private static String addFileLine( String message ) {
-		if ( message == null ) return null;
-		String fileline = DebugLib.fileline();
-		return fileline!=null? fileline+": "+message: message;		
-	}
-	
-	/** Print the message and stack trace */
-	public void printStackTrace() {
-		System.out.println( toString() );
-		if ( traceback != null )
-			System.out.println( traceback );
-	}
 
 	/** 
 	 * Get the cause, if any.

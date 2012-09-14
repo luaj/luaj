@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -212,10 +213,10 @@ public class IoLib extends OneArgFunction {
 
 	LuaTable filemethods;
 	
-	public IoLib() {
-	}
+	protected Globals globals;
 	
 	public LuaValue call(LuaValue env) {
+		globals = env.checkglobals();
 		
 		// io lib functions
 		LuaTable t = new LuaTable();
@@ -237,7 +238,7 @@ public class IoLib extends OneArgFunction {
 		
 		// return the table
 		env.set("io", t);
-		PackageLib.instance.LOADED.set("io", t);
+		env.get("package").get("loaded").set("io", t);
 		return t;
 	}
 

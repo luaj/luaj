@@ -56,8 +56,8 @@ public class TypeTest extends TestCase {
 	private final LuaValue stringdouble  = LuaValue.valueOf(samplestringdouble);
 	private final LuaTable    table         = LuaValue.tableOf();
 	private final LuaFunction somefunc      = new ZeroArgFunction() { public LuaValue call() { return NONE;}};
-	private final LuaThread   thread        = new LuaThread(somefunc);
-	private final LuaClosure  someclosure   = new LuaClosure(new Prototype());
+	private final LuaThread   thread        = new LuaThread(new Globals(), somefunc);
+	private final LuaClosure  someclosure   = new LuaClosure(new Prototype(), new LuaTable());
 	private final LuaUserdata userdataobj   = LuaValue.userdataOf(sampleobject);
 	private final LuaUserdata userdatacls   = LuaValue.userdataOf(sampledata);
 	

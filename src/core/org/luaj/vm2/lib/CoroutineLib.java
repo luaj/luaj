@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
@@ -61,7 +62,10 @@ public class CoroutineLib extends OneArgFunction {
 
 	static int coroutine_count = 0;
 
+	Globals globals;
+	
 	public LuaValue call(LuaValue env) {
+		globals = env.checkglobals();
 		LuaTable coroutine = new LuaTable();
 		coroutine.set("create", new create());
 		coroutine.set("resume", new resume());
@@ -70,27 +74,26 @@ public class CoroutineLib extends OneArgFunction {
 		coroutine.set("yield", new yield());
 		coroutine.set("wrap", new wrap());
 		env.set("coroutine", coroutine);
-		env.get("package").get("loaded").set("coroutine", TRUE);
+		env.get("package").get("loaded").set("coroutine", coroutine);
 		return coroutine;
 	}
 
 	final class create extends LibFunction {
 		public LuaValue call(LuaValue f) {
-			return new LuaThread(f.checkfunction());
+			return new LuaThread(globals, f.checkfunction());
 		}
 	}
 
 	final class resume extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			if (!(args.arg1() instanceof LuaThread)) argerror(1, "thread");
-			final LuaThread t = (LuaThread) args.arg1();
-			return resume( t, args.subargs(2) );
+			final LuaThread t = args.checkthread(1);
+			return t.resume( args.subargs(2) );
 		}
 	}
 
 	final class running extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			final LuaThread r = LuaThread.getRunning();
+			final LuaThread r = globals.running_thread;
 			return varargsOf(r, valueOf(r.isMainThread()));
 		}
 	}
@@ -104,14 +107,14 @@ public class CoroutineLib extends OneArgFunction {
 	
 	final class yield extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			return yield( args );
+			return globals.yield( args );
 		}
 	}
 
 	final class wrap extends LibFunction {
 		public LuaValue call(LuaValue f) {
 			final LuaValue func = f.checkfunction();
-			final LuaThread thread = new LuaThread(func);
+			final LuaThread thread = new LuaThread(globals, func);
 			return new wrapper(thread);
 		}
 	}
@@ -122,27 +125,12 @@ public class CoroutineLib extends OneArgFunction {
 			this.luathread = luathread;
 		}
 		public Varargs invoke(Varargs args) {
-			final Varargs result = resume(luathread, args);
+			final Varargs result = luathread.resume(args);
 			if ( result.arg1().toboolean() ) {
 				return result.subargs(2);
 			} else {
 				return error( result.arg(2).tojstring() );
 			}
 		}
-	}
-
-	Varargs yield(Varargs args) {
-		final LuaThread.State s = LuaThread.getRunning().state;
-		if (s.function == null)
-			throw new LuaError("cannot yield main thread");
-		return s.lua_yield(args);
-	}
-
-	Varargs resume(LuaThread t, Varargs args) {
-		final LuaThread.State s = t.state;
-		if (s.status > LuaThread.STATUS_SUSPENDED)
-			return LuaValue.varargsOf(LuaValue.FALSE, 
-					LuaValue.valueOf("cannot resume "+(s.status==LuaThread.STATUS_DEAD? "dead": "non-suspended")+" coroutine"));
-		return s.lua_resume(t, args);
 	}
 }

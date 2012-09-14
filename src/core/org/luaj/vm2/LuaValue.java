@@ -109,11 +109,6 @@ package org.luaj.vm2;
  */
 abstract
 public class LuaValue extends Varargs {
-	/** The default global environment.  This must be set before lua can be used. 
-	 * Typically, it is set as a side effect of calling one of 
-	 * JsePlatform.standardGlobals() or similar functions.
-	 */
-	public static LuaValue _G;
 	
 	/** Type enumeration constant for lua numbers that are ints, for compatibility with lua 5.1 number patch only */
 	public static final int TINT            = (-2);
@@ -877,7 +872,16 @@ public class LuaValue extends Varargs {
 	 * @see #checkclosure()
 	 */
 	public LuaValue    checkfunction()         { argerror("function");  return null; }	
-	
+
+
+	/** Check that the value is a Globals instance, or throw {@link LuaError} if not 
+	 * <p>
+	 * {@link Globals} are a special {@link LuaTable} that establish the default global environment.  
+	 * @return {@code this} if if an instance fof {@Globals}
+	 * @throws LuaError if not a {@link Globals} instance. 
+	 */
+	public Globals checkglobals() { argerror("globals");  return null; }
+
 	/** Check that the value is numeric, and convert and cast value to int, or throw {@link LuaError} if not numeric 
 	 * <p>
 	 * Values that are {@link LuaNumber} will be cast to int and may lose precision.
@@ -1354,13 +1358,14 @@ public class LuaValue extends Varargs {
 	public Varargs inext(LuaValue index) { return typerror("table"); }
 	
 	/** 
-	 * Load a library instance by setting its environment to the global environment {@code LuaValue._G} 
+	 * Load a library instance by setting its environment to the calling object, 
 	 * and calling it, which should iniitalize the library instance and 
-	 * install itself into this instance. 
+	 * install itself into this instance.  The calling object should be the 
+	 * {@link Globals} environment to associate wtih the library. 
 	 * @param library The callable {@link LuaValue} to load into {@code this}
 	 * @return {@link LuaValue._G} containing the result of the initialization call.
 	 */
-	public LuaValue load(LuaValue library) { return load(library, _G); }
+	public LuaValue load(LuaValue library) { return load(library, this); }
 
 	/** 
 	 * Load a library instance by setting its environment to {@code env} 

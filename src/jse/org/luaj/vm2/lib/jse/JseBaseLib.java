@@ -67,10 +67,13 @@ import org.luaj.vm2.lib.ResourceFinder;
 
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
-	/** Construct a JSE base library instance */
-	public JseBaseLib() {
-		STDIN = System.in;
+	/** Extend the library loading to set the default value for {@link Globals.STDIN} */
+	public LuaValue call(LuaValue env) {
+		super.call(env);
+		env.checkglobals().STDIN = System.in;
+		return env;
 	}
+
 
 	/** 
 	 * Try to open a file in the current working directory, 

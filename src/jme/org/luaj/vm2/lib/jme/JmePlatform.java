@@ -22,6 +22,7 @@
 package org.luaj.vm2.lib.jme;
 
 import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
@@ -53,7 +54,7 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * A simple example of initializing globals and using them from Java is:
  * <pre> {@code
- * LuaValue _G = JmePlatform.standardGlobals();
+ * Globals _G = JmePlatform.standardGlobals();
  * _G.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * <p>
@@ -71,6 +72,7 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * The standard globals will contain all standard libraries in their JME flavors:
  * <ul>
+ * <li>{@link Globals}</li>
  * <li>{@link BaseLib}</li>
  * <li>{@link PackageLib}</li>
  * <li>{@link Bit32Lib}</li>
@@ -101,9 +103,8 @@ public class JmePlatform {
 	 * @see JsePlatform
 	 * @see JmePlatform
 	 */
-	public static LuaTable standardGlobals() {
-		LuaTable _G = new LuaTable();
-		LuaValue._G = _G;
+	public static Globals standardGlobals() {
+		Globals _G = new Globals();
 		_G.load(new BaseLib());
 		_G.load(new PackageLib());
 		_G.load(new Bit32Lib());
@@ -114,6 +115,7 @@ public class JmePlatform {
 		_G.load(new CoroutineLib());
 		_G.load(new JmeIoLib());
 		LuaC.install();
+		_G.compiler = LuaC.instance;
 		return _G;		
 	}
 	
@@ -125,8 +127,8 @@ public class JmePlatform {
 	 * @see JmePlatform
 	 * @see DebugLib
 	 */
-	public static LuaTable debugGlobals() {
-		LuaTable _G = standardGlobals();
+	public static Globals debugGlobals() {
+		Globals _G = standardGlobals();
 		_G.load(new DebugLib());
 		return _G;
 	}
