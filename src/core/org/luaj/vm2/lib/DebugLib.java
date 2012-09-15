@@ -26,21 +26,17 @@ import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaNil;
 import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.LuaThread.CallFrame;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.jme.JmePlatform;
-import org.luaj.vm2.lib.jse.JsePlatform;
-import org.luaj.vm2.luajc.LuaJC;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
@@ -73,10 +69,6 @@ import org.luaj.vm2.luajc.LuaJC;
 public class DebugLib extends OneArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
-
-	// leave this unset to allow obfuscators to 
-	// remove it in production builds
-	public static boolean DEBUG_ENABLED;
 	
 	private static final LuaString LUA             = valueOf("Lua");  
 	private static final LuaString JAVA            = valueOf("Java");  
@@ -89,8 +81,7 @@ public class DebugLib extends OneArgFunction {
 	private static final LuaString CALL            = valueOf("call");  
 	private static final LuaString LINE            = valueOf("line");  
 	private static final LuaString COUNT           = valueOf("count");  
-	private static final LuaString RETURN          = valueOf("return");  
-	private static final LuaString TAILRETURN      = valueOf("tail return");
+	private static final LuaString RETURN          = valueOf("return");
 	private static final LuaString CONSTANT        = valueOf("constant");  
 	private static final LuaString FOR_ITERATOR    = valueOf("for iterator");
 	private static final LuaString METAMETHOD      = valueOf("metamethod");
@@ -112,10 +103,18 @@ public class DebugLib extends OneArgFunction {
 
 	Globals globals;
 	
+	LuaValue hookfunc;
+	boolean hookline;
+	boolean hookcall;
+	boolean hookrtrn;
+	int hookcount;
+	boolean inhook;
+	int lastline;
+	int bytecodes;
+	
 	public LuaTable call(LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;
-		DEBUG_ENABLED = true;
 		LuaTable debug = new LuaTable();
 		debug.set("debug", new debug());
 		debug.set("gethook", new gethook());
@@ -148,11 +147,10 @@ public class DebugLib extends OneArgFunction {
 	// debug.gethook ([thread])
 	final class gethook extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
-			LuaThread t = args.optthread(1, globals.running_thread); 
 			return varargsOf(
-					t.hookfunc,
-					valueOf((t.hookcall?"c":"")+(t.hookline?"l":"")+(t.hookrtrn?"r":"")),
-					valueOf(t.hookcount));
+					hookfunc,
+					valueOf((hookcall?"c":"")+(hookline?"l":"")+(hookrtrn?"r":"")),
+					valueOf(hookcount));
 		}
 	}
 
@@ -163,10 +161,10 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			LuaValue func = args.arg(a++);
 			String what = args.optjstring(a++, "flnStu");
-			LuaThread.CallStack callstack = thread.callstack;
+			DebugLib.CallStack callstack = callstack(thread);
 
 			// find the stack info
-			LuaThread.CallFrame frame;
+			DebugLib.CallFrame frame;
 			if ( func.isnumber() ) {
 				frame = callstack.getCallFrame(func.toint());
 				if (frame == null)
@@ -220,7 +218,7 @@ public class DebugLib extends OneArgFunction {
 			if (what.indexOf('L') >= 0) {
 				LuaTable lines = new LuaTable();
 				info.set(ACTIVELINES, lines);
-				CallFrame cf;
+				DebugLib.CallFrame cf;
 				for (int l = 1; (cf=callstack.getCallFrame(l)) != null; ++l)
 					if (cf.f == func)
 						lines.insert(-1, valueOf(cf.currentline()));
@@ -239,7 +237,7 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
-			return thread.callstack.getCallFrame(level).getLocal(local);
+			return callstack(thread).getCallFrame(level).getLocal(local);
 		}
 	}
 
@@ -297,11 +295,11 @@ public class DebugLib extends OneArgFunction {
 					case 'l': line=true; break;
 					case 'r': rtrn=true; break;
 				}
-			thread.hookfunc = func;
-			thread.hookcall = call;
-			thread.hookline = line;
-			thread.hookcount = count;
-			thread.hookrtrn = rtrn;
+			hookfunc = func;
+			hookcall = call;
+			hookline = line;
+			hookcount = count;
+			hookrtrn = rtrn;
 			return NONE;
 		}
 	}
@@ -314,7 +312,7 @@ public class DebugLib extends OneArgFunction {
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
 			LuaValue value = args.arg(a++);
-			return thread.callstack.getCallFrame(level).setLocal(local, value);
+			return callstack(thread).getCallFrame(level).setLocal(local, value);
 		}
 	}
 
@@ -372,7 +370,7 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			String message = args.optjstring(a++, null);
 			int level = args.optint(a++,1);
-			String tb = thread.callstack.traceback(level);
+			String tb = callstack(thread).traceback(level);
 			return valueOf(message!=null? message+"\n"+tb: tb);
 		}
 	}
@@ -403,6 +401,223 @@ public class DebugLib extends OneArgFunction {
 		}
 	}
 
+	public void onCall(LuaFunction f) {
+		if (inhook) return;
+		callstack().onCall(f);
+		if (hookcall && hookfunc != null) 
+			callHook(CALL, NIL);
+	}
+
+	public void onCall(LuaClosure c, Varargs varargs, LuaValue[] stack) {
+		if (inhook) return;
+		callstack().onCall(c, varargs, stack);
+		if (hookcall && hookfunc != null) 
+			callHook(CALL, NIL);
+	}
+
+	public void onInstruction(int pc, Varargs v, int top) {
+		if (inhook) return;
+		callstack().onInstruction(pc, v, top);
+		if (hookfunc == null) return;
+		if (hookcount > 0)
+			if (++bytecodes % hookcount == 0)
+				callHook(COUNT, NIL);
+		if (hookline) {
+			int newline = callstack().currentline();
+			if ( newline != lastline ) {
+				lastline = newline;
+				callHook(LINE, LuaValue.valueOf(newline));
+			}
+		}
+	}
+
+	public void onReturn() {
+		if (inhook) return;
+		callstack().onReturn();
+		if (hookcall && hookfunc != null)
+			callHook(RETURN, NIL);
+	}
+
+	public String traceback(int level) {
+		return callstack().traceback(level);
+	}
+	
+	void callHook(LuaValue type, LuaValue arg) {
+		inhook = true;
+		try {
+			hookfunc.call(type, arg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			inhook = false;
+		}
+	}
+	
+	CallStack callstack() {
+		return callstack(globals.running_thread);
+	}
+
+	CallStack callstack(LuaThread t) {
+		if (t.callstack == null)
+			t.callstack = new CallStack();
+		return (CallStack) t.callstack;
+	}
+
+	public static class CallStack {
+			final static CallFrame[] EMPTY = {};
+			CallFrame[] frame = EMPTY;
+			int calls  = 0;
+	
+			CallStack() {}
+			
+			int currentline() {
+				return calls > 0? frame[calls-1].currentline(): -1;
+			}
+
+			private CallFrame pushcall() {
+				if (calls >= frame.length) {
+					int n = Math.max(4, frame.length * 3 / 2);
+					CallFrame[] f = new CallFrame[n];
+					System.arraycopy(frame, 0, f, 0, frame.length);
+					for (int i = frame.length; i < n; ++i)
+						f[i] = new CallFrame();
+					frame = f;
+				}
+				return frame[calls++];
+			}
+			
+			final void onCall(LuaFunction function) {
+				pushcall().set(function);
+			}
+
+			final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+				pushcall().set(function, varargs, stack);
+			}
+			
+			final void onReturn() {
+				if (calls > 0)
+					frame[--calls].reset();
+			}
+			
+			final void onInstruction(int pc, Varargs v, int top) {
+				frame[calls-1].instr(pc, v, top);
+			}
+	
+			/**
+			 * Get the traceback starting at a specific level.
+			 * @param level
+			 * @return String containing the traceback.
+			 */
+			String traceback(int level) {
+				StringBuffer sb = new StringBuffer();
+				sb.append( "stack traceback:" );
+				DebugLib.CallFrame c = getCallFrame(level);
+				if (c != null) {
+					sb.append("\n\t");
+					sb.append( c.sourceline() );
+					sb.append( " in " );
+					while ( (c = getCallFrame(++level)) != null ) {
+						sb.append( c.tracename() );
+						sb.append( "\n\t" );
+						sb.append( c.sourceline() );
+						sb.append( " in " );
+					}
+					sb.append( "main chunk" );
+				}
+				return sb.toString();
+			}
+	
+			DebugLib.CallFrame getCallFrame(int level) {
+				if (level < 1 || level >= calls)
+					return null;
+				return frame[calls-level];
+			}
+	
+			DebugLib.CallFrame findCallFrame(LuaValue func) {
+				for (int i = 1; i <= calls; ++i)
+					if (frame[calls-i].f == func)
+						return frame[i];
+				return null;
+			}
+	
+		}
+
+	static class CallFrame {
+		LuaFunction f;
+		int pc;
+		int top;
+		Varargs v;
+		LuaValue[] stack;
+		boolean tail;
+		void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+			this.f = function;
+			this.v = varargs;
+			this.stack = stack;
+			this.tail = false;
+		}
+		void set(LuaFunction function) {
+			this.f = function;
+		}
+		void reset() {
+			this.f = null;
+			this.v = null;
+			this.stack = null;
+		}
+		void instr(int pc, Varargs v, int top) {
+			this.pc = pc;
+			this.v = v;
+			this.top = top;
+			if (f.checkclosure().p.code[pc] == Lua.OP_TAILCALL)
+				this.tail = true;
+			if (TRACE)
+				Print.printState(f.checkclosure(), pc, stack, top, v);
+		}
+		Varargs getLocal(int i) {
+			LuaString name = getlocalname(i);
+			if ( name != null )
+				return varargsOf( name, stack[i-1] );
+			else
+				return NIL;
+		}
+		Varargs setLocal(int i, LuaValue value) {
+			LuaString name = getlocalname(i);
+			if ( name != null ) {
+				stack[i-1] = value;
+				return name;
+			} else {
+				return NIL;
+			}
+		}
+		int currentline() {
+			if ( !f.isclosure() ) return -1;
+			int[] li = f.checkclosure().p.lineinfo;
+			return li==null || pc<0 || pc>=li.length? -1: li[pc]; 
+		}
+		String sourceline() {
+			if ( !f.isclosure() ) return f.tojstring();
+			String s = f.checkclosure().p.source.tojstring();
+			int line = currentline();
+			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
+		}
+		String tracename() {
+			LuaString[] kind = getfuncname(this);
+			if ( kind == null )
+				return "function ?";
+			return "function "+kind[0].tojstring();
+		}
+		LuaString getlocalname(int index) {
+			if ( !f.isclosure() ) return null;
+			return f.checkclosure().p.getlocalname(index, pc);
+		}
+		String tojstring() {
+			return tracename()+" "+sourceline();
+		}
+		boolean istailcall() {
+			return tail;
+		}
+		
+	}
+
 	static LuaString findupvalue(LuaClosure c, int up) {
 		if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
@@ -426,7 +641,7 @@ public class DebugLib extends OneArgFunction {
 		if (!x) throw new RuntimeException("lua_assert failed");
 	}	
 	
-	public static LuaString[] getfuncname(CallFrame frame) {
+	public static LuaString[] getfuncname(DebugLib.CallFrame frame) {
 		if (!frame.f.isclosure())
 			return new LuaString[] { frame.f.strvalue(), JAVA };
 		Prototype p = frame.f.checkclosure().p;
@@ -572,6 +787,4 @@ public class DebugLib extends OneArgFunction {
 	  }
 	  return setreg;
 	}
-
-
 }

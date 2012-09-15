@@ -208,11 +208,13 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	final class pcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkvalue(1);
-			globals.running_thread.callstack.onCall(this);
+			if (globals != null && globals.debuglib != null)
+				globals.debuglib.onCall(this);
 			try {
 				return pcall(func,args.subargs(2),null);
 			} finally {
-				globals.running_thread.callstack.onReturn();
+				if (globals != null && globals.debuglib != null)
+					globals.debuglib.onReturn();
 			}
 		}
 	}
@@ -350,11 +352,13 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 	// "xpcall", // (f, err) -> result1, ...				
 	final class xpcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			globals.running_thread.callstack.onCall(this);
+			if (globals != null && globals.debuglib != null)
+				globals.debuglib.onCall(this);
 			try {
-				return pcall(args.arg1(),NONE,args.checkvalue(2));
+				return pcall(args.arg1(),args.subargs(3),args.checkvalue(2));
 			} finally {
-				globals.running_thread.callstack.onReturn();
+				if (globals != null && globals.debuglib != null)
+					globals.debuglib.onReturn();
 			}
 		}
 	}

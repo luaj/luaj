@@ -84,21 +84,14 @@ public class LuaThread extends LuaValue {
 	
 	public final State state;
 
-	public final CallStack callstack = new CallStack();
-	
 	public static final int        MAX_CALLSTACK = 256;
 	
 	/** Interval to check for LuaThread dereferencing.  */
 	public static int GC_INTERVAL = 30000;
 
-	/** Thread-local used by DebugLib to store debugging state.  */
-	public Object debugState;
-
-	public LuaValue hookfunc;
-	public boolean hookline;
-	public boolean hookcall;
-	public boolean hookrtrn;
-	public int hookcount;
+	/** Thread-local used by DebugLib to store debugging state. 
+	 * This is ano opaque value that should not be modified by applications. */
+	public Object callstack;
 
 	public final Globals globals;
 
@@ -238,180 +231,6 @@ public class LuaThread extends LuaValue {
 				this.result = LuaValue.NONE;
 			}
 		}
-	}
-
-	public static class CallStack {
-		final CallFrame[] frame = new CallFrame[MAX_CALLSTACK];
-		int               calls  = 0;
-
-		CallStack() {
-			for (int i = 0; i < MAX_CALLSTACK; ++i)
-				frame[i] = new CallFrame();
-		}
-
-		/**
-		 * Method to indicate the start of a call
-		 * @param stack 
-		 * @param varargs 
-		 * @see DebugLib
-		 */
-		public final void onCall(LuaFunction function) {
-			frame[calls++].set(function);
-//			if (DebugLib.DEBUG_ENABLED) 
-//				DebugLib.debugOnCall(globals.running_thread, calls, function);
-		}
-
-		public final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
-			frame[calls++].set(function, varargs, stack);
-//			if (DebugLib.DEBUG_ENABLED) 
-//				DebugLib.debugOnCall(globals.running_thread, calls, function);
-		}
-		
-		/**
-		 * Method to signal the end of a call
-		 * @see DebugLib
-		 */
-		public final void onReturn() {
-			frame[--calls].reset();
-//			if (DebugLib.DEBUG_ENABLED) 
-//				DebugLib.debugOnReturn(running_thread, calls);
-		}
-		
-		public final void onInstruction(int pc, Varargs v, int top) {
-			frame[calls-1].instr(pc, v, top);
-		}
-
-		/**
-		 * Get number of calls in stack
-		 * @return number of calls in current call stack
-		 * @see DebugLib
-		 */
-		public final int getCallstackDepth() {
-			return calls;
-		}
-
-		/** 
-		 * Get the function at a particular level of the stack.
-		 * @param level # of levels back from the top of the stack.
-		 * @return LuaFunction, or null if beyond the stack limits.
-		 */
-		public LuaFunction getFunction(int level) {
-			return level>0 && level<=calls? frame[calls-level].f: null;
-		}
-
-		/**
-		 * Get the traceback starting at a specific level.
-		 * @param level
-		 * @return String containing the traceback.
-		 */
-		public String traceback(int level) {
-			StringBuffer sb = new StringBuffer();
-			sb.append( "stack traceback:" );
-			CallFrame c = getCallFrame(level);
-			if (c != null) {
-				sb.append("\n\t");
-				sb.append( c.sourceline() );
-				sb.append( " in " );
-				while ( (c = getCallFrame(++level)) != null ) {
-					sb.append( c.tracename() );
-					sb.append( "\n\t" );
-					sb.append( c.sourceline() );
-					sb.append( " in " );
-				}
-				sb.append( "main chunk" );
-			}
-			return sb.toString();
-		}
-
-		public CallFrame getCallFrame(int level) {
-			if (level < 1 || level >= calls)
-				return null;
-			return frame[calls-level];
-		}
-
-		public CallFrame findCallFrame(LuaValue func) {
-			for (int i = 1; i <= calls; ++i)
-				if (frame[calls-i].f == func)
-					return frame[i];
-			return null;
-		}
-
-	}
-
-	public static class CallFrame {
-		public LuaFunction f;
-		public int pc;
-		int top;
-		Varargs v;
-		LuaValue[] stack;
-		boolean tail;
-		public void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
-			this.f = function;
-			this.v = varargs;
-			this.stack = stack;
-			this.tail = false;
-		}
-		public void set(LuaFunction function) {
-			this.f = function;
-		}
-		public void reset() {
-			this.f = null;
-			this.v = null;
-			this.stack = null;
-		}
-		public void instr(int pc, Varargs v, int top) {
-			this.pc = pc;
-			this.v = v;
-			this.top = top;
-			if (f.checkclosure().p.code[pc] == Lua.OP_TAILCALL)
-				this.tail = true;
-			if (DebugLib.TRACE)
-				Print.printState(f.checkclosure(), pc, stack, top, v);
-		}
-		public Varargs getLocal(int i) {
-			LuaString name = getlocalname(i);
-			if ( name != null )
-				return varargsOf( name, stack[i-1] );
-			else
-				return NIL;
-		}
-		public Varargs setLocal(int i, LuaValue value) {
-			LuaString name = getlocalname(i);
-			if ( name != null ) {
-				stack[i-1] = value;
-				return name;
-			} else {
-				return NIL;
-			}
-		}
-		public int currentline() {
-			if ( !f.isclosure() ) return -1;
-			int[] li = f.checkclosure().p.lineinfo;
-			return li==null || pc<0 || pc>=li.length? -1: li[pc]; 
-		}
-		public String sourceline() {
-			if ( !f.isclosure() ) return f.tojstring();
-			String s = f.checkclosure().p.source.tojstring();
-			int line = currentline();
-			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
-		}
-		public String tracename() {
-			LuaString[] kind = DebugLib.getfuncname(this);
-			if ( kind == null )
-				return "function ?";
-			return "function "+kind[0].tojstring();
-		}
-		public LuaString getlocalname(int index) {
-			if ( !f.isclosure() ) return null;
-			return f.checkclosure().p.getlocalname(index, pc);
-		}
-		public String tojstring() {
-			return tracename()+" "+sourceline();
-		}
-		public boolean istailcall() {
-			return tail;
-		}
-		
 	}
 		
 }

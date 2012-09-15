@@ -192,15 +192,15 @@ public class LuaClosure extends LuaFunction {
 		// TODO: use linked list.
 		UpValue[] openups = p.p.length>0? new UpValue[stack.length]: null;
 		
-		// debug wants args to this function
-		if (DebugLib.DEBUG_ENABLED && globals != null)
-			globals.running_thread.callstack.onCall( this, varargs, stack ); 
+		// allow for debug hooks
+		if (globals != null && globals.debuglib != null)
+			globals.debuglib.onCall( this, varargs, stack ); 
 
 		// process instructions
 		try {
 			while ( true ) {
-				if (DebugLib.DEBUG_ENABLED && globals != null)
-					globals.running_thread.callstack.onInstruction( pc, v, top ); 
+				if (globals != null && globals.debuglib != null)
+					globals.debuglib.onInstruction( pc, v, top ); 
 				
 				// pull out instruction
 				i = code[pc++];
@@ -507,12 +507,12 @@ public class LuaClosure extends LuaFunction {
 			processErrorHooks(le, p, pc);
 			throw le;
 		} finally {
-			if (DebugLib.DEBUG_ENABLED && globals != null)
-				globals.running_thread.callstack.onReturn();
 			if ( openups != null )
 				for ( int u=openups.length; --u>=0; )
 					if ( openups[u] != null )
 						openups[u].close();
+			if (globals != null && globals.debuglib != null)
+				globals.debuglib.onReturn();
 		}
 	}
 
@@ -538,8 +538,8 @@ public class LuaClosure extends LuaFunction {
 		le.fileline = (p.source != null? p.source.tojstring(): "?") + ":" 
 			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
 		le.traceback = errorHook(le.getMessage());
-		if (DebugLib.DEBUG_ENABLED && globals != null && globals.debuglib != null)
-			le.traceback += globals.running_thread.callstack.traceback(le.level);
+		if (globals != null && globals.debuglib != null)
+			le.traceback += globals.debuglib.traceback(le.level);
 	}
 	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
@@ -562,21 +562,4 @@ public class LuaClosure extends LuaFunction {
 		upValues[i].setValue(v);
 	}
 	
-	
-	/** 
-	 * Add file and line info to a message at a particular level 
-	 * @param message the String message to use
-	 * @param level where to supply line info from in call stack
-	 * */
-	private String getFileLineMessage( Exception e, int pc ) {
-		String msg = e.getMessage();
-		if ( msg == null ) return null;
-		if ( globals == null ) return msg;
-		LuaFunction f = globals.running_thread.callstack.getFunction(1);
-		if ( ! (f instanceof LuaClosure) ) return msg;
-		LuaClosure c = (LuaClosure) f;
-		LuaString file = c.p.source != null ? c.p.source: valueOf("?");
-		String line = c.p.lineinfo != null && pc < c.p.lineinfo.length? String.valueOf(c.p.lineinfo[pc]): "?";
-		return file.tojstring() + ": " + line;
-	}	
 }

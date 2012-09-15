@@ -41,11 +41,10 @@ public class OrphanedThreadTest extends TestCase {
 	WeakReference luathr_ref;
 	LuaValue function;
 	WeakReference func_ref;
-	LuaValue env;
 	
 	protected void setUp() throws Exception {
 		LuaThread.thread_orphan_check_interval = 5;
-		env = JsePlatform.standardGlobals();
+		globals = JsePlatform.standardGlobals();
 	}
 	
 	protected void tearDown() {
@@ -53,17 +52,17 @@ public class OrphanedThreadTest extends TestCase {
 	}
 	
 	public void testCollectOrphanedNormalThread() throws Exception {
-		function = new NormalFunction();
+		function = new NormalFunction(globals);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
 	public void testCollectOrphanedEarlyCompletionThread() throws Exception {
-		function = new EarlyCompletionFunction();
+		function = new EarlyCompletionFunction(globals);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
 	public void testCollectOrphanedAbnormalThread() throws Exception {
-		function = new AbnormalFunction();
+		function = new AbnormalFunction(globals);
 		doTest(LuaValue.FALSE, LuaValue.valueOf("abnormal condition"));
 	}
 	
@@ -76,7 +75,7 @@ public class OrphanedThreadTest extends TestCase {
 			"print('leakage in closure.3, arg is '..arg)\n" +
 			"return 'done'\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -92,7 +91,7 @@ public class OrphanedThreadTest extends TestCase {
 			"end\n" +
 			"print( 'pcall-closre.result:', pcall( f, ... ) )\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -109,12 +108,11 @@ public class OrphanedThreadTest extends TestCase {
 		    "end\n" +
 			"load(f)()\n";
 		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", env);
+		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
 		doTest(LuaValue.TRUE, LuaValue.ONE);
 	}
 
 	private void doTest(LuaValue status2, LuaValue value2) throws Exception {
-		globals = JsePlatform.standardGlobals();
 		luathread = new LuaThread(globals, function);
 		luathr_ref = new WeakReference(luathread);
 		func_ref = new WeakReference(function);
@@ -144,7 +142,11 @@ public class OrphanedThreadTest extends TestCase {
 	}
 	
 	
-	class NormalFunction extends OneArgFunction {
+	static class NormalFunction extends OneArgFunction {
+		final Globals globals;
+		public NormalFunction(Globals globals) {
+			this.globals = globals;
+		}
 		public LuaValue call(LuaValue arg) {
 			System.out.println("in normal.1, arg is "+arg);
 			arg = globals.yield(ONE).arg1();
@@ -155,7 +157,11 @@ public class OrphanedThreadTest extends TestCase {
 		}		
 	}
 	
-	class EarlyCompletionFunction extends OneArgFunction {
+	static class EarlyCompletionFunction extends OneArgFunction {
+		final Globals globals;
+		public EarlyCompletionFunction(Globals globals) {
+			this.globals = globals;
+		}
 		public LuaValue call(LuaValue arg) {
 			System.out.println("in early.1, arg is "+arg);
 			arg = globals.yield(ONE).arg1();
@@ -164,17 +170,11 @@ public class OrphanedThreadTest extends TestCase {
 		}		
 	}
 	
-	class AbnormalFunction extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			System.out.println("in abnormal.1, arg is "+arg);
-			arg = globals.yield(ONE).arg1();
-			System.out.println("in abnormal.2, arg is "+arg);
-			error("abnormal condition");
-			return ZERO;
-		}		
-	}
-	
-	class ClosureFunction extends OneArgFunction {
+	static class AbnormalFunction extends OneArgFunction {
+		final Globals globals;
+		public AbnormalFunction(Globals globals) {
+			this.globals = globals;
+		}
 		public LuaValue call(LuaValue arg) {
 			System.out.println("in abnormal.1, arg is "+arg);
 			arg = globals.yield(ONE).arg1();
