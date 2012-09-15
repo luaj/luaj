@@ -410,8 +410,7 @@ public class Print extends Lua {
 						s.substring(0, 32).tojstring()+"...+"+(s.length()-32)+"b");					
 				break;
 			case LuaValue.TFUNCTION:
-				ps.print( ( v instanceof LuaClosure )?
-					((LuaClosure)v).p.toString(): v.tojstring() );
+				ps.print( v.tojstring() );
 				break;
 			case LuaValue.TUSERDATA:
 				Object o = v.touserdata();

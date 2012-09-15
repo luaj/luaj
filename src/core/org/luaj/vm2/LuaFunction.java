@@ -72,7 +72,10 @@ public class LuaFunction extends LuaValue {
 
 	public String tojstring() {
 		String s = getClass().getName();
-		return "function: " + s.substring(s.lastIndexOf('.')+1);
+		return "function: " + s.substring(Math.max(s.lastIndexOf('.'),s.lastIndexOf('$'))+1);
 	}
 
+	public LuaString strvalue() {
+		return valueOf(tojstring());
+	}
 }

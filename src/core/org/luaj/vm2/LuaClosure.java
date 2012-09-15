@@ -124,6 +124,10 @@ public class LuaClosure extends LuaFunction {
 		return s_metatable; 
 	}
 	
+	public String tojstring() {
+		return "function: " + p.toString();
+	}
+	
 	public final LuaValue call() {
 		LuaValue[] stack = new LuaValue[p.maxstacksize];
 		for (int i = 0; i < p.numparams; ++i )
@@ -185,7 +189,8 @@ public class LuaClosure extends LuaFunction {
 		LuaValue[] k = p.k;
 		
 		// upvalues are only possible when closures create closures
-		UpValue[] openups = p.p.length>0? new UpValue[p.p.length]: null;
+		// TODO: use linked list.
+		UpValue[] openups = p.p.length>0? new UpValue[stack.length]: null;
 		
 		// debug wants args to this function
 		if (DebugLib.DEBUG_ENABLED && globals != null)

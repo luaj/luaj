@@ -80,6 +80,7 @@ local echo = function(msg,...)
 	return ... 
 end
 local echocr = function(...)
+	local arg = table.pack(...) 
 	echo('(echocr) first args', table.unpack(arg,1,arg.n)) 
 	local a = arg
 	while true do

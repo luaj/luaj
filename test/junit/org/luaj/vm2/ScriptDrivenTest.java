@@ -63,10 +63,10 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 		default:
 		case JSE:
 		case LUAJIT:
-			globals = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
+			globals = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
 			break;
 		case JME:
-			globals = org.luaj.vm2.lib.jme.JmePlatform.standardGlobals();
+			globals = org.luaj.vm2.lib.jme.JmePlatform.debugGlobals();
 			break;
 		}
 	}
@@ -179,8 +179,6 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 		if ( script == null )
 			fail("Could not load script for test case: " + name);
 		try {
-			// Use "stdin" instead of resource name so that output matches
-			// standard Lua.
 			switch ( this.platform ) {
 			case LUAJIT:
 				if ( nocompile ) {
@@ -190,7 +188,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 					return LuaJC.getInstance().load( script, name, _G);
 				}
 			default:
-				return LoadState.load(script, "=stdin", "bt", _G);
+				return LoadState.load(script, "@"+name+".lua", "bt", _G);
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace();

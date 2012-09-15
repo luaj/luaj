@@ -85,11 +85,11 @@ print( 'a.a='..tostring(a.a)..' a.b='..tostring(a.b)..' b.a='..tostring(b.a)..' 
 local s1,x1,y1 = pcall( debug.getmetatable, a )
 local s2,x2,y2 = pcall( debug.setmetatable, a, mt )
 print( 'a.a='..tostring(a.a)..' a.b='..tostring(a.b)..' b.a='..tostring(b.a)..' b.b='..tostring(b.b)) 
-local s3,x3,y3 = pcall( debug.getmetatable, a )
-local s4,x4,y4 = pcall( debug.getmetatable, b )
-local s5,x5,y5 = pcall( debug.setmetatable, a, nil )
+local s3,x3,y3 = pcall( debug.getmetatable, a ) print(type(s3), type(x3), type(y3), type(getmetatable(a)))
+local s4,x4,y4 = pcall( debug.getmetatable, b ) print(type(s4), type(x4), type(y4), type(getmetatable(b)))
+local s5,x5,y5 = pcall( debug.setmetatable, a, nil ) print(type(s5), type(x5), type(y5), type(getmetatable(a)))
 print( 'a.a='..tostring(a.a)..' a.b='..tostring(a.b)..' b.a='..tostring(b.a)..' b.b='..tostring(b.b)) 
-local s6,x6,y6 = pcall( debug.getmetatable, a )
+local s6,x6,y6 = pcall( debug.getmetatable, a ) print(type(s6), type(x6), type(y6), type(getmetatable(a)))
 if not s1 then print( 's1 error', x1 ) end
 if not s2 then print( 's2 error', x2 ) end
 if not s3 then print( 's3 error', x3 ) end

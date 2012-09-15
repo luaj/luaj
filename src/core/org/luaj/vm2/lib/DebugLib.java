@@ -21,9 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.lib;
 
-import java.lang.ref.WeakReference;
-
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
@@ -34,11 +33,14 @@ import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
+import org.luaj.vm2.LuaThread.CallFrame;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.jme.JmePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.luajc.LuaJC;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
@@ -76,23 +78,28 @@ public class DebugLib extends OneArgFunction {
 	// remove it in production builds
 	public static boolean DEBUG_ENABLED;
 	
-	private static final LuaString LUA        = valueOf("Lua");  
-	private static final LuaString JAVA       = valueOf("Java");  
-	private static final LuaString QMARK      = valueOf("?");  
-	private static final LuaString GLOBAL     = valueOf("global");  
-	private static final LuaString LOCAL      = valueOf("local");  
-	private static final LuaString METHOD     = valueOf("method");  
-	private static final LuaString UPVALUE    = valueOf("upvalue");  
-	private static final LuaString FIELD      = valueOf("field");
-	private static final LuaString CALL       = valueOf("call");  
-	private static final LuaString LINE       = valueOf("line");  
-	private static final LuaString COUNT      = valueOf("count");  
-	private static final LuaString RETURN     = valueOf("return");  
-	private static final LuaString TAILRETURN = valueOf("tail return");
-	private static final LuaString CONSTANT   = valueOf("constant");  
+	private static final LuaString LUA             = valueOf("Lua");  
+	private static final LuaString JAVA            = valueOf("Java");  
+	private static final LuaString QMARK           = valueOf("?");  
+	private static final LuaString GLOBAL          = valueOf("global");  
+	private static final LuaString LOCAL           = valueOf("local");  
+	private static final LuaString METHOD          = valueOf("method");  
+	private static final LuaString UPVALUE         = valueOf("upvalue");  
+	private static final LuaString FIELD           = valueOf("field");
+	private static final LuaString CALL            = valueOf("call");  
+	private static final LuaString LINE            = valueOf("line");  
+	private static final LuaString COUNT           = valueOf("count");  
+	private static final LuaString RETURN          = valueOf("return");  
+	private static final LuaString TAILRETURN      = valueOf("tail return");
+	private static final LuaString CONSTANT        = valueOf("constant");  
+	private static final LuaString FOR_ITERATOR    = valueOf("for iterator");
+	private static final LuaString METAMETHOD      = valueOf("metamethod");
 	
 	private static final LuaString FUNC            = valueOf("func");  
+	private static final LuaString ISTAILCALL      = valueOf("istailcall");  
+	private static final LuaString ISVARARG        = valueOf("isvararg");  
 	private static final LuaString NUPS            = valueOf("nups");  
+	private static final LuaString NPARAMS         = valueOf("nparams");  
 	private static final LuaString NAME            = valueOf("name");  
 	private static final LuaString NAMEWHAT        = valueOf("namewhat");  
 	private static final LuaString WHAT            = valueOf("what");  
@@ -110,9 +117,23 @@ public class DebugLib extends OneArgFunction {
 		globals.debuglib = this;
 		DEBUG_ENABLED = true;
 		LuaTable debug = new LuaTable();
-		env.set("debug", new debug());
-		env.set("gethook", new gethook());
-		env.set("sethook", new sethook());
+		debug.set("debug", new debug());
+		debug.set("gethook", new gethook());
+		debug.set("getinfo", new getinfo());
+		debug.set("getlocal", new getlocal());
+		debug.set("getmetatable", new getmetatable());
+		debug.set("getregistry", new getregistry());
+		debug.set("getupvalue", new getupvalue());
+		debug.set("getuservalue", new getuservalue());
+		debug.set("sethook", new sethook());
+		debug.set("setlocal", new setlocal());
+		debug.set("setmetatable", new setmetatable());
+		debug.set("setupvalue", new setupvalue());
+		debug.set("setuservalue", new setuservalue());
+		debug.set("traceback", new traceback());
+		debug.set("upvalueid", new upvalueid());
+		debug.set("upvaluejoin", new upvaluejoin());
+		env.set("debug", debug);
 		env.get("package").get("loaded").set("debug", debug);
 		return debug;
 	}
@@ -140,9 +161,74 @@ public class DebugLib extends OneArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
-			LuaValue func    = args.optfunction(a++, null);
-			String what       = args.optjstring(a++,"");
-			return NONE;
+			LuaValue func = args.arg(a++);
+			String what = args.optjstring(a++, "flnStu");
+			LuaThread.CallStack callstack = thread.callstack;
+
+			// find the stack info
+			LuaThread.CallFrame frame;
+			if ( func.isnumber() ) {
+				frame = callstack.getCallFrame(func.toint());
+				if (frame == null)
+					return NONE;
+				func = frame.f;
+			} else if ( func.isfunction() ) {
+				frame = callstack.findCallFrame(func);
+			} else {
+				return argerror(a-2, "function or level");
+			}
+
+			// start a table
+			LuaTable info = new LuaTable();
+			LuaClosure c = func.optclosure(null);
+			if (what.indexOf('S') >= 0) {
+				if (c != null) {
+					Prototype p = c.p;
+					info.set(WHAT, LUA);
+					info.set(SOURCE, p.source);
+					info.set(SHORT_SRC, valueOf(sourceshort(p)));
+					info.set(LINEDEFINED, valueOf(p.linedefined));
+					info.set(LASTLINEDEFINED, valueOf(p.lastlinedefined));
+				} else {
+					String shortName = func.tojstring();
+					LuaString name = LuaString.valueOf("[Java] " + shortName);
+					info.set(WHAT, JAVA);
+					info.set(SOURCE, name);
+					info.set(SHORT_SRC, valueOf(shortName));
+					info.set(LINEDEFINED, LuaValue.MINUSONE);
+					info.set(LASTLINEDEFINED, LuaValue.MINUSONE);
+				}
+			}
+			if (what.indexOf('l') >= 0) {
+				info.set( CURRENTLINE, valueOf(frame!=null? frame.currentline(): -1) );
+			}
+			if (what.indexOf('u') >= 0) {
+				info.set(NUPS, valueOf(c!=null? c.p.upvalues.length: 0));
+				info.set(NPARAMS, valueOf(c!=null? c.p.numparams: 0));
+				info.set(ISVARARG, valueOf(c!=null? c.p.is_vararg: 0));
+			}
+			if (what.indexOf('n') >= 0) {
+				if (frame != null) {
+					LuaString[] kind = getfuncname(frame);
+					info.set(NAME, kind!=null? kind[0]: QMARK);
+					info.set(NAMEWHAT, kind!=null? kind[1]: EMPTYSTRING);
+				}
+			}
+			if (what.indexOf('t') >= 0) {
+				info.set(ISTAILCALL, frame != null && frame.istailcall()? ONE: ZERO);
+			}
+			if (what.indexOf('L') >= 0) {
+				LuaTable lines = new LuaTable();
+				info.set(ACTIVELINES, lines);
+				CallFrame cf;
+				for (int l = 1; (cf=callstack.getCallFrame(l)) != null; ++l)
+					if (cf.f == func)
+						lines.insert(-1, valueOf(cf.currentline()));
+			}
+			if (what.indexOf('f') >= 0) {
+				info.set( FUNC, func );
+			}
+			return info;
 		}
 	}
 
@@ -151,9 +237,9 @@ public class DebugLib extends OneArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
-			LuaValue func    = args.optfunction(a++, null);
-			LuaValue local   = args.checkvalue(a++);
-			return thread.callstack.findCallFrame(func).getLocal(local.toint());
+			int level = args.checkint(a++);
+			int local = args.checkint(a++);
+			return thread.callstack.getCallFrame(level).getLocal(local);
 		}
 	}
 
@@ -225,32 +311,27 @@ public class DebugLib extends OneArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
-			LuaValue func    = args.optfunction(a++, null);
-			LuaValue local   = args.checkvalue(a++);
-			LuaValue value   = args.checkvalue(a++);
-			return thread.callstack.findCallFrame(func).setLocal(local.toint(), value);
+			int level = args.checkint(a++);
+			int local = args.checkint(a++);
+			LuaValue value = args.arg(a++);
+			return thread.callstack.getCallFrame(level).setLocal(local, value);
 		}
 	}
 
 	//	debug.setmetatable (value, table)
-	final class setmetatable extends VarArgFunction { 
-		public Varargs invoke(Varargs args) {
-			LuaValue object = args.arg(1);
-			try {
-				LuaValue mt = args.opttable(2, null);
-				switch ( object.type() ) {
-					case TNIL:      LuaNil.s_metatable      = mt; break;
-					case TNUMBER:   LuaNumber.s_metatable   = mt; break;
-					case TBOOLEAN:  LuaBoolean.s_metatable  = mt; break;
-					case TSTRING:   LuaString.s_metatable   = mt; break;
-					case TFUNCTION: LuaFunction.s_metatable = mt; break;
-					case TTHREAD:   LuaThread.s_metatable   = mt; break;
-					default: object.setmetatable( mt );
-				}
-				return LuaValue.TRUE;
-			} catch ( LuaError e ) {
-				return varargsOf(FALSE, valueOf(e.toString()));
+	final class setmetatable extends TwoArgFunction { 
+		public LuaValue call(LuaValue value, LuaValue table) {
+			LuaValue mt = table.opttable(null);
+			switch ( value.type() ) {
+				case TNIL:      LuaNil.s_metatable      = mt; break;
+				case TNUMBER:   LuaNumber.s_metatable   = mt; break;
+				case TBOOLEAN:  LuaBoolean.s_metatable  = mt; break;
+				case TSTRING:   LuaString.s_metatable   = mt; break;
+				case TFUNCTION: LuaFunction.s_metatable = mt; break;
+				case TTHREAD:   LuaThread.s_metatable   = mt; break;
+				default: value.setmetatable( mt );
 			}
+			return value;
 		}
 	}
 
@@ -291,7 +372,7 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			String message = args.optjstring(a++, null);
 			int level = args.optint(a++,1);
-			String tb = thread.callstack.traceback(level-1);
+			String tb = thread.callstack.traceback(level);
 			return valueOf(message!=null? message+"\n"+tb: tb);
 		}
 	}
@@ -331,83 +412,7 @@ public class DebugLib extends OneArgFunction {
 		}
 		return null;
 	}
-
 	
-	// ------------------- library function implementations -----------------
-	protected Varargs _getinfo(Varargs args, LuaValue level0func) {
-		int a=1;
-		LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
-		LuaValue func = args.arg(a++);
-		String what = args.optjstring(a++, "nSluf");
-		LuaThread.CallStack callstack = thread.callstack;
-
-		// find the stack info
-		LuaThread.CallFrame frame;
-		if ( func.isnumber() ) {
-			frame = callstack.getCallFrame(func.toint());
-		} else {
-			frame = callstack.findCallFrame(func);
-		}
-		if (frame == null)
-			return NIL;
-
-		// start a table
-		LuaTable info = new LuaTable();
-		LuaClosure c = frame.f.isclosure()? (LuaClosure) frame.f: null;
-		for (int i = 0, j = what.length(); i < j; i++) {
-			switch (what.charAt(i)) {
-				case 'S': {
-					if ( c != null ) {
-						Prototype p = c.p;
-						info.set(WHAT, LUA);
-						info.set(SOURCE, p.source);
-						info.set(SHORT_SRC, valueOf(sourceshort(p)));
-						info.set(LINEDEFINED, valueOf(p.linedefined));
-						info.set(LASTLINEDEFINED, valueOf(p.lastlinedefined));
-					} else {
-						String shortName = frame.f.tojstring();
-						LuaString name = LuaString.valueOf("[Java] "+shortName);
-						info.set(WHAT, JAVA);
-						info.set(SOURCE, name);
-						info.set(SHORT_SRC, valueOf(shortName));
-						info.set(LINEDEFINED, LuaValue.MINUSONE);
-						info.set(LASTLINEDEFINED, LuaValue.MINUSONE);
-					}
-					break;
-				}
-				case 'l': {
-					int line = frame.currentline();
-					info.set( CURRENTLINE, valueOf(line) );
-					break;
-				}
-				case 'u': {
-					info.set(NUPS, valueOf(c!=null? c.p.upvalues.length: 0));
-					break;
-				}
-				case 'n': {
-					LuaString[] kind = frame.getfunckind();
-					info.set(NAME, kind!=null? kind[0]: QMARK);
-					info.set(NAMEWHAT, kind!=null? kind[1]: EMPTYSTRING);
-					break;
-				}
-				case 'f': {
-					info.set( FUNC, frame.f );
-					break;
-				}
-				case 'L': {
-					LuaTable lines = new LuaTable();
-					info.set(ACTIVELINES, lines);
-					int line = frame.currentline();
-					if ( line >= 0 )
-						lines.set(1, valueOf(line));
-					break;
-				}
-			}
-		}
-		return info;
-	}
-
-
 	public static String sourceshort(Prototype p) {
 		String name = p.source.tojstring();
         if ( name.startsWith("@") || name.startsWith("=") )
@@ -416,13 +421,48 @@ public class DebugLib extends OneArgFunction {
 			name = "binary string";
         return name;
 	}
-
-	// =======================================================
 	
 	static void lua_assert(boolean x) {
 		if (!x) throw new RuntimeException("lua_assert failed");
 	}	
-
+	
+	public static LuaString[] getfuncname(CallFrame frame) {
+		if (!frame.f.isclosure())
+			return new LuaString[] { frame.f.strvalue(), JAVA };
+		Prototype p = frame.f.checkclosure().p;
+		int pc = frame.pc;
+		int i = p.code[pc]; /* calling instruction */
+		LuaString tm;
+		switch (Lua.GET_OPCODE(i)) {
+			case Lua.OP_CALL:
+			case Lua.OP_TAILCALL: /* get function name */
+				return getobjname(p, pc, Lua.GETARG_A(i));
+			case Lua.OP_TFORCALL: /* for iterator */
+		    	return new LuaString[] { FOR_ITERATOR, FOR_ITERATOR};
+		    /* all other instructions can call only through metamethods */
+		    case Lua.OP_SELF:
+		    case Lua.OP_GETTABUP:
+		    case Lua.OP_GETTABLE: tm = LuaValue.INDEX; break;
+		    case Lua.OP_SETTABUP:
+		    case Lua.OP_SETTABLE: tm = LuaValue.NEWINDEX; break;
+		    case Lua.OP_EQ: tm = LuaValue.EQ; break;
+		    case Lua.OP_ADD: tm = LuaValue.ADD; break;
+		    case Lua.OP_SUB: tm = LuaValue.SUB; break;
+		    case Lua.OP_MUL: tm = LuaValue.MUL; break;
+		    case Lua.OP_DIV: tm = LuaValue.DIV; break;
+		    case Lua.OP_MOD: tm = LuaValue.MOD; break;
+		    case Lua.OP_POW: tm = LuaValue.POW; break;
+		    case Lua.OP_UNM: tm = LuaValue.UNM; break;
+		    case Lua.OP_LEN: tm = LuaValue.LEN; break;
+		    case Lua.OP_LT: tm = LuaValue.LT; break;
+		    case Lua.OP_LE: tm = LuaValue.LE; break;
+		    case Lua.OP_CONCAT: tm = LuaValue.CONCAT; break;
+		    default:
+		      return null;  /* else no useful name can be found */
+		}
+		return new LuaString[] { tm, METAMETHOD };
+	}
+	
 	// return StrValue[] { name, namewhat } if found, null if not
 	public static LuaString[] getobjname(Prototype p, int lastpc, int reg) {
 		int pc = lastpc; // currentpc(L, ci);
@@ -445,12 +485,12 @@ public class DebugLib extends OneArgFunction {
 			case Lua.OP_GETTABUP:
 			case Lua.OP_GETTABLE: {
 				int k = Lua.GETARG_C(i); /* key index */
-				int t = Lua.GETARG_Bx(i); /* table index */
+				int t = Lua.GETARG_B(i); /* table index */
 		        LuaString vn = (Lua.GET_OPCODE(i) == Lua.OP_GETTABLE)  /* name of indexed variable */
 	                    ? p.getlocalname(t + 1, pc)
 	                    : (t < p.upvalues.length ? p.upvalues[t].name : QMARK);
 				name = kname(p, k);
-				return new LuaString[] { name, vn.eq_b(ENV)? GLOBAL: FIELD };
+				return new LuaString[] { name, vn != null && vn.eq_b(ENV)? GLOBAL: FIELD };
 			}
 			case Lua.OP_GETUPVAL: {
 				int u = Lua.GETARG_B(i); /* upvalue index */
@@ -460,7 +500,7 @@ public class DebugLib extends OneArgFunction {
 		    case Lua.OP_LOADK:
 		    case Lua.OP_LOADKX: {
 		        int b = (Lua.GET_OPCODE(i) == Lua.OP_LOADK) ? Lua.GETARG_Bx(i)
-		                                 : Lua.GETARG_Ax(p.code[pc + 1]);
+		                                                    : Lua.GETARG_Ax(p.code[pc + 1]);
 		        if (p.k[b].isstring()) {
 		          name = p.k[b].strvalue();
 		          return new LuaString[] { name, CONSTANT };

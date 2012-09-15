@@ -307,9 +307,17 @@ public class LuaThread extends LuaValue {
 		public String traceback(int level) {
 			StringBuffer sb = new StringBuffer();
 			sb.append( "stack traceback:" );
-			for (LuaFunction f = null; (f = getFunction(level)) != null; ++level) {
-				sb.append( "\n\t" );
-				sb.append( f.tostring() );
+			CallFrame c = getCallFrame(level);
+			if (c != null) {
+				sb.append("\n\t");
+				sb.append( c.sourceline() );
+				sb.append( " in " );
+				while ( (c = getCallFrame(++level)) != null ) {
+					sb.append( c.tracename() );
+					sb.append( "\n\t" );
+					sb.append( c.sourceline() );
+					sb.append( " in " );
+				}
 				sb.append( "main chunk" );
 			}
 			return sb.toString();
@@ -332,17 +340,16 @@ public class LuaThread extends LuaValue {
 
 	public static class CallFrame {
 		public LuaFunction f;
-		int pc, top;
+		public int pc;
+		int top;
 		Varargs v;
 		LuaValue[] stack;
+		boolean tail;
 		public void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
 			this.f = function;
 			this.v = varargs;
 			this.stack = stack;
-		}
-		public void print() {
-			// TODO Auto-generated method stub
-			
+			this.tail = false;
 		}
 		public void set(LuaFunction function) {
 			this.f = function;
@@ -356,7 +363,9 @@ public class LuaThread extends LuaValue {
 			this.pc = pc;
 			this.v = v;
 			this.top = top;
-			if (DebugLib.DEBUG_ENABLED && DebugLib.TRACE & f.isclosure())
+			if (f.checkclosure().p.code[pc] == Lua.OP_TAILCALL)
+				this.tail = true;
+			if (DebugLib.TRACE)
 				Print.printState(f.checkclosure(), pc, stack, top, v);
 		}
 		public Varargs getLocal(int i) {
@@ -377,34 +386,32 @@ public class LuaThread extends LuaValue {
 		}
 		public int currentline() {
 			if ( !f.isclosure() ) return -1;
-			int[] li = ((LuaClosure)f).p.lineinfo;
+			int[] li = f.checkclosure().p.lineinfo;
 			return li==null || pc<0 || pc>=li.length? -1: li[pc]; 
-		}
-		public LuaString[] getfunckind() {
-			if ( !f.isclosure() || pc<0 ) return null;
-			Prototype p = ((LuaClosure)f).p;
-			int stackpos = (p.code[pc] >> 6) & 0xff; 
-			return DebugLib.getobjname(p, pc, stackpos);
 		}
 		public String sourceline() {
 			if ( !f.isclosure() ) return f.tojstring();
-			String s = ((LuaClosure)f).p.source.tojstring();
+			String s = f.checkclosure().p.source.tojstring();
 			int line = currentline();
 			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
 		}
 		public String tracename() {
-			LuaString[] kind = getfunckind();
+			LuaString[] kind = DebugLib.getfuncname(this);
 			if ( kind == null )
 				return "function ?";
 			return "function "+kind[0].tojstring();
 		}
 		public LuaString getlocalname(int index) {
 			if ( !f.isclosure() ) return null;
-			return ((LuaClosure)f).p.getlocalname(index, pc);
+			return f.checkclosure().p.getlocalname(index, pc);
 		}
 		public String tojstring() {
 			return tracename()+" "+sourceline();
 		}
+		public boolean istailcall() {
+			return tail;
+		}
+		
 	}
 		
 }

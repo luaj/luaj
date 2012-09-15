@@ -47,8 +47,8 @@ public class LuaError extends RuntimeException {
 	protected Throwable cause;
 
 	public String getMessage() {
-		return (fileline != null? fileline + " ": "") 
-			+ (traceback != null? traceback: super.getMessage());
+		return traceback != null? traceback:
+			(fileline != null? fileline: "?:-1") + " " + super.getMessage();
 	}
 
 	/** Construct LuaError when a program exception occurs. 
