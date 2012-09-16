@@ -505,7 +505,7 @@ public abstract class Varargs {
 		int end = narg();
 		switch ( end-start ) {
 		case 0: return arg(start);
-		case 1: return new LuaValue.PairVarargs(arg(start),arg(end));
+		case 1: return new Varargs.PairVarargs(arg(start),arg(end));
 		}
 		return end<start? (Varargs) LuaValue.NONE: new SubVarargs(this,start,end); 
 	}
@@ -514,7 +514,7 @@ public abstract class Varargs {
 	 * Implementation of Varargs for use in the Varargs.subargs() function.
 	 * @see Varargs#subargs(int)
 	 */
-	private static class SubVarargs extends Varargs {
+	static class SubVarargs extends Varargs {
 		private final Varargs v;
 		private final int start;
 		private final int end;
@@ -532,6 +532,147 @@ public abstract class Varargs {
 		}
 		public int narg() {
 			return end+1-start;
+		}
+		public Varargs subargs(final int start) {
+			if (start == 1)
+				return this;
+			final int newstart = this.start + start - 1;
+			if (start > 0) {
+				if (newstart >= this.end)
+					return LuaValue.NONE;
+				if (newstart == this.end)
+					return v.arg(this.end);
+				if (newstart == this.end-1)
+					return new Varargs.PairVarargs(v.arg(this.end-1), v.arg(this.end));
+				return new SubVarargs(v, newstart, this.end);
+			}
+			return new SubVarargs(v, newstart, this.end);
+		}
+	}
+
+	/** Varargs implemenation backed by two values.  
+	 * <p>
+	 * This is an internal class not intended to be used directly.
+	 * Instead use the corresponding static method on LuaValue. 
+	 *  
+	 * @see LuaValue#varargsOf(LuaValue, Varargs)
+	 */
+	static final class PairVarargs extends Varargs {
+		private final LuaValue v1;
+		private final Varargs v2;
+		/** Construct a Varargs from an two LuaValue. 
+		 * <p>
+		 * This is an internal class not intended to be used directly.
+		 * Instead use the corresponding static method on LuaValue. 
+		 *  
+		 * @see LuaValue#varargsOf(LuaValue, Varargs)
+		 */
+		PairVarargs(LuaValue v1, Varargs v2) {
+			this.v1 = v1;
+			this.v2 = v2;
+		}
+		public LuaValue arg(int i) {
+			return i==1? v1: v2.arg(i-1);
+		}
+		public int narg() {
+			return 1+v2.narg();
+		}
+		public LuaValue arg1() { 
+			return v1; 
+		}
+		public Varargs subargs(final int start) {
+			if (start == 1)
+				return this;
+			if (start == 2)
+				return v2;
+			if (start > 2)
+				return v2.subargs(start - 1);
+			return new SubVarargs(this, start, 2);
+		}
+	}
+
+	/** Varargs implemenation backed by an array of LuaValues 
+	 * <p>
+	 * This is an internal class not intended to be used directly.
+	 * Instead use the corresponding static methods on LuaValue. 
+	 *  
+	 * @see LuaValue#varargsOf(LuaValue[])
+	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
+	 */
+	static final class ArrayVarargs extends Varargs {
+		private final LuaValue[] v;
+		private final Varargs r;
+		/** Construct a Varargs from an array of LuaValue. 
+		 * <p>
+		 * This is an internal class not intended to be used directly.
+		 * Instead use the corresponding static methods on LuaValue. 
+		 *  
+		 * @see LuaValue#varargsOf(LuaValue[])
+		 * @see LuaValue#varargsOf(LuaValue[], Varargs)
+		 */
+		ArrayVarargs(LuaValue[] v, Varargs r) {
+			this.v = v;
+			this.r = r ;
+			for (int i = 0; i < v.length; ++i)
+				if (v[i] == null)
+					throw new IllegalArgumentException("nulls in array");
+		}
+		public LuaValue arg(int i) {
+			return i >=1 && i<=v.length? v[i - 1]: r.arg(i-v.length);
+		}
+		public int narg() {
+			return v.length+r.narg();
+		}
+		public LuaValue arg1() { return v.length>0? v[0]: r.arg1(); }
+	}
+
+	/** Varargs implemenation backed by an array of LuaValues 
+	 * <p>
+	 * This is an internal class not intended to be used directly.
+	 * Instead use the corresponding static methods on LuaValue. 
+	 *  
+	 * @see LuaValue#varargsOf(LuaValue[], int, int)
+	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
+	 */
+	static final class ArrayPartVarargs extends Varargs {
+		private final int offset;
+		private final LuaValue[] v;
+		private final int length;
+		private final Varargs more;
+		/** Construct a Varargs from an array of LuaValue. 
+		 * <p>
+		 * This is an internal class not intended to be used directly.
+		 * Instead use the corresponding static methods on LuaValue. 
+		 *  
+		 * @see LuaValue#varargsOf(LuaValue[], int, int)
+		 */
+		ArrayPartVarargs(LuaValue[] v, int offset, int length) {
+			this.v = v;
+			this.offset = offset;
+			this.length = length;
+			this.more = LuaValue.NONE;
+		}
+		/** Construct a Varargs from an array of LuaValue and additional arguments. 
+		 * <p>
+		 * This is an internal class not intended to be used directly.
+		 * Instead use the corresponding static method on LuaValue. 
+		 *  
+		 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
+		 */
+		public ArrayPartVarargs(LuaValue[] v, int offset, int length, Varargs more) {
+			this.v = v;
+			this.offset = offset;
+			this.length = length;
+			this.more = more;
+		}
+		public LuaValue arg(int i) {
+			return i>=1&&i<=length? v[i+offset-1]: more.arg(i-length);
+		}
+		public int narg() {
+			return length + more.narg();
+		}
+		public LuaValue arg1() { 
+			return length>0? v[offset]: more.arg1(); 
 		}
 	}
 }

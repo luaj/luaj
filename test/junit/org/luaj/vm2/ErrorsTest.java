@@ -52,6 +52,7 @@ public class ErrorsTest extends ScriptDrivenTest {
 		runTest("baselibargs");      
 	}
 	public void testCoroutineLibArgs()  { runTest("coroutinelibargs"); }	
+	public void testDebugLibArgs()      { runTest("debuglibargs"); }	
 	public void testIoLibArgs()         { runTest("iolibargs");        }	
 	public void testMathLibArgs()       { runTest("mathlibargs");      }	
 	public void testModuleLibArgs()     { runTest("modulelibargs");    }	

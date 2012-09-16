@@ -211,11 +211,27 @@ local tryhooks = function(mask)
 			tostring(d1)..' ' ) 
 end
 
---[[
 tryhooks("c")
 tryhooks("r")
 tryhooks("l")
 tryhooks("crl")
---]]
 
- 
+print( '----- debug.getupvalueid' )
+local x=1, y=2
+function a()
+	return function()
+		return x,y
+	end
+end
+a1 = a()
+a2 = a()
+print('debug.getupvalue(a1,1)', debug.getupvalue(a1,1))
+print('debug.getupvalue(a1,2)', debug.getupvalue(a1,2))
+print('debug.getupvalue(a2,1)', debug.getupvalue(a2,1))
+print('debug.getupvalue(a2,2)', debug.getupvalue(a2,2))
+print('debug.getupvalueid(a1,1) == debug.getupvalueid(a1,1)', debug.getupvalueid(a1,1) == debug.getupvalueid(a1,1))
+print('debug.getupvalueid(a1,1) == debug.getupvalueid(a2,1)', debug.getupvalueid(a1,1) == debug.getupvalueid(a2,1))
+print('debug.getupvalueid(a1,2) == debug.getupvalueid(a1,2)', debug.getupvalueid(a1,2) == debug.getupvalueid(a1,2))
+print('debug.getupvalueid(a1,2) == debug.getupvalueid(a2,2)', debug.getupvalueid(a1,2) == debug.getupvalueid(a2,2))
+
+v

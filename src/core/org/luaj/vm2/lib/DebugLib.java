@@ -55,7 +55,7 @@ import org.luaj.vm2.Varargs;
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
+ * Globals _G = new Globals();
  * _G.load(new DebugLib());
  * } </pre>
  * Doing so will ensure the library is properly initialized 
@@ -112,7 +112,7 @@ public class DebugLib extends OneArgFunction {
 	int lastline;
 	int bytecodes;
 	
-	public LuaTable call(LuaValue env) {
+	public LuaValue call(LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;
 		LuaTable debug = new LuaTable();
@@ -148,7 +148,7 @@ public class DebugLib extends OneArgFunction {
 	final class gethook extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			return varargsOf(
-					hookfunc,
+					hookfunc != null? hookfunc: NIL,
 					valueOf((hookcall?"c":"")+(hookline?"l":"")+(hookrtrn?"r":"")),
 					valueOf(hookcount));
 		}
@@ -237,7 +237,8 @@ public class DebugLib extends OneArgFunction {
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
-			return callstack(thread).getCallFrame(level).getLocal(local);
+			CallFrame f = callstack(thread).getCallFrame(level);
+			return f != null? f.getLocal(local): NONE;
 		}
 	}
 
@@ -282,7 +283,7 @@ public class DebugLib extends OneArgFunction {
 	
 	// debug.sethook ([thread,] hook, mask [, count])
 	final class sethook extends VarArgFunction { 
-		public Varargs call(Varargs args) {
+		public Varargs invoke(Varargs args) {
 			int a=1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			LuaValue func    = args.optfunction(a++, null);
@@ -312,7 +313,8 @@ public class DebugLib extends OneArgFunction {
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
 			LuaValue value = args.arg(a++);
-			return callstack(thread).getCallFrame(level).setLocal(local, value);
+			CallFrame f = callstack(thread).getCallFrame(level); 
+			return f != null? f.setLocal(local, value): NONE;
 		}
 	}
 
@@ -383,7 +385,7 @@ public class DebugLib extends OneArgFunction {
 			if ( func instanceof LuaClosure ) {
 				LuaClosure c = (LuaClosure) func;
 				if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
-					return userdataOf(c.upValues[up-1].hashCode());
+					return valueOf(c.upValues[up-1].hashCode());
 				}
 			}
 			return NIL;
@@ -397,6 +399,7 @@ public class DebugLib extends OneArgFunction {
 			int n1 = args.checkint(2);
 			LuaValue f2 = args.checkfunction(3);
 			int n2 = args.checkint(4);
+			f1.checkclosure().upValues[n1] = f2.checkclosure().upValues[n2];
 			return NONE;
 		}
 	}
