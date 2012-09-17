@@ -417,7 +417,7 @@ public class LexState {
 		LuaC._assert (isdigit(current));
 		save_and_next();
 		if (first == '0' && check_next("Xx"))
-			expo = "PpEe";
+			expo = "Pp";
 		while (true) {
 			if (check_next(expo))
 				check_next("+-");

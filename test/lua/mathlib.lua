@@ -218,4 +218,23 @@ print( math.randomseed(20) )
 for i=1,20 do
 	print( t[i] == math.random() )
 end
+
+-- tests involving -0, which is folded into 0 for luaj, but not for plain lua
+print("----------- Tests involving -0 and NaN")
+print('0 == -0', 0 == -0)
+t = {[0] = 10, 20, 30, 40, 50}
+print('t[-0] == t[0]',t[-0] == t[0])
+local x = -1
+local mz, z = 0/x, 0 -- minus zero, zero
+print('mz, z', mz, z)
+print('mz == z', mz == z)
+print('1/mz < 0 and 0 < 1/z', 1/mz < 0 and 0 < 1/z)
+local a = {[mz] = 1}
+print('a[z] == 1 and a[mz] == 1', a[z] == 1 and a[mz] == 1)
+-- string with same binary representation as 0.0 (may create problems
+-- for constant manipulation in the pre-compiler)
+local a1, a2, a3, a4, a5 = 0, 0, "\0\0\0\0\0\0\0\0", 0, "\0\0\0\0\0\0\0\0"
+assert(a1 == a2 and a2 == a4 and a1 ~= a3)
+assert(a3 == a5)
+
 --]]
