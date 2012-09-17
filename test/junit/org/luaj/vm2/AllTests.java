@@ -49,6 +49,7 @@ public class AllTests {
 		vm.addTestSuite(LuaOperationsTest.class);
 		vm.addTestSuite(StringTest.class);
 		vm.addTestSuite(OrphanedThreadTest.class);
+		vm.addTestSuite(VarargsTest.class);
 		suite.addTest(vm);
 
 		// table tests

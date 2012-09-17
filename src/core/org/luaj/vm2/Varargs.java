@@ -501,14 +501,7 @@ public abstract class Varargs {
 	 * @param start the index from which to include arguments, where 1 is the first argument.
 	 * @return Varargs containing argument { start, start+1,  ... , narg-start-1 }
 	 */
-	public Varargs subargs(final int start) {
-		int end = narg();
-		switch ( end-start ) {
-		case 0: return arg(start);
-		case 1: return new Varargs.PairVarargs(arg(start),arg(end));
-		}
-		return end<start? (Varargs) LuaValue.NONE: new SubVarargs(this,start,end); 
-	}
+	abstract public Varargs subargs(final int start);
 
 	/**
 	 * Implementation of Varargs for use in the Varargs.subargs() function.
@@ -587,7 +580,7 @@ public abstract class Varargs {
 				return v2;
 			if (start > 2)
 				return v2.subargs(start - 1);
-			return new SubVarargs(this, start, 2);
+			return LuaValue.argerror(1, "start must be > 0");
 		}
 	}
 
@@ -618,12 +611,25 @@ public abstract class Varargs {
 					throw new IllegalArgumentException("nulls in array");
 		}
 		public LuaValue arg(int i) {
-			return i >=1 && i<=v.length? v[i - 1]: r.arg(i-v.length);
+			return i < 1 ? LuaValue.NIL: i <= v.length? v[i - 1]: r.arg(i-v.length);
 		}
 		public int narg() {
 			return v.length+r.narg();
 		}
 		public LuaValue arg1() { return v.length>0? v[0]: r.arg1(); }
+		public Varargs subargs(int start) {
+			if (start <= 0)
+				LuaValue.argerror(1, "start must be > 0");
+			if (start == 1)
+				return this;
+			if (start > v.length)
+				return LuaValue.NONE;
+			if (start == v.length)
+				return v[v.length - 1];
+			if (start == v.length - 1)
+				return new PairVarargs(v[v.length - 2], v[v.length - 1]);
+			return new ArrayPartVarargs(v, start - 1, v.length - (start - 1));
+		}
 	}
 
 	/** Varargs implemenation backed by an array of LuaValues 
@@ -665,14 +671,27 @@ public abstract class Varargs {
 			this.length = length;
 			this.more = more;
 		}
-		public LuaValue arg(int i) {
-			return i>=1&&i<=length? v[i+offset-1]: more.arg(i-length);
+		public LuaValue arg(final int i) {
+			return i < 1? LuaValue.NIL: i <= length? v[offset+i-1]: more.arg(i-length);
 		}
 		public int narg() {
 			return length + more.narg();
 		}
 		public LuaValue arg1() { 
 			return length>0? v[offset]: more.arg1(); 
+		}
+		public Varargs subargs(int start) {
+			if (start <= 0)
+				LuaValue.argerror(1, "start must be > 0");
+			if (start == 1)
+				return this;
+			if (start > length)
+				return LuaValue.NONE;
+			if (start == length)
+				return v[offset + length - 1];
+			if (start == length - 1)
+				return new PairVarargs(v[offset + length - 2], v[offset + length - 1]);
+			return new ArrayPartVarargs(v, offset + start - 1, length - (start - 1));
 		}
 	}
 }

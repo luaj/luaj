@@ -3532,7 +3532,7 @@ public class LuaValue extends Varargs {
 		public int narg() { return 0; }
 		public LuaValue arg1() { return NIL; }
 		public String tojstring() { return "none"; }
-		public Varargs subargs(final int start) { return this; }
+		public Varargs subargs(final int start) { return start > 0? this: argerror(1, "start must be > 0"); }
 
 	}
 	
@@ -3546,7 +3546,7 @@ public class LuaValue extends Varargs {
 			return this;
 		if (start > 1)
 			return NONE;
-		return new Varargs.SubVarargs(this, start, 1);
+		return argerror(1, "start must be > 0");
 	}
 
 }
