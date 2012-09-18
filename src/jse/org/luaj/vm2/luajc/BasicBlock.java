@@ -120,7 +120,6 @@ public class BasicBlock {
 			case Lua.OP_LE:
 			case Lua.OP_TEST: 
 			case Lua.OP_TESTSET:
-			case Lua.OP_TFORLOOP:
 				if ( Lua.GET_OPCODE(code[i+1]) != Lua.OP_JMP  )
 					throw new IllegalArgumentException("test not followed by jump at "+i); 
 				sbx = Lua.GETARG_sBx(code[i+1]);
@@ -129,6 +128,7 @@ public class BasicBlock {
 				visitor.visitBranch( i, j );
 				visitor.visitBranch( i, i+1 ); 				
 				continue;
+			case Lua.OP_TFORLOOP:
 			case Lua.OP_FORLOOP:
 				sbx = Lua.GETARG_sBx(ins);
 				j = i + sbx + 1;

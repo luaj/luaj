@@ -29,7 +29,10 @@ import java.util.Hashtable;
 
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Print;
+import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
@@ -37,8 +40,9 @@ public class TestLuaJC {
 	// create the script
 	public static String name = "script";
 	public static String script =
-		"_ENV={}; return _ENV\n"+
-		"";
+			"for n,p in ipairs({77}) do\n"+
+			"	print('n,p',n,p)\n"+
+			"end\n";
 		
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);
@@ -48,12 +52,16 @@ public class TestLuaJC {
 			LuaTable _G = JsePlatform.standardGlobals();
 			System.out.println("_G: "+_G);
 			System.out.println("_G.print: "+_G.get("print"));
-			
-			// compile into a chunk, or load as a class
-			LuaValue chunk;
+
+			// print the chunk as a closure
+			byte[] bytes = script.getBytes();
+			LuaValue chunk = LuaC.instance.load(new ByteArrayInputStream(bytes), "script", _G);
+			Prototype p = chunk.checkclosure().p;
+			Print.print(p);
+
+			// compile into a luajc chunk, or load as a class
 			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
-				InputStream is =  new ByteArrayInputStream( script.getBytes() );
-				chunk = LuaJC.getInstance().load(is, "script", _G);
+				chunk = LuaJC.getInstance().load(new ByteArrayInputStream(bytes), "script", _G);
 			} else {
 				chunk = (LuaValue) Class.forName("script").newInstance();
 			}

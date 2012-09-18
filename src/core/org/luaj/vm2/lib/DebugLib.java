@@ -395,11 +395,15 @@ public class DebugLib extends OneArgFunction {
 	//	debug.upvaluejoin (f1, n1, f2, n2)
 	final class upvaluejoin extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
-			LuaValue f1 = args.checkfunction(1);
+			LuaClosure f1 = args.checkclosure(1);
 			int n1 = args.checkint(2);
-			LuaValue f2 = args.checkfunction(3);
+			LuaClosure f2 = args.checkclosure(3);
 			int n2 = args.checkint(4);
-			f1.checkclosure().upValues[n1] = f2.checkclosure().upValues[n2];
+			if (n1 < 1 || n1 > f1.upValues.length)
+				argerror("index out of range");
+			if (n2 < 1 || n2 > f2.upValues.length)
+				argerror("index out of range");
+			f1.upValues[n1-1] = f2.upValues[n2-1];
 			return NONE;
 		}
 	}

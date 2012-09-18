@@ -264,7 +264,7 @@ public class ProtoInfo {
 					v[a+1][pc].isreferenced = true;
 					v[a+3][pc] = new VarInfo(a+3,pc);
 					break;
-					
+
 				case Lua.OP_LOADNIL: /*	A B	R(A) := ... := R(A+B) := nil			*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_B( ins );
@@ -296,6 +296,24 @@ public class ProtoInfo {
 						v[a][pc] = VarInfo.INVALID;
 					break;
 					
+				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
+					a = Lua.GETARG_A( ins );
+					c = Lua.GETARG_C( ins );
+					v[a++][pc].isreferenced = true;
+					v[a++][pc].isreferenced = true;
+					v[a++][pc].isreferenced = true;
+					for ( int j=0; j<c; j++, a++ )
+						v[a][pc] = new VarInfo(a,pc);
+					for ( ; a<m; a++ )
+						v[a][pc] = VarInfo.INVALID;
+					break;
+					
+				case Lua.OP_TFORLOOP: /* A sBx	if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx */
+					a = Lua.GETARG_A( ins );
+					v[a+1][pc].isreferenced = true;
+					v[a][pc] = new VarInfo(a,pc);
+					break;
+	
 				case Lua.OP_TAILCALL: /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
 					a = Lua.GETARG_A( ins );
 					b = Lua.GETARG_B( ins );
@@ -309,20 +327,6 @@ public class ProtoInfo {
 					b = Lua.GETARG_B( ins );
 					for ( int i=0; i<=b-2; i++ )
 						v[a+i][pc].isreferenced = true;
-					break;
-					
-				case Lua.OP_TFORCALL: /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
-				case Lua.OP_TFORLOOP: /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
-				                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
-					a = Lua.GETARG_A( ins );
-					c = Lua.GETARG_C( ins );
-					v[a++][pc].isreferenced = true;
-					v[a++][pc].isreferenced = true;
-					v[a++][pc].isreferenced = true;
-					for ( int j=0; j<c; j++, a++ )
-						v[a][pc] = new VarInfo(a,pc);
-					for ( ; a<m; a++ )
-						v[a][pc] = VarInfo.INVALID;
 					break;
 					
 				case Lua.OP_CLOSURE: { /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/

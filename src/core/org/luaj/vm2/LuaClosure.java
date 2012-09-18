@@ -434,9 +434,10 @@ public class LuaClosure extends LuaFunction {
 					c = (i>>14) & 0x1ff;
 					while (--c >= 0)
 						stack[a+3+c] = v.arg(c+1);
+					v = NONE;
 					continue;
 
-				case Lua.OP_TFORLOOP: /* A sBx	if R(A) != nil then ps+= sBx */
+				case Lua.OP_TFORLOOP: /* A sBx	if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx */
 					if (!stack[a+1].isnil()) { /* continue loop? */
 						stack[a] = stack[a+1];  /* save control varible. */
 						pc += (i>>>14)-0x1ffff;

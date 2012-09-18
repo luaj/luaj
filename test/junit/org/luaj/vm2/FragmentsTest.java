@@ -94,6 +94,15 @@ public class FragmentsTest extends TestSuite {
 				"return b" );
 		}
 
+		public void testSimpleForloop() {
+			runFragment( LuaValue.valueOf(77),
+				"for n,p in ipairs({77}) do\n"+
+				"	print('n,p',n,p)\n"+
+				"   return p\n"+
+				"end\n");
+			
+		}
+			
 		public void testForloopParamUpvalues() {
 			runFragment( LuaValue.varargsOf(new LuaValue[] { 
 					LuaValue.valueOf(77), 

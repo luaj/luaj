@@ -225,8 +225,7 @@ public class Lua {
 	public static final int OP_FORPREP = 33; /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
 
 	public static final int OP_TFORCALL = 34; /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
-	public static final int OP_TFORLOOP = 35; /*	A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
-	                        if R(A+3) ~= nil then R(A+2)=R(A+3) else pc++	*/ 
+	public static final int OP_TFORLOOP = 35; /* A sBx   if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx } */ 
 	public static final int OP_SETLIST = 36; /*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
 
 	public static final int OP_CLOSURE = 37; /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/

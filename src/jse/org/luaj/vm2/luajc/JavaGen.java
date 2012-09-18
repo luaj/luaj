@@ -361,10 +361,12 @@ public class JavaGen {
 					}
 					break;
 					
-				case Lua.OP_TFORLOOP:/* A sBx	if R(A) != nil then ps+= sBx */
-					builder.loadLocal(pc, a);
+				case Lua.OP_TFORLOOP:/* A sBx   if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx } */
+					builder.loadLocal(pc, a+1);
+					builder.dup();
+					builder.storeLocal(pc, a);
 					builder.isNil();
-					builder.addBranch(pc, JavaBuilder.BRANCH_IFNE, pc+1+sbx);
+					builder.addBranch(pc, JavaBuilder.BRANCH_IFEQ, pc+1+sbx);
 					break;
 					
 				case Lua.OP_SETLIST: /*	A B C	R(A)[(C-1)*FPF+i]:= R(A+i), 1 <= i <= B	*/

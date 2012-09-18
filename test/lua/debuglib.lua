@@ -216,22 +216,41 @@ tryhooks("r")
 tryhooks("l")
 tryhooks("crl")
 
-print( '----- debug.getupvalueid' )
-local x=1, y=2
-function a()
+print( '----- debug.upvalueid' )
+local x,y = 100,200
+function a(b,c)
+	local z,w = b,c
 	return function()
-		return x,y
+		x,y,z,w = x+1,y+1,z+1,w+1
+		return x,y,z,w
 	end
 end
-a1 = a()
-a2 = a()
+a1 = a(300,400)
+a2 = a(500,600)
 print('debug.getupvalue(a1,1)', debug.getupvalue(a1,1))
 print('debug.getupvalue(a1,2)', debug.getupvalue(a1,2))
 print('debug.getupvalue(a2,1)', debug.getupvalue(a2,1))
 print('debug.getupvalue(a2,2)', debug.getupvalue(a2,2))
-print('debug.getupvalueid(a1,1) == debug.getupvalueid(a1,1)', debug.getupvalueid(a1,1) == debug.getupvalueid(a1,1))
-print('debug.getupvalueid(a1,1) == debug.getupvalueid(a2,1)', debug.getupvalueid(a1,1) == debug.getupvalueid(a2,1))
-print('debug.getupvalueid(a1,2) == debug.getupvalueid(a1,2)', debug.getupvalueid(a1,2) == debug.getupvalueid(a1,2))
-print('debug.getupvalueid(a1,2) == debug.getupvalueid(a2,2)', debug.getupvalueid(a1,2) == debug.getupvalueid(a2,2))
+print('debug.upvalueid(a1,1) == debug.upvalueid(a1,1)', debug.upvalueid(a1,1) == debug.upvalueid(a1,1))
+print('debug.upvalueid(a1,1) == debug.upvalueid(a2,1)', debug.upvalueid(a1,1) == debug.upvalueid(a2,1))
+print('debug.upvalueid(a1,1) == debug.upvalueid(a1,2)', debug.upvalueid(a1,1) == debug.upvalueid(a1,2))
 
-v
+print( '----- debug.upvaluejoin' )
+print('a1',a1())
+print('a2',a2())
+print('debug.upvaluejoin(a1,1,a2,2)', debug.upvaluejoin(a1,1,a2,2))
+print('debug.upvaluejoin(a1,3,a2,4)', debug.upvaluejoin(a1,3,a2,4))
+print('a1',a1())
+print('a2',a2())
+print('a1',a1())
+print('a2',a2())
+for i = 1,4 do
+	print('debug.getupvalue(a1,'..i..')', debug.getupvalue(a1,i))
+	print('debug.getupvalue(a2,'..i..')', debug.getupvalue(a2,i))
+	for j = 1,4 do
+		print('debug.upvalueid(a1,'..i..') == debug.upvalueid(a1,'..j..')', debug.upvalueid(a1,i) == debug.upvalueid(a1,j))
+		print('debug.upvalueid(a1,'..i..') == debug.upvalueid(a2,'..j..')', debug.upvalueid(a1,i) == debug.upvalueid(a2,j))
+		print('debug.upvalueid(a2,'..i..') == debug.upvalueid(a1,'..j..')', debug.upvalueid(a2,i) == debug.upvalueid(a1,j))
+		print('debug.upvalueid(a2,'..i..') == debug.upvalueid(a2,'..j..')', debug.upvalueid(a2,i) == debug.upvalueid(a2,j))
+	end
+end
