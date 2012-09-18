@@ -105,78 +105,111 @@ public class VarargsTest extends TestCase {
 		expectNegSubargsError(NONE);
 		expectNegSubargsError(NIL);
 	}
+
+	static void standardTestsA_G(Varargs a_g) {
+		expectEquals(A_G, a_g);
+		expectEquals(A_G, a_g.subargs(1));
+		expectEquals(C_G, a_g.subargs(3).subargs(1));
+		expectEquals(E_G, a_g.subargs(5));
+		expectEquals(E_G, a_g.subargs(5).subargs(1));
+		expectEquals(FG, a_g.subargs(6));
+		expectEquals(FG, a_g.subargs(6).subargs(1));
+		expectEquals(G, a_g.subargs(7));
+		expectEquals(G, a_g.subargs(7).subargs(1));
+		expectEquals(NONE, a_g.subargs(8));
+		expectEquals(NONE, a_g.subargs(8).subargs(1));
+		standardTestsC_G(A_G.subargs(3));
+	}
+
+	static void standardTestsC_G(Varargs c_g) {
+		expectEquals(C_G, c_g.subargs(1));
+		expectEquals(E_G, c_g.subargs(3));
+		expectEquals(E_G, c_g.subargs(3).subargs(1));
+		expectEquals(FG, c_g.subargs(4));
+		expectEquals(FG, c_g.subargs(4).subargs(1));
+		expectEquals(G, c_g.subargs(5));
+		expectEquals(G, c_g.subargs(5).subargs(1));
+		expectEquals(NONE, c_g.subargs(6));
+		expectEquals(NONE, c_g.subargs(6).subargs(1));
+		standardTestsE_G(c_g.subargs(3));
+	}
+
+	static void standardTestsE_G(Varargs e_g) {
+		expectEquals(E_G, e_g.subargs(1));
+		expectEquals(FG, e_g.subargs(2));
+		expectEquals(FG, e_g.subargs(2).subargs(1));
+		expectEquals(G, e_g.subargs(3));
+		expectEquals(G, e_g.subargs(3).subargs(1));
+		expectEquals(NONE, e_g.subargs(4));
+		expectEquals(NONE, e_g.subargs(4).subargs(1));
+		standardTestsFG(e_g.subargs(2));
+	}
+
+	static void standardTestsFG(Varargs fg) {
+		expectEquals(FG, fg.subargs(1));
+		expectEquals(G, fg.subargs(2));
+		expectEquals(G, fg.subargs(2).subargs(1));
+		expectEquals(NONE, fg.subargs(3));
+		expectEquals(NONE, fg.subargs(3).subargs(1));
+	}
+
+	static void standardTestsNone(Varargs none) {
+		expectEquals(NONE, none.subargs(1));
+		expectEquals(NONE, none.subargs(2));		
+	}
 	
 	public void testVarargsSubargs() {
-		expectEquals(A_G, A_G.subargs(1));
-		expectEquals(A_G, A_G_alt.subargs(1));
-		expectEquals(C_G, A_G.subargs(3));
-		expectEquals(C_G, A_G_alt.subargs(3));
-		expectEquals(C_G, A_G.subargs(3).subargs(1));
-		expectEquals(C_G, A_G_alt.subargs(3).subargs(1));
-		expectEquals(E_G, A_G.subargs(5));
-		expectEquals(E_G, A_G_alt.subargs(5));
-		expectEquals(E_G, A_G.subargs(5).subargs(1));
-		expectEquals(E_G, A_G_alt.subargs(5).subargs(1));
-		expectEquals(FG, A_G.subargs(6));
-		expectEquals(FG, A_G_alt.subargs(6));
-		expectEquals(FG, A_G.subargs(6).subargs(1));
-		expectEquals(FG, A_G_alt.subargs(6).subargs(1));
-		expectEquals(G, A_G.subargs(7));
-		expectEquals(G, A_G_alt.subargs(7));
-		expectEquals(G, A_G.subargs(7).subargs(1));
-		expectEquals(G, A_G_alt.subargs(7).subargs(1));
-		expectEquals(NONE, A_G.subargs(8));
-		expectEquals(NONE, A_G_alt.subargs(8));
-		expectEquals(NONE, A_G.subargs(8).subargs(1));
-		expectEquals(NONE, A_G_alt.subargs(8).subargs(1));
+		standardTestsA_G(A_G);
+		standardTestsA_G(A_G_alt);
+		standardTestsC_G(C_G);
+		standardTestsC_G(C_G_alt);
+		standardTestsE_G(E_G);
+		standardTestsE_G(E_G_alt);
+		standardTestsFG(FG);
+		standardTestsFG(FG_alt);
+		standardTestsNone(NONE);
+	}
+	
+	public void testVarargsMore() {
+		Varargs a_g;
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, }, LuaValue.varargsOf( new LuaValue[] { B, C, D, E, F, G }));
+		standardTestsA_G(a_g);
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, }, LuaValue.varargsOf( new LuaValue[] { C, D, E, F, G }));
+		standardTestsA_G(a_g);
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, }, LuaValue.varargsOf( new LuaValue[] { D, E, F, G }));
+		standardTestsA_G(a_g);
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, }, LuaValue.varargsOf(E, F, G));
+		standardTestsA_G(a_g);
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E }, LuaValue.varargsOf( F, G ));
+		standardTestsA_G(a_g);
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E, F, }, G );
+		standardTestsA_G(a_g);
+	}
+	
+	public void testPairVarargsMore() {
+		Varargs a_g = new Varargs.PairVarargs(A, 
+					new Varargs.PairVarargs(B, 
+					new Varargs.PairVarargs(C,  
+					new Varargs.PairVarargs(D, 
+					new Varargs.PairVarargs(E, 
+					new Varargs.PairVarargs(F, G)))))); 
+		standardTestsA_G(a_g);
+	}
 
-		expectEquals(C_G, C_G.subargs(1));
-		expectEquals(C_G, C_G_alt.subargs(1));
-		expectEquals(E_G, C_G.subargs(3));
-		expectEquals(E_G, C_G_alt.subargs(3));
-		expectEquals(E_G, C_G.subargs(3).subargs(1));
-		expectEquals(E_G, C_G_alt.subargs(3).subargs(1));
-		expectEquals(FG, C_G.subargs(4));
-		expectEquals(FG, C_G_alt.subargs(4));
-		expectEquals(FG, C_G.subargs(4).subargs(1));
-		expectEquals(FG, C_G_alt.subargs(4).subargs(1));
-		expectEquals(G, C_G.subargs(5));
-		expectEquals(G, C_G_alt.subargs(5));
-		expectEquals(G, C_G.subargs(5).subargs(1));
-		expectEquals(G, C_G_alt.subargs(5).subargs(1));
-		expectEquals(NONE, C_G.subargs(6));
-		expectEquals(NONE, C_G_alt.subargs(6));
-		expectEquals(NONE, C_G.subargs(6).subargs(1));
-		expectEquals(NONE, C_G_alt.subargs(6).subargs(1));
-
-		expectEquals(E_G, E_G.subargs(1));
-		expectEquals(E_G, E_G_alt.subargs(1));
-		expectEquals(FG, E_G.subargs(2));
-		expectEquals(FG, E_G_alt.subargs(2));
-		expectEquals(FG, E_G.subargs(2).subargs(1));
-		expectEquals(FG, E_G_alt.subargs(2).subargs(1));
-		expectEquals(G, E_G.subargs(3));
-		expectEquals(G, E_G_alt.subargs(3));
-		expectEquals(G, E_G.subargs(3).subargs(1));
-		expectEquals(G, E_G_alt.subargs(3).subargs(1));
-		expectEquals(NONE, E_G.subargs(4));
-		expectEquals(NONE, E_G_alt.subargs(4));
-		expectEquals(NONE, E_G.subargs(4).subargs(1));
-		expectEquals(NONE, E_G_alt.subargs(4).subargs(1));
-
-		expectEquals(FG, FG.subargs(1));
-		expectEquals(FG, FG_alt.subargs(1));
-		expectEquals(G, FG.subargs(2));
-		expectEquals(G, FG_alt.subargs(2));
-		expectEquals(G, FG.subargs(2).subargs(1));
-		expectEquals(G, FG_alt.subargs(2).subargs(1));
-		expectEquals(NONE, FG.subargs(3));
-		expectEquals(NONE, FG_alt.subargs(3));
-		expectEquals(NONE, FG.subargs(3).subargs(1));
-		expectEquals(NONE, FG_alt.subargs(3).subargs(1));
-
-		expectEquals(NONE, NONE.subargs(1));
-		expectEquals(NONE, NONE.subargs(2));
+	public void testArrayPartMore() {
+		Varargs a_g; 
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 1, new Varargs.ArrayPartVarargs(Z_H_array, 2, 6));
+		standardTestsA_G(a_g);
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 2, new Varargs.ArrayPartVarargs(Z_H_array, 3, 5));
+		standardTestsA_G(a_g);
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 3, new Varargs.ArrayPartVarargs(Z_H_array, 4, 4));
+		standardTestsA_G(a_g);
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 4, new Varargs.ArrayPartVarargs(Z_H_array, 5, 3));
+		standardTestsA_G(a_g);
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 5, new Varargs.ArrayPartVarargs(Z_H_array, 6, 2));
+		standardTestsA_G(a_g);
+		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 6, new Varargs.ArrayPartVarargs(Z_H_array, 7, 1));
+		standardTestsA_G(a_g);
 	}
 
 	static void expectNegSubargsError(Varargs v) {

@@ -623,12 +623,8 @@ public abstract class Varargs {
 			if (start == 1)
 				return this;
 			if (start > v.length)
-				return LuaValue.NONE;
-			if (start == v.length)
-				return v[v.length - 1];
-			if (start == v.length - 1)
-				return new PairVarargs(v[v.length - 2], v[v.length - 1]);
-			return new ArrayPartVarargs(v, start - 1, v.length - (start - 1));
+				return r.subargs(start - v.length);
+			return LuaValue.varargsOf(v, start - 1, v.length - (start - 1), r);
 		}
 	}
 
@@ -686,12 +682,8 @@ public abstract class Varargs {
 			if (start == 1)
 				return this;
 			if (start > length)
-				return LuaValue.NONE;
-			if (start == length)
-				return v[offset + length - 1];
-			if (start == length - 1)
-				return new PairVarargs(v[offset + length - 2], v[offset + length - 1]);
-			return new ArrayPartVarargs(v, offset + start - 1, length - (start - 1));
+				return more.subargs(start - length);
+			return LuaValue.varargsOf(v, offset + start - 1, length - (start - 1), more);
 		}
 	}
 }

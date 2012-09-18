@@ -3506,7 +3506,7 @@ public class LuaValue extends Varargs {
 	 * <p>
 	 * This may return a {@link TailcallVarargs} to be evaluated by the client. 
 	 * <p>
-	 * This should not be called directly, instead use on of the call invocation functions.
+	 * This should not be called directly, instead use one of the call invocation functions.
 	 * 
 	 * @param args the arguments to the call invocation.
 	 * @return Varargs the return values, possible a TailcallVarargs.
