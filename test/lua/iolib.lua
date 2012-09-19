@@ -5,6 +5,15 @@ print( 'platform', platform )
 -- 
 -- C version on Windows will add change \n into \r\n for text files at least
 -- 
+local tostr,files,nfiles = tostring,{},0
+tostring = function(x)
+	local s = tostr(x)
+	if s:sub(1,4) ~= 'file' then return s end
+	if files[s] then return files[s] end
+	files[s] = 'file.'..nfiles
+	nfiles = nfiles + 1
+	return files[s]
+end
 print( io ~= nil )
 print( io.open ~= nil )
 print( io.stdin ~= nil )

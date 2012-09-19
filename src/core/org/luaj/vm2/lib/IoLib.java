@@ -469,7 +469,7 @@ public class IoLib extends OneArgFunction {
 	private static Varargs iowrite(File f, Varargs args) throws IOException {
 		for ( int i=1, n=args.narg(); i<=n; i++ )
 			f.write( args.checkstring(i) );
-		return LuaValue.TRUE;
+		return f;
 	}
 
 	private Varargs ioread(File f, Varargs args) throws IOException {
