@@ -21,9 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import org.luaj.vm2.Varargs.SubVarargs;
-
-
 /**
  * Base class for all concrete lua type values.  
  * <p>
@@ -432,7 +429,7 @@ public class LuaValue extends Varargs {
 	 */
 	public boolean isuserdata(Class c)   { return false; }
 	
-	/** Convert to boolean false if {@link #NIL} or {@link FALSE}, true if anything else
+	/** Convert to boolean false if {@link #NIL} or {@link #FALSE}, true if anything else
 	 * @return Value cast to byte if number or string convertible to number, otherwise 0
 	 * @see #optboolean(boolean)
 	 * @see #checkboolean() 

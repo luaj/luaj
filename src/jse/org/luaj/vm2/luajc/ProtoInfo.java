@@ -26,13 +26,13 @@ public class ProtoInfo {
 	// A main chunk proto info.
 	public ProtoInfo(Prototype p, String name) {
 		// For the outer chunk, we have one upvalue which is the environment.
-		this(p,name,new UpvalInfo[] { new UpvalInfo() });
+		this(p,name,null);
 	}
 	
 	private ProtoInfo(Prototype p, String name, UpvalInfo[] u) {
 		this.name = name;
 		this.prototype = p;
-		this.upvals = u;
+		this.upvals = u != null? u: new UpvalInfo[] { new UpvalInfo(this) };
 		this.subprotos = p.p!=null&&p.p.length>0? new ProtoInfo[p.p.length]: null;
 		
 		// find basic blocks
@@ -364,6 +364,10 @@ public class ProtoInfo {
 					break;
 
 				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
+					a = Lua.GETARG_A( ins );
+					if (a > 0)
+						for ( --a; a<m; a++ )
+							v[a][pc] = VarInfo.INVALID;
 					break;
 	
 				default:

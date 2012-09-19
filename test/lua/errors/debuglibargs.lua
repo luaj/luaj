@@ -111,7 +111,7 @@ checkallpass('debug.setupvalue',{{f},{2,'3'},{nil,aboolean,astring,n=3}})
 print('p,q', p, q)
 checkallerrors('debug.setupvalue',{},'value expected')
 checkallerrors('debug.setupvalue',{{f}},'value expected')
-checkallerrors('debug.setupvalue',{{f},{1}},'value expected')
+checkallerrors('debug.setupvalue',{{f},{2}},'value expected')
 checkallerrors('debug.setupvalue',{notafunction,{2}}, 'value expected')
 checkallerrors('debug.setupvalue',{{f},notanumber}, 'value expected')
 

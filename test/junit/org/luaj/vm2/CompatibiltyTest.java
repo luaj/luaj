@@ -76,9 +76,9 @@ public class CompatibiltyTest extends TestSuite {
 
 	public static TestSuite suite() {
 		TestSuite suite = new TestSuite("Compatibility Tests");
-		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Tests" ) );
-		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Tests" ) );
-		suite.addTest( new TestSuite( LuaJCTest.class,        "JSE Bytecode Tests" ) );
+		suite.addTest( new TestSuite( JseCompatibilityTest.class,   "JSE Compatibility Tests" ) );
+		suite.addTest( new TestSuite( JmeCompatibilityTest.class,   "JME Compatibility Tests" ) );
+		suite.addTest( new TestSuite( LuaJCCompatibilityTest.class,        "LuaJC Compatibility Tests" ) );
 		return suite;
 	}
 	
@@ -100,8 +100,8 @@ public class CompatibiltyTest extends TestSuite {
 			System.setProperty("JME", "false");
 		}
 	}
-	public static class LuaJCTest extends CompatibiltyTestSuite {
-		public LuaJCTest() {
+	public static class LuaJCCompatibilityTest extends CompatibiltyTestSuite {
+		public LuaJCCompatibilityTest() {
 			super(ScriptDrivenTest.PlatformType.LUAJIT);
 		}
 		protected void setUp() throws Exception {

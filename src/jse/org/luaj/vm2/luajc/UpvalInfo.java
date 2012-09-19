@@ -13,9 +13,12 @@ public class UpvalInfo {
 	boolean rw;     // read-write
 
 	// Upval info representing the implied context containing only the environment.
-	public UpvalInfo() {
-		nvars = 1;
-		var = new VarInfo[] { VarInfo.PARAM(0) };
+	public UpvalInfo(ProtoInfo pi) {
+		this.pi = pi;
+		this.slot = 0;
+		this.nvars = 1;
+		this.var = new VarInfo[] { VarInfo.PARAM(0) };
+		this.rw = false;
 	}
 
 	public UpvalInfo(ProtoInfo pi, int pc, int slot) {

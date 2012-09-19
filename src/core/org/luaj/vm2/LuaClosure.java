@@ -21,8 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.DebugLib;
-
 /**
  * Extension of {@link LuaFunction} which executes lua bytecode. 
  * <p>

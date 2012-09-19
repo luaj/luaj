@@ -545,5 +545,15 @@ public class FragmentsTest extends TestSuite {
 			        "    end\n" +
 			        "end\n");
 		}
+		
+		public void testUpvalueInDoBlock() {
+			runFragment( LuaValue.NONE, "do\n"+
+					"	local x = 10\n"+
+					"	function g()\n"+
+					"		return x\n"+
+					"	end\n"+
+					"end\n"+
+					"g()\n");
+		}
 	}
 }

@@ -105,11 +105,12 @@ public class LuaJC implements LuaCompiler {
 	
 	private static String toStandardJavaClassName( String luachunkname ) {
 		String stub = toStub( luachunkname );
-		String classname = stub.replace('/','.').replaceAll(NON_IDENTIFIER, "_");
-		int c = classname.charAt(0);
-		if ( c!='_' && !Character.isJavaIdentifierStart(c) )
-			classname = "_"+classname;
-		return classname;
+		StringBuffer classname = new StringBuffer();
+		for (int i = 0, n = stub.length(); i < n; ++i) {
+			final char c = stub.charAt(i);
+			classname.append((((i == 0) && Character.isJavaIdentifierStart(c)) || ((i > 0) && Character.isJavaIdentifierPart(c)))? c: '_');
+		}
+		return classname.toString();
 	}
 	
 	private static String toStandardLuaFileName( String luachunkname ) {

@@ -39,11 +39,11 @@ import org.luaj.vm2.luajc.LuaJC;
 public class TestLuaJC {
 	// create the script
 	public static String name = "script";
-	public static String script =
-			"for n,p in ipairs({77}) do\n"+
-			"	print('n,p',n,p)\n"+
-			"end\n";
-		
+	public static String script = 
+			"function f1(a) print( 'f1:', a ) return a end\n" +
+					"b = f1()\n" + 
+					"return b";
+
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);
 		try {

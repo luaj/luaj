@@ -24,6 +24,7 @@ package org.luaj.vm2;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -121,6 +122,8 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 	    	}
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// Ignore and return null.
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
