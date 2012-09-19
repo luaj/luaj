@@ -111,18 +111,23 @@ print(string.format("simple%ssimple", " simple "))
 local testformat = function(message,fmt,...)
 	local s,e = pcall( string.format, fmt, ... )
 	if s then
+		if string.find(fmt, 'q') then
+			print(message, e)
+		end
 		print( message, string.byte(e,1,#e) )
 	else
 		print( message, 'error', e )
 	end
 end
 
-specials = "\"specials\": %% \000 \r \n"
 testformat('plain %', "%%")
-testformat("specials (%s)", "---%s---", specials)
-testformat("specials (%q)", "---%q---", specials)
+testformat("specials (%s)", "---%s---", " %% \000 \r \n ")
+testformat("specials (%q)", "---%q---", " %% \000 \r \n ")
+testformat("specials (%q)", "---%q---", "0%%0\0000\r0\n0")
 testformat("controls (%q)", "---%q---", ' \a \b \f \t \v \\ ')
+testformat("controls (%q)", "---%q---", '0\a0\b0\f0\t0\v0\\0')
 testformat("extended (%q)", "---%q---", ' \222 \223 \224 ')
+testformat("extended (%q)", "---%q---", '0\2220\2230\2240')
 testformat("embedded newlines", "%s\r%s\n%s", '===', '===', '===')
 
 -- format long string
@@ -144,7 +149,7 @@ strtests('lower', string.lower, s )
 strtests('upper', string.upper, s )
 strtests('reverse', string.reverse, s )
 strtests('char', string.char, 92, 60, 61, 93 )
-strtests('dump', string.dump, load('print("hello, world")', 'sample') )
+print( 'string.dump test:', load(string.dump(function(x) return 'foo->'..x end),'bar')('bat') )
 
 
 -- floating point formats (not supported yet)

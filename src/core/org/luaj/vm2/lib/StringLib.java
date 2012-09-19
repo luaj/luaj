@@ -303,15 +303,20 @@ public class StringLib extends OneArgFunction {
 				buf.append( (byte)'\\' );
 				buf.append( (byte)c );
 				break;
-			case '\r':
-				buf.append( "\\r" );
-				break;
-			case '\0':
-				buf.append( "\\000" );
-				break;
 			default:
-				buf.append( (byte) c );
-			break;
+				if (c <= 0x1F || c == 0x7F) {
+					buf.append( (byte) '\\' );
+					if (i+1 == n || s.luaByte(i+1) < '0' || s.luaByte(i+1) > '9') {
+						buf.append(Integer.toString(c));
+					} else {
+						buf.append( (byte) '0' );
+						buf.append( (byte) (char) ('0' + c / 10) );
+						buf.append( (byte) (char) ('0' + c % 10) );
+					}
+				} else {
+					buf.append((byte) c);
+				}
+				break;
 			}
 		}
 		buf.append( (byte) '"' );

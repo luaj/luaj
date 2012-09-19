@@ -230,8 +230,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
 				if ( i>1 ) globals.STDOUT.write( '\t' );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
-				int z = s.indexOf((byte)0, 0);
-				globals.STDOUT.write( s.m_bytes, s.m_offset, z>=0? z: s.m_length );
+				globals.STDOUT.write( s.m_bytes, s.m_offset, s.m_length );
 			}
 			globals.STDOUT.println();
 			return NONE;
