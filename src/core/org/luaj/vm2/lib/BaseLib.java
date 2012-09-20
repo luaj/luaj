@@ -321,7 +321,7 @@ public class BaseLib extends OneArgFunction implements ResourceFinder {
 		public LuaValue call(LuaValue e, LuaValue base) {
 			if (base.isnil())
 				return e.tonumber();
-			final int b = base.optint(10);
+			final int b = base.checkint();
 			if ( b < 2 || b > 36 )
 				argerror(2, "base out of range");
 			return e.checkstring().tonumber(b);

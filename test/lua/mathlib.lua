@@ -228,7 +228,6 @@ local x = -1
 local mz, z = 0/x, 0 -- minus zero, zero
 print('mz, z', mz, z)
 print('mz == z', mz == z)
-print('1/mz < 0 and 0 < 1/z', 1/mz < 0 and 0 < 1/z)
 local a = {[mz] = 1}
 print('a[z] == 1 and a[mz] == 1', a[z] == 1 and a[mz] == 1)
 -- string with same binary representation as 0.0 (may create problems

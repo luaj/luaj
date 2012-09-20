@@ -72,8 +72,8 @@ print( 'pcall(pairs,"a")', pcall(pairs,"a") )
 print( 'pcall(pairs,1)', pcall(pairs,1) )
 for k,v in pairs({}) do print('pairs1',k,v)end
 for k,v in pairs({'one','two'}) do print('pairs2',k,v)end
-for k,v in pairs({aa='aaa',bb='bbb'}) do print('pairs3',k,v)end
-for k,v in pairs({aa='aaa',bb='bbb','one','two'}) do print('pairs4',k,v)end
+for k,v in pairs({aa='aaa'}) do print('pairs3',k,v)end
+for k,v in pairs({aa='aaa','one','two'}) do print('pairs4',k,v)end
 for k,v in pairs({[20]='30',[30]='20'}) do print('pairs5',k,v)end
 
 -- _G

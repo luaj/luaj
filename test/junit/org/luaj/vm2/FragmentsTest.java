@@ -555,5 +555,10 @@ public class FragmentsTest extends TestSuite {
 					"end\n"+
 					"g()\n");
 		}
+		
+		public void testNullError() {
+			runFragment( LuaValue.varargsOf(LuaValue.FALSE, LuaValue.NIL),
+					"return pcall(error)\n");
+		}
 	}
 }
