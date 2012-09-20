@@ -184,7 +184,7 @@ public class DebugLib extends OneArgFunction {
 					Prototype p = c.p;
 					info.set(WHAT, LUA);
 					info.set(SOURCE, p.source);
-					info.set(SHORT_SRC, valueOf(sourceshort(p)));
+					info.set(SHORT_SRC, valueOf(shortsource(p)));
 					info.set(LINEDEFINED, valueOf(p.linedefined));
 					info.set(LASTLINEDEFINED, valueOf(p.lastlinedefined));
 				} else {
@@ -470,6 +470,22 @@ public class DebugLib extends OneArgFunction {
 		return (CallStack) t.callstack;
 	}
 
+	static class DebugInfo {
+		  String name;	/* (n) */
+		  String namewhat;	/* (n) 'global', 'local', 'field', 'method' */
+		  String what;	/* (S) 'Lua', 'C', 'main', 'tail' */
+		  String source;	/* (S) */
+		  int currentline;	/* (l) */
+		  int linedefined;	/* (S) */
+		  int lastlinedefined;	/* (S) */
+		  short nups;	/* (u) number of upvalues */
+		  short nparams;/* (u) number of parameters */
+		  boolean isvararg;        /* (u) */
+		  boolean istailcall;	/* (t) */
+		  String short_src; /* (S) */
+		  CallFrame cf;  /* active function */
+	}
+	
 	public static class CallStack {
 			final static CallFrame[] EMPTY = {};
 			CallFrame[] frame = EMPTY;
@@ -518,18 +534,18 @@ public class DebugLib extends OneArgFunction {
 			String traceback(int level) {
 				StringBuffer sb = new StringBuffer();
 				sb.append( "stack traceback:" );
-				DebugLib.CallFrame c = getCallFrame(level);
-				if (c != null) {
+				for (DebugLib.CallFrame c, prev = null; (c = getCallFrame(level++)) != null; prev = c ) {
+					DebugInfo ar = c.getinfo("Slnt", prev);
+					prev = c;
 					sb.append("\n\t");
-					sb.append( c.sourceline() );
+					sb.append( c.shortsource() );
+					sb.append( ':' );
+					if (c.currentline() > 0)
+						sb.append( c.currentline()+":" );
 					sb.append( " in " );
-					while ( (c = getCallFrame(++level)) != null ) {
-						sb.append( c.tracename() );
-						sb.append( "\n\t" );
-						sb.append( c.sourceline() );
-						sb.append( " in " );
-					}
-					sb.append( "main chunk" );
+					sb.append( c.tracename() );
+					if (c.istailcall())
+						sb.append("\n\t(...tail calls...)");
 				}
 				return sb.toString();
 			}
@@ -545,8 +561,7 @@ public class DebugLib extends OneArgFunction {
 					if (frame[calls-i].f == func)
 						return frame[i];
 				return null;
-			}
-	
+			}	
 		}
 
 	static class CallFrame {
@@ -561,6 +576,9 @@ public class DebugLib extends OneArgFunction {
 			this.v = varargs;
 			this.stack = stack;
 			this.tail = false;
+		}
+		public String shortsource() {
+			return f.isclosure()? DebugLib.shortsource(f.checkclosure().p): "[Java]";
 		}
 		void set(LuaFunction function) {
 			this.f = function;
@@ -608,9 +626,17 @@ public class DebugLib extends OneArgFunction {
 		}
 		String tracename() {
 			LuaString[] kind = getfuncname(this);
-			if ( kind == null )
-				return "function ?";
-			return "function "+kind[0].tojstring();
+			if (kind[0] == null)
+				return "function "+kind[1].tojstring();
+//			if (kind[0] == M)
+//				return "main chunk";
+			if (kind[0] == JAVA)
+				return "function "+kind[1].tojstring();
+			return "function <"+shortsource()+":"+linedefined()+">";
+		
+		}
+		private int linedefined() {
+			return f.isclosure()? f.checkclosure().p.linedefined: -1;
 		}
 		LuaString getlocalname(int index) {
 			if ( !f.isclosure() ) return null;
@@ -622,7 +648,81 @@ public class DebugLib extends OneArgFunction {
 		boolean istailcall() {
 			return tail;
 		}
-		
+
+		DebugInfo getinfo(String what, CallFrame previous) {
+			DebugInfo ar = new DebugInfo();
+			for (int i = 0, n = what.length(); i < n; ++i) {
+				switch (what.charAt(i)) {
+			      case 'S':
+			    	  if (f.isclosure()) {
+			    		  Prototype p = f.checkclosure().p;
+			    		  ar.source = p.source != null ? p.source.tojstring() : "=?";
+			    		  ar.linedefined = p.linedefined;
+			    		  ar.lastlinedefined = p.lastlinedefined;
+			    		  ar.what = (ar.linedefined == 0) ? "main" : "Lua";
+			    	  } else {
+			    		    ar.source = "=[Java]";
+			    		    ar.linedefined = -1;
+			    		    ar.lastlinedefined = -1;
+			    		    ar.what = "Java";
+			    	  }
+			    	  ar.short_src = chunkid(ar.source);
+			    	  break;
+			      case 'l':
+			    	  ar.currentline = currentline();
+			    	  break;
+			      case 'u':
+			    	  if (f.isclosure()) {
+			    		  Prototype p = f.checkclosure().p;
+			    		  ar.nups = (short) p.upvalues.length;
+			    		  ar.nparams = (short) p.numparams;
+			    		  ar.isvararg = p.is_vararg != 0;
+			    	  } else {
+				    	  ar.isvararg = true;
+				    	  ar.nups = 0;
+				    	  ar.nparams = 0;
+			    	  }
+			    	  break;
+			      case 't':
+			    	  ar.istailcall = this.tail;
+			    	  break;
+			      case 'n': {
+			        /* calling function is a known Lua function? */
+			        if (!tail && (previous != null && previous.f.isclosure())) {
+			        	LuaString[] kind = getfuncname(previous);
+			        	ar.name = String.valueOf(kind[0]);
+			        	ar.namewhat = String.valueOf(kind[1]);
+			        }
+			        else
+			          ar.namewhat = null;
+			        if (ar.namewhat == null) {
+			          ar.namewhat = "";  /* not found */
+			          ar.name = null;
+			        }
+			        break;
+			      }
+			      default:
+			    	  break;
+				}
+			}
+			return null;
+		}
+	}
+	
+	static String chunkid( String source ) {
+		 if ( source.startsWith("=") )
+			 return source.substring(1);
+		 String end = "";
+		 if ( source.startsWith("@") ) {
+			 source = source.substring(1);
+		 } else {
+			 source = "[string \""+source;
+			 end = "\"]";
+		 }
+		 int n = source.length() + end.length(); 
+		 if ( n > 50 )
+			 source = source.substring(0,50-end.length()-3) + "...";
+		 return source + end;
 	}
 
 	static LuaString findupvalue(LuaClosure c, int up) {
@@ -635,7 +735,7 @@ public class DebugLib extends OneArgFunction {
 		return null;
 	}
 	
-	public static String sourceshort(Prototype p) {
+	public static String shortsource(Prototype p) {
 		String name = p.source.tojstring();
         if ( name.startsWith("@") || name.startsWith("=") )
 			name = name.substring(1);
