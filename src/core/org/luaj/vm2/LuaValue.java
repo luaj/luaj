@@ -2970,11 +2970,12 @@ public class LuaValue extends Varargs {
 	 * @see #lteq(LuaValue)
 	 */
 	public LuaValue comparemt( LuaValue tag, LuaValue op1 ) { 
-		if ( type() == op1.type() ) { 
-			LuaValue h = metatag(tag);
-			if ( !h.isnil() && h == op1.metatag(tag) )
-				return h.call(this, op1);
-		}
+		LuaValue h = metatag(tag);
+		if ( !h.isnil() )
+			return h.call(this, op1);
+		h = op1.metatag(tag);
+		if ( !h.isnil() )
+			return h.call(this, op1);
 		return error("attempt to compare "+tag+" on "+typename()+" and "+op1.typename());
 	}
 	

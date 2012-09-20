@@ -848,14 +848,14 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			assertEquals( fal, fal.lt(tru) );
 			assertEquals( tbl, tbl.lt(tbl2) );
 			assertEquals( tbl2, tbl2.lt(tbl) );
-			try { tbl.lt(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tbl3.lt(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tbl, tbl.lt(tbl3) );
+			assertEquals( tbl3, tbl3.lt(tbl) );
 			assertEquals( fal, tru.lteq(fal) );
 			assertEquals( tru, fal.lteq(tru) );
 			assertEquals( tbl2, tbl.lteq(tbl2) );
 			assertEquals( tbl, tbl2.lteq(tbl) );
-			try { tbl.lteq(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tbl3.lteq(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tbl3, tbl.lteq(tbl3) );
+			assertEquals( tbl, tbl3.lteq(tbl) );
 
 			// always use right argument
 			mt = LuaValue.tableOf( new LuaValue[] { 
@@ -868,14 +868,14 @@ public class UnaryBinaryOperatorsTest extends TestCase {
 			assertEquals( tru, fal.lt(tru) );
 			assertEquals( tbl2, tbl.lt(tbl2) );
 			assertEquals( tbl, tbl2.lt(tbl) );
-			try { tbl.lt(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tbl3.lt(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tbl3, tbl.lt(tbl3) );
+			assertEquals( tbl, tbl3.lt(tbl) );
 			assertEquals( tru, tru.lteq(fal) );
 			assertEquals( fal, fal.lteq(tru) );
 			assertEquals( tbl, tbl.lteq(tbl2) );
 			assertEquals( tbl2, tbl2.lteq(tbl) );
-			try { tbl.lteq(tbl3); fail("did not throw error"); } catch ( LuaError le ) { };
-			try { tbl3.lteq(tbl); fail("did not throw error"); } catch ( LuaError le ) { };
+			assertEquals( tbl, tbl.lteq(tbl3) );
+			assertEquals( tbl3, tbl3.lteq(tbl) );
 			
 		} finally { 
 			LuaBoolean.s_metatable = null;
