@@ -71,11 +71,18 @@ public class LuaFunction extends LuaValue {
 	}
 
 	public String tojstring() {
-		String s = getClass().getName();
-		return "function: " + s.substring(Math.max(s.lastIndexOf('.'),s.lastIndexOf('$'))+1);
+		return "function: " + classnamestub();
 	}
 
 	public LuaString strvalue() {
 		return valueOf(tojstring());
+	}
+
+	/** Return the last part of the class name, to be used as a function name in tojstring and elsewhere. 
+	 * @return String naming the last part of the class name after the last dot (.) or dollar sign ($).
+	 */
+	public String classnamestub() {
+		String s = getClass().getName();
+		return s.substring(Math.max(s.lastIndexOf('.'),s.lastIndexOf('$'))+1);
 	}
 }

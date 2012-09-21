@@ -61,7 +61,6 @@ public class LexState {
     }
                                
     private static final int EOZ    = (-1);
-	private static final int MAXSRC = 80;
 	private static final int MAX_INT = Integer.MAX_VALUE-2;
 	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX? 
 	private static final int LUAI_MAXCCALLS = 200;
@@ -260,27 +259,11 @@ public class LexState {
 	}
 
 	void lexerror( String msg, int token ) {
-		String cid = chunkid( source.tojstring() ); // TODO: get source name from source
+		String cid = Lua.chunkid( source.tojstring() );
 		L.pushfstring( cid+":"+linenumber+": "+msg );
 		if ( token != 0 )
 			L.pushfstring( "syntax error: "+msg+" near "+txtToken(token) );
 		throw new LuaError(cid+":"+linenumber+": "+msg);
-	}
-
-	String chunkid( String source ) {
-		 if ( source.startsWith("=") )
-			 return source.substring(1);
-		 String end = "";
-		 if ( source.startsWith("@") ) {
-			 source = source.substring(1);
-		 } else {
-			 source = "[string \""+source;
-			 end = "\"]";
-		 }
-		 int n = source.length() + end.length(); 
-		 if ( n > MAXSRC )
-			 source = source.substring(0,MAXSRC-end.length()-3) + "...";
-		 return source + end;
 	}
 
 	void syntaxerror( String msg ) {

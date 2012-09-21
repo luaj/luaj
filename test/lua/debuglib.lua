@@ -150,12 +150,6 @@ function test()
 		printinfo( 'debug.getinfo(2,"fL")', debug.getinfo(2, "fL") )
 		printinfo( 'debug.getinfo(10,"")', pcall( debug.getinfo, 10, "" ) )
 		printinfo( 'debug.getinfo(-10,"")', pcall( debug.getinfo, -10, "" ) )
-		--[[
-		for i=1,3 do
-			printinfo( 'debug.traceback("msg")', debug.traceback('msg') )
-			printinfo( 'debug.traceback("another",'..i..')', debug.traceback('another',i) )
-		end 
-		--]]
 		print( '---' )
 		return x
 	end
@@ -215,6 +209,36 @@ tryhooks("c")
 tryhooks("r")
 tryhooks("l")
 tryhooks("crl")
+
+print( '----- debug.traceback' )
+function test()
+	function a(msg)
+		print((string.gsub(debug.traceback(msg), "%[Java]", "[C]")))
+	end
+	local function b(msg)
+		pcall(a,msg)
+	end
+	c = function(i)
+		if i <= 0 then b('hi') return end
+		return c(i-1)
+	end
+	d = setmetatable({},{__index=function(t,k) v = c(k) return v end})
+	local e = function()
+		return d[0]
+	end
+	local f = {
+		g = function()
+			e()
+		end
+	}
+	h = function()
+		f.g()
+	end
+	local i = h
+	i()
+end
+pcall(test)
+
 
 print( '----- debug.upvalueid' )
 local x,y = 100,200

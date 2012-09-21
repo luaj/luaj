@@ -37,6 +37,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.DebugLib.CallFrame;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
@@ -207,13 +208,13 @@ public class DebugLib extends OneArgFunction {
 			}
 			if (what.indexOf('n') >= 0) {
 				if (frame != null) {
-					LuaString[] kind = getfuncname(frame);
-					info.set(NAME, kind!=null? kind[0]: QMARK);
-					info.set(NAMEWHAT, kind!=null? kind[1]: EMPTYSTRING);
+					DebugInfo ar = frame.getinfo("n");
+					info.set(NAME, LuaValue.valueOf(ar.name));
+					info.set(NAMEWHAT, LuaValue.valueOf(ar.namewhat));
 				}
 			}
 			if (what.indexOf('t') >= 0) {
-				info.set(ISTAILCALL, frame != null && frame.istailcall()? ONE: ZERO);
+				info.set(ISTAILCALL, ZERO);
 			}
 			if (what.indexOf('L') >= 0) {
 				LuaTable lines = new LuaTable();
@@ -505,6 +506,8 @@ public class DebugLib extends OneArgFunction {
 					for (int i = frame.length; i < n; ++i)
 						f[i] = new CallFrame();
 					frame = f;
+					for (int i = 1; i < n; ++i)
+						f[i].previous = f[i-1];
 				}
 				return frame[calls++];
 			}
@@ -534,24 +537,30 @@ public class DebugLib extends OneArgFunction {
 			String traceback(int level) {
 				StringBuffer sb = new StringBuffer();
 				sb.append( "stack traceback:" );
-				for (DebugLib.CallFrame c, prev = null; (c = getCallFrame(level++)) != null; prev = c ) {
-					DebugInfo ar = c.getinfo("Slnt", prev);
-					prev = c;
+				for (DebugLib.CallFrame c; (c = getCallFrame(level++)) != null; ) {
 					sb.append("\n\t");
 					sb.append( c.shortsource() );
 					sb.append( ':' );
 					if (c.currentline() > 0)
 						sb.append( c.currentline()+":" );
 					sb.append( " in " );
-					sb.append( c.tracename() );
-					if (c.istailcall())
-						sb.append("\n\t(...tail calls...)");
+					DebugInfo ar = c.getinfo("n");
+					if (c.linedefined() == 0)
+						sb.append("main chunk");
+					else if ( ar.name != null ) {
+						sb.append( "function '" );
+						sb.append( ar.name );
+						sb.append( '\'' );
+					} else {
+						sb.append( "function <"+c.shortsource()+":"+c.linedefined()+">" );
+					}
 				}
+				sb.append("\n\t[Java]: in ?");
 				return sb.toString();
 			}
 	
 			DebugLib.CallFrame getCallFrame(int level) {
-				if (level < 1 || level >= calls)
+				if (level < 1 || level > calls)
 					return null;
 				return frame[calls-level];
 			}
@@ -570,12 +579,11 @@ public class DebugLib extends OneArgFunction {
 		int top;
 		Varargs v;
 		LuaValue[] stack;
-		boolean tail;
+		CallFrame previous;
 		void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
 			this.f = function;
 			this.v = varargs;
 			this.stack = stack;
-			this.tail = false;
 		}
 		public String shortsource() {
 			return f.isclosure()? DebugLib.shortsource(f.checkclosure().p): "[Java]";
@@ -592,8 +600,6 @@ public class DebugLib extends OneArgFunction {
 			this.pc = pc;
 			this.v = v;
 			this.top = top;
-			if (f.checkclosure().p.code[pc] == Lua.OP_TAILCALL)
-				this.tail = true;
 			if (TRACE)
 				Print.printState(f.checkclosure(), pc, stack, top, v);
 		}
@@ -620,20 +626,7 @@ public class DebugLib extends OneArgFunction {
 		}
 		String sourceline() {
 			if ( !f.isclosure() ) return f.tojstring();
-			String s = f.checkclosure().p.source.tojstring();
-			int line = currentline();
-			return (s.startsWith("@")||s.startsWith("=")? s.substring(1): s) + ":" + line;
-		}
-		String tracename() {
-			LuaString[] kind = getfuncname(this);
-			if (kind[0] == null)
-				return "function "+kind[1].tojstring();
-//			if (kind[0] == M)
-//				return "main chunk";
-			if (kind[0] == JAVA)
-				return "function "+kind[1].tojstring();
-			return "function <"+shortsource()+":"+linedefined()+">";
-		
+			return DebugLib.shortsource(f.checkclosure().p) + ":" + currentline();
 		}
 		private int linedefined() {
 			return f.isclosure()? f.checkclosure().p.linedefined: -1;
@@ -642,14 +635,7 @@ public class DebugLib extends OneArgFunction {
 			if ( !f.isclosure() ) return null;
 			return f.checkclosure().p.getlocalname(index, pc);
 		}
-		String tojstring() {
-			return tracename()+" "+sourceline();
-		}
-		boolean istailcall() {
-			return tail;
-		}
-
-		DebugInfo getinfo(String what, CallFrame previous) {
+		DebugInfo getinfo(String what) {
 			DebugInfo ar = new DebugInfo();
 			for (int i = 0, n = what.length(); i < n; ++i) {
 				switch (what.charAt(i)) {
@@ -660,13 +646,14 @@ public class DebugLib extends OneArgFunction {
 			    		  ar.linedefined = p.linedefined;
 			    		  ar.lastlinedefined = p.lastlinedefined;
 			    		  ar.what = (ar.linedefined == 0) ? "main" : "Lua";
+				    	  ar.short_src = DebugLib.shortsource(p);
 			    	  } else {
-			    		    ar.source = "=[Java]";
-			    		    ar.linedefined = -1;
-			    		    ar.lastlinedefined = -1;
-			    		    ar.what = "Java";
+			    		  ar.source = "=[Java]";
+			    		  ar.linedefined = -1;
+			    		  ar.lastlinedefined = -1;
+			    		  ar.what = "Java";
+			    		  ar.short_src = f.classnamestub();
 			    	  }
-			    	  ar.short_src = chunkid(ar.source);
 			    	  break;
 			      case 'l':
 			    	  ar.currentline = currentline();
@@ -684,47 +671,33 @@ public class DebugLib extends OneArgFunction {
 			    	  }
 			    	  break;
 			      case 't':
-			    	  ar.istailcall = this.tail;
+			    	  ar.istailcall = false;
 			    	  break;
 			      case 'n': {
-			        /* calling function is a known Lua function? */
-			        if (!tail && (previous != null && previous.f.isclosure())) {
-			        	LuaString[] kind = getfuncname(previous);
-			        	ar.name = String.valueOf(kind[0]);
-			        	ar.namewhat = String.valueOf(kind[1]);
-			        }
-			        else
-			          ar.namewhat = null;
-			        if (ar.namewhat == null) {
-			          ar.namewhat = "";  /* not found */
-			          ar.name = null;
-			        }
-			        break;
+			    	  /* calling function is a known Lua function? */
+			    	  if (previous != null && previous.f.isclosure()) {
+			    		  NameWhat nw = getfuncname(previous);
+			    		  if (nw != null) {
+			    			  ar.name = nw.name;
+			    			  ar.namewhat = nw.namewhat;
+			    		  }
+			    	  }
+			    	  else
+			    		  ar.namewhat = null;
+			    	  if (ar.namewhat == null) {
+			    		  ar.namewhat = "";  /* not found */
+			    		  ar.name = null;
+			    	  }
+			    	  break;
 			      }
 			      default:
 			    	  break;
 				}
 			}
-			return null;
+			return ar;
 		}
 	}
 	
-	static String chunkid( String source ) {
-		 if ( source.startsWith("=") )
-			 return source.substring(1);
-		 String end = "";
-		 if ( source.startsWith("@") ) {
-			 source = source.substring(1);
-		 } else {
-			 source = "[string \""+source;
-			 end = "\"]";
-		 }
-		 int n = source.length() + end.length(); 
-		 if ( n > 50 )
-			 source = source.substring(0,50-end.length()-3) + "...";
-		 return source + end;
-	}
-
 	static LuaString findupvalue(LuaClosure c, int up) {
 		if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
@@ -748,9 +721,19 @@ public class DebugLib extends OneArgFunction {
 		if (!x) throw new RuntimeException("lua_assert failed");
 	}	
 	
-	public static LuaString[] getfuncname(DebugLib.CallFrame frame) {
+	static class NameWhat {
+		final String name;
+		final String namewhat;
+		NameWhat(String name, String namewhat) {
+			this.name = name;
+			this.namewhat = namewhat;
+		}
+	}
+
+	// Return the name info if found, or null if no useful information could be found.
+	static NameWhat getfuncname(DebugLib.CallFrame frame) {
 		if (!frame.f.isclosure())
-			return new LuaString[] { frame.f.strvalue(), JAVA };
+			return new NameWhat(frame.f.classnamestub(), "Java");
 		Prototype p = frame.f.checkclosure().p;
 		int pc = frame.pc;
 		int i = p.code[pc]; /* calling instruction */
@@ -760,7 +743,7 @@ public class DebugLib extends OneArgFunction {
 			case Lua.OP_TAILCALL: /* get function name */
 				return getobjname(p, pc, Lua.GETARG_A(i));
 			case Lua.OP_TFORCALL: /* for iterator */
-		    	return new LuaString[] { FOR_ITERATOR, FOR_ITERATOR};
+		    	return new NameWhat("(for iterator)", "(for iterator");
 		    /* all other instructions can call only through metamethods */
 		    case Lua.OP_SELF:
 		    case Lua.OP_GETTABUP:
@@ -782,15 +765,15 @@ public class DebugLib extends OneArgFunction {
 		    default:
 		      return null;  /* else no useful name can be found */
 		}
-		return new LuaString[] { tm, METAMETHOD };
+		return new NameWhat( tm.tojstring(), "metamethod" );
 	}
 	
-	// return StrValue[] { name, namewhat } if found, null if not
-	public static LuaString[] getobjname(Prototype p, int lastpc, int reg) {
+	// return NameWhat if found, null if not
+	public static NameWhat getobjname(Prototype p, int lastpc, int reg) {
 		int pc = lastpc; // currentpc(L, ci);
 		LuaString name = p.getlocalname(reg + 1, pc);
 		if (name != null) /* is a local? */
-			return new LuaString[] { name, LOCAL };
+			return new NameWhat( name.tojstring(), "local" );
 
 		/* else try symbolic execution */
 		pc = findsetreg(p, lastpc, reg);
@@ -812,12 +795,12 @@ public class DebugLib extends OneArgFunction {
 	                    ? p.getlocalname(t + 1, pc)
 	                    : (t < p.upvalues.length ? p.upvalues[t].name : QMARK);
 				name = kname(p, k);
-				return new LuaString[] { name, vn != null && vn.eq_b(ENV)? GLOBAL: FIELD };
+				return new NameWhat( name.tojstring(), vn != null && vn.eq_b(ENV)? "global": "field" );
 			}
 			case Lua.OP_GETUPVAL: {
 				int u = Lua.GETARG_B(i); /* upvalue index */
 				name = u < p.upvalues.length ? p.upvalues[u].name : QMARK;
-				return new LuaString[] { name, UPVALUE };
+				return new NameWhat( name.tojstring(), "upvalue" );
 			}
 		    case Lua.OP_LOADK:
 		    case Lua.OP_LOADKX: {
@@ -825,14 +808,14 @@ public class DebugLib extends OneArgFunction {
 		                                                    : Lua.GETARG_Ax(p.code[pc + 1]);
 		        if (p.k[b].isstring()) {
 		          name = p.k[b].strvalue();
-		          return new LuaString[] { name, CONSTANT };
+		          return new NameWhat( name.tojstring(), "constant" );
 		        }
 		        break;
 		    }
 			case Lua.OP_SELF: {
 				int k = Lua.GETARG_C(i); /* key index */
 				name = kname(p, k);
-				return new LuaString[] { name, METHOD };
+				return new NameWhat( name.tojstring(), "method" );
 			}
 			default:
 				break;

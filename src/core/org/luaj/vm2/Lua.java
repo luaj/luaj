@@ -340,5 +340,22 @@ public class Lua {
 
 	/* number of list items to accumulate before a SETLIST instruction */
 	public static final int LFIELDS_PER_FLUSH = 50;
-	
+
+	private static final int MAXSRC = 80;
+
+	public static String chunkid( String source ) {
+		 if ( source.startsWith("=") )
+			 return source.substring(1);
+		 String end = "";
+		 if ( source.startsWith("@") ) {
+			 source = source.substring(1);
+		 } else {
+			 source = "[string \""+source;
+			 end = "\"]";
+		 }
+		 int n = source.length() + end.length(); 
+		 if ( n > MAXSRC )
+			 source = source.substring(0,MAXSRC-end.length()-3) + "...";
+		 return source + end;
+	}
 }
