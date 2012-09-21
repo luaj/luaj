@@ -53,7 +53,6 @@ import org.apache.bcel.generic.Type;
 import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaString;
@@ -73,7 +72,6 @@ public class JavaBuilder {
 	private static final String STR_LUAVALUE = LuaValue.class.getName();
 	private static final String STR_LUASTRING = LuaString.class.getName();
 	private static final String STR_LUAINTEGER = LuaInteger.class.getName();
-	private static final String STR_LUADOUBLE = LuaDouble.class.getName();
 	private static final String STR_LUANUMBER = LuaNumber.class.getName();
 	private static final String STR_LUABOOLEAN = LuaBoolean.class.getName();
 	private static final String STR_LUATABLE = LuaTable.class.getName();
@@ -84,7 +82,6 @@ public class JavaBuilder {
 	private static final ObjectType TYPE_LUAVALUE = new ObjectType(STR_LUAVALUE);
 	private static final ObjectType TYPE_LUASTRING = new ObjectType(STR_LUASTRING);
 	private static final ObjectType TYPE_LUAINTEGER = new ObjectType(STR_LUAINTEGER);
-	private static final ObjectType TYPE_LUADOUBLE = new ObjectType(STR_LUADOUBLE);
 	private static final ObjectType TYPE_LUANUMBER = new ObjectType(STR_LUANUMBER);
 	private static final ObjectType TYPE_LUABOOLEAN = new ObjectType(STR_LUABOOLEAN);
 	private static final ObjectType TYPE_LUATABLE = new ObjectType(STR_LUATABLE);
@@ -92,9 +89,8 @@ public class JavaBuilder {
 	
 	private static final ArrayType TYPE_LOCALUPVALUE = new ArrayType( TYPE_LUAVALUE, 1 );
 	private static final ArrayType TYPE_CHARARRAY = new ArrayType( Type.CHAR, 1 );
+	private static final ArrayType TYPE_LUAVALUEARRAY = new ArrayType( TYPE_LUAVALUE, 1 );
 
-	
-	private static final Class[] NO_INNER_CLASSES = {};
 
 	private static final String STR_FUNCV = VarArgFunction.class.getName();
 	private static final String STR_FUNC0 = ZeroArgFunction.class.getName();
@@ -108,7 +104,6 @@ public class JavaBuilder {
 	private static final Type[] ARG_TYPES_DOUBLE = { Type.DOUBLE };
 	private static final Type[] ARG_TYPES_STRING = { Type.STRING };
 	private static final Type[] ARG_TYPES_CHARARRAY = { TYPE_CHARARRAY };
-	private static final Type[] ARG_TYPES_VARARGS_INT =  { TYPE_VARARGS, Type.INT };	
 	private static final Type[] ARG_TYPES_INT_LUAVALUE = { Type.INT, TYPE_LUAVALUE };
 	private static final Type[] ARG_TYPES_INT_VARARGS = { Type.INT, TYPE_VARARGS };
 	private static final Type[] ARG_TYPES_LUAVALUE_VARARGS = { TYPE_LUAVALUE, TYPE_VARARGS };
@@ -161,10 +156,12 @@ public class JavaBuilder {
 	private final int[] targets;
 	private final BranchInstruction[] branches;
 	private final InstructionHandle[] branchDestHandles;
+	private final InstructionHandle[] lastInstrHandles;
 	private InstructionHandle beginningOfLuaInstruction;
 	
 	// hold vararg result
 	private LocalVariableGen varresult = null;
+	private int prev_line = -1;
 	
 	public JavaBuilder(ProtoInfo pi, String classname, String filename) {
 		this.pi = pi;
@@ -220,6 +217,7 @@ public class JavaBuilder {
 		targets = new int[nc];
 		branches = new BranchInstruction[nc];
 		branchDestHandles = new InstructionHandle[nc];
+		lastInstrHandles = new InstructionHandle[nc];
 	}
 	
 	public void initializeSlots() {
@@ -339,6 +337,7 @@ public class JavaBuilder {
 	
 	private Map<Integer,Integer> plainSlotVars = new HashMap<Integer,Integer>();
 	private Map<Integer,Integer> upvalueSlotVars = new HashMap<Integer,Integer>();
+	private Map<Integer,LocalVariableGen> localVarGenBySlot = new HashMap<Integer,LocalVariableGen>();
 	private int findSlot( int slot, Map<Integer,Integer> map, String prefix, Type type ) {
 		Integer islot = Integer.valueOf(slot);
 		if ( map.containsKey(islot) )
@@ -347,6 +346,7 @@ public class JavaBuilder {
 		LocalVariableGen local = mg.addLocalVariable(name, type, null, null);
 		int index = local.getIndex();
 		map.put(islot, Integer.valueOf(index));
+		localVarGenBySlot.put(slot, local);
 		return index;
 	}
 	private int findSlotIndex( int slot, boolean isupvalue ) {
@@ -748,9 +748,23 @@ public class JavaBuilder {
 			beginningOfLuaInstruction = ih;
 	}
 
-	public void onEndOfLuaInstruction(int pc) {
+	public void onEndOfLuaInstruction(int pc, int line) {
 		branchDestHandles[pc] = beginningOfLuaInstruction;
+		lastInstrHandles[pc] = main.getEnd();
+		if (line != prev_line)
+			mg.addLineNumber(beginningOfLuaInstruction, prev_line = line);
 		beginningOfLuaInstruction = null;
+	}
+	
+	public void setVarStartEnd(int slot, int start_pc, int end_pc, String name) {
+		if (localVarGenBySlot.containsKey(slot)) {
+			name = name.replaceAll("[^a-zA-Z0-9]", "_");
+			LocalVariableGen l = localVarGenBySlot.get(slot);
+			l.setEnd(lastInstrHandles[end_pc-1]);
+			if (start_pc > 1)
+				l.setStart(lastInstrHandles[start_pc-2]);
+			l.setName(name);
+		}
 	}
 	
 	private void resolveBranches() {
@@ -798,7 +812,17 @@ public class JavaBuilder {
         append(factory.createInvoke(STR_BUFFER, "value", TYPE_LUAVALUE, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
 	}
 
-	public void closeUpvalue(int pc, int i) {
+	public void closeUpvalue(int pc, int upindex) {
 		// TODO: assign the upvalue location the value null;
+		/*
+		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
+		append(InstructionConstants.THIS);
+		append(InstructionConstants.ACONST_NULL);
+		if ( isrw ) {
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LUAVALUEARRAY, Constants.PUTFIELD));
+		} else {
+			append(factory.createFieldAccess(classname, upvalueName(upindex), TYPE_LUAVALUE, Constants.PUTFIELD));
+		}
+		*/
 	}
 }

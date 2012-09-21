@@ -21,75 +21,64 @@
  ******************************************************************************/
 package org.luaj.luajc;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 public class TestLuaJC {
-	// create the script
-	public static String name = "script";
-	public static String script = 
-			"function f1(a) print( 'f1:', a ) return a end\n" +
-					"b = f1()\n" + 
-					"return b";
+	// This file will be loaded using the FINDER as a resource, provided it is in the 
+	// build path.  This allows the debugger to find the file when stepping into the function.
+	public static String filename = "perf/nsieve.lua";
 
+	static Globals _G;
+	
 	public static void main(String[] args) throws Exception {
-		System.out.println(script);
+		System.out.println("filename: "+filename);
 		try {
 			
 			// create an environment to run in
-			LuaTable _G = JsePlatform.standardGlobals();
-			System.out.println("_G: "+_G);
-			System.out.println("_G.print: "+_G.get("print"));
+			_G = JsePlatform.standardGlobals();
 
-			// print the chunk as a closure
-			byte[] bytes = script.getBytes();
-			LuaValue chunk = LuaC.instance.load(new ByteArrayInputStream(bytes), "script", _G);
-			Prototype p = chunk.checkclosure().p;
+			// print the chunk as a closure, and pretty-print the closure.
+			LuaValue f = _G.loadFile(filename).arg1();
+			Prototype p = f.checkclosure().p;
 			Print.print(p);
 
-			// compile into a luajc chunk, or load as a class
+			// load into a luajc java-bytecode based chunk by installing the LuaJC compiler first
 			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
-				chunk = LuaJC.getInstance().load(new ByteArrayInputStream(bytes), "script", _G);
-			} else {
-				chunk = (LuaValue) Class.forName("script").newInstance();
+				LuaJC.install();
+				f = _G.loadFile(filename).arg1();
 			}
 	
 			// call with arguments
-			LuaValue[] vargs = new LuaValue[args.length];
-			for ( int i=0; i<args.length; i++ )
-				vargs[i] = LuaValue.valueOf(args[i]);
-			Varargs cargs = LuaValue.varargsOf(vargs);
-			Varargs v = chunk.invoke(cargs);
+			Varargs v = f.invoke(LuaValue.NONE);
 			
 			// print the result
-			for ( int i=1; i<=v.narg(); i++ )
-				System.out.println("result["+i+"]: "+v.arg(i));
+			System.out.println("result: "+v);
+
+			// Write out the files.
+			// saveClasses();
+			
 		} catch ( Throwable e ) {
 			e.printStackTrace();
-			saveClasses();
 		}
 	}
 
 	private static void saveClasses() throws Exception {
         // create the chunk
-		String chunkname = "script";
-		String filename = "script";
 		String destdir = ".";
 		
-		InputStream is = new ByteArrayInputStream( script.getBytes() );
-		Hashtable t = LuaJC.getInstance().compileAll(is, chunkname, filename);
+		InputStream is = _G.FINDER.findResource(filename);
+		Hashtable t = LuaJC.getInstance().compileAll(is, filename, filename);
 
         // write out the chunk
     	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
@@ -97,7 +86,7 @@ public class TestLuaJC {
     		byte[] bytes = (byte[]) t.get(key);
     		String destpath = (destdir!=null? destdir+"/": "") + key + ".class";
     		System.out.println( 
-						"chunk "+chunkname+
+						"chunk "+filename+
 						" from "+filename+
 						" written to "+destpath
 						+" length="+bytes.length+" bytes");

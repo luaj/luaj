@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.luajc;
 
+import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
@@ -46,6 +47,10 @@ public class JavaGen {
 		// build this class
 		JavaBuilder builder = new JavaBuilder(pi, classname, filename);
 		scanInstructions(pi, classname, builder);
+		for (int i = 0; i < pi.prototype.locvars.length; ++i) {
+			LocVars l = pi.prototype.locvars[i];
+			builder.setVarStartEnd(i, l.startpc, l.endpc, l.varname.tojstring());
+		}
 		this.bytecode = builder.completeClass();
 		
 		// build sub-prototypes
@@ -80,8 +85,9 @@ public class JavaGen {
 			
 			for ( int pc=b0.pc0; pc<=b0.pc1; pc++ ) {
 				
-				int pc0 = pc; // closure changes pc
-				int ins = p.code[pc];
+				final int pc0 = pc; // closure changes pc
+				final int ins = p.code[pc];
+				final int line = pc < p.lineinfo.length? p.lineinfo[pc]: -1;
 				final int o = Lua.GET_OPCODE(ins);
 				int a = Lua.GETARG_A(ins);
 				int b = Lua.GETARG_B(ins);
@@ -420,7 +426,7 @@ public class JavaGen {
 				}
 				
 				// let builder process branch instructions
-				builder.onEndOfLuaInstruction( pc0 );
+				builder.onEndOfLuaInstruction( pc0, line );
 			}
 		}
 	}

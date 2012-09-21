@@ -97,8 +97,8 @@ public class LuaJC implements LuaCompiler {
 
 	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException {
 		Prototype p = LuaC.instance.compile(stream, name);
-		String classname = toStandardJavaClassName( name );
 		String luaname = toStandardLuaFileName( name );
+		String classname = toStandardJavaClassName( luaname );
 		JavaLoader loader = new JavaLoader();
 		return loader.load(p, classname, luaname, env);
 	}
@@ -116,7 +116,7 @@ public class LuaJC implements LuaCompiler {
 	private static String toStandardLuaFileName( String luachunkname ) {
 		String stub = toStub( luachunkname );
 		String filename = stub.replace('.','/')+".lua";
-		return filename;
+		return filename.startsWith("@")? filename.substring(1): filename;
 	}
 	
 	private static String toStub( String s ) {

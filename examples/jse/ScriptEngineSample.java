@@ -10,16 +10,22 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
 
 public class ScriptEngineSample {
     
     public static void main(String [] args) {
+    	// Set the property 'luaj.debug' before getting the engine to get 
+    	// the debug libraries, which will be slower, but may provide stack traces
+    	// when luaJC is not used.
+    	// System.setProperty("luaj.debug", "true");
+
         ScriptEngineManager sem = new ScriptEngineManager();
         ScriptEngine e = sem.getEngineByExtension(".lua");
         ScriptEngineFactory f = e.getFactory();
 
         // uncomment to enable the lua-to-java bytecode compiler 
-        // (require bcel library in class path)
+        // (requires bcel library in class path)
         // org.luaj.vm2.luajc.LuaJC.install();
     	
         System.out.println( "Engine name: " +f.getEngineName() );
@@ -29,6 +35,7 @@ public class ScriptEngineSample {
         String statement = f.getOutputStatement("\"hello, world\"");
         System.out.println(statement);
         try {
+        	// Simple evaluations.  Each tiny script is compiled then evaluated.
             e.eval(statement);
             
             e.put("x", 25);
@@ -38,22 +45,37 @@ public class ScriptEngineSample {
             e.put("x", 2);
             e.eval("y = math.sqrt(x)");
             System.out.println( "y="+e.get("y") );
-            
+
+            e.put("f", new OneArgFunction() {
+				public LuaValue call(LuaValue arg) {
+					System.out.println("arg "+arg.tojstring());
+					return LuaValue.valueOf(123);
+				}
+            });
+            System.out.println("eval: "+e.eval("return f('abc')"));
+
+            // Example of compiled script tha can be reused once compiled. 
             CompiledScript cs = ((Compilable)e).compile("y = math.sqrt(x); return y");
-            Bindings b = e.createBindings();
-            b.put("x", 3);
-            System.out.println( "eval: "+cs.eval(b) );
-            System.out.println( "y="+b.get("y") );
 
-            SimpleBindings sb = new SimpleBindings();
-            sb.put("x", 144);
+            Bindings b1 = e.createBindings();
+            Bindings b2 = e.createBindings();
+            b1.put("x", 3);
+            b2.put("x", 144);
+            System.out.println( "eval: "+cs.eval(b1) );
+            System.out.println( "eval: "+cs.eval(b2) );
+            System.out.println( "y="+b1.get("y") );
+            System.out.println( "y="+b2.get("y") );
+            
+            // Bindings that use a client-specified Bindings type.
+            Bindings sb = new SimpleBindings();
+            sb.put("x", 2);
             System.out.println( "eval: "+cs.eval(sb) );
-            System.out.println( "y="+sb.get("y") );
 
+            // Example of how exceptions are generated.
             try {
-            	e.eval("\n\nbogus example\n\n");
+            	e.eval("\n\nbuggy lua code\n\n");
             } catch ( ScriptException se ) {
-            	System.out.println("script threw ScriptException as expected, message is '"+se.getMessage()+"'");
+            	System.out.println("script exception thrown for buggy script, message: '"+se.getMessage()+"'");
             }
             
             testEngineBindings(e);

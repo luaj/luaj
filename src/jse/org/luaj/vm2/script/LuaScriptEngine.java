@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Iterator;
+import java.util.Map.Entry;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -37,6 +37,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
@@ -59,7 +60,7 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
     private static final String __NAME__             = "Luaj";
     private static final String __SHORT_NAME__       = "Luaj";
     private static final String __LANGUAGE__         = "lua";
-    private static final String __LANGUAGE_VERSION__ = "5.1";
+    private static final String __LANGUAGE_VERSION__ = "5.2";
     private static final String __ARGV__             = "arg";
     private static final String __FILENAME__         = "?";
     
@@ -67,12 +68,14 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
     
     private ScriptContext defaultContext;
 
-    private final LuaValue _G;
+    private final Globals _G;
 
     public LuaScriptEngine() {
 
         // create globals
-        _G = JsePlatform.standardGlobals();
+        _G = "true".equals(System.getProperty("luaj.debug"))?
+        		JsePlatform.debugGlobals():
+        		JsePlatform.standardGlobals();
     	
     	// set up context
     	ScriptContext ctx = new SimpleScriptContext();
@@ -88,8 +91,10 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
         put(FILENAME, __FILENAME__);
         put(NAME, __SHORT_NAME__);
         put("THREADING", null);
+
+        // Let globals act as an index metatable
+        _G.set(LuaValue.INDEX, _G);
     }
-    
     
     public Object eval(String script) throws ScriptException {
         return eval(new StringReader(script));
@@ -162,22 +167,24 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 		try {
 	    	InputStream ris = new Utf8Encoder(reader);
 	    	try {
-	    		final LuaFunction f = LoadState.load(ris, "script", "bt", null);
+	    		final LuaFunction f = LoadState.load(ris, "script", "bt", _G);
 	    		if ( f.isclosure() ) {
 	    			// most compiled functions are closures with prototypes 
 	    			final Prototype p = f.checkclosure().p;
 					return new CompiledScriptImpl() {
-						protected LuaFunction newFunctionInstance() {
-							return new LuaClosure( p, null );
+						protected LuaFunction newFunctionInstance(LuaTable env) {
+							return new LuaClosure( p, env );
 						}
 					};
 	    		} else {
 	    			// when luajc is used, functions are java class instances
 	    			final Class c = f.getClass();
 					return new CompiledScriptImpl() {
-						protected LuaFunction newFunctionInstance() throws ScriptException {
+						protected LuaFunction newFunctionInstance(LuaTable env) throws ScriptException {
 							try {
-						        return (LuaFunction) c.newInstance();
+						        LuaFunction f = (LuaFunction) c.newInstance();
+						        f.initupvalue1( env );
+						        return f;
 							} catch (Exception e) {
 								throw new ScriptException("instantiation failed: "+e.toString());
 							}
@@ -195,63 +202,51 @@ public class LuaScriptEngine implements ScriptEngine, Compilable {
 	}
 	
 	abstract protected class CompiledScriptImpl extends CompiledScript {
-		abstract protected LuaFunction newFunctionInstance() throws ScriptException; 
+		abstract protected LuaFunction newFunctionInstance(LuaTable env) throws ScriptException; 
 		public ScriptEngine getEngine() {
 			return LuaScriptEngine.this;
 		}
 		public Object eval(ScriptContext context) throws ScriptException {
 	        Bindings b = context.getBindings(ScriptContext.ENGINE_SCOPE);
-	        LuaFunction f = newFunctionInstance();
-	        ClientBindings cb = new ClientBindings(b);
-	        f.initupvalue1(cb.env);
-			Varargs result = f.invoke(LuaValue.NONE);
-			cb.copyGlobalsToBindings();
-			return result;
+	        BindingsGlobals env = new BindingsGlobals(b);
+	        LuaFunction f = newFunctionInstance(env);
+	        try {
+	        	return f.invoke(LuaValue.NONE);
+	        } finally {
+	        	env.copyout();
+	        }
 		}
 	}
-	
-	public class ClientBindings {
-		public final Bindings b;
-		public final LuaTable env;
-		public ClientBindings( Bindings b ) {
+
+	class BindingsGlobals extends Globals {
+		final Bindings b;
+		BindingsGlobals(Bindings b) {
 			this.b = b;
-			this.env = new LuaTable();
-			env.setmetatable(LuaTable.tableOf(new LuaValue[] { LuaValue.INDEX, _G }));
-			this.copyBindingsToGlobals();
+			this.setmetatable(_G);
+			this.debuglib = _G.debuglib;
+			for (Entry<String,Object> e : b.entrySet())
+				rawset(toLua(e.getKey()), toLua(e.getValue()));
 		}
-		public void copyBindingsToGlobals() {
-			for ( Iterator i = b.keySet().iterator(); i.hasNext(); ) {
-				String key = (String) i.next();
-				Object val = b.get(key);
-				LuaValue luakey = toLua(key);
-				LuaValue luaval = toLua(val);
-				env.set(luakey, luaval);
-				i.remove();
-			}
+		void copyout() {
+			b.clear();
+			for (Varargs v = next(LuaValue.NIL); !v.arg1().isnil(); v = next(v.arg1()))
+				b.put(toJava(v.arg1()).toString(), toJava(v.arg(2)));
 		}
-		private LuaValue toLua(Object javaValue) {
-			return javaValue == null? LuaValue.NIL:
-				javaValue instanceof LuaValue? (LuaValue) javaValue:
-				CoerceJavaToLua.coerce(javaValue);
-		}
-		public void copyGlobalsToBindings() {
-			LuaValue[] keys = env.keys();
-			for ( int i=0; i<keys.length; i++ ) {
-				LuaValue luakey = keys[i];
-				LuaValue luaval = env.get(luakey);
-				String key = luakey.tojstring();
-				Object val = toJava( luaval );
-				b.put(key,val);
-			}
-		}
-		private Object toJava(LuaValue v) {
-			switch ( v.type() ) {
-			case LuaValue.TNIL: return null;
-			case LuaValue.TSTRING: return v.tojstring();
-			case LuaValue.TUSERDATA: return v.checkuserdata(Object.class);
-			case LuaValue.TNUMBER: return v.isinttype()? (Object) new Integer(v.toint()): (Object) new Double(v.todouble());
-			default: return v;
-			}
+	}
+
+	LuaValue toLua(Object javaValue) {
+		return javaValue == null? LuaValue.NIL:
+			javaValue instanceof LuaValue? (LuaValue) javaValue:
+			CoerceJavaToLua.coerce(javaValue);
+	}
+	
+	Object toJava(LuaValue v) {
+		switch ( v.type() ) {
+		case LuaValue.TNIL: return null;
+		case LuaValue.TSTRING: return v.tojstring();
+		case LuaValue.TUSERDATA: return v.checkuserdata(Object.class);
+		case LuaValue.TNUMBER: return v.isinttype()? (Object) new Integer(v.toint()): (Object) new Double(v.todouble());
+		default: return v;
 		}
 	}
 
