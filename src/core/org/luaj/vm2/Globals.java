@@ -27,7 +27,10 @@ import java.io.PrintStream;
 import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ResourceFinder;
+import org.luaj.vm2.lib.jme.JmePlatform;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Global environment used by luaj.
@@ -70,6 +73,8 @@ public class Globals extends LuaTable {
 	public LuaThread running_thread = new LuaThread(this);
 
 	public DebugLib debuglib;
+
+	public PackageLib package_;
 	
 	public Globals checkglobals() {
 		return this;

@@ -1462,6 +1462,13 @@ public class LuaValue extends Varargs {
 	 */
 	public LuaValue call(LuaValue arg) { return callmt().call(this,arg); }
 
+	/** Convenience function which calls a luavalue with a single, string argument. 
+	 * @param arg String argument to the function.  This will be converted to a LuaString.
+	 * @return return value of the invocation. 
+	 * @see #call(LuaValue)
+	 */
+	public LuaValue call(String arg) { return call(valueOf(arg)); }
+	
 	/** Call {@link this} with 2 arguments, including metatag processing, 
 	 * and return only the first return value.
 	 * <p>
