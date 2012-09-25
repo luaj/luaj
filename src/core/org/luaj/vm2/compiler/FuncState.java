@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.compiler;
 
+import java.util.Hashtable;
+
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaDouble;
@@ -47,7 +49,7 @@ public class FuncState extends LuaC {
 	};
 	
 	Prototype f;  /* current function header */
-	LuaTable h;  /* table to find (and reuse) elements in `k' */
+	Hashtable h;  /* table to find (and reuse) elements in `k' */
 	FuncState prev;  /* enclosing function */
 	LexState ls;  /* lexical state */
 	LuaC L;  /* compiler being invoked */
@@ -473,20 +475,14 @@ public class FuncState extends LuaC {
 		if (e.k == LexState.VNONRELOC)
 			this.freereg(e.u.info);
 	}
-
-	static final LuaUserdata NIL_PROXY = new LuaUserdata(LuaValue.NIL);
-
 	int addk(LuaValue v) {
-		LuaValue key = v.isnil()? NIL_PROXY: v;
 		if (this.h == null) {
-			this.h = new LuaTable();
-		} else {
-			LuaValue idx = this.h.get(key);
-			if (idx.isnumber())
-				return idx.toint();
-		}
-		int idx = this.nk;
-		this.h.set(key, LuaValue.valueOf(idx));
+			this.h = new Hashtable();
+		} else if (this.h.containsKey(v)) {
+			return ((Integer) h.get(v)).intValue();
+		} 
+		final int idx = this.nk;
+		this.h.put(v, new Integer(idx));
 		final Prototype f = this.f;
 		if (f.k == null || nk + 1 >= f.k.length)
 			f.k = realloc( f.k, nk*2 + 1 );

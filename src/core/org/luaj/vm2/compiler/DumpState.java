@@ -120,7 +120,6 @@ public class DumpState {
 			final LuaValue o = k[i];
 			switch ( o.type() ) {
 			case LuaValue.TNIL:
-			case LuaValue.TUSERDATA:
 				writer.write(LuaValue.TNIL);
 				break;
 			case LuaValue.TBOOLEAN:

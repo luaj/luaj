@@ -538,7 +538,7 @@ public class LuaClosure extends LuaFunction {
 			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
 		le.traceback = errorHook(le.getMessage());
 		if (globals != null && globals.debuglib != null)
-			le.traceback += globals.debuglib.traceback(le.level);
+			le.traceback = le.traceback + "\n" + globals.debuglib.traceback(le.level);
 	}
 	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {

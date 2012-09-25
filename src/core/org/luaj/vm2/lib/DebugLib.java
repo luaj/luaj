@@ -72,20 +72,11 @@ public class DebugLib extends OneArgFunction {
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
 	
 	private static final LuaString LUA             = valueOf("Lua");  
-	private static final LuaString JAVA            = valueOf("Java");  
 	private static final LuaString QMARK           = valueOf("?");  
-	private static final LuaString GLOBAL          = valueOf("global");  
-	private static final LuaString LOCAL           = valueOf("local");  
-	private static final LuaString METHOD          = valueOf("method");  
-	private static final LuaString UPVALUE         = valueOf("upvalue");  
-	private static final LuaString FIELD           = valueOf("field");
 	private static final LuaString CALL            = valueOf("call");  
 	private static final LuaString LINE            = valueOf("line");  
 	private static final LuaString COUNT           = valueOf("count");  
 	private static final LuaString RETURN          = valueOf("return");
-	private static final LuaString CONSTANT        = valueOf("constant");  
-	private static final LuaString FOR_ITERATOR    = valueOf("for iterator");
-	private static final LuaString METAMETHOD      = valueOf("metamethod");
 	
 	private static final LuaString FUNC            = valueOf("func");  
 	private static final LuaString ISTAILCALL      = valueOf("istailcall");  
@@ -178,40 +169,26 @@ public class DebugLib extends OneArgFunction {
 			}
 
 			// start a table
+			DebugInfo ar = callstack.auxgetinfo(what, (LuaFunction) func, frame);
 			LuaTable info = new LuaTable();
-			LuaClosure c = func.optclosure(null);
 			if (what.indexOf('S') >= 0) {
-				if (c != null) {
-					Prototype p = c.p;
-					info.set(WHAT, LUA);
-					info.set(SOURCE, p.source);
-					info.set(SHORT_SRC, valueOf(shortsource(p)));
-					info.set(LINEDEFINED, valueOf(p.linedefined));
-					info.set(LASTLINEDEFINED, valueOf(p.lastlinedefined));
-				} else {
-					String shortName = func.tojstring();
-					LuaString name = LuaString.valueOf("[Java] " + shortName);
-					info.set(WHAT, JAVA);
-					info.set(SOURCE, name);
-					info.set(SHORT_SRC, valueOf(shortName));
-					info.set(LINEDEFINED, LuaValue.MINUSONE);
-					info.set(LASTLINEDEFINED, LuaValue.MINUSONE);
-				}
+				info.set(WHAT, LUA);
+				info.set(SOURCE, valueOf(ar.source));
+				info.set(SHORT_SRC, valueOf(ar.short_src));
+				info.set(LINEDEFINED, valueOf(ar.linedefined));
+				info.set(LASTLINEDEFINED, valueOf(ar.lastlinedefined));
 			}
 			if (what.indexOf('l') >= 0) {
-				info.set( CURRENTLINE, valueOf(frame!=null? frame.currentline(): -1) );
+				info.set( CURRENTLINE, valueOf(ar.currentline) );
 			}
 			if (what.indexOf('u') >= 0) {
-				info.set(NUPS, valueOf(c!=null? c.p.upvalues.length: 0));
-				info.set(NPARAMS, valueOf(c!=null? c.p.numparams: 0));
-				info.set(ISVARARG, valueOf(c!=null? c.p.is_vararg: 0));
+				info.set(NUPS, valueOf(ar.nups));
+				info.set(NPARAMS, valueOf(ar.nparams));
+				info.set(ISVARARG, ar.isvararg? ONE: ZERO);
 			}
 			if (what.indexOf('n') >= 0) {
-				if (frame != null) {
-					DebugInfo ar = frame.getinfo("n");
-					info.set(NAME, LuaValue.valueOf(ar.name));
-					info.set(NAMEWHAT, LuaValue.valueOf(ar.namewhat));
-				}
+				info.set(NAME, LuaValue.valueOf(ar.name!=null? ar.name: "?"));
+				info.set(NAMEWHAT, LuaValue.valueOf(ar.namewhat));
 			}
 			if (what.indexOf('t') >= 0) {
 				info.set(ISTAILCALL, ZERO);
@@ -225,7 +202,8 @@ public class DebugLib extends OneArgFunction {
 						lines.insert(-1, valueOf(cf.currentline()));
 			}
 			if (what.indexOf('f') >= 0) {
-				info.set( FUNC, func );
+				if (func != null)
+					info.set( FUNC, func );
 			}
 			return info;
 		}
@@ -485,93 +463,168 @@ public class DebugLib extends OneArgFunction {
 		  boolean istailcall;	/* (t) */
 		  String short_src; /* (S) */
 		  CallFrame cf;  /* active function */
+
+		public void funcinfo(LuaFunction f) {
+			if (f.isclosure()) {
+				Prototype p = f.checkclosure().p;
+				this.source = p.source != null ? p.source.tojstring() : "=?";
+				this.linedefined = p.linedefined;
+				this.lastlinedefined = p.lastlinedefined;
+				this.what = (this.linedefined == 0) ? "main" : "Lua";
+				this.short_src = DebugLib.shortsource(p);
+			} else {
+				this.source = "=[Java]";
+				this.linedefined = -1;
+				this.lastlinedefined = -1;
+				this.what = "Java";
+				this.short_src = f.classnamestub();
+			}
+		}
 	}
 	
 	public static class CallStack {
-			final static CallFrame[] EMPTY = {};
-			CallFrame[] frame = EMPTY;
-			int calls  = 0;
-	
-			CallStack() {}
-			
-			int currentline() {
-				return calls > 0? frame[calls-1].currentline(): -1;
-			}
+		final static CallFrame[] EMPTY = {};
+		CallFrame[] frame = EMPTY;
+		int calls  = 0;
 
-			private CallFrame pushcall() {
-				if (calls >= frame.length) {
-					int n = Math.max(4, frame.length * 3 / 2);
-					CallFrame[] f = new CallFrame[n];
-					System.arraycopy(frame, 0, f, 0, frame.length);
-					for (int i = frame.length; i < n; ++i)
-						f[i] = new CallFrame();
-					frame = f;
-					for (int i = 1; i < n; ++i)
-						f[i].previous = f[i-1];
-				}
-				return frame[calls++];
-			}
-			
-			final void onCall(LuaFunction function) {
-				pushcall().set(function);
-			}
-
-			final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
-				pushcall().set(function, varargs, stack);
-			}
-			
-			final void onReturn() {
-				if (calls > 0)
-					frame[--calls].reset();
-			}
-			
-			final void onInstruction(int pc, Varargs v, int top) {
-				frame[calls-1].instr(pc, v, top);
-			}
-	
-			/**
-			 * Get the traceback starting at a specific level.
-			 * @param level
-			 * @return String containing the traceback.
-			 */
-			String traceback(int level) {
-				StringBuffer sb = new StringBuffer();
-				sb.append( "stack traceback:" );
-				for (DebugLib.CallFrame c; (c = getCallFrame(level++)) != null; ) {
-					sb.append("\n\t");
-					sb.append( c.shortsource() );
-					sb.append( ':' );
-					if (c.currentline() > 0)
-						sb.append( c.currentline()+":" );
-					sb.append( " in " );
-					DebugInfo ar = c.getinfo("n");
-					if (c.linedefined() == 0)
-						sb.append("main chunk");
-					else if ( ar.name != null ) {
-						sb.append( "function '" );
-						sb.append( ar.name );
-						sb.append( '\'' );
-					} else {
-						sb.append( "function <"+c.shortsource()+":"+c.linedefined()+">" );
-					}
-				}
-				sb.append("\n\t[Java]: in ?");
-				return sb.toString();
-			}
-	
-			DebugLib.CallFrame getCallFrame(int level) {
-				if (level < 1 || level > calls)
-					return null;
-				return frame[calls-level];
-			}
-	
-			DebugLib.CallFrame findCallFrame(LuaValue func) {
-				for (int i = 1; i <= calls; ++i)
-					if (frame[calls-i].f == func)
-						return frame[i];
-				return null;
-			}	
+		CallStack() {}
+		
+		int currentline() {
+			return calls > 0? frame[calls-1].currentline(): -1;
 		}
+
+		private CallFrame pushcall() {
+			if (calls >= frame.length) {
+				int n = Math.max(4, frame.length * 3 / 2);
+				CallFrame[] f = new CallFrame[n];
+				System.arraycopy(frame, 0, f, 0, frame.length);
+				for (int i = frame.length; i < n; ++i)
+					f[i] = new CallFrame();
+				frame = f;
+				for (int i = 1; i < n; ++i)
+					f[i].previous = f[i-1];
+			}
+			return frame[calls++];
+		}
+		
+		final void onCall(LuaFunction function) {
+			pushcall().set(function);
+		}
+
+		final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+			pushcall().set(function, varargs, stack);
+		}
+		
+		final void onReturn() {
+			if (calls > 0)
+				frame[--calls].reset();
+		}
+		
+		final void onInstruction(int pc, Varargs v, int top) {
+			frame[calls-1].instr(pc, v, top);
+		}
+
+		/**
+		 * Get the traceback starting at a specific level.
+		 * @param level
+		 * @return String containing the traceback.
+		 */
+		String traceback(int level) {
+			StringBuffer sb = new StringBuffer();
+			sb.append( "stack traceback:" );
+			for (DebugLib.CallFrame c; (c = getCallFrame(level++)) != null; ) {
+				sb.append("\n\t");
+				sb.append( c.shortsource() );
+				sb.append( ':' );
+				if (c.currentline() > 0)
+					sb.append( c.currentline()+":" );
+				sb.append( " in " );
+				DebugInfo ar = auxgetinfo("n", c.f, c);
+				if (c.linedefined() == 0)
+					sb.append("main chunk");
+				else if ( ar.name != null ) {
+					sb.append( "function '" );
+					sb.append( ar.name );
+					sb.append( '\'' );
+				} else {
+					sb.append( "function <"+c.shortsource()+":"+c.linedefined()+">" );
+				}
+			}
+			sb.append("\n\t[Java]: in ?");
+			return sb.toString();
+		}
+
+		DebugLib.CallFrame getCallFrame(int level) {
+			if (level < 1 || level > calls)
+				return null;
+			return frame[calls-level];
+		}
+
+		DebugLib.CallFrame findCallFrame(LuaValue func) {
+			for (int i = 1; i <= calls; ++i)
+				if (frame[calls-i].f == func)
+					return frame[i];
+			return null;
+		}	
+
+
+		DebugInfo auxgetinfo(String what, LuaFunction f, CallFrame ci) {
+			DebugInfo ar = new DebugInfo();
+			for (int i = 0, n = what.length(); i < n; ++i) {
+				switch (what.charAt(i)) {
+			      case 'S':
+			    	  ar.funcinfo(f);
+			    	  break;
+			      case 'l':
+			    	  ar.currentline = ci != null && ci.f.isclosure()? ci.currentline(): -1;
+			    	  break;
+			      case 'u':
+			    	  if (f != null && f.isclosure()) {
+			    		  Prototype p = f.checkclosure().p;
+			    		  ar.nups = (short) p.upvalues.length;
+			    		  ar.nparams = (short) p.numparams;
+			    		  ar.isvararg = p.is_vararg != 0;
+			    	  } else {
+				    	  ar.nups = 0;
+				    	  ar.isvararg = true;
+				    	  ar.nparams = 0;
+			    	  }
+			    	  break;
+			      case 't':
+			    	  ar.istailcall = false;
+			    	  break;
+			      case 'n': {
+			    	  /* calling function is a known Lua function? */
+			    	  if (ci != null && ci.previous != null) {
+			    		  if (ci.previous.f.isclosure()) {
+			    			  NameWhat nw = getfuncname(ci.previous);
+				    		  if (nw != null) {
+				    			  ar.name = nw.name;
+				    			  ar.namewhat = nw.namewhat;
+				    		  }
+			    		  } else {
+			    			  ar.name = ci.previous.f.classnamestub();
+			    			  ar.namewhat = "Java";
+			    		  }
+			    	  }
+			    	  if (ar.namewhat == null) {
+			    		  ar.namewhat = "";  /* not found */
+			    		  ar.name = null;
+			    	  }
+			    	  break;
+			      }
+			      case 'L':
+			      case 'f':
+			    	  break;
+			      default:
+			    	  // TODO: return bad status.
+			    	  break;
+				}
+			}
+			return ar;
+		}		
+
+	}
 
 	static class CallFrame {
 		LuaFunction f;
@@ -635,69 +688,8 @@ public class DebugLib extends OneArgFunction {
 			if ( !f.isclosure() ) return null;
 			return f.checkclosure().p.getlocalname(index, pc);
 		}
-		DebugInfo getinfo(String what) {
-			DebugInfo ar = new DebugInfo();
-			for (int i = 0, n = what.length(); i < n; ++i) {
-				switch (what.charAt(i)) {
-			      case 'S':
-			    	  if (f.isclosure()) {
-			    		  Prototype p = f.checkclosure().p;
-			    		  ar.source = p.source != null ? p.source.tojstring() : "=?";
-			    		  ar.linedefined = p.linedefined;
-			    		  ar.lastlinedefined = p.lastlinedefined;
-			    		  ar.what = (ar.linedefined == 0) ? "main" : "Lua";
-				    	  ar.short_src = DebugLib.shortsource(p);
-			    	  } else {
-			    		  ar.source = "=[Java]";
-			    		  ar.linedefined = -1;
-			    		  ar.lastlinedefined = -1;
-			    		  ar.what = "Java";
-			    		  ar.short_src = f.classnamestub();
-			    	  }
-			    	  break;
-			      case 'l':
-			    	  ar.currentline = currentline();
-			    	  break;
-			      case 'u':
-			    	  if (f.isclosure()) {
-			    		  Prototype p = f.checkclosure().p;
-			    		  ar.nups = (short) p.upvalues.length;
-			    		  ar.nparams = (short) p.numparams;
-			    		  ar.isvararg = p.is_vararg != 0;
-			    	  } else {
-				    	  ar.isvararg = true;
-				    	  ar.nups = 0;
-				    	  ar.nparams = 0;
-			    	  }
-			    	  break;
-			      case 't':
-			    	  ar.istailcall = false;
-			    	  break;
-			      case 'n': {
-			    	  /* calling function is a known Lua function? */
-			    	  if (previous != null && previous.f.isclosure()) {
-			    		  NameWhat nw = getfuncname(previous);
-			    		  if (nw != null) {
-			    			  ar.name = nw.name;
-			    			  ar.namewhat = nw.namewhat;
-			    		  }
-			    	  }
-			    	  else
-			    		  ar.namewhat = null;
-			    	  if (ar.namewhat == null) {
-			    		  ar.namewhat = "";  /* not found */
-			    		  ar.name = null;
-			    	  }
-			    	  break;
-			      }
-			      default:
-			    	  break;
-				}
-			}
-			return ar;
-		}
 	}
-	
+
 	static LuaString findupvalue(LuaClosure c, int up) {
 		if ( c.upValues != null && up > 0 && up <= c.upValues.length ) {
 			if ( c.p.upvalues != null && up <= c.p.upvalues.length )
