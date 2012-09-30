@@ -64,11 +64,14 @@ if platform ~= 'JME' then
 end
 
 -- write a few lines, including a non-terminating one
+files = {}
 f = io.open("abc.txt","w")
-print( 'f', io.type(f) )
+print( 'f.type', io.type(f) )
+print( 'f', f )
 print( 'write', f:write("line one\nline two\n\nafter blank line\nunterminated line") )
 print( 'type(f)', io.type(f) )
 print( 'close', f:close() )
+files = {}
 
 -- read using io.lines()
 for l in io.lines("abc.txt") do
