@@ -37,7 +37,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.DebugLib.CallFrame;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
@@ -95,15 +94,6 @@ public class DebugLib extends OneArgFunction {
 
 	Globals globals;
 	
-	LuaValue hookfunc;
-	boolean hookline;
-	boolean hookcall;
-	boolean hookrtrn;
-	int hookcount;
-	boolean inhook;
-	int lastline;
-	int bytecodes;
-	
 	public LuaValue call(LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;
@@ -139,10 +129,11 @@ public class DebugLib extends OneArgFunction {
 	// debug.gethook ([thread])
 	final class gethook extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
+			LuaThread t = args.narg() > 0 ? args.checkthread(1): globals.running_thread;
 			return varargsOf(
-					hookfunc != null? hookfunc: NIL,
-					valueOf((hookcall?"c":"")+(hookline?"l":"")+(hookrtrn?"r":"")),
-					valueOf(hookcount));
+					t.hookfunc != null? t.hookfunc: NIL,
+					valueOf((t.hookcall?"c":"")+(t.hookline?"l":"")+(t.hookrtrn?"r":"")),
+					valueOf(t.hookcount));
 		}
 	}
 
@@ -264,7 +255,7 @@ public class DebugLib extends OneArgFunction {
 	final class sethook extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
+			LuaThread t = args.isthread(a)? args.checkthread(a++): globals.running_thread; 
 			LuaValue func    = args.optfunction(a++, null);
 			String str       = args.optjstring(a++,"");
 			int count        = args.optint(a++,0);
@@ -275,11 +266,11 @@ public class DebugLib extends OneArgFunction {
 					case 'l': line=true; break;
 					case 'r': rtrn=true; break;
 				}
-			hookfunc = func;
-			hookcall = call;
-			hookline = line;
-			hookcount = count;
-			hookrtrn = rtrn;
+			t.hookfunc = func;
+			t.hookcall = call;
+			t.hookline = line;
+			t.hookcount = count;
+			t.hookrtrn = rtrn;
 			return NONE;
 		}
 	}
@@ -388,39 +379,43 @@ public class DebugLib extends OneArgFunction {
 	}
 
 	public void onCall(LuaFunction f) {
-		if (inhook) return;
+		LuaThread t = globals.running_thread;
+		if (t.inhook) return;
 		callstack().onCall(f);
-		if (hookcall && hookfunc != null) 
+		if (t.hookcall && t.hookfunc != null) 
 			callHook(CALL, NIL);
 	}
 
 	public void onCall(LuaClosure c, Varargs varargs, LuaValue[] stack) {
-		if (inhook) return;
+		LuaThread t = globals.running_thread;
+		if (t.inhook) return;
 		callstack().onCall(c, varargs, stack);
-		if (hookcall && hookfunc != null) 
+		if (t.hookcall && t.hookfunc != null) 
 			callHook(CALL, NIL);
 	}
 
 	public void onInstruction(int pc, Varargs v, int top) {
-		if (inhook) return;
+		LuaThread t = globals.running_thread;
+		if (t.inhook) return;
 		callstack().onInstruction(pc, v, top);
-		if (hookfunc == null) return;
-		if (hookcount > 0)
-			if (++bytecodes % hookcount == 0)
+		if (t.hookfunc == null) return;
+		if (t.hookcount > 0)
+			if (++t.bytecodes % t.hookcount == 0)
 				callHook(COUNT, NIL);
-		if (hookline) {
+		if (t.hookline) {
 			int newline = callstack().currentline();
-			if ( newline != lastline ) {
-				lastline = newline;
+			if ( newline != t.lastline ) {
+				t.lastline = newline;
 				callHook(LINE, LuaValue.valueOf(newline));
 			}
 		}
 	}
 
 	public void onReturn() {
-		if (inhook) return;
+		LuaThread t = globals.running_thread;
+		if (t.inhook) return;
 		callstack().onReturn();
-		if (hookcall && hookfunc != null)
+		if (t.hookcall && t.hookfunc != null)
 			callHook(RETURN, NIL);
 	}
 
@@ -429,13 +424,14 @@ public class DebugLib extends OneArgFunction {
 	}
 	
 	void callHook(LuaValue type, LuaValue arg) {
-		inhook = true;
+		LuaThread t = globals.running_thread;
+		t.inhook = true;
 		try {
-			hookfunc.call(type, arg);
+			t.hookfunc.call(type, arg);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			inhook = false;
+			t.inhook = false;
 		}
 	}
 	

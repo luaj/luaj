@@ -95,6 +95,17 @@ public class LuaThread extends LuaValue {
 
 	public final Globals globals;
 
+	// Hook function control state used by debug lib.
+	public LuaValue hookfunc;
+	public boolean hookline;
+	public boolean hookcall;
+	public boolean hookrtrn;
+	public int hookcount;
+	public boolean inhook;
+	public int lastline;
+	public int bytecodes;
+
+	
 	/** Private constructor for main thread only */
 	public LuaThread(Globals globals) {
 		state = new State(globals, this, null);
