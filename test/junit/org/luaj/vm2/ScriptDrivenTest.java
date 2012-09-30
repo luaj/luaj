@@ -34,8 +34,8 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.ResourceFinder;
+import org.luaj.vm2.lib.jse.JseProcess;
 import org.luaj.vm2.luajc.LuaJC;
 
 abstract
@@ -235,69 +235,8 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 			throws IOException, InterruptedException {
 		Runtime r = Runtime.getRuntime();
 		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		final Process p = r.exec(cmd);
-		try {
-			// start a thread to write the given input to the subprocess.
-			Thread inputCopier = (new Thread() {
-				public void run() {
-					try {
-						OutputStream processStdIn = p.getOutputStream();
-						try {
-							copy(input, processStdIn);
-						} finally {
-							processStdIn.close();
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-			inputCopier.start();
-
-			// start another thread to read output from the subprocess.
-			Thread outputCopier = (new Thread() {
-				public void run() {
-					try {
-						InputStream processStdOut = p.getInputStream();
-						try {
-							copy(processStdOut, baos);
-						} finally {
-							processStdOut.close();
-						}
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-					}
-				}
-			});
-			outputCopier.start();
-
-			// start another thread to read output from the subprocess.
-			Thread errorCopier = (new Thread() {
-				public void run() {
-					try {
-						InputStream processError = p.getErrorStream();
-						try {
-							copy(processError, System.err);
-						} finally {
-							processError.close();
-						}
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-					}
-				}
-			});
-			errorCopier.start();
-
-			p.waitFor();
-			inputCopier.join();
-			outputCopier.join();
-			errorCopier.join();
-
-			return new String(baos.toByteArray());
-
-		} finally {
-			p.destroy();
-		}
+		new JseProcess(cmd, input, baos, System.err).waitFor();
+		return new String(baos.toByteArray());
 	}
 
 	private String readString(InputStream is) throws IOException {

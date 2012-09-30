@@ -23,9 +23,19 @@ package org.luaj.vm2.lib;
 
 import java.io.IOException;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.PackageLib.java_searcher;
+import org.luaj.vm2.lib.PackageLib.loadlib;
+import org.luaj.vm2.lib.PackageLib.lua_searcher;
+import org.luaj.vm2.lib.PackageLib.preload_searcher;
+import org.luaj.vm2.lib.PackageLib.require;
+import org.luaj.vm2.lib.PackageLib.searchpath;
+import org.luaj.vm2.lib.jme.JmePlatform;
+import org.luaj.vm2.lib.jse.JseOsLib;
+import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
  * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
@@ -72,22 +82,21 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
-public class OsLib extends VarArgFunction {
+public class OsLib extends OneArgFunction {
 	public static String TMP_PREFIX    = ".luaj";
 	public static String TMP_SUFFIX    = "tmp";
 
-	private static final int INIT      = 0;
-	private static final int CLOCK     = 1;
-	private static final int DATE      = 2;
-	private static final int DIFFTIME  = 3;
-	private static final int EXECUTE   = 4;
-	private static final int EXIT      = 5;
-	private static final int GETENV    = 6;
-	private static final int REMOVE    = 7;
-	private static final int RENAME    = 8;
-	private static final int SETLOCALE = 9;
-	private static final int TIME      = 10;
-	private static final int TMPNAME   = 11;
+	private static final int CLOCK     = 0;
+	private static final int DATE      = 1;
+	private static final int DIFFTIME  = 2;
+	private static final int EXECUTE   = 3;
+	private static final int EXIT      = 4;
+	private static final int GETENV    = 5;
+	private static final int REMOVE    = 6;
+	private static final int RENAME    = 7;
+	private static final int SETLOCALE = 8;
+	private static final int TIME      = 9;
+	private static final int TMPNAME   = 10;
 
 	private static final String[] NAMES = {
 		"clock",
@@ -106,61 +115,69 @@ public class OsLib extends VarArgFunction {
 	private static final long t0 = System.currentTimeMillis();
 	private static long tmpnames = t0;
 
+	protected Globals globals;
+	
 	/** 
 	 * Create and OsLib instance.   
 	 */
 	public OsLib() {
 	}
-
-	public LuaValue init(LuaValue env) {
-		LuaTable t = new LuaTable();
-		bind(t, this.getClass(), NAMES, CLOCK);
-		env.set("os", t);
-		env.get("package").get("loaded").set("os", t);
-		return t;
+	
+	public LuaValue call(LuaValue env) {
+		globals = env.checkglobals();
+		LuaTable os = new LuaTable();
+		for (int i = 0; i < NAMES.length; ++i)
+			os.set(NAMES[i], new OsLibFunc(i, NAMES[i]));
+		env.set("os", os);
+		globals.package_.loaded.set("os", os);
+		return os;
 	}
 
-	public Varargs invoke(Varargs args) {
-		try {
-			switch ( opcode ) {
-			case INIT: 
-				return init(args.arg1());
-			case CLOCK:
-				return valueOf(clock());
-			case DATE: {
-				String s = args.optjstring(1, null);
-				double t = args.optdouble(2,-1);
-				return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
-			}
-			case DIFFTIME:
-				return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
-			case EXECUTE:
-				return valueOf(execute(args.optjstring(1, null)));
-			case EXIT:
-				exit(args.optint(1, 0));
+	class OsLibFunc extends VarArgFunction {
+		public OsLibFunc(int opcode, String name) {
+			this.opcode = opcode;
+			this.name = name;
+		}
+		public Varargs invoke(Varargs args) {
+			try {
+				switch ( opcode ) {
+				case CLOCK:
+					return valueOf(clock());
+				case DATE: {
+					String s = args.optjstring(1, null);
+					double t = args.optdouble(2,-1);
+					return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
+				}
+				case DIFFTIME:
+					return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
+				case EXECUTE:
+					return execute(args.optjstring(1, null));
+				case EXIT:
+					exit(args.optint(1, 0));
+					return NONE;
+				case GETENV: {
+					final String val = getenv(args.checkjstring(1));
+					return val!=null? valueOf(val): NIL;
+				}
+				case REMOVE:
+					remove(args.checkjstring(1));
+					return LuaValue.TRUE;
+				case RENAME:
+					rename(args.checkjstring(1), args.checkjstring(2));
+					return LuaValue.TRUE;
+				case SETLOCALE: {
+					String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
+					return s!=null? valueOf(s): NIL;
+				}
+				case TIME:
+					return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
+				case TMPNAME:
+					return valueOf(tmpname());
+				}
 				return NONE;
-			case GETENV: {
-				final String val = getenv(args.checkjstring(1));
-				return val!=null? valueOf(val): NIL;
+			} catch ( IOException e ) {
+				return varargsOf(NIL, valueOf(e.getMessage()));
 			}
-			case REMOVE:
-				remove(args.checkjstring(1));
-				return LuaValue.TRUE;
-			case RENAME:
-				rename(args.checkjstring(1), args.checkjstring(2));
-				return LuaValue.TRUE;
-			case SETLOCALE: {
-				String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
-				return s!=null? valueOf(s): NIL;
-			}
-			case TIME:
-				return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
-			case TMPNAME:
-				return valueOf(tmpname());
-			}
-			return NONE;
-		} catch ( IOException e ) {
-			return varargsOf(NIL, valueOf(e.getMessage()));
 		}
 	}
 
@@ -219,8 +236,8 @@ public class OsLib extends VarArgFunction {
 	 * is available and zero otherwise.
 	 * @param command command to pass to the system
 	 */ 
-	protected int execute(String command) {
-		return 0;
+	protected Varargs execute(String command) {
+		return varargsOf(NIL, valueOf("exit"), ONE);
 	}
 
 	/**

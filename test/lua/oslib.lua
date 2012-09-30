@@ -8,13 +8,12 @@
 -- 
 local pcall = function(...)
 	local s,e,f = pcall(...)
-	return s,type(e)
+	return s,type(e),type(f)
 end 
 print( 'os', type(os) )
 print( 'os.clock()', pcall( os.clock ) )
 print( 'os.date()', pcall( os.date ) )
 print( 'os.difftime(123000, 21500)', pcall( os.difftime, 123000, 21250 ) )
-print( 'os.execute("bogus")', pcall( os.execute, '' ) )
 print( 'os.getenv()', pcall( os.getenv ) )
 print( 'os.getenv("bogus.key")', pcall( os.getenv, 'bogus.key' ) )
 local s,p = pcall( os.tmpname )

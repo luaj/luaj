@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.LibFunction;
 
 /**
@@ -79,23 +80,20 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	public JseOsLib() {
 	}
 
-	protected int execute(String command) {
-		Runtime r = Runtime.getRuntime();
+	protected Varargs execute(String command) {
+		int exitValue;
 		try {
-			final Process p = r.exec(command);
-			try {
-				p.waitFor();
-				return p.exitValue();
-			} finally {
-				p.destroy();
-			}
+			exitValue = new JseProcess(command, null, globals.STDOUT, globals.STDERR).waitFor();
 		} catch (IOException ioe) {
-			return EXEC_IOEXCEPTION;
+			exitValue = EXEC_IOEXCEPTION;
 		} catch (InterruptedException e) {
-			return EXEC_INTERRUPTED;
+			exitValue = EXEC_INTERRUPTED;
 		} catch (Throwable t) {
-			return EXEC_ERROR;
-		}		
+			exitValue = EXEC_ERROR;
+		}
+		if (exitValue == 0)
+			return varargsOf(TRUE, valueOf("exit"), ZERO);
+		return varargsOf(NIL, valueOf("signal"), valueOf(exitValue));
 	}
 
 	protected void remove(String filename) throws IOException {
