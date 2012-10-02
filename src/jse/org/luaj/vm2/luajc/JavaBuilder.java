@@ -77,6 +77,7 @@ public class JavaBuilder {
 	private static final String STR_LUATABLE = LuaTable.class.getName();
 	private static final String STR_BUFFER = Buffer.class.getName();
 	private static final String STR_STRING = String.class.getName();
+	private static final String STR_JSEPLATFORM = "org.luaj.vm2.lib.jse.JsePlatform";
 
 	private static final ObjectType TYPE_VARARGS = new ObjectType(STR_VARARGS);
 	private static final ObjectType TYPE_LUAVALUE = new ObjectType(STR_LUAVALUE);
@@ -86,10 +87,11 @@ public class JavaBuilder {
 	private static final ObjectType TYPE_LUABOOLEAN = new ObjectType(STR_LUABOOLEAN);
 	private static final ObjectType TYPE_LUATABLE = new ObjectType(STR_LUATABLE);
 	private static final ObjectType TYPE_BUFFER = new ObjectType(STR_BUFFER);
+	private static final ObjectType TYPE_STRING = new ObjectType(STR_STRING);
 	
 	private static final ArrayType TYPE_LOCALUPVALUE = new ArrayType( TYPE_LUAVALUE, 1 );
 	private static final ArrayType TYPE_CHARARRAY = new ArrayType( Type.CHAR, 1 );
-	private static final ArrayType TYPE_LUAVALUEARRAY = new ArrayType( TYPE_LUAVALUE, 1 );
+	private static final ArrayType TYPE_STRINGARRAY = new ArrayType( TYPE_STRING, 1 );
 
 
 	private static final String STR_FUNCV = VarArgFunction.class.getName();
@@ -116,6 +118,8 @@ public class JavaBuilder {
 	private static final Type[] ARG_TYPES_INT_INT = { Type.INT, Type.INT };
 	private static final Type[] ARG_TYPES_LUAVALUE = { TYPE_LUAVALUE };
 	private static final Type[] ARG_TYPES_BUFFER = { TYPE_BUFFER };
+	private static final Type[] ARG_TYPES_STRINGARRAY = { TYPE_STRINGARRAY };
+	private static final Type[] ARG_TYPES_LUAVALUE_STRINGARRAY = { TYPE_LUAVALUE, TYPE_STRINGARRAY };
 
 	// names, arg types for main prototype classes
 	private static final String[]     SUPER_NAME_N   = { STR_FUNC0, STR_FUNC1, STR_FUNC2, STR_FUNC3, STR_FUNCV, };
@@ -257,7 +261,7 @@ public class JavaBuilder {
 		}		
 	}
 	
-	public byte[] completeClass() {
+	public byte[] completeClass(boolean genmain) {
 
 		// add class initializer 
 		if ( ! init.isEmpty() ) {
@@ -297,6 +301,26 @@ public class JavaBuilder {
 			} else {
 				append(factory.createFieldAccess(classname, upvalueName(0), TYPE_LUAVALUE, Constants.PUTFIELD));
 			}
+			append(InstructionConstants.RETURN);
+			mg.setMaxStack();
+			cg.addMethod(mg.getMethod());
+			main.dispose();
+		}
+		
+		// add main function so class is invokable from the java command line 
+		if (genmain) {
+			MethodGen mg = new MethodGen( Constants.ACC_PUBLIC | Constants.ACC_STATIC, // access flags
+					Type.VOID, // return type
+					ARG_TYPES_STRINGARRAY, // argument types
+					new String[] { "arg" }, // arg names
+					"main", 
+					classname, // method, defining class
+					main, cp);
+			append(factory.createNew(classname));
+			append(InstructionConstants.DUP);
+            append(factory.createInvoke(classname, Constants.CONSTRUCTOR_NAME, Type.VOID, ARG_TYPES_NONE, Constants.INVOKESPECIAL));
+			append(new ALOAD(0));
+			append(factory.createInvoke(STR_JSEPLATFORM, "luaMain", Type.VOID,  ARG_TYPES_LUAVALUE_STRINGARRAY, Constants.INVOKESTATIC));
 			append(InstructionConstants.RETURN);
 			mg.setMaxStack();
 			cg.addMethod(mg.getMethod());

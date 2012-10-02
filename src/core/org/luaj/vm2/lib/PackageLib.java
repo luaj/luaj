@@ -24,6 +24,7 @@ package org.luaj.vm2.lib;
 import java.io.InputStream;
 
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -306,6 +307,8 @@ public class PackageLib extends OneArgFunction {
 			try {
 				c = Class.forName(classname);
 				v = (LuaValue) c.newInstance();
+				if (v.isfunction())
+					((LuaFunction)v).initupvalue1(globals);
 				return v;
 			} catch ( ClassNotFoundException  cnfe ) {
 				return valueOf("\n\tno class '"+classname+"'" );

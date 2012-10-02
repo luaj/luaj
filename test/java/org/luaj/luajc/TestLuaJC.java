@@ -78,7 +78,7 @@ public class TestLuaJC {
 		String destdir = ".";
 		
 		InputStream is = _G.FINDER.findResource(filename);
-		Hashtable t = LuaJC.getInstance().compileAll(is, filename, filename);
+		Hashtable t = LuaJC.getInstance().compileAll(is, filename, filename, true);
 
         // write out the chunk
     	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {

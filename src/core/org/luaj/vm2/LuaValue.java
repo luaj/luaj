@@ -3524,6 +3524,13 @@ public class LuaValue extends Varargs {
 		return invoke(args);
 	}
 
+	/** Hook for implementations such as LuaJC to load the environment of the main chunk 
+	 * into the first upvalue location.  If the function has no upvalues or is not a main chunk, 
+	 * calling this will be no effect.
+	 * @param env  The environment to load into the first upvalue, if there is one.
+	 */
+	public void initupvalue1(LuaValue env) {}
+
 	/** Varargs implemenation with no values.  
 	 * <p>
 	 * This is an internal class not intended to be used directly.

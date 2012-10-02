@@ -37,11 +37,11 @@ public class JavaGen {
 	public final byte[] bytecode;
 	public final JavaGen[] inners;
 	
-	public JavaGen( Prototype p, String classname, String filename ) {
-		this( new ProtoInfo(p,classname), classname, filename );
+	public JavaGen( Prototype p, String classname, String filename, boolean genmain ) {
+		this( new ProtoInfo(p,classname), classname, filename, genmain );
 	}
 	
-	private JavaGen( ProtoInfo pi, String classname, String filename ) {
+	private JavaGen( ProtoInfo pi, String classname, String filename, boolean genmain ) {
 		this.classname = classname;
 		
 		// build this class
@@ -51,14 +51,14 @@ public class JavaGen {
 			LocVars l = pi.prototype.locvars[i];
 			builder.setVarStartEnd(i, l.startpc, l.endpc, l.varname.tojstring());
 		}
-		this.bytecode = builder.completeClass();
+		this.bytecode = builder.completeClass(genmain);
 		
 		// build sub-prototypes
 		if ( pi.subprotos != null ) {
 			int n = pi.subprotos.length;
 			inners = new JavaGen[n];
 			for ( int i=0; i<n; i++ )
-				inners[i] = new JavaGen(pi.subprotos[i], closureName(classname,i), filename);
+				inners[i] = new JavaGen(pi.subprotos[i], closureName(classname,i), filename, false);
 		} else {
 			inners = null;
 		}

@@ -36,7 +36,7 @@ public class JavaLoader extends ClassLoader {
 	}
 
 	public LuaFunction load( Prototype p, String classname, String filename, LuaValue env ) {
-		JavaGen jg = new JavaGen( p, classname, filename );
+		JavaGen jg = new JavaGen( p, classname, filename, false );
 		return load( jg, env );
 	}
 	

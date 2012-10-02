@@ -79,12 +79,12 @@ public class LuaJC implements LuaCompiler {
 	public LuaJC() {
 	}
 
-	public Hashtable compileAll(InputStream script, String chunkname, String filename) throws IOException {
+	public Hashtable compileAll(InputStream script, String chunkname, String filename, boolean genmain) throws IOException {
 		String classname = toStandardJavaClassName( chunkname );
 		String luaname = toStandardLuaFileName( filename );
 		Hashtable h = new Hashtable();
 		Prototype p = LuaC.instance.compile(script, classname);
-		JavaGen gen = new JavaGen(p, classname, luaname);
+		JavaGen gen = new JavaGen(p, classname, luaname, genmain);
 		insert( h, gen );
 		return h;
 	}

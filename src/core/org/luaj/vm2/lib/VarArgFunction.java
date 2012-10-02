@@ -46,6 +46,7 @@ import org.luaj.vm2.Varargs;
  * @see ThreeArgFunction
  */
 abstract public class VarArgFunction extends LibFunction {
+
 	public VarArgFunction() {
 	}
 	

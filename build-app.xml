@@ -1,0 +1,108 @@
+<!-- And build script to compile lua scripts into runnable jar files using the "luajc" 
+ lua to java bytecode compiler.  
+ 
+ Each source file is converted into a runnable jar file that takes arguments from the command line.  
+ For example, the program test/lua/perf/binarytrees.lua is converted to a jar that can be run with
+    java -jar binarytrees.jar 15
+ -->
+<project default="all">
+	<import file="build.xml"/>
+
+	<import file="build-libs.xml"/>
+
+	<available file="luaj-jse-${version}.jar" property="luaj.lib.exists"/>
+
+	<!-- this may need to be changed when building on mac -->
+	<property name="rt.jar" value="${java.home}/lib/rt.jar"/>
+	
+	<target name="luaj-lib" unless="luaj.lib.exists">
+		<antcall target="jar-jse"/>
+	</target>
+
+	<macrodef name="perftest">
+		<attribute name="cmd"/>
+		<sequential>
+			<echo level="info">------ @{cmd}</echo>
+			<exec executable="bash">
+				<arg value="-c"/>
+				<arg value="time @{cmd}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="buildappjar">
+		<attribute name="luaprog"/>
+		<attribute name="arg" default=""/>
+		<attribute name="srcdir" default="test/lua/perf"/>
+		<sequential>
+			<echo level="info">=========== @{srcdir}/@{luaprog} =============</echo>
+			<delete dir="build/@{luaprog}"/>
+			<mkdir dir="build/@{luaprog}/class"/>
+			<java classname="luajc">
+		        <classpath>
+		           <pathelement path="luaj-jse-${version}.jar"/>
+		           <pathelement path="lib/bcel-5.2.jar"/>
+		        </classpath>
+		 		<arg value="-s"/>
+				<arg path="@{srcdir}"/>
+				<arg value="-d"/>
+				<arg path="build/@{luaprog}/class"/>
+				<arg value="-m"/>
+				<arg value="-v"/>
+				<arg value="@{luaprog}.lua"/>
+			</java>
+			<jar destfile="build/@{luaprog}.jar">
+				<fileset dir="build/@{luaprog}/class"/>
+				<zipfileset includes="org/luaj/vm2/*.class,org/luaj/vm2/lib/*.class,org/luaj/vm2/lib/jse/*.class,org/luaj/vm2/compiler/*.class" src="luaj-jse-${version}.jar" />
+				<manifest>
+					<attribute name="Main-Class" value="@{luaprog}" />
+				</manifest>
+			</jar>
+			<unjar src="build/@{luaprog}.jar" dest="build/@{luaprog}/unjarred"/>
+			<perftest cmd="java -jar build/@{luaprog}.jar @{arg}"/>
+
+			<!-- The following can be adapted to produce an optimized jar.
+			<taskdef resource="proguard/ant/task.properties" classpath="lib/proguard.jar" />
+			<proguard>
+				-injars      build/@{luaprog}.jar
+				-outjars     build/@{luaprog}-opt.jar
+				-libraryjars ${rt.jar}
+				-overloadaggressively
+				-repackageclasses ''
+				-allowaccessmodification
+				-printmapping build/@{luaprog}.map
+
+				-keep public class @{luaprog} {
+				    public static void main(java.lang.String[]);
+				}
+			</proguard>
+			<unjar src="build/@{luaprog}-opt.jar" dest="build/@{luaprog}/unjarred-opt"/>
+			<perftest cmd="java -jar build/@{luaprog}-opt.jar @{arg}"/>
+			-->
+		</sequential>
+	</macrodef>
+
+	<target name="binarytrees" depends="luaj-lib,proguard-lib">
+		<buildappjar luaprog="binarytrees" arg="15"/>
+	</target>
+
+	<target name="fannkuch" depends="luaj-lib,proguard-lib">
+		<buildappjar luaprog="fannkuch" arg="10"/>
+	</target>
+
+	<target name="nbody" depends="luaj-lib,proguard-lib">
+		<buildappjar luaprog="nbody" arg="1000000"/>
+	</target>
+
+	<target name="nsieve" depends="luaj-lib,proguard-lib">
+		<buildappjar luaprog="nsieve" arg="8"/>
+	</target>
+
+	<target name="swingapp" depends="luaj-lib,proguard-lib">
+		<buildappjar luaprog="swingapp" srcdir="examples/lua"/>
+	</target>
+
+	<target name="allappjars" depends="binarytrees,fannkuch,nbody,nsieve,swingapp"/>
+
+	<target name="all" depends="allappjars"/>
+</project>
