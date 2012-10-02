@@ -699,10 +699,9 @@ public class JavaBuilder {
 			init.append(factory.createInvoke(STR_LUASTRING, "valueOf",
 					TYPE_LUASTRING, ARG_TYPES_STRING, Constants.INVOKESTATIC));
 		} else {
-			byte[] b = ls.dumpbytes();
-			char[] c = new char[b.length];
-			for ( int j=0; j<b.length; j++ ) 
-				c[j] = (char) (0xff & (int) (b[j]));
+			char[] c = new char[ls.m_length];
+			for ( int j=0; j<ls.m_length; j++ ) 
+				c[j] = (char) (0xff & (int) (ls.m_bytes[ls.m_offset+j]));
 			init.append(new PUSH(cp, new String(c)));
 			init.append(factory.createInvoke(STR_STRING, "toCharArray",
 					TYPE_CHARARRAY, Type.NO_ARGS,
