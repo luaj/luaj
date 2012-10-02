@@ -64,7 +64,11 @@ public class PackageLib extends OneArgFunction {
 
 	/** The default value to use for package.path.  This can be set with the system property
 	 * "luaj.package.path", and is "?.lua" by default. */
-	public static String DEFAULT_LUA_PATH = System.getProperty("luaj.package.path", "?.lua");
+	public static String DEFAULT_LUA_PATH = System.getProperty("luaj.package.path");
+	static {
+		if (DEFAULT_LUA_PATH == null)
+			DEFAULT_LUA_PATH = "?.lua";
+	}
 
 	/** The globals that were used to load this library. */
 	Globals globals;

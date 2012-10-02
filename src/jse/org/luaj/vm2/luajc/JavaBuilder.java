@@ -346,7 +346,7 @@ public class JavaBuilder {
 		LocalVariableGen local = mg.addLocalVariable(name, type, null, null);
 		int index = local.getIndex();
 		map.put(islot, Integer.valueOf(index));
-		localVarGenBySlot.put(slot, local);
+		localVarGenBySlot.put(islot, local);
 		return index;
 	}
 	private int findSlotIndex( int slot, boolean isupvalue ) {
@@ -699,9 +699,10 @@ public class JavaBuilder {
 			init.append(factory.createInvoke(STR_LUASTRING, "valueOf",
 					TYPE_LUASTRING, ARG_TYPES_STRING, Constants.INVOKESTATIC));
 		} else {
-			char[] c = new char[ls.m_length];
-			for ( int j=0; j<ls.m_length; j++ ) 
-				c[j] = (char) (0xff & (int) (ls.m_bytes[ls.m_offset+j]));
+			byte[] b = ls.dumpbytes();
+			char[] c = new char[b.length];
+			for ( int j=0; j<b.length; j++ ) 
+				c[j] = (char) (0xff & (int) (b[j]));
 			init.append(new PUSH(cp, new String(c)));
 			init.append(factory.createInvoke(STR_STRING, "toCharArray",
 					TYPE_CHARARRAY, Type.NO_ARGS,
@@ -757,9 +758,10 @@ public class JavaBuilder {
 	}
 	
 	public void setVarStartEnd(int slot, int start_pc, int end_pc, String name) {
-		if (localVarGenBySlot.containsKey(slot)) {
+		Integer islot = Integer.valueOf(slot);
+		if (localVarGenBySlot.containsKey(islot)) {
 			name = name.replaceAll("[^a-zA-Z0-9]", "_");
-			LocalVariableGen l = localVarGenBySlot.get(slot);
+			LocalVariableGen l = (LocalVariableGen)localVarGenBySlot.get(islot);
 			l.setEnd(lastInstrHandles[end_pc-1]);
 			if (start_pc > 1)
 				l.setStart(lastInstrHandles[start_pc-2]);

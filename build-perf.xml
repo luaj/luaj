@@ -1,13 +1,13 @@
 <project default="all">
-
 	<import file="build.xml"/>
 
-	<available file="luaj-jse-2.0.jar" property="luaj2.lib.exists"/>			
+	<property name="lua.command" value="lua"/>
+	<available file="luaj-jse-${version}.jar" property="luaj.lib.exists"/>			
 	<available file="lib/jill-1.0.1.jar" property="jill.lib.exists"/>			
 	<available file="lib/kahlua.jar" property="kahlua.lib.exists"/>			
 	<available file="lib/mochalua-1.0.jar" property="mochalua.lib.exists"/>			
 
-	<target name="luaj2-lib" unless="luaj2.lib.exists">
+	<target name="luaj-lib" unless="luaj.lib.exists">
 		<antcall target="jar-jse"/>
 	</target>
 	
@@ -30,7 +30,7 @@
 			dest="lib/mochalua-1.0.jar"/>
 	</target>
 
-	<target name="perf-libs" depends="luaj2-lib,bcel-lib,jill-lib,kahlua-lib,mochalua-lib"/>
+	<target name="perf-libs" depends="luaj-lib,bcel-lib,jill-lib,kahlua-lib,mochalua-lib"/>
 		
 	<macrodef name="perftest">
 		<attribute name="program" default="lua"/>
@@ -51,10 +51,9 @@
 		<sequential>
 			<echo level="info">=========== @{luaprog} =============</echo>
 			<perftest program="java -version" luaprog="" basedir=""/>
-			<perftest program="lua" luaprog="@{luaprog}"/>
-			<perftest program="java -cp luaj-jse-2.0.jar lua -n" luaprog="@{luaprog}"/>
-			<perftest program="java -cp luaj-jse-2.0.jar lua -j" luaprog="@{luaprog}"/>
-			<perftest program="java -cp luaj-jse-2.0.jar\\;lib/bcel-5.2.jar lua -b" luaprog="@{luaprog}"/>
+			<perftest program="${lua.command}" luaprog="@{luaprog}"/>
+			<perftest program="java -cp luaj-jse-${version}.jar lua -n" luaprog="@{luaprog}"/>
+			<perftest program="java -cp luaj-jse-${version}.jar${path.separator}lib/bcel-5.2.jar lua -b" luaprog="@{luaprog}"/>
 	   </sequential>
 	</macrodef>
 

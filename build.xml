@@ -54,6 +54,7 @@
 				<tokenfilter><replacestring from='&lt;Object,String&gt;' to=''/></tokenfilter>
 				<tokenfilter><replacestring from='&lt;Double,String&gt;' to=''/></tokenfilter>
 				<tokenfilter><replacestring from='&lt;Integer,Integer&gt;' to=''/></tokenfilter>
+				<tokenfilter><replacestring from='&lt;Integer,LocalVariableGen&gt;' to=''/></tokenfilter>
 				<tokenfilter><replacestring from='&lt;Exp,Integer&gt;' to=''/></tokenfilter>
 				<tokenfilter><replacestring from='&lt;String,byte[]&gt;' to=''/></tokenfilter>
 				<tokenfilter><replacestring from='&lt;String,Variable&gt;' to=''/></tokenfilter>
