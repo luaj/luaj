@@ -192,9 +192,9 @@ public class LuaThread extends LuaValue {
 		}
 
 		public synchronized Varargs lua_resume(LuaThread new_thread, Varargs args) {
-			LuaThread previous_thread = globals.running_thread;
+			LuaThread previous_thread = globals.running;
 			try {
-				globals.running_thread = new_thread;
+				globals.running = new_thread;
 				this.args = args;
 				if (this.status == STATUS_INITIAL) {
 					this.status = STATUS_RUNNING; 
@@ -215,9 +215,9 @@ public class LuaThread extends LuaValue {
 				this.args = LuaValue.NONE;
 				this.result = LuaValue.NONE;
 				this.error = null;
-				globals.running_thread = previous_thread;
+				globals.running = previous_thread;
 				if (previous_thread != null)
-					globals.running_thread.state.status =STATUS_RUNNING;
+					globals.running.state.status =STATUS_RUNNING;
 			}
 		}
 

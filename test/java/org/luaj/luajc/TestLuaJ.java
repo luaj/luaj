@@ -24,7 +24,6 @@ package org.luaj.luajc;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
@@ -56,12 +55,17 @@ public class TestLuaJ {
 		
 		// compile into a chunk, or load as a class
 		InputStream is =  new ByteArrayInputStream( script.getBytes() );
-		LuaValue chunk = LuaC.instance.load(is, "script",_G);
-		chunk.call();
+		LuaValue chunk = LuaC.instance.load(is, "script", _G);
+		
+		// The loaded chunk should be a closure, which contains the prototype.
+		print( chunk.checkclosure().p );
+
+		// The chunk can be called with arguments as desired.
+		chunk.call(LuaValue.ZERO, LuaValue.ONE);
 	}
 
 	private static void print(Prototype p) {
-		System.out.println("--- "+p.is_vararg);
+		System.out.println("--- "+p);
 		Print.printCode(p);
 		if (p.p!=null)
 			for ( int i=0,n=p.p.length; i<n; i++ )

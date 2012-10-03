@@ -56,36 +56,59 @@ import org.luaj.vm2.lib.ResourceFinder;
  */
 public class Globals extends LuaTable {
 
+	/** The current default input stream. */
 	public InputStream STDIN  = null;
+
+	/** The current default output stream. */
 	public PrintStream STDOUT = System.out;
+
+	/** The current default error stream. */
 	public PrintStream STDERR = System.err;
 
+	/** The installed ResourceFinder for looking files by name. */
 	public ResourceFinder FINDER;
 	
+	/** The installed compiler. */
 	public LuaCompiler compiler = null;
 
+	/** The currently running thread.  Should not be changed by non-library code. */
+	public LuaThread running = new LuaThread(this);
+
+	/** The BaseLib instance loaded into this Globals */
 	public BaseLib baselib;
 	
-	public LuaValue errorfunc;
-
-	public LuaThread running_thread = new LuaThread(this);
-
-	public DebugLib debuglib;
-
+	/** The PackageLib instance loaded into this Globals */
 	public PackageLib package_;
 	
+	/** The DebugLib instance loaded into this Globals, or null if debugging is not enabled */
+	public DebugLib debuglib;
+
+	/** The current error handler for this Globals */
+	public LuaValue errorfunc;
+
+	/** Check that this object is a Globals object, and return it, otherwise throw an error. */
 	public Globals checkglobals() {
 		return this;
 	}
 
-	public Varargs loadFile(String filename) {
-		return baselib.loadFile(filename, "bt", this);
+	/** Convenience function for loading a file.  
+	 * @param filename Name of the file to load.
+	 * @return LuaValue that can be call()'ed or invoke()'ed.
+	 * @throws LuaError if the file could not be loaded.
+	 */
+	public LuaValue loadFile(String filename) {
+		Varargs v = baselib.loadFile(filename, "bt", this);
+		return !v.isnil(1)? v.arg1(): error(v.arg(2).tojstring());
 	}
 	
+	/** Function which yields the current thread. 
+	 * @param args  Arguments to supply as return values in the resume function of the resuming thread.
+	 * @return Values supplied as arguments to the resume() call that reactivates this thread.
+	 */
 	public Varargs yield(Varargs args) {
-		if (running_thread == null || running_thread.isMainThread())
+		if (running == null || running.isMainThread())
 			throw new LuaError("cannot yield main thread");
-		final LuaThread.State s = running_thread.state;
+		final LuaThread.State s = running.state;
 		return s.lua_yield(args);
 	}
 

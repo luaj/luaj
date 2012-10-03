@@ -93,7 +93,7 @@ public class CoroutineLib extends OneArgFunction {
 
 	final class running extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			final LuaThread r = globals.running_thread;
+			final LuaThread r = globals.running;
 			return varargsOf(r, valueOf(r.isMainThread()));
 		}
 	}
