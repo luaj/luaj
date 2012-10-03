@@ -22,10 +22,8 @@
 package org.luaj.vm2.lib.jse;
 
 import org.luaj.vm2.Globals;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
@@ -133,7 +131,7 @@ public class JsePlatform {
 		LuaValue[] vargs = new LuaValue[args.length];
 		for (int i = 0; i < n; ++i)
 			vargs[i] = LuaValue.valueOf(args[i]);
-		LuaTable arg = LuaValue.listOf(vargs);
+		LuaValue arg = LuaValue.listOf(vargs);
 		arg.set("n", n);
 		g.set("arg", arg);
 		mainChunk.initupvalue1(g);

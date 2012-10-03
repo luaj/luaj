@@ -5,8 +5,11 @@
 	<property name="jar.name.jse" value="luaj-jse-${version}.jar"/>
 	<property name="jar.name.sources" value="luaj-sources-${version}.jar"/>
 
-	<target name="clean">
+	<target name="clean-build">
 		<delete dir="build"/>
+	</target>
+
+	<target name="clean" depends="clean-build">
 		<delete>
 		    <fileset dir="." includes="luaj-*.jar"/>
 		</delete>
@@ -17,6 +20,12 @@
 	<target name="parser" depends="javacc-lib">
 		<java classname="javacc" classpath="lib/javacc.jar">
 			<arg line="grammar/LuaParser.jj"/>
+		</java>
+	</target>
+		
+	<target name="plain-parser" depends="javacc-lib">
+		<java dir="src/jse" fork="true" classname="javacc" classpath="lib/javacc.jar">
+			<arg line="../../grammar/Lua52.jj"/>
 		</java>
 	</target>
 		

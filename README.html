@@ -65,11 +65,12 @@ Support for lua 5.2.x features:
 <li>_ENV environments model.
 <li>yield from pcall or metatags.
 <li>Bitwise operator library.
-<li>Better coroutine-related garbage collection. 
 </ul>
 It also includes miscellaneous improvements over luaj 2.0.x:
 <ul>
-<li>Garbage collection of orphaned threads.
+<li>Better coroutine-related garbage collection. 
+<li>Better debug reporting when using closures.
+<li>Line numbers in parse syntax tree.
 </ul>
 <h3>Luaj 2.0.x</h3>
 Support for luaj 5.1.x features, plus:
@@ -741,9 +742,8 @@ and LuaForge:
 <li>debug code may not be completely removed by some obfuscators
 <li>tail calls are not tracked in debug information
 <li>using both version 1 and 2 libraries together in the same java vm has not been tested
-<li>module() and setfenv() only partially supported for lau2java or luajc compiled lua
 <li>values associated with weak keys may linger longer than expected
 <li>behavior of luaj when a SecurityManager is used has not been fully characterized
-<li>Negative zero is treated as identical to integer value zero throughout luaj
+<li>negative zero is treated as identical to integer value zero throughout luaj
 </ul>
 
