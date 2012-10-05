@@ -58,16 +58,12 @@ public class JavaGen {
 			int n = pi.subprotos.length;
 			inners = new JavaGen[n];
 			for ( int i=0; i<n; i++ )
-				inners[i] = new JavaGen(pi.subprotos[i], closureName(classname,i), filename, false);
+				inners[i] = new JavaGen(pi.subprotos[i], pi.subprotos[i].name, filename, false);
 		} else {
 			inners = null;
 		}
 	}
 
-	private String closureName(String classname, int subprotoindex) {
-		return classname+"$"+subprotoindex;
-	}
-	
 	private void scanInstructions(ProtoInfo pi, String classname, JavaBuilder builder) {
 		Prototype p = pi.prototype;
 		int vresultbase = -1;
@@ -395,7 +391,7 @@ public class JavaGen {
 				{
 					Prototype newp = p.p[bx];
 					int nup = newp.upvalues.length;
-					String protoname = closureName(classname, bx);
+					String protoname = pi.subprotos[bx].name;
 					builder.closureCreate( protoname );
 					if ( nup > 0 )
 						builder.dup();

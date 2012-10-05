@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2012 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,24 +28,23 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Vector;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Varargs;
-import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 
 /**
- * lua command for use in java se environments.
+ * lua command for use in JSE environments.
  */
 public class lua {
-	private static final String version = Lua._VERSION + "Copyright (c) 2012 Luaj.org.org";
+	private static final String version = Lua._VERSION + " Copyright (c) 2012 Luaj.org.org";
 
 	private static final String usage = 
 		"usage: java -cp luaj-jse.jar lua [options] [script [args]].\n" +
@@ -56,6 +55,7 @@ public class lua {
 		"  -v       show version information\n" +
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  -n      	nodebug - do not load debug library by default\n" +
+		"  -p      	print the prototype\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -64,7 +64,8 @@ public class lua {
 		System.exit(-1);		
 	}
 
-	private static LuaValue _G;
+	private static Globals _G;
+	private static boolean print = false;
 	
 	public static void main( String[] args ) throws IOException {
 
@@ -73,7 +74,6 @@ public class lua {
 		boolean versioninfo = false;
 		boolean processing = true;
 		boolean nodebug = false;
-		boolean print = false;
 		boolean luajc = false;
 		Vector libs = null;
 		try {
@@ -109,6 +109,9 @@ public class lua {
 						break;
 					case 'n':
 						nodebug = true;
+						break;
+					case 'p':
+						print = true;
 						break;
 					case '-':
 						if ( args[i].length() > 2 )
@@ -190,6 +193,8 @@ public class lua {
 			} finally {
 				script.close();
 			}
+			if (print && c.isclosure())
+				Print.print(c.checkclosure().p);
 			Varargs scriptargs = setGlobalArg(chunkname, args, firstarg, _G);
 			c.invoke( scriptargs );
 		} catch ( Exception e ) {

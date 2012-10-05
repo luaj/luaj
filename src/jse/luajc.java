@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright (c) 2009 Luaj.org. All rights reserved.
+* Copyright (c) 2009-2012 Luaj.org. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -56,8 +56,8 @@ public class luajc {
 		System.exit(-1);		
 	}
 
-	private String srcdir = null;
-	private String destdir = null;
+	private String srcdir = ".";
+	private String destdir = ".";
 	private boolean genmain = false;
 	private boolean recurse = false;
 	private boolean verbose = false;

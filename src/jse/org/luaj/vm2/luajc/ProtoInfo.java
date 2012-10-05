@@ -2,8 +2,11 @@ package org.luaj.vm2.luajc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Hashtable;
+import java.util.Vector;
 
 import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
@@ -411,12 +414,13 @@ public class ProtoInfo {
 		int n = code.length;
 		
 		// propogate to inner prototypes
+		String[] names = findInnerprotoNames();
 		for ( int pc=0; pc<n; pc++ ) {
 			if ( Lua.GET_OPCODE(code[pc]) == Lua.OP_CLOSURE ) {
 				int bx = Lua.GETARG_Bx(code[pc]);
 				Prototype newp = prototype.p[bx];
 				UpvalInfo[] newu = new UpvalInfo[newp.upvalues.length];
-				String newname = name + "$" + bx;
+				String newname = name + "$" + names[bx];
 				for ( int j=0; j<newp.upvalues.length; ++j ) {
 					Upvaldesc u = newp.upvalues[j];
 					newu[j] = u.instack? findOpenUp(pc,u.idx) : upvals[u.idx];
@@ -431,7 +435,6 @@ public class ProtoInfo {
 				upvals[Lua.GETARG_B(code[pc])].rw = true;
 		}
 	}
-	
 	private UpvalInfo findOpenUp(int pc, int slot) {
 		if ( openups[slot] == null )
 			openups[slot] = new UpvalInfo[prototype.code.length];
@@ -470,4 +473,63 @@ public class ProtoInfo {
 	public boolean isReadWriteUpvalue(UpvalInfo u) {
 		return u.rw;
 	}
+	
+	private String[] findInnerprotoNames() {
+		if (prototype.p.length <= 0)
+			return null;
+		// find all the prototype names
+		String[] names = new String[prototype.p.length];
+		Hashtable used = new Hashtable(); 
+		int[] code = prototype.code;
+		int n = code.length;
+		for ( int pc=0; pc<n; pc++ ) {
+			if ( Lua.GET_OPCODE(code[pc]) == Lua.OP_CLOSURE ) {
+				int bx = Lua.GETARG_Bx(code[pc]);
+				String name = null;
+				final int i = code[pc+1];
+				switch (Lua.GET_OPCODE(i)) {
+					case Lua.OP_SETTABLE:
+					case Lua.OP_SETTABUP: {
+						final int b = Lua.GETARG_B(i);
+						if (Lua.ISK(b))
+							name = prototype.k[b&0x0ff].tojstring();
+						break;
+					}
+					case Lua.OP_SETUPVAL: {
+						final int b = Lua.GETARG_B(i);
+						final LuaString s = prototype.upvalues[b].name;
+						if (s != null)
+							name = s.tojstring();
+						break;
+					}
+					default: // Local variable
+						final int a = Lua.GETARG_A(code[pc]);
+						final LuaString s = prototype.getlocalname(a+1, pc+1);
+						if (s != null)
+							name = s.tojstring();
+						break;
+				}
+				name = name != null? toJavaClassPart(name): String.valueOf(bx);
+				if (used.containsKey(name)) {
+					String basename = name;
+					int count = 1;
+					do {
+						name = basename + '$' + count++;
+					} while (used.containsKey(name));
+				}
+				used.put(name, Boolean.TRUE);
+				names[bx] = name;
+			}
+		}
+		return names;
+	}
+	
+	private static String toJavaClassPart(String s) {
+		final int n = s.length();
+		StringBuffer sb = new StringBuffer(n);
+		for (int i = 0; i < n; ++i)
+			sb.append( Character.isJavaIdentifierPart(s.charAt(i)) ? s.charAt(i): "_" );
+		return sb.toString();
+	}
+
 }
