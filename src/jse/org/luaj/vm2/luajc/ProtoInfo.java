@@ -528,7 +528,7 @@ public class ProtoInfo {
 		final int n = s.length();
 		StringBuffer sb = new StringBuffer(n);
 		for (int i = 0; i < n; ++i)
-			sb.append( Character.isJavaIdentifierPart(s.charAt(i)) ? s.charAt(i): "_" );
+			sb.append( Character.isJavaIdentifierPart(s.charAt(i)) ? s.charAt(i): '_' );
 		return sb.toString();
 	}
 
