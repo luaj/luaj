@@ -149,7 +149,10 @@ strtests('lower', string.lower, s )
 strtests('upper', string.upper, s )
 strtests('reverse', string.reverse, s )
 strtests('char', string.char, 92, 60, 61, 93 )
-print( 'string.dump test:', load(string.dump(function(x) return 'foo->'..x end),'bar')('bat') )
+stringdumptest = function() 
+	return load(string.dump(function(x) return 'foo->'..x end),'bar')('bat')
+end
+print( 'string.dump test:', pcall(stringdujptest) )
 
 
 -- floating point formats (not supported yet)

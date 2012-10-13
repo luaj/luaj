@@ -1,5 +1,5 @@
 local platform = ...
-print( 'platform', platform )
+--print( 'platform', platform )
 
 local aliases = {
 	['0']='<zero>',
