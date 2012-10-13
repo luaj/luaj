@@ -152,7 +152,7 @@ strtests('char', string.char, 92, 60, 61, 93 )
 stringdumptest = function() 
 	return load(string.dump(function(x) return 'foo->'..x end),'bar')('bat')
 end
-print( 'string.dump test:', pcall(stringdujptest) )
+print( 'string.dump test:', pcall(stringdumptest) )
 
 
 -- floating point formats (not supported yet)
