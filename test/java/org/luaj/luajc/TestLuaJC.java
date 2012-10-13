@@ -42,6 +42,8 @@ public class TestLuaJC {
 	static Globals _G;
 	
 	public static void main(String[] args) throws Exception {
+		if (args.length > 0)
+			filename = args[0];
 		System.out.println("filename: "+filename);
 		try {
 			
