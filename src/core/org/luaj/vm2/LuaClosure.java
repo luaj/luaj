@@ -560,5 +560,10 @@ public class LuaClosure extends LuaFunction {
 	protected void setUpvalue(int i, LuaValue v) {
 		upValues[i].setValue(v);
 	}
+
+	public String name() {
+		return "<"+p.shortsource()+":"+p.linedefined+">";
+	}
+	
 	
 }

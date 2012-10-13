@@ -77,4 +77,11 @@ public class LuaFunction extends LuaValue {
 		String s = getClass().getName();
 		return s.substring(Math.max(s.lastIndexOf('.'),s.lastIndexOf('$'))+1);
 	}
+	
+	/** Return a human-readable name for this function.  Returns the last part of the class name by default.
+	 * Is overridden by LuaClosure to return the source file and line, and by LibFunctions to return the name.
+	 * @return common name for this function.  */
+	public String name() {
+		return classnamestub();
+	}
 }

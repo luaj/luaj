@@ -79,4 +79,13 @@ public class Prototype {
 	  }
 	  return null;  /* not found */
 	}
+	
+	public String shortsource() {
+		String name = source.tojstring();
+        if ( name.startsWith("@") || name.startsWith("=") )
+			name = name.substring(1);
+		else if ( name.startsWith("\033") )
+			name = "binary string";
+        return name;
+	}
 }

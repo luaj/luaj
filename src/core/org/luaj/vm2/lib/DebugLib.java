@@ -467,13 +467,13 @@ public class DebugLib extends OneArgFunction {
 				this.linedefined = p.linedefined;
 				this.lastlinedefined = p.lastlinedefined;
 				this.what = (this.linedefined == 0) ? "main" : "Lua";
-				this.short_src = DebugLib.shortsource(p);
+				this.short_src = p.shortsource();
 			} else {
 				this.source = "=[Java]";
 				this.linedefined = -1;
 				this.lastlinedefined = -1;
 				this.what = "Java";
-				this.short_src = f.classnamestub();
+				this.short_src = f.name();
 			}
 		}
 	}
@@ -598,9 +598,6 @@ public class DebugLib extends OneArgFunction {
 				    			  ar.name = nw.name;
 				    			  ar.namewhat = nw.namewhat;
 				    		  }
-			    		  } else {
-			    			  ar.name = ci.previous.f.classnamestub();
-			    			  ar.namewhat = "Java";
 			    		  }
 			    	  }
 			    	  if (ar.namewhat == null) {
@@ -635,7 +632,7 @@ public class DebugLib extends OneArgFunction {
 			this.stack = stack;
 		}
 		public String shortsource() {
-			return f.isclosure()? DebugLib.shortsource(f.checkclosure().p): "[Java]";
+			return f.isclosure()? f.checkclosure().p.shortsource(): "[Java]";
 		}
 		void set(LuaFunction function) {
 			this.f = function;
@@ -675,7 +672,7 @@ public class DebugLib extends OneArgFunction {
 		}
 		String sourceline() {
 			if ( !f.isclosure() ) return f.tojstring();
-			return DebugLib.shortsource(f.checkclosure().p) + ":" + currentline();
+			return f.checkclosure().p.shortsource() + ":" + currentline();
 		}
 		private int linedefined() {
 			return f.isclosure()? f.checkclosure().p.linedefined: -1;
@@ -694,15 +691,6 @@ public class DebugLib extends OneArgFunction {
 				return LuaString.valueOf( "."+up );
 		}
 		return null;
-	}
-	
-	public static String shortsource(Prototype p) {
-		String name = p.source.tojstring();
-        if ( name.startsWith("@") || name.startsWith("=") )
-			name = name.substring(1);
-		else if ( name.startsWith("\033") )
-			name = "binary string";
-        return name;
 	}
 	
 	static void lua_assert(boolean x) {
