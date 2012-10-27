@@ -22,8 +22,8 @@ public class SampleParser {
 		try {
 			final String file = args[0];
 			
-			// Create a custom LuaParser subclass that intercepts parse exceptions and 
-			// extracts the line and column number information from the parse token.
+			// Create a LuaParser. This will fill in line and column number 
+			// information for most exceptions.
 			LuaParser parser = new LuaParser(new FileInputStream(file));
 			
 			// Perform the parsing.
@@ -55,13 +55,10 @@ public class SampleParser {
 			} );
 			
 		} catch ( ParseException e ) {
-			System.out.println( "Parse failed : "+e );
-			System.out.println( "Begin Line: "+e.currentToken.beginColumn );
-			System.out.println( "Begin Column: "+e.currentToken.endColumn );
-			System.out.println( "End Line: "+e.currentToken.beginColumn );
-			System.out.println( "End Column: "+e.currentToken.endColumn );
-			System.out.println( "Token Image: '"+e.currentToken.image+"'" );
-			System.out.println( "Message: "+e.getMessage() );
+			System.out.println("parse failed: " + e.getMessage() + "\n"
+					+ "Token Image: '" + e.currentToken.image + "'\n"
+					+ "Location: " + e.currentToken.beginLine + ":" + e.currentToken.beginColumn 
+					        + "-" + e.currentToken.endLine + "," + e.currentToken.endColumn);
 			
 		} catch ( IOException e ) {
 			System.out.println( "IOException occurred: "+e );

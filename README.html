@@ -638,9 +638,10 @@ For example, to parse a file and print all variable names, use code like:
 			}
 		} );
 	} catch ( ParseException e ) {
-		System.out.println( "parse failed: "+e
-			+" line "+e.currentToken.beginLine
-			+" col "+e.currentToken.beginColumn);
+		System.out.println("parse failed: " + e.getMessage() + "\n"
+			+ "Token Image: '" + e.currentToken.image + "'\n"
+			+ "Location: " + e.currentToken.beginLine + ":" + e.currentToken.beginColumn 
+			         + "-" + e.currentToken.endLine + "," + e.currentToken.endColumn);
 	}
 </pre> 
 
