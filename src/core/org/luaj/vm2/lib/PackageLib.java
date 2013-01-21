@@ -148,28 +148,29 @@ public class PackageLib extends OneArgFunction {
 	/** 
 	 * require (modname)
 	 * 
-	 * Loads the given module. The function starts by looking into the package.loaded table to 
-	 * determine whether modname is already loaded. If it is, then require returns the value 
+	 * Loads the given module. The function starts by looking into the package.loaded table 
+	 * to determine whether modname is already loaded. If it is, then require returns the value 
 	 * stored at package.loaded[modname]. Otherwise, it tries to find a loader for the module.
 	 * 
-	 * To find a loader, require is guided by the package.loaders array. By changing this array, 
-	 * we can change how require looks for a module. The following explanation is based on the 
-	 * default configuration for package.loaders.
-	 *  
+	 * To find a loader, require is guided by the package.searchers sequence. 
+	 * By changing this sequence, we can change how require looks for a module. 
+	 * The following explanation is based on the default configuration for package.searchers.
+	 * 
 	 * First require queries package.preload[modname]. If it has a value, this value 
-	 * (which should be a function) is the loader. Otherwise require searches for a Lua loader 
-	 * using the path stored in package.path. If that also fails, it searches for a C loader 
-	 * using the path stored in package.cpath. If that also fails, it tries an all-in-one loader 
-	 * (see package.loaders).
+	 * (which should be a function) is the loader. Otherwise require searches for a Lua loader using 
+	 * the path stored in package.path. If that also fails, it searches for a Java loader using 
+	 * the classpath, using the public default constructor, and casting the instance to LuaFunction.
 	 * 
-	 * Once a loader is found, require calls the loader with a single argument, modname. 
-	 * If the loader returns any value, require assigns the returned value to package.loaded[modname]. 
-	 * If the loader returns no value and has not assigned any value to package.loaded[modname], 
-	 * then require assigns true to this entry. In any case, require returns the final value of 
-	 * package.loaded[modname]. 
-	 * 
-	 * If there is any error loading or running the module, or if it cannot find any loader for 
-	 * the module, then require signals an error.
+	 * Once a loader is found, require calls the loader with two arguments: modname and an extra value 
+	 * dependent on how it got the loader. If the loader came from a file, this extra value is the file name.
+	 * If the loader is a Java instance of LuaFunction, this extra value is the environment.  
+	 * If the loader returns any non-nil value, require assigns the returned value to package.loaded[modname]. 
+	 * If the loader does not return a non-nil value and has not assigned any value to package.loaded[modname], 
+	 * then require assigns true to this entry.
+	 * In any case, require returns the final value of package.loaded[modname].
+	 *  
+	 * If there is any error loading or running the module, or if it cannot find any loader for the module,
+	 * then require raises an error.
 	 */	
 	public class require extends OneArgFunction {
 		public LuaValue call( LuaValue arg ) {
@@ -184,24 +185,24 @@ public class PackageLib extends OneArgFunction {
 			/* else must load it; iterate over available loaders */
 			LuaTable tbl = PackageLib.this.searchers.checktable();
 			StringBuffer sb = new StringBuffer();
-			LuaValue chunk = null;
+			Varargs loader = null;
 			for ( int i=1; true; i++ ) {
-				LuaValue loader = tbl.get(i);
-				if ( loader.isnil() ) {
+				LuaValue searcher = tbl.get(i);
+				if ( searcher.isnil() ) {
 					error( "module '"+name+"' not found: "+name+sb );				
 			    }
 							
 			    /* call loader with module name as argument */
-				chunk = loader.call(name);
-				if ( chunk.isfunction() )
+				loader = searcher.invoke(name);
+				if ( loader.isfunction(1) )
 					break;
-				if ( chunk.isstring() )
-					sb.append( chunk.tojstring() );
+				if ( loader.isstring(1) )
+					sb.append( loader.tojstring(1) );
 			}
 	
 			// load the module using the loader
 			loaded.set(name, _SENTINEL);
-			result = chunk.call(name);
+			result = loader.arg1().call(name, loader.arg(2));
 			if ( ! result.isnil() )
 				loaded.set( name, result );
 			else if ( (result = PackageLib.this.loaded.get(name)) == _SENTINEL ) 
@@ -309,7 +310,7 @@ public class PackageLib extends OneArgFunction {
 				v = (LuaValue) c.newInstance();
 				if (v.isfunction())
 					((LuaFunction)v).initupvalue1(globals);
-				return v;
+				return varargsOf(v, globals);
 			} catch ( ClassNotFoundException  cnfe ) {
 				return valueOf("\n\tno class '"+classname+"'" );
 			} catch ( Exception e ) {
