@@ -74,7 +74,6 @@ public class StringTest extends TestCase {
 		LuaString ls = LuaString.valueOf(before);
 		String after = ls.tojstring();
 		assertEquals( userFriendly( before ), userFriendly( after ) );
-		
 	}
 	
 	public void testUtf8() {		
@@ -90,7 +89,6 @@ public class StringTest extends TestCase {
 		LuaString ls = LuaString.valueOf(before);
 		String after = ls.tojstring();
 		assertEquals( userFriendly( before ), userFriendly( after ) );
-		
 	}
 
 	public void testSpotCheckUtf8() throws UnsupportedEncodingException {
@@ -103,7 +101,7 @@ public class StringTest extends TestCase {
 		assertEquals(162, d[2]);
 		assertEquals(163, d[3]);
 		assertEquals(164, d[4]);
-		
+		assertEquals(expected, actual);
 	}
 	
 	public void testNullTerminated() {		
@@ -112,6 +110,87 @@ public class StringTest extends TestCase {
 		LuaString ls = LuaString.valueOf(before);
 		String after = ls.tojstring();
 		assertEquals( userFriendly( "abc\0def" ), userFriendly( after ) );
-		
+	}
+
+	public void testRecentStringsCacheDifferentHashcodes() {
+		final byte[] abc = {'a', 'b', 'c' };
+		final byte[] xyz = {'x', 'y', 'z' };
+		final LuaString abc1 = LuaString.valueOf(abc);
+		final LuaString xyz1 = LuaString.valueOf(xyz);
+		final LuaString abc2 = LuaString.valueOf(abc);
+		final LuaString xyz2 = LuaString.valueOf(xyz);
+		final int mod = LuaString.RECENT_STRINGS_CACHE_SIZE;
+		assertTrue(abc1.hashCode() % mod != xyz1.hashCode() % mod);
+		assertSame(abc1, abc2);
+		assertSame(xyz1, xyz2);
+	}
+
+	public void testRecentStringsCacheHashCollisionCacheHit() {
+		final byte[] abc = {'a', 'b', 'c' };
+		final byte[] lyz = {'l', 'y', 'z' };  // chosen to have hash collision with 'abc'
+		final LuaString abc1 = LuaString.valueOf(abc);
+		final LuaString abc2 = LuaString.valueOf(abc); // in cache: 'abc'
+		final LuaString lyz1 = LuaString.valueOf(lyz);
+		final LuaString lyz2 = LuaString.valueOf(lyz); // in cache: 'lyz'
+		final int mod = LuaString.RECENT_STRINGS_CACHE_SIZE;
+		assertEquals(abc1.hashCode() % mod, lyz1.hashCode() % mod);
+		assertNotSame(abc1, lyz1);
+		assertFalse(abc1.equals(lyz1));
+		assertSame(abc1, abc2);
+		assertSame(lyz1, lyz2);
+	}
+
+	public void testRecentStringsCacheHashCollisionCacheMiss() {
+		final byte[] abc = {'a', 'b', 'c' };
+		final byte[] lyz = {'l', 'y', 'z' };  // chosen to have hash collision with 'abc'
+		final LuaString abc1 = LuaString.valueOf(abc);
+		final LuaString lyz1 = LuaString.valueOf(lyz); // in cache: 'abc'
+		final LuaString abc2 = LuaString.valueOf(abc); // in cache: 'lyz'
+		final LuaString lyz2 = LuaString.valueOf(lyz); // in cache: 'abc'
+		final int mod = LuaString.RECENT_STRINGS_CACHE_SIZE;
+		assertEquals(abc1.hashCode() % mod, lyz1.hashCode() % mod);
+		assertNotSame(abc1, lyz1);
+		assertFalse(abc1.equals(lyz1));
+		assertNotSame(abc1, abc2);
+		assertNotSame(lyz1, lyz2);
+	}
+
+	public void testRecentStringsLongStrings() {
+		byte[] abc = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes();
+		assertTrue(abc.length > LuaString.RECENT_STRINGS_MAX_LENGTH);
+		LuaString abc1 = LuaString.valueOf(abc);
+		LuaString abc2 = LuaString.valueOf(abc);
+		assertNotSame(abc1, abc2);
+	}
+
+	public void testRecentStringsUsingJavaStrings() {
+		final String abc = "abc";
+		final String lyz = "lyz";  // chosen to have hash collision with 'abc'
+		final String xyz = "xyz";
+
+		final LuaString abc1 = LuaString.valueOf(abc);
+		final LuaString abc2 = LuaString.valueOf(abc);
+		final LuaString lyz1 = LuaString.valueOf(lyz);
+		final LuaString lyz2 = LuaString.valueOf(lyz);
+		final LuaString xyz1 = LuaString.valueOf(xyz);
+		final LuaString xyz2 = LuaString.valueOf(xyz);
+		final int mod = LuaString.RECENT_STRINGS_CACHE_SIZE;
+		assertEquals(abc1.hashCode() % mod, lyz1.hashCode() % mod);
+		assertFalse(abc1.hashCode() % mod == xyz1.hashCode() % mod);
+		assertSame(abc1, abc2);
+		assertSame(lyz1, lyz2);
+		assertSame(xyz1, xyz2);
+
+		final LuaString abc3 = LuaString.valueOf(abc);
+		final LuaString lyz3 = LuaString.valueOf(lyz);
+		final LuaString xyz3 = LuaString.valueOf(xyz);
+
+		final LuaString abc4 = LuaString.valueOf(abc);
+		final LuaString lyz4 = LuaString.valueOf(lyz);
+		final LuaString xyz4 = LuaString.valueOf(xyz);
+		assertNotSame(abc3, abc4);  // because of hash collision
+		assertNotSame(lyz3, lyz4);  // because of hash collision
+		assertSame(xyz3, xyz4);  // because hashes do not collide
+
 	}
 }

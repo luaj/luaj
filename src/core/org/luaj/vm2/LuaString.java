@@ -60,6 +60,22 @@ import org.luaj.vm2.lib.StringLib;
  */
 public class LuaString extends LuaValue {
 
+	/** Size of cache of recent short strings. This is the maximum number of LuaStrings that 
+	 * will be retained in the cache of recent short strings.  */
+	public static final int RECENT_STRINGS_CACHE_SIZE = 128;
+
+	/** Maximum length of a string to be considered for recent short strings caching. 
+	 * This effectively limits the total memory that can be spent on the recent strings cache,
+	 * ecause no LuaString whose backing exceeds this length will be put into the cache.  */
+	public static final int RECENT_STRINGS_MAX_LENGTH = 32;
+
+	/** Simple cache of recently created strings that are short.  
+	 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
+	 * that have been recently constructed.  If a string is being constructed frequently 
+	 * from different contexts, it will generally may show up as a cache hit and resolve 
+	 * to the same value.  */
+	public static volatile LuaString recent_short_strings[] = new LuaString[RECENT_STRINGS_CACHE_SIZE];
+
 	/** The singleton instance representing lua {@code true} */
 	public static LuaValue s_metatable;
 
@@ -71,18 +87,7 @@ public class LuaString extends LuaValue {
 	
 	/** The number of bytes that comprise this string */
 	public final int    m_length;
-
-	private static final Hashtable index_java = new Hashtable();
-
-	private final static LuaString index_get(Hashtable indextable, Object key) {
-		WeakReference w = (WeakReference) indextable.get(key);
-		return w!=null? (LuaString) w.get(): null;
-	}
 	
-	private final static void index_set(Hashtable indextable, Object key, LuaString value) {
-		indextable.put(key, new WeakReference(value));
-	}
-
 	/**
 	 * Get a {@link LuaString} instance whose bytes match 
 	 * the supplied Java String using the UTF8 encoding. 
@@ -90,28 +95,44 @@ public class LuaString extends LuaValue {
 	 * @return {@link LuaString} with UTF8 bytes corresponding to the supplied String
 	 */
 	public static LuaString valueOf(String string) {
-		LuaString s = index_get( index_java, string );
-		if ( s != null ) return s;
 		char[] c = string.toCharArray();
 		byte[] b = new byte[lengthAsUtf8(c)];
 		encodeToUtf8(c, b, 0);
-		s = valueOf(b, 0, b.length);
-		index_set( index_java, string, s );
-		return s;
+		return valueOf(b, 0, b.length);
 	}
 
 	// TODO: should this be deprecated or made private?
-	/** Construct a {@link LuaString} around a byte array without copying the contents.
+	/** Construct a {@link LuaString} around a byte array that may be used directly as the backing.
 	 * <p>
-	 * The array is used directly after this is called, so clients must not change contents.
+	 * The array may be used as the backing for this object, so clients must not change contents.
+	 * If the supplied value for 'len' is more than half the length of the container, the 
+	 * supplied byte array will be used as the backing, otherwise the bytes will be copied to a
+	 * new byte array, and cache lookup may be performed.
 	 * <p>
 	 * @param bytes byte buffer
 	 * @param off offset into the byte buffer
 	 * @param len length of the byte buffer
 	 * @return {@link LuaString} wrapping the byte buffer
 	 */
-	public static LuaString valueOf(byte[] bytes, int off, int len) { 
-		return new LuaString(bytes, off, len);
+	public static LuaString valueOf(byte[] bytes, int off, int len) {
+		if (bytes.length < RECENT_STRINGS_MAX_LENGTH) {
+			// Short string.  Reuse the backing and check the cache of recent strings before returning.
+			final LuaString s = new LuaString(bytes, off, len);
+			final int index = s.hashCode() & (RECENT_STRINGS_CACHE_SIZE - 1);
+			final LuaString cached = recent_short_strings[index];
+			if (cached != null && s.raweq(cached))
+				return cached;
+			recent_short_strings[index] = s;
+			return s;
+		} else if (len >= bytes.length / 2) {
+			// Reuse backing only when more than half the bytes are part of the result.
+			return new LuaString(bytes, off, len);
+		} else {
+			// Short result relative to the source.  Copy only the bytes that are actually to be used.
+			final byte[] b = new byte[len];
+			System.arraycopy(bytes, off, b, 0, len);
+			return valueOf(bytes);
+		}
 	}
 	
 	/** Construct a {@link LuaString} using the supplied characters as byte values.
@@ -127,13 +148,13 @@ public class LuaString extends LuaValue {
 		byte[] b = new byte[n];
 		for ( int i=0; i<n; i++ )
 			b[i] = (byte) bytes[i];
-		return valueOf(b, 0, n);
+		return valueOf(b, 0, b.length);
 	}
 	
 	
 	/** Construct a {@link LuaString} around a byte array without copying the contents.
 	 * <p>
-	 * The array is used directly after this is called, so clients must not change contents.
+	 * The array may be used directly as the backing, so clients must not change contents.
 	 * <p>
 	 * @param bytes byte buffer
 	 * @return {@link LuaString} wrapping the byte buffer
