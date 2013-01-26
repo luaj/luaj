@@ -210,4 +210,16 @@ public class StringTest extends TestCase {
 		assertSame(sub1, sub2);
 		assertFalse(src.m_bytes == sub1.m_bytes);
 	}
+	
+	public void testShortSubstringOfVeryLongStringGetsNewBacking() {
+		LuaString src = LuaString.valueOf(
+				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" );
+		LuaString sub1 = src.substring(10, 50);
+		LuaString sub2 = src.substring(10, 50);
+		assertEquals(sub1.m_offset, 0);
+		assertEquals(sub1.m_length, 40);
+		assertFalse(sub1 == sub2);
+		assertFalse(src.m_bytes == sub1.m_bytes);
+	}
 }
