@@ -191,6 +191,23 @@ public class StringTest extends TestCase {
 		assertNotSame(abc3, abc4);  // because of hash collision
 		assertNotSame(lyz3, lyz4);  // because of hash collision
 		assertSame(xyz3, xyz4);  // because hashes do not collide
-
+	}
+	
+	public void testLongSubstringGetsOldBacking() {
+		LuaString src = LuaString.valueOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+		LuaString sub1 = src.substring(10, 40);
+		assertSame(src.m_bytes, sub1.m_bytes);
+		assertEquals(sub1.m_offset, 10);
+		assertEquals(sub1.m_length, 30);
+	}
+	
+	public void testShortSubstringGetsNewBacking() {
+		LuaString src = LuaString.valueOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+		LuaString sub1 = src.substring(10, 20);
+		LuaString sub2 = src.substring(10, 20);
+		assertEquals(sub1.m_offset, 0);
+		assertEquals(sub1.m_length, 10);
+		assertSame(sub1, sub2);
+		assertFalse(src.m_bytes == sub1.m_bytes);
 	}
 }
