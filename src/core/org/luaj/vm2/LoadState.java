@@ -369,7 +369,7 @@ public class LoadState {
 	}
 
 	/**
-	 * Load lua in either binary or text form from an input stream.
+	 * Load lua in either binary or text from an input stream.
 	 * @param firstByte the first byte of the input stream
 	 * @param stream InputStream to read, after having read the first byte already
 	 * @param name Name to apply to the loaded chunk
@@ -388,6 +388,19 @@ public class LoadState {
 			Prototype p = loadBinaryChunk( firstByte, stream, name );
 			return new LuaClosure( p, env );
 		}
+	}
+
+	/**
+	 * Load lua in the default mode "bt" from an input stream.
+	 * @param firstByte the first byte of the input stream
+	 * @param stream InputStream to read, after having read the first byte already
+	 * @param name Name to apply to the loaded chunk
+	 * @return {@link Prototype} that was loaded
+	 * @throws IllegalArgumentException if the signature is bac
+	 * @throws IOException if an IOException occurs
+	 */
+	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
+		return load(stream, name, "bt", env);
 	}
 
 	/**

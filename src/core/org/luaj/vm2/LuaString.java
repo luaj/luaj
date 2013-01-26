@@ -26,8 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
-import java.util.Hashtable;
 
 import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.StringLib;
@@ -131,7 +129,7 @@ public class LuaString extends LuaValue {
 			// Short result relative to the source.  Copy only the bytes that are actually to be used.
 			final byte[] b = new byte[len];
 			System.arraycopy(bytes, off, b, 0, len);
-			return valueOf(bytes);
+			return valueOf(b, 0, len);  // To possibly use cached version.
 		}
 	}
 	
@@ -257,7 +255,7 @@ public class LuaString extends LuaValue {
 		byte[] b = new byte[lhs.m_length+this.m_length];
 		System.arraycopy(lhs.m_bytes, lhs.m_offset, b, 0, lhs.m_length);
 		System.arraycopy(this.m_bytes, this.m_offset, b, lhs.m_length, this.m_length);
-		return new LuaString(b, 0, b.length);
+		return valueOf(b, 0, b.length);
 	}
 
 	// string comparison 
@@ -370,7 +368,7 @@ public class LuaString extends LuaValue {
 	}
 	
 	public LuaString substring( int beginIndex, int endIndex ) {
-		return new LuaString( m_bytes, m_offset + beginIndex, endIndex - beginIndex );
+		return valueOf( m_bytes, m_offset + beginIndex, endIndex - beginIndex );
 	}
 	
 	public int hashCode() {
