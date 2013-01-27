@@ -516,9 +516,9 @@ public class LuaString extends LuaValue {
 	 */
 	public int indexOf( LuaString s, int start ) {
 		final int slen = s.length();
-		final int limit = m_offset + m_length - slen;
-		for ( int i = m_offset + start; i <= limit; ++i ) {
-			if ( equals( m_bytes, i, s.m_bytes, s.m_offset, slen ) ) {
+		final int limit =  m_length - slen;
+		for ( int i = start; i <= limit; ++i ) {
+			if ( equals( m_bytes, m_offset + i, s.m_bytes, s.m_offset, slen ) ) {
 				return i;
 			}
 		}
