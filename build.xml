@@ -176,7 +176,18 @@
 		<zip destfile="luaj-${version}.zip" 
 			basedir="build" includes="luaj-${version}/**"/>
 	</target>
-	
+
+	<target name="mvn_install" depends="jar-jse">
+		<exec executable="mvn">
+			<arg value="install:install-file"/>
+			<arg value="-Dfile=${jar.name.jse}"/>
+			<arg value="-DgroupId=org.luaj"/>
+			<arg value="-DartifactId=luaj-jse"/>
+			<arg value="-Dversion=${version}"/>
+			<arg value="-Dpackaging=jar"/>
+		</exec>
+	</target>
+
 	<target name="all" depends="clean,jar-jme,jar-jse,jar-jse-sources"/>
 		
 </project>
