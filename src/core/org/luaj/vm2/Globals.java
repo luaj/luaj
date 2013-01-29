@@ -100,7 +100,18 @@ public class Globals extends LuaTable {
 		Varargs v = baselib.loadFile(filename, "bt", this);
 		return !v.isnil(1)? v.arg1(): error(v.arg(2).tojstring());
 	}
-	
+
+	/** Convenience function to load a string value as a script.
+	 * @param script Contents of a lua script, such as "print 'hello, world.'"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @return LuaValue that may be executed via .call(), .invoke(), or .method() calls.
+	 * @throws LuaError if the script could not be compiled.
+	 */
+	public LuaValue loadString(String script, String chunkname) {
+		Varargs v = baselib.loadStream(valueOf(script).toInputStream(), chunkname, "bt", this);
+		return !v.isnil(1)? v.arg1(): error(v.arg(2).tojstring());
+	}
+
 	/** Function which yields the current thread. 
 	 * @param args  Arguments to supply as return values in the resume function of the resuming thread.
 	 * @return Values supplied as arguments to the resume() call that reactivates this thread.
