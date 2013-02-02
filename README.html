@@ -725,6 +725,28 @@ See the <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/ast/package-su
 
 <h1>7 - <a name="7">Building and Testing</a></h1>
 
+<h2>Maven integration</h2>
+The main jar files are now deployed in the maven central repository.  To use them in your maven-based project, list them as a dependency:
+
+
+<p>
+For JSE projects, add this dependency for the luaj-jse jar:
+<pre>
+   &lt;dependency&gt;
+      &lt;groupId&gt;org.luaj&lt;/groupId&gt;
+      &lt;artifactId&gt;luaj-jse&lt;/artifactId&gt;
+      &lt;version&gt;3.0-alpha3&lt;/version&gt;
+   &lt;/dependency&gt;	
+</pre>
+while for JME projects, use the luaj-jme jar:
+<pre>
+   &lt;dependency&gt;
+      &lt;groupId&gt;org.luaj&lt;/groupId&gt;
+      &lt;artifactId&gt;luaj-jme&lt;/artifactId&gt;
+      &lt;version&gt;3.0-alpha3&lt;/version&gt;
+   &lt;/dependency&gt;	
+</pre>
+
 <h2>Building the jars</h2>
 An ant file is included in the root directory which builds the libraries by default.
 
@@ -743,9 +765,9 @@ The main luaj JUnit tests are organized into a JUnit 3 suite:
 Unit test scripts can be found in these locations
 <pre>
 	test/lua/*.lua
-	test/junit/org/luaj/vm2/compiler/lua5.1-tests.zip
-	test/junit/org/luaj/vm2/compiler/regressions.zip
-	test/junit/org/luaj/vm2/vm1/luajvm1-tests.zip
+	test/lua/errors/*.lua
+	test/lua/perf/*.lua
+	test/lua/luaj3.0-tests.zip
 </pre>
 
 <h2>Code coverage</h2>
@@ -769,11 +791,7 @@ Sources are hosted on SourceForge and available via sourceforge.net
 	<a href="http://sourceforge.net/project/platformdownload.php?group_id=197627">SourceForge Luaj Download Area</a>
 </pre>
 <p/>
-and LuaForge:
-<pre>
-	<a href="http://luaforge.net/projects/luaj/">LuaForge Luaj Project Page</a>
-	<a href="http://luaforge.net/frs/?group_id=457">LuaForge Luaj Project Area</a>
-</pre>
+Files are no longer hosted at LuaForge.
 
 <h1>9 - <a name="9">Release Notes</a></h1>
 
@@ -823,6 +841,7 @@ and LuaForge:
 <li>Fix bug 3597515 memory leak due to string caching by simplifying caching logic.</li>
 <li>Fix bug 3565008 so that short substrings are backed by short arrays.</li>
 <li>Fix bug 3495802 to return correct offset of substrings from string.find().</li>
+<li>Add artifacts to Maven central repository.</li>
 
 </ul></td></tr>
 </table></td></tr></table>

@@ -11,7 +11,7 @@ public class App
 {
     public static void main( String[] args )
     {
-		String script = "print 'hello, from luaj!'";
+		String script = "print('hello, world', _VERSION)";
 		
 		// create an environment to run in
 		Globals globals = JsePlatform.standardGlobals();

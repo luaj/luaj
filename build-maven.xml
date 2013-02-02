@@ -1,0 +1,148 @@
+<project default="usage">
+	<!-- Ant file to deploy to maven once the distribution is released on sourceforge.
+	  -->
+	<property file="version.properties"/>
+	<property name="major" value="3.0"/>
+	
+	<macrodef name="write_pom">
+		<attribute name="platform"/>
+		<sequential>
+			<mkdir dir="build/maven-${version}"/>
+			 <echo file="build/maven-${version}/luaj-@{platform}-${version}.pom"><![CDATA[<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.luaj</groupId>
+  <artifactId>luaj-]]>@{platform}<![CDATA[</artifactId>
+  <version>]]>${version}<![CDATA[</version>
+  <packaging>jar</packaging>
+  <name>luaj-]]>@{platform}<![CDATA[</name>
+  <description>Luaj ]]>${version}<![CDATA[ for the ]]>@{platform}<![CDATA[ platform</description>
+  <url>http://sourceforge.net/projects/luaj/</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>http://luaj.sourceforge.net/license.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+	<developer>
+		<id>jrosebor</id>
+		<name>James Roseborough</name>
+		<email>jim.roseborough@luaj.org</email>
+		<timezone>-8</timezone>
+		<roles></roles>
+	</developer>
+	<developer>
+		<id>ifarmer</id>
+		<name>Ian Farmer</name>
+		<email>ian.farmer@luaj.org</email>
+		<timezone>-8</timezone>
+		<roles></roles>
+	</developer>
+  </developers>
+  <scm>
+    <url>http://luaj.cvs.sourceforge.net/viewvc/luaj/luaj-vm/</url>
+  </scm>
+ </project>
+]]></echo>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="prepare_files">
+		<attribute name="platform"/>
+		<sequential>
+			<mkdir dir="build/maven-${version}"/>
+			<write_pom platform="@{platform}"/>
+			<get src="http://downloads.sourceforge.net/project/luaj/luaj-${major}/${version}/luaj-${version}.zip" 
+				dest="build/maven-${version}/luaj-${version}.zip"
+				skipexisting="true"/>
+			<unzip src="build/maven-${version}/luaj-${version}.zip" dest="build/maven-${version}"/>
+			<copy file="build/maven-${version}/luaj-${version}/lib/luaj-@{platform}-${version}.jar" todir="build/maven-${version}"/>
+			
+			<!-- make a -sources file -->
+			<mkdir dir="build/maven-${version}/sources-@{platform}"/>
+			<copy todir="build/maven-${version}/sources-@{platform}">
+				<fileset dir="build/maven-${version}/luaj-${version}/src/core"/>
+				<fileset dir="build/maven-${version}/luaj-${version}/src/@{platform}"/>
+				<filterchain>
+					<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-@{platform} ${version}"'/></tokenfilter>
+				</filterchain>
+			</copy>
+			<zip destfile="build/maven-${version}/luaj-@{platform}-${version}-sources.jar" 
+						basedir="build/maven-${version}/sources-@{platform}"/>
+
+			<!-- make a -javadoc file -->
+			<mkdir dir="build/maven-${version}/javadoc-@{platform}"/>
+			<javadoc defaultexcludes="yes"
+					destdir="build/maven-${version}/javadoc-@{platform}"
+					author="true"
+					version="true"
+					use="true"
+					windowtitle="Luaj API">
+			    <fileset dir="build/maven-${version}/sources-@{platform}">
+					<include name="org/luaj/vm/*.java"/>
+					<include name="org/luaj/vm2/*.java"/>
+					<include name="**/LuaC.java"/>
+					<include name="**/LuaJC.java"/>
+					<include name="**/lib/*/*.java"/>
+			    </fileset>		
+				<doctitle><![CDATA[<h1>Luaj API</h1>]]></doctitle>
+				<bottom><![CDATA[<i>Copyright &#169; 2007-2013 Luaj.org. All Rights Reserved.</i>]]></bottom>
+				<tag name="todo" scope="all" description="To do:"/>
+				<link offline="true" href="http://sourceforge.net/projects/luaj/" packagelistLoc="C:\tmp"/>
+				<link href="http://sourceforge.net/projects/luaj/"/>
+			</javadoc>
+			<zip destfile="build/maven-${version}/luaj-@{platform}-${version}-javadoc.jar" 
+						basedir="build/maven-${version}/javadoc-@{platform}"/>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="sign_and_deploy">
+		<attribute name="platform"/>
+		<sequential>
+			<exec executable="mvn">
+				<arg value="gpg:sign-and-deploy-file"/>
+				<arg value="-Durl=http://oss.sonatype.org/service/local/staging/deploy/maven2"/>
+				<arg value="-DrepositoryId=nexus-releases"/>
+				<arg value="-DpomFile=build/maven-${version}/luaj-@{platform}-${version}.pom"/>
+				<arg value="-Dfile=build/maven-${version}/luaj-@{platform}-${version}.jar"/>
+				<arg value="-Dsources=build/maven-${version}/luaj-@{platform}-${version}-sources.jar"/>
+				<arg value="-Djavadoc=build/maven-${version}/luaj-@{platform}-${version}-javadoc.jar"/>
+			</exec>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="prepare_and_install">
+		<attribute name="platform"/>
+		<sequential>
+			<prepare_files platform="@{platform}"/>
+			<exec executable="mvn">
+				<arg value="install:install-file"/>
+				<arg value="-Dfile=build/maven-${version}/luaj-@{platform}-${version}.jar"/>
+				<arg value="-DpomFile=build/maven-${version}/luaj-@{platform}-${version}.pom"/>
+			</exec>
+		</sequential>
+	</macrodef>
+		
+	<macrodef name="prepare_and_deploy">
+		<attribute name="platform"/>
+		<sequential>
+			<prepare_files platform="@{platform}"/>
+			<sign_and_deploy platform="@{platform}"/>
+		</sequential>
+	</macrodef>
+		
+	<target name="install">
+		<prepare_and_install platform="jse"/>
+		<prepare_and_install platform="jme"/>
+	</target>
+	
+	<target name="deploy">
+		<prepare_and_deploy platform="jse"/>
+		<prepare_and_deploy platform="jme"/>
+	</target>
+
+	<target name="usage">
+		<echo level="info">Usage: ant -Dmajor=${major} -Dversion=${version} -f build-maven.xml [install | deploy]</echo>
+	</target>
+</project>
