@@ -23,9 +23,11 @@ package org.luaj.vm2.lib.jse;
 
 
 import java.io.BufferedInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.RandomAccessFile;
 
 import org.luaj.vm2.LuaError;
@@ -68,11 +70,15 @@ import org.luaj.vm2.lib.LibFunction;
 public class JseIoLib extends IoLib {
 
 	protected File wrapStdin() throws IOException {
-		return new FileImpl(globals.STDIN);
+		return new StdinFile();
 	}
 	
 	protected File wrapStdout() throws IOException {
-		return new FileImpl(globals.STDOUT);
+		return new StdoutFile(FTYPE_STDOUT);
+	}
+	
+	protected File wrapStderr() throws IOException {
+		return new StdoutFile(FTYPE_STDERR);
 	}
 	
 	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {
@@ -103,6 +109,7 @@ public class JseIoLib extends IoLib {
 		throw new LuaError("not implemented");
 	}
 	
+
 	private final class FileImpl extends File {
 		private final RandomAccessFile file;
 		private final InputStream is;
@@ -213,6 +220,122 @@ public class JseIoLib extends IoLib {
 				notimplemented();
 			}
 			return length;
+		}
+	}
+
+	private final class StdoutFile extends File {
+		private final int file_type;
+
+		private StdoutFile(int file_type) {
+			this.file_type = file_type;
+		}
+
+		public String tojstring() {
+			return "file ("+this.hashCode()+")";
+		}
+
+		private final PrintStream getPrintStream() {
+			return file_type == FTYPE_STDERR?
+					globals.STDERR:
+					globals.STDOUT;
+		}
+
+		public void write(LuaString string) throws IOException {
+			getPrintStream().write(string.m_bytes, string.m_offset, string.m_length);
+		}
+
+		public void flush() throws IOException {
+			getPrintStream().flush();
+		}
+
+		public boolean isstdfile() {
+			return true;
+		}
+
+		public void close() throws IOException {
+			// do not close std files.
+		}
+
+		public boolean isclosed() {
+			return false;
+		}
+
+		public int seek(String option, int bytecount) throws IOException {
+			return 0;
+		}
+
+		public void setvbuf(String mode, int size) {
+		}
+
+		public int remaining() throws IOException {
+			return 0;
+		}
+
+		public int peek() throws IOException, EOFException {
+			return 0;
+		}
+
+		public int read() throws IOException, EOFException {
+			return 0;
+		}
+
+		public int read(byte[] bytes, int offset, int length)
+				throws IOException {
+			return 0;
+		}
+	}
+
+	private final class StdinFile extends File {
+		private StdinFile() {
+		}
+
+		public String tojstring() {
+			return "file ("+this.hashCode()+")";
+		}
+
+		public void write(LuaString string) throws IOException {
+		}
+
+		public void flush() throws IOException {
+		}
+
+		public boolean isstdfile() {
+			return true;
+		}
+
+		public void close() throws IOException {
+			// do not close std files.
+		}
+
+		public boolean isclosed() {
+			return false;
+		}
+
+		public int seek(String option, int bytecount) throws IOException {
+			return 0;
+		}
+
+		public void setvbuf(String mode, int size) {
+		}
+
+		public int remaining() throws IOException {
+			return 0;
+		}
+
+		public int peek() throws IOException, EOFException {
+			globals.STDIN.mark(1);
+			int c = globals.STDIN.read();
+			globals.STDIN.reset();
+			return c;
+		}
+
+		public int read() throws IOException, EOFException {
+			return globals.STDIN.read();
+		}
+
+		public int read(byte[] bytes, int offset, int length)
+				throws IOException {
+			return globals.STDIN.read(bytes, offset, length);
 		}
 	}
 }

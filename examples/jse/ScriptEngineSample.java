@@ -97,7 +97,7 @@ public class ScriptEngineSample {
             		"print(\"string written using 'print'\")\n" +
             		"io.write(\"string written using 'io.write()'\\n\")\n" +
             		"io.stdout:write(\"string written using 'io.stdout:write()'\\n\")\n" +
-            		"io.stderr:write(\"string written using 'io.stderr:write()'\\n\")\n" +
+            		"io.stderr:write(\"string written using 'io.stderr:write(), hit return to continue...'\\n\")\n" +
             		"io.write([[string read using 'io.stdin:read(\"*l\")':]]..io.stdin:read(\"*l\")..\"\\n\")\n";
 
             System.out.println("Evaluating script with redirection set.");
@@ -114,7 +114,7 @@ public class ScriptEngineSample {
             e.getContext().setReader(null);
             e.getContext().setWriter(null);
             e.getContext().setErrorWriter(null);
-            e.eval(script);
+            e.eval(script);  // Will wait for a line from the user at this step!
             System.out.println("output::>"+output+"<::output");
             System.out.println("errors::>"+errors+"<::errors");
 

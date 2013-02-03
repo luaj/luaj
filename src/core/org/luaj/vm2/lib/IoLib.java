@@ -111,6 +111,14 @@ public class IoLib extends OneArgFunction {
 		}
 	}
 
+	/** Enumerated value representing stdin */
+	protected static final int FTYPE_STDIN = 0;
+	/** Enumerated value representing stdout */
+	protected static final int FTYPE_STDOUT = 1;
+	/** Enumerated value representing stderr */
+	protected static final int FTYPE_STDERR = 2;
+	/** Enumerated value representing a file type for a named file */
+	protected static final int FTYPE_NAMED = 3;
 
 	/** 
 	 * Wrap the standard input. 
@@ -125,6 +133,13 @@ public class IoLib extends OneArgFunction {
 	 * @throws IOException
 	 */
 	abstract protected File wrapStdout() throws IOException;
+	
+	/** 
+	 * Wrap the standard error output. 
+	 * @return File 
+	 * @throws IOException
+	 */
+	abstract protected File wrapStderr() throws IOException;
 	
 	/**
 	 * Open a file in a particular mode. 
@@ -295,7 +310,7 @@ public class IoLib extends OneArgFunction {
 	}
 	
 	private File input() {
-		return infile!=null? infile: (infile=ioopenfile("-","r"));
+		return infile!=null? infile: (infile=ioopenfile(FTYPE_STDIN, "-","r"));
 	}
 	
 	//	io.flush() -> bool 
@@ -320,7 +335,7 @@ public class IoLib extends OneArgFunction {
 	//	io.input([file]) -> file
 	public Varargs _io_input(LuaValue file) {
 		infile = file.isnil()? input(): 
-				file.isstring()? ioopenfile(file.checkjstring(),"r"):
+				file.isstring()? ioopenfile(FTYPE_NAMED, file.checkjstring(),"r"):
 				checkfile(file);
 		return infile;
 	}
@@ -328,7 +343,7 @@ public class IoLib extends OneArgFunction {
 	// io.output(filename) -> file
 	public Varargs _io_output(LuaValue filename) {
 		outfile = filename.isnil()? output(): 
-				  filename.isstring()? ioopenfile(filename.checkjstring(),"w"):
+				  filename.isstring()? ioopenfile(FTYPE_NAMED, filename.checkjstring(),"w"):
 				  checkfile(filename);
 		return outfile;
 	}
@@ -348,12 +363,12 @@ public class IoLib extends OneArgFunction {
 
 	//	io.open(filename, [mode]) -> file | nil,err
 	public Varargs _io_open(String filename, String mode) throws IOException {
-		return rawopenfile(filename, mode);
+		return rawopenfile(FTYPE_NAMED, filename, mode);
 	}
 
 	//	io.lines(filename) -> iterator
 	public Varargs _io_lines(String filename) {
-		infile = filename==null? input(): ioopenfile(filename,"r");
+		infile = filename==null? input(): ioopenfile(FTYPE_NAMED, filename,"r");
 		checkopen(infile);
 		return lines(infile);
 	}
@@ -420,16 +435,16 @@ public class IoLib extends OneArgFunction {
 	}
 
 	private File output() {
-		return outfile!=null? outfile: (outfile=ioopenfile("-","w"));
+		return outfile!=null? outfile: (outfile=ioopenfile(FTYPE_STDOUT,"-","w"));
 	}
 	
 	private File errput() {
-		return errfile!=null? errfile: (errfile=ioopenfile("-","w"));
+		return errfile!=null? errfile: (errfile=ioopenfile(FTYPE_STDERR,"-","w"));
 	}
 	
-	private File ioopenfile(String filename, String mode) {
+	private File ioopenfile(int filetype, String filename, String mode) {
 		try {
-			return rawopenfile(filename, mode);
+			return rawopenfile(filetype, filename, mode);
 		} catch ( Exception e ) {
 			error("io error: "+e.getMessage());
 			return null;
@@ -517,15 +532,14 @@ public class IoLib extends OneArgFunction {
 			error("attempt to use a closed file");
 		return file;
 	}
-	
-	private File rawopenfile(String filename, String mode) throws IOException {
-		boolean isstdfile = "-".equals(filename);
-		boolean isreadmode = mode.startsWith("r");
-		if ( isstdfile ) {
-			return isreadmode? 
-				wrapStdin():
-				wrapStdout();
+
+	private File rawopenfile(int filetype, String filename, String mode) throws IOException {
+		switch (filetype) {
+		case FTYPE_STDIN: return wrapStdin();
+		case FTYPE_STDOUT: return wrapStdout();
+		case FTYPE_STDERR: return wrapStderr();
 		}
+		boolean isreadmode = mode.startsWith("r");
 		boolean isappend = mode.startsWith("a");
 		boolean isupdate = mode.indexOf("+") > 0;
 		boolean isbinary = mode.endsWith("b");

@@ -75,6 +75,10 @@ public class JmeIoLib extends IoLib {
 		return new FileImpl(globals.STDOUT);
 	}
 	
+	protected File wrapStderr() throws IOException {
+		return new FileImpl(globals.STDERR);
+	}
+	
 	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {
 		String url = "file:///" + filename;
 		int mode  = readMode? Connector.READ: Connector.READ_WRITE;
