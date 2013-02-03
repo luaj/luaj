@@ -1,5 +1,9 @@
 
 
+import java.io.CharArrayReader;
+import java.io.CharArrayWriter;
+import java.io.Reader;
+
 import javax.script.Bindings;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
@@ -11,6 +15,8 @@ import javax.script.SimpleBindings;
 
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.script.LuaScriptEngine;
+import org.luaj.vm2.script.LuajBindings;
 
 public class ScriptEngineSample {
     
@@ -22,6 +28,7 @@ public class ScriptEngineSample {
 
         ScriptEngineManager sem = new ScriptEngineManager();
         ScriptEngine e = sem.getEngineByExtension(".lua");
+        e = new LuaScriptEngine();
         ScriptEngineFactory f = e.getFactory();
 
         // uncomment to enable the lua-to-java bytecode compiler 
@@ -66,8 +73,8 @@ public class ScriptEngineSample {
             System.out.println( "y="+b1.get("y") );
             System.out.println( "y="+b2.get("y") );
             
-            // Bindings that use a client-specified Bindings type.
-            Bindings sb = new SimpleBindings();
+            // In Luaj 3.0, client bindings must derive from LuajBindings. 
+            Bindings sb = new LuajBindings();
             sb.put("x", 2);
             System.out.println( "eval: "+cs.eval(sb) );
 
@@ -81,6 +88,36 @@ public class ScriptEngineSample {
             testEngineBindings(e);
             testClientBindings(e);
             testUserClasses(e);
+
+            // Test redirection of input, output, and standard error. 
+            Reader input = new CharArrayReader("abcdefg\nhijk".toCharArray());
+            CharArrayWriter output = new CharArrayWriter();
+            CharArrayWriter errors = new CharArrayWriter();
+            String script = 
+            		"print(\"string written using 'print'\")\n" +
+            		"io.write(\"string written using 'io.write()'\\n\")\n" +
+            		"io.stdout:write(\"string written using 'io.stdout:write()'\\n\")\n" +
+            		"io.stderr:write(\"string written using 'io.stderr:write()'\\n\")\n" +
+            		"io.write([[string read using 'io.stdin:read(\"*l\")':]]..io.stdin:read(\"*l\")..\"\\n\")\n";
+
+            System.out.println("Evaluating script with redirection set.");
+            e.getContext().setReader(input);
+            e.getContext().setWriter(output);
+            e.getContext().setErrorWriter(errors);
+            e.eval(script);
+            System.out.println("output::>"+output+"<::output");
+            System.out.println("errors::>"+errors+"<::errors");
+
+            System.out.println("Evaluating script with redirection reset.");
+            output.reset();
+            errors.reset();
+            e.getContext().setReader(null);
+            e.getContext().setWriter(null);
+            e.getContext().setErrorWriter(null);
+            e.eval(script);
+            System.out.println("output::>"+output+"<::output");
+            System.out.println("errors::>"+errors+"<::errors");
+
             
         } catch (ScriptException ex) {
             ex.printStackTrace();
@@ -97,7 +134,7 @@ public class ScriptEngineSample {
     	testBindings(e, e.createBindings());
     }
     public static void testClientBindings(ScriptEngine e) throws ScriptException {
-    	testBindings(e, new SimpleBindings());
+    	testBindings(e, new LuajBindings());
     }
     public static void testBindings(ScriptEngine e, Bindings b) throws ScriptException {
         CompiledScript cs = ((Compilable)e).compile(
