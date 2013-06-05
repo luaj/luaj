@@ -67,6 +67,7 @@ public class TableLib extends OneArgFunction {
 		table.set("sort", new sort());
 		table.set("unpack", new unpack());
 		env.set("table", table);
+		env.get("package").get("loaded").set("table", table);
 		return NIL;
 	}
 

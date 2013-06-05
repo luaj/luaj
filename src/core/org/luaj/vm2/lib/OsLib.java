@@ -120,7 +120,7 @@ public class OsLib extends OneArgFunction {
 		for (int i = 0; i < NAMES.length; ++i)
 			os.set(NAMES[i], new OsLibFunc(i, NAMES[i]));
 		env.set("os", os);
-		globals.package_.loaded.set("os", os);
+		env.get("package").get("loaded").set("os", os);
 		return os;
 	}
 

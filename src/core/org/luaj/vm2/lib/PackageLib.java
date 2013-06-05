@@ -71,26 +71,18 @@ public class PackageLib extends OneArgFunction {
 			DEFAULT_LUA_PATH = "?.lua";
 	}
 
+	private static final LuaString _LOADED      = valueOf("loaded");
+	private static final LuaString _LOADLIB     = valueOf("loadlib");
+	private static final LuaString _PRELOAD     = valueOf("preload");
+	private static final LuaString _PATH        = valueOf("path");
+	private static final LuaString _SEARCHPATH  = valueOf("searchpath");
+	private static final LuaString _SEARCHERS   = valueOf("searchers");
+	
 	/** The globals that were used to load this library. */
 	Globals globals;
 
-	/** The table used by require to check for loaded modules, and exposed initially as package.loaded. */
-	public LuaTable loaded;
-
-	/** The table used by the {@link preload_loader}, and exposed initially as package.preload. */
-	public LuaTable preload;
-	
-	/** The value in use as the package path, and set as the initial value of package.path. */
-	public LuaString path;
-	
-	/** The loadlib function used by the package library. */
-	public loadlib loadlib;
-
-	/** The searchpath function used by the package library. */
-	public searchpath searchpath;
-
-	/** The initial searchers list, and the list exposed initially as package.searchers */
-	public LuaTable searchers;
+	/** The table for this package. */
+	LuaTable package_;
 	
 	/** Loader that loads from {@link preload} table if found there */
 	public preload_searcher preload_searcher;
@@ -109,19 +101,19 @@ public class PackageLib extends OneArgFunction {
 
 	public LuaValue call(LuaValue env) {
 		globals = env.checkglobals();
-		env.set("require", new require());
-		LuaTable package_ = new LuaTable();
-		package_.set("loaded", loaded = new LuaTable());
-		package_.set("preload", preload = new LuaTable());
-		package_.set("path", path = LuaValue.valueOf(DEFAULT_LUA_PATH));
-		package_.set("loadlib", loadlib = new loadlib());
-		package_.set("searchpath", searchpath = new searchpath());
-		searchers = new LuaTable();
+		globals.set("require", new require());
+		package_ = new LuaTable();
+		package_.set(_LOADED, new LuaTable());
+		package_.set(_PRELOAD, new LuaTable());
+		package_.set(_PATH, LuaValue.valueOf(DEFAULT_LUA_PATH));
+		package_.set(_LOADLIB, new loadlib());
+		package_.set(_SEARCHPATH, new searchpath());
+		LuaTable searchers = new LuaTable();
 		searchers.set(1, preload_searcher = new preload_searcher());
 		searchers.set(2, lua_searcher     = new lua_searcher());
 		searchers.set(3, java_searcher    = new java_searcher());
-		package_.set("searchers", searchers);
-		loaded.set("package", package_);
+		package_.set(_SEARCHERS, searchers);
+		package_.get(_LOADED).set("package", package_);
 		env.set("package", package_);
 		globals.package_ = this;
 		return env;
@@ -129,14 +121,14 @@ public class PackageLib extends OneArgFunction {
 	
 	/** Allow packages to mark themselves as loaded */
 	public void setIsLoaded(String name, LuaTable value) {
-		loaded.set(name, value);
+		package_.get(_LOADED).set(name, value);
 	}
 
 
 	/** Set the lua path used by this library instance to a new value.  
 	 * Merely sets the value of {@link path} to be used in subsequent searches. */
 	public void setLuaPath( String newLuaPath ) {
-		path = LuaValue.valueOf(newLuaPath);
+		package_.set(_PATH, LuaValue.valueOf(newLuaPath));
 	}
 	
 	public String tojstring() {
@@ -175,6 +167,7 @@ public class PackageLib extends OneArgFunction {
 	public class require extends OneArgFunction {
 		public LuaValue call( LuaValue arg ) {
 			LuaString name = arg.checkstring();
+			LuaValue loaded = package_.get(_LOADED);
 			LuaValue result = loaded.get(name);
 			if ( result.toboolean() ) {
 				if ( result == _SENTINEL )
@@ -183,7 +176,7 @@ public class PackageLib extends OneArgFunction {
 			}
 	
 			/* else must load it; iterate over available loaders */
-			LuaTable tbl = PackageLib.this.searchers.checktable();
+			LuaTable tbl = package_.get(_SEARCHERS).checktable();
 			StringBuffer sb = new StringBuffer();
 			Varargs loader = null;
 			for ( int i=1; true; i++ ) {
@@ -205,7 +198,7 @@ public class PackageLib extends OneArgFunction {
 			result = loader.arg1().call(name, loader.arg(2));
 			if ( ! result.isnil() )
 				loaded.set( name, result );
-			else if ( (result = PackageLib.this.loaded.get(name)) == _SENTINEL ) 
+			else if ( (result = loaded.get(name)) == _SENTINEL ) 
 				loaded.set( name, result = LuaValue.TRUE );
 			return result;
 		}
@@ -221,7 +214,7 @@ public class PackageLib extends OneArgFunction {
 	public class preload_searcher extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaString name = args.checkstring(1);
-			LuaValue val = preload.get(name);
+			LuaValue val = package_.get(_PRELOAD).get(name);
 			return val.isnil()? 
 				valueOf("\n\tno field package.preload['"+name+"']"):
 				val;
@@ -234,11 +227,12 @@ public class PackageLib extends OneArgFunction {
 			InputStream is = null;
 					
 			// get package path
+			LuaValue path = package_.get(_PATH);
 			if ( ! path.isstring() ) 
 				return valueOf("package.path is not a string");
 		
-			// get the searchpath function. 	
-			Varargs v = searchpath.invoke(varargsOf(name, path));
+			// get the searchpath function.
+			Varargs v = package_.get(_SEARCHPATH).invoke(varargsOf(name, path));
 			
 			// Did we get a result?
 			if (!v.isstring(1))
