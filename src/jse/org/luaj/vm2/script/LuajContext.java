@@ -83,22 +83,6 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
     	stderr = globals.STDERR;
 	}
 	
-	public Bindings getBindings(int scope) {
-		if (scope != ScriptContext.ENGINE_SCOPE)
-			throw new IllegalArgumentException("LuajScriptContext only supports ENGINE_SCOPE");
-		return super.getBindings(ENGINE_SCOPE);
-	}
-
-	public void setBindings(Bindings bindings, int scope) {
-		if (!(bindings instanceof LuajBindings))
-			throw new IllegalArgumentException("LuajScriptContext can only be used with LuajBindings");
-		if (scope != ScriptContext.ENGINE_SCOPE)
-			throw new IllegalArgumentException("LuajScriptContext only supports ENGINE_SCOPE");
-		LuajBindings luaj_bindings = (LuajBindings) bindings;
-		globals.setmetatable(luaj_bindings.metatable);
-		super.setBindings(bindings, scope);
-	}
-
 	@Override
 	public void setErrorWriter(Writer writer) {
 		globals.STDERR = writer != null?
@@ -139,5 +123,4 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 			return r.read();
 		}
 	}
-
 }

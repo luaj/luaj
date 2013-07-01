@@ -35,6 +35,7 @@ import org.luaj.vm2.compiler.SimpleTests;
 import org.luaj.vm2.lib.jse.LuaJavaCoercionTest;
 import org.luaj.vm2.lib.jse.LuajavaAccessibleMembersTest;
 import org.luaj.vm2.lib.jse.LuajavaClassMembersTest;
+import org.luaj.vm2.script.ScriptEngineTests;
 
 public class AllTests {
 
@@ -82,10 +83,14 @@ public class AllTests {
 		lib.addTestSuite(LuaJavaCoercionTest.class);
 		lib.addTestSuite(RequireClassTest.class);
 		suite.addTest(lib);
+
+		// Script engine tests.
+		TestSuite script = ScriptEngineTests.suite();
+		suite.addTest(script);
 		
 		// compatiblity tests
 		TestSuite compat = CompatibiltyTest.suite();
-		suite.addTest( compat );
+		suite.addTest(compat);
 		compat.addTestSuite(ErrorsTest.class);
 		
 		return suite;

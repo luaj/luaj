@@ -15,8 +15,6 @@ import javax.script.SimpleBindings;
 
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.script.LuaScriptEngine;
-import org.luaj.vm2.script.LuajBindings;
 
 public class ScriptEngineSample {
     
@@ -27,8 +25,7 @@ public class ScriptEngineSample {
     	// System.setProperty("luaj.debug", "true");
 
         ScriptEngineManager sem = new ScriptEngineManager();
-        ScriptEngine e = sem.getEngineByExtension(".lua");
-        e = new LuaScriptEngine();
+        ScriptEngine e = sem.getEngineByName("luaj");
         ScriptEngineFactory f = e.getFactory();
 
         // uncomment to enable the lua-to-java bytecode compiler 
@@ -73,8 +70,8 @@ public class ScriptEngineSample {
             System.out.println( "y="+b1.get("y") );
             System.out.println( "y="+b2.get("y") );
             
-            // In Luaj 3.0, client bindings must derive from LuajBindings. 
-            Bindings sb = new LuajBindings();
+            // In Luaj 3.0, client bindings can just be SimpleBindings. 
+            Bindings sb = new SimpleBindings();
             sb.put("x", 2);
             System.out.println( "eval: "+cs.eval(sb) );
 
@@ -134,7 +131,7 @@ public class ScriptEngineSample {
     	testBindings(e, e.createBindings());
     }
     public static void testClientBindings(ScriptEngine e) throws ScriptException {
-    	testBindings(e, new LuajBindings());
+    	testBindings(e, new SimpleBindings());
     }
     public static void testBindings(ScriptEngine e, Bindings b) throws ScriptException {
         CompiledScript cs = ((Compilable)e).compile(
