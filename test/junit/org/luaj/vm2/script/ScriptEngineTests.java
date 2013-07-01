@@ -21,6 +21,7 @@
  ******************************************************************************/
 package org.luaj.vm2.script;
 
+import java.io.ByteArrayInputStream;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.Reader;
@@ -133,12 +134,12 @@ public class ScriptEngineTests extends TestSuite  {
  				}
              });
             Object r = e.eval("return f('abc')");
-            assertEquals("abc123", r.toString());
+            assertEquals("abc123", r);
 		}
 		public void testCompiledScript() throws ScriptException {
             CompiledScript cs = ((Compilable)e).compile("y = math.sqrt(x); return y");
             b.put("x", 144);
-            assertEquals("12", cs.eval(b).toString());
+            assertEquals(12, cs.eval(b));
 		}
 		public void testBuggyLuaScript() {
 	        try {
@@ -186,31 +187,31 @@ public class ScriptEngineTests extends TestSuite  {
 		public void testBindingJavaInt() throws ScriptException {
 	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..tostring(x)\n");
 	        b.put("x", 111);
-	        assertEquals("x number 111", cs.eval(b).toString());
+	        assertEquals("x number 111", cs.eval(b));
 	        assertEquals(111, b.get("y"));
 		}
 		public void testBindingJavaDouble() throws ScriptException {
 	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..tostring(x)\n");
 	        b.put("x", 125.125);
-	        assertEquals("x number 125.125", cs.eval(b).toString());
+	        assertEquals("x number 125.125", cs.eval(b));
 	        assertEquals(125.125, b.get("y"));
 		}
 		public void testBindingJavaString() throws ScriptException {
 	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..tostring(x)\n");
 	        b.put("x", "foo");
-	        assertEquals("x string foo", cs.eval(b).toString());
+	        assertEquals("x string foo", cs.eval(b));
 	        assertEquals("foo", b.get("y"));
 		}
 		public void testBindingJavaObject() throws ScriptException {
 	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..tostring(x)\n");
 	        b.put("x", new SomeUserClass());
-	        assertEquals("x userdata some-user-value", cs.eval(b).toString());
+	        assertEquals("x userdata some-user-value", cs.eval(b));
 	        assertEquals(SomeUserClass.class, b.get("y").getClass());
 		}
 		public void testBindingJavaArray() throws ScriptException {
-	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..x[1]..' '..x[2]\n");
+	        CompiledScript cs = ((Compilable)e).compile("y = x; return 'x '..type(x)..' '..#x..' '..x[1]..' '..x[2]\n");
 	        b.put("x", new int[] { 777, 888 });
-	        assertEquals("x userdata 777 888", cs.eval(b).toString());
+	        assertEquals("x userdata 2 777 888", cs.eval(b));
 	        assertEquals(int[].class, b.get("y").getClass());
 		}
 		public void testBindingLuaFunction() throws ScriptException {
@@ -223,10 +224,19 @@ public class ScriptEngineTests extends TestSuite  {
 	        CompiledScript cs = ((Compilable)e).compile(
 	        		"x = x or luajava.newInstance('java.lang.String', 'test')\n" +
 	        		"return 'x ' ..  type(x) .. ' ' .. tostring(x)\n");
-	        assertEquals("x string test", cs.eval(b).toString());
+	        assertEquals("x string test", cs.eval(b));
 	        b.put("x", new SomeUserClass());
-	        assertEquals("x userdata some-user-value", cs.eval(b).toString());
+	        assertEquals("x userdata some-user-value", cs.eval(b));
 	    }	
+		public void testReturnMultipleValues() throws ScriptException {
+	        CompiledScript cs = ((Compilable)e).compile("return 'foo', 'bar'\n");
+	        Object o = cs.eval();
+	        assertEquals(Object[].class, o.getClass());
+	        Object[] array = (Object[]) o;
+	        assertEquals(2, array.length);
+	        assertEquals("foo", array[0]);
+	        assertEquals("bar", array[1]);
+		}
 	}
 
 	public static class SomeUserClass {

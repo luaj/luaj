@@ -155,7 +155,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 				}
 				f.initupvalue1(g);
 			}
-			return f.invoke(LuaValue.NONE);
+			return toJava(f.invoke(LuaValue.NONE));
 		}
 	}
 
@@ -215,23 +215,37 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 				}
 			});
 		}
-		
-		static private Object toJava(LuaValue luajValue) {
-			switch ( luajValue.type() ) {
-			case LuaValue.TNIL: return null;
-			case LuaValue.TSTRING: return luajValue.tojstring();
-			case LuaValue.TUSERDATA: return luajValue.checkuserdata(Object.class);
-			case LuaValue.TNUMBER: return luajValue.isinttype()? 
-					(Object) new Integer(luajValue.toint()): 
-					(Object) new Double(luajValue.todouble());
-			default: return luajValue;
-			}
-		}
+	}
+	
+	static private LuaValue toLua(Object javaValue) {
+		return javaValue == null? LuaValue.NIL:
+			javaValue instanceof LuaValue? (LuaValue) javaValue:
+			CoerceJavaToLua.coerce(javaValue);
+	}
 
-		static private LuaValue toLua(Object javaValue) {
-			return javaValue == null? LuaValue.NIL:
-				javaValue instanceof LuaValue? (LuaValue) javaValue:
-				CoerceJavaToLua.coerce(javaValue);
+	static private Object toJava(LuaValue luajValue) {
+		switch ( luajValue.type() ) {
+		case LuaValue.TNIL: return null;
+		case LuaValue.TSTRING: return luajValue.tojstring();
+		case LuaValue.TUSERDATA: return luajValue.checkuserdata(Object.class);
+		case LuaValue.TNUMBER: return luajValue.isinttype()? 
+				(Object) new Integer(luajValue.toint()): 
+				(Object) new Double(luajValue.todouble());
+		default: return luajValue;
 		}
 	}
+
+	static private Object toJava(Varargs v) {
+		final int n = v.narg();
+		switch (n) {
+		case 0: return null;
+		case 1: return toJava(v.arg1());
+		default:
+			Object[] o = new Object[n];
+			for (int i=0; i<n; ++i)
+				o[i] = toJava(v.arg(i+1));
+			return o;
+		}
+	}
+
 }

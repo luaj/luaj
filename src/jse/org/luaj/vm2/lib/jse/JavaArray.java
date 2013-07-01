@@ -23,8 +23,10 @@ package org.luaj.vm2.lib.jse;
 
 import java.lang.reflect.Array;
 
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
 
 /**
  * LuaValue that represents a Java instance of array type.
@@ -41,8 +43,19 @@ class JavaArray extends LuaUserdata {
 
 	static final LuaValue LENGTH = valueOf("length");
 	
+	static final LuaTable array_metatable;
+	static {
+		array_metatable = new LuaTable();
+		array_metatable.rawset(LuaValue.LEN, new OneArgFunction() {
+			public LuaValue call(LuaValue u) {
+				return LuaValue.valueOf(Array.getLength(((LuaUserdata)u).m_instance));
+			}
+		});
+	}
+	
 	JavaArray(Object instance) {
 		super(instance);
+		setmetatable(array_metatable);
 	}
 	
 	public LuaValue get(LuaValue key) {
