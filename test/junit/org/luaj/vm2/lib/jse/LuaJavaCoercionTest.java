@@ -54,6 +54,30 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( String.class, o.getClass() );
 		assertEquals( "777", o );
 	}
+
+	public void testJavaClassToLuaUserdata() {
+		LuaValue va = CoerceJavaToLua.coerce(ClassA.class);
+		LuaValue va1 = CoerceJavaToLua.coerce(ClassA.class);
+		LuaValue vb = CoerceJavaToLua.coerce(ClassB.class);
+		assertSame(va, va1);
+		assertNotSame(va, vb);
+		LuaValue vi = CoerceJavaToLua.coerce(new ClassA());
+		assertNotSame(va, vi);
+		assertTrue(vi.isuserdata());
+		assertTrue(vi.isuserdata(ClassA.class));
+		assertFalse(vi.isuserdata(ClassB.class));
+		LuaValue vj = CoerceJavaToLua.coerce(new ClassB());
+		assertNotSame(vb, vj);
+		assertTrue(vj.isuserdata());
+		assertFalse(vj.isuserdata(ClassA.class));
+		assertTrue(vj.isuserdata(ClassB.class));
+	}
+
+	static class ClassA {
+	}
+
+	static class ClassB {	
+	}
 	
 	public void testJavaIntArrayToLuaTable() {
 		int[] i = { 222, 333 };

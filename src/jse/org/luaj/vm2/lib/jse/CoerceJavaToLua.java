@@ -131,11 +131,12 @@ public class CoerceJavaToLua {
 	public static LuaValue coerce(Object o) {
 		if ( o == null )
 			return LuaValue.NIL;
+		if (o instanceof Class)
+			return JavaClass.forClass((Class) o);
 		Class clazz = o.getClass();
 		Coercion c = (Coercion) COERCIONS.get( clazz );
 		if ( c == null ) {
-			c = o instanceof Class? JavaClass.forClass((Class)o):
-				clazz.isArray()? arrayCoercion:
+			c = clazz.isArray()? arrayCoercion:
 				instanceCoercion;
 			COERCIONS.put( clazz, c );
 		}
