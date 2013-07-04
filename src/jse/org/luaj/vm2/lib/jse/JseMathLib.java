@@ -58,8 +58,8 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
 	public JseMathLib() {}
 
-	public LuaValue call(LuaValue env) {
-		super.call(env);
+	public LuaValue call(LuaValue modname, LuaValue env) {
+		super.call(modname, env);
 		LuaValue math = env.get("math");
 		math.set("acos", new acos());
 		math.set("asin", new asin());

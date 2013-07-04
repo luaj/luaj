@@ -71,7 +71,7 @@ import org.luaj.vm2.Varargs;
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
  */
 abstract 
-public class IoLib extends OneArgFunction {
+public class IoLib extends TwoArgFunction {
 
 	abstract 
 	protected class File extends LuaValue{
@@ -230,7 +230,7 @@ public class IoLib extends OneArgFunction {
 	
 	protected Globals globals;
 	
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		
 		// io lib functions

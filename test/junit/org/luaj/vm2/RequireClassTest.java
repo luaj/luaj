@@ -16,12 +16,17 @@ public class RequireClassTest extends TestCase {
 		globals = JsePlatform.standardGlobals();
 		require = globals.get("require");
 	}
+
+	public void testLoadClass() {
+		LuaValue result = globals.load(new org.luaj.vm2.require.RequireSampleSuccess());
+		assertEquals( "require-sample-success-", result.tojstring() );
+	}
 	
 	public void testRequireClassSuccess() {
 		LuaValue result = require.call( LuaValue.valueOf("org.luaj.vm2.require.RequireSampleSuccess") );
-		assertEquals( "require-sample-success", result.tojstring() );
+		assertEquals( "require-sample-success-org.luaj.vm2.require.RequireSampleSuccess", result.tojstring() );
 		result = require.call( LuaValue.valueOf("org.luaj.vm2.require.RequireSampleSuccess") );
-		assertEquals( "require-sample-success", result.tojstring() );
+		assertEquals( "require-sample-success-org.luaj.vm2.require.RequireSampleSuccess", result.tojstring() );
 	}
 	
 	public void testRequireClassLoadLuaError() {

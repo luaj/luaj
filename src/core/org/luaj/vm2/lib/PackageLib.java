@@ -61,7 +61,7 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.3">http://www.lua.org/manual/5.1/manual.html#5.3</a>
  */
-public class PackageLib extends OneArgFunction {
+public class PackageLib extends TwoArgFunction {
 
 	/** The default value to use for package.path.  This can be set with the system property
 	 * "luaj.package.path", and is "?.lua" by default. */
@@ -99,7 +99,7 @@ public class PackageLib extends OneArgFunction {
 
 	public PackageLib() {}
 
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.set("require", new require());
 		package_ = new LuaTable();

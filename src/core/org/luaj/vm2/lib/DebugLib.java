@@ -66,7 +66,7 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.9">http://www.lua.org/manual/5.1/manual.html#5.9</a>
  */
-public class DebugLib extends OneArgFunction {
+public class DebugLib extends TwoArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
 	public static final boolean TRACE = (null != System.getProperty("TRACE"));
 	
@@ -94,7 +94,7 @@ public class DebugLib extends OneArgFunction {
 
 	Globals globals;
 	
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;
 		LuaTable debug = new LuaTable();

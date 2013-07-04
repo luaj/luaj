@@ -72,11 +72,11 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
  */
-public class BaseLib extends OneArgFunction implements ResourceFinder {
+public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	
 	Globals globals;
 	
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.FINDER = this;
 		globals.baselib = this;

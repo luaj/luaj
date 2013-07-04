@@ -1357,24 +1357,14 @@ public class LuaValue extends Varargs {
 	public Varargs inext(LuaValue index) { return typerror("table"); }
 	
 	/** 
-	 * Load a library instance by setting its environment to the calling object, 
-	 * and calling it, which should iniitalize the library instance and 
-	 * install itself into this instance.  The calling object should be the 
-	 * {@link Globals} environment to associate wtih the library. 
+	 * Load a library instance by calling it with and empty string as the modname, 
+	 * and this Globals as the environment. This is normally used to iniitalize the 
+	 * library instance and which may install itself into these globals.   
 	 * @param library The callable {@link LuaValue} to load into {@code this}
-	 * @return {@link LuaValue._G} containing the result of the initialization call.
+	 * @param string 
+	 * @return {@link LuaValue} returned by the initialization call.
 	 */
-	public LuaValue load(LuaValue library) { return load(library, this); }
-
-	/** 
-	 * Load a library instance by setting its environment to {@code env} 
-	 * and calling it, which should iniitalize the library instance and 
-	 * install itself into this instance. 
-	 * @param library The callable {@link LuaValue} to load into {@code this}
-	 * @param env The {@link LuaValue} to use as the environment for the library.
-	 * @return {@link LuaValue} containing the result of the initialization call.
-	 */
-	public LuaValue load(LuaValue library, LuaValue env) { return library.call(env); }
+	public LuaValue load(LuaValue library) { return library.call(EMPTYSTRING, this); }
 
 	// varargs references
 	public LuaValue arg(int index) { return index==1? this: NIL; }

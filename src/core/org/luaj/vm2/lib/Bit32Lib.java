@@ -28,12 +28,12 @@ import org.luaj.vm2.Varargs;
 /**
  * Subclass of LibFunction that implements the Lua standard {@code bit32} library.
  */
-public class Bit32Lib extends OneArgFunction {
+public class Bit32Lib extends TwoArgFunction {
 
 	public Bit32Lib() {
 	}
 
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, Bit32LibV.class, new String[] {
 			"band", "bnot", "bor", "btest", "bxor", "extract", "replace"

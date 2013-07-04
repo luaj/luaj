@@ -56,7 +56,7 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
  */
-public class CoroutineLib extends OneArgFunction {
+public class CoroutineLib extends TwoArgFunction {
 
 	static long thread_orphan_check_interval = 30000;
 
@@ -64,7 +64,7 @@ public class CoroutineLib extends OneArgFunction {
 
 	Globals globals;
 	
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		LuaTable coroutine = new LuaTable();
 		coroutine.set("create", new create());

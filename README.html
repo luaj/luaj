@@ -849,6 +849,11 @@ Files are no longer hosted at LuaForge.
 <li>Fix pluggable scripting engine lookup, simplify implementation, and add unit tests.</li>
 <li>Coerce script engine eval() return values to Java.</li>
 <li>Fix Lua to Java coercion directly on Java classes.</li>
+<li>Fix Globals.load() to call the library with an empty modname and the globals as the environment.</li>
+<li>Fix hash codes of double.</li>
+<li>Fix bug in luajava overload resolution.</li>
+<li>Fix luastring bug where parsing did not check for overflow.</li>
+<li>Fix luastring bug where circular dependency randomly caused NullPointerException.</li>
 
 </ul></td></tr>
 </table></td></tr></table>

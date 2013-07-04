@@ -68,8 +68,8 @@ import org.luaj.vm2.lib.ResourceFinder;
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
 	/** Extend the library loading to set the default value for {@link Globals.STDIN} */
-	public LuaValue call(LuaValue env) {
-		super.call(env);
+	public LuaValue call(LuaValue modname, LuaValue env) {
+		super.call(modname, env);
 		env.checkglobals().STDIN = System.in;
 		return env;
 	}

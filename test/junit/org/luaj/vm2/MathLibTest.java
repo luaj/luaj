@@ -2,8 +2,7 @@ package org.luaj.vm2;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.lib.MathLib;
-import org.luaj.vm2.lib.jse.JseMathLib;
+import org.luaj.vm2.lib.jme.JmePlatform;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class MathLibTest extends TestCase {
@@ -13,10 +12,8 @@ public class MathLibTest extends TestCase {
 	private boolean supportedOnJ2me;
 
 	public MathLibTest() {
-		LuaValue g = JsePlatform.standardGlobals();
-		j2se = g.get("math");
-		g.load( new MathLib() );
-		j2me = g.get("math");
+		j2se = JsePlatform.standardGlobals().get("math");
+		j2me = JmePlatform.standardGlobals().get("math");
 	}
 	
 	protected void setUp() throws Exception {

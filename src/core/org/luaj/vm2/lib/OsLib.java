@@ -73,7 +73,7 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
-public class OsLib extends OneArgFunction {
+public class OsLib extends TwoArgFunction {
 	public static String TMP_PREFIX    = ".luaj";
 	public static String TMP_SUFFIX    = "tmp";
 
@@ -114,7 +114,7 @@ public class OsLib extends OneArgFunction {
 	public OsLib() {
 	}
 	
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		LuaTable os = new LuaTable();
 		for (int i = 0; i < NAMES.length; ++i)

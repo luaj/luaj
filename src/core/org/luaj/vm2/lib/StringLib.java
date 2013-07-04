@@ -59,14 +59,14 @@ import org.luaj.vm2.compiler.DumpState;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
  */
-public class StringLib extends OneArgFunction {
+public class StringLib extends TwoArgFunction {
 
 	public static LuaTable instance;
 	
 	public StringLib() {
 	}
 
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, StringLib1.class, new String[] {
 			"dump", "len", "lower", "reverse", "upper", } );

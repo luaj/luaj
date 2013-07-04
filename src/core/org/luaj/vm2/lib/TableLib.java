@@ -56,9 +56,9 @@ import org.luaj.vm2.Varargs;
  * @see JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.5">http://www.lua.org/manual/5.1/manual.html#5.5</a>
  */
-public class TableLib extends OneArgFunction {
+public class TableLib extends TwoArgFunction {
 
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable table = new LuaTable();
 		table.set("concat", new concat());
 		table.set("insert", new insert());

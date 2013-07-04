@@ -73,7 +73,7 @@ import org.luaj.vm2.Varargs;
  * @see JseMathLib
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
  */
-public class MathLib extends OneArgFunction {
+public class MathLib extends TwoArgFunction {
 	
 	public static MathLib MATHLIB = null;
 
@@ -81,7 +81,7 @@ public class MathLib extends OneArgFunction {
 		MATHLIB = this;
 	}
 
-	public LuaValue call(LuaValue env) {
+	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable math = new LuaTable(0,30);
 		math.set("abs", new abs());
 		math.set("ceil", new ceil());
