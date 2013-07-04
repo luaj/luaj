@@ -56,7 +56,6 @@ public class AllTests {
 		// table tests
 		TestSuite table = new TestSuite("Table Tests");
 		table.addTestSuite(TableTest.class);
-		table.addTestSuite(TableArrayTest.class);
 		table.addTestSuite(TableHashTest.class);
 		table.addTestSuite(WeakValueTableTest.class);
 		table.addTestSuite(WeakKeyTableTest.class);
