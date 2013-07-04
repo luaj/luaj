@@ -67,13 +67,6 @@ public class LuaString extends LuaValue {
 	 * ecause no LuaString whose backing exceeds this length will be put into the cache.  */
 	public static final int RECENT_STRINGS_MAX_LENGTH = 32;
 
-	/** Simple cache of recently created strings that are short.  
-	 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
-	 * that have been recently constructed.  If a string is being constructed frequently 
-	 * from different contexts, it will generally may show up as a cache hit and resolve 
-	 * to the same value.  */
-	public static volatile LuaString recent_short_strings[] = new LuaString[RECENT_STRINGS_CACHE_SIZE];
-
 	/** The singleton instance representing lua {@code true} */
 	public static LuaValue s_metatable;
 
@@ -85,6 +78,26 @@ public class LuaString extends LuaValue {
 	
 	/** The number of bytes that comprise this string */
 	public final int    m_length;
+	
+	private static class Cache {
+		/** Simple cache of recently created strings that are short.  
+		 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
+		 * that have been recently constructed.  If a string is being constructed frequently 
+		 * from different contexts, it will generally may show up as a cache hit and resolve 
+		 * to the same value.  */
+		public final LuaString recent_short_strings[] = new LuaString[RECENT_STRINGS_CACHE_SIZE];
+		
+		public LuaString get(LuaString s) {
+			final int index = s.hashCode() & (RECENT_STRINGS_CACHE_SIZE - 1);
+			final LuaString cached = (LuaString) recent_short_strings[index];
+			if (cached != null && s.raweq(cached))
+				return cached;
+			recent_short_strings[index] = s;
+			return s;
+		}
+		
+		static final Cache instance = new Cache();
+	}
 	
 	/**
 	 * Get a {@link LuaString} instance whose bytes match 
@@ -116,12 +129,7 @@ public class LuaString extends LuaValue {
 		if (bytes.length < RECENT_STRINGS_MAX_LENGTH) {
 			// Short string.  Reuse the backing and check the cache of recent strings before returning.
 			final LuaString s = new LuaString(bytes, off, len);
-			final int index = s.hashCode() & (RECENT_STRINGS_CACHE_SIZE - 1);
-			final LuaString cached = recent_short_strings[index];
-			if (cached != null && s.raweq(cached))
-				return cached;
-			recent_short_strings[index] = s;
-			return s;
+			return Cache.instance.get( s );
 		} else if (len >= bytes.length / 2) {
 			// Reuse backing only when more than half the bytes are part of the result.
 			return new LuaString(bytes, off, len);
@@ -713,6 +721,8 @@ public class LuaString extends LuaValue {
 			if ( digit < 0 || digit >= base )
 				return Double.NaN;		
 			x = x * base + digit;
+			if ( x < 0 )
+				return Double.NaN; // overflow
 		}
 		return neg? -x: x;
 	}
