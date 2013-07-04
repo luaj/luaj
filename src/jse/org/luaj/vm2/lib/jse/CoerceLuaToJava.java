@@ -119,27 +119,37 @@ public class CoerceLuaToJava {
 			this.targetType = targetType;
 		}
 		public int score( LuaValue value ) {
+			int fromStringPenalty = 0;
+			if ( value.type() == LuaValue.TSTRING ) {
+				value = value.tonumber();
+				if ( value.isnil() ) {
+					return SCORE_UNCOERCIBLE;
+				}
+				fromStringPenalty = 4;
+			}
 			if ( value.isint() ) {
 				switch ( targetType ) {
 				case TARGET_TYPE_BYTE: {
 					int i = value.toint();
-					return (i==(byte)i)? 0: SCORE_WRONG_TYPE;
+					return fromStringPenalty + ((i==(byte)i)? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_CHAR: {
 					int i = value.toint();
-					return (i==(byte)i)? 1: (i==(char)i)? 0: SCORE_WRONG_TYPE;
+					return fromStringPenalty + ((i==(byte)i)? 1: (i==(char)i)? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_SHORT: {
 					int i = value.toint();
-					return (i==(byte)i)? 1: (i==(short)i)? 0: SCORE_WRONG_TYPE;
+					return fromStringPenalty +
+							((i==(byte)i)? 1: (i==(short)i)? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_INT: { 
 					int i = value.toint();
-					return (i==(byte)i)? 2: ((i==(char)i) || (i==(short)i))? 1: 0;
+					return fromStringPenalty +
+							((i==(byte)i)? 2: ((i==(char)i) || (i==(short)i))? 1: 0);
 				}
-				case TARGET_TYPE_FLOAT: return 1;
-				case TARGET_TYPE_LONG: return 1;
-				case TARGET_TYPE_DOUBLE: return 2;
+				case TARGET_TYPE_FLOAT: return fromStringPenalty + 1;
+				case TARGET_TYPE_LONG: return fromStringPenalty + 1;
+				case TARGET_TYPE_DOUBLE: return fromStringPenalty + 2;
 				default: return SCORE_WRONG_TYPE;
 				}
 			} else if ( value.isnumber() ) {
@@ -150,15 +160,15 @@ public class CoerceLuaToJava {
 				case TARGET_TYPE_INT: return SCORE_WRONG_TYPE;
 				case TARGET_TYPE_LONG: {
 					double d = value.todouble();
-					return (d==(long)d)? 0: SCORE_WRONG_TYPE;
+					return fromStringPenalty + ((d==(long)d)? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_FLOAT: {
 					double d = value.todouble();
-					return (d==(float)d)? 0: SCORE_WRONG_TYPE;
+					return fromStringPenalty + ((d==(float)d)? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_DOUBLE: {
 					double d = value.todouble();
-					return ((d==(long)d) || (d==(float)d))? 1: 0;
+					return fromStringPenalty + (((d==(long)d) || (d==(float)d))? 1: 0);
 				}
 				default: return SCORE_WRONG_TYPE;
 				}
