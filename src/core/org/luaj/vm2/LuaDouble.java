@@ -85,8 +85,8 @@ public class LuaDouble extends LuaNumber {
 	}
 
 	public int hashCode() {
-		long l = Double.doubleToLongBits(v);
-		return ((int)(l>>32)) | (int) l;
+		long l = Double.doubleToLongBits(v + 1);
+		return ((int)(l>>32)) + (int) l;
 	}
 	
 	public boolean islong() {
