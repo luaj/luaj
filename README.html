@@ -72,6 +72,7 @@ It also includes miscellaneous improvements over luaj 2.0.x:
 <li>Better debug reporting when using closures.
 <li>Line numbers in parse syntax tree.
 <li>More compatible table behavior.
+<li>Better thread safety.
 </ul>
 <h3>Luaj 2.0.x</h3>
 Support for lua 5.1.x features, plus:
@@ -381,6 +382,22 @@ and the math operations are limited to those supported by Java ME.
 All libraries are included except luajava, and the os, io, and math libraries are 
 limited to those functions that can be supported on that platform.
 
+<h2>Thread Safety</h2>
+
+Luaj 3.0 can be run in multiple threads, with the following restrictions:
+<ul>
+<li>Each thread created by client code must be given its own, distinct Globals instance
+<li>Each thread must not be allowed to access Globals from other threads
+<li>Shared metatables for Number, String, Thread, Function, Boolean, and and Nil 
+should not be mutated once lua code is running
+</ul>
+
+For an example of loading allocating per-thread Globals and invoking scripts in 
+multiple threads see <a href="examples/jse/SampleMultiThreaded.java">examples/jse/SampleMultiThreaded.java</a>
+
+<p>
+As an alternative, the JSR-223 scripting interface can be used, and should always provide a separate Globals instance 
+per script engine instance by using a ThreadLocal internally.
 
 <h1>4 - <a name="4">Libraries</a></h1>
 
@@ -392,6 +409,7 @@ See <a href="http://www.lua.org/manual/5.1/">standard lua documentation</a> for 
 <p>
 The following libraries are loaded by both <em>JsePlatform.standardGlobals()</em> and <em>JmePlatform.standardGlobals()</em>:
 <pre>	base
+	bit32
 	coroutine
 	io
 	math
