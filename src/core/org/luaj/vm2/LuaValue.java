@@ -1384,7 +1384,7 @@ public class LuaValue extends Varargs {
 	 * @see LuaFunction#s_metatable
 	 * @see LuaThread#s_metatable
 	 */
-	public LuaValue getmetatable() { return null; };
+	public LuaValue getmetatable() { return null; }
 	
 	/** 
 	 * Set the metatable for this {@link LuaValue}
@@ -3131,23 +3131,11 @@ public class LuaValue extends Varargs {
 	 */
 	public LuaString strvalue()     { typerror("strValue"); return null; }
 
-	/** Return the key part of this value if it is a weak table entry, or {@link NIL} if it was weak and is no longer referenced.
-	 * @return {@link LuaValue} key, or {@link NIL} if it was weak and is no longer referenced.
-	 * @see WeakTable
-	 */
-	public LuaValue  strongkey()    { return strongvalue(); }
-
-	/** Return this value as a strong reference, or {@link NIL} if it was weak and is no longer referenced.
-	 * @return {@link LuaValue} referred to, or {@link NIL} if it was weak and is no longer referenced.
+	/** Return this value as a strong reference, or null if it was weak and is no longer referenced.
+	 * @return {@link LuaValue} referred to, or null if it was weak and is no longer referenced.
 	 * @see WeakTable
 	 */
 	public LuaValue  strongvalue()  { return this; }
-
-	/** Test if this is a weak reference and its value no longer is referenced.
-	 * @return true if this is a weak reference whose value no longer is referenced
-	 * @see WeakTable
-	 */
-	public boolean   isweaknil()    { return false; }
 
 	/** Convert java boolean to a {@link LuaValue}.
 	 * 
@@ -3215,7 +3203,7 @@ public class LuaValue extends Varargs {
 	 * @return new {@link LuaTable} instance with no values and no metatable, but preallocated for array and hashed elements.
 	 */
 	public static LuaTable tableOf(int narray, int nhash) { return new LuaTable(narray, nhash); }	
-
+	
 	/** Construct a {@link LuaTable} initialized with supplied array values. 
 	 * @param unnamedValues array of {@link LuaValue} containing the values to use in initialization
 	 * @return new {@link LuaTable} instance with sequential elements coming from the array. 
@@ -3229,7 +3217,7 @@ public class LuaValue extends Varargs {
 	 * @return new {@link LuaTable} instance with sequential elements coming from the array and varargs. 
 	 */
 	public static LuaTable listOf(LuaValue[] unnamedValues,Varargs lastarg) { return new LuaTable(null,unnamedValues,lastarg); }
-	
+
 	/** Construct a {@link LuaTable} initialized with supplied named values. 
 	 * @param namedValues array of {@link LuaValue} containing the keys and values to use in initialization
 	 * in order {@code {key-a, value-a, key-b, value-b, ...} }
@@ -3363,6 +3351,26 @@ public class LuaValue extends Varargs {
 		if ( h.isnil() )
 			throw new LuaError(reason+typename());
 		return h;
+	}
+
+	/** Construct a Metatable instance from the given LuaValue */
+	protected static Metatable metatableOf(LuaValue mt) {
+		if ( mt != null && mt.istable() ) {
+			LuaValue mode = mt.rawget(MODE);
+			if ( mode.isstring() ) {
+				String m = mode.tojstring();
+				boolean weakkeys = m.indexOf('k') >= 0;
+				boolean weakvalues = m.indexOf('v') >= 0;
+				if ( weakkeys || weakvalues ) {
+					return new WeakTable(weakkeys, weakvalues, mt);
+				}
+			}
+			return (LuaTable)mt;
+		} else if ( mt != null ) {
+			return new NonTableMetatable( mt );
+		} else {
+			return null;
+		}
 	}
 
 	/** Throw {@link LuaError} indicating index was attempted on illegal type 

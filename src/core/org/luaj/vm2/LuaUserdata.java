@@ -35,7 +35,7 @@ public class LuaUserdata extends LuaValue {
 		m_instance = obj;
 		m_metatable = metatable;
 	}
-
+	
 	public String tojstring() {
 		return String.valueOf(m_instance);
 	}
@@ -120,7 +120,7 @@ public class LuaUserdata extends LuaValue {
 	}
 	
 	// __eq metatag processing
-	public boolean eqmt( LuaValue val )    { 
+	public boolean eqmt( LuaValue val ) {
 		return m_metatable!=null && val.isuserdata()? LuaValue.eqmtcall(this, m_metatable, val, val.getmetatable()): false; 
 	}
 }

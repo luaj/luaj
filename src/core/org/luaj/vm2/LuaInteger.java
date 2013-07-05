@@ -126,6 +126,10 @@ public class LuaInteger extends LuaNumber {
 		return v;
 	}
 
+	public static int hashCode(int x) {
+		return x;
+	}
+
 	// unary operators
 	public LuaValue neg() { return valueOf(-(long)v); }
 	

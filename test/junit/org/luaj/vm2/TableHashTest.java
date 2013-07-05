@@ -50,7 +50,7 @@ public class TableHashTest extends TestCase {
 		
 		String[] keys = { "abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "wxy", "z01",
 				"cd", "ef", "g", "hi", "jk", "lm", "no", "pq", "rs", };		
-		int[] capacities = { 0, 2, 4, 4, 7, 7, 7, 10, 10, 14, 14, 14, 14, 19, 19, 19, 19, 25, 25, 25 };
+		int[] capacities = { 0, 2, 2, 4, 4, 8, 8, 8, 8, 16, 16, 16, 16, 16, 16, 16, 16, 32, 32, 32 };
 		for ( int i = 0; i < keys.length; ++i ) {
 			assertEquals( capacities[i], t.getHashLength() );
 			String si = "Test Value! "+i;
@@ -241,5 +241,80 @@ public class TableHashTest extends TestCase {
 		assertEquals( LuaValue.valueOf("bb"),  t.next(LuaValue.valueOf("aa")).arg(1) );
 		assertEquals( LuaValue.valueOf("bbb"), t.next(LuaValue.valueOf("aa")).arg(2) );
 		assertEquals( LuaValue.NIL, t.next(LuaValue.valueOf("bb")) );
+	}
+
+	public void testLoopWithRemoval() {
+		final LuaTable t = new_Table();
+
+		t.set( LuaValue.valueOf(1), LuaValue.valueOf("1") );
+		t.set( LuaValue.valueOf(3), LuaValue.valueOf("3") );
+		t.set( LuaValue.valueOf(8), LuaValue.valueOf("4") );
+		t.set( LuaValue.valueOf(17), LuaValue.valueOf("5") );
+		t.set( LuaValue.valueOf(26), LuaValue.valueOf("6") );
+		t.set( LuaValue.valueOf(35), LuaValue.valueOf("7") );
+		t.set( LuaValue.valueOf(42), LuaValue.valueOf("8") );
+		t.set( LuaValue.valueOf(60), LuaValue.valueOf("10") );
+		t.set( LuaValue.valueOf(63), LuaValue.valueOf("11") );
+
+		Varargs entry = t.next(LuaValue.NIL);
+		while ( !entry.isnil(1) ) {
+			LuaValue k = entry.arg1();
+			LuaValue v = entry.arg(2);
+			if ( ( k.toint() & 1 ) == 0 ) {
+				t.set( k, LuaValue.NIL );
+			}
+			entry = t.next(k);
+		}
+
+		int numEntries = 0;
+		entry = t.next(LuaValue.NIL);
+		while ( !entry.isnil(1) ) {
+			LuaValue k = entry.arg1();
+			// Only odd keys should remain
+			assertTrue( ( k.toint() & 1 ) == 1 );
+			numEntries++;
+			entry = t.next(k);
+		}
+		assertEquals( 5, numEntries );
+	}
+
+	public void testLoopWithRemovalAndSet() {
+		final LuaTable t = new_Table();
+
+		t.set( LuaValue.valueOf(1), LuaValue.valueOf("1") );
+		t.set( LuaValue.valueOf(3), LuaValue.valueOf("3") );
+		t.set( LuaValue.valueOf(8), LuaValue.valueOf("4") );
+		t.set( LuaValue.valueOf(17), LuaValue.valueOf("5") );
+		t.set( LuaValue.valueOf(26), LuaValue.valueOf("6") );
+		t.set( LuaValue.valueOf(35), LuaValue.valueOf("7") );
+		t.set( LuaValue.valueOf(42), LuaValue.valueOf("8") );
+		t.set( LuaValue.valueOf(60), LuaValue.valueOf("10") );
+		t.set( LuaValue.valueOf(63), LuaValue.valueOf("11") );
+
+		Varargs entry = t.next(LuaValue.NIL);
+		Varargs entry2 = entry;
+		while ( !entry.isnil(1) ) {
+			LuaValue k = entry.arg1();
+			LuaValue v = entry.arg(2);
+			if ( ( k.toint() & 1 ) == 0 ) {
+				t.set( k, LuaValue.NIL );
+			} else {
+				t.set( k, v.tonumber() );
+				entry2 = t.next(entry2.arg1());
+			}
+			entry = t.next(k);
+		}
+
+		int numEntries = 0;
+		entry = t.next(LuaValue.NIL);
+		while ( !entry.isnil(1) ) {
+			LuaValue k = entry.arg1();
+			// Only odd keys should remain
+			assertTrue( ( k.toint() & 1 ) == 1 );
+			assertTrue( entry.arg(2).type() == LuaValue.TNUMBER );
+			numEntries++;
+			entry = t.next(k);
+		}
+		assertEquals( 5, numEntries );
 	}
 }

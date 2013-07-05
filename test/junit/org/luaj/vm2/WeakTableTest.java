@@ -55,8 +55,8 @@ abstract public class WeakTableTest extends TableTest {
 	}
 	
 	public static class WeakValueTableTest extends WeakTableTest {
-		protected LuaTable new_Table() { return new WeakTable(false, true);	}
-		protected LuaTable new_Table(int n,int m) { return new WeakTable(false, true); }
+		protected LuaTable new_Table() { return WeakTable.make(false, true); }
+		protected LuaTable new_Table(int n,int m) { return WeakTable.make(false, true); }
 
 		public void testWeakValuesTable() {
 			LuaTable t = new_Table();
@@ -64,17 +64,21 @@ abstract public class WeakTableTest extends TableTest {
 			Object obj = new Object();
 			LuaTable tableValue = new LuaTable();
 			LuaString stringValue = LuaString.valueOf("this is a test");
+			LuaTable tableValue2 = new LuaTable();
 			
 			t.set("table", tableValue);
 			t.set("userdata", LuaValue.userdataOf(obj, null));
 			t.set("string", stringValue);
-			t.set("string2", LuaString.valueOf("another string"));
-			assertTrue("table must have at least 4 elements", t.getHashLength() > 4);
+			t.set("string2", LuaValue.valueOf("another string"));
+			t.set(1, tableValue2);
+			assertTrue("table must have at least 4 elements", t.getHashLength() >= 4);
+			assertTrue("array part must have 1 element", t.getArrayLength() >= 1);
 
 			// check that table can be used to get elements 
 			assertEquals(tableValue, t.get("table"));
 			assertEquals(stringValue, t.get("string"));
 			assertEquals(obj, t.get("userdata").checkuserdata());
+			assertEquals(tableValue2, t.get(1));
 
 			// nothing should be collected, since we have strong references here
 			collectGarbage();
@@ -83,10 +87,12 @@ abstract public class WeakTableTest extends TableTest {
 			assertEquals(tableValue, t.get("table"));
 			assertEquals(stringValue, t.get("string"));
 			assertEquals(obj, t.get("userdata").checkuserdata());
+			assertEquals(tableValue2, t.get(1));
 
 			// drop our strong references
 			obj = null;
 			tableValue = null;
+			tableValue2 = null;
 			stringValue = null;
 			
 			// Garbage collection should cause weak entries to be dropped.
@@ -95,16 +101,17 @@ abstract public class WeakTableTest extends TableTest {
 			// check that they are dropped
 			assertEquals(LuaValue.NIL, t.get("table"));
 			assertEquals(LuaValue.NIL, t.get("userdata"));
+			assertEquals(LuaValue.NIL, t.get(1));
 			assertFalse("strings should not be in weak references", t.get("string").isnil());
 		}
 	}
 	
 	public static class WeakKeyTableTest extends WeakTableTest {
-		protected LuaTable new_Table() { return new WeakTable(true, false);	}
-		protected LuaTable new_Table(int n,int m) { return new WeakTable(true, false); }
+		protected LuaTable new_Table() { return WeakTable.make(true, false); }
+		protected LuaTable new_Table(int n,int m) { return WeakTable.make(true, false); }
 		
 		public void testWeakKeysTable() {
-			LuaTable t = new WeakTable(true, false);
+			LuaTable t = WeakTable.make(true, false);
 			
 			LuaValue key = LuaValue.userdataOf(new MyData(111));
 			LuaValue val = LuaValue.userdataOf(new MyData(222));
@@ -137,7 +144,7 @@ abstract public class WeakTableTest extends TableTest {
 		}
 		
 		public void testNext() {
-			LuaTable t = new WeakTable(true, true);
+			LuaTable t = WeakTable.make(true, true);
 			
 			LuaValue key = LuaValue.userdataOf(new MyData(111));
 			LuaValue val = LuaValue.userdataOf(new MyData(222));
@@ -167,11 +174,11 @@ abstract public class WeakTableTest extends TableTest {
 	}
 	
 	public static class WeakKeyValueTableTest extends WeakTableTest {
-		protected LuaTable new_Table() { return new WeakTable(true, true);	}
-		protected LuaTable new_Table(int n,int m) { return new WeakTable(true, true); }
-		
+		protected LuaTable new_Table() { return WeakTable.make(true, true); }
+		protected LuaTable new_Table(int n,int m) { return WeakTable.make(true, true); }
+
 		public void testWeakKeysValuesTable() {
-			LuaTable t = new WeakTable(true, true);
+			LuaTable t = WeakTable.make(true, true);
 			
 			LuaValue key = LuaValue.userdataOf(new MyData(111));
 			LuaValue val = LuaValue.userdataOf(new MyData(222));
@@ -224,7 +231,7 @@ abstract public class WeakTableTest extends TableTest {
 		}
 		
 		public void testReplace() {
-			LuaTable t = new WeakTable(true, true);
+			LuaTable t = WeakTable.make(true, true);
 			
 			LuaValue key = LuaValue.userdataOf(new MyData(111));
 			LuaValue val = LuaValue.userdataOf(new MyData(222));

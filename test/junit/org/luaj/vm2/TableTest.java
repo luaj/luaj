@@ -37,7 +37,7 @@ public class TableTest extends TestCase {
 	}
 	
 	private int keyCount(LuaTable t) {
-		return keys(t).length;		
+		return keys(t).length;
 	}
 	
 	private LuaValue[] keys(LuaTable t) {
@@ -88,8 +88,9 @@ public class TableTest extends TestCase {
 			assertEquals(LuaInteger.valueOf(i), t.get(i));
 		}
 		
-		assertTrue( t.getArrayLength() >= 0 && t.getArrayLength() <= 2 );
-		assertTrue( t.getHashLength() >= 4 );
+		assertTrue( t.getArrayLength() >= 3 );
+		assertTrue( t.getArrayLength() <= 12 );
+		assertTrue( t.getHashLength() <= 3 );
 	}
 	
 	public void testOutOfOrderIntegerKeyInsertion() {
@@ -105,12 +106,8 @@ public class TableTest extends TestCase {
 		}
 		
 		// Ensure capacities make sense
-		assertTrue( t.getArrayLength() >= 0 );
-		assertTrue( t.getArrayLength() <= 6 );
-		
-		assertTrue( t.getHashLength() >= 16 );
-		assertTrue( t.getHashLength() <= 64 );
-		
+		assertEquals( 32, t.getArrayLength() );
+		assertEquals( 0, t.getHashLength() );
 	}
 	
 	public void testStringAndIntegerKeys() {
@@ -122,8 +119,8 @@ public class TableTest extends TestCase {
 			t.set( str, LuaInteger.valueOf( i ) );
 		}
 		
-		assertTrue( t.getArrayLength() >= 9 ); // 1, 2, ..., 9
-		assertTrue( t.getArrayLength() <= 18 );
+		assertTrue( t.getArrayLength() >= 8 ); // 1, 2, ..., 9
+		assertTrue( t.getArrayLength() <= 16 );
 		assertTrue( t.getHashLength() >= 11 ); // 0, "0", "1", ..., "9"
 		assertTrue( t.getHashLength() <= 33 );
 		
@@ -220,6 +217,41 @@ public class TableTest extends TestCase {
 		
 		t.set( "three", LuaValue.NIL );
 		assertEquals( 0, keyCount(t) );
+	}
+
+	public void testShrinkNonPowerOfTwoArray() {
+		LuaTable t = new_Table(6, 2);
+
+		t.set(1, "one");
+		t.set(2, "two");
+		t.set(3, "three");
+		t.set(4, "four");
+		t.set(5, "five");
+		t.set(6, "six");
+
+		t.set("aa", "aaa");
+		t.set("bb", "bbb");
+
+		t.set(3, LuaValue.NIL);
+		t.set(4, LuaValue.NIL);
+		t.set(6, LuaValue.NIL);
+
+		t.set("cc", "ccc");
+		t.set("dd", "ddd");
+
+		assertEquals(4, t.getArrayLength());
+		assertTrue(t.getHashLength() < 10);
+		assertEquals(5, t.hashEntries);
+		assertEquals("one", t.get(1).tojstring());
+		assertEquals("two", t.get(2).tojstring());
+		assertEquals(LuaValue.NIL, t.get(3));
+		assertEquals(LuaValue.NIL, t.get(4));
+		assertEquals("five", t.get(5).tojstring());
+		assertEquals(LuaValue.NIL, t.get(6));
+		assertEquals("aaa", t.get("aa").tojstring());
+		assertEquals("bbb", t.get("bb").tojstring());
+		assertEquals("ccc", t.get("cc").tojstring());
+		assertEquals("ddd", t.get("dd").tojstring());
 	}
 
 	public void testInOrderLuaLength() {
@@ -350,5 +382,4 @@ public class TableTest extends TestCase {
 			compareLists(t,v);
 		}
 	}
-	
 }

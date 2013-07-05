@@ -71,9 +71,10 @@ It also includes miscellaneous improvements over luaj 2.0.x:
 <li>Better coroutine-related garbage collection. 
 <li>Better debug reporting when using closures.
 <li>Line numbers in parse syntax tree.
+<li>More compatible table behavior.
 </ul>
 <h3>Luaj 2.0.x</h3>
-Support for luaj 5.1.x features, plus:
+Support for lua 5.1.x features, plus:
 <ul>
 <li>Support for compiling lua source code into Java source code.
 <li>Support for compiling lua bytecode directly into Java bytecode.
@@ -82,7 +83,7 @@ Support for luaj 5.1.x features, plus:
 <li>Implementation of weak keys and values, and all metatags. 
 </ul>
 <h3>Luaj 1.0.x</h3>
-Support for most luaj 5.1.x features.
+Support for most lua 5.1.x features.
 
 <h2>Performance</h2>
 Good performance is a major goal of luaj.  
@@ -854,6 +855,10 @@ Files are no longer hosted at LuaForge.
 <li>Fix bug in luajava overload resolution.</li>
 <li>Fix luastring bug where parsing did not check for overflow.</li>
 <li>Fix luastring bug where circular dependency randomly caused NullPointerException.</li>
+<li>Major refactor of table implementation.</li>
+<li>Improved behavior of next() (fixes issue #7).</li>
+<li>Existing tables can now be made weak (fixes issue #16).</li>
+<li>More compatible allocation of table entries in array vs. hash (fixes issue #8).</li>
 
 </ul></td></tr>
 </table></td></tr></table>
