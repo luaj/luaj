@@ -218,7 +218,7 @@ public class TableTest extends TestCase {
 		t.set( "three", LuaValue.NIL );
 		assertEquals( 0, keyCount(t) );
 	}
-
+	
 	public void testShrinkNonPowerOfTwoArray() {
 		LuaTable t = new_Table(6, 2);
 
@@ -382,4 +382,38 @@ public class TableTest extends TestCase {
 			compareLists(t,v);
 		}
 	}
+	public void testRemoveWhileIterating() {
+		LuaTable t = LuaValue.tableOf(new LuaValue[] {
+				LuaValue.valueOf("a"), LuaValue.valueOf("aa"),
+				LuaValue.valueOf("b"), LuaValue.valueOf("bb"),
+				LuaValue.valueOf("c"), LuaValue.valueOf("cc"),
+				LuaValue.valueOf("d"), LuaValue.valueOf("dd"),
+				LuaValue.valueOf("e"), LuaValue.valueOf("ee"),
+		}, new LuaValue[] {
+				LuaValue.valueOf("11"),
+				LuaValue.valueOf("22"), 
+				LuaValue.valueOf("33"),
+				LuaValue.valueOf("44"),
+				LuaValue.valueOf("55"),
+		});
+		// Find expected order after removal.
+		java.util.List<String> expected = new java.util.ArrayList<String>();
+		Varargs n;
+		int i;
+		for (n = t.next(LuaValue.NIL), i = 0; !n.arg1().isnil(); n = t.next(n.arg1()), ++i) {
+			if (i % 2 == 0)
+				expected.add(n.arg1() + "=" + n.arg(2));
+		}
+		// Remove every other key while iterating over the table.
+		for (n = t.next(LuaValue.NIL), i = 0; !n.arg1().isnil(); n = t.next(n.arg1()), ++i) {
+			if (i % 2 != 0)
+				t.set(n.arg1(), LuaValue.NIL);
+		}
+		// Iterate over remaining table, and form list of entries still in table.
+		java.util.List<String> actual = new java.util.ArrayList<String>();
+		for (n = t.next(LuaValue.NIL); !n.arg1().isnil(); n = t.next(n.arg1())) {
+			actual.add(n.arg1() + "=" + n.arg(2));
+		}
+		assertEquals(expected, actual);
+	}	
 }
