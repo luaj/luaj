@@ -650,8 +650,7 @@ public class LuaValue extends Varargs {
 	/** Check that optional argument is a function and return as {@link LuaFunction}
 	 * <p>
 	 * A {@link LuaFunction} may either be a Java function that implements 
-	 * functionality directly in Java,  
-	 * or a {@link LuaClosure} 
+	 * functionality directly in Java,  or a {@link LuaClosure} 
 	 * which is a {@link LuaFunction} that executes lua bytecode.  
 	 * @param defval {@link LuaFunction} to return if {@code this} is nil or none
 	 * @return {@code this} cast to {@link LuaFunction} if a function, 
@@ -862,15 +861,14 @@ public class LuaValue extends Varargs {
 	
 	/** Check that the value is a function , or throw {@link LuaError} if not 
 	 * <p>
-	 * A function is considered anything whose {@link type()} returns {@link TFUNCTION}.
-	 * In practice it will be either a built-in Java function, typically deriving from 
-	 * {@link LuaFunction} or a {@link LuaClosure} which represents lua source compiled 
-	 * into lua bytecode.  
-	 * @return {@code this} if if a lua function or closure
+	 * A {@link LuaFunction} may either be a Java function that implements 
+	 * functionality directly in Java,  or a {@link LuaClosure} 
+	 * which is a {@link LuaFunction} that executes lua bytecode.  
+	 * @return {@code this} if it is a lua function or closure
 	 * @throws LuaError if not a function 
 	 * @see #checkclosure()
 	 */
-	public LuaValue    checkfunction()         { argerror("function");  return null; }	
+	public LuaFunction    checkfunction()         { argerror("function");  return null; }	
 
 
 	/** Check that the value is a Globals instance, or throw {@link LuaError} if not 

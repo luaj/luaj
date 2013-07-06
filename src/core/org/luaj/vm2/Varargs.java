@@ -298,7 +298,7 @@ public abstract class Varargs {
 	 * @return LuaValue that can be called if argument i is lua function or closure
 	 * @exception LuaError if the argument is not a lua function or closure
 	 * */
-	public LuaValue     checkfunction(int i)         { return arg(i).checkfunction(); }
+	public LuaFunction    checkfunction(int i)         { return arg(i).checkfunction(); }
 
 	/** Return argument i as a java int value, discarding any fractional part, or throw an error if not a number.
 	 * @param i the index of the argument to test, 1 is the first argument

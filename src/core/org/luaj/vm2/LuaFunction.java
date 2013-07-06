@@ -50,7 +50,7 @@ public class LuaFunction extends LuaValue {
 		return true;
 	}
 
-	public LuaValue checkfunction()  {
+	public LuaFunction checkfunction()  {
 		return this;
 	}
 	
