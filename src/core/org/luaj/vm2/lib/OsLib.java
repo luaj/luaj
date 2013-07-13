@@ -304,8 +304,8 @@ public class OsLib extends TwoArgFunction {
 	 * @param table
 	 * @return long value for the time
 	 */
-	protected long time(LuaTable table) {
-		return System.currentTimeMillis();
+	protected double time(LuaTable table) {
+		return System.currentTimeMillis() / 1000.0;
 	}
 
 	/**
