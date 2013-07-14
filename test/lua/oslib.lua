@@ -54,3 +54,7 @@ for i,k in ipairs({'year', 'month', 'day', 'hour', 'min', 'sec', 'wday', 'yday',
 	local v = tbl[k]
 	print('k', type(k), k, 'v', type(v), v)
 end
+
+print('type(os.time())', type(os.time()))
+print('os.time({year=1971, month=2, day=25})', os.time({year=1971, month=2, day=25}))
+print('os.time({year=1971, month=2, day=25, hour=11, min=22, sec=33})', os.time({year=1971, month=2, day=25, hour=11, min=22, sec=33}))

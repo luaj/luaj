@@ -178,9 +178,8 @@ public class OsLib extends TwoArgFunction {
 					String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
 					return s!=null? valueOf(s): NIL;
 				}
-				case TIME: {
-					return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
-				}
+				case TIME:
+					return valueOf(time(args.opttable(1, null)));
 				case TMPNAME:
 					return valueOf(tmpname());
 				}
@@ -348,6 +347,7 @@ public class OsLib extends TwoArgFunction {
 		y0.set(Calendar.HOUR_OF_DAY, 0);
 		y0.set(Calendar.MINUTE, 0);
 		y0.set(Calendar.SECOND, 0);
+		y0.set(Calendar.MILLISECOND, 0);
 		return y0;
 	}
 	
@@ -466,7 +466,21 @@ public class OsLib extends TwoArgFunction {
 	 * @return long value for the time
 	 */
 	protected double time(LuaTable table) {
-		return (new java.util.Date()).getTime() / 1000.;
+		java.util.Date d;
+		if (table == null) {
+			d = new java.util.Date();
+		} else {
+			Calendar c = Calendar.getInstance();
+			c.set(Calendar.YEAR, table.get("year").checkint());
+			c.set(Calendar.MONTH, table.get("month").checkint()-1);
+			c.set(Calendar.DAY_OF_MONTH, table.get("day").checkint());
+			c.set(Calendar.HOUR, table.get("hour").optint(12));
+			c.set(Calendar.MINUTE, table.get("min").optint(0));
+			c.set(Calendar.SECOND, table.get("sec").optint(0));
+			c.set(Calendar.MILLISECOND, 0);
+			d = c.getTime();
+		}
+		return d.getTime() / 1000.;
 	}
 
 	/**

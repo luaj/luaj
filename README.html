@@ -459,8 +459,7 @@ A richer version for use by <em>JsePlatform</em> is :
 </pre>
 
 Time is a represented as number of seconds since the epoch, 
-and most time and date formatting, locales, and other features 
-are not implemented.
+and locales are not implemented.
 
 <h3>Coroutine Library</h3>
 The <em>coroutine</em> library is implemented using one JavaThread per coroutine.   
@@ -887,7 +886,7 @@ Files are no longer hosted at LuaForge.
 <tr valign="top"><td>&nbsp;&nbsp;<b>3.0-beta2</b></td><td><ul>
 <li>LuaValue.checkfunction() now returns LuaFunction.</li>
 <li>Fix os.time() to return a number of seconds.</li>
-<li>Implement most '%' formatting types for os.date().</li>
+<li>Implement formatting with os.date(), and table argument for os.time()..</li>
 
 </ul></td></tr>
 </table></td></tr></table>
@@ -902,6 +901,5 @@ Files are no longer hosted at LuaForge.
 <li>negative zero is treated as identical to integer value zero throughout luaj
 <li>lua compiled into java bytecode using luajc cannot use string.dump() or xpcall()
 <li>number formatting with string.format() is not supported
-<li>os.time(), and os.date() not completely supported
 </ul>
 
