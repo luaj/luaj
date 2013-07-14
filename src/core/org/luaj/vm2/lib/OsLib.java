@@ -22,7 +22,11 @@
 package org.luaj.vm2.lib;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
+import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -137,7 +141,7 @@ public class OsLib extends TwoArgFunction {
 				case DATE: {
 					String s = args.optjstring(1, null);
 					double t = args.optdouble(2,-1);
-					return valueOf( date(s, t==-1? System.currentTimeMillis()/1000.: t) );
+					return valueOf( date(s, t==-1? time(null): t) );
 				}
 				case DIFFTIME:
 					return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
@@ -174,7 +178,8 @@ public class OsLib extends TwoArgFunction {
 
 	/**
 	 * @return an approximation of the amount in seconds of CPU time used by 
-	 * the program.
+	 * the program.  For luaj this simple returns the elapsed time since the 
+	 * OsLib class was loaded.
 	 */
 	protected double clock() {
 		return (System.currentTimeMillis()-t0) / 1000.;
@@ -196,15 +201,9 @@ public class OsLib extends TwoArgFunction {
 	 * (see the os.time function for a description of this value). 
 	 * Otherwise, date formats the current time.
 	 * 
-	 * If format starts with '!', then the date is formatted in Coordinated 
-	 * Universal Time. After this optional character, if format is the string 
-	 * "*t", then date returns a table with the following fields: year 
-	 * (four digits), month (1--12), day (1--31), hour (0--23), min (0--59), 
-	 * sec (0--61), wday (weekday, Sunday is 1), yday (day of the year), 
-	 * and isdst (daylight saving flag, a boolean).
-	 * 
-	 * If format is not "*t", then date returns the date as a string, 
-	 * formatted according to the same rules as the C function strftime.
+	 * Date returns the date as a string, 
+	 * formatted according to the same rules as ANSII strftime, but without
+	 * support for %g, %G, or %V.
 	 * 
 	 * When called without arguments, date returns a reasonable date and 
 	 * time representation that depends on the host system and on the 
@@ -215,10 +214,171 @@ public class OsLib extends TwoArgFunction {
 	 * @return a LString or a LTable containing date and time, 
 	 * formatted according to the given string format.
 	 */
-	protected String date(String format, double time) {
-		return new java.util.Date((long)(time*1000)).toString();
+	public String date(String format, double time) {
+		byte[] fmt = format.getBytes();
+		final int n = fmt.length;
+		Buffer result = new Buffer(n);
+		byte c;
+		Date date = new Date((long)(time*1000));
+		Calendar d = Calendar.getInstance();
+		d.setTime(date);
+		for ( int i = 0; i < n; ) {
+			switch ( c = fmt[i++ ] ) {
+			case '\n':
+				result.append( "\n" );
+				break;
+			default:
+				result.append( c );
+				break;
+			case '%':
+				if (i >= n) break;
+				switch ( c = fmt[i++ ] ) {
+				default:
+					result.append( (byte)'%' );
+					result.append( (byte)c );
+					break;
+				case '%':
+					result.append( (byte)'%' );
+					break;
+				case 'a':
+					result.append(WeekdayNameAbbrev[d.get(Calendar.DAY_OF_WEEK)-1]);
+					break;
+				case 'A':
+					result.append(WeekdayName[d.get(Calendar.DAY_OF_WEEK)-1]);
+					break;
+				case 'b':
+				case 'h':
+					result.append(MonthNameAbbrev[d.get(Calendar.MONTH)]);
+					break;
+				case 'B':
+					result.append(MonthName[d.get(Calendar.MONTH)]);
+					break;					 
+				case 'c': 
+					result.append(date("%a %b %d %H:%M:%S %Y", time));
+					break;
+				case 'C':
+					result.append(String.valueOf((100000+d.get(Calendar.YEAR))/100).substring(2));
+					break;
+				case 'd':
+					result.append(String.valueOf(100+d.get(Calendar.DAY_OF_MONTH)).substring(1));
+					break;
+				case 'e': {
+					final String s = String.valueOf(d.get(Calendar.DAY_OF_MONTH));
+					if (s.length() < 2)
+						result.append((byte)' ');
+					result.append(s);
+					break;
+				}
+				case 'F':
+					result.append(date("%Y-%m-%d", time));
+					break;
+				case 'H':
+					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)).substring(1));
+					break;
+				case 'I':
+					result.append(String.valueOf(100+(d.get(Calendar.HOUR_OF_DAY)%12)).substring(1));
+					break;
+				case 'j': { // day of year.
+					Calendar y0 = beginningOfYear(d);
+					int dayOfYear = (int) ((d.getTime().getTime() - y0.getTime().getTime()) / (24 * 3600L * 1000L));
+					result.append(String.valueOf(1001+dayOfYear).substring(1));
+					break;
+				}
+				case 'm':
+					result.append(String.valueOf(101+d.get(Calendar.MONTH)).substring(1));
+					break;
+				case 'M':
+					result.append(String.valueOf(100+d.get(Calendar.MINUTE)).substring(1));
+					break;
+				case 'n':
+					result.append((byte)'\n');
+					break;
+				case 'p':
+					result.append(d.get(Calendar.HOUR_OF_DAY) < 12? "AM": "PM");
+					break;
+				case 'R':
+					result.append(date("%H:%M", time));
+					break;
+				case 'r': {
+					final String s = date("%I:%M:%S", time);
+					result.append(s);
+					result.append(d.get(Calendar.HOUR_OF_DAY) < 12? " am": " pm");
+					break;
+				}
+				case 'S':
+					result.append(String.valueOf(100+d.get(Calendar.SECOND)).substring(1));
+					break;
+				case 't':
+					result.append((byte)'\t');
+					break;
+				case 'u':
+					result.append(String.valueOf((d.get(Calendar.DAY_OF_WEEK)+5)%7+1));
+					break;
+				case 'U':
+					result.append(String.valueOf(weekNumber(d, 0)));
+					break;
+				case 'w':
+					result.append(String.valueOf((d.get(Calendar.DAY_OF_WEEK)+6)%7));
+					break;
+				case 'W': 
+					result.append(String.valueOf(weekNumber(d, 1)));
+					break;
+				case 'x':
+				case 'D':
+					result.append(date("%m/%d/%y", time));
+					break;
+				case 'X':
+				case 'T':
+					result.append(date("%H:%M:%S", time));
+					break;
+				case 'y':
+					result.append(String.valueOf(d.get(Calendar.YEAR)).substring(2));
+					break;
+				case 'Y':
+					result.append(String.valueOf(d.get(Calendar.YEAR)));
+					break;
+				case 'z': {
+					final int tzo = d.getTimeZone().getRawOffset() / (60 * 1000);
+					result.append((tzo>0? "+": "") + String.valueOf(tzo));
+					break;
+				}
+				case 'Z':
+					break;
+				}
+			}
+		}
+		return result.tojstring();
 	}
+	
+	private static final String[] WeekdayNameAbbrev = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+	private static final String[] WeekdayName = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+	private static final String[] MonthNameAbbrev = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	private static final String[] MonthName = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
+	private Calendar beginningOfYear(Calendar d) {
+		Calendar y0 = Calendar.getInstance();
+		y0.setTime(d.getTime());
+		y0.set(Calendar.MONTH, 0);
+		y0.set(Calendar.DAY_OF_MONTH, 1);
+		y0.set(Calendar.HOUR_OF_DAY, 0);
+		y0.set(Calendar.MINUTE, 0);
+		y0.set(Calendar.SECOND, 0);
+		return y0;
+	}
+	
+	private int weekNumber(Calendar d, int startDay) {
+		Calendar y0 =  beginningOfYear(d);
+		System.out.println("Time  Date(time) " + d.getTime() + " y0 " + y0.getTime());
+		y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
+		if (y0.after(d)) {
+			y0.set(Calendar.YEAR, y0.get(Calendar.YEAR) - 1);
+			y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
+			System.out.println("  -> y0 " + y0.getTime());
+		}
+		long dt = d.getTime().getTime() - y0.getTime().getTime();
+		return 1 + (int) (dt / (7L * 24L * 3600L * 1000L));
+	}
+	
 	/** 
 	 * This function is equivalent to the C function system. 
 	 * It passes command to be executed by an operating system shell. 
@@ -305,7 +465,7 @@ public class OsLib extends TwoArgFunction {
 	 * @return long value for the time
 	 */
 	protected double time(LuaTable table) {
-		return System.currentTimeMillis() / 1000.0;
+		return (new java.util.Date()).getTime() / 1000.;
 	}
 
 	/**
