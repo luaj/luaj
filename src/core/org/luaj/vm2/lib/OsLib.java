@@ -24,7 +24,6 @@ package org.luaj.vm2.lib;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Globals;
@@ -139,8 +138,23 @@ public class OsLib extends TwoArgFunction {
 				case CLOCK:
 					return valueOf(clock());
 				case DATE: {
-					String s = args.optjstring(1, null);
-					double t = args.optdouble(2,-1);
+					String s = args.optjstring(1, "%c");
+					double t = args.isnumber(2)? args.todouble(2): time(null);
+					if (s.equals("*t")) {
+						Calendar d = Calendar.getInstance();
+						d.setTime(new Date((long)(t*1000)));
+						LuaTable tbl = LuaValue.tableOf();
+						tbl.set("year", LuaValue.valueOf(d.get(Calendar.YEAR)));
+						tbl.set("month", LuaValue.valueOf(d.get(Calendar.MONTH)+1));
+						tbl.set("day", LuaValue.valueOf(d.get(Calendar.DAY_OF_MONTH)));
+						tbl.set("hour", LuaValue.valueOf(d.get(Calendar.HOUR)));
+						tbl.set("min", LuaValue.valueOf(d.get(Calendar.MINUTE)));
+						tbl.set("sec", LuaValue.valueOf(d.get(Calendar.SECOND)));
+						tbl.set("wday", LuaValue.valueOf(d.get(Calendar.DAY_OF_WEEK)));
+						tbl.set("yday", LuaValue.valueOf(d.get(Calendar.DAY_OF_YEAR)));
+						tbl.set("isdst", LuaValue.valueOf(isDaylightSavingsTime(d)));
+						return tbl;
+					}
 					return valueOf( date(s, t==-1? time(null): t) );
 				}
 				case DIFFTIME:
@@ -164,8 +178,9 @@ public class OsLib extends TwoArgFunction {
 					String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
 					return s!=null? valueOf(s): NIL;
 				}
-				case TIME:
+				case TIME: {
 					return valueOf(time(args.arg1().isnil()? null: args.checktable(1)));
+				}
 				case TMPNAME:
 					return valueOf(tmpname());
 				}
@@ -215,13 +230,17 @@ public class OsLib extends TwoArgFunction {
 	 * formatted according to the given string format.
 	 */
 	public String date(String format, double time) {
+		Calendar d = Calendar.getInstance();
+		d.setTime(new Date((long)(time*1000)));
+		if (format.startsWith("!")) {
+			time -= timeZoneOffset(d);
+			d.setTime(new Date((long)(time*1000)));
+			format = format.substring(1);
+		}
 		byte[] fmt = format.getBytes();
 		final int n = fmt.length;
 		Buffer result = new Buffer(n);
 		byte c;
-		Date date = new Date((long)(time*1000));
-		Calendar d = Calendar.getInstance();
-		d.setTime(date);
 		for ( int i = 0; i < n; ) {
 			switch ( c = fmt[i++ ] ) {
 			case '\n':
@@ -234,8 +253,7 @@ public class OsLib extends TwoArgFunction {
 				if (i >= n) break;
 				switch ( c = fmt[i++ ] ) {
 				default:
-					result.append( (byte)'%' );
-					result.append( (byte)c );
+					LuaValue.argerror(1, "invalid conversion specifier '%"+c+"'");
 					break;
 				case '%':
 					result.append( (byte)'%' );
@@ -247,7 +265,6 @@ public class OsLib extends TwoArgFunction {
 					result.append(WeekdayName[d.get(Calendar.DAY_OF_WEEK)-1]);
 					break;
 				case 'b':
-				case 'h':
 					result.append(MonthNameAbbrev[d.get(Calendar.MONTH)]);
 					break;
 				case 'B':
@@ -256,21 +273,8 @@ public class OsLib extends TwoArgFunction {
 				case 'c': 
 					result.append(date("%a %b %d %H:%M:%S %Y", time));
 					break;
-				case 'C':
-					result.append(String.valueOf((100000+d.get(Calendar.YEAR))/100).substring(2));
-					break;
 				case 'd':
 					result.append(String.valueOf(100+d.get(Calendar.DAY_OF_MONTH)).substring(1));
-					break;
-				case 'e': {
-					final String s = String.valueOf(d.get(Calendar.DAY_OF_MONTH));
-					if (s.length() < 2)
-						result.append((byte)' ');
-					result.append(s);
-					break;
-				}
-				case 'F':
-					result.append(date("%Y-%m-%d", time));
 					break;
 				case 'H':
 					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)).substring(1));
@@ -290,29 +294,11 @@ public class OsLib extends TwoArgFunction {
 				case 'M':
 					result.append(String.valueOf(100+d.get(Calendar.MINUTE)).substring(1));
 					break;
-				case 'n':
-					result.append((byte)'\n');
-					break;
 				case 'p':
 					result.append(d.get(Calendar.HOUR_OF_DAY) < 12? "AM": "PM");
 					break;
-				case 'R':
-					result.append(date("%H:%M", time));
-					break;
-				case 'r': {
-					final String s = date("%I:%M:%S", time);
-					result.append(s);
-					result.append(d.get(Calendar.HOUR_OF_DAY) < 12? " am": " pm");
-					break;
-				}
 				case 'S':
 					result.append(String.valueOf(100+d.get(Calendar.SECOND)).substring(1));
-					break;
-				case 't':
-					result.append((byte)'\t');
-					break;
-				case 'u':
-					result.append(String.valueOf((d.get(Calendar.DAY_OF_WEEK)+5)%7+1));
 					break;
 				case 'U':
 					result.append(String.valueOf(weekNumber(d, 0)));
@@ -324,11 +310,9 @@ public class OsLib extends TwoArgFunction {
 					result.append(String.valueOf(weekNumber(d, 1)));
 					break;
 				case 'x':
-				case 'D':
 					result.append(date("%m/%d/%y", time));
 					break;
 				case 'X':
-				case 'T':
 					result.append(date("%H:%M:%S", time));
 					break;
 				case 'y':
@@ -338,12 +322,13 @@ public class OsLib extends TwoArgFunction {
 					result.append(String.valueOf(d.get(Calendar.YEAR)));
 					break;
 				case 'z': {
-					final int tzo = d.getTimeZone().getRawOffset() / (60 * 1000);
-					result.append((tzo>0? "+": "") + String.valueOf(tzo));
+					final int tzo = timeZoneOffset(d) / 60;
+					final int a = Math.abs(tzo);
+					final String h = String.valueOf(100 + a / 60).substring(1);
+					final String m = String.valueOf(100 + a % 60).substring(1);
+					result.append((tzo>=0? "+": "-") + h + m);
 					break;
 				}
-				case 'Z':
-					break;
 				}
 			}
 		}
@@ -368,15 +353,31 @@ public class OsLib extends TwoArgFunction {
 	
 	private int weekNumber(Calendar d, int startDay) {
 		Calendar y0 =  beginningOfYear(d);
-		System.out.println("Time  Date(time) " + d.getTime() + " y0 " + y0.getTime());
 		y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
 		if (y0.after(d)) {
 			y0.set(Calendar.YEAR, y0.get(Calendar.YEAR) - 1);
 			y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
-			System.out.println("  -> y0 " + y0.getTime());
 		}
 		long dt = d.getTime().getTime() - y0.getTime().getTime();
 		return 1 + (int) (dt / (7L * 24L * 3600L * 1000L));
+	}
+	
+	private int timeZoneOffset(Calendar d) {
+		int localStandarTimeMillis = ( 
+				d.get(Calendar.HOUR_OF_DAY) * 3600 +
+				d.get(Calendar.MINUTE) * 60 +
+				d.get(Calendar.SECOND)) * 1000;
+		return d.getTimeZone().getOffset(
+				1,
+				d.get(Calendar.YEAR),
+				d.get(Calendar.MONTH),
+				d.get(Calendar.DAY_OF_MONTH),
+				d.get(Calendar.DAY_OF_WEEK), 
+				localStandarTimeMillis) / 1000;
+	}
+	
+	private boolean isDaylightSavingsTime(Calendar d) {
+		return timeZoneOffset(d) != d.getTimeZone().getRawOffset() / 1000;		
 	}
 	
 	/** 

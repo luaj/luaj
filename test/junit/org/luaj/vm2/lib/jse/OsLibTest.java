@@ -25,37 +25,21 @@ public class OsLibTest extends TestCase {
 	public void testStringDate_b() { t("%b", "Aug"); } 
 	public void testStringDate_B() { t("%B", "August"); } 
 	public void testStringDate_c() { t("%c", "Thu Aug 23 14:55:02 2001"); } 
-	public void testStringDate_C() { t("%C", "20"); } 
 	public void testStringDate_d() { t("%d", "23"); } 
-	public void testStringDate_D() { t("%D", "08/23/01"); } 
-	public void testStringDate_e() { t("%e", "23"); } 
-	public void testStringDate_F() { t("%F", "2001-08-23"); } 
-	public void testStringDate_g() { t("%g", "%g"); } // not implemented.
-	public void testStringDate_G() { t("%G", "%G"); } // not implemented.
-	public void testStringDate_h() { t("%h", "Aug"); } 
 	public void testStringDate_H() { t("%H", "14"); } 
 	public void testStringDate_I() { t("%I", "02"); } 
 	public void testStringDate_j() { t("%j", "235"); } 
 	public void testStringDate_m() { t("%m", "08"); } 
 	public void testStringDate_M() { t("%M", "55"); } 
-	public void testStringDate_n() { t("%n", "\n"); } 
 	public void testStringDate_p() { t("%p", "PM"); } 
-	public void testStringDate_r() { t("%r", "02:55:02 pm"); } 
-	public void testStringDate_R() { t("%R", "14:55"); } 
 	public void testStringDate_S() { t("%S", "02"); } 
-	public void testStringDate_t() { t("%t", "\t"); } 
-	public void testStringDate_T() { t("%T", "14:55:02"); } 
-	public void testStringDate_u() { t("%u", "4"); } 
 	public void testStringDate_U() { t("%U", "33"); }
-	public void testStringDate_V() { t("%V", "%V"); } // not implemented.
 	public void testStringDate_w() { t("%w", "4"); } 
 	public void testStringDate_W() { t("%W", "34"); } 
 	public void testStringDate_x() { t("%x", "08/23/01"); } 
 	public void testStringDate_X() { t("%X", "14:55:02"); } 
 	public void testStringDate_y() { t("%y", "01"); } 
 	public void testStringDate_Y() { t("%Y", "2001"); } 
-	public void testStringDate_z() { t("%z", "-480"); } 
-	public void testStringDate_Z() { t("%Z", ""); } 
 	public void testStringDate_Pct() { t("%%", "%"); } 
 
 	static final double DAY = 24. * 3600.;

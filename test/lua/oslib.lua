@@ -37,3 +37,20 @@ print( 'os.remove(q)', pcall( os.remove, q ) )
 -- print( 'os.setlocale(nil,"all")', pcall( os.setlocale, nil, "all" ) )
 print( 'os.setlocale("C")', pcall( os.setlocale, "C" ) )
 print( 'os.exit', type(os.exit) )
+
+-- os.date() formatting
+local t = 1281364496  -- Aug 9, 2010, 2:34:56 PM (Monday)
+local function p(s)
+  if pcall(os.date, s, t) then
+	  print( "os.date('"..s.."', "..t..")", pcall(os.date, s, t))
+  end
+end
+for i= 65, 90 do
+  p('%'..string.char(i + 97 - 65))
+  p('%'..string.char(i))
+end
+local tbl = os.date('*t', t)
+for i,k in ipairs({'year', 'month', 'day', 'hour', 'min', 'sec', 'wday', 'yday', 'isdst'}) do
+	local v = tbl[k]
+	print('k', type(k), k, 'v', type(v), v)
+end
