@@ -107,7 +107,7 @@ public class CompatibiltyTest extends TestSuite {
 		protected void setUp() throws Exception {
 			super.setUp();
 			System.setProperty("JME", "false");
-			LuaJC.install();
+			LuaJC.install(globals);
 		}
 		// not supported on this platform - don't test
 		public void testDebugLib()      {}	

@@ -21,14 +21,10 @@
  ******************************************************************************/
 package org.luaj.luajc;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 /** Test the plain old bytecode interpreter */
@@ -51,11 +47,10 @@ public class TestLuaJ {
 		System.out.println(script);
 		
 		// create an environment to run in
-		LuaTable _G = JsePlatform.standardGlobals();
+		Globals _G = JsePlatform.standardGlobals();
 		
 		// compile into a chunk, or load as a class
-		InputStream is =  new ByteArrayInputStream( script.getBytes() );
-		LuaValue chunk = LuaC.instance.load(is, "script", _G);
+		LuaValue chunk = _G.load(script, "script");
 		
 		// The loaded chunk should be a closure, which contains the prototype.
 		print( chunk.checkclosure().p );

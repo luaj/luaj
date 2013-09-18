@@ -56,6 +56,7 @@ public class lua {
 		"  -b      	use luajc bytecode-to-bytecode compiler (requires bcel on class path)\n" +
 		"  -n      	nodebug - do not load debug library by default\n" +
 		"  -p      	print the prototype\n" +
+		"  -c enc  	use the supplied encoding 'enc' for input files\n" +
 		"  --       stop handling options\n" +
 		"  -        execute stdin and stop handling options";
 
@@ -66,6 +67,7 @@ public class lua {
 
 	private static Globals _G;
 	private static boolean print = false;
+	private static String encoding = null;
 	
 	public static void main( String[] args ) throws IOException {
 
@@ -113,6 +115,11 @@ public class lua {
 					case 'p':
 						print = true;
 						break;
+					case 'c':
+						if ( ++i >= args.length )
+							usageExit();
+						encoding = args[i];
+						break;
 					case '-':
 						if ( args[i].length() > 2 )
 							usageExit();
@@ -131,7 +138,7 @@ public class lua {
 			
 			// new lua state
 			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
-			if ( luajc ) LuaJC.install();
+			if ( luajc ) LuaJC.install(_G);
 			for ( int i=0, n=libs!=null? libs.size(): 0; i<n; i++ )
 				loadLibrary( (String) libs.elementAt(i) );
 			
@@ -147,6 +154,7 @@ public class lua {
 				} else {
 					switch ( args[i].charAt(1) ) {
 					case 'l':
+					case 'c':
 						++i;
 						break;
 					case 'e':
@@ -187,9 +195,11 @@ public class lua {
 	
 	private static void processScript( InputStream script, String chunkname, String[] args, int firstarg ) throws IOException {
 		try {
-			LuaFunction c;
+			LuaValue c;
 			try {
-				c = LoadState.load(script, chunkname, "bt", _G);
+				c = encoding != null? 
+						_G.load(new InputStreamReader(script, encoding), chunkname):
+						_G.load(script, chunkname, "bt", _G);
 			} finally {
 				script.close();
 			}

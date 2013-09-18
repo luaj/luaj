@@ -1,20 +1,13 @@
 package org.luaj.vm2.lib.jse;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.security.Permission;
-
 import junit.framework.TestCase;
 
-import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class LuajavaAccessibleMembersTest extends TestCase {
 		
-	private LuaTable _G;
+	private Globals _G;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -23,8 +16,7 @@ public class LuajavaAccessibleMembersTest extends TestCase {
 
     private String invokeScript(String script) {
     	try {
-        	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
-			LuaFunction c = LuaC.instance.load( is, "script", _G );
+			LuaValue c = _G.load(script, "script");
 			return c.call().tojstring();
     	} catch ( Exception e ) {
     		fail("exception: "+e );

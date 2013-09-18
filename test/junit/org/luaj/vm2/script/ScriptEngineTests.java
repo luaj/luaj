@@ -21,7 +21,6 @@
  ******************************************************************************/
 package org.luaj.vm2.script;
 
-import java.io.ByteArrayInputStream;
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.Reader;
@@ -100,8 +99,8 @@ public class ScriptEngineTests extends TestSuite  {
 			return new SimpleBindings();
 		}
 		public void setUp() {
+			System.setProperty("org.luaj.luajc", "true");
 			super.setUp();
-		    org.luaj.vm2.luajc.LuaJC.install();
 		}
 		public void testCompiledFunctionIsNotClosure() throws ScriptException {
             CompiledScript cs = ((Compilable)e).compile("return 'foo'");

@@ -26,8 +26,8 @@ public class SampleMultiThreaded {
 
 				// Once a Globals is created, it can and should be reused 
 				// within the same thread.
-				g.loadFile(script1).call();
-				g.loadFile(script2).call();
+				g.loadfile(script1).call();
+				g.loadfile(script2).call();
 
 			} catch ( Exception e ) {
 				e.printStackTrace();

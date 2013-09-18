@@ -28,12 +28,12 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
 
-import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleScriptContext;
 
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.luajc.LuaJC;
 
 /** 
  * Context for LuaScriptEngine execution which maintains its own Globals, 
@@ -61,11 +61,13 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 	 * have negative impact on performance.
 	 */
 	public LuajContext() {
-		this("true".equals(System.getProperty("org.luaj.debug")));
+		this("true".equals(System.getProperty("org.luaj.debug")),
+			"true".equals(System.getProperty("org.luaj.luajc")));
 	}
 
 	/** Construct a LuajContext with its own globals, which
-	 * which optionally are debug globals.
+	 * which optionally are debug globals, and optionally use the
+	 * luajc direct lua to java bytecode compiler.
 	 * <p>
 	 * If createDebugGlobals is set, the globals
 	 * created will be a debug globals that includes the debug 
@@ -73,11 +75,15 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 	 * have negative impact on performance.
 	 * @param createDebugGlobals true to create debug globals, 
 	 * false for standard globals.
+	 * @param useLuaJCCompiler true to use the luajc compiler, 
+	 * reqwuires bcel to be on the class path.
 	 */
-	public LuajContext(boolean createDebugGlobals) {
+	public LuajContext(boolean createDebugGlobals, boolean useLuaJCCompiler) {
 		globals = createDebugGlobals?
     		JsePlatform.debugGlobals():
     		JsePlatform.standardGlobals();
+    	if (useLuaJCCompiler)
+    		LuaJC.install(globals);
     	stdin = globals.STDIN;
     	stdout = globals.STDOUT;
     	stderr = globals.STDERR;

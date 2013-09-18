@@ -24,7 +24,6 @@ package org.luaj.vm2.lib.jme;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.BaseLib;
@@ -114,8 +113,8 @@ public class JmePlatform {
 		_G.load(new StringLib());
 		_G.load(new CoroutineLib());
 		_G.load(new JmeIoLib());
-		LuaC.install();
-		_G.compiler = LuaC.instance;
+		LoadState.install(_G);
+		LuaC.install(_G);
 		return _G;		
 	}
 	

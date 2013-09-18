@@ -241,15 +241,22 @@ Lua scripts can also be run directly in this mode without precompiling using the
 <h2>Run a script in a Java Application</h2>
 
 <p>
-The following pattern is used within Java SE
+A simple hello, world example in luaj is:
 
 <pre>
 	import org.luaj.vm2.*;
 	import org.luaj.vm2.lib.jse.*;
 
-	String script = "examples/lua/hello.lua";
-	LuaValue _G = JsePlatform.standardGlobals();
-	_G.get("dofile").call( LuaValue.valueOf(script) );
+	Globals globals = JsePlatform.standardGlobals();
+	LuaValue chunk = globals.load("print 'hello, world'");
+	chunk.call();
+	
+</pre>
+
+Loading from a file is done via Globals.loadFile():
+
+<pre>
+	LuaValue chunk = globals.loadfile("examples/lua/hello.lua");
 </pre>
 
 <p>
@@ -270,13 +277,13 @@ The for MIDlets the <em>JmePlatform</em> is used instead:
 	import org.luaj.vm2.*;
 	import org.luaj.vm2.lib.jme.*;
 
-	String script = "examples/lua/hello.lua";
-	LuaValue _G = JmePlatform.standardGlobals();
-	_G.get("dofile").call( LuaValue.valueOf(script) );
+	Globals globals = JmePlatform.standardGlobals();
+	LuaValue chunk = globals.loadfile("examples/lua/hello.lua");
+	chunk.call();
 </pre>
 
 <p>
-The file must be a resource within within the midlet jar for <em>dofile()</em> to find it.
+The file must be a resource within within the midlet jar for the loader to find it.
 Any files included via <em>require()</em> must also be part of the midlet resources.
 
 <p>
@@ -310,6 +317,8 @@ The standard use of JSR-223 scripting engines may be used:
 	System.out.println( "y="+e.get("y") );
 </pre>
 
+You can also look up the engine by language "lua" or mimetypes "text/lua" or "application/lua".
+
 <p>
 All standard aspects of script engines including compiled statements should be supported.
 
@@ -341,7 +350,7 @@ To exclude the lua-to-lua-bytecode compiler, do not call
 but instead initialize globals with including only those libraries 
 that are needed and omitting the line:
 <pre>
-	org.luaj.vm2.compiler.LuaC.install();
+	org.luaj.vm2.compiler.LuaC.install(globals);
 </pre>
 
 
@@ -349,10 +358,10 @@ that are needed and omitting the line:
 
 <p>
 To compile from lua to Java bytecode for all lua loaded at runtime, 
-install the LuaJC compiler <em>after</em> globals have been created using:
+install the LuaJC compiler into a <em>globals</em> object use:
 
 <pre>
-	org.luaj.vm2.jse.luajc.LuaJC.install();
+	org.luaj.vm2.jse.luajc.LuaJC.install(globals);
 </pre>
 
 <p>
@@ -389,8 +398,8 @@ Luaj 3.0 can be run in multiple threads, with the following restrictions:
 <ul>
 <li>Each thread created by client code must be given its own, distinct Globals instance
 <li>Each thread must not be allowed to access Globals from other threads
-<li>Shared metatables for Number, String, Thread, Function, Boolean, and and Nil 
-should not be mutated once lua code is running
+<li>Metatables for Number, String, Thread, Function, Boolean, and and Nil 
+ are shared and therefore should not be mutated once lua code is running in any thread.
 </ul>
 
 For an example of loading allocating per-thread Globals and invoking scripts in 
@@ -886,12 +895,14 @@ Files are no longer hosted at LuaForge.
 <tr valign="top"><td>&nbsp;&nbsp;<b>3.0-beta2</b></td><td><ul>
 <li>LuaValue.checkfunction() now returns LuaFunction.</li>
 <li>Fix os.time() to return a number of seconds.</li>
-<li>Implement formatting with os.date(), and table argument for os.time()..</li>
+<li>Implement formatting with os.date(), and table argument for os.time().</li>
+<li>Refactor APIs related to compiling and loading scripts.</li>
 
 </ul></td></tr>
 </table></td></tr></table>
 
 <h2>Known Issues</h2>
+<h3>Limitations</h3>
 <ul>
 <li>debug code may not be completely removed by some obfuscators
 <li>tail calls are not tracked in debug information
@@ -902,4 +913,20 @@ Files are no longer hosted at LuaForge.
 <li>lua compiled into java bytecode using luajc cannot use string.dump() or xpcall()
 <li>number formatting with string.format() is not supported
 </ul>
+<h3>File Character Encoding</h3>
+Source files can be considered encoded in UTF-8 or ISO-8859-1 and results should be as expected, 
+with literal string contianing quoted characters compiling to the same byte sequences as the input. 
 
+For a non ASCII-compatible encoding such as EBSDIC, however, there are restrictions:
+<ul>
+<li>supplying a Reader to Globals.load() is preferred over InputStream variants
+<li>using FileReader or InputStreamReader to get the default OS encoding should work in most cases
+<li>string literals with quoted characters may not produce the expected values in generated code
+<li>command-line tools lua, luac, and luajc will require <em>-c Cp037</em> to specify the encoding
+</ul>
+These restrictions are mainly a side effect of how the language is defined as allowing byte literals
+within literal strings in source files.
+
+Code that is generated on the fly within lua and compiled with lua's <em>load()</em> function 
+should work as expected, however, since these strings will never be represented with the 
+host's native character encoding.

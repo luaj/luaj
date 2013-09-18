@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.StringLib;
@@ -48,7 +49,7 @@ import org.luaj.vm2.lib.StringLib;
  * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed. 
  * The functions 
  * {@link LuaString#lengthAsUtf8(char[]),
- * {@link LuaString#encodeToUtf8(char[], byte[], int)}, and 
+ * {@link LuaString#encodeToUtf8(char[], int, byte[], int)}, and 
  * {@link LuaString#decodeAsUtf8(byte[], int, int) 
  * are used to convert back and forth between UTF8 byte arrays and character arrays.
  * 
@@ -108,7 +109,7 @@ public class LuaString extends LuaValue {
 	public static LuaString valueOf(String string) {
 		char[] c = string.toCharArray();
 		byte[] b = new byte[lengthAsUtf8(c)];
-		encodeToUtf8(c, b, 0);
+		encodeToUtf8(c, c.length, b, 0);
 		return valueOf(b, 0, b.length);
 	}
 
@@ -143,20 +144,31 @@ public class LuaString extends LuaValue {
 	
 	/** Construct a {@link LuaString} using the supplied characters as byte values.
 	 * <p>
-	 * Only th elow-order 8-bits of each character are used, the remainder is ignored. 
+	 * Only the low-order 8-bits of each character are used, the remainder is ignored. 
 	 * <p>
 	 * This is most useful for constructing byte sequences that do not conform to UTF8. 
 	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array. 
 	 * @return {@link LuaString} wrapping a copy of the byte buffer 
 	 */
 	public static LuaString valueOf(char[] bytes) {
-		int n = bytes.length;
-		byte[] b = new byte[n];
-		for ( int i=0; i<n; i++ )
-			b[i] = (byte) bytes[i];
-		return valueOf(b, 0, b.length);
+		return valueOf(bytes, 0, bytes.length);
 	}
-	
+
+	/** Construct a {@link LuaString} using the supplied characters as byte values.
+	 * <p>
+	 * Only the low-order 8-bits of each character are used, the remainder is ignored. 
+	 * <p>
+	 * This is most useful for constructing byte sequences that do not conform to UTF8. 
+	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array. 
+	 * @return {@link LuaString} wrapping a copy of the byte buffer 
+	 */
+	public static LuaString valueOf(char[] bytes, int off, int len) {
+		byte[] b = new byte[len];
+		for ( int i=0; i<len; i++ )
+			b[i] = (byte) bytes[i + off];
+		return valueOf(b, 0, len);
+	}
+
 	
 	/** Construct a {@link LuaString} around a byte array without copying the contents.
 	 * <p>
@@ -556,7 +568,7 @@ public class LuaString extends LuaValue {
 	 * @param length number of bytes to convert
 	 * @return Java String corresponding to the value of bytes interpreted using UTF8 
 	 * @see #lengthAsUtf8(char[])
-	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #encodeToUtf8(char[], int, byte[], int)
 	 * @see #isValidUtf8()
 	 */
 	public static String decodeAsUtf8(byte[] bytes, int offset, int length) {
@@ -581,7 +593,7 @@ public class LuaString extends LuaValue {
 	 * Count the number of bytes required to encode the string as UTF-8.
 	 * @param chars Array of unicode characters to be encoded as UTF-8
 	 * @return count of bytes needed to encode using UTF-8
-	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #encodeToUtf8(char[], int, byte[], int)
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 * @see #isValidUtf8()
 	 */
@@ -601,16 +613,18 @@ public class LuaString extends LuaValue {
 	 * The string should be measured first with lengthAsUtf8
 	 * to make sure the given byte array is large enough.
 	 * @param chars Array of unicode characters to be encoded as UTF-8
+	 * @param nchars Number of characters in the array to convert.
 	 * @param bytes byte array to hold the result
 	 * @param off offset into the byte array to start writing
+	 * @return number of bytes converted.
 	 * @see #lengthAsUtf8(char[])
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 * @see #isValidUtf8()
 	 */
-	public static void encodeToUtf8(char[] chars, byte[] bytes, int off) {
-		final int n = chars.length;
+	public static int encodeToUtf8(char[] chars, int nchars, byte[] bytes, int off) {
 		char c;
-		for ( int i=0, j=off; i<n; i++ ) {
+		int j = off;
+		for ( int i=0; i<nchars; i++ ) {
 			if ( (c = chars[i]) < 0x80 ) {
 				bytes[j++] = (byte) c;
 			} else if ( c < 0x800 ) {
@@ -622,12 +636,13 @@ public class LuaString extends LuaValue {
 				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
 			}
 		}
+		return j - off;
 	}
 
 	/** Check that a byte sequence is valid UTF-8
 	 * @return true if it is valid UTF-8, otherwise false
 	 * @see #lengthAsUtf8(char[])
-	 * @see #encodeToUtf8(char[], byte[], int)
+	 * @see #encodeToUtf8(char[], int, byte[], int)
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 */
 	public boolean isValidUtf8() {
@@ -759,4 +774,15 @@ public class LuaString extends LuaValue {
 		}
 	}
 
+	/**
+	 * Print the bytes of the LuaString to a PrintStream as if it were
+	 * an ASCII string, quoting and escaping control characters.
+	 * @param ps PrintStream to print to.
+	 */
+	public void printToStream(PrintStream ps) {
+		for (int i = 0, n = m_length; i < n; i++) {
+			int c = m_bytes[m_offset+i];
+			ps.print((char) c);
+		}
+	}
 }

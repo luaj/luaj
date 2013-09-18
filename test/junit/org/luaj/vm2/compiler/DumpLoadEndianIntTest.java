@@ -6,13 +6,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 
 import junit.framework.TestCase;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.lib.jse.JsePlatform;
@@ -28,7 +30,7 @@ public class DumpLoadEndianIntTest extends TestCase {
 	private static final String withdoubles = "1234-#!-23.75";
 	private static final String withints = "1234-#!-23";
 
-    private LuaTable _G;
+    private Globals _G;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -83,8 +85,8 @@ public class DumpLoadEndianIntTest extends TestCase {
         try {
             
             // compile into prototype
-            InputStream is = new ByteArrayInputStream(script.getBytes());
-            Prototype p = LuaC.instance.compile(is, "script");
+            Reader reader = new StringReader(script);
+            Prototype p = _G.compilePrototype(reader, "script");
             
             // double check script result before dumping
             LuaFunction f = new LuaClosure(p, _G);
@@ -107,8 +109,8 @@ public class DumpLoadEndianIntTest extends TestCase {
             byte[] dumped = baos.toByteArray();
             
             // load again using compiler
-            is = new ByteArrayInputStream(dumped);
-            f = LoadState.load(is, "dumped", "bt", _G);
+            InputStream is = new ByteArrayInputStream(dumped);
+            f = _G.load(is, "dumped", "b", _G).checkfunction();
             r = f.call();
             actual = r.tojstring();
             assertEquals( expectedPostDump, actual );

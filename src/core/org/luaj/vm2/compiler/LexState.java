@@ -23,6 +23,7 @@ package org.luaj.vm2.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.Hashtable;
 
 import org.luaj.vm2.LocVars;
@@ -136,7 +137,7 @@ public class LexState {
 	FuncState fs;  /* `FuncState' is private to the parser */
 	LuaC L;
 	InputStream z;  /* input stream */
-	byte[] buff;  /* buffer for tokens */
+	char[] buff;  /* buffer for tokens */
 	int nbuff; /* length of buffer */
 	Dyndata dyd = new Dyndata();  /* dynamic structures used by the parser */
 	LuaString source;  /* current source name */
@@ -204,7 +205,7 @@ public class LexState {
 	
 	public LexState(LuaC state, InputStream stream) {
 		this.z = stream;
-		this.buff = new byte[32];
+		this.buff = new char[32];
 		this.L = state;
 	}
 
@@ -229,7 +230,7 @@ public class LexState {
 	void save(int c) {
 		if ( buff == null || nbuff + 1 > buff.length )
 			buff = LuaC.realloc( buff, nbuff*2+1 );
-		buff[nbuff++] = (byte) c;
+		buff[nbuff++] = (char) c;
 	}
 
 
@@ -272,12 +273,11 @@ public class LexState {
 
 	// only called by new_localvarliteral() for var names.
 	LuaString newstring( String s ) {
-		byte[] b = s.getBytes();
-		return L.newTString(b, 0, b.length);
+		return L.newTString(s);
 	}
 
-	LuaString newstring( byte[] bytes, int offset, int len ) {
-		return L.newTString( bytes, offset, len );
+	LuaString newstring( char[] chars, int offset, int len ) {
+		return L.newTString(new String(chars, offset, len));
 	}
 
 	void inclinenumber() {
@@ -327,9 +327,9 @@ public class LexState {
 		return true;
 	}
 
-	void buffreplace(byte from, byte to) {
+	void buffreplace(char from, char to) {
 		int n = nbuff;
-		byte[] p = buff;
+		char[] p = buff;
 		while ((--n) >= 0)
 			if (p[n] == from)
 				p[n] = to;
@@ -477,7 +477,7 @@ public class LexState {
 			}
 		}
 		if (seminfo != null)
-			seminfo.ts = newstring(buff, 2 + sep, nbuff - 2 * (2 + sep));
+			seminfo.ts =  L.newTString(LuaString.valueOf(buff, 2 + sep, nbuff - 2 * (2 + sep)));
 	}
 
 	int hexvalue(int c) {
@@ -574,7 +574,7 @@ public class LexState {
 			}
 		}
 		save_and_next(); /* skip delimiter */
-		seminfo.ts = newstring(buff, 1, nbuff - 2);
+		seminfo.ts = L.newTString(LuaString.valueOf(buff, 1, nbuff-2));
 	}
 
 	int llex(SemInfo seminfo) {
@@ -845,7 +845,7 @@ public class LexState {
 		if (t.token == TK_NAME || t.token == TK_STRING) {
 			LuaString ts = t.seminfo.ts;
 			// TODO: is this necessary?
-			newstring(ts.m_bytes, 0, ts.m_length);
+			L.cachedLuaString(t.seminfo.ts);
 		}
 	}
 

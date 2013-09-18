@@ -11,8 +11,8 @@ import java.net.URL;
 
 import junit.framework.TestCase;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.lib.jse.JsePlatform;
@@ -21,7 +21,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
     private final String dir;
     private final String jar;
-    private LuaTable _G;
+    private Globals _G;
 
     public AbstractUnitTests(String zipdir, String zipfile, String dir) {
     	URL zip = null;
@@ -67,7 +67,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
             // compile in memory
             InputStream is = new ByteArrayInputStream(lua);
-            Prototype p = LuaC.instance.compile(is, "@" + file);
+            Prototype p = _G.loadPrototype(is, "@" + file, "bt");
             String actual = protoToString(p);
 
             // load expected value from jar
@@ -109,7 +109,7 @@ abstract public class AbstractUnitTests extends TestCase {
     protected Prototype loadFromBytes(byte[] bytes, String script)
             throws IOException {
         InputStream is = new ByteArrayInputStream(bytes);
-        return LoadState.loadBinaryChunk(is.read(), is, script);
+        return _G.loadPrototype(is, script, "b");
     }
 
     protected String protoToString(Prototype p) {

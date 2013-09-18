@@ -35,10 +35,10 @@ import java.io.InputStream;
 * <p>
 * A simple pattern for loading and executing code is
 * <pre> {@code
-* LuaValue _G = JsePlatform.standardGlobals();
-* LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
+* Globals _G = JsePlatform.standardGlobals();
+* _G.load(new FileReader("main.lua"), "main.lua", _G ).call();
 * } </pre>
-* This should work regardless of which {@link LuaCompiler}
+* This should work regardless of which {@link Globals.Compiler}
 * has been installed.
 * <p>
 *  
@@ -52,7 +52,7 @@ import java.io.InputStream;
 * for example:
 * <pre> {@code
 * LuaValue _G = JsePlatform.standardGlobals();
-* LuaJC.install();
+* LuaJC.install(_G);
 * LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
 * } </pre>
 * 
@@ -64,7 +64,10 @@ import java.io.InputStream;
 * @see LuaC
 * @see LuaJC
 */
-public class LoadState {
+public class LoadState implements Globals.Undumper {
+
+	/** Shared instance of Globals.Undumper to use loading prototypes from binary lua files */
+	public static final Globals.Undumper instance = new LoadState();
 	
 	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
 	public static final int NUMBER_FORMAT_FLOATS_OR_DOUBLES    = 0;
@@ -89,22 +92,9 @@ public class LoadState {
 	public static final int LUA_TTHREAD			= 8;
 	public static final int LUA_TVALUE          = 9;
 	
-	/** Interface for the compiler, if it is installed. 
-	 * <p>
-	 * See the {@link LuaClosure} documentation for examples of how to use the compiler. 
-	 * @see LuaClosure
-	 * @see #load(InputStream, String, LuaValue)
-	 * */
-	public interface LuaCompiler {
-		
-		/** Load into a Closure or LuaFunction from a Stream and initializes the environment 
-		 * @throws IOException */
-		public LuaFunction load(InputStream stream, String filename, LuaValue env) throws IOException;
-	}
-
-	/** Compiler instance, if installed */
-	public static LuaCompiler compiler = null;
-
+	/** The character encoding to use for file encoding.  Null means the default encoding */
+	public static String encoding = null;
+	
 	/** Signature byte indicating the file is a compiled binary chunk */
 	public static final byte[] LUA_SIGNATURE	= { '\033', 'L', 'u', 'a' };
 
@@ -150,7 +140,11 @@ public class LoadState {
 	
 	/** Read buffer */
 	private byte[] buf = new byte[512];
-	
+
+	/** Install this class as the standard Globals.Undumper for the supplied Globals */
+	public static void install(Globals globals) {
+		globals.undumper = instance;
+	}
 	
 	/** Load a 4-byte int value from the input stream
 	 * @return the int value laoded.  
@@ -369,60 +363,22 @@ public class LoadState {
 	}
 
 	/**
-	 * Load lua in either binary or text from an input stream.
-	 * @param firstByte the first byte of the input stream
+	 * Load input stream as a lua binary chunk if the first 4 bytes are the lua binary signature.
 	 * @param stream InputStream to read, after having read the first byte already
 	 * @param name Name to apply to the loaded chunk
-	 * @param mode "b" for binary only, "t" for text only, "bt" for binary or text.
-	 * @return {@link Prototype} that was loaded
-	 * @throws IllegalArgumentException if the signature is bac
+	 * @return {@link Prototype} that was loaded, or null if the first 4 bytes were not the lua signature.
 	 * @throws IOException if an IOException occurs
 	 */
-	public static LuaFunction load( InputStream stream, String name, String mode, LuaValue env ) throws IOException {
-		if ( compiler != null )
-			return compiler.load(stream, name, env);
-		else {
-			int firstByte = stream.read();
-			if ( firstByte != LUA_SIGNATURE[0] )
-				throw new LuaError("no compiler");
-			Prototype p = loadBinaryChunk( firstByte, stream, name );
-			return new LuaClosure( p, env );
-		}
-	}
-
-	/**
-	 * Load lua in the default mode "bt" from an input stream.
-	 * @param firstByte the first byte of the input stream
-	 * @param stream InputStream to read, after having read the first byte already
-	 * @param name Name to apply to the loaded chunk
-	 * @return {@link Prototype} that was loaded
-	 * @throws IllegalArgumentException if the signature is bac
-	 * @throws IOException if an IOException occurs
-	 */
-	public static LuaFunction load( InputStream stream, String name, LuaValue env ) throws IOException {
-		return load(stream, name, "bt", env);
-	}
-
-	/**
-	 * Load lua thought to be a binary chunk from its first byte from an input stream.
-	 * @param firstByte the first byte of the input stream
-	 * @param stream InputStream to read, after having read the first byte already
-	 * @param name Name to apply to the loaded chunk
-	 * @return {@link Prototype} that was loaded
-	 * @throws IllegalArgumentException if the signature is bac
-	 * @throws IOException if an IOException occurs
-	 */
-	public static Prototype loadBinaryChunk( int firstByte, InputStream stream, String name ) throws IOException {
-
+	public Prototype undump(InputStream stream, String chunkname) throws IOException {
 		// check rest of signature
-		if ( firstByte != LUA_SIGNATURE[0] 
+		if ( stream.read() != LUA_SIGNATURE[0] 
 		   || stream.read() != LUA_SIGNATURE[1]
 	       || stream.read() != LUA_SIGNATURE[2]
 		   || stream.read() != LUA_SIGNATURE[3] )
-			throw new IllegalArgumentException("bad signature");
+			return null;
 		
 		// load file as a compiled chunk
-		String sname = getSourceName(name);
+		String sname = getSourceName(chunkname);
 		LoadState s = new LoadState( stream, sname );
 		s.loadHeader();
 
@@ -456,5 +412,10 @@ public class LoadState {
 	private LoadState( InputStream stream, String name ) {
 		this.name = name;
 		this.is = new DataInputStream( stream );
+	}
+	
+	private LoadState() {
+		this.name = "";
+		this.is = null;
 	}
 }

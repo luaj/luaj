@@ -51,14 +51,14 @@ public class TestLuaJC {
 			_G = JsePlatform.standardGlobals();
 
 			// print the chunk as a closure, and pretty-print the closure.
-			LuaValue f = _G.loadFile(filename).arg1();
+			LuaValue f = _G.loadfile(filename).arg1();
 			Prototype p = f.checkclosure().p;
 			Print.print(p);
 
 			// load into a luajc java-bytecode based chunk by installing the LuaJC compiler first
 			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
-				LuaJC.install();
-				f = _G.loadFile(filename).arg1();
+				LuaJC.install(_G);
+				f = _G.loadfile(filename).arg1();
 			}
 	
 			// call with arguments
@@ -80,7 +80,7 @@ public class TestLuaJC {
 		String destdir = ".";
 		
 		InputStream is = _G.FINDER.findResource(filename);
-		Hashtable t = LuaJC.getInstance().compileAll(is, filename, filename, true);
+		Hashtable t = LuaJC.instance.compileAll(is, filename, filename, _G, true);
 
         // write out the chunk
     	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {

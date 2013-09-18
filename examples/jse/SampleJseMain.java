@@ -13,7 +13,7 @@ public class SampleJseMain {
 		Globals globals = JsePlatform.standardGlobals();
 		
 		// Use the convenience function on the globals to load a chunk.
-		LuaValue chunk = globals.loadFile(script);
+		LuaValue chunk = globals.loadfile(script);
 		
 		// Use any of the "call()" or "invoke()" functions directly on the chunk.
 		chunk.call( LuaValue.valueOf(script) );

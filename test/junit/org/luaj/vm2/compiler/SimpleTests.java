@@ -1,20 +1,16 @@
 package org.luaj.vm2.compiler;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
 import junit.framework.TestCase;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaDouble;
-import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaInteger;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class SimpleTests extends TestCase {
 
-	private LuaTable _G;
+	private Globals _G;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -23,8 +19,7 @@ public class SimpleTests extends TestCase {
 
     private void doTest( String script ) {
     	try {
-        	InputStream is = new ByteArrayInputStream( script.getBytes("UTF8") );
-			LuaFunction c = LuaC.instance.load( is, "script", _G );
+			LuaValue c = _G.load(script, "script");
 			c.call();
     	} catch ( Exception e ) {
     		fail("i/o exception: "+e );

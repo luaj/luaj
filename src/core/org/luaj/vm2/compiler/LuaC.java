@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 
-import org.luaj.vm2.LoadState;
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaClosure;
@@ -35,7 +35,7 @@ import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
-import org.luaj.vm2.LoadState.LuaCompiler;
+import org.luaj.vm2.lib.BaseLib;
 
 /**
  * Compiler for Lua.
@@ -45,7 +45,7 @@ import org.luaj.vm2.LoadState.LuaCompiler;
  * and optionaly instantiates a {@link LuaClosure} around the result 
  * using a user-supplied environment.  
  * <p>
- * Implements the {@link LuaCompiler} interface for loading 
+ * Implements the {@link Globals.Compiler} interface for loading 
  * initialized chunks, which is an interface common to 
  * lua bytecode compiling and java bytecode compiling. 
  * <p> 
@@ -66,7 +66,7 @@ import org.luaj.vm2.LoadState.LuaCompiler;
  * @see LuaCompiler
  * @see Prototype
  */
-public class LuaC extends Lua implements LuaCompiler {
+public class LuaC extends Lua implements Globals.Compiler, Globals.Loader {
 
 	public static final LuaC instance = new LuaC();
 	
@@ -74,8 +74,9 @@ public class LuaC extends Lua implements LuaCompiler {
 	 * try to use it when handed bytes that are 
 	 * not already a compiled lua chunk.
 	 */
-	public static void install() {
-		org.luaj.vm2.LoadState.compiler = instance;
+	public static void install(Globals g) {
+		g.compiler = instance;
+		g.loader = instance;
 	}
 
 	protected static void _assert(boolean b) {		
@@ -213,6 +214,13 @@ public class LuaC extends Lua implements LuaCompiler {
 		return a;
 	}
 
+	static char[] realloc(char[] v, int n) {
+		char[] a = new char[n];
+		if ( v != null )
+			System.arraycopy(v, 0, a, 0, Math.min(v.length,n));
+		return a;
+	}
+
 	public int nCcalls;
 	Hashtable strings;
 
@@ -221,29 +229,25 @@ public class LuaC extends Lua implements LuaCompiler {
 	private LuaC(Hashtable strings) {
 		 this.strings = strings;
 	}
-	
-	/** Load into a Closure or LuaFunction, with the supplied initial environment */
-	public LuaFunction load(InputStream stream, String name, LuaValue env) throws IOException {
-		Prototype p = compile( stream, name );
-		return new LuaClosure( p, env );
-	}
 
-	/** Compile a prototype or load as a binary chunk */
-	public static Prototype compile(InputStream stream, String name) throws IOException {
-		int firstByte = stream.read();
-		return ( firstByte == '\033' )?
-			LoadState.loadBinaryChunk(firstByte, stream, name):
-			(new LuaC(new Hashtable())).luaY_parser(firstByte, stream, name);
+	/** Compile lua source into a Prototype.
+	 * @param stream InputStream representing the text source conforming to lua source syntax.
+	 * @param chunkname String name of the chunk to use.
+	 * @return Prototype representing the lua chunk for this source.
+	 * @throws IOException
+	 */
+	public Prototype compile(InputStream stream, String chunkname) throws IOException {
+		return (new LuaC(new Hashtable())).luaY_parser(stream, chunkname);
 	}
 
 
 	/** Parse the input */
-	private Prototype luaY_parser(int firstByte, InputStream z, String name) {
+	private Prototype luaY_parser(InputStream z, String name) throws IOException{
 		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
 		lexstate.fs = funcstate;
-		lexstate.setinput( this, firstByte, z, (LuaString) LuaValue.valueOf(name) );
+		lexstate.setinput( this, z.read(), z, (LuaString) LuaValue.valueOf(name) );
 		/* main func. is always vararg */
 		funcstate.f = new Prototype();
 		funcstate.f.source = (LuaString) LuaValue.valueOf(name);
@@ -256,25 +260,28 @@ public class LuaC extends Lua implements LuaCompiler {
 	}
 
 	// look up and keep at most one copy of each string
-	public LuaString newTString(byte[] bytes, int offset, int len) {
-		LuaString tmp = LuaString.valueOf(bytes, offset, len);
-		LuaString v = (LuaString) strings.get(tmp);
-		if ( v == null ) {
-			// must copy bytes, since bytes could be from reusable buffer
-			byte[] copy = new byte[len];
-			System.arraycopy(bytes, offset, copy, 0, len);
-			v = LuaString.valueOf(copy);
-			strings.put(v, v);
-		}
-		return v;
+	public LuaString newTString(String s) {
+		return cachedLuaString(LuaString.valueOf(s));
+	}
+
+	// look up and keep at most one copy of each string
+	public LuaString newTString(LuaString s) {
+		return cachedLuaString(s);
+	}
+
+	public LuaString cachedLuaString(LuaString s) {
+		LuaString c = (LuaString) strings.get(s);
+		if (c != null) 
+			return c;
+		strings.put(s, s);
+		return s;
 	}
 
 	public String pushfstring(String string) {
 		return string;
 	}
 
-	public LuaFunction load(Prototype p, String filename, LuaValue env) {
-		return new LuaClosure( p, env );
+	public LuaFunction load(Prototype prototype, String chunkname, LuaValue env) throws IOException {
+		return new LuaClosure(prototype, env);
 	}
-
 }

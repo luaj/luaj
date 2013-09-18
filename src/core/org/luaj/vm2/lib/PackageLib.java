@@ -240,7 +240,7 @@ public class PackageLib extends TwoArgFunction {
 			LuaString filename = v.arg1().strvalue();
 		
 			// Try to load the file.
-			v = globals.loadFile(filename.tojstring()); 
+			v = globals.loadfile(filename.tojstring()); 
 			if ( v.arg1().isfunction() )
 				return LuaValue.varargsOf(v.arg1(), filename);
 			

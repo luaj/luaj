@@ -21,15 +21,10 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-import java.io.ByteArrayInputStream;
 import java.lang.ref.WeakReference;
 
 import junit.framework.TestCase;
 
-import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.Varargs;
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
@@ -74,8 +69,7 @@ public class OrphanedThreadTest extends TestCase {
 			"arg = coroutine.yield(0)\n" +
 			"print('leakage in closure.3, arg is '..arg)\n" +
 			"return 'done'\n";
-		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
+		function = globals.load(script, "script");
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -90,8 +84,7 @@ public class OrphanedThreadTest extends TestCase {
 			"  return 'done'\n" +
 			"end\n" +
 			"print( 'pcall-closre.result:', pcall( f, ... ) )\n";
-		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
+		function = globals.load(script, "script");
 		doTest(LuaValue.TRUE, LuaValue.ZERO);
 	}
 	
@@ -107,8 +100,7 @@ public class OrphanedThreadTest extends TestCase {
 			"	return t[i]\n" +
 		    "end\n" +
 			"load(f)()\n";
-		LuaC.install();
-		function = LoadState.load(new ByteArrayInputStream(script.getBytes()), "script", "bt", globals);
+		function = globals.load(script, "script");
 		doTest(LuaValue.TRUE, LuaValue.ONE);
 	}
 

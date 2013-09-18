@@ -21,8 +21,8 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 
 import junit.framework.TestCase;
@@ -130,9 +130,9 @@ public class LuaOperationsTest extends TestCase {
 
 	public Prototype createPrototype( String script, String name ) {
 		try {
-			LuaTable _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
-			InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
-			return LuaC.instance.compile(is, name);
+			Globals _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
+			Reader reader = new StringReader(script);
+			return _G.compilePrototype(reader, name);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

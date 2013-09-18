@@ -21,13 +21,13 @@
  ******************************************************************************/
 package org.luaj.vm2;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 /** 
@@ -64,16 +64,18 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				Globals _G = org.luaj.vm2.lib.jse.JsePlatform.debugGlobals();
-				InputStream is = new ByteArrayInputStream(script.getBytes("UTF-8"));
+				Globals _G = JsePlatform.debugGlobals();
+				Reader reader = new StringReader(script);
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
 				case TEST_TYPE_LUAJC:
-					chunk = LuaJC.getInstance().load(is,name,_G);
+					LuaJC.install(_G);
+					chunk = _G.load(reader, name);
 					break;
 				default:
-					chunk = LuaC.instance.load( is, name, _G );
-					Print.print(((LuaClosure)chunk).p);
+					Prototype p = _G.compilePrototype(reader, name);
+					chunk = new LuaClosure(p, _G);
+					Print.print(p);
 					break;
 				}
 				Varargs actual = chunk.invoke();

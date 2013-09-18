@@ -38,7 +38,6 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
  	};
     
     private static final String [] MIMETYPES = {
-        "text/plain",
         "text/lua",
         "application/lua"
     };

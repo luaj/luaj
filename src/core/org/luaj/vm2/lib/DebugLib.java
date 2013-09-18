@@ -22,7 +22,6 @@
 package org.luaj.vm2.lib;
 
 import org.luaj.vm2.Globals;
-import org.luaj.vm2.LoadState.LuaCompiler;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;

@@ -22,6 +22,7 @@
 package org.luaj.vm2.lib.jse;
 
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LuaC;
@@ -101,8 +102,8 @@ public class JsePlatform {
 		_G.load(new JseIoLib());
 		_G.load(new JseOsLib());
 		_G.load(new LuajavaLib());
-		LuaC.install();
-		_G.compiler = LuaC.instance;
+		LoadState.install(_G);
+		LuaC.install(_G);
 		return _G;		
 	}
 

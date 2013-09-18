@@ -228,9 +228,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		public Varargs invoke(Varargs args) {
 			LuaValue tostring = globals.get("tostring"); 
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
-				if ( i>1 ) globals.STDOUT.write( '\t' );
+				if ( i>1 ) globals.STDOUT.print( '\t' );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
-				globals.STDOUT.write( s.m_bytes, s.m_offset, s.m_length );
+				globals.STDOUT.print(s.tojstring());
 			}
 			globals.STDOUT.println();
 			return NONE;
@@ -438,7 +438,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		try {
 			if ( is == null )
 				return varargsOf(NIL, valueOf("not found: "+chunkname));
-			return LoadState.load(is, chunkname, mode, env);
+			return globals.load(is, chunkname, mode, env);
 		} catch (Exception e) {
 			return varargsOf(NIL, valueOf(e.getMessage()));
 		}

@@ -163,13 +163,13 @@ public final class Buffer {
 	 * Append a Java String to the buffer.
 	 * The Java string will be converted to bytes using the UTF8 encoding. 
 	 * @return {@code this} to allow call chaining
-	 * @see LuaString#encodeToUtf8(char[], byte[], int)
+	 * @see LuaString#encodeToUtf8(char[], int, byte[], int)
 	 */
 	public final Buffer append( String str ) {
-		char[] chars = str.toCharArray();
-		final int n = LuaString.lengthAsUtf8( chars );
+		char[] c = str.toCharArray();
+		final int n = LuaString.lengthAsUtf8( c );
 		makeroom( 0, n );
-		LuaString.encodeToUtf8( chars, bytes, offset + length );
+		LuaString.encodeToUtf8( c, c.length, bytes, offset + length );
 		length += n;
 		return this;
 	}
