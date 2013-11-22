@@ -35,10 +35,10 @@ import org.luaj.vm2.lib.ResourceFinder;
  * Global environment used by luaj.
  * <p>
  * Contains the global variables referenced by lua libraries such as stdin and stdout, 
- * the resrouce finder which is used tolook up files in a platform independent way, 
+ * the resource finder which is used to look up files in a platform independent way, 
  * the installed lua compiler, the math library in use, debugging calls stack, and so on.  
  * <p>
- * In a multithreded server environment, each server thread should create one Globals instance, 
+ * In a multi-threaded server environment, each server thread should create one Globals instance, 
  * which will be logically distance and not interfere with each other, but share certain 
  * static immutable resources such as class data and string data.
  * <p>
@@ -46,12 +46,12 @@ import org.luaj.vm2.lib.ResourceFinder;
  * {@link JsePlatform.standardGlobasl()} or {@link JmePlatform.standardGlobals()}, 
  * and then used to load lua scripts for execution as in the following example. 
  * <pre> {@code
- * Globals _G = JsePlatform.standardGlobals();
- * _G.compiler.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.compiler.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
  * } </pre>
  * @see LuaCompiler
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LuaValue
  *  
  */
@@ -107,13 +107,16 @@ public class Globals extends LuaTable {
 		return this;
 	}
 	
-	/** The installed loader. */
+	/** The installed loader. 
+	 * @see Loader */
 	public Loader loader;
 
-	/** The installed compiler. */
+	/** The installed compiler.
+	 * @see Compiler */
 	public Compiler compiler;
 
-	/** The installed undumper. */
+	/** The installed undumper.
+	 * @see Undumper */
 	public Undumper undumper;
 
 	/** Convenience function for loading a file that is either binary lua or lua source.

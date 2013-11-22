@@ -32,27 +32,30 @@ import org.luaj.vm2.lib.LibFunction;
  * See {@link org.luaj.lib.MathLib} for the exception list.  
  * <p>
  * Typically, this library is included as part of a call to 
- * {@link JsePlatform#standardGlobals()} 
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * {@link JsePlatform#standardGlobals()}
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new JseBaseLib());
- * _G.load(new PackageLib());
- * _G.load(new JseMathLib());
+ * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new JseMathLib());
+ * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * } </pre>
+ * <p>However, other libraries such as <em>CoroutineLib</em> are not loaded in this case.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
  * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see JseMathLib
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.6">Lua 5.2 Math Lib Reference</a>
  */
 public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	

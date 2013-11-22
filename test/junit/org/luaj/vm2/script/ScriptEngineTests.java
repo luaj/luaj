@@ -95,11 +95,13 @@ public class ScriptEngineTests extends TestSuite  {
 	}
 
 	public static class LuaJCBindingsTest extends EngineTestCase {
+		static {
+			System.setProperty("org.luaj.luajc", "true");
+		}
 		protected Bindings createBindings() {
 			return new SimpleBindings();
 		}
 		public void setUp() {
-			System.setProperty("org.luaj.luajc", "true");
 			super.setUp();
 		}
 		public void testCompiledFunctionIsNotClosure() throws ScriptException {

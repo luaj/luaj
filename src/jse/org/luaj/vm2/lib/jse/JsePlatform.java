@@ -42,18 +42,18 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * A simple example of initializing globals and using them from Java is:
  * <pre> {@code
- * Globals _G = JsePlatform.standardGlobals();
- * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
  * <pre> {@code
- * _G.load( new FileInputStream("main.lua"), "main.lua" ).call();
+ * globals.load( new FileInputStream("main.lua"), "main.lua" ).call();
  * } </pre>
  * <p>
  * although {@code require} could also be used: 
  * <pre> {@code
- * _G.get("require").call(LuaValue.valueOf("main"));
+ * globals.get("require").call(LuaValue.valueOf("main"));
  * } </pre>
  * For this to succeed, the file "main.lua" must be in the current directory or a resource.
  * See {@link JseBaseLib} for details on finding scripts using {@link ResourceFinder}.
@@ -91,20 +91,20 @@ public class JsePlatform {
 	 * @see JmePlatform
 	 */
 	public static Globals standardGlobals() {
-		Globals _G = new Globals();
-		_G.load(new JseBaseLib());
-		_G.load(new PackageLib());
-		_G.load(new Bit32Lib());
-		_G.load(new TableLib());
-		_G.load(new StringLib());
-		_G.load(new CoroutineLib());
-		_G.load(new JseMathLib());
-		_G.load(new JseIoLib());
-		_G.load(new JseOsLib());
-		_G.load(new LuajavaLib());
-		LoadState.install(_G);
-		LuaC.install(_G);
-		return _G;		
+		Globals globals = new Globals();
+		globals.load(new JseBaseLib());
+		globals.load(new PackageLib());
+		globals.load(new Bit32Lib());
+		globals.load(new TableLib());
+		globals.load(new StringLib());
+		globals.load(new CoroutineLib());
+		globals.load(new JseMathLib());
+		globals.load(new JseIoLib());
+		globals.load(new JseOsLib());
+		globals.load(new LuajavaLib());
+		LoadState.install(globals);
+		LuaC.install(globals);
+		return globals;		
 	}
 
 	/** Create standard globals including the {@link debug} library.
@@ -116,9 +116,9 @@ public class JsePlatform {
 	 * @see DebugLib
 	 */
 	public static Globals debugGlobals() {
-		Globals _G = standardGlobals();
-		_G.load(new DebugLib());
-		return _G;
+		Globals globals = standardGlobals();
+		globals.load(new DebugLib());
+		return globals;
 	}
 
 

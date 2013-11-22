@@ -5,11 +5,12 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 /** Simple toy program illustrating how to run Luaj in multiple threads. 
  * 
- * By creating separate Globals in each thread, scripts can be run in each thread.
+ * <p>By creating separate Globals in each thread, scripts can be run in each thread.
  * 
- * However note the following:
- *  - type-related metatables such as LuaNumber.s_metatable are shared by all threads, so are not thread-safe.
- *  - creating additional threads within a Java element called by lua could result in shared access to globals.
+ * <p>However note the following:
+ *  <ul><li>type-related metatables such as LuaNumber.s_metatable are shared by all threads, so are not thread-safe.
+ *  </li><li>creating additional threads within a Java element called by lua could result in shared access to globals.
+ *  </li></ul>
  */
 public class SampleMultiThreaded {
 

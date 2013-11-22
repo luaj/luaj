@@ -53,18 +53,18 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * A simple example of initializing globals and using them from Java is:
  * <pre> {@code
- * Globals _G = JmePlatform.standardGlobals();
- * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * Globals global = JmePlatform.standardGlobals();
+ * global.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
  * <pre> {@code
- * LoadState.load( getClass().getResourceAsStream("main.lua"), "main.lua", _G ).call();
+ * LoadState.load( getClass().getResourceAsStream("main.lua"), "main.lua", globals ).call();
  * } </pre>
  * <p>
  * although {@code require} could also be used: 
  * <pre> {@code
- * _G.get("require").call(LuaValue.valueOf("main"));
+ * globals.get("require").call(LuaValue.valueOf("main"));
  * } </pre>
  * For this to succeed, the file "main.lua" must be a resource in the class path.
  * See {@link BaseLib} for details on finding scripts using {@link ResourceFinder}.
@@ -103,19 +103,19 @@ public class JmePlatform {
 	 * @see JmePlatform
 	 */
 	public static Globals standardGlobals() {
-		Globals _G = new Globals();
-		_G.load(new BaseLib());
-		_G.load(new PackageLib());
-		_G.load(new Bit32Lib());
-		_G.load(new OsLib());
-		_G.load(new MathLib());
-		_G.load(new TableLib());
-		_G.load(new StringLib());
-		_G.load(new CoroutineLib());
-		_G.load(new JmeIoLib());
-		LoadState.install(_G);
-		LuaC.install(_G);
-		return _G;		
+		Globals globals = new Globals();
+		globals.load(new BaseLib());
+		globals.load(new PackageLib());
+		globals.load(new Bit32Lib());
+		globals.load(new OsLib());
+		globals.load(new MathLib());
+		globals.load(new TableLib());
+		globals.load(new StringLib());
+		globals.load(new CoroutineLib());
+		globals.load(new JmeIoLib());
+		LoadState.install(globals);
+		LuaC.install(globals);
+		return globals;		
 	}
 	
 	/** Create standard globals including the {@link debug} library.
@@ -127,8 +127,8 @@ public class JmePlatform {
 	 * @see DebugLib
 	 */
 	public static Globals debugGlobals() {
-		Globals _G = standardGlobals();
-		_G.load(new DebugLib());
-		return _G;
+		Globals globals = standardGlobals();
+		globals.load(new DebugLib());
+		return globals;
 	}
 }

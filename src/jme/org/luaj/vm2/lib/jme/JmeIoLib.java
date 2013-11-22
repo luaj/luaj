@@ -30,7 +30,6 @@ import javax.microedition.io.StreamConnection;
 
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.IoLib;
 import org.luaj.vm2.lib.LibFunction;
 
@@ -43,27 +42,30 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * Typically, this library is included as part of a call to 
  * {@link JmePlatform#standardGlobals()}
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new JmeIoLib());
- * _G.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * Globals globals = JmePlatform.standardGlobals();
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JmeBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new JmeIoLib());
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * } </pre>
+ * <p>However, other libraries such as <em>MathLib</em> are not loaded in this case.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see JmePlatform
  * @see IoLib
  * @see JseIoLib
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.8">Lua 5.2 I/O Lib Reference</a>
  */
 public class JmeIoLib extends IoLib {
 	

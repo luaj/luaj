@@ -43,26 +43,30 @@ import org.luaj.vm2.lib.ResourceFinder;
  * <p>  
  * Typically, this library is included as part of a call to 
  * {@link JsePlatform#standardGlobals()}
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new JseBaseLib());
- * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Globals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.get("print").call(LuaValue.valueOf("hello, world"));
+ * } </pre>
+ * <p>However, other libraries such as <em>PackageLib</em> are not loaded in this case.
  * <p>
  * This is a direct port of the corresponding library in C.
+ * @see Globals
  * @see BaseLib
  * @see ResourceFinder
- * @see #FINDER
+ * @see {@link Globals.FINDER}
  * @see LibFunction
  * @see JsePlatform
- * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
+ * @see org.luaj.vm2.lib.jme.JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.1">Lua 5.2 Base Lib Reference</a>
  */
 
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {

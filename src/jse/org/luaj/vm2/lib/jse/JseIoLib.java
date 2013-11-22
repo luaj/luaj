@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
-
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -33,7 +32,6 @@ import java.io.RandomAccessFile;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.IoLib;
 import org.luaj.vm2.lib.LibFunction;
 
@@ -45,27 +43,30 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * Typically, this library is included as part of a call to 
  * {@link JsePlatform#standardGlobals()}
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new JseBaseLib());
- * _G.load(new PackageLib());
- * _G.load(new JseIoLib());
- * _G.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new JseIoLib());
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * } </pre>
+ * <p>However, other libraries such as <em>MathLib</em> are not loaded in this case.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
  * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see IoLib
  * @see JmeIoLib
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.8">Lua 5.2 I/O Lib Reference</a>
  */
 public class JseIoLib extends IoLib {
 

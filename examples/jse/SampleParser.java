@@ -1,8 +1,3 @@
-/** 
- * Sample luaj program that uses the LuaParser class for parsing, and intercepts the 
- * generated ParseExceptions and fills in the file, line and column information where 
- * the exception occurred.
- */
 import java.io.*;
 
 import org.luaj.vm2.ast.*;
@@ -11,7 +6,13 @@ import org.luaj.vm2.ast.Stat.FuncDef;
 import org.luaj.vm2.ast.Stat.LocalFuncDef;
 import org.luaj.vm2.parser.*;
 
-
+/** 
+ * Sample luaj program that uses the LuaParser class for parsing, and intercepts the 
+ * generated ParseExceptions and fills in the file, line and column information where 
+ * the exception occurred.
+ * 
+ * @see LuaParser
+ */
 public class SampleParser {
 	
 	static public void main(String[] args) {

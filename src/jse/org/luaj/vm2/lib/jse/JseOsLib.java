@@ -20,6 +20,7 @@
 * THE SOFTWARE.
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -43,27 +44,30 @@ import org.luaj.vm2.lib.LibFunction;
  * os-specific features, the behavior of these functions varies considerably 
  * from their counterparts in the C platform.  
  * <p>
- * Typically, this library is included as part of a call to either 
+ * Typically, this library is included as part of a call to 
  * {@link JsePlatform#standardGlobals()}
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new JseBaseLib());
- * _G.load(new PackageLib());
- * _G.load(new JseOsLib());
+ * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( _G.get("os").get("time").call() );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new JseOsLib());
+ * System.out.println( _G.get("os").get("time").call() );
+ * } </pre>
+ * <p>However, other libraries such as <em>MathLib</em> are not loaded in this case.
  * <p>
  * @see LibFunction
  * @see OsLib
  * @see JsePlatform
- * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
+ * @see org.luaj.vm2.lib.jme.JmePlatform
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.9">Lua 5.2 OS Lib Reference</a>
  */
 public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	

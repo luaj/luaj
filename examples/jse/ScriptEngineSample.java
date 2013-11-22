@@ -1,5 +1,3 @@
-
-
 import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.Reader;
@@ -16,22 +14,42 @@ import javax.script.SimpleBindings;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 
+/** Sample code that uses the JSE-223 pluggable scripting language interface
+ * to instantiate and use luaj. 
+ * 
+ * <p>In this case, Globals are only indirectly constructed as a side effect
+ * of using the scripting interface.
+ * 
+ * <p>All features should be supported including compiled scripts. 
+ * 
+ * <p>Configuration is via system properties:
+ * <ul><li><b>"org.luaj.luajc"</b> - set to "true" to use the LuaJC lua-to-Java-bytecode compiling.  
+ * Requires the bcel library to be on the class path.
+ * </li><li><b>"org.luaj.debug"</b> - set to "true" to load the debug library, 
+ * which may provide better stack traces for closures.
+ * </li></ul>
+ * 
+ * <p> These flag values can be set on the command line or via code.
+ */
 public class ScriptEngineSample {
     
     public static void main(String [] args) {
-    	// Set the property 'luaj.debug' before getting the engine to get 
+    	// Set the property 'org.luaj.debug' before getting the engine to get 
     	// the debug libraries, which will be slower, but may provide stack traces
-    	// when luaJC is not used.
-    	// System.setProperty("luaj.debug", "true");
+    	// when luaJC is not used.  
+    	// This can also be set on the command line using -Dorg.luaj.debug=true
+    	// System.setProperty("org.luaj.debug", "true");
 
+        // Set the property 'org.luaj.luajc' before getting the engine to enable 
+    	// the lua-to-java bytecode compiler, which requires the bcel library 
+    	// to be on the class path.
+    	// This can also be set on the command line using -Dorg.luaj.luajc=true
+        // org.luaj.vm2.luajc.LuaJC.install();
+    	
         ScriptEngineManager sem = new ScriptEngineManager();
         ScriptEngine e = sem.getEngineByName("luaj");
         ScriptEngineFactory f = e.getFactory();
 
-        // uncomment to enable the lua-to-java bytecode compiler 
-        // (requires bcel library in class path)
-        // org.luaj.vm2.luajc.LuaJC.install();
-    	
         System.out.println( "Engine name: " +f.getEngineName() );
         System.out.println( "Engine Version: " +f.getEngineVersion() );
         System.out.println( "LanguageName: " +f.getLanguageName() );
