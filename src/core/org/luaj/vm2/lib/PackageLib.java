@@ -34,37 +34,53 @@ import org.luaj.vm2.Varargs;
  * Subclass of {@link LibFunction} which implements the lua standard package and module 
  * library functions. 
  * 
- * <p>
+ * <h3>Lua Environment Variables</h3>
+ * The following variables are available to lua scrips when this library has been loaded:
+ * <ul>
+ * <li><code>"package.loaded"</code> Lua table of loaded modules.
+ * <li><code>"package.path"</code> Search path for lua scripts.
+ * <li><code>"package.preload"</code> Lua table of uninitialized preload functions.
+ * <li><code>"package.searchers"</code> Lua table of functions that search for object to load.
+ * </ul>
+ * 
+ * <h3>Java Environment Variables</h3>
+ * These Java environment variables affect the library behavior:
+ * <ul>
+ * <li><code>"luaj.package.path"</code> Initial value for <code>"package.path"</code>.  Default value is <code>"?.lua"</code>
+ * </ul>
+ * 
+ * <h3>Loading</h3>
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("require").call"foo") );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * Globals _G = new Globals();
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * System.out.println( _G.package_.require.call"foo") );
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * System.out.println( globals.get("require").call("foo") );
  * } </pre>
- * In practice, the first 3 lines of the above are minimal requirements to get 
- * and initialize a globals table capable of basic require, print, and other functions, 
- * so it is much more convenient to use the {@link JsePlatform} and {@link JmePlatform} 
- * utility classes instead.  
- * <p>
- * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * <h3>Limitations</h3>
+ * This library has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * However, the default filesystem search semantics are different and delegated to the bas library 
  * as outlined in the {@link BaseLib} and {@link JseBaseLib} documentation. 
+ * <p>
  * @see LibFunction
  * @see BaseLib
  * @see JseBaseLib
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.3">http://www.lua.org/manual/5.1/manual.html#5.3</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.3">Lua 5.2 Package Lib Reference</a>
  */
 public class PackageLib extends TwoArgFunction {
 
 	/** The default value to use for package.path.  This can be set with the system property
-	 * "luaj.package.path", and is "?.lua" by default. */
+	 * <code>"luaj.package.path"</code>, and is <code>"?.lua"</code> by default. */
 	public static String DEFAULT_LUA_PATH = System.getProperty("luaj.package.path");
 	static {
 		if (DEFAULT_LUA_PATH == null)

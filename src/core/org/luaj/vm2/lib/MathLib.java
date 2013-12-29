@@ -51,17 +51,22 @@ import org.luaj.vm2.Varargs;
  * hand for JME, so will be slower and less accurate than when executed on the JSE platform.
  * <p> 
  * Typically, this library is included as part of a call to either 
- * {@link JmePlatform#standardGlobals()}
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * } </pre>
+ * When using {@link JsePlaform} as in this example, the subclass {@link JseMathLib} will 
+ * be included, which also includes this base functionality.
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new MathLib());
- * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new MathLib());
+ * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
  * Doing so will ensure the library is properly initialized 
  * and loaded into the globals table. 
@@ -71,7 +76,7 @@ import org.luaj.vm2.Varargs;
  * @see JsePlatform
  * @see JmePlatform
  * @see JseMathLib
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.6">http://www.lua.org/manual/5.1/manual.html#5.6</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.6">Lua 5.2 Math Lib Reference</a>
  */
 public class MathLib extends TwoArgFunction {
 	

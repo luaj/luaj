@@ -177,7 +177,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 		}
 	}
 
-	protected LuaValue loadScript(String name, Globals _G) throws IOException {
+	protected LuaValue loadScript(String name, Globals globals) throws IOException {
 		InputStream script = this.findResource(name+".lua");
 		if ( script == null )
 			fail("Could not load script for test case: " + name);
@@ -188,11 +188,11 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 					LuaValue c = (LuaValue) Class.forName(name).newInstance();
 					return c;
 				} else {
-					LuaJC.install(_G);
-					return _G.load(script, name, "bt", _G);
+					LuaJC.install(globals);
+					return globals.load(script, name, "bt", globals);
 				}
 			default:
-				return _G.load(script, "@"+name+".lua", "bt", _G);
+				return globals.load(script, "@"+name+".lua", "bt", globals);
 			}
 		} catch ( Exception e ) {
 			e.printStackTrace();

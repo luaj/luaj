@@ -21,7 +21,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
     private final String dir;
     private final String jar;
-    private Globals _G;
+    private Globals globals;
 
     public AbstractUnitTests(String zipdir, String zipfile, String dir) {
     	URL zip = null;
@@ -43,7 +43,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        _G = JsePlatform.standardGlobals();
+        globals = JsePlatform.standardGlobals();
     }
 
     protected String pathOfFile(String file) {
@@ -67,7 +67,7 @@ abstract public class AbstractUnitTests extends TestCase {
 
             // compile in memory
             InputStream is = new ByteArrayInputStream(lua);
-            Prototype p = _G.loadPrototype(is, "@" + file, "bt");
+            Prototype p = globals.loadPrototype(is, "@" + file, "bt");
             String actual = protoToString(p);
 
             // load expected value from jar
@@ -109,7 +109,7 @@ abstract public class AbstractUnitTests extends TestCase {
     protected Prototype loadFromBytes(byte[] bytes, String script)
             throws IOException {
         InputStream is = new ByteArrayInputStream(bytes);
-        return _G.loadPrototype(is, script, "b");
+        return globals.loadPrototype(is, script, "b");
     }
 
     protected String protoToString(Prototype p) {

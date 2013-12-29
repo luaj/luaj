@@ -35,29 +35,29 @@ import org.luaj.vm2.compiler.DumpState;
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code string} 
  * library. 
- * 
  * <p>
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new StringLib());
- * System.out.println( _G.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new StringLib());
+ * System.out.println( globals.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
  * This is a direct port of the corresponding library in C.
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.4">http://www.lua.org/manual/5.1/manual.html#5.4</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.4">Lua 5.2 String Lib Reference</a>
  */
 public class StringLib extends TwoArgFunction {
 

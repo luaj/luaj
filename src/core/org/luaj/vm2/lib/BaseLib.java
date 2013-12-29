@@ -23,15 +23,12 @@ package org.luaj.vm2.lib;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 
 import org.luaj.vm2.Globals;
-import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
@@ -50,15 +47,20 @@ import org.luaj.vm2.Varargs;
  * directory lookup, use {@link JseBaseLib} instead. 
  * <p>
  * Typically, this library is included as part of a call to either 
+ * {@link JsePlatform#standardGlobals()} or
  * {@link JmePlatform#standardGlobals()}
- * <p>
- * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.get("print").call(LuaValue.valueOf("hello, world"));
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.get("print").call(LuaValue.valueOf("hello, world"));
+ * } </pre>
+ * <p>
+ * For special cases where the smallest possible footprint is desired, 
+ * a minimal set of libraries could be loaded
+ * directly via {@link Globals#load(LuaValue)} using code such as:
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * Doing so will ensure the library is properly initialized 
  * and loaded into the globals table. 
@@ -70,7 +72,7 @@ import org.luaj.vm2.Varargs;
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.1">http://www.lua.org/manual/5.1/manual.html#5.1</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.1">Lua 5.2 Base Lib Reference</a>
  */
 public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	

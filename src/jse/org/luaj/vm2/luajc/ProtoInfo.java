@@ -3,7 +3,6 @@ package org.luaj.vm2.luajc;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Hashtable;
-import java.util.Vector;
 
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaString;

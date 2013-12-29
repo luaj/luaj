@@ -32,28 +32,83 @@ import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ResourceFinder;
 
 /**
- * Global environment used by luaj.
+ * Global environment used by luaj.  Contains global variables referenced by executing lua.
  * <p>
- * Contains the global variables referenced by lua libraries such as stdin and stdout, 
- * the resource finder which is used to look up files in a platform independent way, 
- * the installed lua compiler, the math library in use, debugging calls stack, and so on.  
- * <p>
- * In a multi-threaded server environment, each server thread should create one Globals instance, 
- * which will be logically distance and not interfere with each other, but share certain 
- * static immutable resources such as class data and string data.
- * <p>
+ * 
+ * <h3>Constructing and Initializing Instances</h3>
  * Typically, this is constructed indirectly by a call to 
  * {@link JsePlatform.standardGlobasl()} or {@link JmePlatform.standardGlobals()}, 
  * and then used to load lua scripts for execution as in the following example. 
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
- * globals.compiler.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
+ * globals.load( new StringReader("print 'hello'"), "main.lua" ).call(); 
  * } </pre>
- * @see LuaCompiler
+ * The creates a complete global environment with the standard libraries loaded.
+ * <p>
+ * For specialized circumstances, the Globals may be constructed directly and loaded
+ * with only those libraries that are needed, for example.
+ * <pre> {@code
+ * Globals globals = new Globals();
+ * globals.load( new BaseLib() ); 
+ * } </pre>
+ * 
+ * <h3>Loading and Executing Lua Code</h3>
+ * Globals contains convenience functions to load and execute lua source code given a Reader. 
+ * A simple example is:
+ * <pre> {@code
+ * globals.load( new StringReader("print 'hello'"), "main.lua" ).call(); 
+ * } </pre>
+ * 
+ * <h3>Fine-Grained Control of Compiling and Loading Lua</h3>
+ * Executable LuaFunctions are created from lua code in several steps
+ * <ul>
+ * <li>find the resource using the platform's {@link ResourceFinder}
+ * <li>compile lua to lua bytecode using {@link Compiler}
+ * <li>load lua bytecode to a {@link LuaPrototpye} using {@link Undumper}
+ * <li>construct {@link LuaClosure} from {@link Prototype} with {@link Globals} using {@link Loader}
+ * </ul>
+ * <p>
+ * There are alternate flows when the direct lua-to-Java bytecode compiling {@link LuaJC} is used.
+ * <ul>
+ * <li>compile lua to lua bytecode using {@link Compiler} or load precompiled code using {@link Undumper}
+ * <li>convert lua bytecode to equivalent Java bytecode using {@link LuaJC} that implements {@link Loader} directly
+ * </ul>
+ * 
+ * <h3>Java Field</h3>
+ * Certain public fields are provided that contain the current values of important global state:
+ * <ul>
+ * <li>{@link STDIN} Current value for standard input in the laaded IoLib, if any.
+ * <li>{@link STDOUT} Current value for standard output in the loaded IoLib, if any.
+ * <li>{@link STDERR} Current value for standard error in the loaded IoLib, if any.
+ * <li>{@link FINDER} Current loaded {@link ResourceFinder}, if any.
+ * <li>{@link compiler} Current loaded {@link Compiler}, if any.
+ * <li>{@link undumper} Current loaded {@link Undumper}, if any.
+ * <li>{@link loader} Current loaded {@link Loader}, if any.
+ * </ul>
+ * 
+ * <h3>Lua Environment Variables</h3>
+ * When using {@link JsePlatform} or {@link JmePlatform}, 
+ * these environment variables are created within the Globals.
+ * <ul>
+ * <li>"_G" Pointer to this Globals.
+ * <li>"_VERSION" String containing the version of luaj.
+ * </ul>
+ * 
+ * <h3>Use in Multithreaded Environments</h3>
+ * In a multi-threaded server environment, each server thread should create one Globals instance, 
+ * which will be logically distinct and not interfere with each other, but share certain 
+ * static immutable resources such as class data and string data.
+ * <p>
+ * 
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LuaValue
- *  
+ * @see Compiler
+ * @see Loader
+ * @see Undumper
+ * @see ResourceFinder
+ * @see LuaC
+ * @see LuaJC
  */
 public class Globals extends LuaTable {
 

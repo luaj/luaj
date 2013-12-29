@@ -25,14 +25,48 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LocVars;
-import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 
 
+/** Class to dump a {@link Prototype} into an output stream, as part of compiling.
+ * <p>
+ * Generally, this class is not used directly, but rather indirectly via a command 
+ * line interface tool such as {@link luac}.
+ * <p>
+ * A lua binary file is created via {@link DumpState#dump}:
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * Prototype p = globals.compilePrototype(new StringReader("print('hello, world')"), "main.lua");
+ * ByteArrayOutputStream o = new ByteArrayOutputStream();
+ * DumpState.dump(p, o, false);
+ * byte[] lua_binary_file_bytes = o.toByteArray();
+ * } </pre>
+ * 
+ * The {@link LoadState} may be used directly to undump these bytes:
+ * <pre> {@code
+ * Prototypep = LoadState.instance.undump(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua");
+ * LuaClosure c = new LuaClosure(p, globals);
+ * c.call();
+ * } </pre>
+ * 
+ * 
+ * More commonly, the {@link Globals#undumper} may be used to undump them:
+ * <pre> {@code
+ * Prototype p = globals.loadPrototype(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua", "b");
+ * LuaClosure c = new LuaClosure(p, globals);
+ * c.call();
+ * } </pre>
+ * 
+ * @see luac
+ * @see LoadState
+ * @see Globals
+ * @see Prototype
+ */
 public class DumpState {
 
 	/** set true to allow integer compilation */

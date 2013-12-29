@@ -47,10 +47,10 @@ public class TestLuaJ {
 		System.out.println(script);
 		
 		// create an environment to run in
-		Globals _G = JsePlatform.standardGlobals();
+		Globals globals = JsePlatform.standardGlobals();
 		
 		// compile into a chunk, or load as a class
-		LuaValue chunk = _G.load(script, "script");
+		LuaValue chunk = globals.load(script, "script");
 		
 		// The loaded chunk should be a closure, which contains the prototype.
 		print( chunk.checkclosure().p );

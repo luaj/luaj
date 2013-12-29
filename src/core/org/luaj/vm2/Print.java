@@ -35,6 +35,7 @@ public class Print extends Lua {
 	private static final String STRING_FOR_NULL = "null";
 	public static PrintStream ps = System.out;
 
+	/** String names for each lua opcode value. */
 	public static final String[] OPNAMES = {
 		  "MOVE",
 		  "LOADK",
@@ -341,21 +342,30 @@ public class Print extends Lua {
 		}
 	}
 
-	public static void print(Prototype p) {
-		printFunction(p, true);
+	/** Pretty-prints contents of a Prototype.
+	 * 
+	 * @param prototype Prototype to print.
+	 */
+	public static void print(Prototype prototype) {
+		printFunction(prototype, true);
 	}
 	
-	public static void printFunction(Prototype f, boolean full) {
-		int i, n = f.p.length;
-		printHeader(f);
-		printCode(f);
+	/** Pretty-prints contents of a Prototype in short or long form.
+	 * 
+	 * @param prototype Prototype to print.
+	 * @param full true to print all fields, false to print short form.
+	 */
+	public static void printFunction(Prototype prototype, boolean full) {
+		int i, n = prototype.p.length;
+		printHeader(prototype);
+		printCode(prototype);
 		if (full) {
-			printConstants(f);
-			printLocals(f);
-			printUpValues(f);
+			printConstants(prototype);
+			printLocals(prototype);
+			printUpValues(prototype);
 		}
 		for (i = 0; i < n; i++)
-			printFunction(f.p[i], full);
+			printFunction(prototype.p[i], full);
 	}
 
 	private static void format( String s, int maxcols ) {

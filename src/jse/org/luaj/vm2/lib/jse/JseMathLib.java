@@ -35,18 +35,18 @@ import org.luaj.vm2.lib.LibFunction;
  * {@link JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
- * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
  * <p>
  * For special cases where the smallest possible footprint is desired, 
  * a minimal set of libraries could be loaded
- * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
  * globals.load(new JseBaseLib());
  * globals.load(new PackageLib());
  * globals.load(new JseMathLib());
- * System.out.println( _G.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
+ * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
  * <p>However, other libraries such as <em>CoroutineLib</em> are not loaded in this case.
  * <p>

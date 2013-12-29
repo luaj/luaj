@@ -25,40 +25,39 @@ package org.luaj.vm2;
  * Extension of {@link LuaFunction} which executes lua bytecode. 
  * <p>
  * A {@link LuaClosure} is a combination of a {@link Prototype} 
- * and a {@link LuaValue} to use as an environment for execution. 
+ * and a {@link LuaValue} to use as an environment for execution.
+ * Normally the {@link LuaValue} is a {@link Globals} in which case the environment
+ * will contain standard lua libraries. 
+ * 
  * <p>
  * There are three main ways {@link LuaClosure} instances are created:
  * <ul> 
  * <li>Construct an instance using {@link #LuaClosure(Prototype, LuaValue)}</li>
- * <li>Construct it indirectly by loading a chunk via {@link LuaCompiler#load(java.io.InputStream, String, LuaValue)}
+ * <li>Construct it indirectly by loading a chunk via {@link Globals#load(java.io.Reader, String, LuaValue)}
  * <li>Execute the lua bytecode {@link Lua#OP_CLOSURE} as part of bytecode processing
  * </ul>
  * <p>
  * To construct it directly, the {@link Prototype} is typically created via a compiler such as {@link LuaC}:
  * <pre> {@code
- * InputStream is = new ByteArrayInputStream("print('hello,world').getBytes());
+ * String script = "print( 'hello, world' )";
+ * InputStream is = new ByteArrayInputStream(script.getBytes());
  * Prototype p = LuaC.instance.compile(is, "script");
- * LuaValue _G = JsePlatform.standardGlobals()
- * LuaClosure f = new LuaClosure(p, _G);
+ * LuaValue globals = JsePlatform.standardGlobals();
+ * LuaClosure f = new LuaClosure(p, globals);
+ * f.call();
  * }</pre> 
  * <p>
- * To construct it indirectly, the {@link LuaC} compiler may be used, 
- * which implements the {@link LuaCompiler} interface: 
+ * To construct it indirectly, the {@link Globals#load} method may be used: 
  * <pre> {@code
- * LuaFunction f = LuaC.instance.load(is, "script", _G);
+ * Globals globals = JsePlatform.standardGlobals();
+ * LuaFunction f = globals.load(new StringReader(script), "script");
+ * LuaClosure c = f.checkclosure();  // This may fail if LuaJC is installed.
+ * c.call();
  * }</pre>
  * <p>
- * Typically, a closure that has just been loaded needs to be initialized by executing it, 
- * and its return value can be saved if needed:
- * <pre> {@code
- * LuaValue r = f.call();
- * _G.set( "mypkg", r ) 
- * }</pre>
- * <p> 
- * In the preceding, the loaded value is typed as {@link LuaFunction} 
- * to allow for the possibility of other compilers such as {@link LuaJC}
- * producing {@link LuaFunction} directly without 
- * creating a {@link Prototype} or {@link LuaClosure}.
+ * In this example, the "checkclosure()" may fail if direct lua-to-java-bytecode 
+ * compiling using LuaJC is installed, because no LuaClosure is created in that case
+ * and the value returned is a {@link LuaFunction} but not a {@link LuaClosure}.
  * <p> 
  * Since a {@link LuaClosure} is a {@link LuaFunction} which is a {@link LuaValue}, 
  * all the value operations can be used directly such as:

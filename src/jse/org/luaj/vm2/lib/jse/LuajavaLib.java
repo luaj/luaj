@@ -34,7 +34,6 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.LibFunction;
-import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.VarArgFunction;
 
 /** 
@@ -43,33 +42,42 @@ import org.luaj.vm2.lib.VarArgFunction;
  * Luajava is an approach to mixing lua and java using simple functions that bind 
  * java classes and methods to lua dynamically.  The API is documented on the 
  * <a href="http://www.keplerproject.org/luajava/">luajava</a> documentation pages.
+ * 
  * <p>
- * Typically, this library is included as part of a call to either 
+ * Typically, this library is included as part of a call to 
  * {@link JsePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("luajava").get("bindClass").call( LuaValue.valueOf("java.lang.System") ).invokeMethod("currentTimeMillis") );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
+ * link it into your globals table via {@link Globals#load} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * LuaC.install();
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new LuajavaLib());
- * _G.get("load").call( LuaValue.valueOf( 
- * 		"sys = luajava.bindClass('java.lang.System')\n"+
- * 		"print ( sys:currentTimeMillis() )\n" ) ).call(); 
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new LuajavaLib());
+ * globals.load( 
+ *      "sys = luajava.bindClass('java.lang.System')\n"+
+ *      "print ( sys:currentTimeMillis() )\n", "main.lua" ).call(); 
  * } </pre>
- * This example is not intended to be realistic - only to show how the {@link LuajavaLib} 
- * may be initialized by hand.  In practice, the {@code luajava} library is available 
+ * <p>
+ * 
+ * The {@code luajava} library is available 
  * on all JSE platforms via the call to {@link JsePlatform#standardGlobals()}
- * and the luajava api's are simply invoked from lua.    
+ * and the luajava api's are simply invoked from lua.  
+ * Because it makes extensive use of Java's reflection API, it is not available 
+ * on JME, but can be used in Android applications.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * 
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LuaC
+ * @see CoerceJavaToLua
+ * @see CoerceLuaToJava
  * @see <a href="http://www.keplerproject.org/luajava/manual.html#luareference">http://www.keplerproject.org/luajava/manual.html#luareference</a>
  */
 public class LuajavaLib extends VarArgFunction {

@@ -29,9 +29,7 @@ import java.io.InputStreamReader;
 import java.util.Vector;
 
 import org.luaj.vm2.Globals;
-import org.luaj.vm2.LoadState;
 import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Print;
@@ -65,7 +63,7 @@ public class lua {
 		System.exit(-1);		
 	}
 
-	private static Globals _G;
+	private static Globals globals;
 	private static boolean print = false;
 	private static String encoding = null;
 	
@@ -137,8 +135,8 @@ public class lua {
 				System.out.println(version);
 			
 			// new lua state
-			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
-			if ( luajc ) LuaJC.install(_G);
+			globals = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
+			if ( luajc ) LuaJC.install(globals);
 			for ( int i=0, n=libs!=null? libs.size(): 0; i<n; i++ )
 				loadLibrary( (String) libs.elementAt(i) );
 			
@@ -181,12 +179,12 @@ public class lua {
 		LuaValue slibname =LuaValue.valueOf(libname); 
 		try {
 			// load via plain require
-			_G.get("require").call(slibname);
+			globals.get("require").call(slibname);
 		} catch ( Exception e ) {
 			try {
 				// load as java class
 				LuaValue v = (LuaValue) Class.forName(libname).newInstance(); 
-				v.call(slibname, _G);
+				v.call(slibname, globals);
 			} catch ( Exception f ) {
 				throw new IOException("loadLibrary("+libname+") failed: "+e+","+f );
 			}
@@ -198,21 +196,21 @@ public class lua {
 			LuaValue c;
 			try {
 				c = encoding != null? 
-						_G.load(new InputStreamReader(script, encoding), chunkname):
-						_G.load(script, chunkname, "bt", _G);
+						globals.load(new InputStreamReader(script, encoding), chunkname):
+						globals.load(script, chunkname, "bt", globals);
 			} finally {
 				script.close();
 			}
 			if (print && c.isclosure())
 				Print.print(c.checkclosure().p);
-			Varargs scriptargs = setGlobalArg(chunkname, args, firstarg, _G);
+			Varargs scriptargs = setGlobalArg(chunkname, args, firstarg, globals);
 			c.invoke( scriptargs );
 		} catch ( Exception e ) {
 			e.printStackTrace( System.err );
 		}
 	}
 
-	private static Varargs setGlobalArg(String chunkname, String[] args, int i, LuaValue _G) {
+	private static Varargs setGlobalArg(String chunkname, String[] args, int i, LuaValue globals) {
 		if (args == null)
 			return LuaValue.NONE;
 		LuaTable arg = LuaValue.tableOf();
@@ -220,7 +218,7 @@ public class lua {
 			arg.set( j-i, LuaValue.valueOf(args[j]) );
 		arg.set(0, LuaValue.valueOf(chunkname));
 		arg.set(-1, LuaValue.valueOf("luaj"));
-		_G.set("arg", arg);
+		globals.set("arg", arg);
 		return arg.unpack();
 	}
 

@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
 
 /**

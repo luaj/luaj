@@ -32,29 +32,26 @@ import org.luaj.vm2.Varargs;
  * <p>
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("table").get("length").call( LuaValue.tableOf() ) );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new TableLib());
- * LuaValue tbl = LuaValue.listOf( new LuaValue[] {
- * 		LuaValue.valueOf( "abc" ),
- * 		LuaValue.valueOf( "def" ) } );
- * LuaValue sep = LuaValue.valueOf( "-" );
- * System.out.println( _G.get("table").get("concat").call( tbl, sep ) );
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new TableLib());
+ * System.out.println( globals.get("table").get("length").call( LuaValue.tableOf() ) );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.5">http://www.lua.org/manual/5.1/manual.html#5.5</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.5">Lua 5.2 Table Lib Reference</a>
  */
 public class TableLib extends TwoArgFunction {
 

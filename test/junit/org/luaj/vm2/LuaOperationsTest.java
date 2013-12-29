@@ -130,9 +130,9 @@ public class LuaOperationsTest extends TestCase {
 
 	public Prototype createPrototype( String script, String name ) {
 		try {
-			Globals _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
+			Globals globals = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 			Reader reader = new StringReader(script);
-			return _G.compilePrototype(reader, name);
+			return globals.compilePrototype(reader, name);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -146,25 +146,25 @@ public class LuaOperationsTest extends TestCase {
 		// set up suitable environments for execution
 		LuaValue aaa = LuaValue.valueOf("aaa");
 		LuaValue eee = LuaValue.valueOf("eee");
-		final Globals _G = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
+		final Globals globals = org.luaj.vm2.lib.jse.JsePlatform.standardGlobals();
 		LuaTable newenv = LuaValue.tableOf( new LuaValue[] { 
 				LuaValue.valueOf("a"), LuaValue.valueOf("aaa"), 
 				LuaValue.valueOf("b"), LuaValue.valueOf("bbb"), } );
-		LuaTable mt = LuaValue.tableOf( new LuaValue[] { LuaValue.INDEX, _G } );
+		LuaTable mt = LuaValue.tableOf( new LuaValue[] { LuaValue.INDEX, globals } );
 		newenv.setmetatable(mt);
-		_G.set("a", aaa);
+		globals.set("a", aaa);
 		newenv.set("a", eee);
 
 		// function tests
 		{
-			LuaFunction f = new ZeroArgFunction() { public LuaValue call() { return _G.get("a");}};
+			LuaFunction f = new ZeroArgFunction() { public LuaValue call() { return globals.get("a");}};
 			assertEquals( aaa, f.call() );
 		}
 		
 		// closure tests
 		{
 			Prototype p = createPrototype( "return a\n", "closuretester" );
-			LuaClosure c = new LuaClosure(p, _G);
+			LuaClosure c = new LuaClosure(p, globals);
 			
 			// Test that a clusure with a custom enviroment uses that environment.
 			assertEquals( aaa, c.call() );

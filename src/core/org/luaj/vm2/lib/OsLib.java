@@ -55,20 +55,23 @@ import org.luaj.vm2.Varargs;
  * </ul>
  * <p>
  * Typically, this library is included as part of a call to either 
- * {@link JmePlatform#standardGlobals()}
+ * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("os").get("time").call() );
+ * } </pre>
+ * In this example the platform-specific {@link JseOsLib} library will be loaded, which will include
+ * the base functionality provided by this class.
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * LuaThread.setGlobals(_G);
- * _G.load(new BaseLib());
- * _G.load(new PackageLib());
- * _G.load(new OsLib());
- * System.out.println( _G.get("os").get("time").call() );
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new OsLib());
+ * System.out.println( globals.get("os").get("time").call() );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
   * @see LibFunction
  * @see JseOsLib

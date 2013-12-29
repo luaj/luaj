@@ -25,35 +25,53 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.luaj.vm2.compiler.DumpState;
+
 
 /**
-* Class to manage loading of {@link Prototype} instances.
+* Class to undump compiled lua bytecode into a {@link Prototype} instances.
 * <p>
-* The {@link LoadState} class exposes one main function, 
-* namely {@link #load(InputStream, String, LuaValue)}, 
-* to be used to load code from a particular input stream.  
+* The {@link LoadState} class implements {@link Globals#Undumper}
+* which is used to undump a string of bytes that represent a lua binary file
+* using either the C-based lua compiler, or luaj's {@link DumpState#dump} function.
 * <p>
-* A simple pattern for loading and executing code is
+* The canonical method to load and execute code is done 
+* indirectly using the Globals:
 * <pre> {@code
-* Globals _G = JsePlatform.standardGlobals();
-* _G.load(new FileReader("main.lua"), "main.lua", _G ).call();
+* Globals globals = JsePlatform.standardGlobals();
+* LuaValue chunk = globasl.load("print('hello, world')", "main.lua");
+* chunk.call();
 * } </pre>
 * This should work regardless of which {@link Globals.Compiler}
 * has been installed.
 * <p>
-*  
-* Prior to loading code, a compiler should be installed. 
-* <p>
 * By default, when using {@link JsePlatform} or {@JmePlatform}
-* to construct globals, the {@link LuaC} compiler is installed. 
+* to construct globals, the {@link LoadState} is installed
+* as the default {@link Globals#undumper}. 
 * <p>
-* To override the default compiler with, say, the {@link LuaJC}
-* lua-to-java bytecode compiler, install it before loading, 
-* for example:
+* 
+* A lua binary file is created via {@link DumpState#dump}:
 * <pre> {@code
-* LuaValue _G = JsePlatform.standardGlobals();
-* LuaJC.install(_G);
-* LoadState.load( new FileInputStream("main.lua"), "main.lua", _G ).call();
+* Globals globals = JsePlatform.standardGlobals();
+* Prototype p = globals.compilePrototype(new StringReader("print('hello, world')"), "main.lua");
+* ByteArrayOutputStream o = new ByteArrayOutputStream();
+* DumpState.dump(p, o, false);
+* byte[] lua_binary_file_bytes = o.toByteArray();
+* } </pre>
+* 
+* The {@link LoadState} may be used directly to undump these bytes:
+* <pre> {@code
+* Prototypep = LoadState.instance.undump(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua");
+* LuaClosure c = new LuaClosure(p, globals);
+* c.call();
+* } </pre>
+* 
+* 
+* More commonly, the {@link Globals#undumper} may be used to undump them:
+* <pre> {@code
+* Prototype p = globals.loadPrototype(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua", "b");
+* LuaClosure c = new LuaClosure(p, globals);
+* c.call();
 * } </pre>
 * 
 * @see LuaCompiler

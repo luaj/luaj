@@ -10,16 +10,16 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 public class SimpleTests extends TestCase {
 
-	private Globals _G;
+	private Globals globals;
 
     protected void setUp() throws Exception {
         super.setUp();
-        _G = JsePlatform.standardGlobals();
+        globals = JsePlatform.standardGlobals();
     }
 
     private void doTest( String script ) {
     	try {
-			LuaValue c = _G.load(script, "script");
+			LuaValue c = globals.load(script, "script");
 			c.call();
     	} catch ( Exception e ) {
     		fail("i/o exception: "+e );

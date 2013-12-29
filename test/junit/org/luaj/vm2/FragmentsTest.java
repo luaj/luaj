@@ -64,17 +64,17 @@ public class FragmentsTest extends TestSuite {
 		public void runFragment( Varargs expected, String script ) {
 			try {
 				String name = getName();
-				Globals _G = JsePlatform.debugGlobals();
+				Globals globals = JsePlatform.debugGlobals();
 				Reader reader = new StringReader(script);
 				LuaValue chunk ;
 				switch ( TEST_TYPE ) {
 				case TEST_TYPE_LUAJC:
-					LuaJC.install(_G);
-					chunk = _G.load(reader, name);
+					LuaJC.install(globals);
+					chunk = globals.load(reader, name);
 					break;
 				default:
-					Prototype p = _G.compilePrototype(reader, name);
-					chunk = new LuaClosure(p, _G);
+					Prototype p = globals.compilePrototype(reader, name);
+					chunk = new LuaClosure(p, globals);
 					Print.print(p);
 					break;
 				}

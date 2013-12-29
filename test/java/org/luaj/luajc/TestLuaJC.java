@@ -39,7 +39,7 @@ public class TestLuaJC {
 	// build path.  This allows the debugger to find the file when stepping into the function.
 	public static String filename = "perf/nsieve.lua";
 
-	static Globals _G;
+	static Globals globals;
 	
 	public static void main(String[] args) throws Exception {
 		if (args.length > 0)
@@ -48,17 +48,17 @@ public class TestLuaJC {
 		try {
 			
 			// create an environment to run in
-			_G = JsePlatform.standardGlobals();
+			globals = JsePlatform.standardGlobals();
 
 			// print the chunk as a closure, and pretty-print the closure.
-			LuaValue f = _G.loadfile(filename).arg1();
+			LuaValue f = globals.loadfile(filename).arg1();
 			Prototype p = f.checkclosure().p;
 			Print.print(p);
 
 			// load into a luajc java-bytecode based chunk by installing the LuaJC compiler first
 			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
-				LuaJC.install(_G);
-				f = _G.loadfile(filename).arg1();
+				LuaJC.install(globals);
+				f = globals.loadfile(filename).arg1();
 			}
 	
 			// call with arguments
@@ -79,8 +79,8 @@ public class TestLuaJC {
         // create the chunk
 		String destdir = ".";
 		
-		InputStream is = _G.FINDER.findResource(filename);
-		Hashtable t = LuaJC.instance.compileAll(is, filename, filename, _G, true);
+		InputStream is = globals.FINDER.findResource(filename);
+		Hashtable t = LuaJC.instance.compileAll(is, filename, filename, globals, true);
 
         // write out the chunk
     	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {

@@ -23,13 +23,62 @@ package org.luaj.vm2;
 
 /**
  * Prototype representing compiled lua code. 
+ * 
  * <p>
  * This is both a straight translation of the corresponding C type, 
  * and the main data structure for execution of compiled lua bytecode. 
+ * 
  * <p>
- * See documentatation on {@link LuaClosure} for information on how to load 
- * and execute a {@link Prototype}.
+ * Generally, the {@link Protoytpe} is not constructed directly is an intermediate result
+ * as lua code is loaded using {@link Globals.load}:
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.load( new StringReader("print 'hello'"), "main.lua" ).call(); 
+ * } </pre>
+ * 
+ * <p>
+ * To create a {@link Prototype} directly, a compiler such as {@link LuaC} may be used:
+ * <pre> {@code
+ * InputStream is = new ByteArrayInputStream("print('hello,world')".getBytes());
+ * Prototype p = LuaC.instance.compile(is, "script");
+ * }</pre> 
+ * 
+ * To simplify loading, the {@link Globals#compilePrototype} method may be used: 
+ * <pre> {@code
+ * Prototype p = globals.compileProtoytpe(is, "script");
+ * }</pre>
+ * 
+ * It may also be loaded from a {@link java.io.Reader} : 
+ * <pre> {@code
+ * Prototype p = globals.compileProtoytpe(new StringReader(script), "script");
+ * }</pre>
+ * 
+ * To un-dump a binary file known to be a binary lua file that has been dumped to a string,
+ * the {@link Globals#Undumper} interface may be used: 
+ * <pre> {@code
+ * FileInputStream lua_binary_file = new FileInputStream("foo.lc");  // Known to be compiled lua.
+ * Prototype p = globals.undumper.undump(lua_binary_file, "foo.lua");
+ * }</pre>
+ * 
+ * To execute the code represented by the {@link Prototype} it must be supplied to 
+ * the constructor of a {@link LuaClosure}:
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * LuaClosure f = new LuaClosure(p, globals);
+ * f.call();
+ * }</pre> 
+ * 
+ * To simplify the debugging of prototype values, the contents may be printed using {@link Print#print}:
+ * <pre> {@code
+ * Print.print(p);
+ * }</pre>
+ * <p>
+ *  
  * @see LuaClosure
+ * @see Globals
+ * @see Globals#Undumper
+ * @see Globasl#Compiler
+ * @see Print#print
  */
 
 public class Prototype {

@@ -39,25 +39,36 @@ import org.luaj.vm2.lib.BaseLib;
 
 /**
  * Compiler for Lua.
+ * 
  * <p>
  * Compiles lua source files into lua bytecode within a {@link Prototype}, 
  * loads lua binary files directly into a{@link Prototype}, 
  * and optionaly instantiates a {@link LuaClosure} around the result 
  * using a user-supplied environment.  
+ * 
  * <p>
  * Implements the {@link Globals.Compiler} interface for loading 
  * initialized chunks, which is an interface common to 
- * lua bytecode compiling and java bytecode compiling. 
+ * lua bytecode compiling and java bytecode compiling.
+ *  
  * <p> 
- * Teh {@link LuaC} compiler is installed by default by both the 
+ * The {@link LuaC} compiler is installed by default by both the 
  * {@link JsePlatform} and {@link JmePlatform} classes, 
  * so in the following example, the default {@link LuaC} compiler 
  * will be used:
  * <pre> {@code
- * LuaValue _G = JsePlatform.standardGlobals();
- * LoadState.load( new ByteArrayInputStream("print 'hello'".getBytes()), "main.lua", _G ).call();
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.load(new StringReader("print 'hello'"), "main.lua" ).call();
  * } </pre>
- * @see LuaCompiler
+ * 
+ * To load the LuaC compiler manually, use the install method:
+ * <pre> {@code
+ * LuaC.install(globals);
+ * } </pre>
+ * 
+ * @see LuaC#install(Globals)
+ * @see Globals#Compiler
+ * @see Globals#Loader
  * @see LuaJC
  * @see JsePlatform
  * @see JmePlatform
@@ -68,15 +79,17 @@ import org.luaj.vm2.lib.BaseLib;
  */
 public class LuaC extends Lua implements Globals.Compiler, Globals.Loader {
 
+	/** A sharable instance of the LuaC compiler. */
 	public static final LuaC instance = new LuaC();
 	
 	/** Install the compiler so that LoadState will first 
 	 * try to use it when handed bytes that are 
 	 * not already a compiled lua chunk.
+	 * @param globals the Globals into which this is to be installed.
 	 */
-	public static void install(Globals g) {
-		g.compiler = instance;
-		g.loader = instance;
+	public static void install(Globals globals) {
+		globals.compiler = instance;
+		globals.loader = instance;
 	}
 
 	protected static void _assert(boolean b) {		

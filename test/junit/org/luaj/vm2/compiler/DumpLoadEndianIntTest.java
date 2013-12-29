@@ -30,11 +30,11 @@ public class DumpLoadEndianIntTest extends TestCase {
 	private static final String withdoubles = "1234-#!-23.75";
 	private static final String withints = "1234-#!-23";
 
-    private Globals _G;
+    private Globals globals;
 
     protected void setUp() throws Exception {
         super.setUp();
-        _G = JsePlatform.standardGlobals();
+        globals = JsePlatform.standardGlobals();
         DumpState.ALLOW_INTEGER_CASTING = false;
     }
 
@@ -86,10 +86,10 @@ public class DumpLoadEndianIntTest extends TestCase {
             
             // compile into prototype
             Reader reader = new StringReader(script);
-            Prototype p = _G.compilePrototype(reader, "script");
+            Prototype p = globals.compilePrototype(reader, "script");
             
             // double check script result before dumping
-            LuaFunction f = new LuaClosure(p, _G);
+            LuaFunction f = new LuaClosure(p, globals);
             LuaValue r = f.call();
             String actual = r.tojstring();
             assertEquals( expectedPriorDump, actual );
@@ -110,7 +110,7 @@ public class DumpLoadEndianIntTest extends TestCase {
             
             // load again using compiler
             InputStream is = new ByteArrayInputStream(dumped);
-            f = _G.load(is, "dumped", "b", _G).checkfunction();
+            f = globals.load(is, "dumped", "b", globals).checkfunction();
             r = f.call();
             actual = r.tojstring();
             assertEquals( expectedPostDump, actual );

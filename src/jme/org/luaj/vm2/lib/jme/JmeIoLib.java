@@ -49,7 +49,7 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * For special cases where the smallest possible footprint is desired, 
  * a minimal set of libraries could be loaded
- * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
  * globals.load(new JmeBaseLib());

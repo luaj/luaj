@@ -40,20 +40,25 @@ import org.luaj.vm2.Varargs;
  * <p> 
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * System.out.println( globals.get("coroutine").get("running").call() );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * _G.load(new CoroutineLib());
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new CoroutineLib());
+ * System.out.println( globals.get("coroutine").get("running").call() );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.2">http://www.lua.org/manual/5.1/manual.html#5.2</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.2">Lua 5.2 Coroutine Lib Reference</a>
  */
 public class CoroutineLib extends TwoArgFunction {
 

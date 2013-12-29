@@ -47,20 +47,23 @@ import org.luaj.vm2.Varargs;
  * <p> 
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.standardGlobals();
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * } </pre>
+ * In this example the platform-specific {@link JseIoLib} library will be loaded, which will include
+ * the base functionality provided by this class, whereas the {@link JsePlatform} would load the 
+ * {@link JseIoLib}.
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * LuaTable _G = new LuaTable();
- * _G.load(new JseIoLib());
- * LuaThread.setGlobals(_G);
- * _G.load(new JseBaseLib());
- * _G.load(new PackageLib());
- * _G.load(new JseIoLib());
- * _G.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new OsLib());
+ * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction

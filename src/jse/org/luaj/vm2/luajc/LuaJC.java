@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.util.Hashtable;
 
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
@@ -37,19 +38,25 @@ import org.luaj.vm2.lib.BaseLib;
  * Implementation of {@link LuaCompiler} which does direct 
  * lua-to-java-bytecode compiling. 
  * <p>
+ * By default, when using {@link JsePlatform} or {@JmePlatform}
+ * to construct globals, the plain compiler {@link LuaC} is installed and lua code 
+ * will only be compiled into lua bytecode and execute as {@link LuaClosure}. 
+ * <p>
+ * To override the default compiling behavior with {@link LuaJC}
+ * lua-to-java bytecode compiler, install it before undumping code, 
+ * for example:
+ * <pre> {@code
+ * LuaValue globals = JsePlatform.standardGlobals();
+ * LuaJC.install(globals);
+ * LuaValue chunk = globals.load( "print('hello, world'), "main.lua");
+ * System.out.println(chunk.isclosure());  // Will be false when LuaJC is working.
+ * chunk.call();
+ * } </pre>
+ * <p>
  * This requires the bcel library to be on the class path to work as expected.  
  * If the library is not found, the default {@link LuaC} lua-to-lua-bytecode 
  * compiler will be used.  
- * <p>
- * The compiler should be installed as part of globals initialization, 
- * and before any scripts or lua code is executed. 
- * A typical example is to install it following the globals creation, 
- * as in the following:
- * <pre> {@code
- * LuaValue _G = JsePlatform.standardGlobals();
- * LuaJC.install(_G);
- * _G.loadString("print 'hello'").call();
- * } </pre>
+ * 
  * @see LuaCompiler
  * @see LuaC
  * @see BaseLib

@@ -48,18 +48,18 @@ import org.luaj.vm2.lib.LibFunction;
  * {@link JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
- * System.out.println( _G.get("os").get("time").call() );
+ * System.out.println( globals.get("os").get("time").call() );
  * } </pre>
  * <p>
  * For special cases where the smallest possible footprint is desired, 
  * a minimal set of libraries could be loaded
- * directly via {@link Glboals#load(LuaValue)} using code such as:
+ * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
  * globals.load(new JseBaseLib());
  * globals.load(new PackageLib());
  * globals.load(new JseOsLib());
- * System.out.println( _G.get("os").get("time").call() );
+ * System.out.println( globals.get("os").get("time").call() );
  * } </pre>
  * <p>However, other libraries such as <em>MathLib</em> are not loaded in this case.
  * <p>

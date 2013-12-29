@@ -50,20 +50,25 @@ import org.luaj.vm2.Varargs;
  * <p> 
  * Typically, this library is included as part of a call to either 
  * {@link JsePlatform#debugGlobals()} or {@link JmePlatform#debugGlobals()}
+ * <pre> {@code
+ * Globals globals = JsePlatform.debugGlobals();
+ * System.out.println( globals.get("debug").get("traceback").call() );
+ * } </pre>
  * <p>
  * To instantiate and use it directly, 
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
- * Globals _G = new Globals();
- * _G.load(new DebugLib());
+ * Globals globals = new Globals();
+ * globals.load(new JseBaseLib());
+ * globals.load(new PackageLib());
+ * globals.load(new DebugLib());
+ * System.out.println( globals.get("debug").get("traceback").call() );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
  * <p>
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.9">http://www.lua.org/manual/5.1/manual.html#5.9</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.10">Lua 5.2 Debug Lib Reference</a>
  */
 public class DebugLib extends TwoArgFunction {
 	public static final boolean CALLS = (null != System.getProperty("CALLS"));
