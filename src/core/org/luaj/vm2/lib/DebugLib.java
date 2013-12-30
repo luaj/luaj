@@ -25,6 +25,7 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaNil;
 import org.luaj.vm2.LuaNumber;
@@ -432,8 +433,10 @@ public class DebugLib extends TwoArgFunction {
 		t.inhook = true;
 		try {
 			t.hookfunc.call(type, arg);
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (LuaError e) {
+			throw e;
+		} catch (RuntimeException e) {
+			throw new LuaError(e);
 		} finally {
 			t.inhook = false;
 		}

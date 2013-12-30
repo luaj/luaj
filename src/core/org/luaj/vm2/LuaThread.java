@@ -24,8 +24,6 @@ package org.luaj.vm2;
 
 import java.lang.ref.WeakReference;
 
-import org.luaj.vm2.lib.DebugLib;
-
 /** 
  * Subclass of {@link LuaValue} that implements 
  * a lua coroutine thread using Java Threads.

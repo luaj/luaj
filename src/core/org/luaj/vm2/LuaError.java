@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import org.luaj.vm2.lib.DebugLib;
 
 /**
  * RuntimeException that is thrown and caught in response to a lua error. 
