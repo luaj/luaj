@@ -197,6 +197,15 @@ public class Globals extends LuaTable {
 		return load(new StrReader(script), chunkname);
 	}
 	
+	/** Convenience function to load a string value as a script.  Must be lua source.
+	 * @param script Contents of a lua script, such as "print 'hello, world.'"
+	 * @return LuaValue that may be executed via .call(), .invoke(), or .method() calls.
+	 * @throws LuaError if the script could not be compiled.
+	 */
+	public LuaValue load(String script) {
+		return load(new StrReader(script), script);
+	}
+	
 	/** Load the content form a reader as a text file.  Must be lua source. 
 	 * The source is converted to UTF-8, so any characters appearing in quoted literals 
 	 * above the range 128 will be converted into multiple bytes.  */
