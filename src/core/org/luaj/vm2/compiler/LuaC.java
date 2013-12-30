@@ -253,6 +253,14 @@ public class LuaC extends Lua implements Globals.Compiler, Globals.Loader {
 		return (new LuaC(new Hashtable())).luaY_parser(stream, chunkname);
 	}
 
+	/** @deprecated
+	 * Use Globals.load(InputString, String, String) instead, 
+	 * or LuaC.compil(InputStream, String) and construct LuaClosure directly.
+	 */
+	public LuaValue load(InputStream stream, String chunkname, Globals globals) throws IOException {
+		return new LuaClosure(compile(stream, chunkname), globals);
+	}
+
 
 	/** Parse the input */
 	private Prototype luaY_parser(InputStream z, String name) throws IOException{
