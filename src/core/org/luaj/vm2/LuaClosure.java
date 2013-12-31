@@ -519,16 +519,18 @@ public class LuaClosure extends LuaFunction {
 	 *  @param msg the message to use in error hook processing. 
 	 * */
 	String errorHook(String msg) {
-		if (globals == null || globals.errorfunc == null)
-			return msg;
-		LuaValue errfunc = globals.errorfunc;
-		globals.errorfunc = null;
+		if (globals == null ) return msg;
+		final LuaThread running = globals.running;
+		if (running == null) return msg;
+		final LuaValue errfunc = running.errorfunc;
+		if (errfunc == null) return msg;
+		running.errorfunc = null;
 		try {
 			return errfunc.call( LuaValue.valueOf(msg) ).tojstring();
 		} catch ( Throwable t ) {
 			return "error in error handling";
 		} finally {
-			globals.errorfunc = errfunc;
+			running.errorfunc = errfunc;
 		}
 	}
 
@@ -536,8 +538,6 @@ public class LuaClosure extends LuaFunction {
 		le.fileline = (p.source != null? p.source.tojstring(): "?") + ":" 
 			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
 		le.traceback = errorHook(le.getMessage());
-		if (globals != null && globals.debuglib != null)
-			le.traceback = le.traceback + "\n" + globals.debuglib.traceback(le.level);
 	}
 	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
@@ -548,7 +548,7 @@ public class LuaClosure extends LuaFunction {
 		for (int i = 0; i < n; ++i)
 			if (openups[i] == null)
 				return openups[i] = new UpValue(stack, idx);
-		this.error("No space for upvalue");
+		error("No space for upvalue");
 		return null;
 	}
 

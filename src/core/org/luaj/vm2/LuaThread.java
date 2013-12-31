@@ -93,8 +93,12 @@ public class LuaThread extends LuaValue {
 
 	public final Globals globals;
 
-	// Hook function control state used by debug lib.
+	/** Hook function control state used by debug lib. */
 	public LuaValue hookfunc;
+
+	/** Error message handler for this thread, if any.  */
+	public LuaValue errorfunc;
+
 	public boolean hookline;
 	public boolean hookcall;
 	public boolean hookrtrn;

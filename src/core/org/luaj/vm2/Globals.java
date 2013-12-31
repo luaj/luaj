@@ -136,9 +136,6 @@ public class Globals extends LuaTable {
 	/** The DebugLib instance loaded into this Globals, or null if debugging is not enabled */
 	public DebugLib debuglib;
 
-	/** The current error handler for this Globals */
-	public LuaValue errorfunc;
-
 	/** Interface for module that converts a Prototype into a LuaFunction with an environment. */
 	public interface Loader {
 		/** Convert the prototype into a LuaFunction with the supplied environment. */

@@ -29,6 +29,7 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
@@ -213,7 +214,13 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			if (globals != null && globals.debuglib != null)
 				globals.debuglib.onCall(this);
 			try {
-				return pcall(func,args.subargs(2),null);
+				return varargsOf(TRUE, func.invoke(args.subargs(2)));
+			} catch ( LuaError le ) {
+				final String m = le.getMessage();
+				return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+			} catch ( Exception e ) {
+				final String m = e.getMessage();
+				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 			} finally {
 				if (globals != null && globals.debuglib != null)
 					globals.debuglib.onReturn();
@@ -353,13 +360,26 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "xpcall", // (f, err) -> result1, ...				
 	final class xpcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			if (globals != null && globals.debuglib != null)
-				globals.debuglib.onCall(this);
+			final LuaThread t = globals.running;
+			final LuaValue preverror = t.errorfunc;
+			t.errorfunc = args.checkvalue(2);
 			try {
-				return pcall(args.arg1(),args.subargs(3),args.checkvalue(2));
-			} finally {
 				if (globals != null && globals.debuglib != null)
-					globals.debuglib.onReturn();
+					globals.debuglib.onCall(this);
+				try {
+					return varargsOf(TRUE, args.arg1().invoke(args.subargs(3)));
+				} catch ( LuaError le ) {
+					final String m = le.getMessage();
+					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+				} catch ( Exception e ) {
+					final String m = e.getMessage();
+					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
+				} finally {
+					if (globals != null && globals.debuglib != null)
+						globals.debuglib.onReturn();
+				}
+			} finally {
+				t.errorfunc = preverror;
 			}
 		}
 	}
@@ -394,24 +414,6 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	static final class inext extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			return args.checktable(1).inext(args.arg(2));
-		}
-	}
-
-	public Varargs pcall(LuaValue func, Varargs args, LuaValue errorfunc) {
-		try {
-			LuaValue olderr = globals.errorfunc;
-			globals.errorfunc = errorfunc;
-			try {
-				return varargsOf(LuaValue.TRUE, func.invoke(args));
-			} finally {
-				globals.errorfunc = olderr;
-			}
-		} catch ( LuaError le ) {
-			String m = le.getMessage();
-			return varargsOf(FALSE, m!=null? valueOf(m): NIL);
-		} catch ( Exception e ) {
-			String m = e.getMessage();
-			return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
 		}
 	}
 	
