@@ -518,26 +518,28 @@ public class LuaClosure extends LuaFunction {
 	 *  Run the error hook if there is one
 	 *  @param msg the message to use in error hook processing. 
 	 * */
-	String errorHook(String msg) {
+	String errorHook(String msg, int level) {
 		if (globals == null ) return msg;
-		final LuaThread running = globals.running;
-		if (running == null) return msg;
-		final LuaValue errfunc = running.errorfunc;
-		if (errfunc == null) return msg;
-		running.errorfunc = null;
+		final LuaThread r = globals.running;
+		if (r.errorfunc == null)
+			return globals.debuglib != null?
+				msg + "\n" + globals.debuglib.traceback(level):
+				msg;
+		final LuaValue e = r.errorfunc;
+		r.errorfunc = null;
 		try {
-			return errfunc.call( LuaValue.valueOf(msg) ).tojstring();
+			return e.call( LuaValue.valueOf(msg) ).tojstring();
 		} catch ( Throwable t ) {
 			return "error in error handling";
 		} finally {
-			running.errorfunc = errfunc;
+			r.errorfunc = e;
 		}
 	}
 
 	private void processErrorHooks(LuaError le, Prototype p, int pc) {
 		le.fileline = (p.source != null? p.source.tojstring(): "?") + ":" 
 			+ (p.lineinfo != null && pc >= 0 && pc < p.lineinfo.length? String.valueOf(p.lineinfo[pc]): "?");
-		le.traceback = errorHook(le.getMessage());
+		le.traceback = errorHook(le.getMessage(), le.level);
 	}
 	
 	private UpValue findupval(LuaValue[] stack, short idx, UpValue[] openups) {
