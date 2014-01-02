@@ -905,12 +905,15 @@ Files are no longer hosted at LuaForge.
 <li>More compatible allocation of table entries in array vs. hash (fixes issue #8).</li>
 
 <tr valign="top"><td>&nbsp;&nbsp;<b>3.0-beta2</b></td><td><ul>
-<li>LuaValue.checkfunction() now returns LuaFunction.</li>
-<li>Fix os.time() to return a number of seconds.</li>
+<li>Fix os.time() to return a number of seconds instead of milliseconds.</li>
 <li>Implement formatting with os.date(), and table argument for os.time().</li>
-<li>Refactor APIs related to compiling and loading scripts.</li>
+<li>LuaValue.checkfunction() now returns LuaFunction.</li>
+<li>Refactor APIs related to compiling and loading scripts to provide methods on Globals.</li>
+<li>Add API to compile from Readers as well as InputStreams.</li>
+<li>Add optional -c encoding flag to lua, luac, and luajc tools to control source encoding.</li>
 <li>Let errors thrown in debug hooks bubble up to the running coroutine.</li>
-<li>Make error function in xpcall per-thread instead of per-globals.</li>
+<li>Make error message handler function in xpcall per-thread instead of per-globals.</li>
+<li>Establish "org.luaj.debug" and "org.luaj.luajc" system properties to configure scripting engine.</li>
 
 </ul></td></tr>
 </table></td></tr></table>
@@ -920,7 +923,7 @@ Files are no longer hosted at LuaForge.
 <ul>
 <li>debug code may not be completely removed by some obfuscators
 <li>tail calls are not tracked in debug information
-<li>mixing major versions in the same java vm has not been tested
+<li>mixing different versions of luaj in the same java vm is not supported
 <li>values associated with weak keys may linger longer than expected
 <li>behavior of luaj when a SecurityManager is used has not been fully characterized
 <li>negative zero is treated as identical to integer value zero throughout luaj
