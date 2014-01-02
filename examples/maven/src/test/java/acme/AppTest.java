@@ -42,7 +42,7 @@ public class AppTest
     public void testDirectEvaluation() {
     	String script = "return math.pow(..., 3)";
 		Globals globals = JsePlatform.standardGlobals();
-		LuaValue chunk = globals.loadString(script, "cube");
+		LuaValue chunk = globals.load(script, "cube");
         int result = chunk.call(LuaValue.valueOf(5)).toint();
         assertEquals(125, result);
     }

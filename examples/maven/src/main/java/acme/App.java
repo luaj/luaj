@@ -17,7 +17,7 @@ public class App
 		Globals globals = JsePlatform.standardGlobals();
 		
 		// Use the convenience function on the globals to load a chunk.
-		LuaValue chunk = globals.loadString(script, "maven-exmaple");
+		LuaValue chunk = globals.load(script, "maven-exmaple");
 		
 		// Use any of the "call()" or "invoke()" functions directly on the chunk.
 		chunk.call();
