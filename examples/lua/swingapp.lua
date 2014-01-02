@@ -32,7 +32,7 @@ tick = luajava.createProxy("java.lang.Runnable", {
 	run = function()
 		swingUtilities:invokeLater(tick)
 		if os.time()< tnext then return thread:sleep(1) end
-		tnext = math.max(os.time(),tnext+1000/60)
+		tnext = math.max(os.time(),tnext+1/60)
 		pcall(animate)
 		pcall(render)
 		label:repaint(0,0,0,640,480)
@@ -95,7 +95,7 @@ label:addMouseListener(luajava.createProxy("java.awt.event.MouseListener", {
 }))
 label:addMouseMotionListener(luajava.createProxy("java.awt.event.MouseMotionListener", {
 	mouseDragged = function(e)
-		--print('mouseDragged', e:getX(), e:getY(), e)
+		--pri:wnt('mouseDragged', e:getX(), e:getY(), e)
 		x2,y2 = e:getX(),e:getY()
 	end,
 	-- mouseMoved= function(e) end, 
