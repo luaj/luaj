@@ -1,8 +1,11 @@
 import java.applet.Applet;
 import java.awt.Graphics;
+import java.io.InputStream;
+import java.net.URL;
 
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
@@ -35,7 +38,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * @see LuaValue
  * @see Applet
  */
-public class SampleApplet extends Applet {
+public class SampleApplet extends Applet implements ResourceFinder {
 	private static final long serialVersionUID = 1L;
 
 	Globals globals;
@@ -57,7 +60,12 @@ public class SampleApplet extends Applet {
 		System.out.println("Loading " + script);
 
 		// Construct globals to use.
-		globals = JsePlatform.debugGlobals();
+		globals = JsePlatform.standardGlobals();
+
+		// Use custom resource finder.
+		globals.FINDER = this;
+
+		// Look up and save the handy pcall method.
 		pcall = globals.get("pcall");
 
 		// Load and execute the script, supplying this Applet as the only
@@ -93,5 +101,30 @@ public class SampleApplet extends Applet {
 					p,
 					coerced == g ? graphics : (graphics = CoerceJavaToLua
 							.coerce(coerced = g)));
+	}
+
+	// ResourceFinder implementation.
+	public InputStream findResource(String filename) {
+		InputStream stream = findAsResource(filename);
+		if (stream != null) return stream;
+		stream = findAsDocument(filename);
+		if (stream != null) return stream;
+		System.err.println("Failed to find resource " + filename);
+		return null;
+	}
+	
+	private InputStream findAsResource(String filename) {
+		System.out.println("Looking for jar resource /"+filename);
+		return getClass().getResourceAsStream("/"+filename);
+	}
+	
+	private InputStream findAsDocument(String filename) {
+		try {
+			final URL base = getDocumentBase();
+			System.out.println("Looking in document base "+base);
+			return new URL(base, filename).openStream();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }
