@@ -4,10 +4,21 @@ import java.io.InputStream;
 import java.net.URL;
 
 import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.compiler.LuaC;
+import org.luaj.vm2.lib.Bit32Lib;
+import org.luaj.vm2.lib.CoroutineLib;
+import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.ResourceFinder;
+import org.luaj.vm2.lib.StringLib;
+import org.luaj.vm2.lib.TableLib;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
-import org.luaj.vm2.lib.jse.JsePlatform;
+import org.luaj.vm2.lib.jse.JseBaseLib;
+import org.luaj.vm2.lib.jse.JseIoLib;
+import org.luaj.vm2.lib.jse.JseMathLib;
+import org.luaj.vm2.lib.jse.JseOsLib;
+import org.luaj.vm2.lib.jse.LuajavaLib;
 
 /**
  * Simple Applet that forwards Applet lifecycle events to a lua script.
@@ -59,8 +70,20 @@ public class SampleApplet extends Applet implements ResourceFinder {
 			script = default_script;
 		System.out.println("Loading " + script);
 
-		// Construct globals to use.
-		globals = JsePlatform.standardGlobals();
+		// Construct globals specific to the applet platform.
+		globals = new Globals();
+		globals.load(new JseBaseLib());
+		globals.load(new PackageLib());
+		globals.load(new Bit32Lib());
+		globals.load(new TableLib());
+		globals.load(new StringLib());
+		globals.load(new CoroutineLib());
+		globals.load(new JseMathLib());
+		globals.load(new JseIoLib());
+		globals.load(new JseOsLib());
+		globals.load(new AppletLuajavaLib());
+		LoadState.install(globals);
+		LuaC.install(globals);
 
 		// Use custom resource finder.
 		globals.FINDER = this;
@@ -127,4 +150,13 @@ public class SampleApplet extends Applet implements ResourceFinder {
 			return null;
 		}
 	}
+
+	public static final class AppletLuajavaLib extends LuajavaLib {
+		public AppletLuajavaLib() {}
+		protected Class classForName(String name) throws ClassNotFoundException {
+			// Use plain class loader in applets.
+			return Class.forName(name);
+		}
+	}
+
 }
