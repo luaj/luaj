@@ -74,7 +74,7 @@
 		</proguard>		 
 	</target>
 
-    <target name="sign" depends="jar">
+    <target name="sign" depends="obf">
             <signjar jar="${build.dir}/${script.name}.jar" 
             	alias="${sign.alias}" 
             	storepass="${sign.storepass}" 
@@ -92,8 +92,8 @@
     			${script.name}
     		<applet archive='${script.name}.jar'
     			    code='${java.name}.class'
-    			    width='640' 
-    			    height='480' >
+    			    width='800' 
+    			    height='640' >
 	                <param name='luaj.script' value='${script.name}.lua'/>
     				<param name="java_version" value="1.4+"/>
     			</applet>
