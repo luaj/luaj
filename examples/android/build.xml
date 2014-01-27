@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ant build file for sample Android project that includes luaj. 
+-->
+<project name="LuajActivity" default="help">
+   	<property name="luaj.home" location="../.."/>
+   	<property name="luaj.lib" location="${luaj.home}/lib"/>
+   	<property file="../../version.properties"/>
+    
+    <!-- location of the android sdk -->
+    <property environment="env" />
+   	<property name="sdk.dir" value="${env.ANDROID_HOME}"/>
+   	<echo>sdk.dir: ${sdk.dir}</echo>	
+
+    <!-- android project properties -->
+    <property name="target" value="android-19"/>
+
+	<!-- prior to compiling copys the luaj jar into the 'libs' directory -->
+   	<target name="pre-compile">
+		<mkdir dir="libs"/>
+		<copy file="${luaj.lib}/luaj-jse-${version}.jar" todir="libs"/>
+    </target>
+
+    <!-- version-tag: 1 -->
+    <import file="${sdk.dir}/tools/ant/build.xml" />
+
+</project>
