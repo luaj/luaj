@@ -35,7 +35,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.luajc.LuaJC;
 
 public class TestLuaJC {
-	// This file will be loaded using the FINDER as a resource, provided it is in the 
+	// This file will be loaded using the finder as a resource, provided it is in the 
 	// build path.  This allows the debugger to find the file when stepping into the function.
 	public static String filename = "perf/nsieve.lua";
 
@@ -79,7 +79,7 @@ public class TestLuaJC {
         // create the chunk
 		String destdir = ".";
 		
-		InputStream is = globals.FINDER.findResource(filename);
+		InputStream is = globals.finder.findResource(filename);
 		Hashtable t = LuaJC.instance.compileAll(is, filename, filename, globals, true);
 
         // write out the chunk

@@ -21,7 +21,7 @@ public class LuajView extends View implements ResourceFinder {
 	public LuajView(Context context) {
 		super(context);
 		this.globals = JsePlatform.standardGlobals();
-		this.globals.FINDER = this;
+		this.globals.finder = this;
 	}
 
 	// Implement a finder that loads from the assets directory.

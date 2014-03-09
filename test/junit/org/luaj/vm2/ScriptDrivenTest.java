@@ -76,7 +76,7 @@ public class ScriptDrivenTest extends TestCase implements ResourceFinder {
 	protected void setUp() throws Exception {
 		super.setUp();
 		initGlobals();
-		globals.FINDER = this;
+		globals.finder = this;
 	}
 
 	// ResourceFinder implementation.

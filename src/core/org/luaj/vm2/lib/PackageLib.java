@@ -299,7 +299,7 @@ public class PackageLib extends TwoArgFunction {
 				}
 				
 				// try opening the file
-				InputStream is = globals.FINDER.findResource(filename);
+				InputStream is = globals.finder.findResource(filename);
 				if (is != null) {
 					try { is.close(); } catch ( java.io.IOException ioe ) {}
 					return valueOf(filename);

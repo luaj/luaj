@@ -86,7 +86,7 @@ public class SampleApplet extends Applet implements ResourceFinder {
 		LuaC.install(globals);
 
 		// Use custom resource finder.
-		globals.FINDER = this;
+		globals.finder = this;
 
 		// Look up and save the handy pcall method.
 		pcall = globals.get("pcall");
