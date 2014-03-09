@@ -28,6 +28,7 @@ import java.io.Reader;
 import javax.script.Bindings;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -49,6 +50,7 @@ public class ScriptEngineTests extends TestSuite  {
 		suite.addTest( new TestSuite( SimpleBindingsTest.class,   "Simple Bindings" ) );
 		suite.addTest( new TestSuite( DefaultBindingsTest.class,   "Default Bindings" ) );
 		suite.addTest( new TestSuite( LuaJCBindingsTest.class,   "LuaJC Bindings" ) );
+		suite.addTest( new TestSuite( UserContextTest.class,   "User Context" ) );
 		return suite;
 	}
 	
@@ -245,4 +247,39 @@ public class ScriptEngineTests extends TestSuite  {
     		return "some-user-value";
     	}
     }
+
+	public static class UserContextTest extends TestCase {	
+		protected ScriptEngine e;
+		protected Bindings b;
+		protected ScriptContext c;
+		public void setUp() {
+	       	this.e = new ScriptEngineManager().getEngineByName("luaj");
+			this.c = new LuajContext();
+			this.b = c.getBindings(ScriptContext.ENGINE_SCOPE);
+		}
+		public void testUncompiledScript() throws ScriptException {
+            b.put("x", 144);
+            assertEquals(12, e.eval("z = math.sqrt(x); return z", b));
+            assertEquals(12, b.get("z"));
+            assertEquals(null, e.getBindings(ScriptContext.ENGINE_SCOPE).get("z"));
+            assertEquals(null, e.getBindings(ScriptContext.GLOBAL_SCOPE).get("z"));
+
+            b.put("x", 25);
+            assertEquals(5, e.eval("z = math.sqrt(x); return z", c));
+            assertEquals(5, b.get("z"));
+            assertEquals(null, e.getBindings(ScriptContext.ENGINE_SCOPE).get("z"));
+            assertEquals(null, e.getBindings(ScriptContext.GLOBAL_SCOPE).get("z"));
+		}
+		public void testCompiledScript() throws ScriptException {
+            CompiledScript cs = ((Compilable)e).compile("z = math.sqrt(x); return z");
+            
+            b.put("x", 144);
+            assertEquals(12, cs.eval(b));
+            assertEquals(12, b.get("z"));
+
+            b.put("x", 25);
+            assertEquals(5, cs.eval(c));
+            assertEquals(5, b.get("z"));
+		}
+	}
 }
