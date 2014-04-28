@@ -68,12 +68,12 @@ Support for lua 5.2.x features:
 </ul>
 It also includes miscellaneous improvements over luaj 2.0.x:
 <ul>
+<li>Better thread safety.
+<li>More compatible table behavior.
 <li>Better coroutine-related garbage collection. 
+<li>Maven integration.
 <li>Better debug reporting when using closures.
 <li>Line numbers in parse syntax tree.
-<li>More compatible table behavior.
-<li>Better thread safety.
-<li>Maven integration.
 </ul>
 <h3>Luaj 2.0.x</h3>
 Support for lua 5.1.x features, plus:
@@ -178,7 +178,7 @@ the lua-to-java-bytecode (luajc) compiler is used,
 and actually executes <em>faster</em> than C-based lua in some cases.  
 It is also faster than Java-lua implementations Jill, Kahlua, and Mochalua for all benchmarks tested.  
 
-<h1>2 - <a name="2">Simple Examples</a></h1>
+<h1>2 - <a name="2">Examples</a></h1>
 
 <h2>Run a lua script in Java SE</h2>
 
@@ -199,6 +199,12 @@ To see how luaj can be used to acccess most Java API's including swing, try:
 
 <pre>
 	java -cp lib/luaj-jse-3.0-beta3.jar lua examples/lua/swingapp.lua
+</pre>
+
+<p>
+Links to sources:<pre>
+	<a href="examples/lua/hello.lua">examples/lua/hello.lua</a>
+	<a href="examples/lua/swingapp.lua">examples/lua/swingapp.lua</a>
 </pre>
 
 <h2>Compile lua source to lua bytecode</h2>
@@ -274,7 +280,7 @@ or an InputStream to be loaded as text source "t", or binary lua file "b":
 <p>
 A simple example may be found in
 <pre>
-	examples/jse/SampleJseMain.java
+	<a href="examples/jse/SampleJseMain.java">examples/jse/SampleJseMain.java</a>
 </pre>
 
 <p>
@@ -301,7 +307,7 @@ Any files included via <em>require()</em> must also be part of the midlet resour
 <p>
 A simple example may be found in
 <pre>
-	examples/jme/SampleMIDlet.java
+	<a href="examples/jme/SampleMIDlet.java">examples/jme/SampleMIDlet.java</a>
 </pre>
 
 <p>
@@ -310,7 +316,7 @@ You must include the library <b>lib/luaj-jme-3.0-beta3.jar</b> in your midlet ja
 <p>
 An ant script to build and run the midlet is in
 <pre>
-	build-midlet.xml
+	<a href="build-midlet.xml">build-midlet.xml</a>
 </pre>
 
 <p>
@@ -340,7 +346,7 @@ You must include the library <b>lib/luaj-jse-3.0-beta3.jar</b> in your class pat
 <p>
 A working example may be found in
 <pre>
-	examples/jse/ScriptEngineSample.java
+	<a href="examples/jse/ScriptEngineSample.java">examples/jse/ScriptEngineSample.java</a>
 </pre>
 
 To compile and run it using Java 1.6 or higher:
@@ -386,23 +392,60 @@ The requires <em>bcel</em> to be on the class path, and the ClassLoader of JSE o
 <h1>3 - <a name="3">Concepts</a></h1>
 
 <h2>Globals</h2>
-The old notion of platform has been replaced with creation of globals. 
-Two classes are provided to encapsulate common combinations of libraries.  
+The old notion of platform has been replaced with creation of globals.  
+The  <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/Globals.html">Globals</a>
+class holds global state needed for executing closures as well as providing 
+convenience functions for compiling and loading scripts.
+
+<h2>Platform</h2>
+To simplify construction of Globals, and encapsulate differences needed to support 
+the diverse family of Java runtimes, luaj uses a Platform notion.  
+Typically, a platform is used to construct a Globals, which is then provided as a global 
+environment for client scripts.
 
 <h3>JsePlatform</h3>
-
-This class can be used as a factory for globals in a typical Java SE application. 
+The <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/jse/JsePlatform.html">JsePlatform</a> 
+class can be used as a factory for globals in a typical Java SE application. 
 All standard libraries are included, as well as the luajava library. 
 The default search path is the current directory,
 and the math operations include all those supported by Java SE.
 
-<h3>JmePlatform</h3>
+<h4>Android</h4>
 
-This class can be used to set up the basic environment for a Java ME application.
+Android applications should use the JsePlatform, and can include the <a href="#luajava">Luajava</a> library 
+to simplify access to underlying Android APIs.  
+A specialized Globals.finder should be provided to find scripts and data for loading.
+See <a href="examples/android/src/android/LuajView">examples/android/src/android/LuajView</a>
+for an example that loads from the "res" Android project directory.
+The ant build script is <a href="examples/android/build.xml">examples/android/build.xml</a>.  
+
+<h4>Applet</h4>
+
+Applets in browsers should use the JsePlatform.  The permissions model in applets is 
+highly restrictive, so a specialization of the <a href="#luajava">Luajava</a> library must be used that 
+uses default class loading.  This is illustrated in the sample Applet 
+<a href="examples/jse/SampleApplet.java">examples/jse/SampleApplet.java</a>, 
+which can be built using <a href="build-applet.xml">build-applet.xml</a>.
+
+
+<h3>JmePlatform</h3>
+The <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/jme/JmePlatform.html">JmePlatform</a> 
+class can be used to set up the basic environment for a Java ME application.
 The default search path is limited to the jar resources,
 and the math operations are limited to those supported by Java ME.
 All libraries are included except luajava, and the os, io, and math libraries are 
 limited to those functions that can be supported on that platform.
+
+<h4>MIDlet</h4>
+
+MIDlets require the JmePlatform.  
+The JME platform has several limitations which carry over to luaj.
+In particular Globals.finder is overridden to load as resources, so scripts should be 
+colocated with class files in the MIDlet jar file.  <a href="#luajava">Luajava</a> cannot be used.
+Camples code is in  
+<a href="examples/jme/SampleMIDlet.java">examples/jme/SampleMIDlet.java</a>, 
+which can be built using <a href="build-midlet.xml">build-midlet.xml</a>.
+
 
 <h2>Thread Safety</h2>
 
@@ -509,7 +552,7 @@ To install dynamically from lua use java-class-based require:</em>:
 The <em>lua</em> command line utility includes the <em>debug</em> library by default.
 
 
-<h3>The Luajava Library</h3>
+<h3><a name="luajava">The Luajava Library</a></h3>
 The <em>JsePlatform.standardGlobals()</em> includes the <em>luajava</em> library, which simplifies binding to Java classes and methods.  
 It is patterned after the original <a href="http://www.keplerproject.org/luajava/">luajava project</a>.
 
@@ -757,7 +800,7 @@ For example, to parse a file and print all variable names, use code like:
 
 An example that prints locations of all function definitions in a file may be found in
 <pre>
-	examples/jse/SampleParser.java
+	<a href="examples/jse/SampleParser.java">examples/jse/SampleParser.java</a>
 </pre>
 
 <p>
@@ -765,7 +808,7 @@ See the <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/ast/package-su
 
 <h1>7 - <a name="7">Building and Testing</a></h1>
 
-<h2>Maven integration</h2>
+<h2><a name="maven">Maven integration</a></h2>
 The main jar files are now deployed in the maven central repository.  To use them in your maven-based project, list them as a dependency:
 
 <p>
@@ -788,7 +831,7 @@ while for JME projects, use the luaj-jme jar:
 
 An example skelton maven pom file for a skeleton project is in 
 <pre>
-	examples/maven/pom.xml
+	<a href="examples/maven/pom.xml">examples/maven/pom.xml</a>
 </pre>
 
 
@@ -820,7 +863,7 @@ Unit test scripts can be found in these locations
 <p>
 A build script for running unit tests and producing code coverage statistics is in 
 <pre>
-	build-coverage.xml
+	<a href="build-coverage.xml">build-coverage.xml</a>
 </pre>
 
 It relies on the cobertura code coverage library.
@@ -835,6 +878,8 @@ Sources are hosted on SourceForge and available via sourceforge.net
 	<a href="http://luaj.sourceforge.net/">SourceForge Luaj Project Page</a>
 	<a href="http://sourceforge.net/project/platformdownload.php?group_id=197627">SourceForge Luaj Download Area</a>
 </pre>
+<p/>
+The jar files may also be downloaded from the maven central repository, see <a href="#maven">Maven Integration</a>.
 <p/>
 Files are no longer hosted at LuaForge.
 
@@ -954,5 +999,5 @@ These restrictions are mainly a side effect of how the language is defined as al
 within literal strings in source files.
 
 Code that is generated on the fly within lua and compiled with lua's <em>load()</em> function 
-should work as expected, however, since these strings will never be represented with the 
+should work as expected, since these strings will never be represented with the 
 host's native character encoding.
