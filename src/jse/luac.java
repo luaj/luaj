@@ -20,6 +20,7 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -170,6 +171,7 @@ public class luac {
 	private void processScript( Globals globals, InputStream script, String chunkname, OutputStream out ) throws IOException {
 		try {
 	        // create the chunk
+			script = new BufferedInputStream(script);
 	        Prototype chunk = encoding != null?
 	        		globals.compilePrototype(new InputStreamReader(script, encoding), chunkname):
 	        		globals.compilePrototype(script, chunkname);

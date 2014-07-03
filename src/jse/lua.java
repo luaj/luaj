@@ -20,6 +20,7 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -195,6 +196,7 @@ public class lua {
 		try {
 			LuaValue c;
 			try {
+				script = new BufferedInputStream(script);
 				c = encoding != null? 
 						globals.load(new InputStreamReader(script, encoding), chunkname):
 						globals.load(script, chunkname, "bt", globals);

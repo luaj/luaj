@@ -67,6 +67,12 @@ public class AllTests {
 		TestSuite bytecodetests = FragmentsTest.suite();
 		suite.addTest(bytecodetests);
 		
+		// I/O tests
+		TestSuite io = new TestSuite("I/O Tests");
+		io.addTestSuite(BufferedStreamTest.class);
+		io.addTestSuite(UTF8StreamTest.class);
+		suite.addTest(io);
+		
 		// prototype compiler
 		TestSuite compiler = new TestSuite("Lua Compiler Tests");
 		compiler.addTestSuite(CompilerUnitTests.class);
