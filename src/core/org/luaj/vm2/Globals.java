@@ -300,7 +300,7 @@ public class Globals extends LuaTable {
 	/* Abstract base class to provide basic buffered input storage and delivery.
 	 * This class may be moved to its own package in the future.
 	 */
-	public abstract static class AbstractBufferedStream extends InputStream {
+	abstract static class AbstractBufferedStream extends InputStream {
 		protected byte[] b;
 		protected int i = 0, j = 0;
 		protected AbstractBufferedStream(int buflen) {
@@ -369,7 +369,7 @@ public class Globals extends LuaTable {
 	 * as well as speed up normal compilation and reading of lua scripts.
 	 * This class may be moved to its own package in the future.
 	 */
-	public static class BufferedStream extends AbstractBufferedStream {
+	static class BufferedStream extends AbstractBufferedStream {
 		private final InputStream s;
 		public BufferedStream(InputStream s) {
 			this(128, s);

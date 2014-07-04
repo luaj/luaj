@@ -53,9 +53,7 @@
 		<sequential>
 			<mkdir dir="build/maven-${version}"/>
 			<write_pom platform="@{platform}"/>
-			<get src="http://downloads.sourceforge.net/project/luaj/luaj-${major}/${version}/luaj-${version}.zip" 
-				dest="build/maven-${version}/luaj-${version}.zip"
-				skipexisting="true"/>
+			<copy file="luaj-${version}.zip" todir="build/maven-${version}"/>
 			<unzip src="build/maven-${version}/luaj-${version}.zip" dest="build/maven-${version}"/>
 			<copy file="build/maven-${version}/luaj-${version}/lib/luaj-@{platform}-${version}.jar" todir="build/maven-${version}"/>
 			
