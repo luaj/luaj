@@ -970,7 +970,9 @@ Files are no longer hosted at LuaForge.
 <li>Rename Globals.FINDER to Globals.finder.</li>
 <li>Fix bug in Globals.UTF8Stream affecting loading from Readers.</li>
 <li>Add buffered input for compiling and loading of scripts.</li>
-<li>Coerce byte[] to LuaString, pass LuaValue as-is in CoerceJavaToLua.coerce().</li>
+<li>In CoerceJavaToLua.coerse(), coerce byte[] to LuaString (fixes issue #31).</li>
+<li>In CoerceJavaToLua.coerse(), coerce LuaValue to same value (fixes issue #29).</li>
+<li>Fix line number reporting in debug stack traces (fixes issue #30).</li>
 
 </ul></td></tr>
 </table></td></tr></table>
