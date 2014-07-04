@@ -8,6 +8,7 @@ import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.MathLib;
 
 public class LuaJavaCoercionTest extends TestCase {
 
@@ -423,8 +424,23 @@ public class LuaJavaCoercionTest extends TestCase {
 		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IC.class, A.class) );
 		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IC.class, B.class) );
 		assertEquals( CoerceLuaToJava.SCORE_UNCOERCIBLE, CoerceLuaToJava.inheritanceLevels(IB.class, IA.class) );
-		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IA.class, IB.class) );
-		
+		assertEquals( 1, CoerceLuaToJava.inheritanceLevels(IA.class, IB.class) );	
+	}
+
+	public void testCoerceJavaToLuaLuaValue() {
+		assertSame(LuaValue.NIL, CoerceJavaToLua.coerce(LuaValue.NIL));
+		assertSame(LuaValue.ZERO, CoerceJavaToLua.coerce(LuaValue.ZERO));
+		assertSame(LuaValue.ONE, CoerceJavaToLua.coerce(LuaValue.ONE));
+		assertSame(LuaValue.INDEX, CoerceJavaToLua.coerce(LuaValue.INDEX));
+		LuaTable table = LuaValue.tableOf();
+		assertSame(table, CoerceJavaToLua.coerce(table));
+	}
+
+	public void testCoerceJavaToLuaByeArray() {
+		byte[] bytes = "abcd".getBytes();
+		LuaValue value = CoerceJavaToLua.coerce(bytes);
+		assertEquals(LuaString.class, value.getClass());
+		assertEquals(LuaValue.valueOf("abcd"), value);
 	}
 }
 
