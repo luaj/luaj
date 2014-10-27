@@ -82,10 +82,15 @@ import org.luaj.vm2.compiler.DumpState;
 * @see LuaC
 * @see LuaJC
 */
-public class LoadState implements Globals.Undumper {
+public class LoadState {
 
 	/** Shared instance of Globals.Undumper to use loading prototypes from binary lua files */
-	public static final Globals.Undumper instance = new LoadState();
+	public static final Globals.Undumper instance = new Globals.Undumper() {
+		public Prototype undump(InputStream stream, String chunkname)
+				throws IOException {
+			return LoadState.undump(stream,  chunkname);
+		}
+	};
 	
 	/** format corresponding to non-number-patched lua, all numbers are floats or doubles */
 	public static final int NUMBER_FORMAT_FLOATS_OR_DOUBLES    = 0;
@@ -387,7 +392,7 @@ public class LoadState implements Globals.Undumper {
 	 * @return {@link Prototype} that was loaded, or null if the first 4 bytes were not the lua signature.
 	 * @throws IOException if an IOException occurs
 	 */
-	public Prototype undump(InputStream stream, String chunkname) throws IOException {
+	public static Prototype undump(InputStream stream, String chunkname) throws IOException {
 		// check rest of signature
 		if ( stream.read() != LUA_SIGNATURE[0] 
 		   || stream.read() != LUA_SIGNATURE[1]
@@ -432,8 +437,4 @@ public class LoadState implements Globals.Undumper {
 		this.is = new DataInputStream( stream );
 	}
 	
-	private LoadState() {
-		this.name = "";
-		this.is = null;
-	}
 }

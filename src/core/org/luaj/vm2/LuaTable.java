@@ -299,7 +299,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	 * @return The removed item, or {@link #NONE} if not removed
 	 */
 	public LuaValue remove(int pos) {
-		int n = length();
+		int n = rawlen();
 		if ( pos == 0 )
 			pos = n;
 		else if (pos > n)
@@ -319,7 +319,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	 */
 	public void insert(int pos, LuaValue value) {
 		if ( pos == 0 )
-			pos = length()+1;
+			pos = rawlen()+1;
 		while ( ! value.isnil() ) {
 			LuaValue v = rawget( pos );
 			rawset(pos++, value);
@@ -347,6 +347,17 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	public int length() {
+		return m_metatable != null? len().toint(): rawlen(); 
+	}
+	
+	public LuaValue len()  { 
+		final LuaValue h = metatag(LEN);
+		if (h.toboolean())
+			return h.call(this);
+		return LuaInteger.valueOf(rawlen());
+	}
+
+	public int rawlen() { 
 		int a = getArrayLength();
 		int n = a+1,m=0;
 		while ( !rawget(n).isnil() ) {
@@ -361,14 +372,6 @@ public class LuaTable extends LuaValue implements Metatable {
 				n = k;
 		}
 		return m;
-	}
-	
-	public LuaValue len()  { 
-		return LuaInteger.valueOf(length());
-	}
-
-	public int rawlen() { 
-		return length(); 
 	}
 
 	/**
@@ -879,12 +882,12 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/** Unpack all the elements of this table */
 	public Varargs unpack() {
-		return unpack(1, this.length());
+		return unpack(1, this.rawlen());
 	}
 
 	/** Unpack all the elements of this table from element i */
 	public Varargs unpack(int i) {
-		return unpack(i, this.length());
+		return unpack(i, this.rawlen());
 	}
 
 	/** Unpack the elements from i to j inclusive */
