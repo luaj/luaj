@@ -180,6 +180,21 @@ public class luajc {
 		}
 	}
 
+	private static final class LocalClassLoader extends ClassLoader {
+		private final Hashtable t;
+
+		private LocalClassLoader(Hashtable t) {
+			this.t = t;
+		}
+
+		public Class findClass(String classname) throws ClassNotFoundException {
+			 byte[] bytes = (byte[]) t.get(classname);
+			 if ( bytes != null )
+				 return defineClass(classname, bytes, 0, bytes.length);
+			 return super.findClass(classname);
+		 }
+	}
+
 	class InputFile {
 		public String luachunkname;
 		public String srcfilename;
@@ -230,14 +245,7 @@ public class luajc {
 
         	// try to load the files
         	if ( loadclasses ) {
-				ClassLoader loader = new ClassLoader() {
-			         public Class findClass(String classname) throws ClassNotFoundException {
-			        	 byte[] bytes = (byte[]) t.get(classname);
-			        	 if ( bytes != null )
-			        		 return defineClass(classname, bytes, 0, bytes.length);
-			        	 return super.findClass(classname);
-			         }
-				};
+				ClassLoader loader = new LocalClassLoader(t);
             	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
                 	String classname = (String) e.nextElement();
 	        		try {

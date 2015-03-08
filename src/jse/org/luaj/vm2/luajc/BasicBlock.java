@@ -48,15 +48,7 @@ public class BasicBlock {
 		final boolean[] isbeg = new boolean[n];
 		final boolean[] isend = new boolean[n];
 		isbeg[0] = true;
-		BranchVisitor bv = new BranchVisitor(isbeg) {
-			public void visitBranch(int pc0, int pc1) {
-				isend[pc0] = true;
-				isbeg[pc1] = true;
-			}
-			public void visitReturn(int pc) {
-				isend[pc] = true;
-			}
-		};
+		BranchVisitor bv = new MarkAndMergeVisitor(isbeg, isend);
 		visitBranches(p, bv); // 1st time to mark branches
 		visitBranches(p, bv); // 2nd time to catch merges
 			
@@ -73,25 +65,68 @@ public class BasicBlock {
 		// count previous, next
 		final int[] nnext = new int[n];
 		final int[] nprev = new int[n];
-		visitBranches(p, new BranchVisitor(isbeg) {
-			public void visitBranch(int pc0, int pc1) {
-				nnext[pc0]++;
-				nprev[pc1]++;
-			}
-		});
+		visitBranches(p, new CountPrevNextVistor(isbeg, nnext, nprev));
 		
 		// allocate and cross-reference
-		visitBranches( p, new BranchVisitor(isbeg) {
-			public void visitBranch(int pc0, int pc1) {
-				if ( blocks[pc0].next == null ) blocks[pc0].next = new BasicBlock[nnext[pc0]];
-				if ( blocks[pc1].prev == null ) blocks[pc1].prev = new BasicBlock[nprev[pc1]];
-				blocks[pc0].next[--nnext[pc0]] = blocks[pc1];
-				blocks[pc1].prev[--nprev[pc1]] = blocks[pc0];
-			}
-		});
+		visitBranches( p, new AllocAndXRefVisitor(isbeg, nnext, nprev, blocks));
 		return blocks;
 	}
 	
+	private static final class AllocAndXRefVisitor extends BranchVisitor {
+		private final int[] nnext;
+		private final int[] nprev;
+		private final BasicBlock[] blocks;
+
+		private AllocAndXRefVisitor(boolean[] isbeg, int[] nnext, int[] nprev,
+				BasicBlock[] blocks) {
+			super(isbeg);
+			this.nnext = nnext;
+			this.nprev = nprev;
+			this.blocks = blocks;
+		}
+
+		public void visitBranch(int pc0, int pc1) {
+			if ( blocks[pc0].next == null ) blocks[pc0].next = new BasicBlock[nnext[pc0]];
+			if ( blocks[pc1].prev == null ) blocks[pc1].prev = new BasicBlock[nprev[pc1]];
+			blocks[pc0].next[--nnext[pc0]] = blocks[pc1];
+			blocks[pc1].prev[--nprev[pc1]] = blocks[pc0];
+		}
+	}
+
+	private static final class CountPrevNextVistor extends BranchVisitor {
+		private final int[] nnext;
+		private final int[] nprev;
+
+		private CountPrevNextVistor(boolean[] isbeg, int[] nnext, int[] nprev) {
+			super(isbeg);
+			this.nnext = nnext;
+			this.nprev = nprev;
+		}
+
+		public void visitBranch(int pc0, int pc1) {
+			nnext[pc0]++;
+			nprev[pc1]++;
+		}
+	}
+
+	private static final class MarkAndMergeVisitor extends BranchVisitor {
+		private final boolean[] isend;
+
+		private MarkAndMergeVisitor(boolean[] isbeg, boolean[] isend) {
+			super(isbeg);
+			this.isend = isend;
+		}
+
+		public void visitBranch(int pc0, int pc1) {
+			isend[pc0] = true;
+			isbeg[pc1] = true;
+		}
+
+		public void visitReturn(int pc) {
+			isend[pc] = true;
+		}
+	}
+
 	abstract public static class BranchVisitor {
 		final boolean[] isbeg;
 		public BranchVisitor(boolean[] isbeg) {

@@ -90,27 +90,43 @@ public class JseProcess {
 	private Thread copyBytes(final InputStream input,
 			final OutputStream output, final InputStream ownedInput,
 			final OutputStream ownedOutput) {
-		Thread t = (new Thread() {
-			public void run() {
-				try {
-					byte[] buf = new byte[1024];
-					int r;
-					try {
-						while ((r = input.read(buf)) >= 0) {
-							output.write(buf, 0, r);
-						}
-					} finally {
-						if (ownedInput != null)
-							ownedInput.close();
-						if (ownedOutput != null)
-							ownedOutput.close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		Thread t = (new CopyThread(output, ownedOutput, ownedInput, input));
 		t.start();
 		return t;
 	}
+
+	private static final class CopyThread extends Thread {
+		private final OutputStream output;
+		private final OutputStream ownedOutput;
+		private final InputStream ownedInput;
+		private final InputStream input;
+
+		private CopyThread(OutputStream output, OutputStream ownedOutput,
+				InputStream ownedInput, InputStream input) {
+			this.output = output;
+			this.ownedOutput = ownedOutput;
+			this.ownedInput = ownedInput;
+			this.input = input;
+		}
+
+		public void run() {
+			try {
+				byte[] buf = new byte[1024];
+				int r;
+				try {
+					while ((r = input.read(buf)) >= 0) {
+						output.write(buf, 0, r);
+					}
+				} finally {
+					if (ownedInput != null)
+						ownedInput.close();
+					if (ownedOutput != null)
+						ownedOutput.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 }

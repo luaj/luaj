@@ -12,19 +12,11 @@ public class VarInfo {
 	public static VarInfo INVALID = new VarInfo(-1, -1);
 
 	public static VarInfo PARAM(int slot) {
-		return new VarInfo(slot, -1) {
-			public String toString() {
-				return slot + ".p";
-			}
-		};
+		return new ParamVarInfo(slot, -1);
 	}
 
 	public static VarInfo NIL(final int slot) {
-		return new VarInfo(slot, -1) {
-			public String toString() {
-				return "nil";
-			}
-		};
+		return new NilVarInfo(slot, -1);
 	}
 
 	public static VarInfo PHI(final ProtoInfo pi, final int slot, final int pc) {
@@ -65,6 +57,26 @@ public class VarInfo {
 
 	public boolean isPhiVar() {
 		return false;
+	}
+
+	private static final class ParamVarInfo extends VarInfo {
+		private ParamVarInfo(int slot, int pc) {
+			super(slot, pc);
+		}
+
+		public String toString() {
+			return slot + ".p";
+		}
+	}
+
+	private static final class NilVarInfo extends VarInfo {
+		private NilVarInfo(int slot, int pc) {
+			super(slot, pc);
+		}
+
+		public String toString() {
+			return "nil";
+		}
 	}
 
 	private static final class PhiVarInfo extends VarInfo {

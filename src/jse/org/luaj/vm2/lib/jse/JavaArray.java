@@ -41,16 +41,18 @@ import org.luaj.vm2.lib.OneArgFunction;
  */
 class JavaArray extends LuaUserdata {
 
+	private static final class LenFunction extends OneArgFunction {
+		public LuaValue call(LuaValue u) {
+			return LuaValue.valueOf(Array.getLength(((LuaUserdata)u).m_instance));
+		}
+	}
+
 	static final LuaValue LENGTH = valueOf("length");
 	
 	static final LuaTable array_metatable;
 	static {
 		array_metatable = new LuaTable();
-		array_metatable.rawset(LuaValue.LEN, new OneArgFunction() {
-			public LuaValue call(LuaValue u) {
-				return LuaValue.valueOf(Array.getLength(((LuaUserdata)u).m_instance));
-			}
-		});
+		array_metatable.rawset(LuaValue.LEN, new LenFunction());
 	}
 	
 	JavaArray(Object instance) {
