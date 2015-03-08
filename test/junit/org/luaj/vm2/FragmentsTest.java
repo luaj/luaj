@@ -563,13 +563,33 @@ public class FragmentsTest extends TestSuite {
 					"return pcall(error)\n");
 		}
 
-		
 		public void testFindWithOffset() {
 			runFragment(LuaValue.varargsOf(LuaValue.valueOf(8), LuaValue.valueOf(5)),
 					"string = \"abcdef:ghi\"\n" +
 					"substring = string:sub(3)\n" +
 					"idx = substring:find(\":\")\n" +
 					"return #substring, idx\n");
+		}
+
+		public void testErrorArgIsString() {
+			runFragment(LuaValue.varargsOf(LuaValue.valueOf("string"), LuaValue.valueOf("c")),
+					"a,b = pcall(error, 'c'); return type(b), b\n");
+		}
+		public void testErrorArgIsNil() {
+			runFragment(LuaValue.varargsOf(LuaValue.valueOf("nil"), LuaValue.NIL),
+					"a,b = pcall(error); return type(b), b\n");
+		}
+		public void testErrorArgIsTable() {
+			runFragment(LuaValue.varargsOf(LuaValue.valueOf("table"), LuaValue.valueOf("d")),
+					"a,b = pcall(error, {c='d'}); return type(b), b.c\n");
+		}
+		public void testErrorArgIsNumber() {
+			runFragment(LuaValue.varargsOf(LuaValue.valueOf("string"), LuaValue.valueOf("1")),
+					"a,b = pcall(error, 1); return type(b), b\n");
+		}
+		public void testErrorArgIsBool() {
+			runFragment(LuaValue.varargsOf(LuaValue.valueOf("boolean"), LuaValue.TRUE),
+					"a,b = pcall(error, true); return type(b), b\n");
 		}
 	}
 }

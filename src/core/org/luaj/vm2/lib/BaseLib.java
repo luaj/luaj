@@ -167,7 +167,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "error", // ( message [,level] ) -> ERR
 	static final class error extends TwoArgFunction {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
-			throw new LuaError( arg1.isnil()? null: arg1.tojstring(), arg2.optint(1) );
+			throw arg1.isnil()? new LuaError(null, arg2.optint(1)): 
+				arg1.isstring()? new LuaError(arg1.tojstring(), arg2.optint(1)): 
+					new LuaError(arg1);
 		}
 	}
 
@@ -216,8 +218,8 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			try {
 				return varargsOf(TRUE, func.invoke(args.subargs(2)));
 			} catch ( LuaError le ) {
-				final String m = le.getMessage();
-				return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+				final LuaValue m = le.getMessageObject();
+				return varargsOf(FALSE, m!=null? m: NIL);
 			} catch ( Exception e ) {
 				final String m = e.getMessage();
 				return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
@@ -369,8 +371,8 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 				try {
 					return varargsOf(TRUE, args.arg1().invoke(args.subargs(3)));
 				} catch ( LuaError le ) {
-					final String m = le.getMessage();
-					return varargsOf(FALSE, m!=null? valueOf(m): NIL);
+					final LuaValue m = le.getMessageObject();
+					return varargsOf(FALSE, m!=null? m: NIL);
 				} catch ( Exception e ) {
 					final String m = e.getMessage();
 					return varargsOf(FALSE, valueOf(m!=null? m: e.toString()));
