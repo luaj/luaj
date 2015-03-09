@@ -160,7 +160,7 @@ public class StringLib extends TwoArgFunction {
 			if (c<0 || c>=256) argerror(a, "invalid value");
 			bytes[i] = (byte) c;
 		}
-		return LuaString.valueOf( bytes );
+		return LuaString.valueUsing( bytes );
 	}
 		
 	/** 
@@ -177,7 +177,7 @@ public class StringLib extends TwoArgFunction {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			DumpState.dump( ((LuaClosure)f).p, baos, true );
-			return LuaString.valueOf(baos.toByteArray());
+			return LuaString.valueUsing(baos.toByteArray());
 		} catch (IOException e) {
 			return error( e.getMessage() );
 		}
@@ -658,7 +658,7 @@ public class StringLib extends TwoArgFunction {
 		for ( int offset = 0; offset < bytes.length; offset += len ) {
 			s.copyInto( 0, bytes, offset, len );
 		}
-		return LuaString.valueOf( bytes );
+		return LuaString.valueUsing( bytes );
 	}
 
 	/** 
@@ -672,7 +672,7 @@ public class StringLib extends TwoArgFunction {
 		byte[] b = new byte[n];
 		for ( int i=0, j=n-1; i<n; i++, j-- )
 			b[j] = (byte) s.luaByte(i);
-		return LuaString.valueOf( b );
+		return LuaString.valueUsing( b );
 	}
 
 	/** 

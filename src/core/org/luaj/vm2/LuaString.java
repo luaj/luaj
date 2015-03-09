@@ -38,13 +38,16 @@ import org.luaj.vm2.lib.StringLib;
  * sequences of characters or unicode code points, the {@link LuaString}
  * implementation holds the string value in an internal byte array.  
  * <p>
- * {@link LuaString} values are generally not mutable once constructed, 
+ * {@link LuaString} values are not considered mutable once constructed, 
  * so multiple {@link LuaString} values can chare a single byte array.
  * <p>
  * Currently {@link LuaString}s are pooled via a centrally managed weak table.
  * To ensure that as many string values as possible take advantage of this, 
  * Constructors are not exposed directly.  As with number, booleans, and nil, 
  * instance construction should be via {@link LuaValue#valueOf(byte[])} or similar API.
+ * <p>
+ * Because of this pooling, users of LuaString <em>must not directly alter the
+ * bytes in a LuaString</em>, or undefined behavior will result.
  * <p>
  * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed. 
  * The functions 
@@ -59,47 +62,42 @@ import org.luaj.vm2.lib.StringLib;
  */
 public class LuaString extends LuaValue {
 
-	/** Size of cache of recent short strings. This is the maximum number of LuaStrings that 
-	 * will be retained in the cache of recent short strings.  */
-	public static final int RECENT_STRINGS_CACHE_SIZE = 128;
-
-	/** Maximum length of a string to be considered for recent short strings caching. 
-	 * This effectively limits the total memory that can be spent on the recent strings cache,
-	 * ecause no LuaString whose backing exceeds this length will be put into the cache.  */
-	public static final int RECENT_STRINGS_MAX_LENGTH = 32;
-
 	/** The singleton instance representing lua {@code true} */
 	public static LuaValue s_metatable;
 
-	/** The bytes for the string */
+	/** The bytes for the string.  These <em><b>must not be mutated directly</b></em> because
+	 * the backing may be shared by multiple LuaStrings, and the hash code is 
+	 * computed only at construction time. 
+	 * It is exposed only for performance and legacy reasons. */
 	public final byte[] m_bytes;
 	
 	/** The offset into the byte array, 0 means start at the first byte */
-	public final int    m_offset;
+	public final int m_offset;
 	
 	/** The number of bytes that comprise this string */
-	public final int    m_length;
+	public final int m_length;
 	
-	private static class Cache {
-		/** Simple cache of recently created strings that are short.  
-		 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
-		 * that have been recently constructed.  If a string is being constructed frequently 
-		 * from different contexts, it will generally may show up as a cache hit and resolve 
-		 * to the same value.  */
-		public final LuaString recent_short_strings[] = new LuaString[RECENT_STRINGS_CACHE_SIZE];
-		
-		public LuaString get(LuaString s) {
-			final int index = s.hashCode() & (RECENT_STRINGS_CACHE_SIZE - 1);
-			final LuaString cached = (LuaString) recent_short_strings[index];
-			if (cached != null && s.raweq(cached))
-				return cached;
-			recent_short_strings[index] = s;
-			return s;
-		}
-		
-		static final Cache instance = new Cache();
-	}
-	
+	/** The hashcode for this string.  Computed at construct time. */
+	private final int m_hashcode;
+
+	/** Size of cache of recent short strings. This is the maximum number of LuaStrings that 
+	 * will be retained in the cache of recent short strings.  Exposed to package for testing. */
+	static final int RECENT_STRINGS_CACHE_SIZE = 128;
+
+	/** Maximum length of a string to be considered for recent short strings caching. 
+	 * This effectively limits the total memory that can be spent on the recent strings cache,
+	 * because no LuaString whose backing exceeds this length will be put into the cache.  
+	 * Exposed to package for testing. */
+	static final int RECENT_STRINGS_MAX_LENGTH = 32;
+
+	/** Simple cache of recently created strings that are short.  
+	 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
+	 * that have been recently constructed.  If a string is being constructed frequently 
+	 * from different contexts, it will generally show up as a cache hit and resolve 
+	 * to the same value.  */
+	private static final LuaString recent_short_strings[] = 
+			new LuaString[RECENT_STRINGS_CACHE_SIZE];
+
 	/**
 	 * Get a {@link LuaString} instance whose bytes match 
 	 * the supplied Java String using the UTF8 encoding. 
@@ -110,13 +108,12 @@ public class LuaString extends LuaValue {
 		char[] c = string.toCharArray();
 		byte[] b = new byte[lengthAsUtf8(c)];
 		encodeToUtf8(c, c.length, b, 0);
-		return valueOf(b, 0, b.length);
+		return valueUsing(b, 0, b.length);
 	}
 
-	// TODO: should this be deprecated or made private?
-	/** Construct a {@link LuaString} around a byte array that may be used directly as the backing.
+	/** Construct a {@link LuaString} for a portion of a byte array.
 	 * <p>
-	 * The array may be used as the backing for this object, so clients must not change contents.
+	 * The array is first be used as the backing for this object, so clients must not change contents.
 	 * If the supplied value for 'len' is more than half the length of the container, the 
 	 * supplied byte array will be used as the backing, otherwise the bytes will be copied to a
 	 * new byte array, and cache lookup may be performed.
@@ -127,21 +124,46 @@ public class LuaString extends LuaValue {
 	 * @return {@link LuaString} wrapping the byte buffer
 	 */
 	public static LuaString valueOf(byte[] bytes, int off, int len) {
-		if (bytes.length < RECENT_STRINGS_MAX_LENGTH) {
-			// Short string.  Reuse the backing and check the cache of recent strings before returning.
-			final LuaString s = new LuaString(bytes, off, len);
-			return Cache.instance.get( s );
-		} else if (len >= bytes.length / 2) {
-			// Reuse backing only when more than half the bytes are part of the result.
-			return new LuaString(bytes, off, len);
-		} else {
-			// Short result relative to the source.  Copy only the bytes that are actually to be used.
-			final byte[] b = new byte[len];
-			System.arraycopy(bytes, off, b, 0, len);
-			return valueOf(b, 0, len);  // To possibly use cached version.
-		}
+		if (len > RECENT_STRINGS_MAX_LENGTH)
+			return valueFromCopy(bytes, off, len);
+		final int hash = hashCode(bytes, off, len);
+		final int bucket = hash & (RECENT_STRINGS_CACHE_SIZE - 1);
+		final LuaString t = recent_short_strings[bucket];
+		if (t != null && t.m_hashcode == hash && t.byteseq(bytes, off, len)) return t;
+		final LuaString s = valueFromCopy(bytes, off, len);
+		recent_short_strings[bucket] = s;
+		return s;
 	}
-	
+
+	/** Construct a new LuaString using a copy of the bytes array supplied */
+	private static LuaString valueFromCopy(byte[] bytes, int off, int len) {
+		final byte[] copy = new byte[len];
+		for (int i=0; i<len; ++i) copy[i] = bytes[off+i];
+		return new LuaString(copy, 0, len);
+	}
+
+	/** Construct a {@link LuaString} around, possibly using the the supplied
+	 * byte array as the backing store.
+	 * <p>
+	 * The caller must ensure that the array is not mutated after the call.
+	 * However, if the string is short enough the short-string cache is checked
+	 * for a match which may be used instead of the supplied byte array.
+	 * <p>
+	 * @param bytes byte buffer
+	 * @return {@link LuaString} wrapping the byte buffer, or an equivalent string.
+	 */
+	static public LuaString valueUsing(byte[] bytes, int off, int len) {
+		if (bytes.length > RECENT_STRINGS_MAX_LENGTH)
+			return new LuaString(bytes, off, len);
+		final int hash = hashCode(bytes, off, len);
+		final int bucket = hash & (RECENT_STRINGS_CACHE_SIZE - 1);
+		final LuaString t = recent_short_strings[bucket];
+		if (t != null && t.m_hashcode == hash && t.byteseq(bytes, off, len)) return t;
+		final LuaString s = new LuaString(bytes, off, len);
+		recent_short_strings[bucket] = s;
+		return s;
+	}
+
 	/** Construct a {@link LuaString} using the supplied characters as byte values.
 	 * <p>
 	 * Only the low-order 8-bits of each character are used, the remainder is ignored. 
@@ -166,13 +188,13 @@ public class LuaString extends LuaValue {
 		byte[] b = new byte[len];
 		for ( int i=0; i<len; i++ )
 			b[i] = (byte) bytes[i + off];
-		return valueOf(b, 0, len);
+		return valueUsing(b, 0, len);
 	}
-
 	
-	/** Construct a {@link LuaString} around a byte array without copying the contents.
+	/** Construct a {@link LuaString} for all the bytes in a byte array.
 	 * <p>
-	 * The array may be used directly as the backing, so clients must not change contents.
+	 * The LuaString returned will either be a new LuaString containing a copy
+	 * of the bytes array, or be an existing LuaString used already having the same value.
 	 * <p>
 	 * @param bytes byte buffer
 	 * @return {@link LuaString} wrapping the byte buffer
@@ -181,6 +203,21 @@ public class LuaString extends LuaValue {
 		return valueOf(bytes, 0, bytes.length);
 	}
 	
+	/** Construct a {@link LuaString} for all the bytes in a byte array, possibly using
+	 * the supplied array as the backing store.
+	 * <p>
+	 * The LuaString returned will either be a new LuaString containing the byte array,
+	 * or be an existing LuaString used already having the same value.
+	 * <p>
+	 * The caller must not mutate the contents of the byte array after this call, as 
+	 * it may be used elsewhere due to recent short string caching.
+	 * @param bytes byte buffer
+	 * @return {@link LuaString} wrapping the byte buffer
+	 */
+	public static LuaString valueUsing(byte[] bytes) {
+		return valueUsing(bytes, 0, bytes.length);
+	}
+
 	/** Construct a {@link LuaString} around a byte array without copying the contents.
 	 * <p>
 	 * The array is used directly after this is called, so clients must not change contents.
@@ -194,6 +231,7 @@ public class LuaString extends LuaValue {
 		this.m_bytes = bytes;
 		this.m_offset = offset;
 		this.m_length = length;
+		this.m_hashcode = hashCode(bytes, offset, length);
 	}
 
 	public boolean isstring() {
@@ -275,7 +313,7 @@ public class LuaString extends LuaValue {
 		byte[] b = new byte[lhs.m_length+this.m_length];
 		System.arraycopy(lhs.m_bytes, lhs.m_offset, b, 0, lhs.m_length);
 		System.arraycopy(this.m_bytes, this.m_offset, b, lhs.m_length, this.m_length);
-		return valueOf(b, 0, b.length);
+		return valueUsing(b, 0, b.length);
 	}
 
 	// string comparison 
@@ -394,17 +432,32 @@ public class LuaString extends LuaValue {
 	 * beginIndex and extending for (endIndex - beginIndex ) characters.
 	 */
 	public LuaString substring( int beginIndex, int endIndex ) {
-		return valueOf( m_bytes, m_offset + beginIndex, endIndex - beginIndex );
+		final int off = m_offset + beginIndex;
+		final int len = endIndex - beginIndex;
+		return len >= m_length / 2?
+			valueUsing(m_bytes, off, len):
+			valueOf(m_bytes, off, len);
 	}
 	
 	public int hashCode() {
-		int h = m_length;  /* seed */
-		int step = (m_length>>5)+1;  /* if string is too long, don't hash all its chars */
-		for (int l1=m_length; l1>=step; l1-=step)  /* compute hash */
-		    h = h ^ ((h<<5)+(h>>2)+(((int) m_bytes[m_offset+l1-1] ) & 0x0FF ));
-		return h;
+		return m_hashcode;
 	}
 	
+	/** Compute the hash code of a sequence of bytes within a byte array using
+	 * lua's rules for string hashes.  For long strings, not all bytes are hashed.
+	 * @param bytes  byte array containing the bytes.
+	 * @param offset  offset into the hash for the first byte.
+	 * @param length number of bytes starting with offset that are part of the string.
+	 * @return hash for the string defined by bytes, offset, and length.
+	 */
+	public static int hashCode(byte[] bytes, int offset, int length) {
+		int h = length;  /* seed */
+		int step = (length>>5)+1;  /* if string is too long, don't hash all its chars */
+		for (int l1=length; l1>=step; l1-=step)  /* compute hash */
+		    h = h ^ ((h<<5)+(h>>2)+(((int) bytes[offset+l1-1] ) & 0x0FF ));
+		return h;
+	}
+
 	// object comparison, used in key comparison
 	public boolean equals( Object o ) {
 		if ( o instanceof LuaString ) {
@@ -439,6 +492,11 @@ public class LuaString extends LuaValue {
 
 	public static boolean equals( LuaString a, int i, LuaString b, int j, int n ) {
 		return equals( a.m_bytes, a.m_offset + i, b.m_bytes, b.m_offset + j, n );
+	}
+	
+	/** Return true if the bytes in the supplied range match this LuaStrings bytes. */
+	private boolean byteseq(byte[] bytes, int off, int len) {
+		return (m_length == len && equals(m_bytes, m_offset, bytes, off, len));
 	}
 	
 	public static boolean equals( byte[] a, int i, byte[] b, int j, int n ) {

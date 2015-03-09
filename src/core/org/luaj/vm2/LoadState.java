@@ -220,7 +220,7 @@ public class LoadState {
 			return null;
 		byte[] bytes = new byte[size];
 		is.readFully( bytes, 0, size );
-		return LuaString.valueOf( bytes, 0, bytes.length - 1 );
+		return LuaString.valueUsing( bytes, 0, bytes.length - 1 );
 	}
 	
 	/**

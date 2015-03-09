@@ -28,8 +28,6 @@ import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaUserdata;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Upvaldesc;
@@ -37,7 +35,7 @@ import org.luaj.vm2.compiler.LexState.ConsControl;
 import org.luaj.vm2.compiler.LexState.expdesc;
 
 
-public class FuncState extends LuaC {
+public class FuncState extends Constants {
 
 	static class BlockCnt {
 		BlockCnt previous; /* chain */
@@ -52,7 +50,7 @@ public class FuncState extends LuaC {
 	Hashtable h;  /* table to find (and reuse) elements in `k' */
 	FuncState prev;  /* enclosing function */
 	LexState ls;  /* lexical state */
-	LuaC L;  /* compiler being invoked */
+	LuaC.CompileState L;  /* compiler being invoked */
 	BlockCnt bl;  /* chain of current blocks */
 	int pc;  /* next position to code (equivalent to `ncode') */
 	int lasttarget;   /* `pc' of last `jump target' */

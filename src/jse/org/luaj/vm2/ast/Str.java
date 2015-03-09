@@ -33,20 +33,20 @@ public class Str {
 	public static LuaString quoteString(String image) {
 		String s = image.substring(1, image.length()-1);
 		byte[] bytes = unquote(s);
-		return LuaString.valueOf(bytes);
+		return LuaString.valueUsing(bytes);
 	}
 	
 	public static LuaString charString(String image) {
 		String s = image.substring(1, image.length()-1);
 		byte[] bytes = unquote(s);
-		return LuaString.valueOf(bytes);
+		return LuaString.valueUsing(bytes);
 	}
 	
 	public static LuaString longString(String image) {
 		int i = image.indexOf('[', image.indexOf('[')+1)+1;
 		String s = image.substring(i,image.length()-i);
 		byte[] b = iso88591bytes(s);
-		return LuaString.valueOf(b);
+		return LuaString.valueUsing(b);
 	}
 	
 	public static byte[] iso88591bytes( String s ) {

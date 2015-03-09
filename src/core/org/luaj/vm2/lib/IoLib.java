@@ -557,7 +557,7 @@ public class IoLib extends TwoArgFunction {
 		int r;
 		if ( ( r = f.read(b,0,b.length) ) < 0 )
 			return NIL;
-		return LuaString.valueOf(b, 0, r);
+		return LuaString.valueUsing(b, 0, r);
 	}
 	public static LuaValue freaduntil(File f,boolean lineonly) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -580,7 +580,7 @@ public class IoLib extends TwoArgFunction {
 		}
 		return ( c < 0 && baos.size() == 0 )? 
 			(LuaValue) NIL:
-			(LuaValue) LuaString.valueOf(baos.toByteArray());
+			(LuaValue) LuaString.valueUsing(baos.toByteArray());
 	}
 	public static LuaValue freadline(File f) throws IOException {
 		return freaduntil(f,true);

@@ -13,6 +13,11 @@
 		<delete>
 		    <fileset dir="." includes="luaj-*.jar"/>
 		</delete>
+		<delete dir="examples/android/bin"/>
+		<delete dir="examples/android/build"/>
+		<delete dir="examples/android/gen"/>
+		<delete dir="examples/android/libs"/>
+		<delete dir="examples/maven/target"/>
 	</target>
 
 	<import file="build-libs.xml"/>
@@ -150,7 +155,14 @@
 		    <fileset dir="test"/>
 		</copy>
 		<copy todir="build/luaj-${version}/examples">
-		    <fileset dir="examples"/>
+		    <fileset dir="examples">
+				<include name="android/*.*"/>
+				<include name="android/assets/**"/>
+				<include name="android/res/**"/>
+				<include name="android/src/**"/>
+				<include name="maven/pom.xml"/>
+				<include name="maven/src/**"/>
+			</fileset>
 		</copy>
 		<copy todir="build/luaj-${version}/lib">
 		    <fileset dir=".">
