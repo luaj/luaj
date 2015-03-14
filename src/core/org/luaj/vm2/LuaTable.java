@@ -1073,6 +1073,8 @@ public class LuaTable extends LuaValue implements Metatable {
 		public abstract LuaValue key();
 		public abstract LuaValue value();
 		abstract Entry set(LuaValue value);
+		public abstract boolean keyeq( LuaValue key );
+        public abstract int keyindex( int hashMask );
 
 		public int arraykey( int max ) {
 			return 0;
