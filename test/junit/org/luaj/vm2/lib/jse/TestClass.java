@@ -15,4 +15,8 @@ public class TestClass {
    }
    public TestInterface create_PrivateImpl(String f) { return new PrivateImpl(f); }
    public Class get_PrivateImplClass() { return PrivateImpl.class; }
+   public enum SomeEnum {
+       ValueOne,
+       ValueTwo,
+   }
 }

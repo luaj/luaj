@@ -53,10 +53,16 @@ public class LuajavaAccessibleMembersTest extends TestCase {
 			"return a.public_field;"));
 	}
 
-	public void testAccessFromPrivateClassPublicConcstructor() {
+	public void testAccessFromPrivateClassPublicConstructor() {
 		assertEquals("privateImpl-constructor", invokeScript(
 			"b = luajava.newInstance('"+TestClass.class.getName()+"');" +
 			"c = b:get_PrivateImplClass();" +
 			"return luajava.new(c);"));
+	}
+
+	public void testAccessPublicEnum() {
+		assertEquals("class org.luaj.vm2.lib.jse.TestClass$SomeEnum", invokeScript(
+			"b = luajava.newInstance('"+TestClass.class.getName()+"');" +
+			"return b.SomeEnum"));
 	}
 }

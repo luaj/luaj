@@ -59,6 +59,9 @@ class JavaInstance extends LuaUserdata {
 		LuaValue m = jclass.getMethod(key);
 		if ( m != null )
 			return m;
+		Class c = jclass.getInnerClass(key);
+		if ( c != null )
+			return JavaClass.forClass(c);
 		return super.get(key);
 	}
 

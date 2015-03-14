@@ -49,6 +49,9 @@ public class LuajavaClassMembersTest extends TestCase {
 
 		public String pick(String s) { return "class-c-pick(string:"+s+")"; }
 		public String pick(int i)    { return "class-c-pick(int:"+i+")"; }
+		public static class D {
+			public static String name()    { return "name-of-D"; }
+		}
 	}
 	
 	static LuaValue ZERO = LuaValue.ZERO;
@@ -222,5 +225,14 @@ public class LuajavaClassMembersTest extends TestCase {
 		assertEquals( "static-pick(string:abc,int:1)", p.call(SOMEB,ABC,ONE).tojstring() );
 		assertEquals( "static-pick(int:1,string:abc)", p.call(SOMEB,ONE,ABC).tojstring() );
 		assertEquals( "static-pick(int:1,string:abc)", p.invoke(LuaValue.varargsOf(new LuaValue[] {SOMEB,ONE,ABC,ONE})).arg1().tojstring() );
+	}
+	public void testGetInnerClass() {
+		C c = new C();
+		JavaInstance ic = new JavaInstance(c);
+		LuaValue d = ic.get("D");
+		assertFalse(d.isnil());
+		assertSame(d, JavaClass.forClass(C.D.class));
+		LuaValue e = ic.get("E");
+		assertTrue(e.isnil());
 	}
 }
