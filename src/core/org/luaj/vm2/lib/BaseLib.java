@@ -134,7 +134,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "collectgarbage", // ( opt [,arg] ) -> value
 	static final class collectgarbage extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			String s = args.checkjstring(1);
+			String s = args.optjstring(1, "collect");
 			if ( "collect".equals(s) ) {
 				System.gc();
 				return ZERO;
