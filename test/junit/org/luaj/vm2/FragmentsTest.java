@@ -591,5 +591,8 @@ public class FragmentsTest extends TestSuite {
 			runFragment(LuaValue.varargsOf(LuaValue.valueOf("boolean"), LuaValue.TRUE),
 					"a,b = pcall(error, true); return type(b), b\n");
 		}
+		public void testBalancedMatchOnEmptyString() {
+			runFragment(LuaValue.NIL, "return (\"\"):match(\"%b''\")\n");
+		}
 	}
 }
