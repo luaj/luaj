@@ -594,5 +594,11 @@ public class FragmentsTest extends TestSuite {
 		public void testBalancedMatchOnEmptyString() {
 			runFragment(LuaValue.NIL, "return (\"\"):match(\"%b''\")\n");
 		}
+		public void testReturnValueForTableRemove() {
+			runFragment(LuaValue.NONE, "return table.remove({ })");
+		}
+		public void testTypeOfTableRemoveReturnValue() {
+			runFragment(LuaValue.valueOf("nil"), "local k = table.remove({ }) return type(k)");
+		}
 	}
 }
