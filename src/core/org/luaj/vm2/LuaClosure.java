@@ -363,16 +363,15 @@ public class LuaClosure extends LuaFunction {
 					default:
 						b = i>>>23;
 						c = (i>>14)&0x1ff;
-						v = b>0? 
-							varargsOf(stack,a+1,b-1): // exact arg count
-							varargsOf(stack, a+1, top-v.narg()-(a+1), v); // from prev top 
-						v = stack[a].invoke(v);
+						v = stack[a].invoke(b>0? 
+							varargsOf(stack, a+1, b-1): // exact arg count
+							varargsOf(stack, a+1, top-v.narg()-(a+1), v));  // from prev top 
 						if ( c > 0 ) {
-							while ( --c > 0 )
-								stack[a+c-1] = v.arg(c);
-							v = NONE; // TODO: necessary?
+							v.copyto(stack, a, c-1);
+							v = NONE;
 						} else {
 							top = a + v.narg();
+							v = v.dealias();
 						}
 						continue;
 					}

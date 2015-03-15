@@ -600,5 +600,13 @@ public class FragmentsTest extends TestSuite {
 		public void testTypeOfTableRemoveReturnValue() {
 			runFragment(LuaValue.valueOf("nil"), "local k = table.remove({ }) return type(k)");
 		}
+		public void testVarargBugReport() {
+			runFragment(LuaValue.varargsOf(new LuaValue[] { 
+					LuaValue.valueOf(1), LuaValue.valueOf(2), LuaValue.valueOf(3) }),
+					"local i = function(...) return ... end\n"
+					+ "local v1, v2, v3 = i(1, 2, 3)\n"
+					+ "return v1, v2, v3");
+			
+		}
 	}
 }

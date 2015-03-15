@@ -606,9 +606,6 @@ public abstract class Varargs {
 		ArrayVarargs(LuaValue[] v, Varargs r) {
 			this.v = v;
 			this.r = r ;
-			for (int i = 0; i < v.length; ++i)
-				if (v[i] == null)
-					throw new IllegalArgumentException("nulls in array");
 		}
 		public LuaValue arg(int i) {
 			return i < 1 ? LuaValue.NIL: i <= v.length? v[i - 1]: r.arg(i-v.length);
@@ -625,6 +622,11 @@ public abstract class Varargs {
 			if (start > v.length)
 				return r.subargs(start - v.length);
 			return LuaValue.varargsOf(v, start - 1, v.length - (start - 1), r);
+		}
+		void copyto(LuaValue[] dest, int offset, int length) {
+			int n = Math.min(v.length, length);
+			System.arraycopy(v, 0, dest, offset, n);
+			r.copyto(dest, offset + n, length - n);
 		}
 	}
 
@@ -684,6 +686,37 @@ public abstract class Varargs {
 			if (start > length)
 				return more.subargs(start - length);
 			return LuaValue.varargsOf(v, offset + start - 1, length - (start - 1), more);
+		}
+		void copyto(LuaValue[] dest, int offset, int length) {
+			int n = Math.min(this.v.length, length);
+			System.arraycopy(this.v, this.offset, dest, offset, n);
+			more.copyto(dest, offset + n, length - n);
+		}
+	}
+
+	/** Copy values in a varargs into a destination array.
+	 * Internal utility method not intended to be called directly from user code.
+	 * @return Varargs containing same values, but flattened.
+	 */
+	void copyto(LuaValue[] dest, int offset, int length) {
+		for (int i=0; i<length; ++i)
+			dest[offset+i] = arg(i+1);
+	}
+
+	/** Return Varargs that cannot be using a shared array for the storage, and is flattened.
+	 * Internal utility method not intended to be called directly from user code.
+	 * @return Varargs containing same values, but flattened and with a new array if needed.
+	 */
+	Varargs dealias() {
+		int n = narg();
+		switch (n) {
+		case 0: return LuaValue.NONE;
+		case 1: return arg1();
+		case 2: return new PairVarargs(arg1(), arg(2));
+		default:
+			LuaValue[] v = new LuaValue[n];
+			copyto(v, 0, n);
+			return new ArrayVarargs(v, LuaValue.NONE);
 		}
 	}
 }

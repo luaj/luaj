@@ -3405,7 +3405,8 @@ public class LuaValue extends Varargs {
 	public static Varargs varargsOf(final LuaValue[] v,Varargs r) { 
 		switch ( v.length ) {
 		case 0: return r;
-		case 1: return new Varargs.PairVarargs(v[0],r);
+		case 1: return r.narg()>0? new Varargs.PairVarargs(v[0],r): v[0];
+		case 2: return r.narg()>0? new Varargs.ArrayVarargs(v,r): new Varargs.PairVarargs(v[0],v[1]);
 		default: return new Varargs.ArrayVarargs(v,r);
 		}
 	}
@@ -3424,11 +3425,14 @@ public class LuaValue extends Varargs {
 		case 0: return NONE;
 		case 1: return v[offset];
 		case 2: return new Varargs.PairVarargs(v[offset+0],v[offset+1]);
-		default: return new Varargs.ArrayPartVarargs(v,offset,length);
+		default: return new Varargs.ArrayPartVarargs(v, offset, length, NONE);
 		}
 	}
 
 	/** Construct a {@link Varargs} around an array of {@link LuaValue}s.
+	 * 
+	 * Caller must ensure that array contents are not mutated after this call
+	 * or undefined behavior will result. 
 	 * 
 	 * @param v The array of {@link LuaValue}s
 	 * @param offset number of initial values to skip in the array
@@ -3438,10 +3442,11 @@ public class LuaValue extends Varargs {
 	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
 	 */
-	public static Varargs varargsOf(final LuaValue[] v, final int offset, final int length,Varargs more) {
+	public static Varargs varargsOf(final LuaValue[] v, final int offset, final int length, Varargs more) {
 		switch ( length ) {
 		case 0: return more;
-		case 1: return new Varargs.PairVarargs(v[offset],more);
+		case 1: return more.narg()>0? new Varargs.PairVarargs(v[offset],more): v[offset];
+		case 2: return more.narg()>0? new Varargs.ArrayPartVarargs(v,offset,length,more): new Varargs.PairVarargs(v[offset],v[offset+1]);
 		default: return new Varargs.ArrayPartVarargs(v,offset,length,more);
 		}
 	}
@@ -3477,7 +3482,7 @@ public class LuaValue extends Varargs {
 	public static Varargs varargsOf(LuaValue v1,LuaValue v2,Varargs v3) { 
 		switch ( v3.narg() ) {
 		case 0: return new Varargs.PairVarargs(v1,v2);
-		default: return new Varargs.ArrayVarargs(new LuaValue[] {v1,v2},v3); 
+		default: return new Varargs.ArrayPartVarargs(new LuaValue[]{v1,v2}, 0, 2, v3); 
 		}
 	}
 	
@@ -3540,7 +3545,7 @@ public class LuaValue extends Varargs {
 		public LuaValue arg1() { return NIL; }
 		public String tojstring() { return "none"; }
 		public Varargs subargs(final int start) { return start > 0? this: argerror(1, "start must be > 0"); }
-
+		void copyto(LuaValue[] dest, int offset, int length) { for(;length>0; length--) dest[offset++] = NIL; }
 	}
 	
 	/**
