@@ -404,8 +404,19 @@ public class OsLib extends TwoArgFunction {
 	}
 
 	/**
-	 * Returns the value of the process environment variable varname, 
-	 * or null if the variable is not defined. 
+	 * Returns the value of the process environment variable varname,
+	 * or the System property value for varname,
+	 * or null if the variable is not defined in either environment.
+	 * 
+	 * The default implementation, which is used by the JmePlatform,
+	 * only queryies System.getProperty(). 
+	 * 
+	 * The JsePlatform overrides this behavior and returns the
+	 * environment variable value using System.getenv() if it exists, 
+	 * or the System property value if it does not.
+	 * 
+	 * A SecurityException may be thrown if access is not allowed 
+	 * for 'varname'.
 	 * @param varname
 	 * @return String value, or null if not defined
 	 */

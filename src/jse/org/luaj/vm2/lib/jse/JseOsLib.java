@@ -84,6 +84,11 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	public JseOsLib() {
 	}
 
+	protected String getenv(String varname) {
+		String s = System.getenv(varname);
+		return s != null? s : System.getProperty(varname);
+	}
+
 	protected Varargs execute(String command) {
 		int exitValue;
 		try {
