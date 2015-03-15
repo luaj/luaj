@@ -688,7 +688,7 @@ public abstract class Varargs {
 			return LuaValue.varargsOf(v, offset + start - 1, length - (start - 1), more);
 		}
 		void copyto(LuaValue[] dest, int offset, int length) {
-			int n = Math.min(this.v.length, length);
+			int n = Math.min(this.length, length);
 			System.arraycopy(this.v, this.offset, dest, offset, n);
 			more.copyto(dest, offset + n, length - n);
 		}

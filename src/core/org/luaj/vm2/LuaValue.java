@@ -21,6 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
+import org.luaj.vm2.Varargs;
+
 /**
  * Base class for all concrete lua type values.  
  * <p>
@@ -3405,8 +3407,12 @@ public class LuaValue extends Varargs {
 	public static Varargs varargsOf(final LuaValue[] v,Varargs r) { 
 		switch ( v.length ) {
 		case 0: return r;
-		case 1: return r.narg()>0? new Varargs.PairVarargs(v[0],r): v[0];
-		case 2: return r.narg()>0? new Varargs.ArrayVarargs(v,r): new Varargs.PairVarargs(v[0],v[1]);
+		case 1: return r.narg()>0? 
+					(Varargs) new Varargs.PairVarargs(v[0],r): 
+					(Varargs) v[0];
+		case 2: return r.narg()>0? 
+					(Varargs) new Varargs.ArrayVarargs(v,r): 
+					(Varargs) new Varargs.PairVarargs(v[0],v[1]);
 		default: return new Varargs.ArrayVarargs(v,r);
 		}
 	}
@@ -3445,8 +3451,12 @@ public class LuaValue extends Varargs {
 	public static Varargs varargsOf(final LuaValue[] v, final int offset, final int length, Varargs more) {
 		switch ( length ) {
 		case 0: return more;
-		case 1: return more.narg()>0? new Varargs.PairVarargs(v[offset],more): v[offset];
-		case 2: return more.narg()>0? new Varargs.ArrayPartVarargs(v,offset,length,more): new Varargs.PairVarargs(v[offset],v[offset+1]);
+		case 1: return more.narg()>0? 
+					(Varargs) new Varargs.PairVarargs(v[offset],more): 
+					(Varargs) v[offset];
+		case 2: return more.narg()>0? 
+					(Varargs) new Varargs.ArrayPartVarargs(v,offset,length,more): 
+					(Varargs) new Varargs.PairVarargs(v[offset],v[offset+1]);
 		default: return new Varargs.ArrayPartVarargs(v,offset,length,more);
 		}
 	}
