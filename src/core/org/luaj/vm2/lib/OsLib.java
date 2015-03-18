@@ -150,7 +150,7 @@ public class OsLib extends TwoArgFunction {
 						tbl.set("year", LuaValue.valueOf(d.get(Calendar.YEAR)));
 						tbl.set("month", LuaValue.valueOf(d.get(Calendar.MONTH)+1));
 						tbl.set("day", LuaValue.valueOf(d.get(Calendar.DAY_OF_MONTH)));
-						tbl.set("hour", LuaValue.valueOf(d.get(Calendar.HOUR)));
+						tbl.set("hour", LuaValue.valueOf(d.get(Calendar.HOUR_OF_DAY)));
 						tbl.set("min", LuaValue.valueOf(d.get(Calendar.MINUTE)));
 						tbl.set("sec", LuaValue.valueOf(d.get(Calendar.SECOND)));
 						tbl.set("wday", LuaValue.valueOf(d.get(Calendar.DAY_OF_WEEK)));
