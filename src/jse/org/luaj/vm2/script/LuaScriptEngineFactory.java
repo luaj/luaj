@@ -28,7 +28,10 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
 /**
- * Jsr 223 scripting engine factory
+ * Jsr 223 scripting engine factory.
+ * 
+ * Exposes metadata to support the lua language, and constructs 
+ * instances of LuaScriptEngine to handl lua scripts.
  */
 public class LuaScriptEngineFactory implements ScriptEngineFactory {
     
@@ -47,12 +50,9 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
         "luaj",
     };
     
-    private static final ThreadLocal<ScriptEngine> engines 
-		= new ThreadLocal<ScriptEngine>();
     private List<String> extensions;
     private List<String> mimeTypes;
     private List<String> names;
-
     
     public LuaScriptEngineFactory() {
         extensions = Arrays.asList(EXTENSIONS);
@@ -123,11 +123,6 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
     }
     
     public ScriptEngine getScriptEngine() {
-    	ScriptEngine eng = engines.get();
-    	if ( eng == null ) {
-    		eng = new LuaScriptEngine();
-	        engines.set(eng);
-    	}
-		return eng;
+    	return new LuaScriptEngine();
     }
 }

@@ -46,12 +46,13 @@ public class ScriptEngineTests extends TestSuite  {
 
 	public static TestSuite suite() {
 		TestSuite suite = new TestSuite("Script Engine Tests");
-		suite.addTest( new TestSuite( LookupEngineTestCase.class,   "Lookup Engine" ) );
-		suite.addTest( new TestSuite( SimpleBindingsTest.class,   "Simple Bindings" ) );
-		suite.addTest( new TestSuite( DefaultBindingsTest.class,   "Default Bindings" ) );
-		suite.addTest( new TestSuite( LuaJCBindingsTest.class,   "LuaJC Bindings" ) );
-		suite.addTest( new TestSuite( UserContextTest.class,   "User Context" ) );
-		suite.addTest( new TestSuite( WriterTest.class,   "Writer" ) );
+		suite.addTest( new TestSuite( LookupEngineTestCase.class, "Lookup Engine" ) );
+		suite.addTest( new TestSuite( DefaultBindingsTest.class, "Default Bindings" ) );
+		suite.addTest( new TestSuite( SimpleBindingsTest.class, "Simple Bindings" ) );
+		suite.addTest( new TestSuite( CompileClosureTest.class, "Compile Closure" ) );
+		suite.addTest( new TestSuite( CompileNonClosureTest.class, "Compile NonClosure" ) );
+		suite.addTest( new TestSuite( UserContextTest.class, "User Context" ) );
+		suite.addTest( new TestSuite( WriterTest.class, "Writer" ) );
 		return suite;
 	}
 	
@@ -81,35 +82,39 @@ public class ScriptEngineTests extends TestSuite  {
 		}
 	}
 	
-	public static class SimpleBindingsTest extends EngineTestCase {
-		protected Bindings createBindings() {
-			return new SimpleBindings();
-		}
-		public void testCompiledFunctionIsClosure() throws ScriptException {
-            CompiledScript cs = ((Compilable)e).compile("return 'foo'");
-            assertTrue(((LuaScriptEngine.LuajCompiledScript)cs).function.isclosure());
-		}
-	}
-	
 	public static class DefaultBindingsTest extends EngineTestCase {
 		protected Bindings createBindings() {
 			return e.createBindings();
 		}
 	}
 
-	public static class LuaJCBindingsTest extends EngineTestCase {
-		static {
-			System.setProperty("org.luaj.luajc", "true");
-		}
+	public static class SimpleBindingsTest extends EngineTestCase {
 		protected Bindings createBindings() {
 			return new SimpleBindings();
 		}
-		public void setUp() {
+	}
+
+	public static class CompileClosureTest extends DefaultBindingsTest {
+		protected void setUp() throws Exception {
+			System.setProperty("org.luaj.luajc", "false");
+			super.setUp();
+		}
+		public void testCompiledFunctionIsClosure() throws ScriptException {
+            CompiledScript cs = ((Compilable)e).compile("return 'foo'");
+            LuaValue value = ((LuaScriptEngine.LuajCompiledScript)cs).function;
+            assertTrue(value.isclosure());
+		}
+	}
+	
+	public static class CompileNonClosureTest extends DefaultBindingsTest {
+		protected void setUp() throws Exception {
+			System.setProperty("org.luaj.luajc", "true");
 			super.setUp();
 		}
 		public void testCompiledFunctionIsNotClosure() throws ScriptException {
             CompiledScript cs = ((Compilable)e).compile("return 'foo'");
-            assertFalse(((LuaScriptEngine.LuajCompiledScript)cs).function.isclosure());
+            LuaValue value = ((LuaScriptEngine.LuajCompiledScript)cs).function;
+            assertFalse(value.isclosure());
 		}
 	}
 
@@ -117,7 +122,7 @@ public class ScriptEngineTests extends TestSuite  {
 		protected ScriptEngine e;
 		protected Bindings b;
 		abstract protected Bindings createBindings();
-		public void setUp() {
+		protected void setUp() throws Exception {
 	       	this.e = new ScriptEngineManager().getEngineByName("luaj");
 			this.b = createBindings();
 		}
