@@ -62,8 +62,6 @@ import org.luaj.vm2.Varargs;
  */
 public class CoroutineLib extends TwoArgFunction {
 
-	static long thread_orphan_check_interval = 30000;
-
 	static int coroutine_count = 0;
 
 	Globals globals;

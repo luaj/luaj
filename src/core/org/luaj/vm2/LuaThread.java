@@ -63,10 +63,14 @@ public class LuaThread extends LuaValue {
 
 	public static int coroutine_count = 0;
 
-	/** Interval at which to check for lua threads that are no longer referenced. 
-	 * This can be changed by Java startup code if desired.
+	/** Polling interval, in milliseconds, which each thread uses while waiting to
+	 * return from a yielded state to check if the lua threads is no longer
+	 * referenced and therefore should be garbage collected.  
+	 * A short polling interval for many threads will consume server resources. 
+	 * Orphaned threads cannot be detected and collected unless garbage
+	 * collection is run.  This can be changed by Java startup code if desired.
 	 */
-	static long thread_orphan_check_interval = 30000;
+	public static long thread_orphan_check_interval = 5000;
 	
 	public static final int STATUS_INITIAL       = 0;
 	public static final int STATUS_SUSPENDED     = 1;
@@ -83,12 +87,9 @@ public class LuaThread extends LuaValue {
 	public final State state;
 
 	public static final int        MAX_CALLSTACK = 256;
-	
-	/** Interval to check for LuaThread dereferencing.  */
-	public static int GC_INTERVAL = 30000;
 
 	/** Thread-local used by DebugLib to store debugging state. 
-	 * This is ano opaque value that should not be modified by applications. */
+	 * This is an opaque value that should not be modified by applications. */
 	public Object callstack;
 
 	public final Globals globals;
@@ -243,6 +244,15 @@ public class LuaThread extends LuaValue {
 				this.args = LuaValue.NONE;
 				this.result = LuaValue.NONE;
 			}
+		}
+
+		public synchronized void set_inhook(boolean value) {
+			LuaThread t = (LuaThread) this.lua_thread.get();
+			if (t == null) {
+				this.status = STATUS_DEAD;
+				throw new OrphanedThread();
+			}
+			t.inhook = value;
 		}
 	}
 		

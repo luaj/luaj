@@ -388,61 +388,55 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	public void onCall(LuaFunction f) {
-		LuaThread t = globals.running;
-		if (t.inhook) return;
+		if (globals.running.inhook) return;
 		callstack().onCall(f);
-		if (t.hookcall && t.hookfunc != null) 
-			callHook(CALL, NIL);
+		callHook(globals.running.hookfunc, CALL, NIL);
 	}
 
 	public void onCall(LuaClosure c, Varargs varargs, LuaValue[] stack) {
-		LuaThread t = globals.running;
-		if (t.inhook) return;
+		if (globals.running.inhook) return;
 		callstack().onCall(c, varargs, stack);
-		if (t.hookcall && t.hookfunc != null) 
-			callHook(CALL, NIL);
+		callHook(globals.running.hookfunc, CALL, NIL);
 	}
 
 	public void onInstruction(int pc, Varargs v, int top) {
-		LuaThread t = globals.running;
-		if (t.inhook) return;
+		if (globals.running.inhook) return;
 		callstack().onInstruction(pc, v, top);
-		if (t.hookfunc == null) return;
-		if (t.hookcount > 0)
-			if (++t.bytecodes % t.hookcount == 0)
-				callHook(COUNT, NIL);
-		if (t.hookline) {
+		if (globals.running.hookfunc == null) return;
+		if (globals.running.hookcount > 0)
+			if (++globals.running.bytecodes % globals.running.hookcount == 0)
+				callHook(globals.running.hookfunc, COUNT, NIL);
+		if (globals.running.hookline) {
 			int newline = callstack().currentline();
-			if ( newline != t.lastline ) {
-				t.lastline = newline;
-				callHook(LINE, LuaValue.valueOf(newline));
+			if ( newline != globals.running.lastline ) {
+				globals.running.lastline = newline;
+				callHook(globals.running.hookfunc, LINE, LuaValue.valueOf(newline));
 			}
 		}
 	}
 
 	public void onReturn() {
-		LuaThread t = globals.running;
-		if (t.inhook) return;
+		if (globals.running.inhook) return;
 		callstack().onReturn();
-		if (t.hookcall && t.hookfunc != null)
-			callHook(RETURN, NIL);
+		callHook(globals.running.hookfunc, RETURN, NIL);
 	}
 
 	public String traceback(int level) {
 		return callstack().traceback(level);
 	}
 	
-	void callHook(LuaValue type, LuaValue arg) {
-		LuaThread t = globals.running;
-		t.inhook = true;
+	void callHook(LuaValue hookfunc, LuaValue type, LuaValue arg) {
+		if (hookfunc == null) return;
+		LuaThread.State state = globals.running.state;
+		state.set_inhook(true);
 		try {
-			t.hookfunc.call(type, arg);
+			hookfunc.call(type, arg);
 		} catch (LuaError e) {
 			throw e;
 		} catch (RuntimeException e) {
 			throw new LuaError(e);
 		} finally {
-			t.inhook = false;
+			state.set_inhook(false);
 		}
 	}
 	
