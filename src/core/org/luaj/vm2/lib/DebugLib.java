@@ -490,11 +490,11 @@ public class DebugLib extends TwoArgFunction {
 
 		CallStack() {}
 		
-		int currentline() {
+		synchronized int currentline() {
 			return calls > 0? frame[calls-1].currentline(): -1;
 		}
 
-		private CallFrame pushcall() {
+		private synchronized CallFrame pushcall() {
 			if (calls >= frame.length) {
 				int n = Math.max(4, frame.length * 3 / 2);
 				CallFrame[] f = new CallFrame[n];
@@ -508,21 +508,22 @@ public class DebugLib extends TwoArgFunction {
 			return frame[calls++];
 		}
 		
-		final void onCall(LuaFunction function) {
+		final synchronized void onCall(LuaFunction function) {
 			pushcall().set(function);
 		}
 
-		final void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
+		final synchronized void onCall(LuaClosure function, Varargs varargs, LuaValue[] stack) {
 			pushcall().set(function, varargs, stack);
 		}
 		
-		final void onReturn() {
+		final synchronized void onReturn() {
 			if (calls > 0)
 				frame[--calls].reset();
 		}
 		
-		final void onInstruction(int pc, Varargs v, int top) {
-			frame[calls-1].instr(pc, v, top);
+		final synchronized void onInstruction(int pc, Varargs v, int top) {
+			if (calls > 0)
+				frame[calls-1].instr(pc, v, top);
 		}
 
 		/**
@@ -530,7 +531,7 @@ public class DebugLib extends TwoArgFunction {
 		 * @param level
 		 * @return String containing the traceback.
 		 */
-		String traceback(int level) {
+		synchronized String traceback(int level) {
 			StringBuffer sb = new StringBuffer();
 			sb.append( "stack traceback:" );
 			for (DebugLib.CallFrame c; (c = getCallFrame(level++)) != null; ) {
@@ -555,13 +556,13 @@ public class DebugLib extends TwoArgFunction {
 			return sb.toString();
 		}
 
-		DebugLib.CallFrame getCallFrame(int level) {
+		synchronized DebugLib.CallFrame getCallFrame(int level) {
 			if (level < 1 || level > calls)
 				return null;
 			return frame[calls-level];
 		}
 
-		DebugLib.CallFrame findCallFrame(LuaValue func) {
+		synchronized DebugLib.CallFrame findCallFrame(LuaValue func) {
 			for (int i = 1; i <= calls; ++i)
 				if (frame[calls-i].f == func)
 					return frame[i];
@@ -569,7 +570,7 @@ public class DebugLib extends TwoArgFunction {
 		}	
 
 
-		DebugInfo auxgetinfo(String what, LuaFunction f, CallFrame ci) {
+		synchronized DebugInfo auxgetinfo(String what, LuaFunction f, CallFrame ci) {
 			DebugInfo ar = new DebugInfo();
 			for (int i = 0, n = what.length(); i < n; ++i) {
 				switch (what.charAt(i)) {
