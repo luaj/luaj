@@ -99,11 +99,16 @@ public class Prototype {
 	public int numparams;
 	public int is_vararg;
 	public int maxstacksize;
+	private static final Upvaldesc[] NOUPVALUES = {};
+	private static final Prototype[] NOSUBPROTOS = {};
 
+	public Prototype() {
+		p = NOSUBPROTOS;
+		upvalues = NOUPVALUES;
+	}
 
-	public Prototype() {}
-	
 	public Prototype(int n_upvalues) {
+		p = NOSUBPROTOS;
 		upvalues = new Upvaldesc[n_upvalues];
 	}
 	
