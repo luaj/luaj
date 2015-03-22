@@ -202,19 +202,55 @@ public class Globals extends LuaTable {
 	public LuaValue load(String script) {
 		return load(new StrReader(script), script);
 	}
-	
+
+	/** Convenience function to load a string value as a script with a custom environment.
+	 * Must be lua source.
+	 * @param script Contents of a lua script, such as "print 'hello, world.'"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @param environment LuaTable to be used as the environment for the loaded function.
+	 * @return LuaValue that may be executed via .call(), .invoke(), or .method() calls.
+	 * @throws LuaError if the script could not be compiled.
+	 */
+	public LuaValue load(String script, String chunkname, LuaTable environment) {
+		return load(new StrReader(script), chunkname, environment);
+	}
+
 	/** Load the content form a reader as a text file.  Must be lua source. 
 	 * The source is converted to UTF-8, so any characters appearing in quoted literals 
-	 * above the range 128 will be converted into multiple bytes.  */
+	 * above the range 128 will be converted into multiple bytes.  
+	 * @param script Contents of a lua script, such as "print 'hello, world.'"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @return LuaValue that may be executed via .call(), .invoke(), or .method() calls.
+	 * @throws LuaError if the script could not be compiled.
+	 */ 
 	public LuaValue load(Reader reader, String chunkname) {
 		return load(new UTF8Stream(reader), chunkname, "t", this);
 	}
 
-	/** Load the content form an input stream as a binary chunk or text file. */
-	public LuaValue load(InputStream is, String chunkname, String mode, LuaValue env) {
+	/** Load the content form a reader as a text file, supplying a custom environment.  
+	 * Must be lua source. The source is converted to UTF-8, so any characters 
+	 * appearing in quoted literals above the range 128 will be converted into
+	 * multiple bytes. 
+	 * @param script Contents of a lua script, such as "print 'hello, world.'"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @param environment LuaTable to be used as the environment for the loaded function.
+	 * @return LuaValue that may be executed via .call(), .invoke(), or .method() calls.
+	 * @throws LuaError if the script could not be compiled.
+	 */ 
+	public LuaValue load(Reader reader, String chunkname, LuaTable environment) {
+		return load(new UTF8Stream(reader), chunkname, "t", environment);
+	}	
+
+	/** Load the content form an input stream as a binary chunk or text file. 
+	 * @param is Input stream containing a lua script or compiled lua"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @param mode String containing 'b' or 't' or both to control loading as binary or text or either.
+	 * @param environment LuaTable to be used as the environment for the loaded function.
+	 * */
+	public LuaValue load(InputStream is, String chunkname, String mode, LuaValue environment) {
 		try {
 			Prototype p = loadPrototype(is, chunkname, mode);
-			return loader.load(p, chunkname, env);
+			return loader.load(p, chunkname, environment);
 		} catch (LuaError l) {
 			throw l;
 		} catch (Exception e) {
@@ -225,6 +261,9 @@ public class Globals extends LuaTable {
 	/** Load lua source or lua binary from an input stream into a Prototype. 
 	 * The InputStream is either a binary lua chunk starting with the lua binary chunk signature, 
 	 * or a text input file.  If it is a text input file, it is interpreted as a UTF-8 byte sequence.  
+	 * @param is Input stream containing a lua script or compiled lua"
+	 * @param chunkname Name that will be used within the chunk as the source.
+	 * @param mode String containing 'b' or 't' or both to control loading as binary or text or either.
 	 */
 	public Prototype loadPrototype(InputStream is, String chunkname, String mode) throws IOException {
 		if (mode.indexOf('b') >= 0) {

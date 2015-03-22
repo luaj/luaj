@@ -62,9 +62,9 @@ import org.luaj.vm2.lib.StringLib;
  */
 public class LuaString extends LuaValue {
 
-	/** The singleton instance representing lua {@code true} */
+	/** The singleton instance for string metatables that forwards to the string functions */
 	public static LuaValue s_metatable;
-
+	
 	/** The bytes for the string.  These <em><b>must not be mutated directly</b></em> because
 	 * the backing may be shared by multiple LuaStrings, and the hash code is 
 	 * computed only at construction time. 
@@ -252,11 +252,6 @@ public class LuaString extends LuaValue {
 	
 	public String tojstring() {
 		return decodeAsUtf8(m_bytes, m_offset, m_length);
-	}
-
-	// get is delegated to the string library
-	public LuaValue get(LuaValue key) {
-		return s_metatable!=null? gettable(this,key): StringLib.instance.get(key);
 	}
 
 	// unary operators
