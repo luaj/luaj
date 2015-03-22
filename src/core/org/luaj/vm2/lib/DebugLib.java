@@ -139,10 +139,11 @@ public class DebugLib extends TwoArgFunction {
 	final class gethook extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			LuaThread t = args.narg() > 0 ? args.checkthread(1): globals.running;
+			LuaThread.State s = t.state;
 			return varargsOf(
-					t.hookfunc != null? t.hookfunc: NIL,
-					valueOf((t.hookcall?"c":"")+(t.hookline?"l":"")+(t.hookrtrn?"r":"")),
-					valueOf(t.hookcount));
+					s.hookfunc != null? s.hookfunc: NIL,
+					valueOf((s.hookcall?"c":"")+(s.hookline?"l":"")+(s.hookrtrn?"r":"")),
+					valueOf(s.hookcount));
 		}
 	}
 
@@ -275,11 +276,12 @@ public class DebugLib extends TwoArgFunction {
 					case 'l': line=true; break;
 					case 'r': rtrn=true; break;
 				}
-			t.hookfunc = func;
-			t.hookcall = call;
-			t.hookline = line;
-			t.hookcount = count;
-			t.hookrtrn = rtrn;
+			LuaThread.State s = t.state;
+			s.hookfunc = func;
+			s.hookcall = call;
+			s.hookline = line;
+			s.hookcount = count;
+			s.hookrtrn = rtrn;
 			return NONE;
 		}
 	}
@@ -337,7 +339,7 @@ public class DebugLib extends TwoArgFunction {
 		public Varargs invoke(Varargs args) {
 			Object o = args.checkuserdata(1);
 			LuaValue v = args.checkvalue(2);
-			LuaUserdata u = (LuaUserdata)args.arg1();
+			LuaUserdata u = (LuaUserdata) o;
 			u.m_instance = v.checkuserdata();
 			u.m_metatable = v.getmetatable();
 			return NONE;
@@ -388,55 +390,58 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	public void onCall(LuaFunction f) {
-		if (globals.running.inhook) return;
+		LuaThread.State s = globals.running.state;
+		if (s.inhook) return;
 		callstack().onCall(f);
-		callHook(globals.running.hookfunc, CALL, NIL);
+		if (s.hookcall) callHook(s, CALL, NIL);
 	}
 
 	public void onCall(LuaClosure c, Varargs varargs, LuaValue[] stack) {
-		if (globals.running.inhook) return;
+		LuaThread.State s = globals.running.state;
+		if (s.inhook) return;
 		callstack().onCall(c, varargs, stack);
-		callHook(globals.running.hookfunc, CALL, NIL);
+		if (s.hookcall) callHook(s, CALL, NIL);
 	}
 
 	public void onInstruction(int pc, Varargs v, int top) {
-		if (globals.running.inhook) return;
+		LuaThread.State s = globals.running.state;
+		if (s.inhook) return;
 		callstack().onInstruction(pc, v, top);
-		if (globals.running.hookfunc == null) return;
-		if (globals.running.hookcount > 0)
-			if (++globals.running.bytecodes % globals.running.hookcount == 0)
-				callHook(globals.running.hookfunc, COUNT, NIL);
-		if (globals.running.hookline) {
+		if (s.hookfunc == null) return;
+		if (s.hookcount > 0)
+			if (++s.bytecodes % s.hookcount == 0)
+				callHook(s, COUNT, NIL);
+		if (s.hookline) {
 			int newline = callstack().currentline();
-			if ( newline != globals.running.lastline ) {
-				globals.running.lastline = newline;
-				callHook(globals.running.hookfunc, LINE, LuaValue.valueOf(newline));
+			if ( newline != s.lastline ) {
+				s.lastline = newline;
+				callHook(s, LINE, LuaValue.valueOf(newline));
 			}
 		}
 	}
 
 	public void onReturn() {
-		if (globals.running.inhook) return;
+		LuaThread.State s = globals.running.state;
+		if (s.inhook) return;
 		callstack().onReturn();
-		callHook(globals.running.hookfunc, RETURN, NIL);
+		if (s.hookrtrn) callHook(s, RETURN, NIL);
 	}
 
 	public String traceback(int level) {
 		return callstack().traceback(level);
 	}
 	
-	void callHook(LuaValue hookfunc, LuaValue type, LuaValue arg) {
-		if (hookfunc == null) return;
-		LuaThread.State state = globals.running.state;
-		state.set_inhook(true);
+	void callHook(LuaThread.State s, LuaValue type, LuaValue arg) {
+		if (s.inhook || s.hookfunc == null) return;
+		s.inhook = true;
 		try {
-			hookfunc.call(type, arg);
+			s.hookfunc.call(type, arg);
 		} catch (LuaError e) {
 			throw e;
 		} catch (RuntimeException e) {
 			throw new LuaError(e);
 		} finally {
-			state.set_inhook(false);
+			s.inhook = false;
 		}
 	}
 	

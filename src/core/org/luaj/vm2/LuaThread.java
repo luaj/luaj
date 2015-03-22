@@ -94,20 +94,8 @@ public class LuaThread extends LuaValue {
 
 	public final Globals globals;
 
-	/** Hook function control state used by debug lib. */
-	public LuaValue hookfunc;
-
 	/** Error message handler for this thread, if any.  */
 	public LuaValue errorfunc;
-
-	public boolean hookline;
-	public boolean hookcall;
-	public boolean hookrtrn;
-	public int hookcount;
-	public boolean inhook;
-	public int lastline;
-	public int bytecodes;
-
 	
 	/** Private constructor for main thread only */
 	public LuaThread(Globals globals) {
@@ -173,6 +161,18 @@ public class LuaThread extends LuaValue {
 		Varargs args = LuaValue.NONE;
 		Varargs result = LuaValue.NONE;
 		String error = null;
+
+		/** Hook function control state used by debug lib. */
+		public LuaValue hookfunc;
+
+		public boolean hookline;
+		public boolean hookcall;
+		public boolean hookrtrn;
+		public int hookcount;
+		public boolean inhook;
+		public int lastline;
+		public int bytecodes;
+		
 		public int status = LuaThread.STATUS_INITIAL;
 
 		State(Globals globals, LuaThread lua_thread, LuaValue function) {
@@ -244,15 +244,6 @@ public class LuaThread extends LuaValue {
 				this.args = LuaValue.NONE;
 				this.result = LuaValue.NONE;
 			}
-		}
-
-		public synchronized void set_inhook(boolean value) {
-			LuaThread t = (LuaThread) this.lua_thread.get();
-			if (t == null) {
-				this.status = STATUS_DEAD;
-				throw new OrphanedThread();
-			}
-			t.inhook = value;
 		}
 	}
 		
