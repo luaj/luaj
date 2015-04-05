@@ -79,6 +79,12 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	
 	Globals globals;
 	
+
+	/** Perform one-time initialization on the library by adding base functions
+	 * to the supplied environment, and returning it as the return value.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, which must be a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.finder = this;

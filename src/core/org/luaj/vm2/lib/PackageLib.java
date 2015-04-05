@@ -120,6 +120,13 @@ public class PackageLib extends TwoArgFunction {
 
 	public PackageLib() {}
 
+	/** Perform one-time initialization on the library by adding package functions
+	 * to the supplied environment, and returning it as the return value.
+	 * It also creates the package.preload and package.loaded tables for use by
+	 * other libraries.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, typically a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.set("require", new require());

@@ -66,6 +66,10 @@ import org.luaj.vm2.Varargs;
  * System.out.println( globals.get("debug").get("traceback").call() );
  * } </pre>
  * <p>
+ * This library exposes the entire state of lua code, and provides method to see and modify
+ * all underlying lua values within a Java VM so should not be exposed to client code
+ * in a shared server environment.
+ * 
  * @see LibFunction
  * @see JsePlatform
  * @see JmePlatform
@@ -103,6 +107,12 @@ public class DebugLib extends TwoArgFunction {
 
 	Globals globals;
 	
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, which must be a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;

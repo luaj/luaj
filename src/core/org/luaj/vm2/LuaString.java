@@ -62,7 +62,12 @@ import org.luaj.vm2.lib.StringLib;
  */
 public class LuaString extends LuaValue {
 
-	/** The singleton instance for string metatables that forwards to the string functions */
+	/** The singleton instance for string metatables that forwards to the string functions.
+	 * Typically, this is set to the string metatable as a side effect of loading the string
+	 * library, and is read-write to provide flexible behavior by default.  When used in a 
+	 * server environment where there may be roge scripts, this should be replaced with a
+	 * read-only table since it is shared across all lua code in this Java VM.
+	 */
 	public static LuaValue s_metatable;
 	
 	/** The bytes for the string.  These <em><b>must not be mutated directly</b></em> because

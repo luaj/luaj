@@ -29,7 +29,6 @@ import org.luaj.vm2.Buffer;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.ReadOnlyTable;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.DumpState;
 
@@ -62,35 +61,49 @@ import org.luaj.vm2.compiler.DumpState;
  */
 public class StringLib extends TwoArgFunction {
 
-	public static final ReadOnlyTable lib_functions;
-	static {
-			LuaTable t = new LuaTable();
-			t.set("byte", new byte_());
-			t.set("char", new char_());
-			t.set("dump", new dump());
-			t.set("find", new find());
-			t.set("format", new format());
-			t.set("gmatch", new gmatch());
-			t.set("gsub", new gsub());
-			t.set("len", new len());
-			t.set("lower", new lower());
-			t.set("match", new match());
-			t.set("rep", new rep());
-			t.set("reverse", new reverse());
-			t.set("sub", new sub());
-			t.set("upper", new upper());
-			lib_functions = new ReadOnlyTable(t);
-			LuaString.s_metatable = new ReadOnlyTable(
-					new LuaValue[] { INDEX, lib_functions });
-	}
-	
+	/** Construct a StringLib, which can be initialized by calling it with a 
+	 * modname string, and a global environment table as arguments using 
+	 * {@link #call(LuaValue, LuaValue)}. */
 	public StringLib() {
 	}
 
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * Creates a metatable that uses __INDEX to fall back on itself to support string
+	 * method operations.
+	 * If the shared strings metatable instance is null, will set the metatable as
+	 * the global shared metatable for strings.
+	 * <P>
+	 * All tables and metatables are read-write by default so if this will be used in 
+	 * a server environment, sandboxing should be used.  In particular, the 
+	 * {@link LuaString#s_metatable} table should probably be made read-only.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, typically a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
-		env.set("string", lib_functions);
-		env.get("package").get("loaded").set("string", lib_functions);
-		return lib_functions;
+		LuaTable string = new LuaTable();
+		string.set("byte", new byte_());
+		string.set("char", new char_());
+		string.set("dump", new dump());
+		string.set("find", new find());
+		string.set("format", new format());
+		string.set("gmatch", new gmatch());
+		string.set("gsub", new gsub());
+		string.set("len", new len());
+		string.set("lower", new lower());
+		string.set("match", new match());
+		string.set("rep", new rep());
+		string.set("reverse", new reverse());
+		string.set("sub", new sub());
+		string.set("upper", new upper());
+		LuaTable mt = LuaValue.tableOf(
+				new LuaValue[] { INDEX, string });
+		env.set("string", string);
+		env.get("package").get("loaded").set("string", string);
+		if (LuaString.s_metatable == null)
+			LuaString.s_metatable = mt;
+		return string;
 	}
 	
 	/**

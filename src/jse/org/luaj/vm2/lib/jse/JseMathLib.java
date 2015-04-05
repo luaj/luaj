@@ -61,6 +61,15 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
 	public JseMathLib() {}
 
+
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * <P>Specifically, adds all library functions that can be implemented directly
+	 * in JSE but not JME: acos, asin, atan, atan2, cosh, exp, log, pow, sinh, and tanh.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, which must be a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		super.call(modname, env);
 		LuaValue math = env.get("math");

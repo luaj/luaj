@@ -79,13 +79,25 @@ import org.luaj.vm2.Varargs;
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.6">Lua 5.2 Math Lib Reference</a>
  */
 public class MathLib extends TwoArgFunction {
-	
+
+	/** Pointer to the latest MathLib instance, used only to dispatch
+	 * math.exp to tha correct platform math library.
+	 */
 	public static MathLib MATHLIB = null;
 
+	/** Construct a MathLib, which can be initialized by calling it with a 
+	 * modname string, and a global environment table as arguments using 
+	 * {@link #call(LuaValue, LuaValue)}. */
 	public MathLib() {
 		MATHLIB = this;
 	}
 
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, typically a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable math = new LuaTable(0,30);
 		math.set("abs", new abs());

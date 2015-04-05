@@ -55,6 +55,12 @@ import org.luaj.vm2.Varargs;
  */
 public class TableLib extends TwoArgFunction {
 
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, typically a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable table = new LuaTable();
 		table.set("concat", new concat());

@@ -71,7 +71,14 @@ import org.luaj.vm2.lib.ResourceFinder;
 
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
-	/** Extend the library loading to set the default value for {@link Globals.STDIN} */
+
+	/** Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied environment,
+	 * adding the table to package.loaded, and returning table as the return value.
+	 * <P>Specifically, extend the library loading to set the default value for {@link Globals.STDIN}
+	 * @param modname the module name supplied if this is loaded via 'require'.
+	 * @param env the environment to load into, which must be a Globals instance.
+	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		super.call(modname, env);
 		env.checkglobals().STDIN = System.in;
