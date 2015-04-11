@@ -323,7 +323,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			return argerror(2,"value");
 		}
 		public LuaValue call(LuaValue table, LuaValue metatable) {
-			final LuaValue mt0 = table.getmetatable();
+			final LuaValue mt0 = table.checktable().getmetatable();
 			if ( mt0!=null && !mt0.rawget(METATABLE).isnil() )
 				error("cannot change a protected metatable");
 			return table.setmetatable(metatable.isnil()? null: metatable.checktable());
