@@ -521,9 +521,7 @@ public class LuaClosure extends LuaFunction {
 		if (globals == null ) return msg;
 		final LuaThread r = globals.running;
 		if (r.errorfunc == null)
-			return globals.debuglib != null?
-				msg + "\n" + globals.debuglib.traceback(level):
-				msg;
+			return msg;
 		final LuaValue e = r.errorfunc;
 		r.errorfunc = null;
 		try {
