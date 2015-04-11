@@ -7,7 +7,8 @@ import org.luaj.vm2.lib.jse.*;
  * in a server environment.
  * 
  * <p>Although this sandboxing is done primarily in Java here, these 
- * same techniques should all be possible directly from lua using metatables.
+ * same techniques should all be possible directly from lua using metatables,
+ * and examples are shown in examples/lua/samplesandboxed.lua.
  * 
  * <p> The main goals of this sandbox are:
  * <ul>
