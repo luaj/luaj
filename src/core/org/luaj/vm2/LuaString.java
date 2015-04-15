@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import org.luaj.vm2.lib.MathLib;
-import org.luaj.vm2.lib.StringLib;
 
 /**
  * Subclass of {@link LuaValue} for representing lua strings. 
@@ -710,8 +709,7 @@ public class LuaString extends LuaValue {
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 */
 	public boolean isValidUtf8() {
-		int i,j,n,b,e=0;
-		for ( i=m_offset,j=m_offset+m_length,n=0; i<j; ++n ) {
+		for (int i=m_offset,j=m_offset+m_length; i<j;) {
 			int c = m_bytes[i++];
 			if ( c >= 0 ) continue;
 			if ( ((c & 0xE0) == 0xC0) 
