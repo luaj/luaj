@@ -50,9 +50,9 @@ import org.luaj.vm2.lib.MathLib;
  * <p>
  * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed. 
  * The functions 
- * {@link LuaString#lengthAsUtf8(char[]),
- * {@link LuaString#encodeToUtf8(char[], int, byte[], int)}, and 
- * {@link LuaString#decodeAsUtf8(byte[], int, int) 
+ * {@link #lengthAsUtf8(char[])},
+ * {@link #encodeToUtf8(char[], int, byte[], int)}, and 
+ * {@link #decodeAsUtf8(byte[], int, int)} 
  * are used to convert back and forth between UTF8 byte arrays and character arrays.
  * 
  * @see LuaValue

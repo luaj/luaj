@@ -11,6 +11,10 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  *  <ul><li>type-related metatables such as LuaNumber.s_metatable are shared by all threads, so are not thread-safe.
  *  </li><li>creating additional threads within a Java element called by lua could result in shared access to globals.
  *  </li></ul>
+ *  
+ * This can be used when all the scripts running can be trusted.  
+ * For examples of how to sandbox scripts in protect against rogue scripts,
+ * see examples/jse/SampLeSandboxed.java.
  */
 public class SampleMultiThreaded {
 
