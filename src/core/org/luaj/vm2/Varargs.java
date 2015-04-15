@@ -91,28 +91,28 @@ public abstract class Varargs {
 	/** Gets the type of argument {@code i} 
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return int value corresponding to one of the LuaValue integer type values
-	 * @see LuaValue.TNIL
-	 * @see LuaValue.TBOOLEAN
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
-	 * @see LuaValue.TTABLE
-	 * @see LuaValue.TFUNCTION
-	 * @see LuaValue.TUSERDATA
-	 * @see LuaValue.TTHREAD
+	 * @see LuaValue#TNIL
+	 * @see LuaValue#TBOOLEAN
+	 * @see LuaValue#TNUMBER
+	 * @see LuaValue#TSTRING
+	 * @see LuaValue#TTABLE
+	 * @see LuaValue#TFUNCTION
+	 * @see LuaValue#TUSERDATA
+	 * @see LuaValue#TTHREAD
 	 * */
 	public int type(int i)             { return arg(i).type(); }
 	
 	/** Tests if argument i is nil.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument is nil or does not exist, false otherwise
-	 * @see LuaValue.TNIL
+	 * @see LuaValue#TNIL
 	 * */
 	public boolean isnil(int i)        { return arg(i).isnil(); }
 
 	/** Tests if argument i is a function.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a function or closure, false otherwise
-	 * @see LuaValue.TFUNCTION
+	 * @see LuaValue#TFUNCTION
 	 * */
 	public boolean isfunction(int i)   { return arg(i).isfunction(); }
 
@@ -123,8 +123,8 @@ public abstract class Varargs {
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a number or 
 	 * string that can be interpreted as a number, false otherwise
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
+	 * @see LuaValue#TNUMBER
+	 * @see LuaValue#TSTRING
 	 * */
 	public boolean isnumber(int i)     { return arg(i).isnumber(); }
 
@@ -133,29 +133,29 @@ public abstract class Varargs {
 	 * this will return true for both strings and numbers.  
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a string or number, false otherwise
-	 * @see LuaValue.TNUMBER
-	 * @see LuaValue.TSTRING
+	 * @see LuaValue#TNUMBER
+	 * @see LuaValue#TSTRING
 	 * */
 	public boolean isstring(int i)     { return arg(i).isstring(); }
 
 	/** Tests if argument i is a table.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a lua table, false otherwise
-	 * @see LuaValue.TTABLE
+	 * @see LuaValue#TTABLE
 	 * */
 	public boolean istable(int i)      { return arg(i).istable(); }
 
 	/** Tests if argument i is a thread.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a lua thread, false otherwise
-	 * @see LuaValue.TTHREAD
+	 * @see LuaValue#TTHREAD
 	 * */
 	public boolean isthread(int i)     { return arg(i).isthread(); }
 
 	/** Tests if argument i is a userdata.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a userdata, false otherwise
-	 * @see LuaValue.TUSERDATA
+	 * @see LuaValue#TUSERDATA
 	 * */
 	public boolean isuserdata(int i)   { return arg(i).isuserdata(); }
 
