@@ -24,9 +24,11 @@ package org.luaj.vm2.lib.jse;
 import java.io.File;
 import java.io.IOException;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.LibFunction;
+import org.luaj.vm2.lib.OsLib;
 
 /**
  * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
@@ -45,7 +47,7 @@ import org.luaj.vm2.lib.LibFunction;
  * from their counterparts in the C platform.  
  * <p>
  * Typically, this library is included as part of a call to 
- * {@link JsePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("os").get("time").call() );
@@ -65,7 +67,7 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * @see LibFunction
  * @see OsLib
- * @see JsePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.9">Lua 5.2 OS Lib Reference</a>
  */

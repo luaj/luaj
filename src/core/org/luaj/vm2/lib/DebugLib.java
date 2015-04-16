@@ -46,11 +46,12 @@ import org.luaj.vm2.Varargs;
  * To do this, it must maintain a separate stack of calls to {@link LuaClosure} and {@link LibFunction} 
  * instances.  
  * Especially when lua-to-java bytecode compiling is being used
- * via a {@link LuaCompiler} such as {@link LuaJC}, 
+ * via a {@link org.luaj.vm2.Globals.Compiler} such as {@link org.luaj.vm2.luajc.LuaJC}, 
  * this cannot be done in all cases.  
  * <p> 
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#debugGlobals()} or {@link JmePlatform#debugGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#debugGlobals()} or 
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#debugGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.debugGlobals();
  * System.out.println( globals.get("debug").get("traceback").call() );
@@ -71,8 +72,8 @@ import org.luaj.vm2.Varargs;
  * in a shared server environment.
  * 
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.10">Lua 5.2 Debug Lib Reference</a>
  */
 public class DebugLib extends TwoArgFunction {

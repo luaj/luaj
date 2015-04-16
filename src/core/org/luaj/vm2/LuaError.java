@@ -110,8 +110,7 @@ public class LuaError extends RuntimeException {
 	/**
 	 * Construct a LuaError with a LuaValue as the message object,
 	 * and level to draw line number information from.
-	 * @param message message to supply
-	 * @param level where to supply line info from in call stack
+	 * @param message_object message string or object to supply
 	 */
 	public LuaError(LuaValue message_object) {
 		super( message_object.tojstring() );

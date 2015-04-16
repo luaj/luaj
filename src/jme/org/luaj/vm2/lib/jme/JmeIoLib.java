@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.IoLib;
@@ -41,7 +42,7 @@ import org.luaj.vm2.lib.LibFunction;
  * However, seek is not supported. 
  * <p>
  * Typically, this library is included as part of a call to 
- * {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JmePlatform.standardGlobals();
  * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
@@ -62,9 +63,9 @@ import org.luaj.vm2.lib.LibFunction;
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see IoLib
- * @see JseIoLib
+ * @see org.luaj.vm2.lib.jse.JseIoLib
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.8">Lua 5.2 I/O Lib Reference</a>
  */
 public class JmeIoLib extends IoLib {

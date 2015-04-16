@@ -55,12 +55,12 @@ import org.luaj.vm2.Varargs;
  * </ul>
  * <p>
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("os").get("time").call() );
  * } </pre>
- * In this example the platform-specific {@link JseOsLib} library will be loaded, which will include
+ * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseOsLib} library will be loaded, which will include
  * the base functionality provided by this class.
  * <p>
  * To instantiate and use it directly, 
@@ -74,9 +74,9 @@ import org.luaj.vm2.Varargs;
  * } </pre>
  * <p>
   * @see LibFunction
- * @see JseOsLib
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JseOsLib
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
 public class OsLib extends TwoArgFunction {

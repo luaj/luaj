@@ -33,14 +33,12 @@ import java.lang.ref.WeakReference;
  * <p>
  * The threads must be initialized with the globals, so that 
  * the global environment may be passed along according to rules of lua. 
- * This is done via a call to {@link #setGlobals(LuaValue)} 
- * at some point during globals initialization.
- * See {@link BaseLib} for additional documentation and example code.  
+ * This is done via the constructor arguments {@link #LuaThread(Globals)} or 
+ * {@link #LuaThread(Globals, LuaValue)}.
  * <p> 
- * The utility classes {@link JsePlatform} and {@link JmePlatform} 
- * see to it that this initialization is done properly.  
- * For this reason it is highly recommended to use one of these classes
- * when initializing globals. 
+ * The utility classes {@link org.luaj.vm2.lib.jse.JsePlatform} and 
+ * {@link org.luaj.vm2.lib.jme.JmePlatform} 
+ * see to it that this {@link Globals} are initialized properly.
  * <p>
  * The behavior of coroutine threads matches closely the behavior 
  * of C coroutine library.  However, because of the use of Java threads 
@@ -50,17 +48,29 @@ import java.lang.ref.WeakReference;
  * to determine if it can ever be resumed.  If not, it throws 
  * {@link OrphanedThread} which is an {@link java.lang.Error}. 
  * Applications should not catch {@link OrphanedThread}, because it can break
- * the thread safety of luaj.
+ * the thread safety of luaj.  The value controlling the polling interval 
+ * is {@link #thread_orphan_check_interval} and may be set by the user.
+ * <p> 
+ * There are two main ways to abandon a coroutine.  The first is to call 
+ * {@code yield()} from lua, or equivalently {@link Globals#yield(Varargs)}, 
+ * and arrange to have it never resumed possibly by values passed to yield.
+ * The second is to throw {@link OrphanedThread}, which should put the thread
+ * in a dead state.   In either case all references to the thread must be
+ * dropped, and the garbage collector must run for the thread to be 
+ * garbage collected. 
+ *
  *   
  * @see LuaValue
- * @see JsePlatform
- * @see JmePlatform
- * @see CoroutineLib
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
+ * @see org.luaj.vm2.lib.CoroutineLib
  */
 public class LuaThread extends LuaValue {
 
+	/** Shared metatable for lua threads. */
 	public static LuaValue s_metatable;
 
+	/** The current number of coroutines.  Should not be set. */
 	public static int coroutine_count = 0;
 
 	/** Polling interval, in milliseconds, which each thread uses while waiting to

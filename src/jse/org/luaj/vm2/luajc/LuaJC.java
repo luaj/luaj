@@ -27,18 +27,18 @@ import java.io.Reader;
 import java.util.Hashtable;
 
 import org.luaj.vm2.Globals;
-import org.luaj.vm2.LoadState;
+import org.luaj.vm2.LuaClosure;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.BaseLib;
 
 /**
- * Implementation of {@link LuaCompiler} which does direct 
+ * Implementation of {@link org.luaj.vm2.Globals.Compiler} which does direct 
  * lua-to-java-bytecode compiling. 
  * <p>
- * By default, when using {@link JsePlatform} or {@JmePlatform}
+ * By default, when using {@link org.luaj.vm2.lib.jse.JsePlatform} or 
+ * {@link org.luaj.vm2.lib.jme.JmePlatform}
  * to construct globals, the plain compiler {@link LuaC} is installed and lua code 
  * will only be compiled into lua bytecode and execute as {@link LuaClosure}. 
  * <p>
@@ -57,9 +57,9 @@ import org.luaj.vm2.lib.BaseLib;
  * If the library is not found, the default {@link LuaC} lua-to-lua-bytecode 
  * compiler will be used.  
  * 
- * @see LuaCompiler
- * @see LuaC
- * @see BaseLib
+ * @see Globals#compiler
+ * @see #install(Globals)
+ * @see org.luaj.vm2.compiler.LuaC
  * @see LuaValue
  */
 public class LuaJC implements Globals.Loader {

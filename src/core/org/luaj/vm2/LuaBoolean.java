@@ -27,7 +27,7 @@ package org.luaj.vm2;
  * These instance are not instantiated directly by clients.  
  * Instead, there are exactly twon instances of this class, 
  * {@link LuaValue#TRUE} and {@link LuaValue#FALSE} 
- * representing the lua values {@code true} and {@link false}.
+ * representing the lua values {@code true} and {@code false}.
  * The function {@link LuaValue#valueOf(boolean)} will always 
  * return one of these two values. 
  * <p>

@@ -38,18 +38,18 @@ import org.luaj.vm2.lib.BaseLib;
  * 
  * <p>
  * Compiles lua source files into lua bytecode within a {@link Prototype}, 
- * loads lua binary files directly into a{@link Prototype}, 
+ * loads lua binary files directly into a {@link Prototype}, 
  * and optionaly instantiates a {@link LuaClosure} around the result 
  * using a user-supplied environment.  
  * 
  * <p>
- * Implements the {@link Globals.Compiler} interface for loading 
+ * Implements the {@link org.luaj.vm2.Globals.Compiler} interface for loading 
  * initialized chunks, which is an interface common to 
  * lua bytecode compiling and java bytecode compiling.
  *  
  * <p> 
  * The {@link LuaC} compiler is installed by default by both the 
- * {@link JsePlatform} and {@link JmePlatform} classes, 
+ * {@link org.luaj.vm2.lib.jse.JsePlatform} and {@link org.luaj.vm2.lib.jme.JmePlatform} classes, 
  * so in the following example, the default {@link LuaC} compiler 
  * will be used:
  * <pre> {@code
@@ -62,15 +62,14 @@ import org.luaj.vm2.lib.BaseLib;
  * LuaC.install(globals);
  * } </pre>
  * 
- * @see LuaC#install(Globals)
- * @see Globals#Compiler
- * @see Globals#Loader
- * @see LuaJC
- * @see JsePlatform
- * @see JmePlatform
+ * @see #install(Globals)
+ * @see Globals#compiler
+ * @see Globals#loader
+ * @see org.luaj.vm2.luajc.LuaJC
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see BaseLib
  * @see LuaValue
- * @see LuaCompiler
  * @see Prototype
  */
 public class LuaC extends Constants implements Globals.Compiler, Globals.Loader {

@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.LibFunction;
 
@@ -29,10 +30,10 @@ import org.luaj.vm2.lib.LibFunction;
  * library. 
  * <p> 
  * It contains all lua math functions, including those not available on the JME platform.  
- * See {@link org.luaj.lib.MathLib} for the exception list.  
+ * See {@link org.luaj.vm2.lib.MathLib} for the exception list.  
  * <p>
  * Typically, this library is included as part of a call to 
- * {@link JsePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
@@ -52,9 +53,9 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
- * @see JseMathLib
+ * @see org.luaj.vm2.lib.jse.JseMathLib
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.6">Lua 5.2 Math Lib Reference</a>
  */
 public class JseMathLib extends org.luaj.vm2.lib.MathLib {

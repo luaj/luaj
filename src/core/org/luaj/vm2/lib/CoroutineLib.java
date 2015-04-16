@@ -39,7 +39,7 @@ import org.luaj.vm2.Varargs;
  * may not be collected by the garbage collector. 
  * <p> 
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("coroutine").get("running").call() );
@@ -56,8 +56,8 @@ import org.luaj.vm2.Varargs;
  * } </pre>
  * <p>
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.2">Lua 5.2 Coroutine Lib Reference</a>
  */
 public class CoroutineLib extends TwoArgFunction {

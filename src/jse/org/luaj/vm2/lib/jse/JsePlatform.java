@@ -34,7 +34,7 @@ import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 
-/** The {@link JsePlatform} class is a convenience class to standardize 
+/** The {@link org.luaj.vm2.lib.jse.JsePlatform} class is a convenience class to standardize 
  * how globals tables are initialized for the JSE platform. 
  * <p>
  * It is used to allocate either a set of standard globals using 
@@ -56,29 +56,30 @@ import org.luaj.vm2.lib.TableLib;
  * globals.get("require").call(LuaValue.valueOf("main"));
  * } </pre>
  * For this to succeed, the file "main.lua" must be in the current directory or a resource.
- * See {@link JseBaseLib} for details on finding scripts using {@link ResourceFinder}.
+ * See {@link org.luaj.vm2.lib.jse.JseBaseLib} for details on finding scripts using {@link ResourceFinder}.
  * <p>
  * The standard globals will contain all standard libraries plus {@code luajava}:
  * <ul>
  * <li>{@link Globals}</li>
- * <li>{@link JseBaseLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jse.JseBaseLib}</li>
  * <li>{@link PackageLib}</li>
  * <li>{@link Bit32Lib}</li>
  * <li>{@link TableLib}</li>
  * <li>{@link StringLib}</li>
  * <li>{@link CoroutineLib}</li>
- * <li>{@link JseMathLib}</li>
- * <li>{@link JseIoLib}</li>
- * <li>{@link JseOsLib}</li>
- * <li>{@link LuajavaLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jse.JseMathLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jse.JseIoLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jse.JseOsLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jse.LuajavaLib}</li>
  * </ul>
  * In addition, the {@link LuaC} compiler is installed so lua files may be loaded in their source form. 
  * <p> 
  * The debug globals are simply the standard globals plus the {@code debug} library {@link DebugLib}.
  * <p>
- * The class ensures that initialization is done in the correct order, 
- * and that linkage is made  to {@link LuaThread#setGlobals(LuaValue)}. 
- * @see JmePlatform
+ * The class ensures that initialization is done in the correct order.
+ * 
+ * @see Globals
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  */
 public class JsePlatform {
 
@@ -87,8 +88,8 @@ public class JsePlatform {
 	 * 
 	 * @return Table of globals initialized with the standard JSE libraries
 	 * @see #debugGlobals()
-	 * @see JsePlatform
-	 * @see JmePlatform
+	 * @see org.luaj.vm2.lib.jse.JsePlatform
+	 * @see org.luaj.vm2.lib.jme.JmePlatform
 	 */
 	public static Globals standardGlobals() {
 		Globals globals = new Globals();
@@ -107,12 +108,12 @@ public class JsePlatform {
 		return globals;		
 	}
 
-	/** Create standard globals including the {@link debug} library.
+	/** Create standard globals including the {@link DebugLib} library.
 	 * 
 	 * @return Table of globals initialized with the standard JSE and debug libraries
 	 * @see #standardGlobals()
-	 * @see JsePlatform
-	 * @see JmePlatform
+	 * @see org.luaj.vm2.lib.jse.JsePlatform
+	 * @see org.luaj.vm2.lib.jme.JmePlatform
 	 * @see DebugLib
 	 */
 	public static Globals debugGlobals() {

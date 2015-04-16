@@ -29,32 +29,33 @@ package org.luaj.vm2;
  * and the main data structure for execution of compiled lua bytecode. 
  * 
  * <p>
- * Generally, the {@link Protoytpe} is not constructed directly is an intermediate result
- * as lua code is loaded using {@link Globals.load}:
+ * Generally, the {@link Prototype} is not constructed directly is an intermediate result
+ * as lua code is loaded using {@link Globals#load(java.io.Reader, String)}:
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * globals.load( new StringReader("print 'hello'"), "main.lua" ).call(); 
  * } </pre>
  * 
  * <p>
- * To create a {@link Prototype} directly, a compiler such as {@link LuaC} may be used:
+ * To create a {@link Prototype} directly, a compiler such as 
+ * {@link org.luaj.vm2.compiler.LuaC} may be used:
  * <pre> {@code
  * InputStream is = new ByteArrayInputStream("print('hello,world')".getBytes());
  * Prototype p = LuaC.instance.compile(is, "script");
  * }</pre> 
  * 
- * To simplify loading, the {@link Globals#compilePrototype} method may be used: 
+ * To simplify loading, the {@link Globals#compilePrototype(java.io.InputStream, String)} method may be used: 
  * <pre> {@code
  * Prototype p = globals.compileProtoytpe(is, "script");
  * }</pre>
  * 
- * It may also be loaded from a {@link java.io.Reader} : 
+ * It may also be loaded from a {@link java.io.Reader} via {@link Globals#compilePrototype(java.io.Reader, String)}: 
  * <pre> {@code
  * Prototype p = globals.compileProtoytpe(new StringReader(script), "script");
  * }</pre>
  * 
  * To un-dump a binary file known to be a binary lua file that has been dumped to a string,
- * the {@link Globals#Undumper} interface may be used: 
+ * the {@link Globals.Undumper} interface may be used: 
  * <pre> {@code
  * FileInputStream lua_binary_file = new FileInputStream("foo.lc");  // Known to be compiled lua.
  * Prototype p = globals.undumper.undump(lua_binary_file, "foo.lua");
@@ -76,8 +77,8 @@ package org.luaj.vm2;
  *  
  * @see LuaClosure
  * @see Globals
- * @see Globals#Undumper
- * @see Globasl#Compiler
+ * @see Globals#undumper
+ * @see Globals#compiler
  * @see Print#print
  */
 

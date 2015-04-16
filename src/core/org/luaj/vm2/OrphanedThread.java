@@ -29,7 +29,7 @@ package org.luaj.vm2;
  * {@link LuaThread} being used as a coroutine that could not possibly be
  * resumed again because there are no more references to the LuaThread with
  * which it is associated. Rather than locking up resources forever, this error
- * is thrown, and should fall through all the way to the thread's {@link Thread.run}() method.
+ * is thrown, and should fall through all the way to the thread's {@link Thread#run()} method.
  * <p>
  * Java code mixed with the luaj vm should not catch this error because it may
  * occur when the coroutine is not running, so any processing done during error

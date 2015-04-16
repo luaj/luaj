@@ -51,12 +51,14 @@ import org.luaj.vm2.Varargs;
  * hand for JME, so will be slower and less accurate than when executed on the JSE platform.
  * <p> 
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or 
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
- * When using {@link JsePlaform} as in this example, the subclass {@link JseMathLib} will 
+ * When using {@link org.luaj.vm2.lib.jse.JsePlatform} as in this example, 
+ * the subclass {@link org.luaj.vm2.lib.jse.JseMathLib} will 
  * be included, which also includes this base functionality.
  * <p>
  * To instantiate and use it directly, 
@@ -73,9 +75,9 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
- * @see JseMathLib
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
+ * @see org.luaj.vm2.lib.jse.JseMathLib
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.6">Lua 5.2 Math Lib Reference</a>
  */
 public class MathLib extends TwoArgFunction {

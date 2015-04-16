@@ -38,18 +38,18 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This contains all library functions listed as "basic functions" in the lua documentation for JME. 
  * The functions dofile and loadfile use the 
- * {@link #finder} instance to find resource files.
+ * {@link Globals#finder} instance to find resource files.
  * Since JME has no file system by default, {@link BaseLib} implements 
  * {@link ResourceFinder} using {@link Class#getResource(String)}, 
  * which is the closest equivalent on JME.     
  * The default loader chain in {@link PackageLib} will use these as well.
  * <p>  
  * To use basic library functions that include a {@link ResourceFinder} based on 
- * directory lookup, use {@link JseBaseLib} instead. 
+ * directory lookup, use {@link org.luaj.vm2.lib.jse.JseBaseLib} instead. 
  * <p>
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#standardGlobals()} or
- * {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * globals.get("print").call(LuaValue.valueOf("hello, world"));
@@ -67,12 +67,12 @@ import org.luaj.vm2.Varargs;
  * and loaded into the globals table. 
  * <p>
  * This is a direct port of the corresponding library in C.
- * @see JseBaseLib
+ * @see org.luaj.vm2.lib.jse.JseBaseLib
  * @see ResourceFinder
- * @see #finder
+ * @see Globals#finder
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.1">Lua 5.2 Base Lib Reference</a>
  */
 public class BaseLib extends TwoArgFunction implements ResourceFinder {

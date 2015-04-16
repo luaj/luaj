@@ -386,11 +386,12 @@ public abstract class Varargs {
 	 * */
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
-	/** Return argument i as a LuaValue when a user-supplied assertion passes, or throw an error.
+	/** Performs test on argument i as a LuaValue when a user-supplied assertion passes, or throw an error.
+	 * Returns normally if the value of {@code test} is {@code true}, otherwise throws and argument error with 
+	 * the supplied message, {@code msg}.
 	 * @param test user supplied assertion to test against
 	 * @param i the index to report in any error message
 	 * @param msg the error message to use when the test fails
-	 * @return LuaValue value if the value of {@code test} is {@code true}
 	 * @exception LuaError if the the value of {@code test} is {@code false}
 	 * */
 	public void         argcheck(boolean test, int i, String msg) { if (!test) LuaValue.argerror(i,msg); }

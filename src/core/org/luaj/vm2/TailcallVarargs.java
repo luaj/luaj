@@ -38,7 +38,7 @@ package org.luaj.vm2;
  * details of this mechanism, as it is built into the core 
  * execution framework. 
  * @see Prototype 
- * @see LuaJC
+ * @see org.luaj.vm2.luajc.LuaJC
  */
 public class TailcallVarargs extends Varargs {
 

@@ -33,7 +33,7 @@ import org.luaj.vm2.LuaValue;
 /**
  * Helper class to coerce values from lua to Java within the luajava library. 
  * <p>
- * This class is primarily used by the {@link LuajavaLib}, 
+ * This class is primarily used by the {@link org.luaj.vm2.lib.jse.LuajavaLib}, 
  * but can also be used directly when working with Java/lua bindings. 
  * <p>
  * To coerce to specific Java values, generally the {@code toType()} methods 
@@ -54,7 +54,7 @@ import org.luaj.vm2.LuaValue;
  * For data in lua tables, the various methods on {@link LuaTable} can be used directly 
  * to convert data to something more useful.
  * 
- * @see LuajavaLib
+ * @see org.luaj.vm2.lib.jse.LuajavaLib
  * @see CoerceJavaToLua
  */
 public class CoerceLuaToJava {

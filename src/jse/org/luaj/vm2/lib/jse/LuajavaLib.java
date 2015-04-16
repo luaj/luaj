@@ -28,6 +28,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -45,7 +46,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * 
  * <p>
  * Typically, this library is included as part of a call to 
- * {@link JsePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("luajava").get("bindClass").call( LuaValue.valueOf("java.lang.System") ).invokeMethod("currentTimeMillis") );
@@ -65,7 +66,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * <p>
  * 
  * The {@code luajava} library is available 
- * on all JSE platforms via the call to {@link JsePlatform#standardGlobals()}
+ * on all JSE platforms via the call to {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * and the luajava api's are simply invoked from lua.  
  * Because it makes extensive use of Java's reflection API, it is not available 
  * on JME, but can be used in Android applications.

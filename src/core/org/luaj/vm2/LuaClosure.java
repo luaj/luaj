@@ -33,11 +33,12 @@ package org.luaj.vm2;
  * There are three main ways {@link LuaClosure} instances are created:
  * <ul> 
  * <li>Construct an instance using {@link #LuaClosure(Prototype, LuaValue)}</li>
- * <li>Construct it indirectly by loading a chunk via {@link Globals#load(java.io.Reader, String, LuaValue)}
+ * <li>Construct it indirectly by loading a chunk via {@link Globals#load(java.io.Reader, String)}
  * <li>Execute the lua bytecode {@link Lua#OP_CLOSURE} as part of bytecode processing
  * </ul>
  * <p>
- * To construct it directly, the {@link Prototype} is typically created via a compiler such as {@link LuaC}:
+ * To construct it directly, the {@link Prototype} is typically created via a compiler such as 
+ * {@link org.luaj.vm2.compiler.LuaC}:
  * <pre> {@code
  * String script = "print( 'hello, world' )";
  * InputStream is = new ByteArrayInputStream(script.getBytes());
@@ -47,7 +48,7 @@ package org.luaj.vm2;
  * f.call();
  * }</pre> 
  * <p>
- * To construct it indirectly, the {@link Globals#load} method may be used: 
+ * To construct it indirectly, the {@link Globals#load(java.io.Reader, String)} method may be used: 
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * LuaFunction f = globals.load(new StringReader(script), "script");
@@ -78,7 +79,7 @@ package org.luaj.vm2;
  * @see LuaValue#checkclosure()
  * @see LuaValue#optclosure(LuaClosure)
  * @see LoadState
- * @see LoadState#compiler
+ * @see Globals#compiler
  */
 public class LuaClosure extends LuaFunction {
 	private static final UpValue[] NOUPVALUES = new UpValue[0];

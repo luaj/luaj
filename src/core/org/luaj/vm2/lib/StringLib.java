@@ -37,7 +37,7 @@ import org.luaj.vm2.compiler.DumpState;
  * library. 
  * <p>
  * Typically, this library is included as part of a call to either 
- * {@link JsePlatform#standardGlobals()} or {@link JmePlatform#standardGlobals()}
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
@@ -55,8 +55,8 @@ import org.luaj.vm2.compiler.DumpState;
  * <p>
  * This is a direct port of the corresponding library in C.
  * @see LibFunction
- * @see JsePlatform
- * @see JmePlatform
+ * @see org.luaj.vm2.lib.jse.JsePlatform
+ * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.4">Lua 5.2 String Lib Reference</a>
  */
 public class StringLib extends TwoArgFunction {

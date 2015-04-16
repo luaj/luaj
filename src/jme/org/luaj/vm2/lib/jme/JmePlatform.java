@@ -21,11 +21,11 @@
  ******************************************************************************/
 package org.luaj.vm2.lib.jme;
 
-import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
@@ -33,10 +33,11 @@ import org.luaj.vm2.lib.DebugLib;
 import org.luaj.vm2.lib.MathLib;
 import org.luaj.vm2.lib.OsLib;
 import org.luaj.vm2.lib.PackageLib;
+import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 
-/** The {@link JmePlatform} class is a convenience class to standardize 
+/** The {@link org.luaj.vm2.lib.jme.JmePlatform} class is a convenience class to standardize 
  * how globals tables are initialized for the JME platform. 
  * <p>
  * The JME platform, being limited, cannot implement all libraries in all aspects.  The main limitations are
@@ -44,8 +45,8 @@ import org.luaj.vm2.lib.TableLib;
  * <li>Some math functions are not implemented, see {@link MathLib} for details</li>
  * <li>Scripts are loaded via Class.getResourceAsStream(), see {@link BaseLib} for details</li>
  * <li>OS functions execute(), remove(), rename(), and tmpname() vary, see {@link OsLib} for details</li>
- * <li>I/O seek is not implemented, see {@link JmeIoLib} for details</li>
- * <li>luajava is not available, see {@link LuajavaLib} for details</li>
+ * <li>I/O seek is not implemented, see {@link org.luaj.vm2.lib.jme.JmeIoLib} for details</li>
+ * <li>luajava is not available, see {@link org.luaj.vm2.lib.jse.LuajavaLib} for details</li>
  * </ul>
  * <p>
  * It is used to allocate either a set of standard globals using 
@@ -79,7 +80,7 @@ import org.luaj.vm2.lib.TableLib;
  * <li>{@link StringLib}</li>
  * <li>{@link CoroutineLib}</li>
  * <li>{@link MathLib}</li>
- * <li>{@link JmeIoLib}</li>
+ * <li>{@link org.luaj.vm2.lib.jme.JmeIoLib}</li>
  * <li>{@link OsLib}</li>
  * </ul>
  * In addition, the {@link LuaC} compiler is installed so lua files may be loaded in their source form. 
@@ -87,10 +88,10 @@ import org.luaj.vm2.lib.TableLib;
  * The debug globals are simply the standard globals plus the {@code debug} library {@link DebugLib}.
  * <p>
  * <p>
- * The class ensures that initialization is done in the correct order, 
- * and that linkage is made  to {@link LuaThread#setGlobals(LuaValue)}. 
- * @see JsePlatform
- * @see LoadState
+ * The class ensures that initialization is done in the correct order.  
+ * 
+ * @see Globals
+ * @see org.luaj.vm2.lib.jse.JsePlatform
  */
 public class JmePlatform {
 
@@ -99,8 +100,8 @@ public class JmePlatform {
 	 * 
 	 * @return Table of globals initialized with the standard JME libraries
 	 * @see #debugGlobals()
-	 * @see JsePlatform
-	 * @see JmePlatform
+	 * @see org.luaj.vm2.lib.jse.JsePlatform
+	 * @see org.luaj.vm2.lib.jme.JmePlatform
 	 */
 	public static Globals standardGlobals() {
 		Globals globals = new Globals();
@@ -118,12 +119,12 @@ public class JmePlatform {
 		return globals;		
 	}
 	
-	/** Create standard globals including the {@link debug} library.
+	/** Create standard globals including the {@link DebugLib} library.
 	 * 
 	 * @return Table of globals initialized with the standard JSE and debug libraries
-	 * @see #standarsGlobals()
-	 * @see JsePlatform
-	 * @see JmePlatform
+	 * @see #standardGlobals()
+	 * @see org.luaj.vm2.lib.jse.JsePlatform
+	 * @see org.luaj.vm2.lib.jme.JmePlatform
 	 * @see DebugLib
 	 */
 	public static Globals debugGlobals() {
