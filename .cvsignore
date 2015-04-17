@@ -2,10 +2,14 @@ bin
 target
 build
 lib
-luaj*.jar
 jit
 *.ser
 *.gz
+*.jar
+*.lua
 *.out
 *.tar
 *.txt
+*.zip
+docs
+*.0
