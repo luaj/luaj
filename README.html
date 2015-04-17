@@ -462,7 +462,29 @@ multiple threads see <a href="examples/jse/SampleMultiThreaded.java">examples/js
 
 <p>
 As an alternative, the JSR-223 scripting interface can be used, and should always provide a separate Globals instance 
-per script engine instance by using a ThreadLocal internally.
+per script engine instance by using a ThreadLocal internally.  
+
+<h2>Sandboxing</h2>
+Lua and luaj are allow for easy sandboxing of scripts in a server environment.
+<P>
+Considerations include
+<ul>
+<li>The <em>debug</em> and <em>luajava</em> library give unfettered access to the luaj vm and java vm 
+<li>Portions of the <em>os</em>, <em>io</em>, and <em>coroutine</em> libraries are prone to abuse 
+<li>Rogue scripts may need to be throttled or killed
+<li>Shared metatables (string, booleans, etc.) need to be made read-only or isolated via class loaders
+such as <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/server/LuajClassLoader.html">LuajClassLoader</a>
+</ul>
+
+Luaj provides sample code covering various approaches:
+<ul>
+<li><a href="examples/jse/SampleSandboxed.java">examples/jse/SampleSandboxed.java</a>
+A java sandbox that limits libraries, limits bytecodes per script, and makes shared tables read-only
+<li><a href="examples/lua/samplesandboxed.lua">examples/jse/samplesandboxed.lua</a>
+A lua sandbox that limits librares,limits bytecodes per script, and makes shared tables read-only
+<li><a href="examples/jse/SampleUsingClassLoader.java">examples/jse/SampleUsingClassLoader.java</a>
+A heavier but strong sandbox where each script gets its own class loader and a full private luaj implementation
+</ul>
 
 <h1>4 - <a name="4">Libraries</a></h1>
 
@@ -535,7 +557,8 @@ Luaj uses WeakReferences and the OrphanedThread error to ensure that coroutines 
 are properly garbage collected.  For thread safety, OrphanedThread should not be caught by Java code.  
 See <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/LuaThread.html">LuaThread</a>
 and <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/OrphanedThread.html">OrphanedThread</a>
-javadoc for details. 
+javadoc for details.  The sample code in <a href="examples/jse/CollectingOrphanedCoroutines.java">examples/jse/CollectingOrphanedCoroutines.java</a>
+provides working examples.
 
 <h3>Debug Library</h3>
 The <em>debug</em> library is not included by default by 
@@ -982,6 +1005,9 @@ Files are no longer hosted at LuaForge.
 <li>Fix os.date("*t") to return hour in 24 hour format (fixes issue #45)</li>
 <li>Add SampleSandboxed.java example code to illustrate sandboxing techniques in Java.</li>
 <li>Add samplesandboxed.lua example code to illustrate sandboxing techniques in lua.</li>
+<li>Add CollectingOrphanedCoroutines.java example code to show how to deal with orphaned lua threads.</li>
+<li>Add LuajClassLoader.java and Launcher.java to simplify loading via custom class loader.</li>
+<li>Add SampleUsingClassLoader.java example code to demonstrate loading using custom class loader.</li>
 <li>Make string metatable a proper metatable, and make it read-only by default.</li>
 <li>Add sample code that illustrates techniques in creating sandboxed environments.</li>
 <li>Add convenience methods to Global to load string scripts with custom environment.</li>
@@ -1001,6 +1027,8 @@ Files are no longer hosted at LuaForge.
 <li>negative zero is treated as identical to integer value zero throughout luaj
 <li>lua compiled into java bytecode using luajc cannot use string.dump() or xpcall()
 <li>number formatting with string.format() is not supported
+<li>shared metatables for string, bool, etc are shared across Globals instances in the same class loader
+<li>orphaned threads will not be collected unless garbage collection is run and sufficient time elapses
 </ul>
 <h3>File Character Encoding</h3>
 Source files can be considered encoded in UTF-8 or ISO-8859-1 and results should be as expected, 
