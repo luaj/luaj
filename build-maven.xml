@@ -2,17 +2,17 @@
 	<!-- Ant file to deploy to maven once the distribution is released on sourceforge.
 	  -->
 	<property file="version.properties"/>
-	<property name="major" value="3.0"/>
 	
 	<macrodef name="write_pom">
 		<attribute name="platform"/>
+		<attribute name="snapshot" default=""/>
 		<sequential>
 			<mkdir dir="build/maven-${version}"/>
-			 <echo file="build/maven-${version}/luaj-@{platform}-${version}.pom"><![CDATA[<project>
+			 <echo file="build/maven-${version}/luaj-@{platform}-${version}@{snapshot}.pom"><![CDATA[<project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.luaj</groupId>
   <artifactId>luaj-]]>@{platform}<![CDATA[</artifactId>
-  <version>]]>${version}<![CDATA[</version>
+  <version>]]>${version}@{snapshot}<![CDATA[</version>
   <packaging>jar</packaging>
   <name>luaj-]]>@{platform}<![CDATA[</name>
   <description>Luaj ]]>${version}<![CDATA[ for the ]]>@{platform}<![CDATA[ platform</description>
@@ -50,9 +50,10 @@
 	
 	<macrodef name="prepare_files">
 		<attribute name="platform"/>
+		<attribute name="snapshot" default=""/>
 		<sequential>
 			<mkdir dir="build/maven-${version}"/>
-			<write_pom platform="@{platform}"/>
+			<write_pom platform="@{platform}" snapshot="@{snapshot}"/>
 			<copy file="luaj-${version}.zip" todir="build/maven-${version}"/>
 			<unzip src="build/maven-${version}/luaj-${version}.zip" dest="build/maven-${version}"/>
 			<copy file="build/maven-${version}/luaj-${version}/lib/luaj-@{platform}-${version}.jar" todir="build/maven-${version}"/>
@@ -95,6 +96,21 @@
 		</sequential>
 	</macrodef>
 
+	<macrodef name="shapshot_files">
+		<attribute name="platform"/>
+		<sequential>
+			<exec executable="mvn">
+				<arg value="deploy:deploy-file"/>
+				<arg value="-Durl=https://oss.sonatype.org/content/repositories/snapshots"/>
+				<arg value="-DrepositoryId=nexus-releases"/>
+				<arg value="-DpomFile=build/maven-${version}/luaj-@{platform}-${version}-SNAPSHOT.pom"/>
+				<arg value="-Dfile=build/maven-${version}/luaj-@{platform}-${version}.jar"/>
+				<arg value="-Dsources=build/maven-${version}/luaj-@{platform}-${version}-sources.jar"/>
+				<arg value="-Djavadoc=build/maven-${version}/luaj-@{platform}-${version}-javadoc.jar"/>
+			</exec>
+		</sequential>
+	</macrodef>
+	
 	<macrodef name="sign_and_deploy">
 		<attribute name="platform"/>
 		<sequential>
@@ -109,7 +125,7 @@
 			</exec>
 		</sequential>
 	</macrodef>
-	
+ 	
 	<macrodef name="prepare_and_install">
 		<attribute name="platform"/>
 		<sequential>
@@ -121,7 +137,15 @@
 			</exec>
 		</sequential>
 	</macrodef>
-		
+
+	<macrodef name="prepare_and_snapshot">
+		<attribute name="platform"/>
+		<sequential>
+			<prepare_files platform="@{platform}" snapshot="-SNAPSHOT"/>
+			<shapshot_files platform="@{platform}"/>
+		</sequential>
+	</macrodef>		
+			
 	<macrodef name="prepare_and_deploy">
 		<attribute name="platform"/>
 		<sequential>
@@ -135,12 +159,17 @@
 		<prepare_and_install platform="jme"/>
 	</target>
 	
+	<target name="snapshot">
+		<prepare_and_snapshot platform="jse"/>
+		<prepare_and_snapshot platform="jme"/>
+	</target>
+	
 	<target name="deploy">
 		<prepare_and_deploy platform="jse"/>
 		<prepare_and_deploy platform="jme"/>
 	</target>
 
 	<target name="usage">
-		<echo level="info">Usage: ant -Dmajor=${major} -Dversion=${version} -f build-maven.xml [install | deploy]</echo>
+		<echo level="info">Usage: ant [-Dversion=${version}] -f build-maven.xml [install | shapshot | deploy]</echo>
 	</target>
 </project>
