@@ -469,7 +469,7 @@ Lua and luaj are allow for easy sandboxing of scripts in a server environment.
 <P>
 Considerations include
 <ul>
-<li>The <em>debug</em> and <em>luajava</em> library give unfettered access to the luaj vm and java vm 
+<li>The <em>debug</em> and <em>luajava</em> library give unfettered access to the luaj vm and java vm so can be abused
 <li>Portions of the <em>os</em>, <em>io</em>, and <em>coroutine</em> libraries are prone to abuse 
 <li>Rogue scripts may need to be throttled or killed
 <li>Shared metatables (string, booleans, etc.) need to be made read-only or isolated via class loaders
@@ -788,8 +788,10 @@ The grammar is specified for <a href="https://javacc.dev.java.net/">javacc versi
 parsers that do not require a separate runtime.     
 
 <p>
-A plain undecorated grammer that can be used for validation is available in <a href="grammar/Lua51.jj">grammar/Lua51.jj</a>
-while a grammar that generates a typed parse tree is in  <a href="grammar/LuaParser.jj">grammar/LuaParser.jj</a>
+A plain undecorated grammer that can be used for validation is available in 
+<a href="http://luaj.org/luaj/3.0/grammar/Lua51.jj">grammar/Lua51.jj</a>
+while a grammar that generates a typed parse tree is in 
+<a href="http://luaj.org/luaj/3.0/grammar/LuaParser.jj">grammar/LuaParser.jj</a>
 
 <h2>Creating a Parse Tree from Lua Source</h2>
 The default lu compiler does a single-pass compile of lua source to lua bytecode, so no explicit parse tree is produced.  
