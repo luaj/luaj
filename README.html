@@ -393,7 +393,7 @@ The requires <em>bcel</em> to be on the class path, and the ClassLoader of JSE o
 
 <h2>Globals</h2>
 The old notion of platform has been replaced with creation of globals.  
-The  <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/Globals.html">Globals</a>
+The  <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/Globals.html">Globals</a>
 class holds global state needed for executing closures as well as providing 
 convenience functions for compiling and loading scripts.
 
@@ -404,7 +404,7 @@ Typically, a platform is used to construct a Globals, which is then provided as 
 environment for client scripts.
 
 <h3>JsePlatform</h3>
-The <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/jse/JsePlatform.html">JsePlatform</a> 
+The <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/jse/JsePlatform.html">JsePlatform</a> 
 class can be used as a factory for globals in a typical Java SE application. 
 All standard libraries are included, as well as the luajava library. 
 The default search path is the current directory,
@@ -429,7 +429,7 @@ which can be built using <a href="build-applet.xml">build-applet.xml</a>.
 
 
 <h3>JmePlatform</h3>
-The <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/jme/JmePlatform.html">JmePlatform</a> 
+The <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/jme/JmePlatform.html">JmePlatform</a> 
 class can be used to set up the basic environment for a Java ME application.
 The default search path is limited to the jar resources,
 and the math operations are limited to those supported by Java ME.
@@ -473,7 +473,7 @@ Considerations include
 <li>Portions of the <em>os</em>, <em>io</em>, and <em>coroutine</em> libraries are prone to abuse 
 <li>Rogue scripts may need to be throttled or killed
 <li>Shared metatables (string, booleans, etc.) need to be made read-only or isolated via class loaders
-such as <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/server/LuajClassLoader.html">LuajClassLoader</a>
+such as <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/server/LuajClassLoader.html">LuajClassLoader</a>
 </ul>
 
 Luaj provides sample code covering various approaches:
@@ -555,8 +555,8 @@ as with the yield-from-anywhere patch in C-based lua.
 <p>
 Luaj uses WeakReferences and the OrphanedThread error to ensure that coroutines that are no longer referenced 
 are properly garbage collected.  For thread safety, OrphanedThread should not be caught by Java code.  
-See <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/LuaThread.html">LuaThread</a>
-and <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/OrphanedThread.html">OrphanedThread</a>
+See <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/LuaThread.html">LuaThread</a>
+and <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/OrphanedThread.html">OrphanedThread</a>
 javadoc for details.  The sample code in <a href="examples/jse/CollectingOrphanedCoroutines.java">examples/jse/CollectingOrphanedCoroutines.java</a>
 provides working examples.
 
@@ -607,7 +607,7 @@ The <em>lua</em> connand line tool includes <em>luajava</em>.
 <h2>API Javadoc</h2>
 The javadoc for the main classes in the LuaJ API are on line at
 <pre>
-	 <a href="http://luaj.sourceforge.net/api/3.0/index.html">http://luaj.sourceforge.net/api/3.0</a>
+	 <a href="http://luaj.org/luaj/3.0/api/index.html">http://luaj.org/luaj/3.0/api</a>
 </pre>
 
 You can also build a local version from sources using 
@@ -617,10 +617,10 @@ You can also build a local version from sources using
 
 <h2>LuaValue and Varargs</h2>
 All lua value manipulation is now organized around 
-<a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/LuaValue.html">LuaValue</a>
+<a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/LuaValue.html">LuaValue</a>
 which exposes the majority of interfaces used for lua computation.  
 <pre>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/LuaValue.html">org.luaj.vm2.LuaValue</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/LuaValue.html">org.luaj.vm2.LuaValue</a>
 </pre>
 
 <h3>Common Functions</h3>
@@ -643,12 +643,12 @@ Some commonly used functions and constants include:
 </pre>
 
 <h2>Varargs</h2>
-The interface <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/Varargs.html">Varargs</a> provides an abstraction for 
+The interface <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/Varargs.html">Varargs</a> provides an abstraction for 
 both a variable argument list and multiple return values.  
 For convenience, <em>LuaValue</em> implements <em>Varargs</em> so a single value can be supplied anywhere 
 variable arguments are expected.      
 <pre>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/Varargs.html">org.luaj.vm2.Varargs</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/Varargs.html">org.luaj.vm2.Varargs</a>
 </pre>
 
 <h3>Common Functions</h3>
@@ -662,18 +662,18 @@ variable arguments are expected.
 	optlong(int n,long d);  // return n if a long, d if no argument, or error if not a long
 </pre>
  
-See the <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/Varargs.html">Varargs</a> API for a complete list.
+See the <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/Varargs.html">Varargs</a> API for a complete list.
  
 <h2>LibFunction</h2>
 The simplest way to implement a function is to choose a base class based on the number of arguments to the function.
 LuaJ provides 5 base classes for this purpose, depending if the function has 0, 1, 2, 3 or variable arguments, 
 and if it provide multiple return values.   
 <pre>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/ZeroArgFunction.html">org.luaj.vm2.lib.ZeroArgFunction</a>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/OneArgFunction.html">org.luaj.vm2.lib.OneArgFunction</a>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/TwoArgFunction.html">org.luaj.vm2.lib.TwoArgFunction</a>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/ThreeArgFunction.html">org.luaj.vm2.lib.ThreeArgFunction</a>
-	 <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/lib/VarArgFunction.html">org.luaj.vm2.lib.VarArgFunction</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/ZeroArgFunction.html">org.luaj.vm2.lib.ZeroArgFunction</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/OneArgFunction.html">org.luaj.vm2.lib.OneArgFunction</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/TwoArgFunction.html">org.luaj.vm2.lib.TwoArgFunction</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/ThreeArgFunction.html">org.luaj.vm2.lib.ThreeArgFunction</a>
+	 <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/lib/VarArgFunction.html">org.luaj.vm2.lib.VarArgFunction</a>
 </pre>
 
 Each of these functions has an abstract method that must be implemented, 
@@ -777,7 +777,7 @@ For this example to work the code in <em>hyperbolic.java</em> must be compiled a
 Closures still exist in this framework, but are optional, and are only used to implement lua bytecode execution, 
 and is generally not directly manipulated by the user of luaj.
 <p>
-See the <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/LuaClosure.html">org.luaj.vm2.LuaClosure</a> 
+See the <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/LuaClosure.html">org.luaj.vm2.LuaClosure</a> 
 javadoc for details on using that class directly. 
 
 <h1>6 - <a name="6">Parser</a></h1>
@@ -827,7 +827,7 @@ An example that prints locations of all function definitions in a file may be fo
 </pre>
 
 <p>
-See the <a href="http://luaj.sourceforge.net/api/3.0/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
+See the <a href="http://luaj.org/luaj/3.0/api/org/luaj/vm2/ast/package-summary.html">org.luaj.vm2.ast package</a> javadoc for the API relating to the syntax tree that is produced. 
 
 <h1>7 - <a name="7">Building and Testing</a></h1>
 
@@ -925,7 +925,8 @@ Files are no longer hosted at LuaForge.
 <li>JSR-223 enhancement: allow both ".lua" and "lua" as extensions in getScriptEngine() </li>
 <li>JSR-223 fix: use system class loader to support using luaj as JRE extension </li>
 <li>Improve selection logic when binding to overloaded functions using luajava</li>
-<li>Enhance javadoc, put it <a href="docs/api/index.html">in distribution</a> and <a href="http://luaj.sourceforge.net/api/3.0/index.html">on line</a></li>
+<li>Enhance javadoc, put it <a href="docs/api/index.html">in distribution</a> 
+and at <a href="http://luaj.sourceforge.net/api/2.0/index.html">http://luaj.sourceforge.net/api/2.0/</a></li>
 <li>Major refactor of luajava type coercion logic, improve method selection.</li> 
 <li>Add lib/luaj-sources-2.0.2.jar for easier integration into an IDE such as Netbeans </li>
 
@@ -1012,6 +1013,7 @@ Files are no longer hosted at LuaForge.
 <li>Add sample code that illustrates techniques in creating sandboxed environments.</li>
 <li>Add convenience methods to Global to load string scripts with custom environment.</li>
 <li>Turn off default traceback.  Use xpcall() with debug.traceback instead.</li>
+<li>Move online docs to <a href="http://luaj.org/luaj/3.0/api/index.html">http://luaj.org/luaj/3.0/api/</a></li>
 
 </ul></td></tr>
 </table></td></tr></table>
