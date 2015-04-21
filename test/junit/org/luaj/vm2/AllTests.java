@@ -52,6 +52,7 @@ public class AllTests {
 		vm.addTestSuite(StringTest.class);
 		vm.addTestSuite(OrphanedThreadTest.class);
 		vm.addTestSuite(VarargsTest.class);
+		vm.addTestSuite(LoadOrderTest.class);
 		suite.addTest(vm);
 
 		// table tests

@@ -99,8 +99,10 @@ public class LuaString extends LuaValue {
 	 * that have been recently constructed.  If a string is being constructed frequently 
 	 * from different contexts, it will generally show up as a cache hit and resolve 
 	 * to the same value.  */
-	private static final LuaString recent_short_strings[] = 
-			new LuaString[RECENT_STRINGS_CACHE_SIZE];
+	private static final class RecentShortStrings {
+		private static final LuaString recent_short_strings[] = 
+				new LuaString[RECENT_STRINGS_CACHE_SIZE];
+	}
 
 	/**
 	 * Get a {@link LuaString} instance whose bytes match 
@@ -132,10 +134,10 @@ public class LuaString extends LuaValue {
 			return valueFromCopy(bytes, off, len);
 		final int hash = hashCode(bytes, off, len);
 		final int bucket = hash & (RECENT_STRINGS_CACHE_SIZE - 1);
-		final LuaString t = recent_short_strings[bucket];
+		final LuaString t = RecentShortStrings.recent_short_strings[bucket];
 		if (t != null && t.m_hashcode == hash && t.byteseq(bytes, off, len)) return t;
 		final LuaString s = valueFromCopy(bytes, off, len);
-		recent_short_strings[bucket] = s;
+		RecentShortStrings.recent_short_strings[bucket] = s;
 		return s;
 	}
 
@@ -161,10 +163,10 @@ public class LuaString extends LuaValue {
 			return new LuaString(bytes, off, len);
 		final int hash = hashCode(bytes, off, len);
 		final int bucket = hash & (RECENT_STRINGS_CACHE_SIZE - 1);
-		final LuaString t = recent_short_strings[bucket];
+		final LuaString t = RecentShortStrings.recent_short_strings[bucket];
 		if (t != null && t.m_hashcode == hash && t.byteseq(bytes, off, len)) return t;
 		final LuaString s = new LuaString(bytes, off, len);
-		recent_short_strings[bucket] = s;
+		RecentShortStrings.recent_short_strings[bucket] = s;
 		return s;
 	}
 
