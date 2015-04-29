@@ -81,12 +81,13 @@
 			    <fileset dir="build/maven-${version}/sources-@{platform}">
 					<include name="org/luaj/vm/*.java"/>
 					<include name="org/luaj/vm2/*.java"/>
+					<include name="org/luaj/vm2/server/*.java"/>
 					<include name="**/LuaC.java"/>
 					<include name="**/LuaJC.java"/>
 					<include name="**/lib/*/*.java"/>
 			    </fileset>		
 				<doctitle><![CDATA[<h1>Luaj API</h1>]]></doctitle>
-				<bottom><![CDATA[<i>Copyright &#169; 2007-2013 Luaj.org. All Rights Reserved.</i>]]></bottom>
+				<bottom><![CDATA[<i>Copyright &#169; 2007-2015 Luaj.org. All Rights Reserved.</i>]]></bottom>
 				<tag name="todo" scope="all" description="To do:"/>
 				<link offline="true" href="http://sourceforge.net/projects/luaj/" packagelistLoc="C:\tmp"/>
 				<link href="http://sourceforge.net/projects/luaj/"/>

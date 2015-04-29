@@ -130,7 +130,7 @@
 		    <fileset dir="src/jse" defaultexcludes="yes" includes="org/luaj/vm2/lib/jse/*.java,org/luaj/vm2/luajc/LuaJC.java,org/luaj/vm2/server/*.java"/>
 		    <fileset dir="src/jme" defaultexcludes="yes" includes="org/luaj/vm2/lib/jme/*.java"/>
 			<doctitle><![CDATA[<h1>Luaj API</h1>]]></doctitle>
-			<bottom><![CDATA[<i>Copyright &#169; 2007-2008 Luaj.org. All Rights Reserved.</i>]]></bottom>
+			<bottom><![CDATA[<i>Copyright &#169; 2007-2015 Luaj.org. All Rights Reserved.</i>]]></bottom>
 			<tag name="todo" scope="all" description="To do:"/>
 			<group title="Core VM" packages="org.luaj.vm.*"/>
 			<link offline="true" href="http://sourceforge.net/projects/luaj/" packagelistLoc="C:\tmp"/>
