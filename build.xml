@@ -160,6 +160,9 @@
 				<include name="android/assets/**"/>
 				<include name="android/res/**"/>
 				<include name="android/src/**"/>
+				<include name="jme/*.java"/>
+				<include name="jse/*.java"/>
+				<include name="lua/*.*"/>
 				<include name="maven/pom.xml"/>
 				<include name="maven/src/**"/>
 			</fileset>
