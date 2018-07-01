@@ -152,7 +152,7 @@ public class Print extends Lua {
 		int[] code = f.code;
 		int pc, n = code.length;
 		for (pc = 0; pc < n; pc++) {
-			printOpCode(f, pc);
+			pc = printOpCode(f, pc);
 			ps.println();
 		}
 	}
@@ -161,9 +161,10 @@ public class Print extends Lua {
 	 * Print an opcode in a prototype
 	 * @param f the {@link Prototype}
 	 * @param pc the program counter to look up and print
+	 * @return pc same as above or changed
 	 */
-	public static void printOpCode(Prototype f, int pc) {
-		printOpCode(ps,f,pc);
+	public static int printOpCode(Prototype f, int pc) {
+		return printOpCode(ps,f,pc);
 	}
 	
 	/** 
@@ -171,8 +172,9 @@ public class Print extends Lua {
 	 * @param ps the {@link PrintStream} to print to
 	 * @param f the {@link Prototype}
 	 * @param pc the program counter to look up and print
+	 * @return pc same as above or changed
 	 */
-	public static void printOpCode(PrintStream ps, Prototype f, int pc) {
+	public static int printOpCode(PrintStream ps, Prototype f, int pc) {
 		int[] code = f.code;
 		int i = code[pc];
 		int o = GET_OPCODE(i);
@@ -282,7 +284,7 @@ public class Print extends Lua {
 			break;
 		case OP_SETLIST:
 			if (c == 0)
-				ps.print("  ; " + ((int) code[++pc]));
+				ps.print("  ; " + ((int) code[++pc]) + " (stored in the next OP)");
 			else
 				ps.print("  ; " + ((int) c));
 			break;
@@ -292,6 +294,7 @@ public class Print extends Lua {
 		default:
 			break;
 		}
+		return pc;
 	}
 
 	private static int getline(Prototype f, int pc) {
