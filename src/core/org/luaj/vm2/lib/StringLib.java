@@ -525,12 +525,13 @@ public class StringLib extends TwoArgFunction {
 			this.soffset = 0;
 		}
 		public Varargs invoke(Varargs args) {
-			for ( ; soffset<srclen; soffset++ ) {
+			for ( ; soffset<=srclen; soffset++ ) {
 				ms.reset();
 				int res = ms.match(soffset, 0);
 				if ( res >=0 ) {
 					int soff = soffset;
 					soffset = res;
+					if (soff == res) soffset++; /* empty match? go at least one position */
 					return ms.push_captures( true, soff, res );
 				}
 			}
