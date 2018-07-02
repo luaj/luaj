@@ -471,7 +471,7 @@ public class StringLib extends TwoArgFunction {
 		public void format(Buffer buf, double x) {
 			String out;
 			try {
-				String.format(src, x);
+				out = String.format(src, x);
 			} catch (Throwable e) {
 				out = String.valueOf( x );
 			}
