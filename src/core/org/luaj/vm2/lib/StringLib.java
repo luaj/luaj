@@ -392,8 +392,7 @@ public class StringLib extends TwoArgFunction {
 			zeroPad &= !leftAdjust; // '-' overrides '0'
 			conversion = c;
 			length = p - start;
-			String str = strfrmt.tojstring();
-			src = str.substring(start - 1, p);
+			src = strfrmt.substring(start - 1, p).tojstring();
 		}
 		
 		public void format(Buffer buf, byte c) {
