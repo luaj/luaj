@@ -25,6 +25,7 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.Bit32Lib;
 import org.luaj.vm2.lib.CoroutineLib;
@@ -124,10 +125,11 @@ public class JsePlatform {
 
 
 	/** Simple wrapper for invoking a lua function with command line arguments.  
-	 * The supplied function is first given a new Globals object, 
-	 * then the program is run with arguments.
+	 * The supplied function is first given a new Globals object as its environment
+	 * then the program is run with arguments.  
+	 * @return {@link Varargs} containing any values returned by mainChunk.
 	 */
-	public static void luaMain(LuaValue mainChunk, String[] args) {
+	public static Varargs luaMain(LuaValue mainChunk, String[] args) {
 		Globals g = standardGlobals();
 		int n = args.length;
 		LuaValue[] vargs = new LuaValue[args.length];
@@ -137,6 +139,6 @@ public class JsePlatform {
 		arg.set("n", n);
 		g.set("arg", arg);
 		mainChunk.initupvalue1(g);
-		mainChunk.invoke(LuaValue.varargsOf(vargs));
+		return mainChunk.invoke(LuaValue.varargsOf(vargs));
 	}
 }

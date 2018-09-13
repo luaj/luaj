@@ -97,14 +97,19 @@ public class LuaClosure extends LuaFunction {
 	 */
 	public LuaClosure(Prototype p, LuaValue env) {
 		this.p = p;
+		this.initupvalue1(env);
+		globals = env instanceof Globals? (Globals) env: null;	
+	}
+	
+	public void initupvalue1(LuaValue env) {
 		if (p.upvalues == null || p.upvalues.length == 0)
 			this.upValues = NOUPVALUES;
 		else {
 			this.upValues = new UpValue[p.upvalues.length];
 			this.upValues[0] = new UpValue(new LuaValue[] {env}, 0);
 		}
-		globals = env instanceof Globals? (Globals) env: null;	
 	}
+
 	
 	public boolean isclosure() {
 		return true;
