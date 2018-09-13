@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -133,7 +134,7 @@ public class CoerceJavaToLua {
 	}
 
 
-	static final Map COERCIONS = new HashMap();
+	static final Map COERCIONS = Collections.synchronizedMap(new HashMap());
 	
 	static {
 		Coercion boolCoercion = new BoolCoercion() ;
