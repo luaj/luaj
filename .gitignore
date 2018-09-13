@@ -1,8 +1,8 @@
-bin
-target
-build
-lib
-jit
+bin/
+target/
+build/
+lib/
+jit/
 *.ser
 *.gz
 *.jar
