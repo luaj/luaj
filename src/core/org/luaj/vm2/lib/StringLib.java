@@ -343,6 +343,8 @@ public class StringLib extends TwoArgFunction {
 		public final int conversion;
 		public final int length;
 		
+		public final String src;
+		
 		public FormatDesc(Varargs args, LuaString strfrmt, final int start) {
 			int p = start, n = strfrmt.length();
 			int c = 0;
@@ -390,6 +392,7 @@ public class StringLib extends TwoArgFunction {
 			zeroPad &= !leftAdjust; // '-' overrides '0'
 			conversion = c;
 			length = p - start;
+			src = strfrmt.substring(start - 1, p).tojstring();
 		}
 		
 		public void format(Buffer buf, byte c) {
@@ -465,8 +468,13 @@ public class StringLib extends TwoArgFunction {
 		}
 		
 		public void format(Buffer buf, double x) {
-			// TODO
-			buf.append( String.valueOf( x ) );
+			String out;
+			try {
+				out = String.format(src, x);
+			} catch (Throwable e) {
+				out = String.valueOf( x );
+			}
+			buf.append( out );
 		}
 		
 		public void format(Buffer buf, LuaString s) {
