@@ -867,6 +867,10 @@ public class DebugLib extends TwoArgFunction {
 	        if (reg == a) setreg = pc;  /* jumped code can change 'a' */
 	        break;
 	      }
+	      case Lua.OP_SETLIST: { // Lua.testAMode(Lua.OP_SETLIST) == false
+	    	if ( ((i>>14)&0x1ff) == 0 ) pc++; // if c == 0 then c stored in next op -> skip
+		break;
+	      }
 	      default:
 	        if (Lua.testAMode(op) && reg == a)  /* any instruction that set A */
 	          setreg = pc;
