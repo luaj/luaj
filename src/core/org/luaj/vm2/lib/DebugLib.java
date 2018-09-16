@@ -700,7 +700,7 @@ public class DebugLib extends TwoArgFunction {
 			if ( !f.isclosure() ) return f.tojstring();
 			return f.checkclosure().p.shortsource() + ":" + currentline();
 		}
-		private int linedefined() {
+		int linedefined() {
 			return f.isclosure()? f.checkclosure().p.linedefined: -1;
 		}
 		LuaString getlocalname(int index) {
