@@ -84,27 +84,27 @@ public class DebugLib extends TwoArgFunction {
 		try { TRACE = (null != System.getProperty("TRACE")); } catch (Exception e) {}
 	}
 	
-	private static final LuaString LUA             = valueOf("Lua");  
+	static final LuaString LUA             = valueOf("Lua");  
 	private static final LuaString QMARK           = valueOf("?");  
 	private static final LuaString CALL            = valueOf("call");  
 	private static final LuaString LINE            = valueOf("line");  
 	private static final LuaString COUNT           = valueOf("count");  
 	private static final LuaString RETURN          = valueOf("return");
 	
-	private static final LuaString FUNC            = valueOf("func");  
-	private static final LuaString ISTAILCALL      = valueOf("istailcall");  
-	private static final LuaString ISVARARG        = valueOf("isvararg");  
-	private static final LuaString NUPS            = valueOf("nups");  
-	private static final LuaString NPARAMS         = valueOf("nparams");  
-	private static final LuaString NAME            = valueOf("name");  
-	private static final LuaString NAMEWHAT        = valueOf("namewhat");  
-	private static final LuaString WHAT            = valueOf("what");  
-	private static final LuaString SOURCE          = valueOf("source");  
-	private static final LuaString SHORT_SRC       = valueOf("short_src");  
-	private static final LuaString LINEDEFINED     = valueOf("linedefined");  
-	private static final LuaString LASTLINEDEFINED = valueOf("lastlinedefined");  
-	private static final LuaString CURRENTLINE     = valueOf("currentline");  
-	private static final LuaString ACTIVELINES     = valueOf("activelines");  
+	static final LuaString FUNC            = valueOf("func");  
+	static final LuaString ISTAILCALL      = valueOf("istailcall");  
+	static final LuaString ISVARARG        = valueOf("isvararg");  
+	static final LuaString NUPS            = valueOf("nups");  
+	static final LuaString NPARAMS         = valueOf("nparams");  
+	static final LuaString NAME            = valueOf("name");  
+	static final LuaString NAMEWHAT        = valueOf("namewhat");  
+	static final LuaString WHAT            = valueOf("what");  
+	static final LuaString SOURCE          = valueOf("source");  
+	static final LuaString SHORT_SRC       = valueOf("short_src");  
+	static final LuaString LINEDEFINED     = valueOf("linedefined");  
+	static final LuaString LASTLINEDEFINED = valueOf("lastlinedefined");  
+	static final LuaString CURRENTLINE     = valueOf("currentline");  
+	static final LuaString ACTIVELINES     = valueOf("activelines");  
 
 	Globals globals;
 	
