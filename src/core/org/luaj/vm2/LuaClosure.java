@@ -123,10 +123,6 @@ public class LuaClosure extends LuaFunction {
 		return this;
 	}
 	
-	public LuaValue getmetatable() { 
-		return s_metatable; 
-	}
-	
 	public String tojstring() {
 		return "function: " + p.toString();
 	}
