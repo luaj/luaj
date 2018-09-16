@@ -92,7 +92,7 @@ public class CoroutineLib extends TwoArgFunction {
 		}
 	}
 
-	final class resume extends VarArgFunction {
+	static final class resume extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			final LuaThread t = args.checkthread(1);
 			return t.resume( args.subargs(2) );
@@ -127,7 +127,7 @@ public class CoroutineLib extends TwoArgFunction {
 		}
 	}
 
-	final class wrapper extends VarArgFunction {
+	static final class wrapper extends VarArgFunction {
 		final LuaThread luathread;
 		wrapper(LuaThread luathread) {
 			this.luathread = luathread;
