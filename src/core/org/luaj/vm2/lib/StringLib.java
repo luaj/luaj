@@ -162,20 +162,22 @@ public class StringLib extends TwoArgFunction {
 	}
 		
 	/** 
-	 * string.dump (function)
+	 * string.dump (function[, stripDebug])
 	 * 
 	 * Returns a string containing a binary representation of the given function, 
 	 * so that a later loadstring on this string returns a copy of the function. 
 	 * function must be a Lua function without upvalues.
+	 * Boolean param stripDebug - true to strip debugging info, false otherwise.
+	 * The default value for stripDebug is true.
 	 *  
 	 * TODO: port dumping code as optional add-on
 	 */
-	static final class dump extends OneArgFunction {
-		public LuaValue call(LuaValue arg) {
-			LuaValue f = arg.checkfunction();
+	static final class dump extends VarArgFunction {
+		public LuaValue invoke(Varargs args) {
+			LuaValue f = args.checkfunction(1);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
-				DumpState.dump( ((LuaClosure)f).p, baos, true );
+				DumpState.dump( ((LuaClosure)f).p, baos, args.optboolean(2, true) );
 				return LuaString.valueUsing(baos.toByteArray());
 			} catch (IOException e) {
 				return error( e.getMessage() );
