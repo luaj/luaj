@@ -154,7 +154,7 @@ public class StringLib extends TwoArgFunction {
 			byte[] bytes = new byte[n];
 			for ( int i=0, a=1; i<n; i++, a++ ) {
 				int c = args.checkint(a);
-				if (c<0 || c>=256) argerror(a, "invalid value");
+				if (c<0 || c>=256) argerror(a, "invalid value for string.char [0; 255]: " + c);
 				bytes[i] = (byte) c;
 			}
 			return LuaString.valueUsing( bytes );
