@@ -97,12 +97,12 @@ public class StringLib extends TwoArgFunction {
 		string.set("reverse", new reverse());
 		string.set("sub", new sub());
 		string.set("upper", new upper());
-		LuaTable mt = LuaValue.tableOf(
-				new LuaValue[] { INDEX, string });
+		
 		env.set("string", string);
 		env.get("package").get("loaded").set("string", string);
-		if (LuaString.s_metatable == null)
-			LuaString.s_metatable = mt;
+		if (LuaString.s_metatable == null) {
+			LuaString.s_metatable = LuaValue.tableOf(new LuaValue[] { INDEX, string });
+		}
 		return string;
 	}
 	
