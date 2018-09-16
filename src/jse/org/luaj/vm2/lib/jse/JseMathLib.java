@@ -24,6 +24,7 @@ package org.luaj.vm2.lib.jse;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.LibFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 
 /** 
  * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
@@ -76,8 +77,9 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 		LuaValue math = env.get("math");
 		math.set("acos", new acos());
 		math.set("asin", new asin());
-		math.set("atan", new atan());
-		math.set("atan2", new atan2());
+		LuaValue atan =  new atan2();
+		math.set("atan", atan);
+		math.set("atan2", atan);
 		math.set("cosh", new cosh());
 		math.set("exp", new exp());
 		math.set("log", new log());
@@ -89,8 +91,11 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 
 	static final class acos extends UnaryOp { protected double call(double d) { return Math.acos(d); } }
 	static final class asin extends UnaryOp { protected double call(double d) { return Math.asin(d); } }
-	static final class atan extends UnaryOp { protected double call(double d) { return Math.atan(d); } }
-	static final class atan2 extends BinaryOp { protected double call(double y, double x) { return Math.atan2(y, x); } }
+	static final class atan2 extends TwoArgFunction { 
+		public LuaValue call(LuaValue x, LuaValue y) {
+			return valueOf(Math.atan2(x.checkdouble(), y.optdouble(1)));
+		} 
+	}
 	static final class cosh extends UnaryOp { protected double call(double d) { return Math.cosh(d); } }
 	static final class exp extends UnaryOp { protected double call(double d) { return Math.exp(d); } }
 	static final class log extends UnaryOp { protected double call(double d) { return Math.log(d); } }
@@ -105,3 +110,4 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	
 	
 }
+
