@@ -117,7 +117,7 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 		protected CompileState() {}
 	
 		/** Parse the input */
-		private Prototype luaY_parser(InputStream z, String name) throws IOException{
+		Prototype luaY_parser(InputStream z, String name) throws IOException{
 			LexState lexstate = new LexState(this, z);
 			FuncState funcstate = new FuncState();
 			// lexstate.buff = buff;
