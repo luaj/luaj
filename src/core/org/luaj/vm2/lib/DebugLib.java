@@ -565,7 +565,11 @@ public class DebugLib extends TwoArgFunction {
 					sb.append( ar.name );
 					sb.append( '\'' );
 				} else {
-					sb.append( "function <"+c.shortsource()+":"+c.linedefined()+">" );
+					sb.append( "function <" );
+					sb.append( c.shortsource() );
+					sb.append( ':' );
+					sb.append( c.linedefined() );
+					sb.append( '>' );
 				}
 			}
 			sb.append("\n\t[Java]: in ?");
