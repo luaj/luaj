@@ -303,7 +303,7 @@ public class LuaClosure extends LuaFunction {
 						if ( c > b+1 ) {
 							Buffer sb = stack[c].buffer();
 							while ( --c>=b ) 
-								sb = stack[c].concat(sb);
+								sb.concatTo(stack[c]);
 							stack[a] = sb.value();
 						} else {
 							stack[a] = stack[c-1].concat(stack[c]);
