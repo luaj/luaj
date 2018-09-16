@@ -101,7 +101,7 @@ abstract public class Visitor {
 		visitExps(args.exps);
 	}
 	public void visit(TableField field) {
-		if ( field.name != null );
+		if ( field.name != null )
 			visit( field.name );
 		if ( field.index != null )
 			field.index.accept(this);
