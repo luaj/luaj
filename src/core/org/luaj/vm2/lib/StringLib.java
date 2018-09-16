@@ -298,7 +298,7 @@ public class StringLib extends TwoArgFunction {
 		}
 	}
 	
-	private static void addquoted(Buffer buf, LuaString s) {
+	static void addquoted(Buffer buf, LuaString s) {
 		int c;
 		buf.append( (byte) '"' );
 		for ( int i = 0, n = s.length(); i < n; i++ ) {
@@ -338,7 +338,7 @@ public class StringLib extends TwoArgFunction {
 		private static final int MAX_FLAGS = 5;
 		
 		private int width;
-		private int precision;
+		int precision;
 		
 		public final int conversion;
 		public final int length;
@@ -794,7 +794,7 @@ public class StringLib extends TwoArgFunction {
 		return NIL;
 	}
 	
-	private static int posrelat( int pos, int len ) {
+	static int posrelat( int pos, int len ) {
 		return ( pos >= 0 ) ? pos : len + pos + 1;
 	}
 	
@@ -816,7 +816,7 @@ public class StringLib extends TwoArgFunction {
 	private static final byte MASK_CONTROL		= 0x40;
 	private static final byte MASK_HEXDIGIT		= (byte)0x80;
 	
-	private static final byte[] CHAR_TABLE;
+	static final byte[] CHAR_TABLE;
 	
 	static {
 		CHAR_TABLE = new byte[256];
