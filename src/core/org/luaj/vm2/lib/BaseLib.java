@@ -245,7 +245,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		public Varargs invoke(Varargs args) {
 			LuaValue tostring = globals.get("tostring"); 
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
-				if ( i>1 ) globals.STDOUT.print( '\t' );
+				if ( i>1 ) globals.STDOUT.print( " \t" );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
 				globals.STDOUT.print(s.tojstring());
 			}
