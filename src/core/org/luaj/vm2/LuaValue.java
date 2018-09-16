@@ -3143,7 +3143,7 @@ public class LuaValue extends Varargs {
 	 * @return {@link LuaString} corresponding to the value if a string or number
 	 * @throws LuaError if not a string or number
 	 */
-	public LuaString strvalue()     { typerror("strValue"); return null; }
+	public LuaString strvalue()     { typerror("string or number"); return null; }
 
 	/** Return this value as a strong reference, or null if it was weak and is no longer referenced.
 	 * @return {@link LuaValue} referred to, or null if it was weak and is no longer referenced.
@@ -3298,7 +3298,7 @@ public class LuaValue extends Varargs {
 				if ((!res.isnil()) || (tm = t.metatag(INDEX)).isnil())
 					return res;
 			} else if ((tm = t.metatag(INDEX)).isnil())
-				t.indexerror();
+				t.indexerror(key.tojstring());
 			if (tm.isfunction())
 				return tm.call(t, key);
 			t = tm;
@@ -3326,7 +3326,7 @@ public class LuaValue extends Varargs {
 					return true;
 				}
 			} else if ((tm = t.metatag(NEWINDEX)).isnil())
-				t.typerror("index");
+				throw new LuaError("table expected for set index ('" + key + "') value, got " + t.typename());
 			if (tm.isfunction()) {
 				tm.call(t, key, value);
 				return true;
@@ -3389,8 +3389,8 @@ public class LuaValue extends Varargs {
 	/** Throw {@link LuaError} indicating index was attempted on illegal type 
 	 * @throws LuaError when called.  
 	 */
-    private void indexerror() {
-		error( "attempt to index ? (a "+typename()+" value)" );
+    private void indexerror(String key) {
+		error( "attempt to index ? (a "+typename()+" value) with key '" + key + "'" );
 	}
  	
 	/** Construct a {@link Varargs} around an array of {@link LuaValue}s.
