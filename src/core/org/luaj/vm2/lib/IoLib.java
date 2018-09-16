@@ -467,7 +467,7 @@ public class IoLib extends TwoArgFunction {
 		return LuaValue.TRUE;
 	}
 
-	private static Varargs errorresult(Exception ioe) {
+	static Varargs errorresult(Exception ioe) {
 		String s = ioe.getMessage();		
 		return errorresult("io error: "+(s!=null? s: ioe.toString()));
 	}
