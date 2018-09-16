@@ -252,7 +252,6 @@ public class PackageLib extends TwoArgFunction {
 	public class lua_searcher extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaString name = args.checkstring(1);
-			InputStream is = null;
 					
 			// get package path
 			LuaValue path = package_.get(_PATH);
