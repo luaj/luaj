@@ -2045,7 +2045,7 @@ public class LuaValue extends Varargs {
 	 * @see #eqmtcall(LuaValue, LuaValue, LuaValue, LuaValue)
 	 * @see #EQ
 	 */
-	public LuaValue   eq( LuaValue val )      { return this == val? TRUE: FALSE; }
+	public LuaValue   eq( LuaValue val )      { return eq_b(val)? TRUE: FALSE; }
 	
 	/** Equals: Perform equality comparison with another value 
 	 * including metatag processing using {@link #EQ}, 
