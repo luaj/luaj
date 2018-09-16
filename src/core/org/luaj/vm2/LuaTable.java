@@ -266,8 +266,8 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/** caller must ensure key is not nil */
 	public void set( LuaValue key, LuaValue value ) {
-		if (!key.isvalidkey() && !metatag(NEWINDEX).isfunction())
-			typerror("table index");
+		if (key == null || !key.isvalidkey() && !metatag(NEWINDEX).isfunction())
+			throw new LuaError("value ('" + key + "') can not be used as a table index");
 		if ( m_metatable==null || ! rawget(key).isnil() ||  ! settable(this,key,value) )
 			rawset(key, value);
 	}
@@ -347,7 +347,12 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	public int length() {
-		return m_metatable != null? len().toint(): rawlen(); 
+		if (m_metatable != null) {
+			LuaValue len = len();
+			if (!len.isint()) throw new LuaError("table length is not an integer: " + len);
+			return len.toint();
+		}
+		return rawlen();
 	}
 	
 	public LuaValue len()  { 
@@ -390,7 +395,7 @@ public class LuaTable extends LuaValue implements Metatable {
 					}
 				}
 				if ( hash.length == 0 )
-					error( "invalid key to 'next'" );
+					error( "invalid key to 'next' 1: " + key );
 				i = hashSlot( key );
 				boolean found = false;
 				for ( Slot slot = hash[i]; slot != null; slot = slot.rest() ) {
@@ -404,7 +409,7 @@ public class LuaTable extends LuaValue implements Metatable {
 					}
 				}
 				if ( !found ) {
-					error( "invalid key to 'next'" );
+					error( "invalid key to 'next' 2: " + key );
 				}
 				i += 1+array.length;
 			}
@@ -780,6 +785,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	 * @param comparator {@link LuaValue} to be called to compare elements.
 	 */
 	public void sort(LuaValue comparator) {
+		if (len().tolong() >= (long)Integer.MAX_VALUE) throw new LuaError("array too big: " + len().tolong());
 		if (m_metatable != null && m_metatable.useWeakValues()) {
 			dropWeakArrayValues();
 		}
