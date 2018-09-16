@@ -80,8 +80,8 @@ import org.luaj.vm2.Varargs;
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
 public class OsLib extends TwoArgFunction {
-	public static String TMP_PREFIX    = ".luaj";
-	public static String TMP_SUFFIX    = "tmp";
+	public static final String TMP_PREFIX    = ".luaj";
+	public static final String TMP_SUFFIX    = "tmp";
 
 	private static final int CLOCK     = 0;
 	private static final int DATE      = 1;
