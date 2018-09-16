@@ -234,7 +234,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.getmetatable (value)
-	final class getmetatable extends LibFunction {
+	static final class getmetatable extends LibFunction {
 		public LuaValue call(LuaValue v) {
 			LuaValue mt = v.getmetatable();
 			return mt != null? mt: NIL;
@@ -311,7 +311,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setmetatable (value, table)
-	final class setmetatable extends TwoArgFunction { 
+	static final class setmetatable extends TwoArgFunction { 
 		public LuaValue call(LuaValue value, LuaValue table) {
 			LuaValue mt = table.opttable(null);
 			switch ( value.type() ) {
@@ -328,7 +328,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setupvalue (f, up, value)
-	final class setupvalue extends VarArgFunction { 
+	static final class setupvalue extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -346,7 +346,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setuservalue (udata, value)
-	final class setuservalue extends VarArgFunction { 
+	static final class setuservalue extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			Object o = args.checkuserdata(1);
 			LuaValue v = args.checkvalue(2);
@@ -370,7 +370,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 	
 	//	debug.upvalueid (f, n)
-	final class upvalueid extends VarArgFunction { 
+	static final class upvalueid extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -385,7 +385,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.upvaluejoin (f1, n1, f2, n2)
-	final class upvaluejoin extends VarArgFunction { 
+	static final class upvaluejoin extends VarArgFunction { 
 		public Varargs invoke(Varargs args) {
 			LuaClosure f1 = args.checkclosure(1);
 			int n1 = args.checkint(2);
