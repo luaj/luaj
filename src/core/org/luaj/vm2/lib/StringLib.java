@@ -1075,9 +1075,10 @@ public class StringLib extends TwoArgFunction {
 							error("Missing [ after %f in pattern");
 						}
 						int ep = classend( poffset );
-						int previous = ( soffset == 0 ) ? -1 : s.luaByte( soffset - 1 );
+						int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
+						int next = ( soffset == s.length() ) ? '\0' : s.luaByte( soffset );
 						if ( matchbracketclass( previous, poffset, ep - 1 ) ||
-							 matchbracketclass( s.luaByte( soffset ), poffset, ep - 1 ) )
+							 !matchbracketclass( next, poffset, ep - 1 ) )
 							return -1;
 						poffset = ep;
 						continue;
