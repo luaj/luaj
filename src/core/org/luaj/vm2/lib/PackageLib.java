@@ -92,12 +92,12 @@ public class PackageLib extends TwoArgFunction {
 			DEFAULT_LUA_PATH = "?.lua";
 	}
 
-	private static final LuaString _LOADED      = valueOf("loaded");
+	static final LuaString _LOADED      = valueOf("loaded");
 	private static final LuaString _LOADLIB     = valueOf("loadlib");
-	private static final LuaString _PRELOAD     = valueOf("preload");
-	private static final LuaString _PATH        = valueOf("path");
-	private static final LuaString _SEARCHPATH  = valueOf("searchpath");
-	private static final LuaString _SEARCHERS   = valueOf("searchers");
+	static final LuaString _PRELOAD     = valueOf("preload");
+	static final LuaString _PATH        = valueOf("path");
+	static final LuaString _SEARCHPATH  = valueOf("searchpath");
+	static final LuaString _SEARCHERS   = valueOf("searchers");
 	
 	/** The globals that were used to load this library. */
 	Globals globals;
