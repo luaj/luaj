@@ -677,16 +677,16 @@ public class DebugLib extends TwoArgFunction {
 		}
 		Varargs getLocal(int i) {
 			LuaString name = getlocalname(i);
-			if ( name != null )
-				return varargsOf( name, stack[i-1] );
+			if ( i >= 1 && i <= stack.length && stack[i-1] != null )
+				return varargsOf( name == null ? NIL : name, stack[i-1] );
 			else
 				return NIL;
 		}
 		Varargs setLocal(int i, LuaValue value) {
 			LuaString name = getlocalname(i);
-			if ( name != null ) {
+			if ( i >= 1 && i <= stack.length && stack[i-1] != null ) {
 				stack[i-1] = value;
-				return name;
+				return name == null ? NIL : name;
 			} else {
 				return NIL;
 			}
