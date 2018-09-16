@@ -139,7 +139,7 @@ abstract public class LibFunction extends LuaFunction {
 	}
 	
 	public String tojstring() {
-		return name != null? name: super.tojstring();
+		return name != null ? "function: " + name : super.tojstring();
 	}
 	
 	/** 
