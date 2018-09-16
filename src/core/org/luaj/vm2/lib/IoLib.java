@@ -544,7 +544,7 @@ public class IoLib extends TwoArgFunction {
 		}
 		boolean isreadmode = mode.startsWith("r");
 		boolean isappend = mode.startsWith("a");
-		boolean isupdate = mode.indexOf("+") > 0;
+		boolean isupdate = mode.indexOf('+') > 0;
 		boolean isbinary = mode.endsWith("b");
 		return openFile( filename, isreadmode, isappend, isupdate, isbinary );
 	}
