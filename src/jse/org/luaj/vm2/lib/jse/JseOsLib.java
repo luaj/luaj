@@ -74,13 +74,13 @@ import org.luaj.vm2.lib.OsLib;
 public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	
 	/** return code indicating the execute() threw an I/O exception */
-	public static int EXEC_IOEXCEPTION =  1;
+	public static final int EXEC_IOEXCEPTION =  1;
 	
 	/** return code indicating the execute() was interrupted */
-	public static int EXEC_INTERRUPTED = -2;
+	public static final int EXEC_INTERRUPTED = -2;
 	
 	/** return code indicating the execute() threw an unknown exception */
-	public static int EXEC_ERROR       = -3;
+	public static final int EXEC_ERROR       = -3;
 	
 	/** public constructor */
 	public JseOsLib() {
