@@ -120,7 +120,7 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 		if ( ! f.exists() )
 			throw new IOException("No such file or directory");
 		if ( ! f.renameTo(new File(newname)) )
-			throw new IOException("Failed to delete");
+			throw new IOException("Failed to rename");
 	}
 
 	protected String tmpname() {
