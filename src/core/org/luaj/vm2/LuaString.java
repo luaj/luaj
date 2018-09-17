@@ -144,7 +144,7 @@ public class LuaString extends LuaValue {
 	/** Construct a new LuaString using a copy of the bytes array supplied */
 	private static LuaString valueFromCopy(byte[] bytes, int off, int len) {
 		final byte[] copy = new byte[len];
-		for (int i=0; i<len; ++i) copy[i] = bytes[off+i];
+		System.arraycopy(bytes, off, copy, 0, len);
 		return new LuaString(copy, 0, len);
 	}
 
