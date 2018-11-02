@@ -1246,13 +1246,14 @@ public class LuaTable extends LuaValue implements Metatable {
 		}
 
 		public Entry set(LuaValue value) {
-			LuaValue n = value.tonumber();
-			if ( !n.isnil() ) {
-				this.value = n.todouble();
-				return this;
-			} else {
-				return new NormalEntry( this.key, value );
+			if (value.type() == TNUMBER) {
+				LuaValue n = value.tonumber();
+				if (!n.isnil()) {
+					this.value = n.todouble();
+					return this;
+				}
 			}
+			return new NormalEntry( this.key, value );
 		}
 
 		public int keyindex( int mask ) {
