@@ -972,19 +972,19 @@ public class StringLib extends TwoArgFunction {
 			switch ( p.luaByte( poffset++ ) ) {
 			case L_ESC:
 				if ( poffset == p.length() ) {
-					error( "malformed pattern (ends with %)" );
+					error( "malformed pattern (ends with '%')" );
 				}
 				return poffset + 1;
 				
 			case '[':
-				if ( p.luaByte( poffset ) == '^' ) poffset++;
+				if ( poffset != p.length() && p.luaByte( poffset ) == '^' ) poffset++;
 				do {
 					if ( poffset == p.length() ) {
-						error( "malformed pattern (missing ])" );
+						error( "malformed pattern (missing ']')" );
 					}
-					if ( p.luaByte( poffset++ ) == L_ESC && poffset != p.length() )
-						poffset++;
-				} while ( p.luaByte( poffset ) != ']' );
+					if ( p.luaByte( poffset++ ) == L_ESC && poffset < p.length() )
+						poffset++; /* skip escapes (e.g. '%]') */
+				} while ( poffset == p.length() || p.luaByte( poffset ) != ']' );
 				return poffset + 1;
 			default:
 				return poffset;
@@ -1073,8 +1073,8 @@ public class StringLib extends TwoArgFunction {
 						continue;
 					case 'f': {
 						poffset += 2;
-						if ( p.luaByte( poffset ) != '[' ) {
-							error("Missing [ after %f in pattern");
+						if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
+							error("Missing '[' after '%f' in pattern");
 						}
 						int ep = classend( poffset );
 						int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
