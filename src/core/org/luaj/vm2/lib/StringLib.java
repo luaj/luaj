@@ -775,7 +775,7 @@ public class StringLib extends TwoArgFunction {
 			
 			boolean anchor = false;
 			int poff = 0;
-			if ( pat.luaByte( 0 ) == '^' ) {
+			if ( pat.length() > 0 && pat.luaByte( 0 ) == '^' ) {
 				anchor = true;
 				poff = 1;
 			}
