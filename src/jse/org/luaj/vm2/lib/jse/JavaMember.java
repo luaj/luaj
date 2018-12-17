@@ -51,7 +51,7 @@ class JavaMember extends VarArgFunction {
 		fixedargs = new CoerceLuaToJava.Coercion[isvarargs? params.length-1: params.length];
 		for ( int i=0; i<fixedargs.length; i++ )
 			fixedargs[i] = CoerceLuaToJava.getCoercion( params[i] );
-		varargs = isvarargs? CoerceLuaToJava.getCoercion( params[params.length-1] ): null;
+		varargs = isvarargs? CoerceLuaToJava.getCoercion( params[params.length-1].getComponentType() ): null;
 	}
 	
 	int score(Varargs args) {
