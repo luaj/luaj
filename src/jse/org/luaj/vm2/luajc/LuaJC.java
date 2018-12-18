@@ -114,7 +114,24 @@ public class LuaJC implements Globals.Loader {
 		StringBuffer classname = new StringBuffer();
 		for (int i = 0, n = stub.length(); i < n; ++i) {
 			final char c = stub.charAt(i);
-			classname.append((((i == 0) && Character.isJavaIdentifierStart(c)) || ((i > 0) && Character.isJavaIdentifierPart(c)))? c: '_');
+			switch(i) {
+			case 0:
+				if(Character.isJavaIdentifierStart(c)) {
+					classname.append(c);
+				} else {
+					classname.append('_');
+				}
+				break;
+			default:
+				if(c == '/') {
+					classname.append(c);
+				} else if(Character.isJavaIdentifierPart(c)) {
+					classname.append(c);
+				} else {
+					classname.append('_');
+				}
+				break;
+			}
 		}
 		return classname.toString();
 	}

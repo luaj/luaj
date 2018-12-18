@@ -189,8 +189,10 @@ public class luajc {
 
 		public Class findClass(String classname) throws ClassNotFoundException {
 			 byte[] bytes = (byte[]) t.get(classname);
-			 if ( bytes != null )
+			 if ( bytes != null ) {
+				 classname = classname.replace('/', '.');
 				 return defineClass(classname, bytes, 0, bytes.length);
+			 }
 			 return super.findClass(classname);
 		 }
 	}
