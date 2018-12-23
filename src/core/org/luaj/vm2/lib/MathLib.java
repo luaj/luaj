@@ -212,9 +212,14 @@ public class MathLib extends TwoArgFunction {
 	
 	static class modf extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			double x = args.checkdouble(1);
+			LuaValue n = args.arg1();
+			/* number is its own integer part, no fractional part */
+			if (n.islong()) return varargsOf(n, valueOf(0.0));
+			double x = n.checkdouble();
+			/* integer part (rounds toward zero) */
 			double intPart = ( x > 0 ) ? Math.floor( x ) : Math.ceil( x );
-			double fracPart = x - intPart;
+			/* fractional part (test needed for inf/-inf) */
+			double fracPart = x == intPart ? 0.0 : x - intPart;
 			return varargsOf( valueOf(intPart), valueOf(fracPart) );
 		}
 	}
