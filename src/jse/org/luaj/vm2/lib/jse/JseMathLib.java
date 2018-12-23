@@ -98,7 +98,14 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	}
 	static final class cosh extends UnaryOp { protected double call(double d) { return Math.cosh(d); } }
 	static final class exp extends UnaryOp { protected double call(double d) { return Math.exp(d); } }
-	static final class log extends UnaryOp { protected double call(double d) { return Math.log(d); } }
+	static final class log extends TwoArgFunction {
+		public LuaValue call(LuaValue x, LuaValue base) {
+			double nat = Math.log(x.checkdouble());
+			double b = base.optdouble(Math.E);
+			if (b != Math.E) nat /= Math.log(b);
+			return valueOf(nat);
+		}
+	}
 	static final class pow extends BinaryOp { protected double call(double x, double y) { return Math.pow(x, y); } }
 	static final class sinh extends UnaryOp { protected double call(double d) { return Math.sinh(d); } }
 	static final class tanh extends UnaryOp { protected double call(double d) { return Math.tanh(d); } }
