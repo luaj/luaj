@@ -299,7 +299,8 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		}
 		public LuaValue call(LuaValue table, LuaValue index, LuaValue value) {
 			LuaTable t = table.checktable();
-			t.rawset(index.checknotnil(), value);
+			if (!index.isvalidkey()) argerror(2, "value");
+			t.rawset(index, value);
 			return t;
 		}
 	}
