@@ -163,10 +163,12 @@ public class MathLib extends TwoArgFunction {
 		} 
 	}
 	
-	static final class fmod extends BinaryOp {
-		protected double call(double x, double y) {
-			double q = x/y;
-			return x - y * (q>=0? Math.floor(q): Math.ceil(q));
+	static final class fmod extends TwoArgFunction {
+		public LuaValue call(LuaValue xv, LuaValue yv) {
+			if (xv.islong() && yv.islong()) {
+				return valueOf(xv.tolong() % yv.tolong());
+			}
+			return valueOf(xv.checkdouble() % yv.checkdouble());
 		}
 	}
 	static final class ldexp extends BinaryOp {
