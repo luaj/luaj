@@ -643,7 +643,7 @@ public class LuaValue extends Varargs {
 	 * @see #isnumber()
 	 * @see #TNUMBER
 	 */
-	public double      optdouble(double defval)            { argerror("double");    return 0;     }
+	public double      optdouble(double defval)            { argerror("number");    return 0;     }
 
 	/** Check that optional argument is a function and return as {@link LuaFunction}
 	 * <p>
@@ -855,7 +855,7 @@ public class LuaValue extends Varargs {
 	 * @see #optdouble(double)
 	 * @see #TNUMBER
 	 */
-	public double      checkdouble()           { argerror("double");    return 0; }
+	public double      checkdouble()           { argerror("number");    return 0; }
 	
 	/** Check that the value is a function , or throw {@link LuaError} if not 
 	 * <p>
