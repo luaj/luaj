@@ -177,7 +177,14 @@ public class LuaDouble extends LuaNumber {
 	 * @see #dmod_d(double, double) 
 	 */
 	public static LuaValue dmod(double lhs, double rhs) {
-		return rhs!=0? valueOf( lhs-rhs*Math.floor(lhs/rhs) ): NAN;
+		if (rhs == 0 || lhs == Double.POSITIVE_INFINITY || lhs == Double.NEGATIVE_INFINITY) return NAN;
+		if (rhs == Double.POSITIVE_INFINITY) {
+			return lhs < 0 ? POSINF : valueOf(lhs);
+		}
+		if (rhs == Double.NEGATIVE_INFINITY) {
+			return lhs > 0 ? NEGINF : valueOf(lhs);
+		}
+		return valueOf( lhs-rhs*Math.floor(lhs/rhs) );
 	}
 
 	/** Take modulo for double numbers according to lua math, and return a double result.
@@ -188,7 +195,14 @@ public class LuaDouble extends LuaNumber {
 	 * @see #dmod(double, double)
 	 */
 	public static double dmod_d(double lhs, double rhs) {
-		return rhs!=0? lhs-rhs*Math.floor(lhs/rhs): Double.NaN;
+		if (rhs == 0 || lhs == Double.POSITIVE_INFINITY || lhs == Double.NEGATIVE_INFINITY) return Double.NaN;
+		if (rhs == Double.POSITIVE_INFINITY) {
+			return lhs < 0 ? Double.POSITIVE_INFINITY : lhs;
+		}
+		if (rhs == Double.NEGATIVE_INFINITY) {
+			return lhs > 0 ? Double.NEGATIVE_INFINITY : lhs;
+		}
+		return lhs-rhs*Math.floor(lhs/rhs);
 	}
 
 	// relational operators
