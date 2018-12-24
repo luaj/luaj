@@ -261,7 +261,7 @@ public class StringLib extends TwoArgFunction {
 								break;
 							case 'i':
 							case 'd':
-								fdsc.format( result, args.checkint( arg ) );
+								fdsc.format( result, args.checklong( arg ) );
 								break;
 							case 'o':
 							case 'u':
