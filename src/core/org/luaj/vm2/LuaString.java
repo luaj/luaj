@@ -391,23 +391,23 @@ public class LuaString extends LuaValue {
 	public short   toshort()       { return (short) toint(); }
 
 	public double optdouble(double defval) {
-		return checknumber().checkdouble();
+		return checkdouble();
 	}
 	
 	public int optint(int defval) {
-		return checknumber().checkint();
+		return checkint();
 	}
 	
 	public LuaInteger optinteger(LuaInteger defval) { 
-		return checknumber().checkinteger();
+		return checkinteger();
 	}
 	
 	public long optlong(long defval) {
-		return checknumber().checklong();
+		return checklong();
 	}
 	
 	public LuaNumber optnumber(LuaNumber defval) {
-		return checknumber().checknumber();
+		return checknumber();
 	}
 	
 	public LuaString optstring(LuaString defval) {
