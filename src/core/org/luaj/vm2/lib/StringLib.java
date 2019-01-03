@@ -877,8 +877,14 @@ public class StringLib extends TwoArgFunction {
 					lbuf.append( (byte) b );
 				} else {
 					++i; // skip ESC
-					b = (byte) news.luaByte( i );
+					b = (byte)(i < l ? news.luaByte( i ) : 0);
 					if ( !Character.isDigit( (char) b ) ) {
+						if (b != L_ESC) error( "invalid use of '" + (char)L_ESC +
+							"' in replacement string: after '" + (char)L_ESC +
+							"' must be '0'-'9' or '" + (char)L_ESC +
+							"', but found " + (i < l ? "symbol '" + (char)b + "' with code " + b +
+							" at pos " + (i + 1) :
+							"end of string"));
 						lbuf.append( b );
 					} else if ( b == '0' ) {
 						lbuf.append( s.substring( soff, e ) );
