@@ -28,13 +28,13 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Subclass of {@link LibFunction} which implements the lua standard {@code math} 
- * library. 
- * <p> 
- * It contains only the math library support that is possible on JME.  
- * For a more complete implementation based on math functions specific to JSE 
- * use {@link org.luaj.vm2.lib.jse.JseMathLib}. 
+/**
+ * Subclass of {@link LibFunction} which implements the lua standard {@code math}
+ * library.
+ * <p>
+ * It contains only the math library support that is possible on JME.
+ * For a more complete implementation based on math functions specific to JSE
+ * use {@link org.luaj.vm2.lib.jse.JseMathLib}.
  * In Particular the following math functions are <b>not</b> implemented by this library:
  * <ul>
  * <li>acos</li>
@@ -47,21 +47,21 @@ import org.luaj.vm2.Varargs;
  * <li>atan2</li>
  * </ul>
  * <p>
- * The implementations of {@code exp()} and {@code pow()} are constructed by 
+ * The implementations of {@code exp()} and {@code pow()} are constructed by
  * hand for JME, so will be slower and less accurate than when executed on the JSE platform.
- * <p> 
- * Typically, this library is included as part of a call to either 
- * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or 
+ * <p>
+ * Typically, this library is included as part of a call to either
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
- * When using {@link org.luaj.vm2.lib.jse.JsePlatform} as in this example, 
- * the subclass {@link org.luaj.vm2.lib.jse.JseMathLib} will 
+ * When using {@link org.luaj.vm2.lib.jse.JsePlatform} as in this example,
+ * the subclass {@link org.luaj.vm2.lib.jse.JseMathLib} will
  * be included, which also includes this base functionality.
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -70,8 +70,8 @@ import org.luaj.vm2.Varargs;
  * globals.load(new MathLib());
  * System.out.println( globals.get("math").get("sqrt").call( LuaValue.valueOf(2) ) );
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * Doing so will ensure the library is properly initialized
+ * and loaded into the globals table.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
  * @see LibFunction
@@ -87,8 +87,8 @@ public class MathLib extends TwoArgFunction {
 	 */
 	public static MathLib MATHLIB = null;
 
-	/** Construct a MathLib, which can be initialized by calling it with a 
-	 * modname string, and a global environment table as arguments using 
+	/** Construct a MathLib, which can be initialized by calling it with a
+	 * modname string, and a global environment table as arguments using
 	 * {@link #call(LuaValue, LuaValue)}. */
 	public MathLib() {
 		MATHLIB = this;
@@ -125,7 +125,7 @@ public class MathLib extends TwoArgFunction {
 		math.set("sqrt", new sqrt());
 		math.set("tan", new tan());
 		env.set("math", math);
-		env.get("package").get("loaded").set("math", math);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("math", math);
 		return math;
 	}
 	
@@ -158,9 +158,9 @@ public class MathLib extends TwoArgFunction {
 		exp(MathLib mathlib) {
 			this.mathlib = mathlib;
 		}
-		protected double call(double d) { 
-			return mathlib.dpow_lib(Math.E,d); 
-		} 
+		protected double call(double d) {
+			return mathlib.dpow_lib(Math.E,d);
+		}
 	}
 	
 	static final class fmod extends TwoArgFunction {
@@ -263,26 +263,26 @@ public class MathLib extends TwoArgFunction {
 	
 	/** compute power using installed math library, or default if there is no math library installed */
 	public static LuaValue dpow(double a, double b) {
-		return LuaDouble.valueOf( 
+		return LuaDouble.valueOf(
 				MATHLIB!=null?
 				MATHLIB.dpow_lib(a,b):
 				dpow_default(a,b) );
 	}
 	public static double dpow_d(double a, double b) {
-		return MATHLIB!=null? 
-				MATHLIB.dpow_lib(a,b): 
+		return MATHLIB!=null?
+				MATHLIB.dpow_lib(a,b):
 				dpow_default(a,b);
 	}
 	
-	/** 
-	 * Hook to override default dpow behavior with faster implementation.  
+	/**
+	 * Hook to override default dpow behavior with faster implementation.
 	 */
 	public double dpow_lib(double a, double b) {
 		return dpow_default(a,b);
 	}
 
-	/** 
-	 * Default JME version computes using longhand heuristics. 
+	/**
+	 * Default JME version computes using longhand heuristics.
 	 */
 	protected static double dpow_default(double a, double b) {
 		if ( b < 0 )

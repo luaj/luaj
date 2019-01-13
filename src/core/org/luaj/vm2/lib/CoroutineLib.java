@@ -27,25 +27,25 @@ import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine} 
- * library. 
- * <p> 
+/**
+ * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine}
+ * library.
+ * <p>
  * The coroutine library in luaj has the same behavior as the
- * coroutine library in C, but is implemented using Java Threads to maintain 
- * the call state between invocations.  Therefore it can be yielded from anywhere, 
+ * coroutine library in C, but is implemented using Java Threads to maintain
+ * the call state between invocations.  Therefore it can be yielded from anywhere,
  * similar to the "Coco" yield-from-anywhere patch available for C-based lua.
  * However, coroutines that are yielded but never resumed to complete their execution
- * may not be collected by the garbage collector. 
- * <p> 
- * Typically, this library is included as part of a call to either 
+ * may not be collected by the garbage collector.
+ * <p>
+ * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("coroutine").get("running").call() );
  * } </pre>
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -82,7 +82,7 @@ public class CoroutineLib extends TwoArgFunction {
 		coroutine.set("yield", new yield());
 		coroutine.set("wrap", new wrap());
 		env.set("coroutine", coroutine);
-		env.get("package").get("loaded").set("coroutine", coroutine);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("coroutine", coroutine);
 		return coroutine;
 	}
 

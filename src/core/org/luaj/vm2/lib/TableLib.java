@@ -25,19 +25,19 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Subclass of {@link LibFunction} which implements the lua standard {@code table} 
- * library. 
+/**
+ * Subclass of {@link LibFunction} which implements the lua standard {@code table}
+ * library.
  * 
  * <p>
- * Typically, this library is included as part of a call to either 
+ * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("table").get("length").call( LuaValue.tableOf() ) );
  * } </pre>
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -70,7 +70,7 @@ public class TableLib extends TwoArgFunction {
 		table.set("sort", new sort());
 		table.set("unpack", new unpack());
 		env.set("table", table);
-		env.get("package").get("loaded").set("table", table);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("table", table);
 		return NIL;
 	}
 

@@ -38,26 +38,26 @@ import org.luaj.vm2.Print;
 import org.luaj.vm2.Prototype;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Subclass of {@link LibFunction} which implements the lua standard {@code debug} 
- * library. 
- * <p> 
+/**
+ * Subclass of {@link LibFunction} which implements the lua standard {@code debug}
+ * library.
+ * <p>
  * The debug library in luaj tries to emulate the behavior of the corresponding C-based lua library.
- * To do this, it must maintain a separate stack of calls to {@link LuaClosure} and {@link LibFunction} 
- * instances.  
+ * To do this, it must maintain a separate stack of calls to {@link LuaClosure} and {@link LibFunction}
+ * instances.
  * Especially when lua-to-java bytecode compiling is being used
- * via a {@link org.luaj.vm2.Globals.Compiler} such as {@link org.luaj.vm2.luajc.LuaJC}, 
- * this cannot be done in all cases.  
- * <p> 
- * Typically, this library is included as part of a call to either 
- * {@link org.luaj.vm2.lib.jse.JsePlatform#debugGlobals()} or 
+ * via a {@link org.luaj.vm2.Globals.Compiler} such as {@link org.luaj.vm2.luajc.LuaJC},
+ * this cannot be done in all cases.
+ * <p>
+ * Typically, this library is included as part of a call to either
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#debugGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#debugGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.debugGlobals();
  * System.out.println( globals.get("debug").get("traceback").call() );
  * } </pre>
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -84,27 +84,27 @@ public class DebugLib extends TwoArgFunction {
 		try { TRACE = (null != System.getProperty("TRACE")); } catch (Exception e) {}
 	}
 	
-	static final LuaString LUA             = valueOf("Lua");  
-	private static final LuaString QMARK           = valueOf("?");  
-	private static final LuaString CALL            = valueOf("call");  
-	private static final LuaString LINE            = valueOf("line");  
-	private static final LuaString COUNT           = valueOf("count");  
+	static final LuaString LUA             = valueOf("Lua");
+	private static final LuaString QMARK           = valueOf("?");
+	private static final LuaString CALL            = valueOf("call");
+	private static final LuaString LINE            = valueOf("line");
+	private static final LuaString COUNT           = valueOf("count");
 	private static final LuaString RETURN          = valueOf("return");
 	
-	static final LuaString FUNC            = valueOf("func");  
-	static final LuaString ISTAILCALL      = valueOf("istailcall");  
-	static final LuaString ISVARARG        = valueOf("isvararg");  
-	static final LuaString NUPS            = valueOf("nups");  
-	static final LuaString NPARAMS         = valueOf("nparams");  
-	static final LuaString NAME            = valueOf("name");  
-	static final LuaString NAMEWHAT        = valueOf("namewhat");  
-	static final LuaString WHAT            = valueOf("what");  
-	static final LuaString SOURCE          = valueOf("source");  
-	static final LuaString SHORT_SRC       = valueOf("short_src");  
-	static final LuaString LINEDEFINED     = valueOf("linedefined");  
-	static final LuaString LASTLINEDEFINED = valueOf("lastlinedefined");  
-	static final LuaString CURRENTLINE     = valueOf("currentline");  
-	static final LuaString ACTIVELINES     = valueOf("activelines");  
+	static final LuaString FUNC            = valueOf("func");
+	static final LuaString ISTAILCALL      = valueOf("istailcall");
+	static final LuaString ISVARARG        = valueOf("isvararg");
+	static final LuaString NUPS            = valueOf("nups");
+	static final LuaString NPARAMS         = valueOf("nparams");
+	static final LuaString NAME            = valueOf("name");
+	static final LuaString NAMEWHAT        = valueOf("namewhat");
+	static final LuaString WHAT            = valueOf("what");
+	static final LuaString SOURCE          = valueOf("source");
+	static final LuaString SHORT_SRC       = valueOf("short_src");
+	static final LuaString LINEDEFINED     = valueOf("linedefined");
+	static final LuaString LASTLINEDEFINED = valueOf("lastlinedefined");
+	static final LuaString CURRENTLINE     = valueOf("currentline");
+	static final LuaString ACTIVELINES     = valueOf("activelines");
 
 	Globals globals;
 	
@@ -135,19 +135,19 @@ public class DebugLib extends TwoArgFunction {
 		debug.set("upvalueid", new upvalueid());
 		debug.set("upvaluejoin", new upvaluejoin());
 		env.set("debug", debug);
-		env.get("package").get("loaded").set("debug", debug);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("debug", debug);
 		return debug;
 	}
 
 	// debug.debug()
-	static final class debug extends ZeroArgFunction { 
+	static final class debug extends ZeroArgFunction {
 		public LuaValue call() {
 			return NONE;
 		}
 	}
 
 	// debug.gethook ([thread])
-	final class gethook extends VarArgFunction { 
+	final class gethook extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaThread t = args.narg() > 0 ? args.checkthread(1): globals.running;
 			LuaThread.State s = t.state;
@@ -159,10 +159,10 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.getinfo ([thread,] f [, what])
-	final class getinfo extends VarArgFunction { 
+	final class getinfo extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running; 
+			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
 			LuaValue func = args.arg(a++);
 			String what = args.optjstring(a++, "flnStu");
 			DebugLib.CallStack callstack = callstack(thread);
@@ -222,10 +222,10 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.getlocal ([thread,] f, local)
-	final class getlocal extends VarArgFunction { 
+	final class getlocal extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running; 
+			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
 			CallFrame f = callstack(thread).getCallFrame(level);
@@ -249,7 +249,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.getupvalue (f, up)
-	static final class getupvalue extends VarArgFunction { 
+	static final class getupvalue extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -265,7 +265,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.getuservalue (u)
-	static final class getuservalue extends LibFunction { 
+	static final class getuservalue extends LibFunction {
 		public LuaValue call(LuaValue u) {
 			return u.isuserdata()? u: NIL;
 		}
@@ -273,10 +273,10 @@ public class DebugLib extends TwoArgFunction {
 	
 	
 	// debug.sethook ([thread,] hook, mask [, count])
-	final class sethook extends VarArgFunction { 
+	final class sethook extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread t = args.isthread(a)? args.checkthread(a++): globals.running; 
+			LuaThread t = args.isthread(a)? args.checkthread(a++): globals.running;
 			LuaValue func    = args.optfunction(a++, null);
 			String str       = args.optjstring(a++,"");
 			int count        = args.optint(a++,0);
@@ -298,20 +298,20 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setlocal ([thread,] level, local, value)
-	final class setlocal extends VarArgFunction { 
+	final class setlocal extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running; 
+			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
 			int level = args.checkint(a++);
 			int local = args.checkint(a++);
 			LuaValue value = args.arg(a++);
-			CallFrame f = callstack(thread).getCallFrame(level); 
+			CallFrame f = callstack(thread).getCallFrame(level);
 			return f != null? f.setLocal(local, value): NONE;
 		}
 	}
 
 	//	debug.setmetatable (value, table)
-	static final class setmetatable extends TwoArgFunction { 
+	static final class setmetatable extends TwoArgFunction {
 		public LuaValue call(LuaValue value, LuaValue table) {
 			LuaValue mt = table.opttable(null);
 			switch ( value.type() ) {
@@ -328,7 +328,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setupvalue (f, up, value)
-	static final class setupvalue extends VarArgFunction { 
+	static final class setupvalue extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -346,7 +346,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.setuservalue (udata, value)
-	static final class setuservalue extends VarArgFunction { 
+	static final class setuservalue extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			Object o = args.checkuserdata(1);
 			LuaValue v = args.checkvalue(2);
@@ -358,10 +358,10 @@ public class DebugLib extends TwoArgFunction {
 	}
 	
 	//	debug.traceback ([thread,] [message [, level]])
-	final class traceback extends VarArgFunction { 
+	final class traceback extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a=1;
-			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running; 
+			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
 			String message = args.optjstring(a++, null);
 			int level = args.optint(a++,1);
 			String tb = callstack(thread).traceback(level);
@@ -370,7 +370,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 	
 	//	debug.upvalueid (f, n)
-	static final class upvalueid extends VarArgFunction { 
+	static final class upvalueid extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -385,7 +385,7 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	//	debug.upvaluejoin (f1, n1, f2, n2)
-	static final class upvaluejoin extends VarArgFunction { 
+	static final class upvaluejoin extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaClosure f1 = args.checkclosure(1);
 			int n1 = args.checkint(2);
@@ -587,7 +587,7 @@ public class DebugLib extends TwoArgFunction {
 				if (frame[calls-i].f == func)
 					return frame[i];
 			return null;
-		}	
+		}
 
 
 		synchronized DebugInfo auxgetinfo(String what, LuaFunction f, CallFrame ci) {
@@ -641,7 +641,7 @@ public class DebugLib extends TwoArgFunction {
 				}
 			}
 			return ar;
-		}		
+		}
 
 	}
 
@@ -694,7 +694,7 @@ public class DebugLib extends TwoArgFunction {
 		int currentline() {
 			if ( !f.isclosure() ) return -1;
 			int[] li = f.checkclosure().p.lineinfo;
-			return li==null || pc<0 || pc>=li.length? -1: li[pc]; 
+			return li==null || pc<0 || pc>=li.length? -1: li[pc];
 		}
 		String sourceline() {
 			if ( !f.isclosure() ) return f.tojstring();
@@ -721,7 +721,7 @@ public class DebugLib extends TwoArgFunction {
 	
 	static void lua_assert(boolean x) {
 		if (!x) throw new RuntimeException("lua_assert failed");
-	}	
+	}
 	
 	static class NameWhat {
 		final String name;

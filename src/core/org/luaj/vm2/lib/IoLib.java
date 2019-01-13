@@ -31,31 +31,31 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Abstract base class extending {@link LibFunction} which implements the 
- * core of the lua standard {@code io} library.   
- * <p> 
+/**
+ * Abstract base class extending {@link LibFunction} which implements the
+ * core of the lua standard {@code io} library.
+ * <p>
  * It contains the implementation of the io library support that is common to
- * the JSE and JME platforms. 
- * In practice on of the concrete IOLib subclasses is chosen:  
- * {@link org.luaj.vm2.lib.jse.JseIoLib} for the JSE platform, and 
+ * the JSE and JME platforms.
+ * In practice on of the concrete IOLib subclasses is chosen:
+ * {@link org.luaj.vm2.lib.jse.JseIoLib} for the JSE platform, and
  * {@link org.luaj.vm2.lib.jme.JmeIoLib} for the JME platform.
  * <p>
- * The JSE implementation conforms almost completely to the C-based lua library, 
- * while the JME implementation follows closely except in the area of random-access files, 
- * which are difficult to support properly on JME. 
- * <p> 
- * Typically, this library is included as part of a call to either 
+ * The JSE implementation conforms almost completely to the C-based lua library,
+ * while the JME implementation follows closely except in the area of random-access files,
+ * which are difficult to support properly on JME.
+ * <p>
+ * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * } </pre>
  * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseIoLib} library will be loaded, which will include
- * the base functionality provided by this class, whereas the {@link org.luaj.vm2.lib.jse.JsePlatform} would load the 
+ * the base functionality provided by this class, whereas the {@link org.luaj.vm2.lib.jse.JsePlatform} would load the
  * {@link org.luaj.vm2.lib.jse.JseIoLib}.
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -73,10 +73,10 @@ import org.luaj.vm2.Varargs;
  * @see org.luaj.vm2.lib.jme.JmeIoLib
  * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
  */
-abstract 
+abstract
 public class IoLib extends TwoArgFunction {
 
-	abstract 
+	abstract
 	protected class File extends LuaValue{
 		abstract public void write( LuaString string ) throws IOException;
 		abstract public void flush() throws IOException;
@@ -85,12 +85,12 @@ public class IoLib extends TwoArgFunction {
 		abstract public boolean isclosed();
 		// returns new position
 		abstract public int seek(String option, int bytecount) throws IOException;
-		abstract public void setvbuf(String mode, int size);		
+		abstract public void setvbuf(String mode, int size);
 		// get length remaining to read
-		abstract public int remaining() throws IOException;		
+		abstract public int remaining() throws IOException;
 		// peek ahead one character
-		abstract public int peek() throws IOException, EOFException;		
-		// return char if read, -1 if eof, throw IOException on other exception 
+		abstract public int peek() throws IOException, EOFException;
+		// return char if read, -1 if eof, throw IOException on other exception
 		abstract public int read() throws IOException, EOFException;
 		// return number of bytes read if positive, false if eof, throw IOException on other exception
 		abstract public int read(byte[] bytes, int offset, int length) throws IOException;
@@ -123,29 +123,29 @@ public class IoLib extends TwoArgFunction {
 	/** Enumerated value representing a file type for a named file */
 	protected static final int FTYPE_NAMED = 3;
 
-	/** 
-	 * Wrap the standard input. 
-	 * @return File 
+	/**
+	 * Wrap the standard input.
+	 * @return File
 	 * @throws IOException
 	 */
 	abstract protected File wrapStdin() throws IOException;
 
-	/** 
-	 * Wrap the standard output. 
-	 * @return File 
+	/**
+	 * Wrap the standard output.
+	 * @return File
 	 * @throws IOException
 	 */
 	abstract protected File wrapStdout() throws IOException;
 	
-	/** 
-	 * Wrap the standard error output. 
-	 * @return File 
+	/**
+	 * Wrap the standard error output.
+	 * @return File
 	 * @throws IOException
 	 */
 	abstract protected File wrapStderr() throws IOException;
 	
 	/**
-	 * Open a file in a particular mode. 
+	 * Open a file in a particular mode.
 	 * @param filename
 	 * @param readMode true if opening in read mode
 	 * @param appendMode true if opening in append mode
@@ -157,7 +157,7 @@ public class IoLib extends TwoArgFunction {
 	abstract protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException;
 
 	/**
-	 * Open a temporary file. 
+	 * Open a temporary file.
 	 * @return File object if successful
 	 * @throws IOException if could not be opened
 	 */
@@ -167,7 +167,7 @@ public class IoLib extends TwoArgFunction {
 	 * Start a new process and return a file for input or output
 	 * @param prog the program to execute
 	 * @param mode "r" to read, "w" to write
-	 * @return File to read to or write from 
+	 * @return File to read to or write from
 	 * @throws IOException if an i/o exception occurs
 	 */
 	abstract protected File openProgram(String prog, String mode) throws IOException;
@@ -178,7 +178,7 @@ public class IoLib extends TwoArgFunction {
 
 	private static final LuaValue STDIN       = valueOf("stdin");
 	private static final LuaValue STDOUT      = valueOf("stdout");
-	private static final LuaValue STDERR      = valueOf("stderr");		
+	private static final LuaValue STDERR      = valueOf("stderr");
 	private static final LuaValue FILE        = valueOf("file");
 	private static final LuaValue CLOSED_FILE = valueOf("closed file");
 	
@@ -256,7 +256,7 @@ public class IoLib extends TwoArgFunction {
 		
 		// return the table
 		env.set("io", t);
-		env.get("package").get("loaded").set("io", t);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("io", t);
 		return t;
 	}
 
@@ -316,7 +316,7 @@ public class IoLib extends TwoArgFunction {
 		return infile!=null? infile: (infile=ioopenfile(FTYPE_STDIN, "-","r"));
 	}
 	
-	//	io.flush() -> bool 
+	//	io.flush() -> bool
 	public Varargs _io_flush() throws IOException {
 		checkopen(output());
 		outfile.flush();
@@ -337,7 +337,7 @@ public class IoLib extends TwoArgFunction {
 
 	//	io.input([file]) -> file
 	public Varargs _io_input(LuaValue file) {
-		infile = file.isnil()? input(): 
+		infile = file.isnil()? input():
 				file.isstring()? ioopenfile(FTYPE_NAMED, file.checkjstring(),"r"):
 				checkfile(file);
 		return infile;
@@ -345,7 +345,7 @@ public class IoLib extends TwoArgFunction {
 
 	// io.output(filename) -> file
 	public Varargs _io_output(LuaValue filename) {
-		outfile = filename.isnil()? output(): 
+		outfile = filename.isnil()? output():
 				  filename.isstring()? ioopenfile(FTYPE_NAMED, filename.checkjstring(),"w"):
 				  checkfile(filename);
 		return outfile;
@@ -420,7 +420,7 @@ public class IoLib extends TwoArgFunction {
 		return valueOf( checkfile(file).seek(whence,offset) );
 	}
 
-	//	file:write(...) -> void		
+	//	file:write(...) -> void
 	public Varargs _file_write(LuaValue file, Varargs subargs) throws IOException {
 		return iowrite(checkfile(file),subargs);
 	}
@@ -468,7 +468,7 @@ public class IoLib extends TwoArgFunction {
 	}
 
 	static Varargs errorresult(Exception ioe) {
-		String s = ioe.getMessage();		
+		String s = ioe.getMessage();
 		return errorresult("io error: "+(s!=null? s: ioe.toString()));
 	}
 	
@@ -509,8 +509,8 @@ public class IoLib extends TwoArgFunction {
 						case 'a': vi = freadall(f); break item;
 						}
 					}
-				default: 
-					return argerror( i+1, "(invalid format)" ); 
+				default:
+					return argerror( i+1, "(invalid format)" );
 			}
 			if ( (v[i++] = vi).isnil() )
 				break;
@@ -564,7 +564,7 @@ public class IoLib extends TwoArgFunction {
 		int c;
 		try {
 			if ( lineonly ) {
-				loop: while ( (c = f.read()) > 0 ) { 
+				loop: while ( (c = f.read()) > 0 ) {
 					switch ( c ) {
 					case '\r': break;
 					case '\n': break loop;
@@ -572,13 +572,13 @@ public class IoLib extends TwoArgFunction {
 					}
 				}
 			} else {
-				while ( (c = f.read()) > 0 ) 
+				while ( (c = f.read()) > 0 )
 					baos.write(c);
 			}
 		} catch ( EOFException e ) {
 			c = -1;
 		}
-		return ( c < 0 && baos.size() == 0 )? 
+		return ( c < 0 && baos.size() == 0 )?
 			(LuaValue) NIL:
 			(LuaValue) LuaString.valueUsing(baos.toByteArray());
 	}
@@ -619,7 +619,7 @@ public class IoLib extends TwoArgFunction {
 			if ( baos != null )
 				baos.write( c );
 		}
-	}		
+	}
 	
 	
 	

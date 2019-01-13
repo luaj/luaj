@@ -27,15 +27,15 @@ import org.luaj.vm2.Varargs;
 
 /**
  * Subclass of LibFunction that implements the Lua standard {@code bit32} library.
- * <p> 
- * Typically, this library is included as part of a call to either 
+ * <p>
+ * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("bit32").get("bnot").call( LuaValue.valueOf(2) ) );
  * } </pre>
  * <p>
- * To instantiate and use it directly, 
+ * To instantiate and use it directly,
  * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
  * <pre> {@code
  * Globals globals = new Globals();
@@ -71,7 +71,7 @@ public class Bit32Lib extends TwoArgFunction {
 			"arshift", "lrotate", "lshift", "rrotate", "rshift"
 		});
 		env.set("bit32", t);
-		env.get("package").get("loaded").set("bit32", t);
+		if (!env.get("package").isnil()) env.get("package").get("loaded").set("bit32", t);
 		return t;
 	}
 
@@ -219,6 +219,6 @@ public class Bit32Lib extends TwoArgFunction {
 	}
 
 	private static LuaValue bitsToValue( int x ) {
-		return ( x < 0 ) ? valueOf((double) ((long) x & 0xFFFFFFFFL)) : valueOf(x); 
+		return ( x < 0 ) ? valueOf((double) ((long) x & 0xFFFFFFFFL)) : valueOf(x);
 	}
 }
