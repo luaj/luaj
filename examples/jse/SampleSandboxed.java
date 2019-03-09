@@ -1,12 +1,26 @@
-import org.luaj.vm2.*;
+import org.luaj.vm2.Globals;
+import org.luaj.vm2.LoadState;
+import org.luaj.vm2.LuaBoolean;
+import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaThread;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.compiler.LuaC;
-import org.luaj.vm2.lib.*;
-import org.luaj.vm2.lib.jse.*;
+import org.luaj.vm2.lib.Bit32Lib;
+import org.luaj.vm2.lib.DebugLib;
+import org.luaj.vm2.lib.PackageLib;
+import org.luaj.vm2.lib.TableLib;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
+import org.luaj.vm2.lib.jse.JseBaseLib;
+import org.luaj.vm2.lib.jse.JseMathLib;
+import org.luaj.vm2.lib.jse.JseStringLib;
 
 /** Simple program that illustrates basic sand-boxing of client scripts
  * in a server environment.
  * 
- * <p>Although this sandboxing is done primarily in Java here, these 
+ * <p>Although this sandboxing is done primarily in Java here, these
  * same techniques should all be possible directly from lua using metatables,
  * and examples are shown in examples/lua/samplesandboxed.lua.
  * 
@@ -29,7 +43,7 @@ public class SampleSandboxed {
 		server_globals = new Globals();
 		server_globals.load(new JseBaseLib());
 		server_globals.load(new PackageLib());
-		server_globals.load(new StringLib());
+		server_globals.load(new JseStringLib());
 
 		// To load scripts, we occasionally need a math library in addition to compiler support.
 		// To limit scripts using the debug library, they must be closures, so we only install LuaC.
@@ -47,7 +61,7 @@ public class SampleSandboxed {
 		runScriptInSandbox( "return getmetatable('abc').len" );
 		runScriptInSandbox( "return getmetatable('abc').__index" );
 
-		// Example user scripts that attempt rogue operations, and will fail. 
+		// Example user scripts that attempt rogue operations, and will fail.
 		runScriptInSandbox( "return setmetatable('abc', {})" );
 		runScriptInSandbox( "getmetatable('abc').len = function() end" );
 		runScriptInSandbox( "getmetatable('abc').__index = {}" );
@@ -61,9 +75,9 @@ public class SampleSandboxed {
 				LuaValue.ADD, new TwoArgFunction() {
 					public LuaValue call(LuaValue x, LuaValue y) {
 						return LuaValue.valueOf(
-								(x == TRUE ? 1.0 : x.todouble()) + 
+								(x == TRUE ? 1.0 : x.todouble()) +
 								(y == TRUE ? 1.0 : y.todouble()) );
-					}				
+					}
 				},
 		}));
 		runScriptInSandbox( "return 5 + 6, 5 + true, false + 6" );
@@ -75,21 +89,21 @@ public class SampleSandboxed {
 	// that contain functions that can be abused.
 	static void runScriptInSandbox(String script) {
 		
-		// Each script will have it's own set of globals, which should 
+		// Each script will have it's own set of globals, which should
 		// prevent leakage between scripts running on the same server.
 		Globals user_globals = new Globals();
 		user_globals.load(new JseBaseLib());
 		user_globals.load(new PackageLib());
 		user_globals.load(new Bit32Lib());
 		user_globals.load(new TableLib());
-		user_globals.load(new StringLib());
+		user_globals.load(new JseStringLib());
 		user_globals.load(new JseMathLib());
 
 		// This library is dangerous as it gives unfettered access to the
-		// entire Java VM, so it's not suitable within this lightweight sandbox. 
+		// entire Java VM, so it's not suitable within this lightweight sandbox.
 		// user_globals.load(new LuajavaLib());
 		
-		// Starting coroutines in scripts will result in threads that are 
+		// Starting coroutines in scripts will result in threads that are
 		// not under the server control, so this libary should probably remain out.
 		// user_globals.load(new CoroutineLib());
 
@@ -98,12 +112,12 @@ public class SampleSandboxed {
 		// user_globals.load(new JseIoLib());
 		// user_globals.load(new JseOsLib());
 
-		// Loading and compiling scripts from within scripts may also be 
+		// Loading and compiling scripts from within scripts may also be
 		// prohibited, though in theory it should be fairly safe.
 		// LoadState.install(user_globals);
 		// LuaC.install(user_globals);
 
-		// The debug library must be loaded for hook functions to work, which  
+		// The debug library must be loaded for hook functions to work, which
 		// allow us to limit scripts to run a certain number of instructions at a time.
 		// However we don't wish to expose the library in the user globals,
 		// so it is immediately removed from the user globals once created.
@@ -111,18 +125,18 @@ public class SampleSandboxed {
 		LuaValue sethook = user_globals.get("debug").get("sethook");
 		user_globals.set("debug", LuaValue.NIL);
 
-		// Set up the script to run in its own lua thread, which allows us 
+		// Set up the script to run in its own lua thread, which allows us
 		// to set a hook function that limits the script to a specific number of cycles.
-		// Note that the environment is set to the user globals, even though the 
+		// Note that the environment is set to the user globals, even though the
 		// compiling is done with the server globals.
 		LuaValue chunk = server_globals.load(script, "main", user_globals);
 		LuaThread thread = new LuaThread(user_globals, chunk);
 
-		// Set the hook function to immediately throw an Error, which will not be 
+		// Set the hook function to immediately throw an Error, which will not be
 		// handled by any Lua code other than the coroutine.
 		LuaValue hookfunc = new ZeroArgFunction() {
 			public LuaValue call() {
-				// A simple lua error may be caught by the script, but a 
+				// A simple lua error may be caught by the script, but a
 				// Java Error will pass through to top and stop the script.
 				throw new Error("Script overran resource limits.");
 			}

@@ -49,7 +49,7 @@ import org.luaj.vm2.compiler.DumpState;
  * Globals globals = new Globals();
  * globals.load(new JseBaseLib());
  * globals.load(new PackageLib());
- * globals.load(new StringLib());
+ * globals.load(new JseStringLib());
  * System.out.println( globals.get("string").get("upper").call( LuaValue.valueOf("abcde") ) );
  * } </pre>
  * <p>
@@ -230,7 +230,7 @@ public class StringLib extends TwoArgFunction {
 	 * This function does not accept string values containing embedded zeros,
 	 * except as arguments to the q option.
 	 */
-	static final class format extends VarArgFunction {
+	final class format extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaString fmt = args.checkstring( 1 );
 			final int n = fmt.length();
@@ -330,7 +330,7 @@ public class StringLib extends TwoArgFunction {
 	
 	private static final String FLAGS = "-+ #0";
 	
-	static class FormatDesc {
+	class FormatDesc {
 		
 		private boolean leftAdjust;
 		private boolean zeroPad;
@@ -470,13 +470,7 @@ public class StringLib extends TwoArgFunction {
 		}
 		
 		public void format(Buffer buf, double x) {
-			String out;
-			try {
-				out = String.format(src, x);
-			} catch (Throwable e) {
-				out = String.valueOf( x );
-			}
-			buf.append( out );
+			buf.append( StringLib.this.format(src, x) );
 		}
 		
 		public void format(Buffer buf, LuaString s) {
@@ -486,11 +480,15 @@ public class StringLib extends TwoArgFunction {
 			buf.append(s);
 		}
 		
-		public static final void pad(Buffer buf, char c, int n) {
+		public final void pad(Buffer buf, char c, int n) {
 			byte b = (byte)c;
 			while ( n-- > 0 )
 				buf.append(b);
 		}
+	}
+	
+	protected String format(String src, double x) {
+		return String.valueOf(x);
 	}
 	
 	/**
