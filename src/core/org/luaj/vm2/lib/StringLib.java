@@ -173,7 +173,7 @@ public class StringLib extends TwoArgFunction {
 	 * TODO: port dumping code as optional add-on
 	 */
 	static final class dump extends VarArgFunction {
-		public LuaValue invoke(Varargs args) {
+		public Varargs invoke(Varargs args) {
 			LuaValue f = args.checkfunction(1);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
