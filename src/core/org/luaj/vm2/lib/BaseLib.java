@@ -33,21 +33,21 @@ import org.luaj.vm2.LuaThread;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** 
- * Subclass of {@link LibFunction} which implements the lua basic library functions. 
+/**
+ * Subclass of {@link LibFunction} which implements the lua basic library functions.
  * <p>
- * This contains all library functions listed as "basic functions" in the lua documentation for JME. 
- * The functions dofile and loadfile use the 
+ * This contains all library functions listed as "basic functions" in the lua documentation for JME.
+ * The functions dofile and loadfile use the
  * {@link Globals#finder} instance to find resource files.
- * Since JME has no file system by default, {@link BaseLib} implements 
- * {@link ResourceFinder} using {@link Class#getResource(String)}, 
- * which is the closest equivalent on JME.     
+ * Since JME has no file system by default, {@link BaseLib} implements
+ * {@link ResourceFinder} using {@link Class#getResource(String)},
+ * which is the closest equivalent on JME.
  * The default loader chain in {@link PackageLib} will use these as well.
- * <p>  
- * To use basic library functions that include a {@link ResourceFinder} based on 
- * directory lookup, use {@link org.luaj.vm2.lib.jse.JseBaseLib} instead. 
  * <p>
- * Typically, this library is included as part of a call to either 
+ * To use basic library functions that include a {@link ResourceFinder} based on
+ * directory lookup, use {@link org.luaj.vm2.lib.jse.JseBaseLib} instead.
+ * <p>
+ * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
  * <pre> {@code
@@ -55,7 +55,7 @@ import org.luaj.vm2.Varargs;
  * globals.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
  * <p>
- * For special cases where the smallest possible footprint is desired, 
+ * For special cases where the smallest possible footprint is desired,
  * a minimal set of libraries could be loaded
  * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
@@ -63,8 +63,8 @@ import org.luaj.vm2.Varargs;
  * globals.load(new JseBaseLib());
  * globals.get("print").call(LuaValue.valueOf("hello, world"));
  * } </pre>
- * Doing so will ensure the library is properly initialized 
- * and loaded into the globals table. 
+ * Doing so will ensure the library is properly initialized
+ * and loaded into the globals table.
  * <p>
  * This is a direct port of the corresponding library in C.
  * @see org.luaj.vm2.lib.jse.JseBaseLib
@@ -119,9 +119,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		return env;
 	}
 
-	/** ResourceFinder implementation 
+	/** ResourceFinder implementation
 	 * 
-	 * Tries to open the file as a resource, which can work for JSE and JME. 
+	 * Tries to open the file as a resource, which can work for JSE and JME.
 	 */
 	public InputStream findResource(String filename) {
 		return getClass().getResourceAsStream(filename.startsWith("/")? filename: "/"+filename);
@@ -131,7 +131,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "assert", // ( v [,message] ) -> v, message | ERR
 	static final class _assert extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			if ( !args.arg1().toboolean() ) 
+			if ( !args.arg1().toboolean() )
 				error( args.narg()>1? args.optjstring(2,"assertion failed!"): "assertion failed!" );
 			return args;
 		}
@@ -163,23 +163,23 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		public Varargs invoke(Varargs args) {
 			args.argcheck(args.isstring(1) || args.isnil(1), 1, "filename must be string or nil");
 			String filename = args.isstring(1)? args.tojstring(1): null;
-			Varargs v = filename == null? 
+			Varargs v = filename == null?
 					loadStream( globals.STDIN, "=stdin", "bt", globals ):
 					loadFile( args.checkjstring(1), "bt", globals );
-			return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();			
+			return v.isnil(1)? error(v.tojstring(2)): v.arg1().invoke();
 		}
 	}
 
 	// "error", // ( message [,level] ) -> ERR
 	static final class error extends TwoArgFunction {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
-			throw arg1.isnil()? new LuaError(null, arg2.optint(1)): 
-				arg1.isstring()? new LuaError(arg1.tojstring(), arg2.optint(1)): 
+			throw arg1.isnil()? new LuaError(null, arg2.optint(1)):
+				arg1.isstring()? new LuaError(arg1.tojstring(), arg2.optint(1)):
 					new LuaError(arg1);
 		}
 	}
 
-	// "getmetatable", // ( object ) -> table 
+	// "getmetatable", // ( object ) -> table
 	static final class getmetatable extends LibFunction {
 		public LuaValue call() {
 			return argerror(1, "value");
@@ -197,7 +197,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			String source = args.optjstring(2, ld.isstring()? ld.tojstring(): "=(load)");
 			String mode = args.optjstring(3, "bt");
 			LuaValue env = args.optvalue(4, globals);
-			return loadStream(ld.isstring()? ld.strvalue().toInputStream(): 
+			return loadStream(ld.isstring()? ld.strvalue().toInputStream():
 				new StringInputStream(ld.checkfunction()), source, mode, env);
 		}
 	}
@@ -209,7 +209,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			String filename = args.isstring(1)? args.tojstring(1): null;
 			String mode = args.optjstring(2, "bt");
 			LuaValue env = args.optvalue(3, globals);
-			return filename == null? 
+			return filename == null?
 				loadStream( globals.STDIN, "=stdin", mode, env ):
 				loadFile( filename, mode, env );
 		}
@@ -243,13 +243,13 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			this.baselib = baselib;
 		}
 		public Varargs invoke(Varargs args) {
-			LuaValue tostring = globals.get("tostring"); 
+			LuaValue tostring = globals.get("tostring");
 			for ( int i=1, n=args.narg(); i<=n; i++ ) {
-				if ( i>1 ) globals.STDOUT.print( " \t" );
+				if ( i>1 ) globals.STDOUT.print( '\t' );
 				LuaString s = tostring.call( args.arg(i) ).strvalue();
 				globals.STDOUT.print(s.tojstring());
 			}
-			globals.STDOUT.println();
+			globals.STDOUT.print('\n');
 			return NONE;
 		}
 	}
@@ -308,7 +308,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "select", // (f, ...) -> value1, ...
 	static final class select extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			int n = args.narg()-1; 				
+			int n = args.narg()-1;
 			if ( args.arg1().equals(valueOf("#")) )
 				return valueOf(n);
 			int i = args.checkint(1);
@@ -350,10 +350,10 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	static final class tostring extends LibFunction {
 		public LuaValue call(LuaValue arg) {
 			LuaValue h = arg.metatag(TOSTRING);
-			if ( ! h.isnil() ) 
+			if ( ! h.isnil() )
 				return h.call(arg);
 			LuaValue v = arg.tostring();
-			if ( ! v.isnil() ) 
+			if ( ! v.isnil() )
 				return v;
 			return valueOf(arg.tojstring());
 		}
@@ -366,7 +366,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		}
 	}
 
-	// "xpcall", // (f, err) -> result1, ...				
+	// "xpcall", // (f, err) -> result1, ...
 	final class xpcall extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			final LuaThread t = globals.running;
@@ -426,10 +426,10 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 		}
 	}
 	
-	/** 
+	/**
 	 * Load from a named file, returning the chunk or nil,error of can't load
-	 * @param env 
-	 * @param mode 
+	 * @param env
+	 * @param mode
 	 * @return Varargs containing chunk, or NIL,error-text on error
 	 */
 	public Varargs loadFile(String filename, String mode, LuaValue env) {
@@ -460,7 +460,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	
 	private static class StringInputStream extends InputStream {
 		final LuaValue func;
-		byte[] bytes; 
+		byte[] bytes;
 		int offset, remaining = 0;
 		StringInputStream(LuaValue func) {
 			this.func = func;
