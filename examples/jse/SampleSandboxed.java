@@ -15,7 +15,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
-import org.luaj.vm2.lib.jse.JseStringLib;
+import org.luaj.vm2.lib.jse.StringLib;
 
 /** Simple program that illustrates basic sand-boxing of client scripts
  * in a server environment.
@@ -43,7 +43,7 @@ public class SampleSandboxed {
 		server_globals = new Globals();
 		server_globals.load(new JseBaseLib());
 		server_globals.load(new PackageLib());
-		server_globals.load(new JseStringLib());
+		server_globals.load(new StringLib());
 
 		// To load scripts, we occasionally need a math library in addition to compiler support.
 		// To limit scripts using the debug library, they must be closures, so we only install LuaC.
@@ -96,7 +96,7 @@ public class SampleSandboxed {
 		user_globals.load(new PackageLib());
 		user_globals.load(new Bit32Lib());
 		user_globals.load(new TableLib());
-		user_globals.load(new JseStringLib());
+		user_globals.load(new StringLib());
 		user_globals.load(new JseMathLib());
 
 		// This library is dangerous as it gives unfettered access to the

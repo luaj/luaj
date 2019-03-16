@@ -97,7 +97,7 @@ public class JsePlatform {
 		globals.load(new PackageLib());
 		globals.load(new Bit32Lib());
 		globals.load(new TableLib());
-		globals.load(new JseStringLib());
+		globals.load(new StringLib());
 		globals.load(new CoroutineLib());
 		globals.load(new JseMathLib());
 		globals.load(new JseIoLib());

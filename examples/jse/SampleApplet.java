@@ -17,7 +17,7 @@ import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseIoLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 import org.luaj.vm2.lib.jse.JseOsLib;
-import org.luaj.vm2.lib.jse.JseStringLib;
+import org.luaj.vm2.lib.jse.StringLib;
 import org.luaj.vm2.lib.jse.LuajavaLib;
 
 /**
@@ -76,7 +76,7 @@ public class SampleApplet extends Applet implements ResourceFinder {
 		globals.load(new PackageLib());
 		globals.load(new Bit32Lib());
 		globals.load(new TableLib());
-		globals.load(new JseStringLib());
+		globals.load(new StringLib());
 		globals.load(new CoroutineLib());
 		globals.load(new JseMathLib());
 		globals.load(new JseIoLib());
