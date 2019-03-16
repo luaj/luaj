@@ -186,7 +186,7 @@ It is also faster than Java-lua implementations Jill, Kahlua, and Mochalua for a
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-3.0.2.jar lua examples/lua/hello.lua
+	java -cp luaj-jse-3.0.2.jar lua examples/lua/hello.lua
 </pre>
 
 <p>
@@ -198,7 +198,7 @@ You should see the following output:
 To see how luaj can be used to acccess most Java API's including swing, try:
 
 <pre>
-	java -cp lib/luaj-jse-3.0.2.jar lua examples/lua/swingapp.lua
+	java -cp luaj-jse-3.0.2.jar lua examples/lua/swingapp.lua
 </pre>
 
 <p>
@@ -213,8 +213,8 @@ Links to sources:<pre>
 From the main distribution directory line type:
 
 <pre>
-	java -cp lib/luaj-jse-3.0.2.jar luac examples/lua/hello.lua
-	java -cp lib/luaj-jse-3.0.2.jar lua luac.out
+	java -cp luaj-jse-3.0.2.jar luac examples/lua/hello.lua
+	java -cp luaj-jse-3.0.2.jar lua luac.out
 </pre>
 
 <p>
@@ -228,8 +228,8 @@ Luaj can compile lua sources or binaries directly to java bytecode if the bcel l
 
 <pre>
 	ant bcel-lib
-	java -cp &quot;lib/luaj-jse-3.0.2.jar;lib/bcel-5.2.jar&quot; luajc -s examples/lua -d . hello.lua
-	java -cp &quot;lib/luaj-jse-3.0.2.jar;.&quot; lua -l hello
+	java -cp &quot;luaj-jse-3.0.2.jar;lib/bcel-5.2.jar&quot; luajc -s examples/lua -d . hello.lua
+	java -cp &quot;luaj-jse-3.0.2.jar;.&quot; lua -l hello
 </pre>
 
 <p>
@@ -240,7 +240,7 @@ but the compiled classes must be in the class path at runtime, unless runtime ji
 <p>
 Lua scripts can also be run directly in this mode without precompiling using the <em>lua</em> command with the <b><em>-b</em></b> option and providing the <em>bcel</em> library in the class path:
 <pre>
-	java -cp &quot;lib/luaj-jse-3.0.2.jar;lib/bcel-5.2.jar&quot; lua -b examples/lua/hello.lua
+	java -cp &quot;luaj-jse-3.0.2.jar;lib/bcel-5.2.jar&quot; lua -b examples/lua/hello.lua
 </pre>
 
 
@@ -284,7 +284,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jse-3.0.2.jar</b> in your class path.
+You must include the library <b>luaj-jse-3.0.2.jar</b> in your class path.
 
 <h2>Run a script in a MIDlet</h2>
 
@@ -311,7 +311,7 @@ A simple example may be found in
 </pre>
 
 <p>
-You must include the library <b>lib/luaj-jme-3.0.2.jar</b> in your midlet jar.
+You must include the library <b>luaj-jme-3.0.2.jar</b> in your midlet jar.
 
 <p>
 An ant script to build and run the midlet is in
@@ -341,7 +341,7 @@ You can also look up the engine by language "lua" or mimetypes "text/lua" or "ap
 All standard aspects of script engines including compiled statements are supported.
 
 <p>
-You must include the library <b>lib/luaj-jse-3.0.2.jar</b> in your class path.
+You must include the library <b>luaj-jse-3.0.2.jar</b> in your class path.
 
 <p>
 A working example may be found in
@@ -352,8 +352,8 @@ A working example may be found in
 To compile and run it using Java 1.6 or higher:
 
 <pre>
-	javac -cp lib/luaj-jse-3.0.2.jar examples/jse/ScriptEngineSample.java
-	java -cp &quot;lib/luaj-jse-3.0.2.jar;examples/jse&quot; ScriptEngineSample
+	javac -cp luaj-jse-3.0.2.jar examples/jse/ScriptEngineSample.java
+	java -cp &quot;luaj-jse-3.0.2.jar;examples/jse&quot; ScriptEngineSample
 </pre>
 
 <h2>Excluding the lua bytecode compiler</h2>
@@ -593,7 +593,7 @@ The following lua script will open a swing frame on Java SE:
 See a longer sample in <em>examples/lua/swingapp.lua</em> for details, including a simple animation loop, rendering graphics, mouse and key handling, and image loading. 
 Or try running it using: 
 <pre>
-	java -cp lib/luaj-jse-3.0.2.jar lua examples/lua/swingapp.lua
+	java -cp luaj-jse-3.0.2.jar lua examples/lua/swingapp.lua
 </pre>
 
 <p>
