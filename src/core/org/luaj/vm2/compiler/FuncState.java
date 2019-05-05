@@ -50,7 +50,6 @@ public class FuncState extends Constants {
 	Hashtable h;  /* table to find (and reuse) elements in `k' */
 	FuncState prev;  /* enclosing function */
 	LexState ls;  /* lexical state */
-	LuaC.CompileState L;  /* compiler being invoked */
 	BlockCnt bl;  /* chain of current blocks */
 	int pc;  /* next position to code (equivalent to `ncode') */
 	int lasttarget;   /* `pc' of last `jump target' */
@@ -113,8 +112,8 @@ public class FuncState extends Constants {
 	void errorlimit (int limit, String what) {
 		// TODO: report message logic.
 	  	String msg = (f.linedefined == 0) ?
-	  	    L.pushfstring("main function has more than "+limit+" "+what) :
-	  	    L.pushfstring("function at line "+f.linedefined+" has more than "+limit+" "+what);
+	  	    ls.L.pushfstring("main function has more than "+limit+" "+what) :
+	  	    ls.L.pushfstring("function at line "+f.linedefined+" has more than "+limit+" "+what);
 	  	  ls.lexerror(msg, 0);
 	}
 
@@ -296,7 +295,7 @@ public class FuncState extends Constants {
 				}
 			}  /* else go through */
 		}
-		this.codeABC(OP_LOADNIL, from, n - 1, 0); 
+		this.codeABC(OP_LOADNIL, from, n - 1, 0);
 	}
 
 
@@ -478,7 +477,7 @@ public class FuncState extends Constants {
 			this.h = new Hashtable();
 		} else if (this.h.containsKey(v)) {
 			return ((Integer) h.get(v)).intValue();
-		} 
+		}
 		final int idx = this.nk;
 		this.h.put(v, new Integer(idx));
 		final Prototype f = this.f;
@@ -496,7 +495,7 @@ public class FuncState extends Constants {
 		if ( r instanceof LuaDouble ) {
 			double d = r.todouble();
 			int i = (int) d;
-			if ( d == (double) i ) 
+			if ( d == (double) i )
 				r = LuaInteger.valueOf(i);
 		}
 		return this.addk(r);
@@ -688,7 +687,7 @@ public class FuncState extends Constants {
 		case LexState.VKNUM: {
 		      e.u.info = this.numberK(e.u.nval());
 		      e.k = LexState.VK;
-		      /* go through */			
+		      /* go through */
 		}
 		case LexState.VK: {
 			if (e.u.info <= MAXINDEXRK) /* constant fit in argC? */
