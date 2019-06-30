@@ -23,10 +23,10 @@ package org.luaj.vm2;
 
 
 /**
- * Constants for lua limits and opcodes. 
+ * Constants for lua limits and opcodes.
  * <p>
  * This is a direct translation of C lua distribution header file constants
- * for bytecode creation and processing.  
+ * for bytecode creation and processing.
  */
 public class Lua {
 	/** version is supplied by ant build task */
@@ -80,7 +80,6 @@ public class Lua {
 	public static final int POS_Bx		= POS_C;
 	public static final int POS_Ax		= POS_A;
 
-
 	public static final int MAX_OP          = ((1<<SIZE_OP)-1);
 	public static final int MAXARG_A        = ((1<<SIZE_A)-1);
 	public static final int MAXARG_B        = ((1<<SIZE_B)-1);
@@ -89,17 +88,18 @@ public class Lua {
 	public static final int MAXARG_sBx      = (MAXARG_Bx>>1);     	/* `sBx' is signed */
 	public static final int MAXARG_Ax       = ((1<<SIZE_Ax)-1);
 
-	public static final int MASK_OP = ((1<<SIZE_OP)-1)<<POS_OP; 
-	public static final int MASK_A  = ((1<<SIZE_A)-1)<<POS_A; 
-	public static final int MASK_B  = ((1<<SIZE_B)-1)<<POS_B; 
-	public static final int MASK_C  = ((1<<SIZE_C)-1)<<POS_C; 
-	public static final int MASK_Bx = ((1<<SIZE_Bx)-1)<<POS_Bx; 
+	public static final int MASK_OP = ((1<<SIZE_OP)-1)<<POS_OP;
+	public static final int MASK_A  = ((1<<SIZE_A)-1)<<POS_A;
+	public static final int MASK_B  = ((1<<SIZE_B)-1)<<POS_B;
+	public static final int MASK_C  = ((1<<SIZE_C)-1)<<POS_C;
+	public static final int MASK_Bx = ((1<<SIZE_Bx)-1)<<POS_Bx;
+	public static final int MASK_Ax = ((1<<SIZE_Ax)-1)<<POS_Ax;
 
-	public static final int MASK_NOT_OP = ~MASK_OP; 
-	public static final int MASK_NOT_A  = ~MASK_A; 
-	public static final int MASK_NOT_B  = ~MASK_B; 
-	public static final int MASK_NOT_C  = ~MASK_C; 
-	public static final int MASK_NOT_Bx = ~MASK_Bx; 
+	public static final int MASK_NOT_OP = ~MASK_OP;
+	public static final int MASK_NOT_A  = ~MASK_A;
+	public static final int MASK_NOT_B  = ~MASK_B;
+	public static final int MASK_NOT_C  = ~MASK_C;
+	public static final int MASK_NOT_Bx = ~MASK_Bx;
 
 	/*
 	** the following macros help to manipulate instructions
@@ -213,8 +213,8 @@ public class Lua {
 	public static final int OP_LT = 25; /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
 	public static final int OP_LE = 26; /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
 
-	public static final int OP_TEST = 27; /*	A C	if not (R(A) <=> C) then pc++			*/ 
-	public static final int OP_TESTSET = 28; /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/ 
+	public static final int OP_TEST = 27; /*	A C	if not (R(A) <=> C) then pc++			*/
+	public static final int OP_TESTSET = 28; /*	A B C	if (R(B) <=> C) then R(A) := R(B) else pc++	*/
 
 	public static final int OP_CALL = 29; /*	A B C	R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1)) */
 	public static final int OP_TAILCALL = 30; /*	A B C	return R(A)(R(A+1), ... ,R(A+B-1))		*/
@@ -225,7 +225,7 @@ public class Lua {
 	public static final int OP_FORPREP = 33; /*	A sBx	R(A)-=R(A+2); pc+=sBx				*/
 
 	public static final int OP_TFORCALL = 34; /* A C	R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));	*/
-	public static final int OP_TFORLOOP = 35; /* A sBx   if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx } */ 
+	public static final int OP_TFORLOOP = 35; /* A sBx   if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx } */
 	public static final int OP_SETLIST = 36; /*	A B C	R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B	*/
 
 	public static final int OP_CLOSURE = 37; /*	A Bx	R(A) := closure(KPROTO[Bx], R(A), ... ,R(A+n))	*/
@@ -237,11 +237,11 @@ public class Lua {
 	public static final int NUM_OPCODES	= OP_EXTRAARG + 1;
 
 	/* pseudo-opcodes used in parsing only.  */
-	public static final int OP_GT  = 63; // > 
+	public static final int OP_GT  = 63; // >
 	public static final int OP_GE  = 62; // >=
-	public static final int OP_NEQ = 61; // ~= 
-	public static final int OP_AND = 60; // and 
-	public static final int OP_OR  = 59; // or 
+	public static final int OP_NEQ = 61; // ~=
+	public static final int OP_AND = 60; // and
+	public static final int OP_OR  = 59; // or
 	
 	/*===========================================================================
 	  Notes:
@@ -271,7 +271,7 @@ public class Lua {
 	** bits 4-5: B arg mode
 	** bit 6: instruction set register A
 	** bit 7: operator is a test
-	*/  
+	*/
 
 	  public static final int OpArgN = 0;  /* argument is not used */
 	  public static final int OpArgU = 1;  /* argument is used */
@@ -353,7 +353,7 @@ public class Lua {
 			 source = "[string \""+source;
 			 end = "\"]";
 		 }
-		 int n = source.length() + end.length(); 
+		 int n = source.length() + end.length();
 		 if ( n > MAXSRC )
 			 source = source.substring(0,MAXSRC-end.length()-3) + "...";
 		 return source + end;

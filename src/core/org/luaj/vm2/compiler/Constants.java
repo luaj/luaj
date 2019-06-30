@@ -46,20 +46,20 @@ public class Constants extends Lua {
 	
 
 	/* OpMode - basic instruction format */
-	static final int 
+	static final int
 		iABC = 0,
 		iABx = 1,
 		iAsBx = 2;
 
 	/* OpArgMask */
-	static final int 
+	static final int
 	  OpArgN = 0,  /* argument is not used */
 	  OpArgU = 1,  /* argument is used */
 	  OpArgR = 2,  /* argument is a register or a jump offset */
 	  OpArgK = 3;   /* argument is a constant or register/constant */
 
 
-	protected static void _assert(boolean b) {		
+	protected static void _assert(boolean b) {
 		if (!b)
 			throw new LuaError("compiler assert failed");
 	}
@@ -103,6 +103,11 @@ public class Constants extends Lua {
 		return ((o << POS_OP) & MASK_OP) |
 				((a << POS_A) & MASK_A) |
 				((bc << POS_Bx) & MASK_Bx) ;
+ 	}
+	
+	static int CREATE_Ax(int o, int a) {
+		return ((o << POS_OP) & MASK_OP) |
+				((a << POS_Ax) & MASK_Ax) ;
  	}
 
 	// vector reallocation
@@ -150,7 +155,7 @@ public class Constants extends Lua {
 	}
 
 	static LexState.Labeldesc[] grow(LexState.Labeldesc[] v, int min_n) {
-		return v == null ? new LexState.Labeldesc[2] : v.length < min_n ? realloc(v, v.length*2) : v; 
+		return v == null ? new LexState.Labeldesc[2] : v.length < min_n ? realloc(v, v.length*2) : v;
 	}
 	
 	static LexState.Labeldesc[] realloc(LexState.Labeldesc[] v, int n) {

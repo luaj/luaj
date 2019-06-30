@@ -62,14 +62,14 @@ public class LexState extends Constants {
                                
     private static final int EOZ    = (-1);
 	private static final int MAX_INT = Integer.MAX_VALUE-2;
-	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX? 
+	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX?
 	private static final int LUAI_MAXCCALLS = 200;
 	
 	private static final String LUA_QS(String s) { return "'"+s+"'"; }
 	private static final String LUA_QL(Object o) { return LUA_QS(String.valueOf(o)); }
 	
 	private static final int     LUA_COMPAT_LSTR   =    1; // 1 for compatibility, 2 for old behavior
-	private static final boolean LUA_COMPAT_VARARG = true;	
+	private static final boolean LUA_COMPAT_VARARG = true;
     
     public static boolean isReservedKeyword(String varName) {
     	return RESERVED_LOCAL_VAR_KEYWORDS_TABLE.containsKey(varName);
@@ -84,7 +84,7 @@ public class LexState extends Constants {
 	/*
 	** grep "ORDER OPR" if you change these enums
 	*/
-	static final int 
+	static final int
 	  OPR_ADD=0, OPR_SUB=1, OPR_MUL=2, OPR_DIV=3, OPR_MOD=4, OPR_POW=5,
 	  OPR_CONCAT=6,
 	  OPR_NE=7, OPR_EQ=8,
@@ -92,11 +92,11 @@ public class LexState extends Constants {
 	  OPR_AND=13, OPR_OR=14,
 	  OPR_NOBINOPR=15;
 
-	static final int 
+	static final int
 		OPR_MINUS=0, OPR_NOT=1, OPR_LEN=2, OPR_NOUNOPR=3;
 
 	/* exp kind */
-	static final int 	  
+	static final int
 	  VVOID = 0,	/* no value */
 	  VNIL = 1,
 	  VTRUE = 2,
@@ -153,14 +153,14 @@ public class LexState extends Constants {
 	    "::", "<eos>", "<number>", "<name>", "<string>", "<eof>",
 	};
 
-	final static int 
+	final static int
 		/* terminal symbols denoted by reserved words */
-		TK_AND=257,  TK_BREAK=258, TK_DO=259, TK_ELSE=260, TK_ELSEIF=261, 
-		TK_END=262, TK_FALSE=263, TK_FOR=264, TK_FUNCTION=265, TK_GOTO=266, TK_IF=267, 
+		TK_AND=257,  TK_BREAK=258, TK_DO=259, TK_ELSE=260, TK_ELSEIF=261,
+		TK_END=262, TK_FALSE=263, TK_FOR=264, TK_FUNCTION=265, TK_GOTO=266, TK_IF=267,
 		TK_IN=268, TK_LOCAL=269, TK_NIL=270, TK_NOT=271, TK_OR=272, TK_REPEAT=273,
 		TK_RETURN=274, TK_THEN=275, TK_TRUE=276, TK_UNTIL=277, TK_WHILE=278,
 		/* other terminal symbols */
-		TK_CONCAT=279, TK_DOTS=280, TK_EQ=281, TK_GE=282, TK_LE=283, TK_NE=284, 
+		TK_CONCAT=279, TK_DOTS=280, TK_EQ=281, TK_GE=282, TK_LE=283, TK_NE=284,
 		TK_DBCOLON=285, TK_EOS=286, TK_NUMBER=287, TK_NAME=288, TK_STRING=289;
 	  
 	final static int FIRST_RESERVED = TK_AND;
@@ -175,7 +175,7 @@ public class LexState extends Constants {
 	}
 
 	private boolean isalnum(int c) {
-		return (c >= '0' && c <= '9') 
+		return (c >= '0' && c <= '9')
 			|| (c >= 'a' && c <= 'z')
 			|| (c >= 'A' && c <= 'Z')
 			|| (c == '_');
@@ -188,13 +188,13 @@ public class LexState extends Constants {
 	}
 	
 	private boolean isdigit(int c) {
-		return (c >= '0' && c <= '9'); 
+		return (c >= '0' && c <= '9');
 	}
 	
 	private boolean isxdigit(int c) {
 		return (c >= '0' && c <= '9')
 				|| (c >= 'a' && c <= 'f')
-				|| (c >= 'A' && c <= 'F'); 
+				|| (c >= 'A' && c <= 'F');
 	}
 	
 	private boolean isspace(int c) {
@@ -235,7 +235,7 @@ public class LexState extends Constants {
 
 	String token2str( int token ) {
 		if ( token < FIRST_RESERVED ) {
-			return iscntrl(token)? 
+			return iscntrl(token)?
 					L.pushfstring( "char("+((int)token)+")" ):
 					L.pushfstring( String.valueOf( (char) token ) );
 		} else {
@@ -821,7 +821,7 @@ public class LexState extends Constants {
 
 	/* dynamic structures used by the parser */
 	static class Dyndata {
-		Vardesc[] actvar;  /* list of active local variables */ 
+		Vardesc[] actvar;  /* list of active local variables */
 		int n_actvar = 0;
 		Labeldesc[] gt;  /* list of pending gotos */
 		int n_gt = 0;
@@ -1610,7 +1610,7 @@ public class LexState extends Constants {
 		switch (t.token) {
 		    case TK_ELSE: case TK_ELSEIF: case TK_END: case TK_EOS:
 		    	return true;
-			case TK_UNTIL: 
+			case TK_UNTIL:
 		    	return withuntil;
 		    default: return false;
 		}
@@ -1634,7 +1634,7 @@ public class LexState extends Constants {
 	static class LHS_assign {
 		LHS_assign prev;
 		/* variable (global, local, upvalue, or indexed) */
-		expdesc v = new expdesc(); 
+		expdesc v = new expdesc();
 	};
 
 
@@ -1845,7 +1845,7 @@ public class LexState extends Constants {
 		if (this.testnext(','))
 			this.exp1(); /* optional step */
 		else { /* default step = 1 */
-			fs.codeABx(Lua.OP_LOADK, fs.freereg, fs.numberK(LuaInteger.valueOf(1)));
+			fs.codeK(fs.freereg, fs.numberK(LuaInteger.valueOf(1)));
 			fs.reserveregs(1);
 		}
 		this.forbody(base, line, 1, true);

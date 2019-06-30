@@ -580,11 +580,11 @@ public class FuncState extends Constants {
 			break;
 		}
 		case LexState.VK: {
-			this.codeABx(OP_LOADK, reg, e.u.info);
+			this.codeK(reg, e.u.info);
 			break;
 		}
 		case LexState.VKNUM: {
-			this.codeABx(OP_LOADK, reg, this.numberK(e.u.nval()));
+			this.codeK(reg, this.numberK(e.u.nval()));
 			break;
 		}
 		case LexState.VRELOCABLE: {
@@ -1116,6 +1116,20 @@ public class FuncState extends Constants {
 		return this.code(CREATE_ABx(o, a, bc), this.ls.lastline);
 	}
 
+	int codeextraarg(int a) {
+		_assert(a <= MAXARG_Ax);
+		return this.code(CREATE_Ax(OP_EXTRAARG, a), this.ls.lastline);
+	}
+
+	int codeK(int reg, int k) {
+		if (k <= MAXARG_Bx)
+			return codeABx(OP_LOADK, reg, k);
+		else {
+			int p = codeABx(OP_LOADKX, reg, 0);
+			codeextraarg(k);
+			return p;
+		}
+	}
 
 	void setlist(int base, int nelems, int tostore) {
 		int c = (nelems - 1) / LFIELDS_PER_FLUSH + 1;
