@@ -320,7 +320,7 @@ public class LuaClosure extends LuaFunction {
 					}
 					continue;
 					
-				case Lua.OP_JMP: /*	sBx	pc+=sBx					*/
+				case Lua.OP_JMP: /*	A sBx	pc+=sBx; if (A) close all upvalues >= R(A - 1)	*/
 					pc  += (i>>>14)-0x1ffff;
 					if (a > 0) {
 						for (--a, b = openups.length; --b>=0; )

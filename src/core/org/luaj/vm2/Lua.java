@@ -208,7 +208,7 @@ public class Lua {
 
 	public static final int OP_CONCAT = 22; /*	A B C	R(A) := R(B).. ... ..R(C)			*/
 
-	public static final int OP_JMP = 23; /*	sBx	pc+=sBx					*/
+	public static final int OP_JMP = 23; /*	A sBx	pc+=sBx; if (A) close all upvalues >= R(A - 1)	*/
 	public static final int OP_EQ = 24; /*	A B C	if ((RK(B) == RK(C)) ~= A) then pc++		*/
 	public static final int OP_LT = 25; /*	A B C	if ((RK(B) <  RK(C)) ~= A) then pc++  		*/
 	public static final int OP_LE = 26; /*	A B C	if ((RK(B) <= RK(C)) ~= A) then pc++  		*/
