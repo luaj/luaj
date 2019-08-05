@@ -478,7 +478,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 					return -1;
 			}
 			--remaining;
-			return bytes[offset++];
+			return 0xFF&bytes[offset++];
 		}
 	}
 }
