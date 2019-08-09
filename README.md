@@ -13,9 +13,6 @@ on.<br>
 </div>
 
 <h1>Getting Started with LuaJ</h1>
-
-
-<h1>Getting Started with LuaJ</h1>
 James Roseborough, Ian Farmer, Version 3.0.2
 <p>
 <small>
