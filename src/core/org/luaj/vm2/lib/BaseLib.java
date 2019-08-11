@@ -350,8 +350,11 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	static final class tostring extends LibFunction {
 		public LuaValue call(LuaValue arg) {
 			LuaValue h = arg.metatag(TOSTRING);
-			if ( ! h.isnil() )
-				return h.call(arg);
+			if ( ! h.isnil() ) {
+				LuaValue v = h.call(arg);
+				LuaValue vs = v.tostring();
+				return !vs.isnil() ? vs : v;
+			}
 			LuaValue v = arg.tostring();
 			if ( ! v.isnil() )
 				return v;
