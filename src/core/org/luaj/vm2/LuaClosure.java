@@ -122,11 +122,11 @@ public class LuaClosure extends LuaFunction {
 	public LuaClosure checkclosure() {
 		return this;
 	}
-	
+
 	public String tojstring() {
 		return "function: " + p.toString();
 	}
-	
+
 	private LuaValue[] getNewStack() {
 		int max = p.maxstacksize;
 		LuaValue[] stack = new LuaValue[max];

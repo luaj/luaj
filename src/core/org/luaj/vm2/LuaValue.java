@@ -529,7 +529,7 @@ public class LuaValue extends Varargs {
 	 * @see #isstring()
 	 * @see #TSTRING
 	 */
-	public String  tojstring()           { return typename() + ": " + Integer.toHexString(hashCode()); }
+	public String  tojstring()           { return typename() + ": 0x" + Integer.toHexString(hashCode()); }
 	
 	/** Convert to userdata instance, or null.
 	 * @return userdata instance if userdata, or null if not {@link LuaUserdata}
