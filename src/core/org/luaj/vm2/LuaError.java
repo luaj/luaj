@@ -61,7 +61,7 @@ public class LuaError extends RuntimeException {
 		if (m == null)
 			return null;
 		if (fileline != null)
-			return fileline + " " + m;
+			return fileline + m;
 		return m;
 	}
 
