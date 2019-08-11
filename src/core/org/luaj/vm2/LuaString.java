@@ -639,9 +639,15 @@ public class LuaString extends LuaValue {
 	public static String decodeAsUtf8(byte[] bytes, int offset, int length) {
 		int i,j,n,b;
 		for ( i=offset,j=offset+length,n=0; i<j; ++n ) {
-			switch ( 0xE0 & bytes[i++] ) {
-			case 0xE0: ++i;
-			case 0xC0: ++i;
+			byte v = bytes[i++];
+			if ((v & 0xC0) == 0xC0) {
+				++i;
+				if ((v & 0xE0) == 0xE0) {
+					++i;
+					if ((v & 0xF0) == 0xF0) {
+						++i;
+					}
+				}
 			}
 		}
 		char[] chars=new char[n];
@@ -662,12 +668,25 @@ public class LuaString extends LuaValue {
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 * @see #isValidUtf8()
 	 */
-	public static int lengthAsUtf8(char[] chars) {		
-		int i,b;
+	public static int lengthAsUtf8(char[] chars) {
+		int i, b;
 		char c;
-		for ( i=b=chars.length; --i>=0; )
-			if ( (c=chars[i]) >=0x80 )
-				b += (c>=0x800)? 2: 1;
+		for (i = 0, b = 0; i < chars.length; i++) {
+			if ((c = chars[i]) < 0x80 || (c >= 0xdc00 && c < 0xe000)) {
+				b += 1;
+			} else if (c < 0x800) {
+				b += 2;
+			} else if (c >= 0xd800 && c < 0xdc00) {
+				if (i + 1 < chars.length && chars[i+1] >= 0xdc00 && chars[i+1] < 0xe000) {
+					b += 4;
+					i++;
+				} else {
+					b += 1;
+				}
+			} else {
+				b += 3;
+			}
+		}
 		return b;
 	}
 	
@@ -689,16 +708,28 @@ public class LuaString extends LuaValue {
 	public static int encodeToUtf8(char[] chars, int nchars, byte[] bytes, int off) {
 		char c;
 		int j = off;
-		for ( int i=0; i<nchars; i++ ) {
-			if ( (c = chars[i]) < 0x80 ) {
+		for (int i = 0; i < nchars; i++) {
+			if ((c = chars[i]) < 0x80) {
 				bytes[j++] = (byte) c;
-			} else if ( c < 0x800 ) {
-				bytes[j++] = (byte) (0xC0 | ((c>>6)  & 0x1f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+			} else if (c < 0x800) {
+				bytes[j++] = (byte) (0xC0 | ((c >> 6)));
+				bytes[j++] = (byte) (0x80 | (c & 0x3f));
+			} else if (c >= 0xd800 && c < 0xdc00) {
+				if (i + 1 < nchars && chars[i+1] >= 0xdc00 && chars[i+1] < 0xe000) {
+					int uc = 0x10000 + (((c & 0x3ff) << 10) | (chars[++i] & 0x3ff));
+					bytes[j++] = (byte) (0xF0 | ((uc >> 18)));
+					bytes[j++] = (byte) (0x80 | ((uc >> 12) & 0x3f));
+					bytes[j++] = (byte) (0x80 | ((uc >> 6) & 0x3f));
+					bytes[j++] = (byte) (0x80 | (uc & 0x3f));
+				} else {
+					bytes[j++] = (byte) '?';
+				}
+			} else if (c >= 0xdc00 && c < 0xe000) {
+				bytes[j++] = (byte) '?';
 			} else {
-				bytes[j++] = (byte) (0xE0 | ((c>>12) & 0x0f));
-				bytes[j++] = (byte) (0x80 | ((c>>6)  & 0x3f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+				bytes[j++] = (byte) (0xE0 | ((c >> 12)));
+				bytes[j++] = (byte) (0x80 | ((c >> 6) & 0x3f));
+				bytes[j++] = (byte) (0x80 | (c & 0x3f));
 			}
 		}
 		return j - off;
@@ -711,16 +742,16 @@ public class LuaString extends LuaValue {
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 */
 	public boolean isValidUtf8() {
-		for (int i=m_offset,j=m_offset+m_length; i<j;) {
+		for (int i = m_offset, j = m_offset + m_length; i < j;) {
 			int c = m_bytes[i++];
-			if ( c >= 0 ) continue;
-			if ( ((c & 0xE0) == 0xC0) 
-					&& i<j 
-					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
-			if ( ((c & 0xF0) == 0xE0) 
-					&& i+1<j 
-					&& (m_bytes[i++] & 0xC0) == 0x80 
-					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
+			if (c >= 0)
+				continue;
+			if (((c & 0xE0) == 0xC0) && i < j && (m_bytes[i++] & 0xC0) == 0x80)
+				continue;
+			if (((c & 0xF0) == 0xE0) && i + 1 < j && (m_bytes[i++] & 0xC0) == 0x80 && (m_bytes[i++] & 0xC0) == 0x80)
+				continue;
+			if (((c & 0xF8) == 0xF0) && i + 2 < j && (m_bytes[i++] & 0xC0) == 0x80 && (m_bytes[i++] & 0xC0) == 0x80 && (m_bytes[i++] & 0xC0) == 0x80)
+				continue;
 			return false;
 		}
 		return true;
