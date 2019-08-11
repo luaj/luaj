@@ -99,7 +99,7 @@ package org.luaj.vm2;
  * {@link #INDEX}, {@link #NEWINDEX}, {@link #CALL}, {@link #MODE}, {@link #METATABLE},
  * {@link #ADD}, {@link #SUB}, {@link #DIV}, {@link #MUL}, {@link #POW},
  * {@link #MOD}, {@link #UNM}, {@link #LEN}, {@link #EQ}, {@link #LT},
- * {@link #LE}, {@link #TOSTRING}, and {@link #CONCAT}.
+ * {@link #LE}, {@link #TOSTRING}, {@link #CONCAT}, {@link PAIRS} and {@link IPAIRS}.
  * 
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -242,7 +242,13 @@ public class LuaValue extends Varargs {
 
 	/** LuaString constant with value "__concat" for use as metatag */
 	public static final LuaString CONCAT      = valueOf("__concat");
-	
+
+	/** LuaString constant with value "__pairs" for use as metatag */
+	public static final LuaString PAIRS = valueOf("__pairs");
+
+	/** LuaString constant with value "__ipairs" for use as metatag */
+	public static final LuaString IPAIRS = valueOf("__ipairs");
+
 	/** LuaString constant with value "" */
 	public static final LuaString EMPTYSTRING = valueOf("");
 

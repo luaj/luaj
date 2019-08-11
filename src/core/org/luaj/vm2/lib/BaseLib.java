@@ -113,8 +113,8 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 
 		next next;
 		env.set("next", next = new next());
-		env.set("pairs", new pairs(next));
-		env.set("ipairs", new ipairs());
+		env.set("pairs", new pairsbase(PAIRS, NIL, next));
+		env.set("ipairs", new pairsbase(IPAIRS, ZERO, new inext()));
 		
 		return env;
 	}
@@ -395,23 +395,26 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			}
 		}
 	}
-	
-	// "pairs" (t) -> iter-func, t, nil
-	static final class pairs extends VarArgFunction {
-		final next next;
-		pairs(next next) {
-			this.next = next;
+
+	// pairsbase, // (t) -> iter-func, t, initial
+	static final class pairsbase extends VarArgFunction {
+		final LuaString method;
+		final LuaValue initial;
+		final VarArgFunction iter;
+
+		pairsbase(LuaString method, LuaValue initial, VarArgFunction iter) {
+			this.method = method;
+			this.initial = initial;
+			this.iter = iter;
 		}
+
 		public Varargs invoke(Varargs args) {
-				return varargsOf( next, args.checktable(1), NIL );
-		}
-	}
-	
-	// // "ipairs", // (t) -> iter-func, t, 0
-	static final class ipairs extends VarArgFunction {
-		inext inext = new inext();
-		public Varargs invoke(Varargs args) {
-			return varargsOf( inext, args.checktable(1), ZERO );
+			LuaValue arg = args.arg1();
+			LuaValue t = arg.metatag(method);
+			if (!t.isnil())
+				// TODO: This can return more than 3 results.
+				return t.invoke(args.isvalue(1) ? arg : t);
+			return varargsOf(iter, args.checktable(1), initial);
 		}
 	}
 	
