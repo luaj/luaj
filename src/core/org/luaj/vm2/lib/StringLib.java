@@ -309,10 +309,24 @@ public class StringLib extends TwoArgFunction {
 								addquoted( result, args.checkstring( arg ) );
 								break;
 							case 's': {
-								LuaString s = args.checkstring( arg );
+								LuaValue argv = args.checkvalue( arg );
+								LuaString s;
+								LuaValue h = argv.metatag(TOSTRING);
+								if ( ! h.isnil() ) {
+									LuaValue v = h.call(argv).tostring();
+									return !v.isnil() ? v : StringLib.valueOf("(null)");
+								} else {
+									LuaValue v = argv.tostring();
+									if ( ! v.isnil() ) {
+										s = v.checkstring();
+									} else {
+										s = StringLib.valueOf(argv.tojstring());
+									}
+								}
 								if ( fdsc.precision == -1 && s.length() >= 100 ) {
 									result.append( s );
 								} else {
+									fdsc.zeroPad = false;
 									fdsc.format( result, s );
 								}
 							}	break;
