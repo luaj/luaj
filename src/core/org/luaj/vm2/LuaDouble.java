@@ -33,8 +33,8 @@ import org.luaj.vm2.lib.MathLib;
  * <p>
  * Almost all API's implemented in LuaDouble are defined and documented in {@link LuaValue}.
  * <p>
- * However the constants {@link #NAN}, {@link #POSINF}, {@link #NEGINF},
- * {@link #JSTR_NAN}, {@link #JSTR_POSINF}, and {@link #JSTR_NEGINF} may be useful 
+ * However the constants {@link #NAN}, {@link #NEGNAN}, {@link #POSINF}, {@link #NEGINF},
+ * {@link #JSTR_NAN}, {@link #JSTR_NEGNAN}, {@link #JSTR_POSINF}, and {@link #JSTR_NEGINF} may be useful
  * when dealing with Nan or Infinite values. 
  * <p>
  * LuaDouble also defines functions for handling the unique math rules of lua devision and modulo in
@@ -55,7 +55,10 @@ public class LuaDouble extends LuaNumber {
 
 	/** Constant LuaDouble representing NaN (not a number) */
 	public static final LuaDouble NAN    = new LuaDouble( Double.NaN );
-	
+
+	/** Constant LuaDouble representing negative NaN (not a number) */
+	public static final LuaDouble NEGNAN    = new LuaDouble( -Double.NaN );
+
 	/** Constant LuaDouble representing positive infinity */
 	public static final LuaDouble POSINF = new LuaDouble( Double.POSITIVE_INFINITY );
 	
@@ -64,7 +67,10 @@ public class LuaDouble extends LuaNumber {
 	
 	/** Constant String representation for NaN (not a number), "nan" */
 	public static final String JSTR_NAN    = "nan";
-	
+
+	/** Constant String representation for negative NaN (not a number), "-nan" */
+	public static final String JSTR_NEGNAN    = "-nan";
+
 	/** Constant String representation for positive infinity, "inf" */
 	public static final String JSTR_POSINF = "inf";
 
@@ -235,17 +241,13 @@ public class LuaDouble extends LuaNumber {
 	public int strcmp( LuaString rhs )      { typerror("attempt to compare number with string"); return 0; }
 			
 	public String tojstring() {
-		/*
-		if ( v == 0.0 ) { // never occurs in J2me 
-			long bits = Double.doubleToLongBits( v );
-			return ( bits >> 63 == 0 ) ? "0" : "-0";
-		}
-		*/
+		if ( v == 0.0 ) // never occurs on J2ME
+			return (Double.doubleToRawLongBits(v)<0? "-0": "0");
 		long l = (long) v;
 		if ( l == v ) 
 			return Long.toString(l);
 		if ( Double.isNaN(v) )
-			return JSTR_NAN;
+			return (Double.doubleToRawLongBits(v)<0? JSTR_NEGNAN: JSTR_NAN);
 		if ( Double.isInfinite(v) ) 
 			return (v<0? JSTR_NEGINF: JSTR_POSINF);
 		return Float.toString((float)v);
