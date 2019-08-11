@@ -150,7 +150,7 @@ public class LexState extends Constants {
 	    "in", "local", "nil", "not", "or", "repeat",
 	    "return", "then", "true", "until", "while",
 	    "..", "...", "==", ">=", "<=", "~=",
-	    "::", "<eos>", "<number>", "<name>", "<string>", "<eof>",
+	    "::", "<eof>", "<number>", "<name>", "<string>"
 	};
 
 	final static int
@@ -161,7 +161,7 @@ public class LexState extends Constants {
 		TK_RETURN=274, TK_THEN=275, TK_TRUE=276, TK_UNTIL=277, TK_WHILE=278,
 		/* other terminal symbols */
 		TK_CONCAT=279, TK_DOTS=280, TK_EQ=281, TK_GE=282, TK_LE=283, TK_NE=284,
-		TK_DBCOLON=285, TK_EOS=286, TK_NUMBER=287, TK_NAME=288, TK_STRING=289;
+		TK_DBCOLON=285, TK_EOF=286, TK_NUMBER=287, TK_NAME=288, TK_STRING=289;
 	  
 	final static int FIRST_RESERVED = TK_AND;
 	final static int NUM_RESERVED = TK_WHILE+1-FIRST_RESERVED;
@@ -292,7 +292,7 @@ public class LexState extends Constants {
 	void setinput(LuaC.CompileState L, int firstByte, InputStream z, LuaString source) {
 		this.decpoint = '.';
 		this.L = L;
-		this.lookahead.token = TK_EOS; /* no look-ahead token */
+		this.lookahead.token = TK_EOF; /* no look-ahead token */
 		this.z = z;
 		this.fs = null;
 		this.linenumber = 1;
@@ -434,7 +434,7 @@ public class LexState extends Constants {
 			switch (current) {
 			case EOZ:
 				lexerror((seminfo != null) ? "unfinished long string"
-						: "unfinished long comment", TK_EOS);
+						: "unfinished long comment", TK_EOF);
 				break; /* to avoid warnings */
 			case '[': {
 				if (skip_sep() == sep) {
@@ -498,7 +498,7 @@ public class LexState extends Constants {
 		while (current != del) {
 			switch (current) {
 			case EOZ:
-				lexerror("unfinished string", TK_EOS);
+				lexerror("unfinished string", TK_EOF);
 				continue; /* to avoid warnings */
 			case '\n':
 			case '\r':
@@ -685,7 +685,7 @@ public class LexState extends Constants {
 		        return TK_NUMBER;
 		    }
 		 	case EOZ: {
-				return TK_EOS;
+				return TK_EOF;
 			}
 			default: {
 				if (isspace(current)) {
@@ -720,15 +720,15 @@ public class LexState extends Constants {
 
 	void next() {
 		lastline = linenumber;
-		if (lookahead.token != TK_EOS) { /* is there a look-ahead token? */
+		if (lookahead.token != TK_EOF) { /* is there a look-ahead token? */
 			t.set( lookahead ); /* use this one */
-			lookahead.token = TK_EOS; /* and discharge it */
+			lookahead.token = TK_EOF; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
 	}
 
 	void lookahead() {
-		_assert (lookahead.token == TK_EOS);
+		_assert (lookahead.token == TK_EOF);
 		lookahead.token = llex(lookahead.seminfo);
 	}
 
@@ -839,8 +839,8 @@ public class LexState extends Constants {
 	------------------------------------------------------------------------*/
 	
 	void anchor_token () {
-		/* last token from outer function must be EOS */
-		_assert(fs != null || t.token == TK_EOS);
+		/* last token from outer function must be EOF */
+		_assert(fs != null || t.token == TK_EOF);
 		if (t.token == TK_NAME || t.token == TK_STRING) {
 			LuaString ts = t.seminfo.ts;
 			// TODO: is this necessary?
@@ -1608,7 +1608,7 @@ public class LexState extends Constants {
 
 	boolean block_follow (boolean withuntil) {
 		switch (t.token) {
-		    case TK_ELSE: case TK_ELSEIF: case TK_END: case TK_EOS:
+		    case TK_ELSE: case TK_ELSEIF: case TK_END: case TK_EOF:
 		    	return true;
 			case TK_UNTIL:
 		    	return withuntil;
@@ -2140,7 +2140,7 @@ public class LexState extends Constants {
 		  fs.newupvalue(envn, v);  /* ...set environment upvalue */
 		  next();  /* read first token */
 		  statlist();  /* parse main body */
-		  check(TK_EOS);
+		  check(TK_EOF);
 		  close_func();
 	}
 	
