@@ -78,7 +78,6 @@ import org.luaj.vm2.Varargs;
 public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	
 	Globals globals;
-	
 
 	/** Perform one-time initialization on the library by adding base functions
 	 * to the supplied environment, and returning it as the return value.

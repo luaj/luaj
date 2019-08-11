@@ -73,7 +73,6 @@ import org.luaj.vm2.lib.ResourceFinder;
 
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
-
 	/** Perform one-time initialization on the library by creating a table
 	 * containing the library functions, adding that table to the supplied environment,
 	 * adding the table to package.loaded, and returning table as the return value.
