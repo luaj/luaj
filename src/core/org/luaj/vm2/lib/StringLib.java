@@ -667,22 +667,35 @@ public class StringLib extends TwoArgFunction {
 			return str_find_aux( args, false );
 		}
 	}
-	
+
 	/**
-	 * string.rep (s, n)
-	 * 
-	 * Returns a string that is the concatenation of n copies of the string s.
+	 * string.rep (s, n [, sep])
+	 *
+	 * Returns a string that is the concatenation of n copies of the string s
+	 * separated by the string sep. The default value for sep is the empty
+	 * string (that is, no separator).
 	 */
 	static final class rep extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			LuaString s = args.checkstring( 1 );
-			int n = args.checkint( 2 );
-			final byte[] bytes = new byte[ s.length() * n ];
+			LuaString s = args.checkstring(1);
+			int n = args.checkint(2);
+			LuaString sep = args.optstring(3, EMPTYSTRING);
+			if (n <= 0)
+				return EMPTYSTRING;
 			int len = s.length();
-			for ( int offset = 0; offset < bytes.length; offset += len ) {
-				s.copyInto( 0, bytes, offset, len );
+			int lsep = sep.length();
+			final byte[] bytes = new byte[len * n + lsep * (n - 1)];
+			int offset = 0;
+			while (n-- > 1) {
+				s.copyInto(0, bytes, offset, len);
+				offset += len;
+				if (lsep > 0) {
+					sep.copyInto(0, bytes, offset, lsep);
+					offset += lsep;
+				}
 			}
-			return LuaString.valueUsing( bytes );
+			s.copyInto(0, bytes, offset, len);
+			return LuaString.valueUsing(bytes);
 		}
 	}
 
