@@ -21,7 +21,6 @@
 ******************************************************************************/
 package org.luaj.vm2;
 
-import jdk.nashorn.internal.objects.Global;
 import org.luaj.vm2.compat.JavaCompat;
 import org.luaj.vm2.lib.MathLib;
 
