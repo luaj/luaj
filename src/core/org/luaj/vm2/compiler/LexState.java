@@ -198,7 +198,7 @@ public class LexState extends Constants {
 	}
 	
 	private boolean isspace(int c) {
-		return (c <= ' ');
+		return (c >= 0 && c <= ' ');
 	}
 	
 	
