@@ -388,8 +388,13 @@ public class LexState extends Constants {
 			seminfo.r = LuaValue.ZERO;
 		else if (str.indexOf('x')>=0 || str.indexOf('X')>=0)
 			seminfo.r = strx2number(str, seminfo);
-		else
-			seminfo.r = LuaValue.valueOf(Double.parseDouble(str.trim()));
+		else {
+			try {
+				seminfo.r = LuaValue.valueOf(Double.parseDouble(str.trim()));
+			} catch (NumberFormatException e) {
+				lexerror("malformed number (" + e.getMessage() + ")", TK_NUMBER);
+			}
+		}
 		return true;
 	}
 
