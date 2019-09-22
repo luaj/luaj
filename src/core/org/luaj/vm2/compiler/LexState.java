@@ -413,7 +413,6 @@ public class LexState extends Constants {
 			else
 				break;
 		}
-		save('\0');
 		String str = new String(buff, 0, nbuff);
 		str2d(str, seminfo);
 	}
