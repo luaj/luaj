@@ -618,7 +618,7 @@ public class IoLib extends TwoArgFunction {
 	public static LuaValue freadall(File f) throws IOException {
 		int n = f.remaining();
 		if ( n >= 0 ) {
-			return freadbytes(f, n);
+			return n == 0 ? EMPTYSTRING : freadbytes(f, n);
 		} else {
 			return freaduntil(f,false,false);
 		}
