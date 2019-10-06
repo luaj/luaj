@@ -492,6 +492,7 @@ public class IoLib extends TwoArgFunction {
 
 	private Varargs ioread(File f, Varargs args) throws IOException {
 		int i,n=args.narg();
+		if (n == 0) return freadline(f);
 		LuaValue[] v = new LuaValue[n];
 		LuaValue ai,vi;
 		LuaString fmt;
