@@ -321,7 +321,7 @@ public class JseIoLib extends IoLib {
 		}
 
 		public int remaining() throws IOException {
-			return 0;
+			return -1;
 		}
 
 		public int peek() throws IOException, EOFException {
