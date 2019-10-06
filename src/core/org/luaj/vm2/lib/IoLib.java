@@ -582,6 +582,7 @@ public class IoLib extends TwoArgFunction {
 	// ------------- file reading utilitied ------------------
 	
 	public static LuaValue freadbytes(File f, int count) throws IOException {
+		if (count == 0) return f.eof() ? NIL : EMPTYSTRING;
 		byte[] b = new byte[count];
 		int r;
 		if ( ( r = f.read(b,0,b.length) ) < 0 )
