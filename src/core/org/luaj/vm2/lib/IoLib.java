@@ -434,7 +434,7 @@ public class IoLib extends TwoArgFunction {
 
 	//	lines iterator(s,var) -> var'
 	public Varargs _lines_iter(LuaValue file) throws IOException {
-		return freadline(checkfile(file));
+		return freadline(checkfile(file),false);
 	}
 
 	private File output() {
@@ -492,7 +492,7 @@ public class IoLib extends TwoArgFunction {
 
 	private Varargs ioread(File f, Varargs args) throws IOException {
 		int i,n=args.narg();
-		if (n == 0) return freadline(f);
+		if (n == 0) return freadline(f,false);
 		LuaValue[] v = new LuaValue[n];
 		LuaValue ai,vi;
 		LuaString fmt;
@@ -506,7 +506,8 @@ public class IoLib extends TwoArgFunction {
 					if ( fmt.m_length == 2 && fmt.m_bytes[fmt.m_offset] == '*' ) {
 						switch ( fmt.m_bytes[fmt.m_offset+1] ) {
 						case 'n': vi = freadnumber(f); break item;
-						case 'l': vi = freadline(f); break item;
+						case 'l': vi = freadline(f,false); break item;
+						case 'L': vi = freadline(f,true); break item;
 						case 'a': vi = freadall(f); break item;
 						}
 					}
@@ -560,15 +561,15 @@ public class IoLib extends TwoArgFunction {
 			return NIL;
 		return LuaString.valueUsing(b, 0, r);
 	}
-	public static LuaValue freaduntil(File f,boolean lineonly) throws IOException {
+	public static LuaValue freaduntil(File f,boolean lineonly,boolean withend) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int c;
 		try {
 			if ( lineonly ) {
 				loop: while ( (c = f.read()) > 0 ) {
 					switch ( c ) {
-					case '\r': break;
-					case '\n': break loop;
+					case '\r': if (withend) baos.write(c); break;
+					case '\n': if (withend) baos.write(c); break loop;
 					default: baos.write(c); break;
 					}
 				}
@@ -583,15 +584,15 @@ public class IoLib extends TwoArgFunction {
 			(LuaValue) NIL:
 			(LuaValue) LuaString.valueUsing(baos.toByteArray());
 	}
-	public static LuaValue freadline(File f) throws IOException {
-		return freaduntil(f,true);
+	public static LuaValue freadline(File f,boolean withend) throws IOException {
+		return freaduntil(f,true,withend);
 	}
 	public static LuaValue freadall(File f) throws IOException {
 		int n = f.remaining();
 		if ( n >= 0 ) {
 			return freadbytes(f, n);
 		} else {
-			return freaduntil(f,false);
+			return freaduntil(f,false,false);
 		}
 	}
 	public static LuaValue freadnumber(File f) throws IOException {
