@@ -118,6 +118,14 @@ public class IoLib extends TwoArgFunction {
 		public String tojstring() {
 			return "file: " + Integer.toHexString(hashCode());
 		}
+		
+		public void finalize() {
+			if (!isclosed()) {
+				try {
+					close();
+				} catch (IOException ignore) {}
+			}
+		}
 	}
 
 	/** Enumerated value representing stdin */
