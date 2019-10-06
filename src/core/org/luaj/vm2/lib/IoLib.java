@@ -371,7 +371,7 @@ public class IoLib extends TwoArgFunction {
 
 	//	io.lines(filename) -> iterator
 	public Varargs _io_lines(String filename) {
-		infile = filename==null? input(): ioopenfile(FTYPE_NAMED, filename,"r");
+		File infile = filename==null? input(): ioopenfile(FTYPE_NAMED, filename,"r");
 		checkopen(infile);
 		return lines(infile);
 	}
