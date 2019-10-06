@@ -95,6 +95,12 @@ public class IoLib extends TwoArgFunction {
 		// return number of bytes read if positive, false if eof, throw IOException on other exception
 		abstract public int read(byte[] bytes, int offset, int length) throws IOException;
 		
+		public boolean eof() throws IOException {
+			try {
+				return peek() < 0;
+			} catch (EOFException e) { return true; }
+		}
+		
 		// delegate method access to file methods table
 		public LuaValue get( LuaValue key ) {
 			return filemethods.get(key);
@@ -269,7 +275,14 @@ public class IoLib extends TwoArgFunction {
 	static final class IoLibV extends VarArgFunction {
 		private File f;
 		public IoLib iolib;
+		private boolean toclose;
+		private Varargs args;
 		public IoLibV() {
+		}
+		public IoLibV(File f, String name, int opcode, IoLib iolib, boolean toclose, Varargs args) {
+			this(f, name, opcode, iolib);
+			this.toclose = toclose;
+			this.args = args;
 		}
 		public IoLibV(File f, String name, int opcode, IoLib iolib) {
 			super();
@@ -290,20 +303,20 @@ public class IoLib extends TwoArgFunction {
 				case IO_TYPE:		return iolib._io_type(args.arg1());
 				case IO_POPEN:		return iolib._io_popen(args.checkjstring(1),args.optjstring(2,"r"));
 				case IO_OPEN:		return iolib._io_open(args.checkjstring(1), args.optjstring(2,"r"));
-				case IO_LINES:		return iolib._io_lines(args.isvalue(1)? args.checkjstring(1): null);
+				case IO_LINES:		return iolib._io_lines(args);
 				case IO_READ:		return iolib._io_read(args);
 				case IO_WRITE:		return iolib._io_write(args);
 					
 				case FILE_CLOSE:	return iolib._file_close(args.arg1());
 				case FILE_FLUSH:	return iolib._file_flush(args.arg1());
 				case FILE_SETVBUF:	return iolib._file_setvbuf(args.arg1(),args.checkjstring(2),args.optint(3,1024));
-				case FILE_LINES:	return iolib._file_lines(args.arg1());
+				case FILE_LINES:	return iolib._file_lines(args);
 				case FILE_READ:		return iolib._file_read(args.arg1(),args.subargs(2));
 				case FILE_SEEK:		return iolib._file_seek(args.arg1(),args.optjstring(2,"cur"),args.optint(3,0));
 				case FILE_WRITE:	return iolib._file_write(args.arg1(),args.subargs(2));
 
 				case IO_INDEX:		return iolib._io_index(args.arg(2));
-				case LINES_ITER:	return iolib._lines_iter(f);
+				case LINES_ITER:	return iolib._lines_iter(f, toclose, this.args);
 				}
 			} catch ( IOException ioe ) {
 				return errorresult(ioe);
@@ -369,11 +382,12 @@ public class IoLib extends TwoArgFunction {
 		return rawopenfile(FTYPE_NAMED, filename, mode);
 	}
 
-	//	io.lines(filename) -> iterator
-	public Varargs _io_lines(String filename) {
+	//	io.lines(filename, ...) -> iterator
+	public Varargs _io_lines(Varargs args) {
+		String filename = args.isvalue(1)? args.checkjstring(1): null;
 		File infile = filename==null? input(): ioopenfile(FTYPE_NAMED, filename,"r");
 		checkopen(infile);
-		return lines(infile);
+		return lines(infile, filename != null, args.subargs(filename != null ? 2 : 1));
 	}
 
 	//	io.read(...) -> (...)
@@ -405,9 +419,9 @@ public class IoLib extends TwoArgFunction {
 		return LuaValue.TRUE;
 	}
 
-	// file:lines() -> iterator
-	public Varargs _file_lines(LuaValue file) {
-		return lines(checkfile(file));
+	// file:lines(...) -> iterator
+	public Varargs _file_lines(Varargs args) {
+		return lines(checkfile(args.arg1()), false, args.subargs(2));
 	}
 
 	//	file:read(...) -> (...)
@@ -433,8 +447,13 @@ public class IoLib extends TwoArgFunction {
 	}
 
 	//	lines iterator(s,var) -> var'
-	public Varargs _lines_iter(LuaValue file) throws IOException {
-		return freadline(checkfile(file),false);
+	public Varargs _lines_iter(LuaValue file, boolean toclose, Varargs args) throws IOException {
+		File f = optfile(file);
+		if ( f == null ) argerror(1, "not a file: " + file);
+		if ( f.isclosed() )	error("file is already closed");
+		Varargs ret = ioread(f, args);
+		if (toclose && ret.isnil(1) && f.eof()) f.close();
+		return ret;
 	}
 
 	private File output() {
@@ -476,9 +495,9 @@ public class IoLib extends TwoArgFunction {
 		return varargsOf(NIL, valueOf(errortext));
 	}
 
-	private Varargs lines(final File f) {
+	private Varargs lines(final File f, boolean toclose, Varargs args) {
 		try {
-			return new IoLibV(f,"lnext",LINES_ITER,this);
+			return new IoLibV(f,"lnext",LINES_ITER,this,toclose,args);
 		} catch ( Exception e ) {
 			return error("lines: "+e);
 		}
