@@ -594,7 +594,7 @@ public class IoLib extends TwoArgFunction {
 		int c;
 		try {
 			if ( lineonly ) {
-				loop: while ( (c = f.read()) > 0 ) {
+				loop: while ( (c = f.read()) >= 0 ) {
 					switch ( c ) {
 					case '\r': if (withend) baos.write(c); break;
 					case '\n': if (withend) baos.write(c); break loop;
@@ -602,7 +602,7 @@ public class IoLib extends TwoArgFunction {
 					}
 				}
 			} else {
-				while ( (c = f.read()) > 0 )
+				while ( (c = f.read()) >= 0 )
 					baos.write(c);
 			}
 		} catch ( EOFException e ) {
