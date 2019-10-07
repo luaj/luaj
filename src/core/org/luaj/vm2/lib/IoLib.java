@@ -396,10 +396,10 @@ public class IoLib extends TwoArgFunction {
 
 	//	io.lines(filename, ...) -> iterator
 	public Varargs _io_lines(Varargs args) {
-		String filename = args.isvalue(1)? args.checkjstring(1): null;
+		String filename = args.optjstring(1, null);
 		File infile = filename==null? input(): ioopenfile(FTYPE_NAMED, filename,"r");
 		checkopen(infile);
-		return lines(infile, filename != null, args.subargs(filename != null ? 2 : 1));
+		return lines(infile, filename != null, args.subargs(2));
 	}
 
 	//	io.read(...) -> (...)
