@@ -468,10 +468,12 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 			this.func = func;
 		}
 		public int read() throws IOException {
-			if ( remaining <= 0 ) {
+			if ( remaining < 0 )
+				return -1;
+			if ( remaining == 0 ) {
 				LuaValue s = func.call();
 				if ( s.isnil() )
-					return -1;
+					return remaining = -1;
 				LuaString ls = s.strvalue();
 				bytes = ls.m_bytes;
 				offset = ls.m_offset;
