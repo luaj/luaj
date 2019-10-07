@@ -327,6 +327,10 @@ public class IoLib extends TwoArgFunction {
 				case LINES_ITER:	return iolib._lines_iter(f, toclose, this.args);
 				}
 			} catch ( IOException ioe ) {
+				if (opcode == LINES_ITER) {
+					String s = ioe.getMessage();
+					error(s != null ? s : ioe.toString());
+				}
 				return errorresult(ioe);
 			}
 			return NONE;
