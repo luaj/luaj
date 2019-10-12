@@ -24,16 +24,16 @@ package org.luaj.vm2;
 /**
  * Class to encapsulate varargs values, either as part of a variable argument list, or multiple return values.
  * <p>
- * To construct varargs, use one of the static methods such as 
+ * To construct varargs, use one of the static methods such as
  * {@code LuaValue.varargsOf(LuaValue,LuaValue)}
  * <p>
  * <p>
- * Any LuaValue can be used as a stand-in for Varargs, for both calls and return values. 
- * When doing so, nargs() will return 1 and arg1() or arg(1) will return this.  
- * This simplifies the case when calling or implementing varargs functions with only 
- * 1 argument or 1 return value.  
+ * Any LuaValue can be used as a stand-in for Varargs, for both calls and return values.
+ * When doing so, nargs() will return 1 and arg1() or arg(1) will return this.
+ * This simplifies the case when calling or implementing varargs functions with only
+ * 1 argument or 1 return value.
  * <p>
- * Varargs can also be derived from other varargs by appending to the front with a call 
+ * Varargs can also be derived from other varargs by appending to the front with a call
  * such as  {@code LuaValue.varargsOf(LuaValue,Varargs)}
  * or by taking a portion of the args using {@code Varargs.subargs(int start)}
  * <p>
@@ -57,22 +57,22 @@ public abstract class Varargs {
 	abstract public LuaValue arg( int i );
 	
 	/**
-	 * Get the number of arguments, or 0 if there are none. 
-	 * @return number of arguments. 
+	 * Get the number of arguments, or 0 if there are none.
+	 * @return number of arguments.
 	 */
 	abstract public int narg();
 	
 	/**
-	 * Get the first argument in the list. 
+	 * Get the first argument in the list.
 	 * @return LuaValue which is first in the list, or LuaValue.NIL if there are no values.
 	 * @see Varargs#arg(int)
 	 * @see LuaValue#NIL
 	 */
 	abstract public LuaValue arg1();
 
-	/** 
+	/**
 	 * Evaluate any pending tail call and return result.
-	 * @return the evaluated tail call result 
+	 * @return the evaluated tail call result
 	 */
 	public Varargs eval() { return this; }
 	
@@ -88,7 +88,7 @@ public abstract class Varargs {
 	// utilities to get specific arguments and type-check them.
 	// -----------------------------------------------------------------------
 	
-	/** Gets the type of argument {@code i} 
+	/** Gets the type of argument {@code i}
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return int value corresponding to one of the LuaValue integer type values
 	 * @see LuaValue#TNIL
@@ -117,20 +117,20 @@ public abstract class Varargs {
 	public boolean isfunction(int i)   { return arg(i).isfunction(); }
 
 	/** Tests if argument i is a number.
-	 * Since anywhere a number is required, a string can be used that 
-	 * is a number, this will return true for both numbers and 
-	 * strings that can be interpreted as numbers.  
+	 * Since anywhere a number is required, a string can be used that
+	 * is a number, this will return true for both numbers and
+	 * strings that can be interpreted as numbers.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if the argument exists and is a number or 
+	 * @return true if the argument exists and is a number or
 	 * string that can be interpreted as a number, false otherwise
 	 * @see LuaValue#TNUMBER
 	 * @see LuaValue#TSTRING
 	 * */
 	public boolean isnumber(int i)     { return arg(i).isnumber(); }
 
-	/** Tests if argument i is a string.  
-	 * Since all lua numbers can be used where strings are used, 
-	 * this will return true for both strings and numbers.  
+	/** Tests if argument i is a string.
+	 * Since all lua numbers can be used where strings are used,
+	 * this will return true for both strings and numbers.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @return true if the argument exists and is a string or number, false otherwise
 	 * @see LuaValue#TNUMBER
@@ -167,7 +167,7 @@ public abstract class Varargs {
 	
 	/** Return argument i as a boolean value, {@code defval} if nil, or throw a LuaError if any other type.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return true if argument i is boolean true, false if it is false, or defval if not supplied or nil 
+	 * @return true if argument i is boolean true, false if it is false, or defval if not supplied or nil
 	 * @exception LuaError if the argument is not a lua boolean
 	 * */
 	public boolean      optboolean(int i, boolean defval)          { return arg(i).optboolean(defval); }
@@ -256,7 +256,7 @@ public abstract class Varargs {
 	 * */
 	public Object       optuserdata(int i, Object defval)          { return arg(i).optuserdata(defval); }
 
-	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass, 
+	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass,
 	 * {@code defval} if nil, or throw a LuaError  if any other type.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @param c the class to which the userdata instance must be assignable
@@ -363,7 +363,7 @@ public abstract class Varargs {
 	 * */
 	public Object       checkuserdata(int i)         { return arg(i).checkuserdata(); }
 
-	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass, 
+	/** Return argument i as a java Object if it is a userdata whose instance Class c or a subclass,
 	 * or throw an error if any other type.
 	 * @param i the index of the argument to test, 1 is the first argument
 	 * @param c the class to which the userdata instance must be assignable
@@ -387,7 +387,7 @@ public abstract class Varargs {
 	public LuaValue     checknotnil(int i)           { return arg(i).checknotnil(); }
 	
 	/** Performs test on argument i as a LuaValue when a user-supplied assertion passes, or throw an error.
-	 * Returns normally if the value of {@code test} is {@code true}, otherwise throws and argument error with 
+	 * Returns normally if the value of {@code test} is {@code true}, otherwise throws and argument error with
 	 * the supplied message, {@code msg}.
 	 * @param test user supplied assertion to test against
 	 * @param i the index to report in any error message
@@ -404,20 +404,20 @@ public abstract class Varargs {
 		return i>narg() || arg(i).isnil();
 	}
 	
-	/** Convert argument {@code i} to java boolean based on lua rules for boolean evaluation. 
+	/** Convert argument {@code i} to java boolean based on lua rules for boolean evaluation.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return {@code false} if argument i is nil or false, otherwise {@code true}
 	 * */
 	public boolean toboolean(int i)           { return arg(i).toboolean(); }
 
-	/** Return argument i as a java byte value, discarding any fractional part and truncating, 
+	/** Return argument i as a java byte value, discarding any fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return byte value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
 	 * */
 	public byte    tobyte(int i)              { return arg(i).tobyte(); }
 	
-	/** Return argument i as a java char value, discarding any fractional part and truncating, 
+	/** Return argument i as a java char value, discarding any fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return char value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
@@ -430,21 +430,21 @@ public abstract class Varargs {
 	 * */
 	public double  todouble(int i)            { return arg(i).todouble(); }
 
-	/** Return argument i as a java float value, discarding excess fractional part and truncating, 
+	/** Return argument i as a java float value, discarding excess fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return float value with excess fraction discarded and truncated if necessary if argument i is number, otherwise 0
 	 * */
 	public float   tofloat(int i)             { return arg(i).tofloat(); }
 	
-	/** Return argument i as a java int value, discarding any fractional part and truncating, 
+	/** Return argument i as a java int value, discarding any fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return int value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
 	 * */
 	public int     toint(int i)               { return arg(i).toint(); }
 
-	/** Return argument i as a java long value, discarding any fractional part and truncating, 
+	/** Return argument i as a java long value, discarding any fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return long value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
@@ -457,7 +457,7 @@ public abstract class Varargs {
 	 * */
 	public String  tojstring(int i)           { return arg(i).tojstring(); }
 	
-	/** Return argument i as a java short value, discarding any fractional part and truncating, 
+	/** Return argument i as a java short value, discarding any fractional part and truncating,
 	 * or 0 if not a number.
 	 * @param i the index of the argument to convert, 1 is the first argument
 	 * @return short value with fraction discarded and truncated if necessary if argument i is number, otherwise 0
@@ -477,8 +477,8 @@ public abstract class Varargs {
 	 * */
 	public Object  touserdata(int i,Class c)  { return arg(i).touserdata(c); }
 	
-	/** Convert the list of varargs values to a human readable java String. 
-	 * @return String value in human readable form such as {1,2}. 
+	/** Convert the list of varargs values to a human readable java String.
+	 * @return String value in human readable form such as {1,2}.
 	 */
 	public String tojstring() {
 		Buffer sb = new Buffer();
@@ -491,8 +491,8 @@ public abstract class Varargs {
 		return sb.tojstring();
 	}
 	
-	/** Convert the value or values to a java String using Varargs.tojstring() 
-	 * @return String value in human readable form. 
+	/** Convert the value or values to a java String using Varargs.tojstring()
+	 * @return String value in human readable form.
 	 * @see Varargs#tojstring()
 	 */
 	public String toString() { return tojstring(); }
@@ -544,21 +544,21 @@ public abstract class Varargs {
 		}
 	}
 
-	/** Varargs implemenation backed by two values.  
+	/** Varargs implemenation backed by two values.
 	 * <p>
 	 * This is an internal class not intended to be used directly.
-	 * Instead use the corresponding static method on LuaValue. 
-	 *  
+	 * Instead use the corresponding static method on LuaValue.
+	 * 
 	 * @see LuaValue#varargsOf(LuaValue, Varargs)
 	 */
 	static final class PairVarargs extends Varargs {
 		private final LuaValue v1;
 		private final Varargs v2;
-		/** Construct a Varargs from an two LuaValue. 
+		/** Construct a Varargs from an two LuaValue.
 		 * <p>
 		 * This is an internal class not intended to be used directly.
-		 * Instead use the corresponding static method on LuaValue. 
-		 *  
+		 * Instead use the corresponding static method on LuaValue.
+		 * 
 		 * @see LuaValue#varargsOf(LuaValue, Varargs)
 		 */
 		PairVarargs(LuaValue v1, Varargs v2) {
@@ -571,8 +571,8 @@ public abstract class Varargs {
 		public int narg() {
 			return 1+v2.narg();
 		}
-		public LuaValue arg1() { 
-			return v1; 
+		public LuaValue arg1() {
+			return v1;
 		}
 		public Varargs subargs(final int start) {
 			if (start == 1)
@@ -585,22 +585,22 @@ public abstract class Varargs {
 		}
 	}
 
-	/** Varargs implemenation backed by an array of LuaValues 
+	/** Varargs implemenation backed by an array of LuaValues
 	 * <p>
 	 * This is an internal class not intended to be used directly.
-	 * Instead use the corresponding static methods on LuaValue. 
-	 *  
+	 * Instead use the corresponding static methods on LuaValue.
+	 * 
 	 * @see LuaValue#varargsOf(LuaValue[])
 	 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 	 */
 	static final class ArrayVarargs extends Varargs {
 		private final LuaValue[] v;
 		private final Varargs r;
-		/** Construct a Varargs from an array of LuaValue. 
+		/** Construct a Varargs from an array of LuaValue.
 		 * <p>
 		 * This is an internal class not intended to be used directly.
-		 * Instead use the corresponding static methods on LuaValue. 
-		 *  
+		 * Instead use the corresponding static methods on LuaValue.
+		 * 
 		 * @see LuaValue#varargsOf(LuaValue[])
 		 * @see LuaValue#varargsOf(LuaValue[], Varargs)
 		 */
@@ -631,11 +631,11 @@ public abstract class Varargs {
 		}
 	}
 
-	/** Varargs implemenation backed by an array of LuaValues 
+	/** Varargs implemenation backed by an array of LuaValues
 	 * <p>
 	 * This is an internal class not intended to be used directly.
-	 * Instead use the corresponding static methods on LuaValue. 
-	 *  
+	 * Instead use the corresponding static methods on LuaValue.
+	 * 
 	 * @see LuaValue#varargsOf(LuaValue[], int, int)
 	 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 	 */
@@ -644,11 +644,11 @@ public abstract class Varargs {
 		private final LuaValue[] v;
 		private final int length;
 		private final Varargs more;
-		/** Construct a Varargs from an array of LuaValue. 
+		/** Construct a Varargs from an array of LuaValue.
 		 * <p>
 		 * This is an internal class not intended to be used directly.
-		 * Instead use the corresponding static methods on LuaValue. 
-		 *  
+		 * Instead use the corresponding static methods on LuaValue.
+		 * 
 		 * @see LuaValue#varargsOf(LuaValue[], int, int)
 		 */
 		ArrayPartVarargs(LuaValue[] v, int offset, int length) {
@@ -657,11 +657,11 @@ public abstract class Varargs {
 			this.length = length;
 			this.more = LuaValue.NONE;
 		}
-		/** Construct a Varargs from an array of LuaValue and additional arguments. 
+		/** Construct a Varargs from an array of LuaValue and additional arguments.
 		 * <p>
 		 * This is an internal class not intended to be used directly.
-		 * Instead use the corresponding static method on LuaValue. 
-		 *  
+		 * Instead use the corresponding static method on LuaValue.
+		 * 
 		 * @see LuaValue#varargsOf(LuaValue[], int, int, Varargs)
 		 */
 		public ArrayPartVarargs(LuaValue[] v, int offset, int length, Varargs more) {
@@ -676,8 +676,8 @@ public abstract class Varargs {
 		public int narg() {
 			return length + more.narg();
 		}
-		public LuaValue arg1() { 
-			return length>0? v[offset]: more.arg1(); 
+		public LuaValue arg1() {
+			return length>0? v[offset]: more.arg1();
 		}
 		public Varargs subargs(int start) {
 			if (start <= 0)
@@ -707,8 +707,10 @@ public abstract class Varargs {
 	/** Return Varargs that cannot be using a shared array for the storage, and is flattened.
 	 * Internal utility method not intended to be called directly from user code.
 	 * @return Varargs containing same values, but flattened and with a new array if needed.
+	 * @exclude
+	 * @hide
 	 */
-	Varargs dealias() {
+	public Varargs dealias() {
 		int n = narg();
 		switch (n) {
 		case 0: return LuaValue.NONE;

@@ -290,7 +290,7 @@ public class IoLib extends TwoArgFunction {
 		public IoLibV(File f, String name, int opcode, IoLib iolib, boolean toclose, Varargs args) {
 			this(f, name, opcode, iolib);
 			this.toclose = toclose;
-			this.args = args;
+			this.args = args.dealias();
 		}
 		public IoLibV(File f, String name, int opcode, IoLib iolib) {
 			super();
