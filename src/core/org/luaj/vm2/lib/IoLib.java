@@ -317,7 +317,7 @@ public class IoLib extends TwoArgFunction {
 					
 				case FILE_CLOSE:	return iolib._file_close(args.arg1());
 				case FILE_FLUSH:	return iolib._file_flush(args.arg1());
-				case FILE_SETVBUF:	return iolib._file_setvbuf(args.arg1(),args.checkjstring(2),args.optint(3,1024));
+				case FILE_SETVBUF:	return iolib._file_setvbuf(args.arg1(),args.checkjstring(2),args.optint(3,8192));
 				case FILE_LINES:	return iolib._file_lines(args);
 				case FILE_READ:		return iolib._file_read(args.arg1(),args.subargs(2));
 				case FILE_SEEK:		return iolib._file_seek(args.arg1(),args.optjstring(2,"cur"),args.optint(3,0));
