@@ -427,6 +427,12 @@ public class IoLib extends TwoArgFunction {
 
 	// file:setvbuf(mode,[size]) -> void
 	public Varargs _file_setvbuf(LuaValue file, String mode, int size) {
+		if ("no".equals(mode)) {
+		} else if ("full".equals(mode)) {
+		} else if ("line".equals(mode)) {
+		} else {
+			argerror(1, "invalid option '" + mode + "', must be one of 'no', 'full' or 'line'");
+		}
 		checkfile(file).setvbuf(mode,size);
 		return LuaValue.TRUE;
 	}
@@ -443,6 +449,12 @@ public class IoLib extends TwoArgFunction {
 
 	//  file:seek([whence][,offset]) -> pos | nil,error
 	public Varargs _file_seek(LuaValue file, String whence, int offset) throws IOException {
+		if ("set".equals(whence)) {
+		} else if ("end".equals(whence)) {
+		} else if ("cur".equals(whence)) {
+		} else {
+			argerror(1, "invalid option '" + whence + "', must be one of 'set', 'cur' or 'end'");
+		}
 		return valueOf( checkfile(file).seek(whence,offset) );
 	}
 
