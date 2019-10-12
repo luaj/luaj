@@ -546,7 +546,7 @@ public class IoLib extends TwoArgFunction {
 					break item;
 				case LuaValue.TSTRING:
 					fmt = ai.checkstring();
-					if ( fmt.m_length == 2 && fmt.m_bytes[fmt.m_offset] == '*' ) {
+					if ( fmt.m_length >= 2 && fmt.m_bytes[fmt.m_offset] == '*' ) {
 						switch ( fmt.m_bytes[fmt.m_offset+1] ) {
 						case 'n': vi = freadnumber(f); break item;
 						case 'l': vi = freadline(f,false); break item;
