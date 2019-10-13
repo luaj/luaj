@@ -431,7 +431,7 @@ public class IoLib extends TwoArgFunction {
 		} else if ("full".equals(mode)) {
 		} else if ("line".equals(mode)) {
 		} else {
-			argerror(1, "invalid option '" + mode + "', must be one of 'no', 'full' or 'line'");
+			argerror(1, "invalid value: '" + mode + "'; must be one of 'no', 'full' or 'line'");
 		}
 		checkfile(file).setvbuf(mode,size);
 		return LuaValue.TRUE;
@@ -453,7 +453,7 @@ public class IoLib extends TwoArgFunction {
 		} else if ("end".equals(whence)) {
 		} else if ("cur".equals(whence)) {
 		} else {
-			argerror(1, "invalid option '" + whence + "', must be one of 'set', 'cur' or 'end'");
+			argerror(1, "invalid value: '" + whence + "'; must be one of 'set', 'cur' or 'end'");
 		}
 		return valueOf( checkfile(file).seek(whence,offset) );
 	}
