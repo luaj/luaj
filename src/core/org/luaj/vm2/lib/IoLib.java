@@ -386,6 +386,7 @@ public class IoLib extends TwoArgFunction {
 
 	// io.popen(prog, [mode]) -> file
 	public Varargs _io_popen(String prog, String mode) throws IOException {
+		if (!"r".equals(mode) && !"w".equals(mode)) argerror(2, "invalid value: '" + mode + "'; must be one of 'r' or 'w'");
 		return openProgram(prog, mode);
 	}
 
