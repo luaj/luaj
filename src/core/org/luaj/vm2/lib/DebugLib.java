@@ -802,7 +802,7 @@ public class DebugLib extends TwoArgFunction {
 			case Lua.OP_GETUPVAL: {
 				int u = Lua.GETARG_B(i); /* upvalue index */
 				name = u < p.upvalues.length ? p.upvalues[u].name : QMARK;
-				return new NameWhat( name.tojstring(), "upvalue" );
+				return name == null ? null : new NameWhat( name.tojstring(), "upvalue" );
 			}
 		    case Lua.OP_LOADK:
 		    case Lua.OP_LOADKX: {
