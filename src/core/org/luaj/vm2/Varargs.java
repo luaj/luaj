@@ -291,7 +291,7 @@ public abstract class Varargs {
 	 * @return java double value if argument i is a number or string that converts to a number
 	 * @exception LuaError if the argument is not a number
 	 * */
-	public double       checkdouble(int i)           { return arg(i).checknumber().todouble(); }
+	public double       checkdouble(int i)           { return arg(i).checkdouble(); }
 
 	/** Return argument i as a function, or throw an error if an incompatible type.
 	 * @param i the index of the argument to test, 1 is the first argument
@@ -300,12 +300,12 @@ public abstract class Varargs {
 	 * */
 	public LuaFunction    checkfunction(int i)         { return arg(i).checkfunction(); }
 
-	/** Return argument i as a java int value, discarding any fractional part, or throw an error if not a number.
+	/** Return argument i as a java int value, or throw an error if it cannot be converted to one.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return int value with fraction discarded and truncated if necessary if argument i is number
-	 * @exception LuaError if the argument is not a number
+	 * @return int value if argument i is a number or string that converts to a number
+	 * @exception LuaError if the argument cannot be represented by a java int value
 	 * */
-	public int          checkint(int i)              { return arg(i).checknumber().toint(); }
+	public int          checkint(int i)              { return arg(i).checkint(); }
 
 	/** Return argument i as a java int value, or throw an error if not a number or is not representable by a java int.
 	 * @param i the index of the argument to test, 1 is the first argument
@@ -314,12 +314,12 @@ public abstract class Varargs {
 	 * */
 	public LuaInteger   checkinteger(int i)          { return arg(i).checkinteger(); }
 
-	/** Return argument i as a java long value, discarding any fractional part, or throw an error if not a number.
+	/** Return argument i as a java long value, or throw an error if it cannot be converted to one.
 	 * @param i the index of the argument to test, 1 is the first argument
-	 * @return long value with fraction discarded and truncated if necessary if argument i is number
-	 * @exception LuaError if the argument is not a number
+	 * @return long value if argument i is a number or string that converts to a number
+	 * @exception LuaError if the argument cannot be represented by a java long value
 	 * */
-	public long         checklong(int i)             { return arg(i).checknumber().tolong(); }
+	public long         checklong(int i)             { return arg(i).checklong(); }
 
 	/** Return argument i as a LuaNumber, or throw an error if not a number or string that can be converted to a number.
 	 * @param i the index of the argument to test, 1 is the first argument
