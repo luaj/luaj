@@ -583,6 +583,17 @@ public class IoLib extends TwoArgFunction {
 	}
 
 	private File rawopenfile(int filetype, String filename, String mode) throws IOException {
+		int len = mode.length();
+		for (int i = 0; i < len; i++) { // [rwa][+]?b*
+			char ch = mode.charAt(i);
+			if (i == 0 && "rwa".indexOf(ch) >= 0) continue;
+			if (i == 1 && ch == '+') continue;
+			if (i >= 1 && ch == 'b') continue;
+			len = -1;
+			break;
+		}
+		if (len <= 0) argerror(2, "invalid mode: '" + mode + "'");
+		
 		switch (filetype) {
 		case FTYPE_STDIN: return wrapStdin();
 		case FTYPE_STDOUT: return wrapStdout();
