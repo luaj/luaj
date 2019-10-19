@@ -152,7 +152,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 				System.gc();
 				return LuaValue.TRUE;
 			} else {
-				this.argerror("gc op");
+				argerror(1, "invalid option '" + s + "'");
 			}
 			return NIL;
 		}
