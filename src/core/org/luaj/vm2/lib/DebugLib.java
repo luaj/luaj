@@ -442,6 +442,10 @@ public class DebugLib extends TwoArgFunction {
 		return callstack().traceback(level);
 	}
 	
+	public CallFrame getCallFrame(int level) {
+		return callstack().getCallFrame(level);
+	}
+	
 	void callHook(LuaThread.State s, LuaValue type, LuaValue arg) {
 		if (s.inhook || s.hookfunc == null) return;
 		s.inhook = true;
@@ -645,7 +649,7 @@ public class DebugLib extends TwoArgFunction {
 
 	}
 
-	static class CallFrame {
+	public static class CallFrame {
 		LuaFunction f;
 		int pc;
 		int top;
@@ -691,7 +695,7 @@ public class DebugLib extends TwoArgFunction {
 				return NIL;
 			}
 		}
-		int currentline() {
+		public int currentline() {
 			if ( !f.isclosure() ) return -1;
 			int[] li = f.checkclosure().p.lineinfo;
 			return li==null || pc<0 || pc>=li.length? -1: li[pc];

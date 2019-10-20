@@ -173,9 +173,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "error", // ( message [,level] ) -> ERR
 	static final class error extends TwoArgFunction {
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
-			throw arg1.isnil()? new LuaError(null, arg2.optint(1)):
-				arg1.isstring()? new LuaError(arg1.tojstring(), arg2.optint(1)):
-					new LuaError(arg1);
+			if (arg1.isnil()) throw new LuaError(NIL);
+			if (!arg1.isstring() || arg2.optint(1) == 0) throw new LuaError(arg1);
+			throw new LuaError(arg1.tojstring(), arg2.optint(1));
 		}
 	}
 
