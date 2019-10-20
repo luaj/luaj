@@ -73,12 +73,6 @@ public class TableLib extends TwoArgFunction {
 		if (!env.get("package").isnil()) env.get("package").get("loaded").set("table", table);
 		return NIL;
 	}
-
-	static class TableLibFunction extends LibFunction {
-		public LuaValue call() {
-			return argerror(1, "table expected, got no value");
-		}
-	}
 	
 	// "concat" (table [, sep [, i [, j]]]) -> string
 	static class concat extends TableLibFunction {
@@ -104,12 +98,12 @@ public class TableLib extends TwoArgFunction {
 				return argerror(2, "value expected");
 			}
 			case 2: {
-				LuaTable table = args.arg1().checktable();
+				LuaTable table = args.checktable(1);
 				table.insert(table.length()+1,args.arg(2));
 				return NONE;
 			}
 			default: {
-				args.arg1().checktable().insert(args.checkint(2),args.arg(3));
+				args.checktable(1).insert(args.checkint(2),args.arg(3));
 				return NONE;
 			}
 			}
@@ -128,15 +122,15 @@ public class TableLib extends TwoArgFunction {
 	// "remove" (table [, pos]) -> removed-ele
 	static class remove extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			return args.arg1().checktable().remove(args.optint(2, 0));
+			return args.checktable(1).remove(args.optint(2, 0));
 		}
 	}
 
 	// "sort" (table [, comp])
 	static class sort extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			args.arg1().checktable().sort(
-					args.arg(2).isnil()? NIL: args.arg(2).checkfunction());
+			args.checktable(1).sort(
+					args.isnil(2)? NIL: args.checkfunction(2));
 			return NONE;
 		}
 	}
