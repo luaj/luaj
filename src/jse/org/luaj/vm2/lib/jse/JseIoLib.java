@@ -133,7 +133,7 @@ public class JseIoLib extends IoLib {
 			this( null, null, o );
 		}
 		public String tojstring() {
-			return "file (" + (this.closed ? "closed" : this.hashCode()) + ")";
+			return "file (" + (this.closed ? "closed" : String.valueOf(this.hashCode())) + ")";
 		}
 		public boolean isstdfile() {
 			return file == null;
