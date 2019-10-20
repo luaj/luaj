@@ -83,8 +83,8 @@ public class StringLib extends TwoArgFunction {
 	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable string = new LuaTable();
-		string.set("byte", new byte_());
-		string.set("char", new char_());
+		string.set("byte", new _byte());
+		string.set("char", new _char());
 		string.set("dump", new dump());
 		string.set("find", new find());
 		string.set("format", new format());
@@ -117,7 +117,7 @@ public class StringLib extends TwoArgFunction {
 	 * 
 	 * @param args the calling args
 	 */
-	static final class byte_ extends VarArgFunction {
+	static final class _byte extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaString s = args.checkstring(1);
 			int l = s.m_length;
@@ -148,7 +148,7 @@ public class StringLib extends TwoArgFunction {
 	 * 
 	 * @param args the calling VM
 	 */
-	static final class char_ extends VarArgFunction {
+	static final class _char extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int n = args.narg();
 			byte[] bytes = new byte[n];
