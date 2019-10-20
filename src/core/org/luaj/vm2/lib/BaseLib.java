@@ -182,7 +182,7 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "getmetatable", // ( object ) -> table
 	static final class getmetatable extends LibFunction {
 		public LuaValue call() {
-			return argerror(1, "value");
+			return argerror(1, "value expected");
 		}
 		public LuaValue call(LuaValue arg) {
 			LuaValue mt = arg.getmetatable();
@@ -260,10 +260,10 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	// "rawequal", // (v1, v2) -> boolean
 	static final class rawequal extends LibFunction {
 		public LuaValue call() {
-			return argerror(1, "value");
+			return argerror(1, "value expected");
 		}
 		public LuaValue call(LuaValue arg) {
-			return argerror(2, "value");
+			return argerror(2, "value expected");
 		}
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			return valueOf(arg1.raweq(arg2));
@@ -271,12 +271,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	}
 
 	// "rawget", // (table, index) -> value
-	static final class rawget extends LibFunction {
-		public LuaValue call() {
-			return argerror(1, "value");
-		}
+	static final class rawget extends TableLibFunction {
 		public LuaValue call(LuaValue arg) {
-			return argerror(2, "value");
+			return argerror(2, "value expected");
 		}
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			return arg1.checktable().rawget(arg2);
@@ -292,16 +289,16 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	}
 
 	// "rawset", // (table, index, value) -> table
-	static final class rawset extends LibFunction {
+	static final class rawset extends TableLibFunction {
 		public LuaValue call(LuaValue table) {
-			return argerror(2,"value");
+			return argerror(2,"value expected");
 		}
 		public LuaValue call(LuaValue table, LuaValue index) {
-			return argerror(3,"value");
+			return argerror(3,"value expected");
 		}
 		public LuaValue call(LuaValue table, LuaValue index, LuaValue value) {
 			LuaTable t = table.checktable();
-			if (!index.isvalidkey()) argerror(2, "value");
+			if (!index.isvalidkey()) argerror(2, "table index is nil");
 			t.rawset(index, value);
 			return t;
 		}
@@ -321,9 +318,9 @@ public class BaseLib extends TwoArgFunction implements ResourceFinder {
 	}
 	
 	// "setmetatable", // (table, metatable) -> table
-	static final class setmetatable extends LibFunction {
+	static final class setmetatable extends TableLibFunction {
 		public LuaValue call(LuaValue table) {
-			return argerror(2,"value");
+			return argerror(2,"nil or table expected");
 		}
 		public LuaValue call(LuaValue table, LuaValue metatable) {
 			final LuaValue mt0 = table.checktable().getmetatable();
