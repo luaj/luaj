@@ -28,14 +28,14 @@ import java.io.OutputStream;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LocVars;
-import org.luaj.vm2.Prototype;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Prototype;
 
 
 /** Class to dump a {@link Prototype} into an output stream, as part of compiling.
  * <p>
- * Generally, this class is not used directly, but rather indirectly via a command 
+ * Generally, this class is not used directly, but rather indirectly via a command
  * line interface tool such as {@link luac}.
  * <p>
  * A lua binary file is created via {@link DumpState#dump}:
@@ -85,7 +85,7 @@ public class DumpState {
 	public static final int NUMBER_FORMAT_DEFAULT = NUMBER_FORMAT_FLOATS_OR_DOUBLES;
 
 	// header fields
-	private boolean IS_LITTLE_ENDIAN = false;
+	private boolean IS_LITTLE_ENDIAN = true;
 	private int NUMBER_FORMAT = NUMBER_FORMAT_DEFAULT;
 	private int SIZEOF_LUA_NUMBER = 8;
 	private static final int SIZEOF_INT = 4;
@@ -190,7 +190,7 @@ public class DumpState {
 				dumpString((LuaString)o);
 				break;
 			default:
-				throw new IllegalArgumentException("bad type for " + o);			
+				throw new IllegalArgumentException("bad type for " + o);
 			}
 		}
 		n = f.p.length;
