@@ -701,7 +701,7 @@ public class LexState extends Constants {
 					LuaString ts;
 					do {
 						save_and_next();
-					} while (isalnum(current) || current == '_');
+					} while (isalnum(current));
 					ts = newstring(buff, 0, nbuff);
 					if ( RESERVED.containsKey(ts) )
 						return ((Integer)RESERVED.get(ts)).intValue();
