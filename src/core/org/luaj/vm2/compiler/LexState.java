@@ -589,6 +589,13 @@ public class LexState extends Constants {
 				inclinenumber();
 				continue;
 			}
+			case ' ':
+			case '\f':
+			case '\t':
+			case 0x0B: /* \v */ {
+				nextChar();
+				continue;
+			}
 			case '-': {
 				nextChar();
 				if (current != '-')
@@ -692,11 +699,7 @@ public class LexState extends Constants {
 				return TK_EOS;
 			}
 			default: {
-				if (isspace(current)) {
-					_assert (!currIsNewline());
-					nextChar();
-					continue;
-				} else if (isalpha(current) || current == '_') {
+				if (isalpha(current) || current == '_') {
 					/* identifier or reserved word */
 					LuaString ts;
 					do {
