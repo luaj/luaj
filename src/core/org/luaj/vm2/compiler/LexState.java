@@ -696,9 +696,6 @@ public class LexState extends Constants {
 					_assert (!currIsNewline());
 					nextChar();
 					continue;
-				} else if (isdigit(current)) {
-					read_numeral(seminfo);
-					return TK_NUMBER;
 				} else if (isalpha(current) || current == '_') {
 					/* identifier or reserved word */
 					LuaString ts;
