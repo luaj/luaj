@@ -821,7 +821,7 @@ public class StringLib extends TwoArgFunction {
 	static {
 		CHAR_TABLE = new byte[256];
 		
-		for ( int i = 0; i < 256; ++i ) {
+		for ( int i = 0; i < 128; ++i ) {
 			final char c = (char) i;
 			CHAR_TABLE[i] = (byte)( ( Character.isDigit( c ) ? MASK_DIGIT : 0 ) |
 							( Character.isLowerCase( c ) ? MASK_LOWERCASE : 0 ) |
@@ -830,7 +830,7 @@ public class StringLib extends TwoArgFunction {
 			if ( ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) || ( c >= '0' && c <= '9' ) ) {
 				CHAR_TABLE[i] |= MASK_HEXDIGIT;
 			}
-			if ( ( c >= '!' && c <= '/' ) || ( c >= ':' && c <= '@' ) ) {
+			if ( ( c >= '!' && c <= '/' ) || ( c >= ':' && c <= '@' ) || ( c >= '[' && c <= '`' ) || ( c >= '{' && c <= '~' ) ) {
 				CHAR_TABLE[i] |= MASK_PUNCT;
 			}
 			if ( ( CHAR_TABLE[i] & ( MASK_LOWERCASE | MASK_UPPERCASE ) ) != 0 ) {
@@ -842,7 +842,7 @@ public class StringLib extends TwoArgFunction {
 		CHAR_TABLE['\r'] |= MASK_SPACE;
 		CHAR_TABLE['\n'] |= MASK_SPACE;
 		CHAR_TABLE['\t'] |= MASK_SPACE;
-		CHAR_TABLE[0x0C /* '\v' */ ] |= MASK_SPACE;
+		CHAR_TABLE[0x0B /* '\v' */ ] |= MASK_SPACE;
 		CHAR_TABLE['\f'] |= MASK_SPACE;
 	};
 	
@@ -1008,9 +1008,10 @@ public class StringLib extends TwoArgFunction {
 			case 'c': res = ( cdata & MASK_CONTROL ) != 0; break;
 			case 'p': res = ( cdata & MASK_PUNCT ) != 0; break;
 			case 's': res = ( cdata & MASK_SPACE ) != 0; break;
+			case 'g': res = ( cdata & ( MASK_ALPHA | MASK_DIGIT | MASK_PUNCT ) ) != 0; break;
 			case 'w': res = ( cdata & ( MASK_ALPHA | MASK_DIGIT ) ) != 0; break;
 			case 'x': res = ( cdata & MASK_HEXDIGIT ) != 0; break;
-			case 'z': res = ( c == 0 ); break;
+			case 'z': res = ( c == 0 ); break;  /* deprecated option */
 			default: return cl == c;
 			}
 			return ( lcl == cl ) ? res : !res;
