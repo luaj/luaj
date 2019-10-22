@@ -33,8 +33,8 @@ import org.luaj.vm2.lib.OsLib;
 /**
  * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
  * <p>
- * This contains more complete implementations of the following functions 
- * using features that are specific to JSE:   
+ * This contains more complete implementations of the following functions
+ * using features that are specific to JSE:
  * <ul>
  * <li>{@code execute()}</li>
  * <li>{@code remove()}</li>
@@ -42,18 +42,18 @@ import org.luaj.vm2.lib.OsLib;
  * <li>{@code tmpname()}</li>
  * </ul>
  * <p>
- * Because the nature of the {@code os} library is to encapsulate 
- * os-specific features, the behavior of these functions varies considerably 
- * from their counterparts in the C platform.  
+ * Because the nature of the {@code os} library is to encapsulate
+ * os-specific features, the behavior of these functions varies considerably
+ * from their counterparts in the C platform.
  * <p>
- * Typically, this library is included as part of a call to 
+ * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * System.out.println( globals.get("os").get("time").call() );
  * } </pre>
  * <p>
- * For special cases where the smallest possible footprint is desired, 
+ * For special cases where the smallest possible footprint is desired,
  * a minimal set of libraries could be loaded
  * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
@@ -126,7 +126,7 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	protected String tmpname() {
 		try {
 			java.io.File f = java.io.File.createTempFile(TMP_PREFIX ,TMP_SUFFIX);
-			return f.getName();
+			return f.getAbsolutePath();
 		} catch ( IOException ioe ) {
 			return super.tmpname();
 		}
