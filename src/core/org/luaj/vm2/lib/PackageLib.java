@@ -144,6 +144,7 @@ public class PackageLib extends TwoArgFunction {
 		searchers.set(2, lua_searcher     = new lua_searcher());
 		searchers.set(3, java_searcher    = new java_searcher());
 		package_.set(_SEARCHERS, searchers);
+		package_.set("config", FILE_SEP + "\n;\n?\n!\n-\n");
 		package_.get(_LOADED).set("package", package_);
 		env.set("package", package_);
 		globals.package_ = this;
