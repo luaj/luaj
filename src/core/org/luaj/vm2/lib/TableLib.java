@@ -140,11 +140,9 @@ public class TableLib extends TwoArgFunction {
 	static class unpack extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaTable t = args.checktable(1);
-			switch (args.narg()) {
-			case 1: return t.unpack();
-			case 2: return t.unpack(args.checkint(2));
-			default: return t.unpack(args.checkint(2), args.checkint(3));
-			}
+			// do not waste resource for calc rawlen if arg3 is not nil
+			int len = args.arg(3).isnil() ? t.rawlen() : 0;
+			return t.unpack(args.optint(2, 1), args.optint(3, len));
 		}
 	}
 }
