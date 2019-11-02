@@ -1748,7 +1748,7 @@ public class LexState extends Constants {
 		fs.checkrepeated(dyd.label, dyd.n_label, label);  /* check for repeated labels */
 		checknext(TK_DBCOLON);  /* skip double colon */
 		/* create new entry for this label */
-		l = newlabelentry(dyd.label=grow(dyd.label, dyd.n_label+1), dyd.n_label++, label, line, fs.pc);
+		l = newlabelentry(dyd.label=grow(dyd.label, dyd.n_label+1), dyd.n_label++, label, line, fs.getlabel());
 		skipnoopstat();  /* skip other no-op statements */
 		if (block_follow(false)) {  /* label is last no-op statement in the block? */
 			/* assume that locals are already out of scope */
