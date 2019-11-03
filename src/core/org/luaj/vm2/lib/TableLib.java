@@ -126,7 +126,13 @@ public class TableLib extends TwoArgFunction {
 	// "remove" (table [, pos]) -> removed-ele
 	static class remove extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			return args.checktable(1).remove(args.optint(2, 0));
+			LuaTable table = args.checktable(1);
+			int size = table.length();
+			int pos = args.optint(2, size);
+			if (pos != size && (pos < 1 || pos > size + 1)) {
+				argerror(2, "position out of bounds: " + pos + " not between 1 and " + (size + 1));
+			}
+			return table.remove(pos);
 		}
 	}
 
