@@ -94,17 +94,21 @@ public class TableLib extends TwoArgFunction {
 	static class insert extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			switch (args.narg()) {
-			case 0: case 1: {
-				return argerror(2, "value expected");
-			}
 			case 2: {
 				LuaTable table = args.checktable(1);
 				table.insert(table.length()+1,args.arg(2));
 				return NONE;
 			}
-			default: {
-				args.checktable(1).insert(args.checkint(2),args.arg(3));
+			case 3: {
+				LuaTable table = args.checktable(1);
+				int pos = args.checkint(2);
+				int max = table.length() + 1;
+				if (pos < 1 || pos > max) argerror(2, "position out of bounds: " + pos + " not between 1 and " + max);
+				table.insert(pos, args.arg(3));
 				return NONE;
+			}
+			default: {
+				return error("wrong number of arguments to 'table.insert': " + args.narg() + " (must be 2 or 3)");
 			}
 			}
 		}
