@@ -25,23 +25,23 @@ import java.lang.ref.WeakReference;
 import java.util.Vector;
 
 /**
- * Subclass of {@link LuaValue} for representing lua tables. 
+ * Subclass of {@link LuaValue} for representing lua tables.
  * <p>
  * Almost all API's implemented in {@link LuaTable} are defined and documented in {@link LuaValue}.
  * <p>
  * If a table is needed, the one of the type-checking functions can be used such as
- * {@link #istable()}, 
+ * {@link #istable()},
  * {@link #checktable()}, or
- * {@link #opttable(LuaTable)} 
+ * {@link #opttable(LuaTable)}
  * <p>
- * The main table operations are defined on {@link LuaValue} 
+ * The main table operations are defined on {@link LuaValue}
  * for getting and setting values with and without metatag processing:
  * <ul>
- * <li>{@link #get(LuaValue)}</li>  
- * <li>{@link #set(LuaValue,LuaValue)}</li>  
- * <li>{@link #rawget(LuaValue)}</li>  
+ * <li>{@link #get(LuaValue)}</li>
+ * <li>{@link #set(LuaValue,LuaValue)}</li>
+ * <li>{@link #rawget(LuaValue)}</li>
  * <li>{@link #rawset(LuaValue,LuaValue)}</li>
- * <li>plus overloads such as {@link #get(String)}, {@link #get(int)}, and so on</li>  
+ * <li>plus overloads such as {@link #get(String)}, {@link #get(int)}, and so on</li>
  * </ul>
  * <p>
  * To iterate over key-value pairs from Java, use
@@ -56,7 +56,7 @@ import java.util.Vector;
  * }}</pre>
  * 
  * <p>
- * As with other types, {@link LuaTable} instances should be constructed via one of the table constructor 
+ * As with other types, {@link LuaTable} instances should be constructed via one of the table constructor
  * methods on {@link LuaValue}:
  * <ul>
  * <li>{@link LuaValue#tableOf()} empty table</li>
@@ -92,7 +92,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		hash = NOBUCKETS;
 	}
 	
-	/** 
+	/**
 	 * Construct table with preset capacity.
 	 * @param narray capacity of array part
 	 * @param nhash capacity of hash part
@@ -102,9 +102,9 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/**
-	 * Construct table with named and unnamed parts. 
+	 * Construct table with named and unnamed parts.
 	 * @param named Named elements in order {@code key-a, value-a, key-b, value-b, ... }
-	 * @param unnamed Unnamed elements in order {@code value-1, value-2, ... } 
+	 * @param unnamed Unnamed elements in order {@code value-1, value-2, ... }
 	 * @param lastarg Additional unnamed values beyond {@code unnamed.length}
 	 */
 	public LuaTable(LuaValue[] named, LuaValue[] unnamed, Varargs lastarg) {
@@ -123,17 +123,17 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/**
-	 * Construct table of unnamed elements. 
-	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... } 
+	 * Construct table of unnamed elements.
+	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... }
 	 */
 	public LuaTable(Varargs varargs) {
 		this(varargs,1);
 	}
 
 	/**
-	 * Construct table of unnamed elements. 
+	 * Construct table of unnamed elements.
 	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... }
-	 * @param firstarg the index in varargs of the first argument to include in the table 
+	 * @param firstarg the index in varargs of the first argument to include in the table
 	 */
 	public LuaTable(Varargs varargs, int firstarg) {
 		int nskip = firstarg-1;
@@ -152,8 +152,8 @@ public class LuaTable extends LuaValue implements Metatable {
 		return "table";
 	}
 	
-	public boolean istable() { 
-		return true; 
+	public boolean istable() {
+		return true;
 	}
 	
 	public LuaTable checktable() {
@@ -185,17 +185,17 @@ public class LuaTable extends LuaValue implements Metatable {
 		return v;
 	}
 	
-	/** 
-	 * Get the length of the array part of the table. 
-	 * @return length of the array part, does not relate to count of objects in the table. 
+	/**
+	 * Get the length of the array part of the table.
+	 * @return length of the array part, does not relate to count of objects in the table.
 	 */
 	protected int getArrayLength() {
 		return array.length;
 	}
 
-	/** 
-	 * Get the length of the hash part of the table. 
-	 * @return length of the hash part, does not relate to count of objects in the table. 
+	/**
+	 * Get the length of the hash part of the table.
+	 * @return length of the hash part, does not relate to count of objects in the table.
 	 */
 	protected int getHashLength() {
 		return hash.length;
@@ -294,7 +294,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/** Remove the element at a position in a list-table
-	 *  
+	 * 
 	 * @param pos the position to remove
 	 * @return The removed item, or {@link #NONE} if not removed
 	 */
@@ -313,7 +313,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/** Insert an element at a position in a list-table
-	 *  
+	 * 
 	 * @param pos the position to remove
 	 * @param value The value to insert
 	 */
@@ -355,14 +355,14 @@ public class LuaTable extends LuaValue implements Metatable {
 		return rawlen();
 	}
 	
-	public LuaValue len()  { 
+	public LuaValue len()  {
 		final LuaValue h = metatag(LEN);
 		if (h.toboolean())
 			return h.call(this);
 		return LuaInteger.valueOf(rawlen());
 	}
 
-	public int rawlen() { 
+	public int rawlen() {
 		int a = getArrayLength();
 		int n = a+1,m=0;
 		while ( !rawget(n).isnil() ) {
@@ -380,7 +380,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/**
-	 * Get the next element after a particular key in the table 
+	 * Get the next element after a particular key in the table
 	 * @return key,value or nil
 	 */
 	public Varargs next( LuaValue key ) {
@@ -441,8 +441,8 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	/**
-	 * Get the next element after a particular key in the 
-	 * contiguous array part of a table 
+	 * Get the next element after a particular key in the
+	 * contiguous array part of a table
 	 * @return key,value or none
 	 */
 	public Varargs inext(LuaValue key) {
@@ -517,7 +517,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		}
 	}
 	
-	/** 
+	/**
 	 * Find the hashtable slot to use
 	 * @param key key to look for
 	 * @return slot to use
@@ -779,7 +779,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	//
 	// implemented heap sort from wikipedia
 	//
-	// Only sorts the contiguous array part. 
+	// Only sorts the contiguous array part.
 	//
 	/** Sort the table using a comparator.
 	 * @param comparator {@link LuaValue} to be called to compare elements.
@@ -789,17 +789,21 @@ public class LuaTable extends LuaValue implements Metatable {
 		if (m_metatable != null && m_metatable.useWeakValues()) {
 			dropWeakArrayValues();
 		}
+		LuaValue[] array = this.array;
 		int n = array.length;
 		while ( n > 0 && array[n-1] == null )
 			--n;
-		if ( n > 1 ) 
-			heapSort(n, comparator);
+		if ( n > 1 )
+			heapSort(n, comparator.isnil() ? null : comparator);
 	}
 
 	private void heapSort(int count, LuaValue cmpfunc) {
 		heapify(count, cmpfunc);
+		LuaValue[] array = this.array;
 		for ( int end=count-1; end>0; ) {
-			swap(end, 0);
+			LuaValue a = array[end]; // swap(end, 0)
+			array[end] = array[0];
+			array[0] = a;
 			siftDown(0, --end, cmpfunc);
 		}
 	}
@@ -810,12 +814,15 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	private void siftDown(int start, int end, LuaValue cmpfunc) {
-		for ( int root=start; root*2+1 <= end; ) { 
-			int child = root*2+1; 
+		LuaValue[] array = this.array;
+		for ( int root=start; root*2+1 <= end; ) {
+			int child = root*2+1;
 			if (child < end && compare(child, child + 1, cmpfunc))
-				++child; 
+				++child;
 			if (compare(root, child, cmpfunc)) {
-				swap(root, child);
+				LuaValue a = array[root]; // swap(root, child)
+				array[root] = array[child];
+				array[child] = a;
 				root = child;
 			} else
 				return;
@@ -824,6 +831,8 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	private boolean compare(int i, int j, LuaValue cmpfunc) {
 		LuaValue a, b;
+		LuaValue[] array = this.array;
+		Metatable m_metatable = this.m_metatable;
 		if (m_metatable == null) {
 			a = array[i];
 			b = array[j];
@@ -833,22 +842,16 @@ public class LuaTable extends LuaValue implements Metatable {
 		}
 		if ( a == null || b == null )
 			return false;
-		if ( ! cmpfunc.isnil() ) {
+		if ( cmpfunc != null ) {
 			return cmpfunc.call(a,b).toboolean();
 		} else {
 			return a.lt_b(b);
 		}
 	}
 	
-	private void swap(int i, int j) {
-		LuaValue a = array[i];
-		array[i] = array[j];
-		array[j] = a;
-	}
-	
-	/** This may be deprecated in a future release.  
+	/** This may be deprecated in a future release.
 	 * It is recommended to count via iteration over next() instead
-	 * @return count of keys in the table 
+	 * @return count of keys in the table
 	 * */
 	public int keyCount() {
 		LuaValue k = LuaValue.NIL;
@@ -859,9 +862,9 @@ public class LuaTable extends LuaValue implements Metatable {
 		}
 	}
 	
-	/** This may be deprecated in a future release.  
-	 * It is recommended to use next() instead 
-	 * @return array of keys in the table 
+	/** This may be deprecated in a future release.
+	 * It is recommended to use next() instead
+	 * @return array of keys in the table
 	 * */
 	public LuaValue[] keys() {
 		Vector l = new Vector();
