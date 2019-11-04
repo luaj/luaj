@@ -299,15 +299,15 @@ public class LuaTable extends LuaValue implements Metatable {
 	 * @return The removed item, or {@link #NONE} if not removed
 	 */
 	public LuaValue remove(int pos) {
-		int n = rawlen();
+		int n = length();
 		if ( pos == 0 )
 			pos = n;
 		else if (pos > n)
 			return NONE;
-		LuaValue v = rawget(pos);
+		LuaValue v = get(pos);
 		for ( LuaValue r=v; !r.isnil(); ) {
-			r = rawget(pos+1);
-			rawset(pos++, r);
+			r = get(pos+1);
+			set(pos++, r);
 		}
 		return v.isnil()? NONE: v;
 	}
@@ -319,10 +319,10 @@ public class LuaTable extends LuaValue implements Metatable {
 	 */
 	public void insert(int pos, LuaValue value) {
 		if ( pos == 0 )
-			pos = rawlen()+1;
+			pos = length()+1;
 		while ( ! value.isnil() ) {
-			LuaValue v = rawget( pos );
-			rawset(pos++, value);
+			LuaValue v = get( pos );
+			set(pos++, value);
 			value = v;
 		}
 	}
@@ -789,40 +789,35 @@ public class LuaTable extends LuaValue implements Metatable {
 		if (m_metatable != null && m_metatable.useWeakValues()) {
 			dropWeakArrayValues();
 		}
-		LuaValue[] array = this.array;
-		int n = array.length;
-		while ( n > 0 && array[n-1] == null )
-			--n;
+		int n = length();
 		if ( n > 1 )
 			heapSort(n, comparator.isnil() ? null : comparator);
 	}
 
 	private void heapSort(int count, LuaValue cmpfunc) {
 		heapify(count, cmpfunc);
-		LuaValue[] array = this.array;
-		for ( int end=count-1; end>0; ) {
-			LuaValue a = array[end]; // swap(end, 0)
-			array[end] = array[0];
-			array[0] = a;
-			siftDown(0, --end, cmpfunc);
+		for ( int end=count; end>1; ) {
+			LuaValue a = get(end); // swap(end, 1)
+			set(end, get(1));
+			set(1, a);
+			siftDown(1, --end, cmpfunc);
 		}
 	}
 
 	private void heapify(int count, LuaValue cmpfunc) {
-		for ( int start=count/2-1; start>=0; --start )
-			siftDown(start, count - 1, cmpfunc);
+		for ( int start=count/2; start>0; --start )
+			siftDown(start, count, cmpfunc);
 	}
 
 	private void siftDown(int start, int end, LuaValue cmpfunc) {
-		LuaValue[] array = this.array;
-		for ( int root=start; root*2+1 <= end; ) {
-			int child = root*2+1;
+		for ( int root=start; root*2 <= end; ) {
+			int child = root*2;
 			if (child < end && compare(child, child + 1, cmpfunc))
 				++child;
 			if (compare(root, child, cmpfunc)) {
-				LuaValue a = array[root]; // swap(root, child)
-				array[root] = array[child];
-				array[child] = a;
+				LuaValue a = get(root); // swap(root, child)
+				set(root, get(child));
+				set(child, a);
 				root = child;
 			} else
 				return;
@@ -830,16 +825,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	private boolean compare(int i, int j, LuaValue cmpfunc) {
-		LuaValue a, b;
-		LuaValue[] array = this.array;
-		Metatable m_metatable = this.m_metatable;
-		if (m_metatable == null) {
-			a = array[i];
-			b = array[j];
-		} else {
-			a = m_metatable.arrayget(array, i);
-			b = m_metatable.arrayget(array, j);
-		}
+		LuaValue a = get(i), b = get(j);
 		if ( a == null || b == null )
 			return false;
 		if ( cmpfunc != null ) {

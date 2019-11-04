@@ -151,7 +151,7 @@ public class TableLib extends TwoArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaTable t = args.checktable(1);
 			// do not waste resource for calc rawlen if arg3 is not nil
-			int len = args.arg(3).isnil() ? t.rawlen() : 0;
+			int len = args.arg(3).isnil() ? t.length() : 0;
 			return t.unpack(args.optint(2, 1), args.optint(3, len));
 		}
 	}
