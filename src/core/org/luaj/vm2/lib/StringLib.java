@@ -1201,7 +1201,7 @@ public class StringLib extends TwoArgFunction {
 		int matchbalance( int soff, int poff ) {
 			final int plen = p.length();
 			if ( poff == plen || poff + 1 == plen ) {
-				error( "unbalanced pattern" );
+				error( "malformed pattern (missing arguments to '%b')" );
 			}
 			final int slen = s.length();
 			if ( soff >= slen )
