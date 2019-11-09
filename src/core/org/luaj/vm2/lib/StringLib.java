@@ -1085,7 +1085,7 @@ public class StringLib extends TwoArgFunction {
 						case 'f': {
 							poffset += 2;
 							if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
-								error("Missing '[' after '%f' in pattern");
+								error("missing '[' after '%f' in pattern");
 							}
 							int ep = classend( poffset );
 							int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
