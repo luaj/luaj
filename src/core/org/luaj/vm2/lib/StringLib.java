@@ -803,6 +803,8 @@ public class StringLib extends TwoArgFunction {
 	private static final LuaString SPECIALS = valueOf("^$*+?.([%-");
 	private static final int MAX_CAPTURES = 32;
 	
+	private static final int MAXCCALLS = 200;
+	
 	private static final int CAP_UNFINISHED = -1;
 	private static final int CAP_POSITION = -2;
 	
@@ -846,6 +848,7 @@ public class StringLib extends TwoArgFunction {
 	};
 	
 	static class MatchState {
+		int matchdepth;  /* control for recursive depth (to avoid C stack overflow) */
 		final LuaString s;
 		final LuaString p;
 		final Varargs args;
@@ -860,10 +863,12 @@ public class StringLib extends TwoArgFunction {
 			this.level = 0;
 			this.cinit = new int[ MAX_CAPTURES ];
 			this.clen = new int[ MAX_CAPTURES ];
+			this.matchdepth = MAXCCALLS;
 		}
 		
 		void reset() {
 			level = 0;
+			this.matchdepth = MAXCCALLS;
 		}
 		
 		private void add_s( Buffer lbuf, LuaString news, int soff, int e ) {
@@ -1052,81 +1057,86 @@ public class StringLib extends TwoArgFunction {
 		 * where match ends, otherwise returns -1.
 		 */
 		int match( int soffset, int poffset ) {
-			while ( true ) {
-				// Check if we are at the end of the pattern -
-				// equivalent to the '\0' case in the C version, but our pattern
-				// string is not NUL-terminated.
-				if ( poffset == p.length() )
-					return soffset;
-				switch ( p.luaByte( poffset ) ) {
-				case '(':
-					if ( ++poffset < p.length() && p.luaByte( poffset ) == ')' )
-						return start_capture( soffset, poffset + 1, CAP_POSITION );
-					else
-						return start_capture( soffset, poffset, CAP_UNFINISHED );
-				case ')':
-					return end_capture( soffset, poffset + 1 );
-				case L_ESC:
-					if ( poffset + 1 == p.length() )
-						error("malformed pattern (ends with '%')");
-					switch ( p.luaByte( poffset + 1 ) ) {
-					case 'b':
-						soffset = matchbalance( soffset, poffset + 2 );
-						if ( soffset == -1 ) return -1;
-						poffset += 4;
-						continue;
-					case 'f': {
-						poffset += 2;
-						if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
-							error("Missing '[' after '%f' in pattern");
+			if (matchdepth-- == 0) error("pattern too complex");
+			try {
+				while ( true ) {
+					// Check if we are at the end of the pattern -
+					// equivalent to the '\0' case in the C version, but our pattern
+					// string is not NUL-terminated.
+					if ( poffset == p.length() )
+						return soffset;
+					switch ( p.luaByte( poffset ) ) {
+					case '(':
+						if ( ++poffset < p.length() && p.luaByte( poffset ) == ')' )
+							return start_capture( soffset, poffset + 1, CAP_POSITION );
+						else
+							return start_capture( soffset, poffset, CAP_UNFINISHED );
+					case ')':
+						return end_capture( soffset, poffset + 1 );
+					case L_ESC:
+						if ( poffset + 1 == p.length() )
+							error("malformed pattern (ends with '%')");
+						switch ( p.luaByte( poffset + 1 ) ) {
+						case 'b':
+							soffset = matchbalance( soffset, poffset + 2 );
+							if ( soffset == -1 ) return -1;
+							poffset += 4;
+							continue;
+						case 'f': {
+							poffset += 2;
+							if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
+								error("Missing '[' after '%f' in pattern");
+							}
+							int ep = classend( poffset );
+							int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
+							int next = ( soffset == s.length() ) ? '\0' : s.luaByte( soffset );
+							if ( matchbracketclass( previous, poffset, ep - 1 ) ||
+								 !matchbracketclass( next, poffset, ep - 1 ) )
+								return -1;
+							poffset = ep;
+							continue;
 						}
-						int ep = classend( poffset );
-						int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
-						int next = ( soffset == s.length() ) ? '\0' : s.luaByte( soffset );
-						if ( matchbracketclass( previous, poffset, ep - 1 ) ||
-							 !matchbracketclass( next, poffset, ep - 1 ) )
+						default: {
+							int c = p.luaByte( poffset + 1 );
+							if ( Character.isDigit( (char) c ) ) {
+								soffset = match_capture( soffset, c );
+								if ( soffset == -1 )
+									return -1;
+								return match( soffset, poffset + 2 );
+							}
+						}
+						}
+					case '$':
+						if ( poffset + 1 == p.length() )
+							return ( soffset == s.length() ) ? soffset : -1;
+					}
+					int ep = classend( poffset );
+					boolean m = soffset < s.length() && singlematch( s.luaByte( soffset ), poffset, ep );
+					int pc = ( ep < p.length() ) ? p.luaByte( ep ) : '\0';
+					
+					switch ( pc ) {
+					case '?':
+						int res;
+						if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
+							return res;
+						poffset = ep + 1;
+						continue;
+					case '*':
+						return max_expand( soffset, poffset, ep );
+					case '+':
+						return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
+					case '-':
+						return min_expand( soffset, poffset, ep );
+					default:
+						if ( !m )
 							return -1;
+						soffset++;
 						poffset = ep;
 						continue;
 					}
-					default: {
-						int c = p.luaByte( poffset + 1 );
-						if ( Character.isDigit( (char) c ) ) {
-							soffset = match_capture( soffset, c );
-							if ( soffset == -1 )
-								return -1;
-							return match( soffset, poffset + 2 );
-						}
-					}
-					}
-				case '$':
-					if ( poffset + 1 == p.length() )
-						return ( soffset == s.length() ) ? soffset : -1;
 				}
-				int ep = classend( poffset );
-				boolean m = soffset < s.length() && singlematch( s.luaByte( soffset ), poffset, ep );
-				int pc = ( ep < p.length() ) ? p.luaByte( ep ) : '\0';
-				
-				switch ( pc ) {
-				case '?':
-					int res;
-					if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
-						return res;
-					poffset = ep + 1;
-					continue;
-				case '*':
-					return max_expand( soffset, poffset, ep );
-				case '+':
-					return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
-				case '-':
-					return min_expand( soffset, poffset, ep );
-				default:
-					if ( !m )
-						return -1;
-					soffset++;
-					poffset = ep;
-					continue;
-				}
+			} finally {
+				matchdepth++;
 			}
 		}
 		
