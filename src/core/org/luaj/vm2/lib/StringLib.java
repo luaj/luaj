@@ -527,19 +527,20 @@ public class StringLib extends TwoArgFunction {
 		private final int srclen;
 		private final MatchState ms;
 		private int soffset;
+		private int lastmatch;
 		public GMatchAux(Varargs args, LuaString src, LuaString pat) {
 			this.srclen = src.length();
 			this.ms = new MatchState(args, src, pat);
 			this.soffset = 0;
+			this.lastmatch = -1;
 		}
 		public Varargs invoke(Varargs args) {
 			for ( ; soffset<=srclen; soffset++ ) {
 				ms.reset();
 				int res = ms.match(soffset, 0);
-				if ( res >=0 ) {
+				if ( res >=0 && res != lastmatch ) {
 					int soff = soffset;
-					soffset = res;
-					if (soff == res) soffset++; /* empty match? go at least one position */
+					lastmatch = soffset = res;
 					return ms.push_captures( true, soff, res );
 				}
 			}
@@ -598,6 +599,7 @@ public class StringLib extends TwoArgFunction {
 			LuaString src = args.checkstring( 1 );
 			final int srclen = src.length();
 			LuaString p = args.checkstring( 2 );
+			int lastmatch = -1; /* end of last match */
 			LuaValue repl = args.arg( 3 );
 			int max_s = args.optint( 4, srclen + 1 );
 			final boolean anchor = p.length() > 0 && p.charAt( 0 ) == '^';
@@ -610,18 +612,15 @@ public class StringLib extends TwoArgFunction {
 			while ( n < max_s ) {
 				ms.reset();
 				int res = ms.match( soffset, anchor ? 1 : 0 );
-				if ( res != -1 ) {
+				if ( res != -1 && res != lastmatch ) {  /* match? */
 					n++;
-					ms.add_value( lbuf, soffset, res, repl );
+					ms.add_value( lbuf, soffset, res, repl );  /* add replacement to buffer */
+					soffset = lastmatch = res;
 				}
-				if ( res != -1 && res > soffset )
-					soffset = res;
-				else if ( soffset < srclen )
+				else if ( soffset < srclen ) /* otherwise, skip one character */
 					lbuf.append( (byte) src.luaByte( soffset++ ) );
-				else
-					break;
-				if ( anchor )
-					break;
+				else break;   /* end of subject */
+				if ( anchor ) break;
 			}
 			lbuf.append( src.substring( soffset, srclen ) );
 			return varargsOf(lbuf.tostring(), valueOf(n));
