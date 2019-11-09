@@ -938,7 +938,7 @@ public class StringLib extends TwoArgFunction {
 				if ( i == 0 ) {
 					return s.substring( soff, end );
 				} else {
-					return error( "invalid capture index" );
+					return error( "invalid capture index %" + (i + 1) );
 				}
 			} else {
 				int l = clen[i];
@@ -957,7 +957,7 @@ public class StringLib extends TwoArgFunction {
 		private int check_capture( int l ) {
 			l -= '1';
 			if ( l < 0 || l >= level || this.clen[l] == CAP_UNFINISHED ) {
-				error("invalid capture index");
+				error("invalid capture index %" + (l + 1));
 			}
 			return l;
 		}
