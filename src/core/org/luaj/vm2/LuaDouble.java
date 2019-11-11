@@ -24,18 +24,18 @@ package org.luaj.vm2;
 import org.luaj.vm2.lib.MathLib;
 
 /**
- * Extension of {@link LuaNumber} which can hold a Java double as its value. 
+ * Extension of {@link LuaNumber} which can hold a Java double as its value.
  * <p>
- * These instance are not instantiated directly by clients, but indirectly 
+ * These instance are not instantiated directly by clients, but indirectly
  * via the static functions {@link LuaValue#valueOf(int)} or {@link LuaValue#valueOf(double)}
- * functions.  This ensures that values which can be represented as int 
- * are wrapped in {@link LuaInteger} instead of {@link LuaDouble}.  
+ * functions.  This ensures that values which can be represented as int
+ * are wrapped in {@link LuaInteger} instead of {@link LuaDouble}.
  * <p>
  * Almost all API's implemented in LuaDouble are defined and documented in {@link LuaValue}.
  * <p>
  * However the constants {@link #NAN}, {@link #POSINF}, {@link #NEGINF},
- * {@link #JSTR_NAN}, {@link #JSTR_POSINF}, and {@link #JSTR_NEGINF} may be useful 
- * when dealing with Nan or Infinite values. 
+ * {@link #JSTR_NAN}, {@link #JSTR_POSINF}, and {@link #JSTR_NEGINF} may be useful
+ * when dealing with Nan or Infinite values.
  * <p>
  * LuaDouble also defines functions for handling the unique math rules of lua devision and modulo in
  * <ul>
@@ -43,7 +43,7 @@ import org.luaj.vm2.lib.MathLib;
  * <li>{@link #ddiv_d(double, double)}</li>
  * <li>{@link #dmod(double, double)}</li>
  * <li>{@link #dmod_d(double, double)}</li>
- * </ul> 
+ * </ul>
  * <p>
  * @see LuaValue
  * @see LuaNumber
@@ -90,7 +90,7 @@ public class LuaDouble extends LuaNumber {
 	}
 	
 	public boolean islong() {
-		return v == (long) v; 
+		return v == (long) v;
 	}
 	
 	public byte    tobyte()        { return (byte) (long) v; }
@@ -151,12 +151,12 @@ public class LuaDouble extends LuaNumber {
 	/** Divide two double numbers according to lua math, and return a {@link LuaValue} result.
 	 * @param lhs Left-hand-side of the division.
 	 * @param rhs Right-hand-side of the division.
-	 * @return {@link LuaValue} for the result of the division, 
+	 * @return {@link LuaValue} for the result of the division,
 	 * taking into account positive and negiative infinity, and Nan
-	 * @see #ddiv_d(double, double) 
+	 * @see #ddiv_d(double, double)
 	 */
 	public static LuaValue ddiv(double lhs, double rhs) {
-		return rhs!=0? valueOf( lhs / rhs ): lhs>0? POSINF: lhs==0? NAN: NEGINF;	
+		return rhs!=0? valueOf( lhs / rhs ): lhs>0? POSINF: lhs==0? NAN: NEGINF;
 	}
 	
 	/** Divide two double numbers according to lua math, and return a double result.
@@ -166,15 +166,15 @@ public class LuaDouble extends LuaNumber {
 	 * @see #ddiv(double, double)
 	 */
 	public static double ddiv_d(double lhs, double rhs) {
-		return rhs!=0? lhs / rhs: lhs>0? Double.POSITIVE_INFINITY: lhs==0? Double.NaN: Double.NEGATIVE_INFINITY;	
+		return rhs!=0? lhs / rhs: lhs>0? Double.POSITIVE_INFINITY: lhs==0? Double.NaN: Double.NEGATIVE_INFINITY;
 	}
 	
 	/** Take modulo double numbers according to lua math, and return a {@link LuaValue} result.
 	 * @param lhs Left-hand-side of the modulo.
 	 * @param rhs Right-hand-side of the modulo.
-	 * @return {@link LuaValue} for the result of the modulo, 
+	 * @return {@link LuaValue} for the result of the modulo,
 	 * using lua's rules for modulo
-	 * @see #dmod_d(double, double) 
+	 * @see #dmod_d(double, double)
 	 */
 	public static LuaValue dmod(double lhs, double rhs) {
 		if (rhs == 0 || lhs == Double.POSITIVE_INFINITY || lhs == Double.NEGATIVE_INFINITY) return NAN;
@@ -190,7 +190,7 @@ public class LuaDouble extends LuaNumber {
 	/** Take modulo for double numbers according to lua math, and return a double result.
 	 * @param lhs Left-hand-side of the modulo.
 	 * @param rhs Right-hand-side of the modulo.
-	 * @return double value for the result of the modulo, 
+	 * @return double value for the result of the modulo,
 	 * using lua's rules for modulo
 	 * @see #dmod(double, double)
 	 */
@@ -206,28 +206,28 @@ public class LuaDouble extends LuaNumber {
 	}
 
 	// relational operators
-	public LuaValue   lt( LuaValue rhs )         { return rhs.gt_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   lt( LuaValue rhs )         { return rhs instanceof LuaNumber ? (rhs.gt_b(v)? TRUE: FALSE) : super.lt(rhs); }
 	public LuaValue   lt( double rhs )      { return v < rhs? TRUE: FALSE; }
 	public LuaValue   lt( int rhs )         { return v < rhs? TRUE: FALSE; }
-	public boolean lt_b( LuaValue rhs )       { return rhs.gt_b(v); }
+	public boolean lt_b( LuaValue rhs )       { return rhs instanceof LuaNumber ? rhs.gt_b(v) : super.lt_b(rhs); }
 	public boolean lt_b( int rhs )         { return v < rhs; }
 	public boolean lt_b( double rhs )      { return v < rhs; }
-	public LuaValue   lteq( LuaValue rhs )       { return rhs.gteq_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   lteq( LuaValue rhs )       { return rhs instanceof LuaNumber ? (rhs.gteq_b(v)? TRUE: FALSE) : super.lteq(rhs); }
 	public LuaValue   lteq( double rhs )    { return v <= rhs? TRUE: FALSE; }
 	public LuaValue   lteq( int rhs )       { return v <= rhs? TRUE: FALSE; }
-	public boolean lteq_b( LuaValue rhs )     { return rhs.gteq_b(v); }
+	public boolean lteq_b( LuaValue rhs )     { return rhs instanceof LuaNumber ? rhs.gteq_b(v) : super.lteq_b(rhs); }
 	public boolean lteq_b( int rhs )       { return v <= rhs; }
 	public boolean lteq_b( double rhs )    { return v <= rhs; }
-	public LuaValue   gt( LuaValue rhs )         { return rhs.lt_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   gt( LuaValue rhs )         { return rhs instanceof LuaNumber ? (rhs.lt_b(v)? TRUE: FALSE) : super.gt(rhs); }
 	public LuaValue   gt( double rhs )      { return v > rhs? TRUE: FALSE; }
 	public LuaValue   gt( int rhs )         { return v > rhs? TRUE: FALSE; }
-	public boolean gt_b( LuaValue rhs )       { return rhs.lt_b(v); }
+	public boolean gt_b( LuaValue rhs )       { return rhs instanceof LuaNumber ? rhs.lt_b(v) : super.gt_b(rhs); }
 	public boolean gt_b( int rhs )         { return v > rhs; }
 	public boolean gt_b( double rhs )      { return v > rhs; }
-	public LuaValue   gteq( LuaValue rhs )       { return rhs.lteq_b(v)? LuaValue.TRUE: FALSE; }
+	public LuaValue   gteq( LuaValue rhs )       { return rhs instanceof LuaNumber ? (rhs.lteq_b(v)? TRUE: FALSE) : super.gteq(rhs); }
 	public LuaValue   gteq( double rhs )    { return v >= rhs? TRUE: FALSE; }
 	public LuaValue   gteq( int rhs )       { return v >= rhs? TRUE: FALSE; }
-	public boolean gteq_b( LuaValue rhs )     { return rhs.lteq_b(v); }
+	public boolean gteq_b( LuaValue rhs )     { return rhs instanceof LuaNumber ? rhs.lteq_b(v) : super.gteq_b(rhs); }
 	public boolean gteq_b( int rhs )       { return v >= rhs; }
 	public boolean gteq_b( double rhs )    { return v >= rhs; }
 	
@@ -236,17 +236,17 @@ public class LuaDouble extends LuaNumber {
 			
 	public String tojstring() {
 		/*
-		if ( v == 0.0 ) { // never occurs in J2me 
+		if ( v == 0.0 ) { // never occurs in J2me
 			long bits = Double.doubleToLongBits( v );
 			return ( bits >> 63 == 0 ) ? "0" : "-0";
 		}
 		*/
 		long l = (long) v;
-		if ( l == v ) 
+		if ( l == v )
 			return Long.toString(l);
 		if ( Double.isNaN(v) )
 			return JSTR_NAN;
-		if ( Double.isInfinite(v) ) 
+		if ( Double.isInfinite(v) )
 			return (v<0? JSTR_NEGINF: JSTR_POSINF);
 		return Float.toString((float)v);
 	}
@@ -268,11 +268,11 @@ public class LuaDouble extends LuaNumber {
 	}
 	
 	public LuaNumber optnumber(LuaNumber defval) {
-		return this; 
+		return this;
 	}
 	
 	public boolean isnumber() {
-		return true; 
+		return true;
 	}
 	
 	public boolean isstring() {
@@ -287,14 +287,14 @@ public class LuaDouble extends LuaNumber {
 	public LuaNumber checknumber()       { return this; }
 	public double checkdouble()          { return v; }
 	
-	public String checkjstring() { 
+	public String checkjstring() {
 		return tojstring();
 	}
-	public LuaString checkstring() { 
+	public LuaString checkstring() {
 		return LuaString.valueOf(tojstring());
 	}
 	
 	public boolean isvalidkey() {
 		return !Double.isNaN(v);
-	}	
+	}
 }
