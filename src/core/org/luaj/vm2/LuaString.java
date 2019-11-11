@@ -31,28 +31,28 @@ import java.io.PrintStream;
 import org.luaj.vm2.lib.MathLib;
 
 /**
- * Subclass of {@link LuaValue} for representing lua strings. 
+ * Subclass of {@link LuaValue} for representing lua strings.
  * <p>
- * Because lua string values are more nearly sequences of bytes than 
+ * Because lua string values are more nearly sequences of bytes than
  * sequences of characters or unicode code points, the {@link LuaString}
- * implementation holds the string value in an internal byte array.  
+ * implementation holds the string value in an internal byte array.
  * <p>
- * {@link LuaString} values are not considered mutable once constructed, 
+ * {@link LuaString} values are not considered mutable once constructed,
  * so multiple {@link LuaString} values can chare a single byte array.
  * <p>
  * Currently {@link LuaString}s are pooled via a centrally managed weak table.
- * To ensure that as many string values as possible take advantage of this, 
- * Constructors are not exposed directly.  As with number, booleans, and nil, 
+ * To ensure that as many string values as possible take advantage of this,
+ * Constructors are not exposed directly.  As with number, booleans, and nil,
  * instance construction should be via {@link LuaValue#valueOf(byte[])} or similar API.
  * <p>
  * Because of this pooling, users of LuaString <em>must not directly alter the
  * bytes in a LuaString</em>, or undefined behavior will result.
  * <p>
- * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed. 
- * The functions 
+ * When Java Strings are used to initialize {@link LuaString} data, the UTF8 encoding is assumed.
+ * The functions
  * {@link #lengthAsUtf8(char[])},
- * {@link #encodeToUtf8(char[], int, byte[], int)}, and 
- * {@link #decodeAsUtf8(byte[], int, int)} 
+ * {@link #encodeToUtf8(char[], int, byte[], int)}, and
+ * {@link #decodeAsUtf8(byte[], int, int)}
  * are used to convert back and forth between UTF8 byte arrays and character arrays.
  * 
  * @see LuaValue
@@ -63,15 +63,15 @@ public class LuaString extends LuaValue {
 
 	/** The singleton instance for string metatables that forwards to the string functions.
 	 * Typically, this is set to the string metatable as a side effect of loading the string
-	 * library, and is read-write to provide flexible behavior by default.  When used in a 
+	 * library, and is read-write to provide flexible behavior by default.  When used in a
 	 * server environment where there may be roge scripts, this should be replaced with a
 	 * read-only table since it is shared across all lua code in this Java VM.
 	 */
 	public static LuaValue s_metatable;
 	
 	/** The bytes for the string.  These <em><b>must not be mutated directly</b></em> because
-	 * the backing may be shared by multiple LuaStrings, and the hash code is 
-	 * computed only at construction time. 
+	 * the backing may be shared by multiple LuaStrings, and the hash code is
+	 * computed only at construction time.
 	 * It is exposed only for performance and legacy reasons. */
 	public final byte[] m_bytes;
 	
@@ -84,29 +84,29 @@ public class LuaString extends LuaValue {
 	/** The hashcode for this string.  Computed at construct time. */
 	private final int m_hashcode;
 
-	/** Size of cache of recent short strings. This is the maximum number of LuaStrings that 
+	/** Size of cache of recent short strings. This is the maximum number of LuaStrings that
 	 * will be retained in the cache of recent short strings.  Exposed to package for testing. */
 	static final int RECENT_STRINGS_CACHE_SIZE = 128;
 
-	/** Maximum length of a string to be considered for recent short strings caching. 
+	/** Maximum length of a string to be considered for recent short strings caching.
 	 * This effectively limits the total memory that can be spent on the recent strings cache,
-	 * because no LuaString whose backing exceeds this length will be put into the cache.  
+	 * because no LuaString whose backing exceeds this length will be put into the cache.
 	 * Exposed to package for testing. */
 	static final int RECENT_STRINGS_MAX_LENGTH = 32;
 
-	/** Simple cache of recently created strings that are short.  
-	 * This is simply a list of strings, indexed by their hash codes modulo the cache size 
-	 * that have been recently constructed.  If a string is being constructed frequently 
-	 * from different contexts, it will generally show up as a cache hit and resolve 
+	/** Simple cache of recently created strings that are short.
+	 * This is simply a list of strings, indexed by their hash codes modulo the cache size
+	 * that have been recently constructed.  If a string is being constructed frequently
+	 * from different contexts, it will generally show up as a cache hit and resolve
 	 * to the same value.  */
 	private static final class RecentShortStrings {
-		private static final LuaString recent_short_strings[] = 
+		private static final LuaString recent_short_strings[] =
 				new LuaString[RECENT_STRINGS_CACHE_SIZE];
 	}
 
 	/**
-	 * Get a {@link LuaString} instance whose bytes match 
-	 * the supplied Java String using the UTF8 encoding. 
+	 * Get a {@link LuaString} instance whose bytes match
+	 * the supplied Java String using the UTF8 encoding.
 	 * @param string Java String containing characters to encode as UTF8
 	 * @return {@link LuaString} with UTF8 bytes corresponding to the supplied String
 	 */
@@ -120,7 +120,7 @@ public class LuaString extends LuaValue {
 	/** Construct a {@link LuaString} for a portion of a byte array.
 	 * <p>
 	 * The array is first be used as the backing for this object, so clients must not change contents.
-	 * If the supplied value for 'len' is more than half the length of the container, the 
+	 * If the supplied value for 'len' is more than half the length of the container, the
 	 * supplied byte array will be used as the backing, otherwise the bytes will be copied to a
 	 * new byte array, and cache lookup may be performed.
 	 * <p>
@@ -172,11 +172,11 @@ public class LuaString extends LuaValue {
 
 	/** Construct a {@link LuaString} using the supplied characters as byte values.
 	 * <p>
-	 * Only the low-order 8-bits of each character are used, the remainder is ignored. 
+	 * Only the low-order 8-bits of each character are used, the remainder is ignored.
 	 * <p>
-	 * This is most useful for constructing byte sequences that do not conform to UTF8. 
-	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array. 
-	 * @return {@link LuaString} wrapping a copy of the byte buffer 
+	 * This is most useful for constructing byte sequences that do not conform to UTF8.
+	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array.
+	 * @return {@link LuaString} wrapping a copy of the byte buffer
 	 */
 	public static LuaString valueOf(char[] bytes) {
 		return valueOf(bytes, 0, bytes.length);
@@ -184,11 +184,11 @@ public class LuaString extends LuaValue {
 
 	/** Construct a {@link LuaString} using the supplied characters as byte values.
 	 * <p>
-	 * Only the low-order 8-bits of each character are used, the remainder is ignored. 
+	 * Only the low-order 8-bits of each character are used, the remainder is ignored.
 	 * <p>
-	 * This is most useful for constructing byte sequences that do not conform to UTF8. 
-	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array. 
-	 * @return {@link LuaString} wrapping a copy of the byte buffer 
+	 * This is most useful for constructing byte sequences that do not conform to UTF8.
+	 * @param bytes array of char, whose values are truncated at 8-bits each and put into a byte array.
+	 * @return {@link LuaString} wrapping a copy of the byte buffer
 	 */
 	public static LuaString valueOf(char[] bytes, int off, int len) {
 		byte[] b = new byte[len];
@@ -215,7 +215,7 @@ public class LuaString extends LuaValue {
 	 * The LuaString returned will either be a new LuaString containing the byte array,
 	 * or be an existing LuaString used already having the same value.
 	 * <p>
-	 * The caller must not mutate the contents of the byte array after this call, as 
+	 * The caller must not mutate the contents of the byte array after this call, as
 	 * it may be used elsewhere due to recent short string caching.
 	 * @param bytes byte buffer
 	 * @return {@link LuaString} wrapping the byte buffer
@@ -241,11 +241,11 @@ public class LuaString extends LuaValue {
 	}
 
 	public boolean isstring() {
-		return true; 
+		return true;
 	}
 		
-	public LuaValue getmetatable() { 
-		return s_metatable; 
+	public LuaValue getmetatable() {
+		return s_metatable;
 	}
 	
 	public int type() {
@@ -289,20 +289,20 @@ public class LuaString extends LuaValue {
 	public LuaValue   modFrom( double lhs )    { return LuaDouble.dmod(lhs, checkarith()); }
 	
 	// relational operators, these only work with other strings
-	public LuaValue   lt( LuaValue rhs )         { return rhs.strcmp(this)>0? LuaValue.TRUE: FALSE; }
-	public boolean lt_b( LuaValue rhs )       { return rhs.strcmp(this)>0; }
+	public LuaValue   lt( LuaValue rhs )         { return rhs.isstring() ? (rhs.strcmp(this)>0? LuaValue.TRUE: FALSE) : super.lt(rhs); }
+	public boolean lt_b( LuaValue rhs )       { return rhs.isstring() ? rhs.strcmp(this)>0 : super.lt_b(rhs); }
 	public boolean lt_b( int rhs )         { typerror("attempt to compare string with number"); return false; }
 	public boolean lt_b( double rhs )      { typerror("attempt to compare string with number"); return false; }
-	public LuaValue   lteq( LuaValue rhs )       { return rhs.strcmp(this)>=0? LuaValue.TRUE: FALSE; }
-	public boolean lteq_b( LuaValue rhs )     { return rhs.strcmp(this)>=0; }
+	public LuaValue   lteq( LuaValue rhs )       { return rhs.isstring() ? (rhs.strcmp(this)>=0? LuaValue.TRUE: FALSE) : super.lteq(rhs); }
+	public boolean lteq_b( LuaValue rhs )     { return rhs.isstring() ? rhs.strcmp(this)>=0 : super.lteq_b(rhs); }
 	public boolean lteq_b( int rhs )       { typerror("attempt to compare string with number"); return false; }
 	public boolean lteq_b( double rhs )    { typerror("attempt to compare string with number"); return false; }
-	public LuaValue   gt( LuaValue rhs )         { return rhs.strcmp(this)<0? LuaValue.TRUE: FALSE; }
-	public boolean gt_b( LuaValue rhs )       { return rhs.strcmp(this)<0; }
+	public LuaValue   gt( LuaValue rhs )         { return rhs.isstring() ? (rhs.strcmp(this)<0? LuaValue.TRUE: FALSE) : super.gt(rhs); }
+	public boolean gt_b( LuaValue rhs )       { return rhs.isstring() ? rhs.strcmp(this)<0 : super.gt_b(rhs); }
 	public boolean gt_b( int rhs )         { typerror("attempt to compare string with number"); return false; }
 	public boolean gt_b( double rhs )      { typerror("attempt to compare string with number"); return false; }
-	public LuaValue   gteq( LuaValue rhs )       { return rhs.strcmp(this)<=0? LuaValue.TRUE: FALSE; }
-	public boolean gteq_b( LuaValue rhs )     { return rhs.strcmp(this)<=0; }
+	public LuaValue   gteq( LuaValue rhs )       { return rhs.isstring() ? (rhs.strcmp(this)<=0? LuaValue.TRUE: FALSE) : super.gteq(rhs); }
+	public boolean gteq_b( LuaValue rhs )     { return rhs.isstring() ? rhs.strcmp(this)<=0 : super.gteq_b(rhs); }
 	public boolean gteq_b( int rhs )       { typerror("attempt to compare string with number"); return false; }
 	public boolean gteq_b( double rhs )    { typerror("attempt to compare string with number"); return false; }
 
@@ -310,14 +310,14 @@ public class LuaString extends LuaValue {
 	public LuaValue concat(LuaValue rhs)      { return rhs.concatTo(this); }
 	public Buffer   concat(Buffer rhs)        { return rhs.concatTo(this); }
 	public LuaValue concatTo(LuaNumber lhs)   { return concatTo(lhs.strvalue()); }
-	public LuaValue concatTo(LuaString lhs)   { 
+	public LuaValue concatTo(LuaString lhs)   {
 		byte[] b = new byte[lhs.m_length+this.m_length];
 		System.arraycopy(lhs.m_bytes, lhs.m_offset, b, 0, lhs.m_length);
 		System.arraycopy(this.m_bytes, this.m_offset, b, lhs.m_length, this.m_length);
 		return valueUsing(b, 0, b.length);
 	}
 
-	// string comparison 
+	// string comparison
 	public int strcmp(LuaValue lhs)           { return -lhs.strcmp(this); }
 	public int strcmp(LuaString rhs) {
 		for ( int i=0, j=0; i<m_length && j<rhs.m_length; ++i, ++j ) {
@@ -329,9 +329,9 @@ public class LuaString extends LuaValue {
 	}
 	
 	/** Check for number in arithmetic, or throw aritherror */
-	private double checkarith() { 
+	private double checkarith() {
 		double d = scannumber();
-		if ( Double.isNaN(d) ) 
+		if ( Double.isNaN(d) )
 			aritherror();
 		return d;
 	}
@@ -368,15 +368,15 @@ public class LuaString extends LuaValue {
 	
 	public boolean isint() {
 		double d = scannumber();
-		if ( Double.isNaN(d) ) 
+		if ( Double.isNaN(d) )
 			return false;
 		int i = (int) d;
 		return i == d;
 	}
 
-	public boolean islong() { 
+	public boolean islong() {
 		double d = scannumber();
-		if ( Double.isNaN(d) ) 
+		if ( Double.isNaN(d) )
 			return false;
 		long l = (long) d;
 		return l == d;
@@ -398,7 +398,7 @@ public class LuaString extends LuaValue {
 		return checkint();
 	}
 	
-	public LuaInteger optinteger(LuaInteger defval) { 
+	public LuaInteger optinteger(LuaInteger defval) {
 		return checkinteger();
 	}
 	
@@ -411,15 +411,15 @@ public class LuaString extends LuaValue {
 	}
 	
 	public LuaString optstring(LuaString defval) {
-		return this; 
+		return this;
 	}
 	
 	public LuaValue tostring() {
 		return this;
 	}
 
-	public String optjstring(String defval) { 
-		return tojstring(); 
+	public String optjstring(String defval) {
+		return tojstring();
 	}
 	
 	public LuaString strvalue() {
@@ -429,7 +429,7 @@ public class LuaString extends LuaValue {
 	/** Take a substring using Java zero-based indexes for begin and end or range.
 	 * @param beginIndex  The zero-based index of the first character to include.
 	 * @param endIndex  The zero-based index of position after the last character.
-	 * @return LuaString which is a substring whose first character is at offset 
+	 * @return LuaString which is a substring whose first character is at offset
 	 * beginIndex and extending for (endIndex - beginIndex ) characters.
 	 */
 	public LuaString substring( int beginIndex, int endIndex ) {
@@ -476,7 +476,7 @@ public class LuaString extends LuaValue {
 		return val.raweq(this);
 	}
 	
-	public boolean raweq( LuaString s ) { 
+	public boolean raweq( LuaString s ) {
 		if ( this == s )
 			return true;
 		if ( s.m_length != m_length )
@@ -503,7 +503,7 @@ public class LuaString extends LuaValue {
 	public static boolean equals( byte[] a, int i, byte[] b, int j, int n ) {
 		if ( a.length < i + n || b.length < j + n )
 			return false;
-		while ( --n>=0 ) 
+		while ( --n>=0 )
 			if ( a[i++]!=b[j++] )
 				return false;
 		return true;
@@ -535,8 +535,8 @@ public class LuaString extends LuaValue {
 		return luaByte( index );
 	}
 	
-	public String checkjstring() { 
-		return tojstring(); 
+	public String checkjstring() {
+		return tojstring();
 	}
 
 	public LuaString checkstring() {
@@ -552,7 +552,7 @@ public class LuaString extends LuaValue {
 	}
 	
 	/**
-	 * Copy the bytes of the string into the given byte array. 
+	 * Copy the bytes of the string into the given byte array.
 	 * @param strOffset offset from which to copy
 	 * @param bytes destination byte array
 	 * @param arrayOffset offset in destination
@@ -626,12 +626,12 @@ public class LuaString extends LuaValue {
 
 
 	/**
-	 * Convert to Java String interpreting as utf8 characters. 
+	 * Convert to Java String interpreting as utf8 characters.
 	 * 
 	 * @param bytes byte array in UTF8 encoding to convert
 	 * @param offset starting index in byte array
 	 * @param length number of bytes to convert
-	 * @return Java String corresponding to the value of bytes interpreted using UTF8 
+	 * @return Java String corresponding to the value of bytes interpreted using UTF8
 	 * @see #lengthAsUtf8(char[])
 	 * @see #encodeToUtf8(char[], int, byte[], int)
 	 * @see #isValidUtf8()
@@ -662,7 +662,7 @@ public class LuaString extends LuaValue {
 	 * @see #decodeAsUtf8(byte[], int, int)
 	 * @see #isValidUtf8()
 	 */
-	public static int lengthAsUtf8(char[] chars) {		
+	public static int lengthAsUtf8(char[] chars) {
 		int i,b;
 		char c;
 		for ( i=b=chars.length; --i>=0; )
@@ -673,7 +673,7 @@ public class LuaString extends LuaValue {
 	
 	/**
 	 * Encode the given Java string as UTF-8 bytes, writing the result to bytes
-	 * starting at offset. 
+	 * starting at offset.
 	 * <p>
 	 * The string should be measured first with lengthAsUtf8
 	 * to make sure the given byte array is large enough.
@@ -694,11 +694,11 @@ public class LuaString extends LuaValue {
 				bytes[j++] = (byte) c;
 			} else if ( c < 0x800 ) {
 				bytes[j++] = (byte) (0xC0 | ((c>>6)  & 0x1f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));
 			} else {
 				bytes[j++] = (byte) (0xE0 | ((c>>12) & 0x0f));
 				bytes[j++] = (byte) (0x80 | ((c>>6)  & 0x3f));
-				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));				
+				bytes[j++] = (byte) (0x80 | ( c      & 0x3f));
 			}
 		}
 		return j - off;
@@ -714,12 +714,12 @@ public class LuaString extends LuaValue {
 		for (int i=m_offset,j=m_offset+m_length; i<j;) {
 			int c = m_bytes[i++];
 			if ( c >= 0 ) continue;
-			if ( ((c & 0xE0) == 0xC0) 
-					&& i<j 
+			if ( ((c & 0xE0) == 0xC0)
+					&& i<j
 					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
-			if ( ((c & 0xF0) == 0xE0) 
-					&& i+1<j 
-					&& (m_bytes[i++] & 0xC0) == 0x80 
+			if ( ((c & 0xF0) == 0xE0)
+					&& i+1<j
+					&& (m_bytes[i++] & 0xC0) == 0x80
 					&& (m_bytes[i++] & 0xC0) == 0x80) continue;
 			return false;
 		}
@@ -728,32 +728,32 @@ public class LuaString extends LuaValue {
 	
 	// --------------------- number conversion -----------------------
 	
-	/** 
-	 * convert to a number using baee 10 or base 16 if it starts with '0x', 
+	/**
+	 * convert to a number using baee 10 or base 16 if it starts with '0x',
 	 * or NIL if it can't be converted
 	 * @return IntValue, DoubleValue, or NIL depending on the content of the string.
-	 * @see LuaValue#tonumber() 
+	 * @see LuaValue#tonumber()
 	 */
 	public LuaValue tonumber() {
 		double d = scannumber();
 		return Double.isNaN(d)? NIL: valueOf(d);
 	}
 	
-	/** 
+	/**
 	 * convert to a number using a supplied base, or NIL if it can't be converted
 	 * @param base the base to use, such as 10
 	 * @return IntValue, DoubleValue, or NIL depending on the content of the string.
-	 * @see LuaValue#tonumber() 
+	 * @see LuaValue#tonumber()
 	 */
 	public LuaValue tonumber( int base ) {
 		double d = scannumber( base );
 		return Double.isNaN(d)? NIL: valueOf(d);
 	}
 	
-	/** 
-	 * Convert to a number in base 10, or base 16 if the string starts with '0x', 
+	/**
+	 * Convert to a number in base 10, or base 16 if the string starts with '0x',
 	 * or return Double.NaN if it cannot be converted to a number.
-	 * @return double value if conversion is valid, or Double.NaN if not 
+	 * @return double value if conversion is valid, or Double.NaN if not
 	 */
 	public double scannumber() {
 		int i=m_offset,j=m_offset+m_length;
@@ -767,10 +767,10 @@ public class LuaString extends LuaValue {
 		return Double.isNaN(l)? scandouble(i,j): l;
 	}
 	
-	/** 
+	/**
 	 * Convert to a number in a base, or return Double.NaN if not a number.
 	 * @param base the base to use between 2 and 36
-	 * @return double value if conversion is valid, or Double.NaN if not 
+	 * @return double value if conversion is valid, or Double.NaN if not
 	 */
 	public double scannumber(int base) {
 		if ( base < 2 || base > 36 )
@@ -788,7 +788,7 @@ public class LuaString extends LuaValue {
 	 * @param base the base to use, such as 10
 	 * @param start the index to start searching from
 	 * @param end the first index beyond the search range
-	 * @return double value if conversion is valid, 
+	 * @return double value if conversion is valid,
 	 * or Double.NaN if not
 	 */
 	private double scanlong( int base, int start, int end ) {
@@ -798,7 +798,7 @@ public class LuaString extends LuaValue {
 			int digit = m_bytes[i] - (base<=10||(m_bytes[i]>='0'&&m_bytes[i]<='9')? '0':
 					m_bytes[i]>='A'&&m_bytes[i]<='Z'? ('A'-10): ('a'-10));
 			if ( digit < 0 || digit >= base )
-				return Double.NaN;		
+				return Double.NaN;
 			x = x * base + digit;
 			if ( x < 0 )
 				return Double.NaN; // overflow
@@ -810,7 +810,7 @@ public class LuaString extends LuaValue {
 	 * Scan and convert a double value, or return Double.NaN if not a double.
 	 * @param start the index to start searching from
 	 * @param end the first index beyond the search range
-	 * @return double value if conversion is valid, 
+	 * @return double value if conversion is valid,
 	 * or Double.NaN if not
 	 */
 	private double scandouble(int start, int end) {
@@ -833,7 +833,7 @@ public class LuaString extends LuaValue {
 			c[i-start] = (char) m_bytes[i];
 		try {
 			return Double.parseDouble(new String(c));
-		} catch ( Exception e ) {			
+		} catch ( Exception e ) {
 			return Double.NaN;
 		}
 	}
