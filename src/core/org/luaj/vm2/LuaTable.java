@@ -472,7 +472,8 @@ public class LuaTable extends LuaValue implements Metatable {
 				}
 			}
 			if ( checkLoadFactor() ) {
-				if ( key.isinttype() && key.toint() > 0 ) {
+				if ( (m_metatable == null || !(m_metatable.useWeakKeys() || m_metatable.useWeakValues()))
+					&& key.isinttype() && key.toint() > 0 ) {
 					// a rehash might make room in the array portion for this key.
 					rehash( key.toint() );
 					if ( arrayset(key.toint(), value) )
