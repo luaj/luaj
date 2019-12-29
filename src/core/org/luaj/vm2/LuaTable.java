@@ -720,7 +720,7 @@ public class LuaTable extends LuaValue implements Metatable {
 					StrongSlot entry = slot.first();
 					if (entry != null)
 						newArray[ k - 1 ] = entry.value();
-				} else {
+				} else if ( !(slot instanceof DeadSlot) ) {
 					int j = slot.keyindex( newHashMask );
 					newHash[j] = slot.relink( newHash[j] );
 				}
