@@ -18,7 +18,7 @@ James Roseborough, Ian Farmer, Version 3.0.2
 <small>
 Copyright &copy; 2009-2014 Luaj.org.
 Freely available under the terms of the
-<a href="http://sourceforge.net/dbimage.php?id=196142">Luaj license</a>.
+<a href="LICENSE">Luaj license</a>.
 </small>
 <hr>
 <p>
