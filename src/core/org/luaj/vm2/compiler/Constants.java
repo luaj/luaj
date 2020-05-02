@@ -38,10 +38,10 @@ import org.luaj.vm2.Upvaldesc;
 public class Constants extends Lua {
 	
 	/** Maximum stack size of a luaj vm interpreter instance. */
-	public static final int MAXSTACK = 250;
+	public static final int MAXSTACK = 1024;
 
 	static final int LUAI_MAXUPVAL = 0xff;
-	static final int LUAI_MAXVARS = 200;
+	static final int LUAI_MAXVARS = 1024;
 	static final int NO_REG		 = MAXARG_A;
 	
 
