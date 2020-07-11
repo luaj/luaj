@@ -794,6 +794,10 @@ public class LuaString extends LuaValue {
 	private double scanlong( int base, int start, int end ) {
 		long x = 0;
 		boolean neg = (m_bytes[start] == '-');
+		if(neg && m_bytes.length == 1) {
+			// this is only a '-' sign, no parsing any number is required
+			return Double.NaN;
+		}
 		for ( int i=(neg?start+1:start); i<end; i++ ) {
 			int digit = m_bytes[i] - (base<=10||(m_bytes[i]>='0'&&m_bytes[i]<='9')? '0':
 					m_bytes[i]>='A'&&m_bytes[i]<='Z'? ('A'-10): ('a'-10));
