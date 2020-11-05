@@ -107,6 +107,7 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 	 * Use Globals.load(InputString, String, String) instead, 
 	 * or LuaC.compile(InputStream, String) and construct LuaClosure directly.
 	 */
+	@Deprecated
 	public LuaValue load(InputStream stream, String chunkname, Globals globals) throws IOException {
 		return new LuaClosure(compile(stream, chunkname), globals);
 	}
