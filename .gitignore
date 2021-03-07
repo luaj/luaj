@@ -13,3 +13,6 @@ jit/
 *.zip
 docs
 *.0
+.classpath
+.project
+.settings/
