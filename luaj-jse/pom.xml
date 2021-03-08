@@ -1,0 +1,72 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.luaj</groupId>
+		<artifactId>luaj-parent</artifactId>
+		<version>3.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>luaj-jse</artifactId>
+
+	<name>luaj-jse</name>
+	<description>LuaJ for Java SE</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.luaj</groupId>
+			<artifactId>luaj-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.bcel</groupId>
+			<artifactId>bcel</artifactId>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.helger.maven</groupId>
+				<artifactId>ph-javacc-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>generate-grammar</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>javacc</goal>
+						</goals>
+						<configuration>
+							<jdkVersion>1.8</jdkVersion>
+							<javadocFriendlyComments>true</javadocFriendlyComments>
+							<packageName>org.luaj.vm2.parser</packageName>
+							<sourceDirectory>src/main/javacc</sourceDirectory>
+							<outputDirectory>${project.build.directory}/generated-sources/javacc</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/javacc</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
