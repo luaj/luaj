@@ -32,21 +32,21 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /**
- * Subclass of {@link LibFunction} which implements the standard lua {@code os} library.
+ * Subclass of {@link LibFunction} which implements the standard lua {@code os}
+ * library.
  * <p>
- * It is a usable base with simplified stub functions
- * for library functions that cannot be implemented uniformly
- * on Jse and Jme.
+ * It is a usable base with simplified stub functions for library functions that
+ * cannot be implemented uniformly on Jse and Jme.
  * <p>
- * This can be installed as-is on either platform, or extended
- * and refined to be used in a complete Jse implementation.
+ * This can be installed as-is on either platform, or extended and refined to be
+ * used in a complete Jse implementation.
  * <p>
- * Because the nature of the {@code os} library is to encapsulate
- * os-specific features, the behavior of these functions varies considerably
- * from their counterparts in the C platform.
+ * Because the nature of the {@code os} library is to encapsulate os-specific
+ * features, the behavior of these functions varies considerably from their
+ * counterparts in the C platform.
  * <p>
- * The following functions have limited implementations of features
- * that are not supported well on Jme:
+ * The following functions have limited implementations of features that are not
+ * supported well on Jme:
  * <ul>
  * <li>{@code execute()}</li>
  * <li>{@code remove()}</li>
@@ -55,33 +55,46 @@ import org.luaj.vm2.Varargs;
  * </ul>
  * <p>
  * Typically, this library is included as part of a call to either
- * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * <pre> {@code
- * Globals globals = JsePlatform.standardGlobals();
- * System.out.println( globals.get("os").get("time").call() );
- * } </pre>
- * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseOsLib} library will be loaded, which will include
- * the base functionality provided by this class.
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = JsePlatform.standardGlobals();
+ * 	System.out.println(globals.get("os").get("time").call());
+ * }
+ * </pre>
+ * 
+ * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseOsLib}
+ * library will be loaded, which will include the base functionality provided by
+ * this class.
  * <p>
- * To instantiate and use it directly,
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
- * <pre> {@code
- * Globals globals = new Globals();
- * globals.load(new JseBaseLib());
- * globals.load(new PackageLib());
- * globals.load(new OsLib());
- * System.out.println( globals.get("os").get("time").call() );
- * } </pre>
+ * To instantiate and use it directly, link it into your globals table via
+ * {@link LuaValue#load(LuaValue)} using code such as:
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = new Globals();
+ * 	globals.load(new JseBaseLib());
+ * 	globals.load(new PackageLib());
+ * 	globals.load(new OsLib());
+ * 	System.out.println(globals.get("os").get("time").call());
+ * }
+ * </pre>
  * <p>
-  * @see LibFunction
+ * 
+ * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JseOsLib
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
- * @see <a href="http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
+ * @see <a href=
+ *      "http://www.lua.org/manual/5.1/manual.html#5.8">http://www.lua.org/manual/5.1/manual.html#5.8</a>
  */
 public class OsLib extends TwoArgFunction {
-	public static final String TMP_PREFIX    = ".luaj";
-	public static final String TMP_SUFFIX    = "tmp";
+	public static final String TMP_PREFIX = ".luaj";
+	public static final String TMP_SUFFIX = "tmp";
 
 	private static final int CLOCK     = 0;
 	private static final int DATE      = 1;
@@ -95,36 +108,29 @@ public class OsLib extends TwoArgFunction {
 	private static final int TIME      = 9;
 	private static final int TMPNAME   = 10;
 
-	private static final String[] NAMES = {
-		"clock",
-		"date",
-		"difftime",
-		"execute",
-		"exit",
-		"getenv",
-		"remove",
-		"rename",
-		"setlocale",
-		"time",
-		"tmpname",
-	};
-	
-	private static final long t0 = System.currentTimeMillis();
-	private static long tmpnames = t0;
+	private static final String[] NAMES = { "clock", "date", "difftime", "execute", "exit", "getenv", "remove",
+			"rename", "setlocale", "time", "tmpname", };
+
+	private static final long t0       = System.currentTimeMillis();
+	private static long       tmpnames = t0;
 
 	protected Globals globals;
-	
+
 	/**
 	 * Create and OsLib instance.
 	 */
 	public OsLib() {
 	}
-	
-	/** Perform one-time initialization on the library by creating a table
-	 * containing the library functions, adding that table to the supplied environment,
-	 * adding the table to package.loaded, and returning table as the return value.
+
+	/**
+	 * Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied
+	 * environment, adding the table to package.loaded, and returning table as
+	 * the return value.
+	 * 
 	 * @param modname the module name supplied if this is loaded via 'require'.
-	 * @param env the environment to load into, typically a Globals instance.
+	 * @param env     the environment to load into, typically a Globals
+	 *                instance.
 	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
@@ -132,7 +138,8 @@ public class OsLib extends TwoArgFunction {
 		for (int i = 0; i < NAMES.length; ++i)
 			os.set(NAMES[i], new OsLibFunc(i, NAMES[i]));
 		env.set("os", os);
-		if (!env.get("package").isnil()) env.get("package").get("loaded").set("os", os);
+		if (!env.get("package").isnil())
+			env.get("package").get("loaded").set("os", os);
 		return os;
 	}
 
@@ -141,9 +148,10 @@ public class OsLib extends TwoArgFunction {
 			this.opcode = opcode;
 			this.name = name;
 		}
+
 		public Varargs invoke(Varargs args) {
 			try {
-				switch ( opcode ) {
+				switch (opcode) {
 				case CLOCK:
 					return valueOf(clock());
 				case DATE: {
@@ -151,7 +159,7 @@ public class OsLib extends TwoArgFunction {
 					double t = args.isnumber(2)? args.todouble(2): time(null);
 					if (s.equals("*t")) {
 						Calendar d = Calendar.getInstance();
-						d.setTime(new Date((long)(t*1000)));
+						d.setTime(new Date((long) (t*1000)));
 						LuaTable tbl = LuaValue.tableOf();
 						tbl.set("year", LuaValue.valueOf(d.get(Calendar.YEAR)));
 						tbl.set("month", LuaValue.valueOf(d.get(Calendar.MONTH)+1));
@@ -164,10 +172,10 @@ public class OsLib extends TwoArgFunction {
 						tbl.set("isdst", LuaValue.valueOf(isDaylightSavingsTime(d)));
 						return tbl;
 					}
-					return valueOf( date(s, t==-1? time(null): t) );
+					return valueOf(date(s, t == -1? time(null): t));
 				}
 				case DIFFTIME:
-					return valueOf(difftime(args.checkdouble(1),args.checkdouble(2)));
+					return valueOf(difftime(args.checkdouble(1), args.checkdouble(2)));
 				case EXECUTE:
 					return execute(args.optjstring(1, null));
 				case EXIT:
@@ -175,7 +183,7 @@ public class OsLib extends TwoArgFunction {
 					return NONE;
 				case GETENV: {
 					final String val = getenv(args.checkjstring(1));
-					return val!=null? valueOf(val): NIL;
+					return val != null? valueOf(val): NIL;
 				}
 				case REMOVE:
 					remove(args.checkjstring(1));
@@ -184,8 +192,8 @@ public class OsLib extends TwoArgFunction {
 					rename(args.checkjstring(1), args.checkjstring(2));
 					return LuaValue.TRUE;
 				case SETLOCALE: {
-					String s = setlocale(args.optjstring(1,null), args.optjstring(2, "all"));
-					return s!=null? valueOf(s): NIL;
+					String s = setlocale(args.optjstring(1, null), args.optjstring(2, "all"));
+					return s != null? valueOf(s): NIL;
 				}
 				case TIME:
 					return valueOf(time(args.opttable(1, null)));
@@ -193,78 +201,79 @@ public class OsLib extends TwoArgFunction {
 					return valueOf(tmpname());
 				}
 				return NONE;
-			} catch ( IOException e ) {
+			} catch (IOException e) {
 				return varargsOf(NIL, valueOf(e.getMessage()));
 			}
 		}
 	}
 
 	/**
-	 * @return an approximation of the amount in seconds of CPU time used by
-	 * the program.  For luaj this simple returns the elapsed time since the
-	 * OsLib class was loaded.
+	 * @return an approximation of the amount in seconds of CPU time used by the
+	 *         program. For luaj this simple returns the elapsed time since the
+	 *         OsLib class was loaded.
 	 */
 	protected double clock() {
-		return (System.currentTimeMillis()-t0) / 1000.;
+		return (System.currentTimeMillis()-t0)/1000.;
 	}
 
 	/**
-	 * Returns the number of seconds from time t1 to time t2.
-	 * In POSIX, Windows, and some other systems, this value is exactly t2-t1.
+	 * Returns the number of seconds from time t1 to time t2. In POSIX, Windows,
+	 * and some other systems, this value is exactly t2-t1.
+	 * 
 	 * @param t2
 	 * @param t1
 	 * @return diffeence in time values, in seconds
 	 */
 	protected double difftime(double t2, double t1) {
-		return t2 - t1;
+		return t2-t1;
 	}
 
 	/**
-	 * If the time argument is present, this is the time to be formatted
-	 * (see the os.time function for a description of this value).
-	 * Otherwise, date formats the current time.
+	 * If the time argument is present, this is the time to be formatted (see
+	 * the os.time function for a description of this value). Otherwise, date
+	 * formats the current time.
 	 * 
-	 * Date returns the date as a string,
-	 * formatted according to the same rules as ANSII strftime, but without
-	 * support for %g, %G, or %V.
+	 * Date returns the date as a string, formatted according to the same rules
+	 * as ANSII strftime, but without support for %g, %G, or %V.
 	 * 
-	 * When called without arguments, date returns a reasonable date and
-	 * time representation that depends on the host system and on the
-	 * current locale (that is, os.date() is equivalent to os.date("%c")).
+	 * When called without arguments, date returns a reasonable date and time
+	 * representation that depends on the host system and on the current locale
+	 * (that is, os.date() is equivalent to os.date("%c")).
 	 * 
 	 * @param format
-	 * @param time time since epoch, or -1 if not supplied
-	 * @return a LString or a LTable containing date and time,
-	 * formatted according to the given string format.
+	 * @param time   time since epoch, or -1 if not supplied
+	 * @return a LString or a LTable containing date and time, formatted
+	 *         according to the given string format.
 	 */
 	public String date(String format, double time) {
 		Calendar d = Calendar.getInstance();
-		d.setTime(new Date((long)(time*1000)));
+		d.setTime(new Date((long) (time*1000)));
 		if (format.startsWith("!")) {
 			time -= timeZoneOffset(d);
-			d.setTime(new Date((long)(time*1000)));
+			d.setTime(new Date((long) (time*1000)));
 			format = format.substring(1);
 		}
 		byte[] fmt = format.getBytes();
 		final int n = fmt.length;
 		Buffer result = new Buffer(n);
 		byte c;
-		for ( int i = 0; i < n; ) {
-			switch ( c = fmt[i++ ] ) {
+		for (int i = 0; i < n;) {
+			switch (c = fmt[i++]) {
 			case '\n':
-				result.append( "\n" );
+				result.append("\n");
 				break;
 			default:
-				result.append( c );
+				result.append(c);
 				break;
 			case '%':
-				if (i >= n) break;
-				switch ( c = fmt[i++ ] ) {
+				if (i >= n)
+					break;
+				switch (c = fmt[i++]) {
 				default:
-					LuaValue.argerror(1, "invalid conversion specifier '%"+c+"'");
+					LuaValue.argerror(1, "invalid conversion specifier '%" + c + "'");
 					break;
 				case '%':
-					result.append( (byte)'%' );
+					result.append((byte) '%');
 					break;
 				case 'a':
 					result.append(WeekdayNameAbbrev[d.get(Calendar.DAY_OF_WEEK)-1]);
@@ -292,7 +301,7 @@ public class OsLib extends TwoArgFunction {
 					break;
 				case 'j': { // day of year.
 					Calendar y0 = beginningOfYear(d);
-					int dayOfYear = (int) ((d.getTime().getTime() - y0.getTime().getTime()) / (24 * 3600L * 1000L));
+					int dayOfYear = (int) ((d.getTime().getTime()-y0.getTime().getTime())/(24*3600L*1000L));
 					result.append(String.valueOf(1001+dayOfYear).substring(1));
 					break;
 				}
@@ -330,11 +339,11 @@ public class OsLib extends TwoArgFunction {
 					result.append(String.valueOf(d.get(Calendar.YEAR)));
 					break;
 				case 'z': {
-					final int tzo = timeZoneOffset(d) / 60;
+					final int tzo = timeZoneOffset(d)/60;
 					final int a = Math.abs(tzo);
-					final String h = String.valueOf(100 + a / 60).substring(1);
-					final String m = String.valueOf(100 + a % 60).substring(1);
-					result.append((tzo>=0? "+": "-") + h + m);
+					final String h = String.valueOf(100+a/60).substring(1);
+					final String m = String.valueOf(100+a%60).substring(1);
+					result.append((tzo >= 0? "+": "-")+h+m);
 					break;
 				}
 				}
@@ -342,11 +351,14 @@ public class OsLib extends TwoArgFunction {
 		}
 		return result.tojstring();
 	}
-	
+
 	private static final String[] WeekdayNameAbbrev = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-	private static final String[] WeekdayName = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
-	private static final String[] MonthNameAbbrev = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	private static final String[] MonthName = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+	private static final String[] WeekdayName       = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
+			"Friday", "Saturday" };
+	private static final String[] MonthNameAbbrev   = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+			"Oct", "Nov", "Dec" };
+	private static final String[] MonthName         = { "January", "February", "March", "April", "May", "June", "July",
+			"August", "September", "October", "November", "December" };
 
 	private Calendar beginningOfYear(Calendar d) {
 		Calendar y0 = Calendar.getInstance();
@@ -359,42 +371,35 @@ public class OsLib extends TwoArgFunction {
 		y0.set(Calendar.MILLISECOND, 0);
 		return y0;
 	}
-	
+
 	private int weekNumber(Calendar d, int startDay) {
-		Calendar y0 =  beginningOfYear(d);
-		y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
+		Calendar y0 = beginningOfYear(d);
+		y0.set(Calendar.DAY_OF_MONTH, 1+(startDay+8-y0.get(Calendar.DAY_OF_WEEK))%7);
 		if (y0.after(d)) {
-			y0.set(Calendar.YEAR, y0.get(Calendar.YEAR) - 1);
-			y0.set(Calendar.DAY_OF_MONTH, 1 + (startDay + 8 - y0.get(Calendar.DAY_OF_WEEK)) % 7);
+			y0.set(Calendar.YEAR, y0.get(Calendar.YEAR)-1);
+			y0.set(Calendar.DAY_OF_MONTH, 1+(startDay+8-y0.get(Calendar.DAY_OF_WEEK))%7);
 		}
-		long dt = d.getTime().getTime() - y0.getTime().getTime();
-		return 1 + (int) (dt / (7L * 24L * 3600L * 1000L));
+		long dt = d.getTime().getTime()-y0.getTime().getTime();
+		return 1+(int) (dt/(7L*24L*3600L*1000L));
 	}
-	
+
 	private int timeZoneOffset(Calendar d) {
-		int localStandarTimeMillis = (
-				d.get(Calendar.HOUR_OF_DAY) * 3600 +
-				d.get(Calendar.MINUTE) * 60 +
-				d.get(Calendar.SECOND)) * 1000;
-		return d.getTimeZone().getOffset(
-				1,
-				d.get(Calendar.YEAR),
-				d.get(Calendar.MONTH),
-				d.get(Calendar.DAY_OF_MONTH),
-				d.get(Calendar.DAY_OF_WEEK),
-				localStandarTimeMillis) / 1000;
+		int localStandarTimeMillis = (d.get(Calendar.HOUR_OF_DAY)*3600+d.get(Calendar.MINUTE)*60+d.get(Calendar.SECOND))
+			*1000;
+		return d.getTimeZone().getOffset(1, d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH),
+			d.get(Calendar.DAY_OF_WEEK), localStandarTimeMillis)/1000;
 	}
-	
+
 	private boolean isDaylightSavingsTime(Calendar d) {
-		return timeZoneOffset(d) != d.getTimeZone().getRawOffset() / 1000;
+		return timeZoneOffset(d) != d.getTimeZone().getRawOffset()/1000;
 	}
-	
+
 	/**
-	 * This function is equivalent to the C function system.
-	 * It passes command to be executed by an operating system shell.
-	 * It returns a status code, which is system-dependent.
-	 * If command is absent, then it returns nonzero if a shell
-	 * is available and zero otherwise.
+	 * This function is equivalent to the C function system. It passes command
+	 * to be executed by an operating system shell. It returns a status code,
+	 * which is system-dependent. If command is absent, then it returns nonzero
+	 * if a shell is available and zero otherwise.
+	 * 
 	 * @param command command to pass to the system
 	 */
 	protected Varargs execute(String command) {
@@ -402,7 +407,9 @@ public class OsLib extends TwoArgFunction {
 	}
 
 	/**
-	 * Calls the C function exit, with an optional code, to terminate the host program.
+	 * Calls the C function exit, with an optional code, to terminate the host
+	 * program.
+	 * 
 	 * @param code
 	 */
 	protected void exit(int code) {
@@ -410,19 +417,19 @@ public class OsLib extends TwoArgFunction {
 	}
 
 	/**
-	 * Returns the value of the process environment variable varname,
-	 * or the System property value for varname,
-	 * or null if the variable is not defined in either environment.
+	 * Returns the value of the process environment variable varname, or the
+	 * System property value for varname, or null if the variable is not defined
+	 * in either environment.
 	 * 
-	 * The default implementation, which is used by the JmePlatform,
-	 * only queryies System.getProperty().
+	 * The default implementation, which is used by the JmePlatform, only
+	 * queryies System.getProperty().
 	 * 
-	 * The JsePlatform overrides this behavior and returns the
-	 * environment variable value using System.getenv() if it exists,
-	 * or the System property value if it does not.
+	 * The JsePlatform overrides this behavior and returns the environment
+	 * variable value using System.getenv() if it exists, or the System property
+	 * value if it does not.
 	 * 
-	 * A SecurityException may be thrown if access is not allowed
-	 * for 'varname'.
+	 * A SecurityException may be thrown if access is not allowed for 'varname'.
+	 * 
 	 * @param varname
 	 * @return String value, or null if not defined
 	 */
@@ -431,57 +438,57 @@ public class OsLib extends TwoArgFunction {
 	}
 
 	/**
-	 * Deletes the file or directory with the given name.
-	 * Directories must be empty to be removed.
-	 * If this function fails, it throws and IOException
+	 * Deletes the file or directory with the given name. Directories must be
+	 * empty to be removed. If this function fails, it throws and IOException
 	 * 
 	 * @param filename
 	 * @throws IOException if it fails
 	 */
 	protected void remove(String filename) throws IOException {
-		throw new IOException( "not implemented" );
+		throw new IOException("not implemented");
 	}
 
 	/**
-	 * Renames file or directory named oldname to newname.
-	 * If this function fails,it throws and IOException
+	 * Renames file or directory named oldname to newname. If this function
+	 * fails,it throws and IOException
 	 * 
 	 * @param oldname old file name
 	 * @param newname new file name
 	 * @throws IOException if it fails
 	 */
 	protected void rename(String oldname, String newname) throws IOException {
-		throw new IOException( "not implemented" );
+		throw new IOException("not implemented");
 	}
 
 	/**
-	 * Sets the current locale of the program. locale is a string specifying
-	 * a locale; category is an optional string describing which category to change:
-	 * "all", "collate", "ctype", "monetary", "numeric", or "time"; the default category
-	 * is "all".
+	 * Sets the current locale of the program. locale is a string specifying a
+	 * locale; category is an optional string describing which category to
+	 * change: "all", "collate", "ctype", "monetary", "numeric", or "time"; the
+	 * default category is "all".
 	 * 
-	 * If locale is the empty string, the current locale is set to an implementation-
-	 * defined native locale. If locale is the string "C", the current locale is set
-	 * to the standard C locale.
+	 * If locale is the empty string, the current locale is set to an
+	 * implementation- defined native locale. If locale is the string "C", the
+	 * current locale is set to the standard C locale.
 	 * 
-	 * When called with null as the first argument, this function only returns the
-	 * name of the current locale for the given category.
+	 * When called with null as the first argument, this function only returns
+	 * the name of the current locale for the given category.
 	 * 
 	 * @param locale
 	 * @param category
-	 * @return the name of the new locale, or null if the request
-	 * cannot be honored.
+	 * @return the name of the new locale, or null if the request cannot be
+	 *         honored.
 	 */
 	protected String setlocale(String locale, String category) {
 		return "C";
 	}
 
 	/**
-	 * Returns the current time when called without arguments,
-	 * or a time representing the date and time specified by the given table.
-	 * This table must have fields year, month, and day,
-	 * and may have fields hour, min, sec, and isdst
-	 * (for a description of these fields, see the os.date function).
+	 * Returns the current time when called without arguments, or a time
+	 * representing the date and time specified by the given table. This table
+	 * must have fields year, month, and day, and may have fields hour, min,
+	 * sec, and isdst (for a description of these fields, see the os.date
+	 * function).
+	 * 
 	 * @param table
 	 * @return long value for the time
 	 */
@@ -500,7 +507,7 @@ public class OsLib extends TwoArgFunction {
 			c.set(Calendar.MILLISECOND, 0);
 			d = c.getTime();
 		}
-		return d.getTime() / 1000.;
+		return d.getTime()/1000.;
 	}
 
 	/**
@@ -508,16 +515,16 @@ public class OsLib extends TwoArgFunction {
 	 * The file must be explicitly opened before its use and explicitly removed
 	 * when no longer needed.
 	 * 
-	 * On some systems (POSIX), this function also creates a file with that name,
-	 * to avoid security risks. (Someone else might create the file with wrong
-	 * permissions in the time between getting the name and creating the file.)
-	 * You still have to open the file to use it and to remove it (even if you
-	 * do not use it).
+	 * On some systems (POSIX), this function also creates a file with that
+	 * name, to avoid security risks. (Someone else might create the file with
+	 * wrong permissions in the time between getting the name and creating the
+	 * file.) You still have to open the file to use it and to remove it (even
+	 * if you do not use it).
 	 * 
 	 * @return String filename to use
 	 */
 	protected String tmpname() {
-		synchronized ( OsLib.class ) {
+		synchronized (OsLib.class) {
 			return TMP_PREFIX+(tmpnames++)+TMP_SUFFIX;
 		}
 	}

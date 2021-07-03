@@ -64,17 +64,17 @@ public class AllTests {
 		table.addTestSuite(WeakKeyTableTest.class);
 		table.addTestSuite(WeakKeyValueTableTest.class);
 		suite.addTest(table);
-		
+
 		// bytecode compilers regression tests
 		TestSuite bytecodetests = FragmentsTest.suite();
 		suite.addTest(bytecodetests);
-		
+
 		// I/O tests
 		TestSuite io = new TestSuite("I/O Tests");
 		io.addTestSuite(BufferedStreamTest.class);
 		io.addTestSuite(UTF8StreamTest.class);
 		suite.addTest(io);
-		
+
 		// prototype compiler
 		TestSuite compiler = new TestSuite("Lua Compiler Tests");
 		compiler.addTestSuite(CompilerUnitTests.class);
@@ -83,7 +83,7 @@ public class AllTests {
 		compiler.addTestSuite(RegressionTests.class);
 		compiler.addTestSuite(SimpleTests.class);
 		suite.addTest(compiler);
-		
+
 		// library tests
 		TestSuite lib = new TestSuite("Library Tests");
 		lib.addTestSuite(JsePlatformTest.class);
@@ -97,12 +97,12 @@ public class AllTests {
 		// Script engine tests.
 		TestSuite script = ScriptEngineTests.suite();
 		suite.addTest(script);
-		
+
 		// compatiblity tests
 		TestSuite compat = CompatibiltyTest.suite();
 		suite.addTest(compat);
 		compat.addTestSuite(ErrorsTest.class);
-		
+
 		return suite;
 	}
 

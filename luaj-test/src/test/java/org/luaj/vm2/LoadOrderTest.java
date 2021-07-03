@@ -61,8 +61,7 @@ public class LoadOrderTest extends TestCase {
 	}
 
 	public void testClassLoadsStringFirst() throws Exception {
-		Launcher launcher = LuajClassLoader
-				.NewLauncher(TestLauncherLoadStringFirst.class);
+		Launcher launcher = LuajClassLoader.NewLauncher(TestLauncherLoadStringFirst.class);
 		Object[] results = launcher.launch("foo", null);
 		assertNotNull(results);
 	}

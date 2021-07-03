@@ -34,61 +34,74 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.IoLib;
 import org.luaj.vm2.lib.LibFunction;
 
-/** 
- * Subclass of {@link IoLib} and therefore {@link LibFunction} which implements the lua standard {@code io} 
- * library for the JSE platform. 
- * <p> 
- * The implementation of the is based on CLDC 1.0 and StreamConnection.
- * However, seek is not supported. 
+/**
+ * Subclass of {@link IoLib} and therefore {@link LibFunction} which implements
+ * the lua standard {@code io} library for the JSE platform.
  * <p>
- * Typically, this library is included as part of a call to 
+ * The implementation of the is based on CLDC 1.0 and StreamConnection. However,
+ * seek is not supported.
+ * <p>
+ * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * <pre> {@code
- * Globals globals = JmePlatform.standardGlobals();
- * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
- * } </pre>
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = JmePlatform.standardGlobals();
+ * 	globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * }
+ * </pre>
  * <p>
- * For special cases where the smallest possible footprint is desired, 
- * a minimal set of libraries could be loaded
- * directly via {@link Globals#load(LuaValue)} using code such as:
- * <pre> {@code
- * Globals globals = new Globals();
- * globals.load(new JmeBaseLib());
- * globals.load(new PackageLib());
- * globals.load(new JmeIoLib());
- * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
- * } </pre>
- * <p>However, other libraries such as <em>MathLib</em> are not loaded in this case.
+ * For special cases where the smallest possible footprint is desired, a minimal
+ * set of libraries could be loaded directly via {@link Globals#load(LuaValue)}
+ * using code such as:
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = new Globals();
+ * 	globals.load(new JmeBaseLib());
+ * 	globals.load(new PackageLib());
+ * 	globals.load(new JmeIoLib());
+ * 	globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
+ * }
+ * </pre>
  * <p>
- * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * However, other libraries such as <em>MathLib</em> are not loaded in this
+ * case.
+ * <p>
+ * This has been implemented to match as closely as possible the behavior in the
+ * corresponding library in C.
+ * 
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see IoLib
  * @see org.luaj.vm2.lib.jse.JseIoLib
- * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.8">Lua 5.2 I/O Lib Reference</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.8">Lua 5.2 I/O Lib
+ *      Reference</a>
  */
 public class JmeIoLib extends IoLib {
-	
+
 	protected File wrapStdin() throws IOException {
 		return new FileImpl(globals.STDIN);
 	}
-	
+
 	protected File wrapStdout() throws IOException {
 		return new FileImpl(globals.STDOUT);
 	}
-	
+
 	protected File wrapStderr() throws IOException {
 		return new FileImpl(globals.STDERR);
 	}
-	
-	protected File openFile( String filename, boolean readMode, boolean appendMode, boolean updateMode, boolean binaryMode ) throws IOException {
+
+	protected File openFile(String filename, boolean readMode, boolean appendMode, boolean updateMode,
+		boolean binaryMode) throws IOException {
 		String url = "file:///" + filename;
-		int mode  = readMode? Connector.READ: Connector.READ_WRITE;
-		StreamConnection conn = (StreamConnection) Connector.open( url, mode );
-		File f = readMode? 
-				new FileImpl(conn, conn.openInputStream(), null):
-				new FileImpl(conn, conn.openInputStream(), conn.openOutputStream());
+		int mode = readMode? Connector.READ: Connector.READ_WRITE;
+		StreamConnection conn = (StreamConnection) Connector.open(url, mode);
+		File f = readMode? new FileImpl(conn, conn.openInputStream(), null)
+			: new FileImpl(conn, conn.openInputStream(), conn.openOutputStream());
 		/*
 		if ( appendMode ) {
 			f.seek("end",0);
@@ -99,11 +112,11 @@ public class JmeIoLib extends IoLib {
 		*/
 		return f;
 	}
-	
+
 	private static void notimplemented() throws IOException {
 		throw new IOException("not implemented");
 	}
-	
+
 	protected File openProgram(String prog, String mode) throws IOException {
 		notimplemented();
 		return null;
@@ -113,52 +126,62 @@ public class JmeIoLib extends IoLib {
 		notimplemented();
 		return null;
 	}
-	
+
 	private final class FileImpl extends File {
 		private final StreamConnection conn;
-		private final InputStream is;
-		private final OutputStream os;
-		private boolean closed = false;
-		private boolean nobuffer = false;
-		private int lookahead = -1;
-		private FileImpl( StreamConnection conn, InputStream is, OutputStream os ) {
+		private final InputStream      is;
+		private final OutputStream     os;
+		private boolean                closed    = false;
+		private boolean                nobuffer  = false;
+		private int                    lookahead = -1;
+
+		private FileImpl(StreamConnection conn, InputStream is, OutputStream os) {
 			this.conn = conn;
 			this.is = is;
 			this.os = os;
 		}
-		private FileImpl( InputStream i ) {
-			this( null, i, null );
+
+		private FileImpl(InputStream i) {
+			this(null, i, null);
 		}
-		private FileImpl( OutputStream o ) {
-			this( null, null, o );
+
+		private FileImpl(OutputStream o) {
+			this(null, null, o);
 		}
+
 		public String tojstring() {
-			return "file ("+this.hashCode()+")";
+			return "file (" + this.hashCode() + ")";
 		}
+
 		public boolean isstdfile() {
 			return conn == null;
 		}
-		public void close() throws IOException  {
+
+		public void close() throws IOException {
 			closed = true;
-			if ( conn != null ) {
+			if (conn != null) {
 				conn.close();
 			}
 		}
+
 		public void flush() throws IOException {
-			if ( os != null )
+			if (os != null)
 				os.flush();
 		}
+
 		public void write(LuaString s) throws IOException {
-			if ( os != null )
-				os.write( s.m_bytes, s.m_offset, s.m_length );
+			if (os != null)
+				os.write(s.m_bytes, s.m_offset, s.m_length);
 			else
 				notimplemented();
-			if ( nobuffer )
+			if (nobuffer)
 				flush();
 		}
+
 		public boolean isclosed() {
 			return closed;
 		}
+
 		public int seek(String option, int pos) throws IOException {
 			/*
 			if ( conn != null ) {
@@ -177,6 +200,7 @@ public class JmeIoLib extends IoLib {
 			notimplemented();
 			return 0;
 		}
+
 		public void setvbuf(String mode, int size) {
 			nobuffer = "no".equals(mode);
 		}
@@ -185,22 +209,22 @@ public class JmeIoLib extends IoLib {
 		public int remaining() throws IOException {
 			return -1;
 		}
-		
+
 		// peek ahead one character
 		public int peek() throws IOException {
-			if ( lookahead < 0 )
+			if (lookahead < 0)
 				lookahead = is.read();
 			return lookahead;
-		}		
-		
+		}
+
 		// return char if read, -1 if eof, throw IOException on other exception 
 		public int read() throws IOException {
-			if ( lookahead >= 0 ) {
+			if (lookahead >= 0) {
 				int c = lookahead;
 				lookahead = -1;
 				return c;
 			}
-			if ( is != null ) 
+			if (is != null)
 				return is.read();
 			notimplemented();
 			return 0;
@@ -208,17 +232,17 @@ public class JmeIoLib extends IoLib {
 
 		// return number of bytes read if positive, -1 if eof, throws IOException
 		public int read(byte[] bytes, int offset, int length) throws IOException {
-			int n,i=0;
-			if (is!=null) {
-				if ( length > 0 && lookahead >= 0 ) {
+			int n, i = 0;
+			if (is != null) {
+				if (length > 0 && lookahead >= 0) {
 					bytes[offset] = (byte) lookahead;
 					lookahead = -1;
 					i += 1;
 				}
-				for ( ; i<length; ) {
+				for (; i < length;) {
 					n = is.read(bytes, offset+i, length-i);
-					if ( n < 0 )
-						return ( i > 0 ? i : -1 );
+					if (n < 0)
+						return (i > 0? i: -1);
 					i += n;
 				}
 			} else {

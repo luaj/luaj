@@ -28,49 +28,64 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /**
- * Subclass of {@link LibFunction} which implements the lua standard {@code coroutine}
- * library.
+ * Subclass of {@link LibFunction} which implements the lua standard
+ * {@code coroutine} library.
  * <p>
- * The coroutine library in luaj has the same behavior as the
- * coroutine library in C, but is implemented using Java Threads to maintain
- * the call state between invocations.  Therefore it can be yielded from anywhere,
- * similar to the "Coco" yield-from-anywhere patch available for C-based lua.
- * However, coroutines that are yielded but never resumed to complete their execution
- * may not be collected by the garbage collector.
+ * The coroutine library in luaj has the same behavior as the coroutine library
+ * in C, but is implemented using Java Threads to maintain the call state
+ * between invocations. Therefore it can be yielded from anywhere, similar to
+ * the "Coco" yield-from-anywhere patch available for C-based lua. However,
+ * coroutines that are yielded but never resumed to complete their execution may
+ * not be collected by the garbage collector.
  * <p>
  * Typically, this library is included as part of a call to either
- * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * <pre> {@code
- * Globals globals = JsePlatform.standardGlobals();
- * System.out.println( globals.get("coroutine").get("running").call() );
- * } </pre>
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = JsePlatform.standardGlobals();
+ * 	System.out.println(globals.get("coroutine").get("running").call());
+ * }
+ * </pre>
  * <p>
- * To instantiate and use it directly,
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
- * <pre> {@code
- * Globals globals = new Globals();
- * globals.load(new JseBaseLib());
- * globals.load(new PackageLib());
- * globals.load(new CoroutineLib());
- * System.out.println( globals.get("coroutine").get("running").call() );
- * } </pre>
+ * To instantiate and use it directly, link it into your globals table via
+ * {@link LuaValue#load(LuaValue)} using code such as:
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = new Globals();
+ * 	globals.load(new JseBaseLib());
+ * 	globals.load(new PackageLib());
+ * 	globals.load(new CoroutineLib());
+ * 	System.out.println(globals.get("coroutine").get("running").call());
+ * }
+ * </pre>
  * <p>
+ * 
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
- * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.2">Lua 5.2 Coroutine Lib Reference</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.2">Lua 5.2
+ *      Coroutine Lib Reference</a>
  */
 public class CoroutineLib extends TwoArgFunction {
 
 	static int coroutine_count = 0;
 
 	Globals globals;
-	
-	/** Perform one-time initialization on the library by creating a table
-	 * containing the library functions, adding that table to the supplied environment,
-	 * adding the table to package.loaded, and returning table as the return value.
+
+	/**
+	 * Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied
+	 * environment, adding the table to package.loaded, and returning table as
+	 * the return value.
+	 * 
 	 * @param modname the module name supplied if this is loaded via 'require'.
-	 * @param env the environment to load into, which must be a Globals instance.
+	 * @param env     the environment to load into, which must be a Globals
+	 *                instance.
 	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
@@ -82,7 +97,8 @@ public class CoroutineLib extends TwoArgFunction {
 		coroutine.set("yield", new yield());
 		coroutine.set("wrap", new wrap());
 		env.set("coroutine", coroutine);
-		if (!env.get("package").isnil()) env.get("package").get("loaded").set("coroutine", coroutine);
+		if (!env.get("package").isnil())
+			env.get("package").get("loaded").set("coroutine", coroutine);
 		return coroutine;
 	}
 
@@ -95,7 +111,7 @@ public class CoroutineLib extends TwoArgFunction {
 	static final class resume extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			final LuaThread t = args.checkthread(1);
-			return t.resume( args.subargs(2) );
+			return t.resume(args.subargs(2));
 		}
 	}
 
@@ -109,13 +125,13 @@ public class CoroutineLib extends TwoArgFunction {
 	static final class status extends LibFunction {
 		public LuaValue call(LuaValue t) {
 			LuaThread lt = t.checkthread();
-			return valueOf( lt.getStatus() );
+			return valueOf(lt.getStatus());
 		}
 	}
-	
+
 	final class yield extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			return globals.yield( args );
+			return globals.yield(args);
 		}
 	}
 
@@ -129,15 +145,17 @@ public class CoroutineLib extends TwoArgFunction {
 
 	static final class wrapper extends VarArgFunction {
 		final LuaThread luathread;
+
 		wrapper(LuaThread luathread) {
 			this.luathread = luathread;
 		}
+
 		public Varargs invoke(Varargs args) {
 			final Varargs result = luathread.resume(args);
-			if ( result.arg1().toboolean() ) {
+			if (result.arg1().toboolean()) {
 				return result.subargs(2);
 			} else {
-				return error( result.arg(2).tojstring() );
+				return error(result.arg(2).tojstring());
 			}
 		}
 	}

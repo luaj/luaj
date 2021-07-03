@@ -24,21 +24,24 @@ package org.luaj.vm2.lib;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** Abstract base class for Java function implementations that take two arguments and 
- * return one value. 
+/**
+ * Abstract base class for Java function implementations that take two arguments
+ * and return one value.
  * <p>
- * Subclasses need only implement {@link LuaValue#call(LuaValue,LuaValue,LuaValue)} to complete this class, 
- * simplifying development.  
- * All other uses of {@link #call()}, {@link #invoke(Varargs)},etc, 
- * are routed through this method by this class, 
+ * Subclasses need only implement
+ * {@link LuaValue#call(LuaValue,LuaValue,LuaValue)} to complete this class,
+ * simplifying development. All other uses of {@link #call()},
+ * {@link #invoke(Varargs)},etc, are routed through this method by this class,
  * dropping or extending arguments with {@code nil} values as required.
  * <p>
- * If more or less than three arguments are required,  
- * or variable argument or variable return values, 
- * then use one of the related function
- * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link TwoArgFunction}, or {@link VarArgFunction}.
+ * If more or less than three arguments are required, or variable argument or
+ * variable return values, then use one of the related function
+ * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link TwoArgFunction}, or
+ * {@link VarArgFunction}.
  * <p>
- * See {@link LibFunction} for more information on implementation libraries and library functions.
+ * See {@link LibFunction} for more information on implementation libraries and
+ * library functions.
+ * 
  * @see #call(LuaValue,LuaValue,LuaValue)
  * @see LibFunction
  * @see ZeroArgFunction
@@ -49,11 +52,11 @@ import org.luaj.vm2.Varargs;
 abstract public class ThreeArgFunction extends LibFunction {
 
 	abstract public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3);
-	
+
 	/** Default constructor */
 	public ThreeArgFunction() {
 	}
-	
+
 	public final LuaValue call() {
 		return call(NIL, NIL, NIL);
 	}
@@ -65,9 +68,9 @@ abstract public class ThreeArgFunction extends LibFunction {
 	public LuaValue call(LuaValue arg1, LuaValue arg2) {
 		return call(arg1, arg2, NIL);
 	}
-	
+
 	public Varargs invoke(Varargs varargs) {
-		return call(varargs.arg1(),varargs.arg(2),varargs.arg(3));
+		return call(varargs.arg1(), varargs.arg(2), varargs.arg(3));
 	}
-	
-} 
+
+}

@@ -25,37 +25,48 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-/** Analog of Process that pipes input and output to client-specified streams.
+/**
+ * Analog of Process that pipes input and output to client-specified streams.
  */
 public class JseProcess {
 
 	final Process process;
-	final Thread input,output,error;
+	final Thread  input, output, error;
 
-	/** Construct a process around a command, with specified streams to redirect input and output to.
+	/**
+	 * Construct a process around a command, with specified streams to redirect
+	 * input and output to.
 	 * 
-	 * @param cmd The command to execute, including arguments, if any
-	 * @param stdin Optional InputStream to read from as process input, or null if input is not needed.
-	 * @param stdout Optional OutputStream to copy process output to, or null if output is ignored.
-	 * @param stderr Optinoal OutputStream to copy process stderr output to, or null if output is ignored.
+	 * @param cmd    The command to execute, including arguments, if any
+	 * @param stdin  Optional InputStream to read from as process input, or null
+	 *               if input is not needed.
+	 * @param stdout Optional OutputStream to copy process output to, or null if
+	 *               output is ignored.
+	 * @param stderr Optinoal OutputStream to copy process stderr output to, or
+	 *               null if output is ignored.
 	 * @throws IOException If the system process could not be created.
 	 * @see Process
 	 */
 	public JseProcess(String[] cmd, InputStream stdin, OutputStream stdout, OutputStream stderr) throws IOException {
-		this(Runtime.getRuntime().exec(cmd), stdin, stdout, stderr);	
+		this(Runtime.getRuntime().exec(cmd), stdin, stdout, stderr);
 	}
 
-	/** Construct a process around a command, with specified streams to redirect input and output to.
+	/**
+	 * Construct a process around a command, with specified streams to redirect
+	 * input and output to.
 	 * 
-	 * @param cmd The command to execute, including arguments, if any
-	 * @param stdin Optional InputStream to read from as process input, or null if input is not needed.
-	 * @param stdout Optional OutputStream to copy process output to, or null if output is ignored.
-	 * @param stderr Optinoal OutputStream to copy process stderr output to, or null if output is ignored.
+	 * @param cmd    The command to execute, including arguments, if any
+	 * @param stdin  Optional InputStream to read from as process input, or null
+	 *               if input is not needed.
+	 * @param stdout Optional OutputStream to copy process output to, or null if
+	 *               output is ignored.
+	 * @param stderr Optinoal OutputStream to copy process stderr output to, or
+	 *               null if output is ignored.
 	 * @throws IOException If the system process could not be created.
 	 * @see Process
 	 */
 	public JseProcess(String cmd, InputStream stdin, OutputStream stdout, OutputStream stderr) throws IOException {
-		this(Runtime.getRuntime().exec(cmd), stdin, stdout, stderr);	
+		this(Runtime.getRuntime().exec(cmd), stdin, stdout, stderr);
 	}
 
 	private JseProcess(Process process, InputStream stdin, OutputStream stdout, OutputStream stderr) {
@@ -70,7 +81,9 @@ public class JseProcess {
 		return process.exitValue();
 	}
 
-	/** Wait for the process to complete, and all pending output to finish.
+	/**
+	 * Wait for the process to complete, and all pending output to finish.
+	 * 
 	 * @return The exit status.
 	 * @throws InterruptedException
 	 */
@@ -87,9 +100,8 @@ public class JseProcess {
 	}
 
 	/** Create a thread to copy bytes from input to output. */
-	private Thread copyBytes(final InputStream input,
-			final OutputStream output, final InputStream ownedInput,
-			final OutputStream ownedOutput) {
+	private Thread copyBytes(final InputStream input, final OutputStream output, final InputStream ownedInput,
+		final OutputStream ownedOutput) {
 		Thread t = (new CopyThread(output, ownedOutput, ownedInput, input));
 		t.start();
 		return t;
@@ -98,11 +110,10 @@ public class JseProcess {
 	private static final class CopyThread extends Thread {
 		private final OutputStream output;
 		private final OutputStream ownedOutput;
-		private final InputStream ownedInput;
-		private final InputStream input;
+		private final InputStream  ownedInput;
+		private final InputStream  input;
 
-		private CopyThread(OutputStream output, OutputStream ownedOutput,
-				InputStream ownedInput, InputStream input) {
+		private CopyThread(OutputStream output, OutputStream ownedOutput, InputStream ownedInput, InputStream input) {
 			this.output = output;
 			this.ownedOutput = ownedOutput;
 			this.ownedInput = ownedInput;
@@ -114,7 +125,7 @@ public class JseProcess {
 				byte[] buf = new byte[1024];
 				int r;
 				try {
-					while ((r = input.read(buf)) >= 0) {
+					while ( (r = input.read(buf)) >= 0 ) {
 						output.write(buf, 0, r);
 					}
 				} finally {

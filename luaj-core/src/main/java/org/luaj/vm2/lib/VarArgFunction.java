@@ -24,20 +24,23 @@ package org.luaj.vm2.lib;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-/** Abstract base class for Java function implementations that takes varaiable arguments and 
- * returns multiple return values. 
+/**
+ * Abstract base class for Java function implementations that takes varaiable
+ * arguments and returns multiple return values.
  * <p>
- * Subclasses need only implement {@link LuaValue#invoke(Varargs)} to complete this class, 
- * simplifying development.  
- * All other uses of {@link #call(LuaValue)}, {@link #invoke()},etc, 
- * are routed through this method by this class,
- * converting arguments to {@link Varargs} and  
- * dropping or extending return values with {@code nil} values as required.
+ * Subclasses need only implement {@link LuaValue#invoke(Varargs)} to complete
+ * this class, simplifying development. All other uses of
+ * {@link #call(LuaValue)}, {@link #invoke()},etc, are routed through this
+ * method by this class, converting arguments to {@link Varargs} and dropping or
+ * extending return values with {@code nil} values as required.
  * <p>
- * If between one and three arguments are required, and only one return value is returned,   
- * {@link ZeroArgFunction}, {@link OneArgFunction}, {@link TwoArgFunction}, or {@link ThreeArgFunction}.
+ * If between one and three arguments are required, and only one return value is
+ * returned, {@link ZeroArgFunction}, {@link OneArgFunction},
+ * {@link TwoArgFunction}, or {@link ThreeArgFunction}.
  * <p>
- * See {@link LibFunction} for more information on implementation libraries and library functions.
+ * See {@link LibFunction} for more information on implementation libraries and
+ * library functions.
+ * 
  * @see #invoke(Varargs)
  * @see LibFunction
  * @see ZeroArgFunction
@@ -49,7 +52,7 @@ abstract public class VarArgFunction extends LibFunction {
 
 	public VarArgFunction() {
 	}
-	
+
 	public LuaValue call() {
 		return invoke(NONE).arg1();
 	}
@@ -59,25 +62,25 @@ abstract public class VarArgFunction extends LibFunction {
 	}
 
 	public LuaValue call(LuaValue arg1, LuaValue arg2) {
-		return invoke(varargsOf(arg1,arg2)).arg1();
+		return invoke(varargsOf(arg1, arg2)).arg1();
 	}
 
 	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-		return invoke(varargsOf(arg1,arg2,arg3)).arg1();
+		return invoke(varargsOf(arg1, arg2, arg3)).arg1();
 	}
 
-	/** 
-	 * Subclass responsibility. 
-	 * May not have expected behavior for tail calls. 
-	 * Should not be used if:
-	 * - function has a possibility of returning a TailcallVarargs
+	/**
+	 * Subclass responsibility. May not have expected behavior for tail calls.
+	 * Should not be used if: - function has a possibility of returning a
+	 * TailcallVarargs
+	 * 
 	 * @param args the arguments to the function call.
 	 */
 	public Varargs invoke(Varargs args) {
 		return onInvoke(args).eval();
 	}
-	
+
 	public Varargs onInvoke(Varargs args) {
 		return invoke(args);
 	}
-} 
+}

@@ -40,13 +40,13 @@ public class TestLuaJC {
 	public static String filename = "perf/nsieve.lua";
 
 	static Globals globals;
-	
+
 	public static void main(String[] args) throws Exception {
 		if (args.length > 0)
 			filename = args[0];
-		System.out.println("filename: "+filename);
+		System.out.println("filename: " + filename);
 		try {
-			
+
 			// create an environment to run in
 			globals = JsePlatform.standardGlobals();
 
@@ -56,47 +56,44 @@ public class TestLuaJC {
 			Print.print(p);
 
 			// load into a luajc java-bytecode based chunk by installing the LuaJC compiler first
-			if ( ! (args.length>0 && args[0].equals("nocompile")) ) {
+			if (!(args.length > 0 && args[0].equals("nocompile"))) {
 				LuaJC.install(globals);
 				f = globals.loadfile(filename).arg1();
 			}
-	
+
 			// call with arguments
 			Varargs v = f.invoke(LuaValue.NONE);
-			
+
 			// print the result
-			System.out.println("result: "+v);
+			System.out.println("result: " + v);
 
 			// Write out the files.
 			// saveClasses();
-			
-		} catch ( Throwable e ) {
+
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static void saveClasses() throws Exception {
-        // create the chunk
+		// create the chunk
 		String destdir = ".";
-		
+
 		InputStream is = globals.finder.findResource(filename);
 		Hashtable t = LuaJC.instance.compileAll(is, filename, filename, globals, true);
 
-        // write out the chunk
-    	for ( Enumeration e = t.keys(); e.hasMoreElements(); ) {
-    		String key = (String) e.nextElement();
-    		byte[] bytes = (byte[]) t.get(key);
-    		String destpath = (destdir!=null? destdir+"/": "") + key + ".class";
-    		System.out.println( 
-						"chunk "+filename+
-						" from "+filename+
-						" written to "+destpath
-						+" length="+bytes.length+" bytes");
-        	FileOutputStream fos = new FileOutputStream( destpath );
-        	fos.write( bytes );
-        	fos.close();
-        }
-		
+		// write out the chunk
+		for (Enumeration e = t.keys(); e.hasMoreElements();) {
+			String key = (String) e.nextElement();
+			byte[] bytes = (byte[]) t.get(key);
+			String destpath = (destdir != null? destdir + "/": "") + key + ".class";
+			System.out.println("chunk " + filename + " from " + filename + " written to " + destpath + " length="
+				+ bytes.length + " bytes");
+			FileOutputStream fos = new FileOutputStream(destpath);
+			fos.write(bytes);
+			fos.close();
+		}
+
 	}
-	
+
 }

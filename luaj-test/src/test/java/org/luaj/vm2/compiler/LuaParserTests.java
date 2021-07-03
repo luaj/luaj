@@ -9,11 +9,11 @@ import org.luaj.vm2.parser.LuaParser;
 
 public class LuaParserTests extends CompilerUnitTests {
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        LuaValue.valueOf(true);
-    }
-	
+	protected void setUp() throws Exception {
+		super.setUp();
+		LuaValue.valueOf(true);
+	}
+
 	protected void doTest(String file) {
 		try {
 			InputStream is = inputStreamOfFile(file);

@@ -30,41 +30,33 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 /** Test the plain old bytecode interpreter */
 public class TestLuaJ {
 	// create the script
-	public static String name = "script";
-	public static String script =
-		"function r(q,...)\n"+
-		"	local a=arg\n"+
-		"	return a and a[2]\n"+
-		"end\n" +
-		"function s(q,...)\n"+
-		"	local a=arg\n"+
-		"	local b=...\n"+
-		"	return a and a[2],b\n"+
-		"end\n" +
-		"print( r(111,222,333),s(111,222,333) )";
-		
+	public static String name   = "script";
+	public static String script = "function r(q,...)\n" + "	local a=arg\n" + "	return a and a[2]\n" + "end\n"
+		+ "function s(q,...)\n" + "	local a=arg\n" + "	local b=...\n" + "	return a and a[2],b\n" + "end\n"
+		+ "print( r(111,222,333),s(111,222,333) )";
+
 	public static void main(String[] args) throws Exception {
 		System.out.println(script);
-		
+
 		// create an environment to run in
 		Globals globals = JsePlatform.standardGlobals();
-		
+
 		// compile into a chunk, or load as a class
 		LuaValue chunk = globals.load(script, "script");
-		
+
 		// The loaded chunk should be a closure, which contains the prototype.
-		print( chunk.checkclosure().p );
+		print(chunk.checkclosure().p);
 
 		// The chunk can be called with arguments as desired.
 		chunk.call(LuaValue.ZERO, LuaValue.ONE);
 	}
 
 	private static void print(Prototype p) {
-		System.out.println("--- "+p);
+		System.out.println("--- " + p);
 		Print.printCode(p);
-		if (p.p!=null)
-			for ( int i=0,n=p.p.length; i<n; i++ )
-				print( p.p[i] );
+		if (p.p != null)
+			for (int i = 0, n = p.p.length; i < n; i++)
+				print(p.p[i]);
 	}
-		
+
 }

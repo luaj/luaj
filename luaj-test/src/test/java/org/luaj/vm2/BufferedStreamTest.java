@@ -27,26 +27,25 @@ import junit.framework.TestCase;
 
 import org.luaj.vm2.Globals.BufferedStream;
 
-
 public class BufferedStreamTest extends TestCase {
 
 	public BufferedStreamTest() {}
-	
+
 	private BufferedStream NewBufferedStream(int buflen, String contents) {
 		return new BufferedStream(buflen, new ByteArrayInputStream(contents.getBytes()));
 	}
-	
+
 	protected void setUp() throws Exception {
 		super.setUp();
 	}
-	
+
 	public void testReadEmptyStream() throws java.io.IOException {
 		BufferedStream bs = NewBufferedStream(4, "");
 		assertEquals(-1, bs.read());
 		assertEquals(-1, bs.read(new byte[10]));
 		assertEquals(-1, bs.read(new byte[10], 0, 10));
 	}
-	
+
 	public void testReadByte() throws java.io.IOException {
 		BufferedStream bs = NewBufferedStream(2, "abc");
 		assertEquals('a', bs.read());
@@ -54,7 +53,7 @@ public class BufferedStreamTest extends TestCase {
 		assertEquals('c', bs.read());
 		assertEquals(-1, bs.read());
 	}
-	
+
 	public void testReadByteArray() throws java.io.IOException {
 		byte[] array = new byte[3];
 		BufferedStream bs = NewBufferedStream(4, "abcdef");
@@ -66,7 +65,7 @@ public class BufferedStreamTest extends TestCase {
 		assertEquals("ef", new String(array, 0, 2));
 		assertEquals(-1, bs.read());
 	}
-	
+
 	public void testReadByteArrayOffsetLength() throws java.io.IOException {
 		byte[] array = new byte[10];
 		BufferedStream bs = NewBufferedStream(8, "abcdefghijklmn");
@@ -78,7 +77,7 @@ public class BufferedStreamTest extends TestCase {
 		assertEquals("ijklmn", new String(array, 0, 6));
 		assertEquals(-1, bs.read());
 	}
-	
+
 	public void testMarkOffsetBeginningOfStream() throws java.io.IOException {
 		byte[] array = new byte[4];
 		BufferedStream bs = NewBufferedStream(8, "abcdefghijkl");

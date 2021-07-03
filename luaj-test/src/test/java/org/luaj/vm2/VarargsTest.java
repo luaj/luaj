@@ -28,34 +28,34 @@ import junit.framework.TestCase;
  */
 public class VarargsTest extends TestCase {
 
-	static LuaValue A = LuaValue.valueOf("a");
-	static LuaValue B = LuaValue.valueOf("b");
-	static LuaValue C = LuaValue.valueOf("c");
-	static LuaValue D = LuaValue.valueOf("d");
-	static LuaValue E = LuaValue.valueOf("e");
-	static LuaValue F = LuaValue.valueOf("f");
-	static LuaValue G = LuaValue.valueOf("g");
-	static LuaValue H = LuaValue.valueOf("h");
-	static LuaValue Z = LuaValue.valueOf("z");
-	static LuaValue NIL = LuaValue.NIL;
-	static Varargs A_G = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E, F, G });
-	static Varargs B_E = LuaValue.varargsOf(new LuaValue[] { B, C, D, E });
-	static Varargs C_G = LuaValue.varargsOf(new LuaValue[] { C, D, E, F, G });
-	static Varargs C_E = LuaValue.varargsOf(new LuaValue[] { C, D, E });
-	static Varargs DE = LuaValue.varargsOf(new LuaValue[] { D, E });
-	static Varargs E_G = LuaValue.varargsOf(new LuaValue[] { E, F, G });
-	static Varargs FG = LuaValue.varargsOf(new LuaValue[] { F, G });
-	static LuaValue[] Z_H_array = {Z, A, B, C, D, E, F, G, H };
-	static Varargs A_G_alt = new Varargs.ArrayPartVarargs(Z_H_array, 1, 7);
-	static Varargs B_E_alt = new Varargs.ArrayPartVarargs(Z_H_array, 2, 4);
-	static Varargs C_G_alt = new Varargs.ArrayPartVarargs(Z_H_array, 3, 5);
-	static Varargs C_E_alt = new Varargs.ArrayPartVarargs(Z_H_array, 3, 3);
-	static Varargs C_E_alt2 = LuaValue.varargsOf(C, D, E);
-	static Varargs DE_alt = new Varargs.PairVarargs(D,E);
-	static Varargs DE_alt2 = LuaValue.varargsOf(D,E);
-	static Varargs E_G_alt = new Varargs.ArrayPartVarargs(Z_H_array, 5, 3);
-	static Varargs FG_alt = new Varargs.PairVarargs(F, G);
-	static Varargs NONE = LuaValue.NONE;
+	static LuaValue   A         = LuaValue.valueOf("a");
+	static LuaValue   B         = LuaValue.valueOf("b");
+	static LuaValue   C         = LuaValue.valueOf("c");
+	static LuaValue   D         = LuaValue.valueOf("d");
+	static LuaValue   E         = LuaValue.valueOf("e");
+	static LuaValue   F         = LuaValue.valueOf("f");
+	static LuaValue   G         = LuaValue.valueOf("g");
+	static LuaValue   H         = LuaValue.valueOf("h");
+	static LuaValue   Z         = LuaValue.valueOf("z");
+	static LuaValue   NIL       = LuaValue.NIL;
+	static Varargs    A_G       = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E, F, G });
+	static Varargs    B_E       = LuaValue.varargsOf(new LuaValue[] { B, C, D, E });
+	static Varargs    C_G       = LuaValue.varargsOf(new LuaValue[] { C, D, E, F, G });
+	static Varargs    C_E       = LuaValue.varargsOf(new LuaValue[] { C, D, E });
+	static Varargs    DE        = LuaValue.varargsOf(new LuaValue[] { D, E });
+	static Varargs    E_G       = LuaValue.varargsOf(new LuaValue[] { E, F, G });
+	static Varargs    FG        = LuaValue.varargsOf(new LuaValue[] { F, G });
+	static LuaValue[] Z_H_array = { Z, A, B, C, D, E, F, G, H };
+	static Varargs    A_G_alt   = new Varargs.ArrayPartVarargs(Z_H_array, 1, 7);
+	static Varargs    B_E_alt   = new Varargs.ArrayPartVarargs(Z_H_array, 2, 4);
+	static Varargs    C_G_alt   = new Varargs.ArrayPartVarargs(Z_H_array, 3, 5);
+	static Varargs    C_E_alt   = new Varargs.ArrayPartVarargs(Z_H_array, 3, 3);
+	static Varargs    C_E_alt2  = LuaValue.varargsOf(C, D, E);
+	static Varargs    DE_alt    = new Varargs.PairVarargs(D, E);
+	static Varargs    DE_alt2   = LuaValue.varargsOf(D, E);
+	static Varargs    E_G_alt   = new Varargs.ArrayPartVarargs(Z_H_array, 5, 3);
+	static Varargs    FG_alt    = new Varargs.PairVarargs(F, G);
+	static Varargs    NONE      = LuaValue.NONE;
 
 	static void expectEquals(Varargs x, Varargs y) {
 		assertEquals(x.narg(), y.narg());
@@ -63,11 +63,11 @@ public class VarargsTest extends TestCase {
 		assertEquals(x.arg(0), y.arg(0));
 		assertEquals(x.arg(-1), y.arg(-1));
 		assertEquals(x.arg(2), y.arg(2));
-		assertEquals(x.arg(3), y.arg(3));		
-		for (int i = 4; i < x.narg() + 2; ++i)
+		assertEquals(x.arg(3), y.arg(3));
+		for (int i = 4; i < x.narg()+2; ++i)
 			assertEquals(x.arg(i), y.arg(i));
 	}
-	
+
 	public void testSanity() {
 		expectEquals(A_G, A_G);
 		expectEquals(A_G_alt, A_G_alt);
@@ -155,9 +155,9 @@ public class VarargsTest extends TestCase {
 
 	static void standardTestsNone(Varargs none) {
 		expectEquals(NONE, none.subargs(1));
-		expectEquals(NONE, none.subargs(2));		
+		expectEquals(NONE, none.subargs(2));
 	}
-	
+
 	public void testVarargsSubargs() {
 		standardTestsA_G(A_G);
 		standardTestsA_G(A_G_alt);
@@ -169,35 +169,31 @@ public class VarargsTest extends TestCase {
 		standardTestsFG(FG_alt);
 		standardTestsNone(NONE);
 	}
-	
+
 	public void testVarargsMore() {
 		Varargs a_g;
-		a_g = LuaValue.varargsOf(new LuaValue[] { A, }, LuaValue.varargsOf( new LuaValue[] { B, C, D, E, F, G }));
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, }, LuaValue.varargsOf(new LuaValue[] { B, C, D, E, F, G }));
 		standardTestsA_G(a_g);
-		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, }, LuaValue.varargsOf( new LuaValue[] { C, D, E, F, G }));
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, }, LuaValue.varargsOf(new LuaValue[] { C, D, E, F, G }));
 		standardTestsA_G(a_g);
-		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, }, LuaValue.varargsOf( new LuaValue[] { D, E, F, G }));
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, }, LuaValue.varargsOf(new LuaValue[] { D, E, F, G }));
 		standardTestsA_G(a_g);
 		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, }, LuaValue.varargsOf(E, F, G));
 		standardTestsA_G(a_g);
-		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E }, LuaValue.varargsOf( F, G ));
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E }, LuaValue.varargsOf(F, G));
 		standardTestsA_G(a_g);
-		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E, F, }, G );
+		a_g = LuaValue.varargsOf(new LuaValue[] { A, B, C, D, E, F, }, G);
 		standardTestsA_G(a_g);
 	}
-	
+
 	public void testPairVarargsMore() {
-		Varargs a_g = new Varargs.PairVarargs(A, 
-					new Varargs.PairVarargs(B, 
-					new Varargs.PairVarargs(C,  
-					new Varargs.PairVarargs(D, 
-					new Varargs.PairVarargs(E, 
-					new Varargs.PairVarargs(F, G)))))); 
+		Varargs a_g = new Varargs.PairVarargs(A, new Varargs.PairVarargs(B, new Varargs.PairVarargs(C,
+			new Varargs.PairVarargs(D, new Varargs.PairVarargs(E, new Varargs.PairVarargs(F, G))))));
 		standardTestsA_G(a_g);
 	}
 
 	public void testArrayPartMore() {
-		Varargs a_g; 
+		Varargs a_g;
 		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 1, new Varargs.ArrayPartVarargs(Z_H_array, 2, 6));
 		standardTestsA_G(a_g);
 		a_g = new Varargs.ArrayPartVarargs(Z_H_array, 1, 2, new Varargs.ArrayPartVarargs(Z_H_array, 3, 5));
@@ -217,14 +213,14 @@ public class VarargsTest extends TestCase {
 		try {
 			v.subargs(0);
 			fail("Failed to throw exception for index 0");
-		} catch ( LuaError e ) {
+		} catch (LuaError e) {
 			assertEquals(expected_msg, e.getMessage());
 		}
 		try {
 			v.subargs(-1);
 			fail("Failed to throw exception for index -1");
-		} catch ( LuaError e ) {
+		} catch (LuaError e) {
 			assertEquals(expected_msg, e.getMessage());
 		}
-	}	
+	}
 }

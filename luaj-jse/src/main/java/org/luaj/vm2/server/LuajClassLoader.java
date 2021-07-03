@@ -28,16 +28,16 @@ import java.util.Map;
 
 /**
  * Class loader that can be used to launch a lua script in a Java VM that has a
- * unique set of classes for org.luaj classes. 
+ * unique set of classes for org.luaj classes.
  * <P>
-* <em>Note: This class is experimental and subject to change in future versions.</em>
+ * <em>Note: This class is experimental and subject to change in future
+ * versions.</em>
  * <P>
- * By using a custom class loader per script, it allows the script to have
- * its own set of globals, including static values such as shared metatables
- * that cannot access lua values from other scripts because their classes are
- * loaded from different class loaders.  Thus normally unsafe libraries such
- * as luajava can be exposed to scripts in a server environment using these
- * techniques.
+ * By using a custom class loader per script, it allows the script to have its
+ * own set of globals, including static values such as shared metatables that
+ * cannot access lua values from other scripts because their classes are loaded
+ * from different class loaders. Thus normally unsafe libraries such as luajava
+ * can be exposed to scripts in a server environment using these techniques.
  * <P>
  * All classes in the package "org.luaj.vm2." are considered user classes, and
  * loaded into this class loader from their bytes in the class path. Other
@@ -61,10 +61,14 @@ import java.util.Map;
  */
 public class LuajClassLoader extends ClassLoader {
 
-	/** String describing the luaj packages to consider part of the user classes */
+	/**
+	 * String describing the luaj packages to consider part of the user classes
+	 */
 	static final String luajPackageRoot = "org.luaj.vm2.";
 
-	/** String describing the Launcher interface to be considered a system class */
+	/**
+	 * String describing the Launcher interface to be considered a system class
+	 */
 	static final String launcherInterfaceRoot = Launcher.class.getName();
 
 	/** Local cache of classes loaded by this loader. */
@@ -75,54 +79,52 @@ public class LuajClassLoader extends ClassLoader {
 	 * its own {@link LuajClassLoader} using the default implementation class
 	 * {@link DefaultLauncher}.
 	 * <P>
-	 * The {@link Launcher} that is returned will be a pristine luaj vm 
-	 * whose classes are loaded into this loader including static variables
-	 * such as shared metatables, and should not be able to directly access
-	 * variables from other Launcher instances.
+	 * The {@link Launcher} that is returned will be a pristine luaj vm whose
+	 * classes are loaded into this loader including static variables such as
+	 * shared metatables, and should not be able to directly access variables
+	 * from other Launcher instances.
 	 * 
 	 * @return {@link Launcher} instance that can be used to launch scripts.
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws ClassNotFoundException
 	 */
-	public static Launcher NewLauncher() throws InstantiationException,
-			IllegalAccessException, ClassNotFoundException {
+	public static Launcher NewLauncher() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		return NewLauncher(DefaultLauncher.class);
 	}
 
 	/**
-	 * Construct a {@link Launcher} instance that will load classes in
-	 * its own {@link LuajClassLoader} using a user-supplied implementation class
-	 * that implements {@link Launcher}.
+	 * Construct a {@link Launcher} instance that will load classes in its own
+	 * {@link LuajClassLoader} using a user-supplied implementation class that
+	 * implements {@link Launcher}.
 	 * <P>
-	 * The {@link Launcher} that is returned will be a pristine luaj vm 
-	 * whose classes are loaded into this loader including static variables
-	 * such as shared metatables, and should not be able to directly access
-	 * variables from other Launcher instances.
+	 * The {@link Launcher} that is returned will be a pristine luaj vm whose
+	 * classes are loaded into this loader including static variables such as
+	 * shared metatables, and should not be able to directly access variables
+	 * from other Launcher instances.
 	 * 
-	 * @return instance of type 'launcher_class' that can be used to launch scripts.
+	 * @return instance of type 'launcher_class' that can be used to launch
+	 *         scripts.
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws ClassNotFoundException
 	 */
 	public static Launcher NewLauncher(Class<? extends Launcher> launcher_class)
-			throws InstantiationException, IllegalAccessException,
-			ClassNotFoundException {
+		throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		final LuajClassLoader loader = new LuajClassLoader();
-		final Object instance = loader.loadAsUserClass(launcher_class.getName())
-				.newInstance();
+		final Object instance = loader.loadAsUserClass(launcher_class.getName()).newInstance();
 		return (Launcher) instance;
 	}
 
 	/**
-	 * Test if a class name should be considered a user class and loaded
-	 * by this loader, or a system class and loaded by the system loader.
+	 * Test if a class name should be considered a user class and loaded by this
+	 * loader, or a system class and loaded by the system loader.
+	 * 
 	 * @param classname Class name to test.
 	 * @return true if this should be loaded into this class loader.
 	 */
 	public static boolean isUserClass(String classname) {
-		return classname.startsWith(luajPackageRoot)
-				&& !classname.startsWith(launcherInterfaceRoot);
+		return classname.startsWith(luajPackageRoot) && !classname.startsWith(launcherInterfaceRoot);
 	}
 
 	public Class<?> loadClass(String classname) throws ClassNotFoundException {
@@ -143,13 +145,11 @@ public class LuajClassLoader extends ClassLoader {
 				for (int n = 0; (n = is.read(b)) >= 0;)
 					baos.write(b, 0, n);
 				byte[] bytes = baos.toByteArray();
-				Class<?> result = super.defineClass(classname, bytes, 0,
-						bytes.length);
+				Class<?> result = super.defineClass(classname, bytes, 0, bytes.length);
 				classes.put(classname, result);
 				return result;
 			} catch (java.io.IOException e) {
-				throw new ClassNotFoundException("Read failed: " + classname
-						+ ": " + e);
+				throw new ClassNotFoundException("Read failed: " + classname + ": " + e);
 			}
 		}
 		throw new ClassNotFoundException("Not found: " + classname);

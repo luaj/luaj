@@ -37,40 +37,60 @@ import org.luaj.vm2.lib.ResourceFinder;
 import org.luaj.vm2.lib.StringLib;
 import org.luaj.vm2.lib.TableLib;
 
-/** The {@link org.luaj.vm2.lib.jme.JmePlatform} class is a convenience class to standardize 
- * how globals tables are initialized for the JME platform. 
+/**
+ * The {@link org.luaj.vm2.lib.jme.JmePlatform} class is a convenience class to
+ * standardize how globals tables are initialized for the JME platform.
  * <p>
- * The JME platform, being limited, cannot implement all libraries in all aspects.  The main limitations are
+ * The JME platform, being limited, cannot implement all libraries in all
+ * aspects. The main limitations are
  * <ul>
- * <li>Some math functions are not implemented, see {@link MathLib} for details</li>
- * <li>Scripts are loaded via Class.getResourceAsStream(), see {@link BaseLib} for details</li>
- * <li>OS functions execute(), remove(), rename(), and tmpname() vary, see {@link OsLib} for details</li>
- * <li>I/O seek is not implemented, see {@link org.luaj.vm2.lib.jme.JmeIoLib} for details</li>
- * <li>luajava is not available, see {@link org.luaj.vm2.lib.jse.LuajavaLib} for details</li>
+ * <li>Some math functions are not implemented, see {@link MathLib} for
+ * details</li>
+ * <li>Scripts are loaded via Class.getResourceAsStream(), see {@link BaseLib}
+ * for details</li>
+ * <li>OS functions execute(), remove(), rename(), and tmpname() vary, see
+ * {@link OsLib} for details</li>
+ * <li>I/O seek is not implemented, see {@link org.luaj.vm2.lib.jme.JmeIoLib}
+ * for details</li>
+ * <li>luajava is not available, see {@link org.luaj.vm2.lib.jse.LuajavaLib} for
+ * details</li>
  * </ul>
  * <p>
- * It is used to allocate either a set of standard globals using 
+ * It is used to allocate either a set of standard globals using
  * {@link #standardGlobals()} or debug globals using {@link #debugGlobals()}
  * <p>
  * A simple example of initializing globals and using them from Java is:
- * <pre> {@code
- * Globals global = JmePlatform.standardGlobals();
- * global.get("print").call(LuaValue.valueOf("hello, world"));
- * } </pre>
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals global = JmePlatform.standardGlobals();
+ * 	global.get("print").call(LuaValue.valueOf("hello, world"));
+ * }
+ * </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
- * <pre> {@code
+ * 
+ * <pre>
+ *  {@code
  * LoadState.load( getClass().getResourceAsStream("main.lua"), "main.lua", globals ).call();
- * } </pre>
+ * }
+ * </pre>
  * <p>
- * although {@code require} could also be used: 
- * <pre> {@code
+ * although {@code require} could also be used:
+ * 
+ * <pre>
+ *  {@code
  * globals.get("require").call(LuaValue.valueOf("main"));
- * } </pre>
- * For this to succeed, the file "main.lua" must be a resource in the class path.
- * See {@link BaseLib} for details on finding scripts using {@link ResourceFinder}.
+ * }
+ * </pre>
+ * 
+ * For this to succeed, the file "main.lua" must be a resource in the class
+ * path. See {@link BaseLib} for details on finding scripts using
+ * {@link ResourceFinder}.
  * <p>
- * The standard globals will contain all standard libraries in their JME flavors:
+ * The standard globals will contain all standard libraries in their JME
+ * flavors:
  * <ul>
  * <li>{@link Globals}</li>
  * <li>{@link BaseLib}</li>
@@ -83,12 +103,14 @@ import org.luaj.vm2.lib.TableLib;
  * <li>{@link org.luaj.vm2.lib.jme.JmeIoLib}</li>
  * <li>{@link OsLib}</li>
  * </ul>
- * In addition, the {@link LuaC} compiler is installed so lua files may be loaded in their source form. 
- * <p> 
- * The debug globals are simply the standard globals plus the {@code debug} library {@link DebugLib}.
+ * In addition, the {@link LuaC} compiler is installed so lua files may be
+ * loaded in their source form.
+ * <p>
+ * The debug globals are simply the standard globals plus the {@code debug}
+ * library {@link DebugLib}.
  * <p>
  * <p>
- * The class ensures that initialization is done in the correct order.  
+ * The class ensures that initialization is done in the correct order.
  * 
  * @see Globals
  * @see org.luaj.vm2.lib.jse.JsePlatform
@@ -116,12 +138,14 @@ public class JmePlatform {
 		globals.load(new JmeIoLib());
 		LoadState.install(globals);
 		LuaC.install(globals);
-		return globals;		
+		return globals;
 	}
-	
-	/** Create standard globals including the {@link DebugLib} library.
+
+	/**
+	 * Create standard globals including the {@link DebugLib} library.
 	 * 
-	 * @return Table of globals initialized with the standard JSE and debug libraries
+	 * @return Table of globals initialized with the standard JSE and debug
+	 *         libraries
 	 * @see #standardGlobals()
 	 * @see org.luaj.vm2.lib.jse.JsePlatform
 	 * @see org.luaj.vm2.lib.jme.JmePlatform

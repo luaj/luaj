@@ -19,105 +19,104 @@ import org.luaj.vm2.lib.jse.JsePlatform;
 
 abstract public class AbstractUnitTests extends TestCase {
 
-    private final String dir;
-    private final String jar;
-    private Globals globals;
+	private final String dir;
+	private final String jar;
+	private Globals      globals;
 
-    public AbstractUnitTests(String zipdir, String zipfile, String dir) {
-    	URL zip = null;
+	public AbstractUnitTests(String zipdir, String zipfile, String dir) {
+		URL zip = null;
 		zip = getClass().getResource(zipfile);
-		if ( zip == null ) {
-	    	File file = new File(zipdir+"/"+zipfile);
+		if (zip == null) {
+			File file = new File(zipdir + "/" + zipfile);
 			try {
-		    	if ( file.exists() )
+				if (file.exists())
 					zip = file.toURI().toURL();
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
 		}
-		if ( zip == null )
-			throw new RuntimeException("not found: "+zipfile);
-		this.jar = "jar:" + zip.toExternalForm()+ "!/";
-        this.dir = dir;
-    }
+		if (zip == null)
+			throw new RuntimeException("not found: " + zipfile);
+		this.jar = "jar:" + zip.toExternalForm() + "!/";
+		this.dir = dir;
+	}
 
-    protected void setUp() throws Exception {
-        super.setUp();
-        globals = JsePlatform.standardGlobals();
-    }
+	protected void setUp() throws Exception {
+		super.setUp();
+		globals = JsePlatform.standardGlobals();
+	}
 
-    protected String pathOfFile(String file) {
-        return jar + dir + "/" + file;
-    }
-    
-    protected InputStream inputStreamOfPath(String path) throws IOException {
-        URL url = new URL(path);
-        return url.openStream();
-    }
-    
-    protected InputStream inputStreamOfFile(String file) throws IOException {
-    	return inputStreamOfPath(pathOfFile(file));
-    }
-    
-    protected void doTest(String file) {
-        try {
-            // load source from jar
-            String path = pathOfFile(file);
-            byte[] lua = bytesFromJar(path);
+	protected String pathOfFile(String file) {
+		return jar + dir + "/" + file;
+	}
 
-            // compile in memory
-            InputStream is = new ByteArrayInputStream(lua);
-            Prototype p = globals.loadPrototype(is, "@" + file, "bt");
-            String actual = protoToString(p);
+	protected InputStream inputStreamOfPath(String path) throws IOException {
+		URL url = new URL(path);
+		return url.openStream();
+	}
 
-            // load expected value from jar
-            byte[] luac = bytesFromJar(path.substring(0, path.length()-4)+".lc");
-            Prototype e = loadFromBytes(luac, file);
-            String expected = protoToString(e);
+	protected InputStream inputStreamOfFile(String file) throws IOException {
+		return inputStreamOfPath(pathOfFile(file));
+	}
 
-            // compare results
-            assertEquals(expected, actual);
+	protected void doTest(String file) {
+		try {
+			// load source from jar
+			String path = pathOfFile(file);
+			byte[] lua = bytesFromJar(path);
 
-            // dump into memory
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DumpState.dump(p, baos, false);
-            byte[] dumped = baos.toByteArray();
+			// compile in memory
+			InputStream is = new ByteArrayInputStream(lua);
+			Prototype p = globals.loadPrototype(is, "@" + file, "bt");
+			String actual = protoToString(p);
 
-            // re-undump
-            Prototype p2 = loadFromBytes(dumped, file);
-            String actual2 = protoToString(p2);
+			// load expected value from jar
+			byte[] luac = bytesFromJar(path.substring(0, path.length()-4) + ".lc");
+			Prototype e = loadFromBytes(luac, file);
+			String expected = protoToString(e);
 
-            // compare again
-            assertEquals(actual, actual2);
+			// compare results
+			assertEquals(expected, actual);
 
-        } catch (IOException e) {
-            fail(e.toString());
-        }
-    }
+			// dump into memory
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			DumpState.dump(p, baos, false);
+			byte[] dumped = baos.toByteArray();
 
-    protected byte[] bytesFromJar(String path) throws IOException {
-        InputStream is = inputStreamOfPath(path);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[2048];
-        int n;
-        while ((n = is.read(buffer)) >= 0)
-            baos.write(buffer, 0, n);
-        is.close();
-        return baos.toByteArray();
-    }
+			// re-undump
+			Prototype p2 = loadFromBytes(dumped, file);
+			String actual2 = protoToString(p2);
 
-    protected Prototype loadFromBytes(byte[] bytes, String script)
-            throws IOException {
-        InputStream is = new ByteArrayInputStream(bytes);
-        return globals.loadPrototype(is, script, "b");
-    }
+			// compare again
+			assertEquals(actual, actual2);
 
-    protected String protoToString(Prototype p) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(baos);
-        Print.ps = ps;
-        new Print().printFunction(p, true);
-        return baos.toString();
-    }
+		} catch (IOException e) {
+			fail(e.toString());
+		}
+	}
+
+	protected byte[] bytesFromJar(String path) throws IOException {
+		InputStream is = inputStreamOfPath(path);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[2048];
+		int n;
+		while ( (n = is.read(buffer)) >= 0 )
+			baos.write(buffer, 0, n);
+		is.close();
+		return baos.toByteArray();
+	}
+
+	protected Prototype loadFromBytes(byte[] bytes, String script) throws IOException {
+		InputStream is = new ByteArrayInputStream(bytes);
+		return globals.loadPrototype(is, script, "b");
+	}
+
+	protected String protoToString(Prototype p) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream(baos);
+		Print.ps = ps;
+		new Print().printFunction(p, true);
+		return baos.toString();
+	}
 
 }

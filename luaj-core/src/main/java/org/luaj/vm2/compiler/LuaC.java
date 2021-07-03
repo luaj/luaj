@@ -37,30 +37,37 @@ import org.luaj.vm2.lib.BaseLib;
  * Compiler for Lua.
  * 
  * <p>
- * Compiles lua source files into lua bytecode within a {@link Prototype}, 
- * loads lua binary files directly into a {@link Prototype}, 
- * and optionaly instantiates a {@link LuaClosure} around the result 
- * using a user-supplied environment.  
+ * Compiles lua source files into lua bytecode within a {@link Prototype}, loads
+ * lua binary files directly into a {@link Prototype}, and optionaly
+ * instantiates a {@link LuaClosure} around the result using a user-supplied
+ * environment.
  * 
  * <p>
- * Implements the {@link org.luaj.vm2.Globals.Compiler} interface for loading 
- * initialized chunks, which is an interface common to 
- * lua bytecode compiling and java bytecode compiling.
- *  
- * <p> 
- * The {@link LuaC} compiler is installed by default by both the 
- * {@link org.luaj.vm2.lib.jse.JsePlatform} and {@link org.luaj.vm2.lib.jme.JmePlatform} classes, 
- * so in the following example, the default {@link LuaC} compiler 
- * will be used:
- * <pre> {@code
- * Globals globals = JsePlatform.standardGlobals();
- * globals.load(new StringReader("print 'hello'"), "main.lua" ).call();
- * } </pre>
+ * Implements the {@link org.luaj.vm2.Globals.Compiler} interface for loading
+ * initialized chunks, which is an interface common to lua bytecode compiling
+ * and java bytecode compiling.
+ * 
+ * <p>
+ * The {@link LuaC} compiler is installed by default by both the
+ * {@link org.luaj.vm2.lib.jse.JsePlatform} and
+ * {@link org.luaj.vm2.lib.jme.JmePlatform} classes, so in the following
+ * example, the default {@link LuaC} compiler will be used:
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = JsePlatform.standardGlobals();
+ * 	globals.load(new StringReader("print 'hello'"), "main.lua").call();
+ * }
+ * </pre>
  * 
  * To load the LuaC compiler manually, use the install method:
- * <pre> {@code
+ * 
+ * <pre>
+ *  {@code
  * LuaC.install(globals);
- * } </pre>
+ * }
+ * </pre>
  * 
  * @see #install(Globals)
  * @see Globals#compiler
@@ -76,10 +83,11 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 
 	/** A sharable instance of the LuaC compiler. */
 	public static final LuaC instance = new LuaC();
-	
-	/** Install the compiler so that LoadState will first 
-	 * try to use it when handed bytes that are 
-	 * not already a compiled lua chunk.
+
+	/**
+	 * Install the compiler so that LoadState will first try to use it when
+	 * handed bytes that are not already a compiled lua chunk.
+	 * 
 	 * @param globals the Globals into which this is to be installed.
 	 */
 	public static void install(Globals globals) {
@@ -89,8 +97,11 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 
 	protected LuaC() {}
 
-	/** Compile lua source into a Prototype.
-	 * @param stream InputStream representing the text source conforming to lua source syntax.
+	/**
+	 * Compile lua source into a Prototype.
+	 * 
+	 * @param stream    InputStream representing the text source conforming to
+	 *                  lua source syntax.
 	 * @param chunkname String name of the chunk to use.
 	 * @return Prototype representing the lua chunk for this source.
 	 * @throws IOException
@@ -103,55 +114,57 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 		return new LuaClosure(prototype, env);
 	}
 
-	/** @deprecated
-	 * Use Globals.load(InputString, String, String) instead, 
-	 * or LuaC.compile(InputStream, String) and construct LuaClosure directly.
+	/**
+	 * @deprecated Use Globals.load(InputString, String, String) instead, or
+	 *             LuaC.compile(InputStream, String) and construct LuaClosure
+	 *             directly.
 	 */
 	public LuaValue load(InputStream stream, String chunkname, Globals globals) throws IOException {
 		return new LuaClosure(compile(stream, chunkname), globals);
 	}
 
 	static class CompileState {
-		int nCcalls = 0;
+		int               nCcalls = 0;
 		private Hashtable strings = new Hashtable();
+
 		protected CompileState() {}
-	
+
 		/** Parse the input */
-		Prototype luaY_parser(InputStream z, String name) throws IOException{
+		Prototype luaY_parser(InputStream z, String name) throws IOException {
 			LexState lexstate = new LexState(this, z);
 			FuncState funcstate = new FuncState();
 			// lexstate.buff = buff;
 			lexstate.fs = funcstate;
-			lexstate.setinput(this, z.read(), z, (LuaString) LuaValue.valueOf(name) );
+			lexstate.setinput(this, z.read(), z, (LuaString) LuaValue.valueOf(name));
 			/* main func. is always vararg */
 			funcstate.f = new Prototype();
 			funcstate.f.source = (LuaString) LuaValue.valueOf(name);
 			lexstate.mainfunc(funcstate);
-			LuaC._assert (funcstate.prev == null);
+			LuaC._assert(funcstate.prev == null);
 			/* all scopes should be correctly finished */
-			LuaC._assert (lexstate.dyd == null 
-					|| (lexstate.dyd.n_actvar == 0 && lexstate.dyd.n_gt == 0 && lexstate.dyd.n_label == 0));
+			LuaC._assert(lexstate.dyd == null
+				|| (lexstate.dyd.n_actvar == 0 && lexstate.dyd.n_gt == 0 && lexstate.dyd.n_label == 0));
 			return funcstate.f;
 		}
-	
+
 		// look up and keep at most one copy of each string
 		public LuaString newTString(String s) {
 			return cachedLuaString(LuaString.valueOf(s));
 		}
-	
+
 		// look up and keep at most one copy of each string
 		public LuaString newTString(LuaString s) {
 			return cachedLuaString(s);
 		}
-	
+
 		public LuaString cachedLuaString(LuaString s) {
 			LuaString c = (LuaString) strings.get(s);
-			if (c != null) 
+			if (c != null)
 				return c;
 			strings.put(s, s);
 			return s;
 		}
-	
+
 		public String pushfstring(String string) {
 			return string;
 		}

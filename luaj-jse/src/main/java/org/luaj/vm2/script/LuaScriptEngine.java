@@ -35,42 +35,42 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
  * scripts using luaj.
  * 
  * <p>
- * This engine requires the types of the Bindings and ScriptContext to be 
- * compatible with the engine.  For creating new client context use
- * ScriptEngine.createContext() which will return {@link LuajContext}, 
- * and for client bindings use the default engine scoped bindings or
- * construct a {@link LuajBindings} directly.
+ * This engine requires the types of the Bindings and ScriptContext to be
+ * compatible with the engine. For creating new client context use
+ * ScriptEngine.createContext() which will return {@link LuajContext}, and for
+ * client bindings use the default engine scoped bindings or construct a
+ * {@link LuajBindings} directly.
  */
 public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngine, Compilable {
-    
-	private static final String __ENGINE_VERSION__   = Lua._VERSION;
-    private static final String __NAME__             = "Luaj";
-    private static final String __SHORT_NAME__       = "Luaj";
-    private static final String __LANGUAGE__         = "lua";
-    private static final String __LANGUAGE_VERSION__ = "5.2";
-    private static final String __ARGV__             = "arg";
-    private static final String __FILENAME__         = "?";
-    
-    private static final ScriptEngineFactory myFactory = new LuaScriptEngineFactory();
-    
-    private LuajContext context;
 
-    public LuaScriptEngine() {
-    	// set up context
-    	context = new LuajContext();
-    	context.setBindings(createBindings(), ScriptContext.ENGINE_SCOPE);
-        setContext(context);
-        
-        // set special values
-        put(LANGUAGE_VERSION, __LANGUAGE_VERSION__);
-        put(LANGUAGE, __LANGUAGE__);
-        put(ENGINE, __NAME__);
-        put(ENGINE_VERSION, __ENGINE_VERSION__);
-        put(ARGV, __ARGV__);
-        put(FILENAME, __FILENAME__);
-        put(NAME, __SHORT_NAME__);
-        put("THREADING", null);
-    }
+	private static final String __ENGINE_VERSION__   = Lua._VERSION;
+	private static final String __NAME__             = "Luaj";
+	private static final String __SHORT_NAME__       = "Luaj";
+	private static final String __LANGUAGE__         = "lua";
+	private static final String __LANGUAGE_VERSION__ = "5.2";
+	private static final String __ARGV__             = "arg";
+	private static final String __FILENAME__         = "?";
+
+	private static final ScriptEngineFactory myFactory = new LuaScriptEngineFactory();
+
+	private LuajContext context;
+
+	public LuaScriptEngine() {
+		// set up context
+		context = new LuajContext();
+		context.setBindings(createBindings(), ScriptContext.ENGINE_SCOPE);
+		setContext(context);
+
+		// set special values
+		put(LANGUAGE_VERSION, __LANGUAGE_VERSION__);
+		put(LANGUAGE, __LANGUAGE__);
+		put(ENGINE, __NAME__);
+		put(ENGINE_VERSION, __ENGINE_VERSION__);
+		put(ARGV, __ARGV__);
+		put(FILENAME, __FILENAME__);
+		put(NAME, __SHORT_NAME__);
+		put("THREADING", null);
+	}
 
 	@Override
 	public CompiledScript compile(String script) throws ScriptException {
@@ -80,18 +80,18 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 	@Override
 	public CompiledScript compile(Reader script) throws ScriptException {
 		try {
-	    	InputStream is = new Utf8Encoder(script);
-	    	try {
-	    		final Globals g = context.globals;
-	    		final LuaFunction f = g.load(script, "script").checkfunction();
-	    		return new LuajCompiledScript(f, g);
-			} catch ( LuaError lee ) {
-				throw new ScriptException(lee.getMessage() );
-			} finally { 
+			InputStream is = new Utf8Encoder(script);
+			try {
+				final Globals g = context.globals;
+				final LuaFunction f = g.load(script, "script").checkfunction();
+				return new LuajCompiledScript(f, g);
+			} catch (LuaError lee) {
+				throw new ScriptException(lee.getMessage());
+			} finally {
 				is.close();
 			}
-		} catch ( Exception e ) {
-			throw new ScriptException("eval threw "+e.toString());
+		} catch (Exception e) {
+			throw new ScriptException("eval threw " + e.toString());
 		}
 	}
 
@@ -116,49 +116,43 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 	}
 
 	@Override
-	public Object eval(String script, ScriptContext context)
-			throws ScriptException {
+	public Object eval(String script, ScriptContext context) throws ScriptException {
 		return eval(new StringReader(script), context);
 	}
 
 	@Override
-	public Object eval(Reader reader, ScriptContext context)
-			throws ScriptException {
-        return compile(reader).eval(context);
+	public Object eval(Reader reader, ScriptContext context) throws ScriptException {
+		return compile(reader).eval(context);
 	}
 
 	@Override
-	public ScriptEngineFactory getFactory() {
-		return myFactory;
-	}
-
+	public ScriptEngineFactory getFactory() { return myFactory; }
 
 	class LuajCompiledScript extends CompiledScript {
 		final LuaFunction function;
-		final Globals compiling_globals;
+		final Globals     compiling_globals;
+
 		LuajCompiledScript(LuaFunction function, Globals compiling_globals) {
 			this.function = function;
 			this.compiling_globals = compiling_globals;
 		}
 
-		public ScriptEngine getEngine() {
-			return LuaScriptEngine.this;
+		public ScriptEngine getEngine() { return LuaScriptEngine.this; }
+
+		public Object eval() throws ScriptException {
+			return eval(getContext());
 		}
 
-	    public Object eval() throws ScriptException {
-	        return eval(getContext());
-	    }
-	    
-	    public Object eval(Bindings bindings) throws ScriptException {
-	    	return eval(((LuajContext) getContext()).globals, bindings);
-	    }
-
-	    public Object eval(ScriptContext context) throws ScriptException {
-	    	return eval(((LuajContext) context).globals, context.getBindings(ScriptContext.ENGINE_SCOPE));
+		public Object eval(Bindings bindings) throws ScriptException {
+			return eval(((LuajContext) getContext()).globals, bindings);
 		}
-	    
-	    Object eval(Globals g, Bindings b) throws ScriptException {
-	    	g.setmetatable(new BindingsMetatable(b));
+
+		public Object eval(ScriptContext context) throws ScriptException {
+			return eval(((LuajContext) context).globals, context.getBindings(ScriptContext.ENGINE_SCOPE));
+		}
+
+		Object eval(Globals g, Bindings b) throws ScriptException {
+			g.setmetatable(new BindingsMetatable(b));
 			LuaFunction f = function;
 			if (f.isclosure())
 				f = new LuaClosure(f.checkclosure().p, g);
@@ -178,37 +172,37 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 
 	private final class Utf8Encoder extends InputStream {
 		private final Reader r;
-		private final int[] buf = new int[2];
-		private int n;
+		private final int[]  buf = new int[2];
+		private int          n;
 
 		private Utf8Encoder(Reader r) {
 			this.r = r;
 		}
 
 		public int read() throws IOException {
-			if ( n > 0 )
+			if (n > 0)
 				return buf[--n];
 			int c = r.read();
-			if ( c < 0x80 )
+			if (c < 0x80)
 				return c;
 			n = 0;
-			if ( c < 0x800 ) {
-				buf[n++] = (0x80 | ( c      & 0x3f));				
-				return     (0xC0 | ((c>>6)  & 0x1f));
+			if (c < 0x800) {
+				buf[n++] = (0x80 | (c & 0x3f));
+				return (0xC0 | ((c>>6) & 0x1f));
 			} else {
-				buf[n++] = (0x80 | ( c      & 0x3f));				
-				buf[n++] = (0x80 | ((c>>6)  & 0x3f));
-				return     (0xE0 | ((c>>12) & 0x0f));
+				buf[n++] = (0x80 | (c & 0x3f));
+				buf[n++] = (0x80 | ((c>>6) & 0x3f));
+				return (0xE0 | ((c>>12) & 0x0f));
 			}
 		}
 	}
-	
+
 	static class BindingsMetatable extends LuaTable {
 
 		BindingsMetatable(final Bindings bindings) {
 			this.rawset(LuaValue.INDEX, new TwoArgFunction() {
 				public LuaValue call(LuaValue table, LuaValue key) {
-					if (key.isstring()) 
+					if (key.isstring())
 						return toLua(bindings.get(key.tojstring()));
 					else
 						return this.rawget(key);
@@ -231,33 +225,38 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 			});
 		}
 	}
-	
+
 	static private LuaValue toLua(Object javaValue) {
-		return javaValue == null? LuaValue.NIL:
-			javaValue instanceof LuaValue? (LuaValue) javaValue:
-			CoerceJavaToLua.coerce(javaValue);
+		return javaValue == null? LuaValue.NIL
+			: javaValue instanceof LuaValue? (LuaValue) javaValue: CoerceJavaToLua.coerce(javaValue);
 	}
 
 	static private Object toJava(LuaValue luajValue) {
-		switch ( luajValue.type() ) {
-		case LuaValue.TNIL: return null;
-		case LuaValue.TSTRING: return luajValue.tojstring();
-		case LuaValue.TUSERDATA: return luajValue.checkuserdata(Object.class);
-		case LuaValue.TNUMBER: return luajValue.isinttype()? 
-				(Object) new Integer(luajValue.toint()): 
-				(Object) new Double(luajValue.todouble());
-		default: return luajValue;
+		switch (luajValue.type()) {
+		case LuaValue.TNIL:
+			return null;
+		case LuaValue.TSTRING:
+			return luajValue.tojstring();
+		case LuaValue.TUSERDATA:
+			return luajValue.checkuserdata(Object.class);
+		case LuaValue.TNUMBER:
+			return luajValue.isinttype()? (Object) new Integer(luajValue.toint())
+				: (Object) new Double(luajValue.todouble());
+		default:
+			return luajValue;
 		}
 	}
 
 	static private Object toJava(Varargs v) {
 		final int n = v.narg();
 		switch (n) {
-		case 0: return null;
-		case 1: return toJava(v.arg1());
+		case 0:
+			return null;
+		case 1:
+			return toJava(v.arg1());
 		default:
 			Object[] o = new Object[n];
-			for (int i=0; i<n; ++i)
+			for (int i = 0; i < n; ++i)
 				o[i] = toJava(v.arg(i+1));
 			return o;
 		}

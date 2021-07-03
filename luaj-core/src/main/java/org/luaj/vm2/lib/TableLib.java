@@ -26,40 +26,56 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /**
- * Subclass of {@link LibFunction} which implements the lua standard {@code table}
- * library.
+ * Subclass of {@link LibFunction} which implements the lua standard
+ * {@code table} library.
  * 
  * <p>
  * Typically, this library is included as part of a call to either
- * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * <pre> {@code
- * Globals globals = JsePlatform.standardGlobals();
- * System.out.println( globals.get("table").get("length").call( LuaValue.tableOf() ) );
- * } </pre>
+ * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
+ * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = JsePlatform.standardGlobals();
+ * 	System.out.println(globals.get("table").get("length").call(LuaValue.tableOf()));
+ * }
+ * </pre>
  * <p>
- * To instantiate and use it directly,
- * link it into your globals table via {@link LuaValue#load(LuaValue)} using code such as:
- * <pre> {@code
- * Globals globals = new Globals();
- * globals.load(new JseBaseLib());
- * globals.load(new PackageLib());
- * globals.load(new TableLib());
- * System.out.println( globals.get("table").get("length").call( LuaValue.tableOf() ) );
- * } </pre>
+ * To instantiate and use it directly, link it into your globals table via
+ * {@link LuaValue#load(LuaValue)} using code such as:
+ * 
+ * <pre>
+ * {
+ * 	&#64;code
+ * 	Globals globals = new Globals();
+ * 	globals.load(new JseBaseLib());
+ * 	globals.load(new PackageLib());
+ * 	globals.load(new TableLib());
+ * 	System.out.println(globals.get("table").get("length").call(LuaValue.tableOf()));
+ * }
+ * </pre>
  * <p>
- * This has been implemented to match as closely as possible the behavior in the corresponding library in C.
+ * This has been implemented to match as closely as possible the behavior in the
+ * corresponding library in C.
+ * 
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
- * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.5">Lua 5.2 Table Lib Reference</a>
+ * @see <a href="http://www.lua.org/manual/5.2/manual.html#6.5">Lua 5.2 Table
+ *      Lib Reference</a>
  */
 public class TableLib extends TwoArgFunction {
 
-	/** Perform one-time initialization on the library by creating a table
-	 * containing the library functions, adding that table to the supplied environment,
-	 * adding the table to package.loaded, and returning table as the return value.
+	/**
+	 * Perform one-time initialization on the library by creating a table
+	 * containing the library functions, adding that table to the supplied
+	 * environment, adding the table to package.loaded, and returning table as
+	 * the return value.
+	 * 
 	 * @param modname the module name supplied if this is loaded via 'require'.
-	 * @param env the environment to load into, typically a Globals instance.
+	 * @param env     the environment to load into, typically a Globals
+	 *                instance.
 	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable table = new LuaTable();
@@ -70,23 +86,27 @@ public class TableLib extends TwoArgFunction {
 		table.set("sort", new sort());
 		table.set("unpack", new unpack());
 		env.set("table", table);
-		if (!env.get("package").isnil()) env.get("package").get("loaded").set("table", table);
+		if (!env.get("package").isnil())
+			env.get("package").get("loaded").set("table", table);
 		return NIL;
 	}
-	
+
 	// "concat" (table [, sep [, i [, j]]]) -> string
 	static class concat extends TableLibFunction {
 		public LuaValue call(LuaValue list) {
-			return list.checktable().concat(EMPTYSTRING,1,list.length());
+			return list.checktable().concat(EMPTYSTRING, 1, list.length());
 		}
+
 		public LuaValue call(LuaValue list, LuaValue sep) {
-			return list.checktable().concat(sep.checkstring(),1,list.length());
+			return list.checktable().concat(sep.checkstring(), 1, list.length());
 		}
+
 		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i) {
-			return list.checktable().concat(sep.checkstring(),i.checkint(),list.length());
+			return list.checktable().concat(sep.checkstring(), i.checkint(), list.length());
 		}
+
 		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i, LuaValue j) {
-			return list.checktable().concat(sep.checkstring(),i.checkint(),j.checkint());
+			return list.checktable().concat(sep.checkstring(), i.checkint(), j.checkint());
 		}
 	}
 
@@ -96,14 +116,15 @@ public class TableLib extends TwoArgFunction {
 			switch (args.narg()) {
 			case 2: {
 				LuaTable table = args.checktable(1);
-				table.insert(table.length()+1,args.arg(2));
+				table.insert(table.length()+1, args.arg(2));
 				return NONE;
 			}
 			case 3: {
 				LuaTable table = args.checktable(1);
 				int pos = args.checkint(2);
-				int max = table.length() + 1;
-				if (pos < 1 || pos > max) argerror(2, "position out of bounds: " + pos + " not between 1 and " + max);
+				int max = table.length()+1;
+				if (pos < 1 || pos > max)
+					argerror(2, "position out of bounds: " + pos + " not between 1 and " + max);
 				table.insert(pos, args.arg(3));
 				return NONE;
 			}
@@ -113,7 +134,7 @@ public class TableLib extends TwoArgFunction {
 			}
 		}
 	}
-	
+
 	// "pack" (...) -> table
 	static class pack extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
@@ -129,8 +150,8 @@ public class TableLib extends TwoArgFunction {
 			LuaTable table = args.checktable(1);
 			int size = table.length();
 			int pos = args.optint(2, size);
-			if (pos != size && (pos < 1 || pos > size + 1)) {
-				argerror(2, "position out of bounds: " + pos + " not between 1 and " + (size + 1));
+			if (pos != size && (pos < 1 || pos > size+1)) {
+				argerror(2, "position out of bounds: " + pos + " not between 1 and " + (size+1));
 			}
 			return table.remove(pos);
 		}
@@ -139,19 +160,17 @@ public class TableLib extends TwoArgFunction {
 	// "sort" (table [, comp])
 	static class sort extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
-			args.checktable(1).sort(
-					args.isnil(2)? NIL: args.checkfunction(2));
+			args.checktable(1).sort(args.isnil(2)? NIL: args.checkfunction(2));
 			return NONE;
 		}
 	}
 
-	
 	// "unpack", // (list [,i [,j]]) -> result1, ...
 	static class unpack extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaTable t = args.checktable(1);
 			// do not waste resource for calc rawlen if arg3 is not nil
-			int len = args.arg(3).isnil() ? t.length() : 0;
+			int len = args.arg(3).isnil()? t.length(): 0;
 			return t.unpack(args.optint(2, 1), args.optint(3, len));
 		}
 	}

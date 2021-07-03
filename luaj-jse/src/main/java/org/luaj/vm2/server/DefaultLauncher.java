@@ -31,13 +31,13 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JsePlatform;
 
 /**
- * Default {@link Launcher} instance that creates standard globals 
- * and runs the supplied scripts with chunk name 'main'.
+ * Default {@link Launcher} instance that creates standard globals and runs the
+ * supplied scripts with chunk name 'main'.
  * <P>
  * Arguments are coerced into lua using {@link CoerceJavaToLua#coerce(Object)}.
  * <P>
- * Return values with simple types are coerced into Java simple types. 
- * Tables, threads, and functions are returned as lua objects.
+ * Return values with simple types are coerced into Java simple types. Tables,
+ * threads, and functions are returned as lua objects.
  * 
  * @see Launcher
  * @see LuajClassLoader
@@ -51,13 +51,15 @@ public class DefaultLauncher implements Launcher {
 	public DefaultLauncher() {
 		g = JsePlatform.standardGlobals();
 	}
-	
+
 	/** Launches the script with chunk name 'main' */
 	public Object[] launch(String script, Object[] arg) {
 		return launchChunk(g.load(script, "main"), arg);
 	}
 
-	/** Launches the script with chunk name 'main' and loading using modes 'bt' */
+	/**
+	 * Launches the script with chunk name 'main' and loading using modes 'bt'
+	 */
 	public Object[] launch(InputStream script, Object[] arg) {
 		return launchChunk(g.load(script, "main", "bt", g), arg);
 	}

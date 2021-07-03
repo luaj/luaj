@@ -26,10 +26,10 @@ import java.util.List;
 
 public class ParList extends SyntaxElement {
 	public static final List<Name> EMPTY_NAMELIST = new ArrayList<Name>();
-	public static final ParList EMPTY_PARLIST = new ParList(EMPTY_NAMELIST,false);
-	
+	public static final ParList    EMPTY_PARLIST  = new ParList(EMPTY_NAMELIST, false);
+
 	public final List<Name> names;
-	public final boolean isvararg;
+	public final boolean    isvararg;
 
 	public ParList(List<Name> names, boolean isvararg) {
 		this.names = names;

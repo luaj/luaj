@@ -6,10 +6,9 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
-
 public class JsePlatformTest extends TestCase {
 	public void testLuaMainPassesArguments() {
-		Globals globals = JsePlatform.standardGlobals();   
+		Globals globals = JsePlatform.standardGlobals();
 		LuaValue chunk = globals.load("return #arg, arg.n, arg[2], arg[1]");
 		Varargs results = JsePlatform.luaMain(chunk, new String[] { "aaa", "bbb" });
 		assertEquals(results.narg(), 4);
