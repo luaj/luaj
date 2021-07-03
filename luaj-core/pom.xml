@@ -14,47 +14,4 @@
 	<name>luaj-core</name>
 	<description>Core code for LuaJ</description>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.helger.maven</groupId>
-				<artifactId>ph-javacc-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>generate-grammar</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>javacc</goal>
-						</goals>
-						<configuration>
-							<jdkVersion>1.8</jdkVersion>
-							<javadocFriendlyComments>true</javadocFriendlyComments>
-							<packageName>org.luaj.vm2.parser</packageName>
-							<sourceDirectory>src/main/javacc</sourceDirectory>
-							<outputDirectory>${project.build.directory}/generated-sources/javacc</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>add-source</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>${project.build.directory}/generated-sources/javacc</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
 </project>
