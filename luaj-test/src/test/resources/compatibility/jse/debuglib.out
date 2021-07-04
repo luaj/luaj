@@ -61,18 +61,18 @@ a.a=bbb a.b=nil b.a=nil b.b=nil
 a.a=bbb a.b=ccc b.a=nil b.b=nil
 boolean	table	nil	table
 boolean	nil	nil	nil
-boolean	boolean	nil	nil
+boolean	table	nil	nil
 a.a=bbb a.b=nil b.a=nil b.b=nil
 boolean	nil	nil	nil
 get=true,true,nil
-set=true,false,nil
+set=true,true,nil
 get=true,true,nil
 get=true,true,nil
-set=true,false,nil
+set=true,true,nil
 get=true,true,nil
 true	nil
-true	true
-true	true
+true	1
+true	1
 ----- debug.getinfo
 6
 ---
@@ -83,7 +83,7 @@ debug.getinfo(1)
     currentline: 144
     linedefined: 141
     lastlinedefined: 155
-    nups: 4
+    nups: 5
     func: function
 debug.getinfo(1,"")
 debug.getinfo(1,"l")
@@ -98,7 +98,7 @@ debug.getinfo(2)
     currentline: 157
     linedefined: 135
     lastlinedefined: 159
-    nups: 5
+    nups: 6
     func: function
 debug.getinfo(2,"l")
     currentline: 157
@@ -162,7 +162,7 @@ true
     currentline: -1
     linedefined: 141
     lastlinedefined: 155
-    nups: 4
+    nups: 5
     func: function
 debug.getinfo(test)
 true
@@ -172,18 +172,22 @@ true
     currentline: -1
     linedefined: 135
     lastlinedefined: 159
-    nups: 5
+    nups: 6
     func: function
 ----- debug.sethook, debug.gethook
    ... in hook	call	nil
- info[2]=debuglib.lua,174
+ info[2]=debuglib.lua,177
    ... in hook	call	nil
- info[2]=debuglib.lua,175
+ info[2]=debuglib.lua,176
    ... in hook	call	nil
  info[2]=[C],-1
    ... in hook	call	nil
  info[2]=[C],-1
 hook = c -> result=true,nil,nil,nil,false,false,nil 
+   ... in hook	return	nil
+ info[2]=[C],-1
+   ... in hook	return	nil
+ info[2]=[C],-1
 hook = r -> result=true,nil,nil,nil,false,false,nil 
    ... in hook	line	192
  info[2]=debuglib.lua,192
@@ -196,19 +200,23 @@ hook = r -> result=true,nil,nil,nil,false,false,nil
    ... in hook	line	195
  info[2]=debuglib.lua,195
 hook = l -> result=true,nil,nil,nil,false,false,nil 
+   ... in hook	return	nil
+ info[2]=[C],-1
    ... in hook	line	192
  info[2]=debuglib.lua,192
    ... in hook	call	nil
- info[2]=debuglib.lua,174
+ info[2]=debuglib.lua,177
    ... in hook	line	177
  info[2]=debuglib.lua,177
    ... in hook	line	178
  info[2]=debuglib.lua,178
    ... in hook	call	nil
- info[2]=debuglib.lua,175
+ info[2]=debuglib.lua,176
    ... in hook	line	176
  info[2]=debuglib.lua,176
    ... in hook	call	nil
+ info[2]=[C],-1
+   ... in hook	return	nil
  info[2]=[C],-1
    ... in hook	line	195
  info[2]=debuglib.lua,195
@@ -229,7 +237,7 @@ stack traceback:
 	debuglib.lua:238: in function <debuglib.lua:214>
 	[C]: in function 'pcall'
 	debuglib.lua:240: in main chunk
-	[C]: at 0x55eaaf4e2f20
+	[C]: in ?
 ----- debug.upvalueid
 debug.getupvalue(a1,1)	x	100
 debug.getupvalue(a1,2)	y	200

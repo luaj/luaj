@@ -1,0 +1,99 @@
+running is not nil
+co.status	suspended
+co-body	1	10
+foo	2
+main	true	4
+co.status	suspended
+co-body	r
+main	true	11	-9
+co.status	suspended
+co-body	x	y
+running is not nil
+co.status.inside	running
+co.status.inside	running
+co.status.inside2	normal
+main	true	10	end
+co.status	dead
+main	false	cannot resume dead coroutine
+co.status	dead
+running is not nil
+co.status	suspended
+co-body	1	10
+foo	2
+main	true	4
+co.status	suspended
+co-body	nil	nil
+main	true	11	-9
+co.status	suspended
+co-body	x	y
+main	true	10	end
+co.status	dead
+main	false	cannot resume dead coroutine
+co.status	dead
+co-body	1	10
+foo	2
+g	4
+co-body	r
+g	11	-9
+co-body	x	y
+g	10	end
+g	cannot resume dead coroutine
+(main) sending args	111	222	333
+(echocr) first args	111	222	333
+(main) resume returns	true	111	222	333
+(main) sending args
+(echoch) yield returns
+(main) resume returns	true
+(main) sending args	111
+(echoch) yield returns	111
+(main) resume returns	true	111
+(main) sending args	111	222	333
+(echoch) yield returns	111	222	333
+(main) resume returns	true	111	222	333
+main-b	suspended
+main-c	suspended
+  b-resumed	main-arg-for-b	true
+  b-b	running
+  b-c	suspended
+  b-resume-b	false	cannot resume non-suspended coroutine
+    c-resumed	b-arg-for-c	true
+    c-b	normal
+    c-c	running
+    c-resume-b	false	cannot resume non-suspended coroutine
+    c-resume-c	false	cannot resume non-suspended coroutine
+  b-resume-c	true	c-rslt
+main-resume-b	true	b-rslt
+    c-resumed	main-arg-for-c	true
+    c-b	suspended
+    c-c	running
+  b-resumed	b-arg-for-b	true
+  b-b	running
+  b-c	normal
+  b-resume-b	false	cannot resume non-suspended coroutine
+  b-resume-c	false	cannot resume non-suspended coroutine
+    c-resume-b	true	b-rslt
+    c-resume-c	false	cannot resume non-suspended coroutine
+main-resume-c	true	c-rslt
+main-b	suspended
+main-c	suspended
+  b-resumed	main-arg-for-b	true
+  b-b	running
+  b-c	suspended
+  b-resume-b	false	cannot resume non-suspended coroutine
+    c-resumed	b-arg-for-c	true
+    c-b	normal
+    c-c	running
+    c-resume-b	false	cannot resume non-suspended coroutine
+    c-resume-c	false	cannot resume non-suspended coroutine
+  b-resume-c	true	c-rslt
+main-resume-b	true	b-rslt
+main-resume-c	true
+main-b	suspended
+main-c	dead
+  b-resumed	main-arg-for-b	true
+  b-b	running
+  b-c	dead
+  b-resume-b	false	cannot resume non-suspended coroutine
+  b-resume-c	false	cannot resume dead coroutine
+main-resume-b	true	b-rslt
+main-resume-c	false	cannot resume dead coroutine

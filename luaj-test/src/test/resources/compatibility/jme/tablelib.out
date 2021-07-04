@@ -1,5 +1,4 @@
 2
-7
 -- concat tests
 onetwothree
 one--two--three
@@ -26,7 +25,6 @@ two
 {[1]=seven,[2]=one,[3]=two,[4]=three,[5]=six,[a]=aaa,[b]=bbb,[c]=ccc}	5
 {[1]=seven,[2]=one,[3]=two,[4]=eight,[5]=three,[6]=six,[a]=aaa,[b]=bbb,[c]=ccc}	6
 {[1]=seven,[2]=one,[3]=two,[4]=eight,[5]=three,[6]=six,[7]=nine,[a]=aaa,[b]=bbb,[c]=ccc}	7
-{[10]=ten,[1]=seven,[2]=one,[3]=two,[4]=eight,[5]=three,[6]=six,[7]=nine,[a]=aaa,[b]=bbb,[c]=ccc}	7
 #{}	0
 #{"a"}	1
 #{"a","b"}	2
@@ -49,13 +47,7 @@ table.remove(t,1)	one
 {[10]=ten,[1]=two,[2]=three,[3]=four,[4]=five,[5]=six,[a]=aaa,[b]=bbb,[c]=ccc}	5
 table.remove(t,3)	four
 {[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
-table.remove(t,5)
-{[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
-table.remove(t,10)
-{[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
-table.remove(t,-1)
-{[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
-table.remove(t,-1)
+table.remove(t,5)	nil
 {[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
 -- sort tests
 one-two-three

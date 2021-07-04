@@ -25,10 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.luaj.vm2.Globals;
@@ -94,6 +97,8 @@ abstract class PlatformTestCase extends ResourcesTestCase {
 				actualOutput = actualOutput.replaceAll("\r\n", "\n");
 				expectedOutput = expectedOutput.replaceAll("\r\n", "\n");
 
+				if (!expectedOutput.equals(actualOutput))
+					Files.write(new File(testName + ".out").toPath(), actualOutput.getBytes(), new OpenOption[0]);
 				assertEquals(expectedOutput, actualOutput);
 			} finally {
 				globals.STDOUT = oldps;
@@ -132,7 +137,7 @@ abstract class PlatformTestCase extends ResourcesTestCase {
 	}
 
 	private String getExpectedOutput(final String name) throws IOException, InterruptedException {
-		InputStream output = inputStreamOfResult(name);
+		InputStream output = inputStreamOfResult(platform.name().toLowerCase() + "/" + name);
 		if (output != null)
 			try {
 				return readString(output);

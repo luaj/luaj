@@ -61,14 +61,39 @@ main-c	suspended
     c-c	running
     c-resume-b	false	cannot resume non-suspended coroutine
     c-resume-c	false	cannot resume non-suspended coroutine
-  b-resume-c	false	attempt to yield across metamethod/C-call boundary
-main-resume-b	false	attempt to yield across metamethod/C-call boundary
-main-resume-c	false	cannot resume dead coroutine
-main-b	dead
+  b-resume-c	true	c-rslt
+main-resume-b	true	b-rslt
+    c-resumed	main-arg-for-c	true
+    c-b	suspended
+    c-c	running
+  b-resumed	b-arg-for-b	true
+  b-b	running
+  b-c	normal
+  b-resume-b	false	cannot resume non-suspended coroutine
+  b-resume-c	false	cannot resume non-suspended coroutine
+    c-resume-b	true	b-rslt
+    c-resume-c	false	cannot resume non-suspended coroutine
+main-resume-c	true	c-rslt
+main-b	suspended
+main-c	suspended
+  b-resumed	main-arg-for-b	true
+  b-b	running
+  b-c	suspended
+  b-resume-b	false	cannot resume non-suspended coroutine
+    c-resumed	b-arg-for-c	true
+    c-b	normal
+    c-c	running
+    c-resume-b	false	cannot resume non-suspended coroutine
+    c-resume-c	false	cannot resume non-suspended coroutine
+  b-resume-c	true	c-rslt
+main-resume-b	true	b-rslt
+main-resume-c	true
+main-b	suspended
 main-c	dead
-main-resume-b	false	cannot resume dead coroutine
-main-resume-c	false	cannot resume dead coroutine
-main-b	dead
-main-c	dead
-main-resume-b	false	cannot resume dead coroutine
+  b-resumed	main-arg-for-b	true
+  b-b	running
+  b-c	dead
+  b-resume-b	false	cannot resume non-suspended coroutine
+  b-resume-c	false	cannot resume dead coroutine
+main-resume-b	true	b-rslt
 main-resume-c	false	cannot resume dead coroutine

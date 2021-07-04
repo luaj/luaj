@@ -8,9 +8,9 @@
 -		debug.getinfo(25)	
 -		debug.getinfo('25')	
 --- checkallpass
--		debug.getinfo(<function>)	<table>
--		debug.getinfo(25)	
--		debug.getinfo('25')	
+-		debug.getinfo(<thread>,<function>)	<table>
+-		debug.getinfo(<thread>,25)	
+-		debug.getinfo(<thread>,'25')	
 --- checkallpass
 -		debug.getinfo(<function>,'')	<table>
 -		debug.getinfo(25,'')	
@@ -22,9 +22,15 @@
 -		debug.getinfo(25,'flnStu')	
 -		debug.getinfo('25','flnStu')	
 --- checkallpass
-fail 	debug.getinfo('')	'bad argument #1 to 'debug.getinfo' (function or level expected)'
-fail 	debug.getinfo('n')	'bad argument #1 to 'debug.getinfo' (function or level expected)'
-fail 	debug.getinfo('flnStu')	'bad argument #1 to 'debug.getinfo' (function or level expected)'
+-		debug.getinfo(<thread>,<function>,'')	<table>
+-		debug.getinfo(<thread>,25,'')	
+-		debug.getinfo(<thread>,'25','')	
+-		debug.getinfo(<thread>,<function>,'n')	<table>
+-		debug.getinfo(<thread>,25,'n')	
+-		debug.getinfo(<thread>,'25','n')	
+-		debug.getinfo(<thread>,<function>,'flnStu')	<table>
+-		debug.getinfo(<thread>,25,'flnStu')	
+-		debug.getinfo(<thread>,'25','flnStu')	
 --- checkallerrors
 -		debug.getinfo()	...function or level...
 --- checkallerrors
@@ -48,7 +54,7 @@ fail 	debug.getinfo('flnStu')	'bad argument #1 to 'debug.getinfo' (function or l
 -		debug.getinfo(<table>,<function>,'abc')	...string expected...
 -		debug.getinfo(<function>,<function>,'abc')	...string expected...
 --- checkallerrors
-badmsg 	debug.getinfo('qzQZ')	template='invalid option' actual='bad argument #1 to 'debug.getinfo' (function or level expected)'
+-		debug.getinfo(<thread>,<function>,'qzQZ')	...invalid option...
 ====== debug.getlocal ======
 f: x,y,a,b,p,q	1	2	nil	nil	p	q
 --- checkallpass
@@ -310,47 +316,47 @@ p,q	abc	abc
 --- checkallpass
 -		debug.traceback()	'stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:127: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback('abc')	'abc
 stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:128: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback('abc',1.25)	'abc
 stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:129: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>)	'stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:130: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>,'abc')	'abc
 stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:131: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>,'abc',1.25)	'abc
 stack traceback:
 	[C]: in function 'pcall'
-	args.lua:143: in function 'invoke'
-	args.lua:167: in function 'checkallpass'
+	args.lua:144: in function 'invoke'
+	args.lua:168: in function 'checkallpass'
 	debuglibargs.lua:132: in main chunk
 	[C]: in ?'
 --- checkallpass
