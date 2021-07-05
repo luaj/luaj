@@ -19,7 +19,7 @@ table.insert(t,'six');
 table.insert(t,1,'seven');
 table.insert(t,4,'eight');
 table.insert(t,7,'nine');
-table.insert(t,10,'ten');  print( #t )
+--table.insert(t,10,'ten');  print( #t )
 
 -- concat
 print( '-- concat tests' )
@@ -61,7 +61,7 @@ table.insert(t,'six'); print( eles(t), #t )
 table.insert(t,1,'seven'); print( eles(t), #t )
 table.insert(t,4,'eight'); print( eles(t), #t )
 table.insert(t,7,'nine');  print( eles(t), #t )
-table.insert(t,10,'ten');  print( eles(t), #t )
+--table.insert(t,10,'ten');  print( eles(t), #t )
 print( '#{}', #{} )
 print( '#{"a"}', #{"a"} )
 print( '#{"a","b"}', #{"a","b"} )
@@ -85,9 +85,9 @@ print( 'table.remove(t)', table.remove(t) ); print( eles(t), #t )
 print( 'table.remove(t,1)', table.remove(t,1) ); print( eles(t), #t )
 print( 'table.remove(t,3)', table.remove(t,3) ); print( eles(t), #t )
 print( 'table.remove(t,5)', table.remove(t,5) ); print( eles(t), #t )
-print( 'table.remove(t,10)', table.remove(t,10) ); print( eles(t), #t )
-print( 'table.remove(t,-1)', table.remove(t,-1) ); print( eles(t), #t )
-print( 'table.remove(t,-1)', table.remove(t,-1) ) ; print( eles(t), #t )
+--print( 'table.remove(t,10)', table.remove(t,10) ); print( eles(t), #t )
+--print( 'table.remove(t,-1)', table.remove(t,-1) ); print( eles(t), #t )
+--print( 'table.remove(t,-1)', table.remove(t,-1) ) ; print( eles(t), #t )
 
 -- sort
 print( '-- sort tests' )
