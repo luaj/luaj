@@ -2,7 +2,7 @@ package.path = "?.lua;test/lua/errors/?.lua"
 require 'args'
 
 -- arg types for language operator
-
+local notstringortable = { nil, anumber, aboolean, afunction, athread, n=5 }
 -- ========= unary operators: - # not
 
 -- unary minus -
@@ -15,7 +15,7 @@ checkallerrors('negative',{notanumber},'attempt to perform arithmetic')
 banner('#')
 lengthop = function(a) return #a end
 checkallpass('lengthop',{sometable})
-checkallerrors('lengthop',{notatable},'attempt to get length of')
+checkallerrors('lengthop',{notstringortable},'attempt to get length of')
 
 -- length
 banner('not')
@@ -127,14 +127,14 @@ checkallerrors('gtop',{{astring,astrnum},notastring},'attempt to compare')
 banner( '[]' )
 bracketop = function(a,b) return a[b] end
 checkallpass('bracketop',{sometable,notanil})
-checkallerrors('bracketop',{notatable,notanil},'attempt to index')
-checkallerrors('bracketop',{sometable},'attempt to index')
+checkallerrors('bracketop',{notstringortable,notanil},'attempt to index')
+--checkallerrors('bracketop',{sometable},'attempt to index')
 
 banner( '.' )
 dotop = function(a,b) return a.b end
 checkallpass('dotop',{sometable,notanil})
-checkallerrors('dotop',{notatable,notanil},'attempt to index')
-checkallerrors('dotop',{sometable},'attempt to index')
+checkallerrors('dotop',{notstringortable,notanil},'attempt to index')
+--checkallerrors('dotop',{sometable},'attempt to index')
 
 banner( 'and' )
 types = {['table']='table',['function']='function',['thread']='thread'}

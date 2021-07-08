@@ -40,24 +40,17 @@ checkallerrors('ipairs', {notatable}, 'bad argument')
 -- load
 banner('load')
 checkallpass('load', {somefunction,{nil,astring,n=2}})
-checkallerrors('load', {notafunction,{nil,astring,anumber,n=3}}, 'bad argument')
-checkallerrors('load', {somefunction,{afunction,atable}}, 'bad argument')
-
--- loadfile
-banner('loadfile')
---checkallpass('loadfile', {})
---checkallpass('loadfile', {{'bogus'}})
---checkallpass('loadfile', {{'test/lua/errors/args.lua'}})
---checkallpass('loadfile', {{'args.lua'}})
---checkallerrors('loadfile', {nonstring}, 'bad argument')
-
--- load
-banner('load')
 checkallpass('load', {{'return'}})
 checkallpass('load', {{'return'},{'mychunk'}})
 checkallpass('load', {{'return a ... b'},{'mychunk'}},true)
-checkallerrors('load', {notastring,{nil,astring,anumber,n=3}}, 'bad argument')
-checkallerrors('load', {{'return'},{afunction,atable}}, 'bad argument')
+checkallerrors('load', {somefunction,nonstring}, 'bad argument')
+checkallerrors('load', {{nil,aboolean,atable,athread},notastring}, 'bad argument')
+checkallerrors('load', {{'return'},nonstring}, 'bad argument')
+
+-- loadfile
+banner('loadfile')
+checkallpass('loadfile', {{'args.lua'}})
+checkallerrors('loadfile', {nonstring}, 'bad argument')
 
 -- next
 banner('next')
@@ -110,15 +103,16 @@ checkallerrors('select', {notanumber}, 'bad argument')
 
 -- setmetatable
 banner('setmetatable')
-checkallpass('setmetatable', {sometable,sometable})
-checkallpass('setmetatable', {sometable,{}})
+checkallpass('setmetatable', {sometable, {nil,atable,n=2}})
 checkallerrors('setmetatable',{notatable,sometable},'bad argument')
 checkallerrors('setmetatable',{sometable,nontable},'bad argument')
 
 -- tonumber
 banner('tonumber')
 checkallpass('tonumber',{somenumber,{nil,2,10,36,n=4}})
-checkallpass('tonumber',{notanil,{nil,10,n=2}})
+checkallpass('tonumber',{notanil,{nil,n=1}})
+checkallpass('tonumber',{somestring,{10}})
+checkallerrors('tonumber',{notastring,{10}},'bad argument')
 checkallerrors('tonumber',{{nil,afunction,atable,n=3},{2,9,11,36}},'bad argument')
 checkallerrors('tonumber',{somenumber,{1,37,atable,afunction,aboolean}},'bad argument')
 

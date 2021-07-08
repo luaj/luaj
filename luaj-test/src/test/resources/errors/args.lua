@@ -24,6 +24,7 @@ somenumber   = { anumber, astrnum }
 someboolean  = { aboolean }
 sometable    = { atable }
 somefunction = { afunction }
+somethread   = { athread }
 somenil      = { anil }
 somekey      = { akey }
 notakey      = { astring, anumber, aboolean, atable, afunction }
