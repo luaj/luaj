@@ -119,6 +119,7 @@ public class PackageLib extends TwoArgFunction {
 	static final LuaString         _PATH       = valueOf("path");
 	static final LuaString         _SEARCHPATH = valueOf("searchpath");
 	static final LuaString         _SEARCHERS  = valueOf("searchers");
+	static final LuaString         _SEEALL     = valueOf("seeall");
 
 	/** The globals that were used to load this library. */
 	Globals globals;
@@ -167,6 +168,7 @@ public class PackageLib extends TwoArgFunction {
 		package_.set(_PATH, LuaValue.valueOf(DEFAULT_LUA_PATH));
 		package_.set(_LOADLIB, new loadlib());
 		package_.set(_SEARCHPATH, new searchpath());
+		package_.set(_SEEALL, new seeall());
 		LuaTable searchers = new LuaTable();
 		searchers.set(1, preload_searcher = new preload_searcher());
 		searchers.set(2, lua_searcher = new lua_searcher());
@@ -362,6 +364,16 @@ public class PackageLib extends TwoArgFunction {
 				sb.append("\n\t" + filename);
 			}
 			return varargsOf(NIL, valueOf(sb.toString()));
+		}
+	}
+
+	public class seeall extends OneArgFunction {
+		@Override
+		public LuaValue call(LuaValue arg) {
+			LuaTable mt = new LuaTable();
+			mt.set(LuaValue.INDEX, globals);
+			arg.checktable().setmetatable(mt);
+			return LuaValue.NONE;
 		}
 	}
 
