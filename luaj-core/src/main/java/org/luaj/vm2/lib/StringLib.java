@@ -640,6 +640,8 @@ public class StringLib extends TwoArgFunction {
 			int lastmatch = -1; /* end of last match */
 			LuaValue repl = args.arg(3);
 			int max_s = args.optint(4, srclen+1);
+			if (max_s < 0)
+				max_s = srclen+1;
 			final boolean anchor = p.length() > 0 && p.charAt(0) == '^';
 
 			Buffer lbuf = new Buffer(srclen);
