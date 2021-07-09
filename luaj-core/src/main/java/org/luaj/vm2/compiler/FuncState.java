@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,7 +43,7 @@ public class FuncState extends Constants {
 		short    nactvar;    /* # active locals outside the breakable structure */
 		boolean  upval;      /* true if some variable in the block is an upvalue */
 		boolean  isloop;     /* true if `block' is a loop */
-	};
+	}
 
 	Prototype f;          /* current function header */
 	Hashtable h;          /* table to find (and reuse) elements in `k' */
@@ -106,7 +106,7 @@ public class FuncState extends Constants {
 
 	void errorlimit(int limit, String what) {
 		// TODO: report message logic.
-		String msg = (f.linedefined == 0)? ls.L.pushfstring("main function has more than " + limit + " " + what)
+		String msg = f.linedefined == 0? ls.L.pushfstring("main function has more than " + limit + " " + what)
 			: ls.L.pushfstring("function at line " + f.linedefined + " has more than " + limit + " " + what);
 		ls.lexerror(msg, 0);
 	}
@@ -118,7 +118,7 @@ public class FuncState extends Constants {
 	}
 
 	void removevars(int tolevel) {
-		ls.dyd.n_actvar -= (nactvar-tolevel);
+		ls.dyd.n_actvar -= nactvar-tolevel;
 		while ( nactvar > tolevel )
 			getlocvar(--nactvar).endpc = pc;
 	}
@@ -245,7 +245,7 @@ public class FuncState extends Constants {
 	}
 
 	boolean hasmultret(int k) {
-		return ((k) == LexState.VCALL || (k) == LexState.VVARARG);
+		return k == LexState.VCALL || k == LexState.VVARARG;
 	}
 
 	void lastlistfield(ConsControl cc) {
@@ -276,7 +276,7 @@ public class FuncState extends Constants {
 			if (GET_OPCODE(previous_code) == OP_LOADNIL) {
 				int pfrom = GETARG_A(previous_code);
 				int pl = pfrom+GETARG_B(previous_code);
-				if ((pfrom <= from && from <= pl+1) || (from <= pfrom && pfrom <= l+1)) { /* can connect both? */
+				if (pfrom <= from && from <= pl+1 || from <= pfrom && pfrom <= l+1) { /* can connect both? */
 					if (pfrom < from)
 						from = pfrom; /* from = min(from, pfrom) */
 					if (pl > l)
@@ -334,7 +334,7 @@ public class FuncState extends Constants {
 			return LexState.NO_JUMP;
 		else
 			/* turn offset into absolute position */
-			return (pc+1)+offset;
+			return pc+1+offset;
 	}
 
 	InstructionPtr getjumpcontrol(int pc) {
@@ -466,7 +466,7 @@ public class FuncState extends Constants {
 			return ((Integer) h.get(v)).intValue();
 		}
 		final int idx = this.nk;
-		this.h.put(v, new Integer(idx));
+		this.h.put(v, Integer.valueOf(idx));
 		final Prototype f = this.f;
 		if (f.k == null || nk+1 >= f.k.length)
 			f.k = realloc(f.k, nk*2+1);
@@ -482,14 +482,14 @@ public class FuncState extends Constants {
 		if (r instanceof LuaDouble) {
 			double d = r.todouble();
 			int i = (int) d;
-			if (d == (double) i)
+			if (d == i)
 				r = LuaInteger.valueOf(i);
 		}
 		return this.addk(r);
 	}
 
 	int boolK(boolean b) {
-		return this.addk((b? LuaValue.TRUE: LuaValue.FALSE));
+		return this.addk(b? LuaValue.TRUE: LuaValue.FALSE);
 	}
 
 	int nilK() {
@@ -562,7 +562,7 @@ public class FuncState extends Constants {
 		}
 		case LexState.VFALSE:
 		case LexState.VTRUE: {
-			this.codeABC(OP_LOADBOOL, reg, (e.k == LexState.VTRUE? 1: 0), 0);
+			this.codeABC(OP_LOADBOOL, reg, e.k == LexState.VTRUE? 1: 0, 0);
 			break;
 		}
 		case LexState.VK: {
@@ -608,7 +608,7 @@ public class FuncState extends Constants {
 			int p_f = LexState.NO_JUMP; /* position of an eventual LOAD false */
 			int p_t = LexState.NO_JUMP; /* position of an eventual LOAD true */
 			if (this.need_value(e.t.i) || this.need_value(e.f.i)) {
-				int fj = (e.k == LexState.VJMP)? LexState.NO_JUMP: this.jump();
+				int fj = e.k == LexState.VJMP? LexState.NO_JUMP: this.jump();
 				p_f = this.code_label(reg, 0, 1);
 				p_t = this.code_label(reg, 1, 0);
 				this.patchtohere(fj);
@@ -662,7 +662,7 @@ public class FuncState extends Constants {
 		case LexState.VFALSE:
 		case LexState.VNIL: {
 			if (this.nk <= MAXINDEXRK) { /* constant fit in RK operand? */
-				e.u.info = (e.k == LexState.VNIL)? this.nilK(): this.boolK((e.k == LexState.VTRUE));
+				e.u.info = e.k == LexState.VNIL? this.nilK(): this.boolK(e.k == LexState.VTRUE);
 				e.k = LexState.VK;
 				return RKASK(e.u.info);
 			} else
@@ -699,7 +699,7 @@ public class FuncState extends Constants {
 			break;
 		}
 		case LexState.VINDEXED: {
-			int op = (var.u.ind_vt == LexState.VLOCAL)? OP_SETTABLE: OP_SETTABUP;
+			int op = var.u.ind_vt == LexState.VLOCAL? OP_SETTABLE: OP_SETTABUP;
 			int e = this.exp2RK(ex);
 			this.codeABC(op, var.u.ind_t, var.u.ind_idx, e);
 			break;
@@ -730,7 +730,7 @@ public class FuncState extends Constants {
 			&& Lua.GET_OPCODE(pc.get()) != OP_TEST);
 		// SETARG_A(pc, !(GETARG_A(pc.get())));
 		int a = GETARG_A(pc.get());
-		int nota = (a != 0? 0: 1);
+		int nota = a != 0? 0: 1;
 		SETARG_A(pc, nota);
 	}
 
@@ -739,7 +739,7 @@ public class FuncState extends Constants {
 			int ie = this.getcode(e);
 			if (GET_OPCODE(ie) == OP_NOT) {
 				this.pc--; /* remove previous OP_NOT */
-				return this.condjump(OP_TEST, GETARG_B(ie), 0, (cond != 0? 0: 1));
+				return this.condjump(OP_TEST, GETARG_B(ie), 0, cond != 0? 0: 1);
 			}
 			/* else go through */
 		}
@@ -838,14 +838,14 @@ public class FuncState extends Constants {
 	}
 
 	static boolean vkisinreg(int k) {
-		return ((k) == LexState.VNONRELOC || (k) == LexState.VLOCAL);
+		return k == LexState.VNONRELOC || k == LexState.VLOCAL;
 	}
 
 	void indexed(expdesc t, expdesc k) {
 		t.u.ind_t = (short) t.u.info;
 		t.u.ind_idx = (short) this.exp2RK(k);
-		LuaC._assert(t.k == LexState.VUPVAL || vkisinreg(t.k));
-		t.u.ind_vt = (short) ((t.k == LexState.VUPVAL)? LexState.VUPVAL: LexState.VLOCAL);
+		Constants._assert(t.k == LexState.VUPVAL || vkisinreg(t.k));
+		t.u.ind_vt = (short) (t.k == LexState.VUPVAL? LexState.VUPVAL: LexState.VLOCAL);
 		t.k = LexState.VINDEXED;
 	}
 
@@ -895,10 +895,9 @@ public class FuncState extends Constants {
 	}
 
 	void codearith(int op, expdesc e1, expdesc e2, int line) {
-		if (constfolding(op, e1, e2))
-			return;
-		else {
-			int o2 = (op != OP_UNM && op != OP_LEN)? this.exp2RK(e2): 0;
+		if (constfolding(op, e1, e2)) {
+		} else {
+			int o2 = op != OP_UNM && op != OP_LEN? this.exp2RK(e2): 0;
 			int o1 = this.exp2RK(e1);
 			if (o1 > o2) {
 				this.freeexp(e1);
@@ -1068,11 +1067,11 @@ public class FuncState extends Constants {
 		this.dischargejpc(); /* `pc' will change */
 		/* put new instruction in code array */
 		if (f.code == null || this.pc+1 > f.code.length)
-			f.code = LuaC.realloc(f.code, this.pc*2+1);
+			f.code = Constants.realloc(f.code, this.pc*2+1);
 		f.code[this.pc] = instruction;
 		/* save corresponding line information */
 		if (f.lineinfo == null || this.pc+1 > f.lineinfo.length)
-			f.lineinfo = LuaC.realloc(f.lineinfo, this.pc*2+1);
+			f.lineinfo = Constants.realloc(f.lineinfo, this.pc*2+1);
 		f.lineinfo[this.pc] = line;
 		return this.pc++;
 	}
@@ -1108,7 +1107,7 @@ public class FuncState extends Constants {
 
 	void setlist(int base, int nelems, int tostore) {
 		int c = (nelems-1)/LFIELDS_PER_FLUSH+1;
-		int b = (tostore == LUA_MULTRET)? 0: tostore;
+		int b = tostore == LUA_MULTRET? 0: tostore;
 		_assert(tostore != 0);
 		if (c <= MAXARG_C)
 			this.codeABC(OP_SETLIST, base, b, c);

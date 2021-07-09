@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -43,7 +43,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -57,7 +57,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -74,11 +74,12 @@ public class Bit32Lib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable t = new LuaTable();
 		bind(t, Bit32LibV.class, new String[] { "band", "bnot", "bor", "btest", "bxor", "extract", "replace" });
@@ -90,6 +91,7 @@ public class Bit32Lib extends TwoArgFunction {
 	}
 
 	static final class Bit32LibV extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			switch (opcode) {
 			case 0:
@@ -113,6 +115,7 @@ public class Bit32Lib extends TwoArgFunction {
 
 	static final class Bit32Lib2 extends TwoArgFunction {
 
+		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			switch (opcode) {
 			case 0:
@@ -200,7 +203,7 @@ public class Bit32Lib extends TwoArgFunction {
 			return rrotate(x, -disp);
 		} else {
 			disp = disp & 31;
-			return bitsToValue((x<<disp) | (x>>>(32-disp)));
+			return bitsToValue(x<<disp | x>>>32-disp);
 		}
 	}
 
@@ -209,7 +212,7 @@ public class Bit32Lib extends TwoArgFunction {
 			return lrotate(x, -disp);
 		} else {
 			disp = disp & 31;
-			return bitsToValue((x>>>disp) | (x<<(32-disp)));
+			return bitsToValue(x>>>disp | x<<32-disp);
 		}
 	}
 
@@ -223,7 +226,7 @@ public class Bit32Lib extends TwoArgFunction {
 		if (field+width > 32) {
 			error("trying to access non-existent bits");
 		}
-		return bitsToValue((n>>>field) & (-1>>>(32-width)));
+		return bitsToValue(n>>>field & -1>>>32-width);
 	}
 
 	static LuaValue replace(int n, int v, int field, int width) {
@@ -236,12 +239,12 @@ public class Bit32Lib extends TwoArgFunction {
 		if (field+width > 32) {
 			error("trying to access non-existent bits");
 		}
-		int mask = (-1>>>(32-width))<<field;
-		n = (n & ~mask) | ((v<<field) & mask);
+		int mask = -1>>>32-width<<field;
+		n = n & ~mask | v<<field & mask;
 		return bitsToValue(n);
 	}
 
 	private static LuaValue bitsToValue(int x) {
-		return (x < 0)? valueOf((double) ((long) x & 0xFFFFFFFFL)): valueOf(x);
+		return x < 0? valueOf(x & 0xFFFFFFFFL): valueOf(x);
 	}
 }

@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,7 @@ import org.luaj.vm2.lib.jse.JsePlatform;
  * <P>
  * Return values with simple types are coerced into Java simple types. Tables,
  * threads, and functions are returned as lua objects.
- * 
+ *
  * @see Launcher
  * @see LuajClassLoader
  * @see LuajClassLoader#NewLauncher()
@@ -53,6 +53,7 @@ public class DefaultLauncher implements Launcher {
 	}
 
 	/** Launches the script with chunk name 'main' */
+	@Override
 	public Object[] launch(String script, Object[] arg) {
 		return launchChunk(g.load(script, "main"), arg);
 	}
@@ -60,11 +61,13 @@ public class DefaultLauncher implements Launcher {
 	/**
 	 * Launches the script with chunk name 'main' and loading using modes 'bt'
 	 */
+	@Override
 	public Object[] launch(InputStream script, Object[] arg) {
 		return launchChunk(g.load(script, "main", "bt", g), arg);
 	}
 
 	/** Launches the script with chunk name 'main' */
+	@Override
 	public Object[] launch(Reader script, Object[] arg) {
 		return launchChunk(g.load(script, "main"), arg);
 	}

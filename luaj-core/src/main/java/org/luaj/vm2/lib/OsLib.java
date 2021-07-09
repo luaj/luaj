@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,7 +57,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -65,14 +65,14 @@ import org.luaj.vm2.Varargs;
  * 	System.out.println(globals.get("os").get("time").call());
  * }
  * </pre>
- * 
+ *
  * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseOsLib}
  * library will be loaded, which will include the base functionality provided by
  * this class.
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -84,7 +84,7 @@ import org.luaj.vm2.Varargs;
  * }
  * </pre>
  * <p>
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JseOsLib
  * @see org.luaj.vm2.lib.jse.JsePlatform
@@ -127,11 +127,12 @@ public class OsLib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, typically a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		LuaTable os = new LuaTable();
@@ -149,6 +150,7 @@ public class OsLib extends TwoArgFunction {
 			this.name = name;
 		}
 
+		@Override
 		public Varargs invoke(Varargs args) {
 			try {
 				switch (opcode) {
@@ -219,7 +221,7 @@ public class OsLib extends TwoArgFunction {
 	/**
 	 * Returns the number of seconds from time t1 to time t2. In POSIX, Windows,
 	 * and some other systems, this value is exactly t2-t1.
-	 * 
+	 *
 	 * @param t2
 	 * @param t1
 	 * @return diffeence in time values, in seconds
@@ -232,14 +234,14 @@ public class OsLib extends TwoArgFunction {
 	 * If the time argument is present, this is the time to be formatted (see
 	 * the os.time function for a description of this value). Otherwise, date
 	 * formats the current time.
-	 * 
+	 *
 	 * Date returns the date as a string, formatted according to the same rules
 	 * as ANSII strftime, but without support for %g, %G, or %V.
-	 * 
+	 *
 	 * When called without arguments, date returns a reasonable date and time
 	 * representation that depends on the host system and on the current locale
 	 * (that is, os.date() is equivalent to os.date("%c")).
-	 * 
+	 *
 	 * @param format
 	 * @param time   time since epoch, or -1 if not supplied
 	 * @return a LString or a LTable containing date and time, formatted
@@ -297,7 +299,7 @@ public class OsLib extends TwoArgFunction {
 					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)).substring(1));
 					break;
 				case 'I':
-					result.append(String.valueOf(100+(d.get(Calendar.HOUR_OF_DAY)%12)).substring(1));
+					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)%12).substring(1));
 					break;
 				case 'j': { // day of year.
 					Calendar y0 = beginningOfYear(d);
@@ -399,7 +401,7 @@ public class OsLib extends TwoArgFunction {
 	 * to be executed by an operating system shell. It returns a status code,
 	 * which is system-dependent. If command is absent, then it returns nonzero
 	 * if a shell is available and zero otherwise.
-	 * 
+	 *
 	 * @param command command to pass to the system
 	 */
 	protected Varargs execute(String command) {
@@ -409,7 +411,7 @@ public class OsLib extends TwoArgFunction {
 	/**
 	 * Calls the C function exit, with an optional code, to terminate the host
 	 * program.
-	 * 
+	 *
 	 * @param code
 	 */
 	protected void exit(int code) {
@@ -420,16 +422,16 @@ public class OsLib extends TwoArgFunction {
 	 * Returns the value of the process environment variable varname, or the
 	 * System property value for varname, or null if the variable is not defined
 	 * in either environment.
-	 * 
+	 *
 	 * The default implementation, which is used by the JmePlatform, only
 	 * queryies System.getProperty().
-	 * 
+	 *
 	 * The JsePlatform overrides this behavior and returns the environment
 	 * variable value using System.getenv() if it exists, or the System property
 	 * value if it does not.
-	 * 
+	 *
 	 * A SecurityException may be thrown if access is not allowed for 'varname'.
-	 * 
+	 *
 	 * @param varname
 	 * @return String value, or null if not defined
 	 */
@@ -440,7 +442,7 @@ public class OsLib extends TwoArgFunction {
 	/**
 	 * Deletes the file or directory with the given name. Directories must be
 	 * empty to be removed. If this function fails, it throws and IOException
-	 * 
+	 *
 	 * @param filename
 	 * @throws IOException if it fails
 	 */
@@ -451,7 +453,7 @@ public class OsLib extends TwoArgFunction {
 	/**
 	 * Renames file or directory named oldname to newname. If this function
 	 * fails,it throws and IOException
-	 * 
+	 *
 	 * @param oldname old file name
 	 * @param newname new file name
 	 * @throws IOException if it fails
@@ -465,14 +467,14 @@ public class OsLib extends TwoArgFunction {
 	 * locale; category is an optional string describing which category to
 	 * change: "all", "collate", "ctype", "monetary", "numeric", or "time"; the
 	 * default category is "all".
-	 * 
+	 *
 	 * If locale is the empty string, the current locale is set to an
 	 * implementation- defined native locale. If locale is the string "C", the
 	 * current locale is set to the standard C locale.
-	 * 
+	 *
 	 * When called with null as the first argument, this function only returns
 	 * the name of the current locale for the given category.
-	 * 
+	 *
 	 * @param locale
 	 * @param category
 	 * @return the name of the new locale, or null if the request cannot be
@@ -488,7 +490,7 @@ public class OsLib extends TwoArgFunction {
 	 * must have fields year, month, and day, and may have fields hour, min,
 	 * sec, and isdst (for a description of these fields, see the os.date
 	 * function).
-	 * 
+	 *
 	 * @param table
 	 * @return long value for the time
 	 */
@@ -514,18 +516,18 @@ public class OsLib extends TwoArgFunction {
 	 * Returns a string with a file name that can be used for a temporary file.
 	 * The file must be explicitly opened before its use and explicitly removed
 	 * when no longer needed.
-	 * 
+	 *
 	 * On some systems (POSIX), this function also creates a file with that
 	 * name, to avoid security risks. (Someone else might create the file with
 	 * wrong permissions in the time between getting the name and creating the
 	 * file.) You still have to open the file to use it and to remove it (even
 	 * if you do not use it).
-	 * 
+	 *
 	 * @return String filename to use
 	 */
 	protected String tmpname() {
 		synchronized (OsLib.class) {
-			return TMP_PREFIX+(tmpnames++)+TMP_SUFFIX;
+			return TMP_PREFIX+tmpnames+++TMP_SUFFIX;
 		}
 	}
 }

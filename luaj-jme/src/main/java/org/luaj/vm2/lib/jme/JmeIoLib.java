@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,7 +43,7 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -55,7 +55,7 @@ import org.luaj.vm2.lib.LibFunction;
  * For special cases where the smallest possible footprint is desired, a minimal
  * set of libraries could be loaded directly via {@link Globals#load(LuaValue)}
  * using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -72,7 +72,7 @@ import org.luaj.vm2.lib.LibFunction;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -83,25 +83,28 @@ import org.luaj.vm2.lib.LibFunction;
  */
 public class JmeIoLib extends IoLib {
 
+	@Override
 	protected File wrapStdin() throws IOException {
 		return new FileImpl(globals.STDIN);
 	}
 
+	@Override
 	protected File wrapStdout() throws IOException {
 		return new FileImpl(globals.STDOUT);
 	}
 
+	@Override
 	protected File wrapStderr() throws IOException {
 		return new FileImpl(globals.STDERR);
 	}
 
+	@Override
 	protected File openFile(String filename, boolean readMode, boolean appendMode, boolean updateMode,
 		boolean binaryMode) throws IOException {
 		String url = "file:///" + filename;
 		int mode = readMode? Connector.READ: Connector.READ_WRITE;
 		StreamConnection conn = (StreamConnection) Connector.open(url, mode);
-		File f = readMode? new FileImpl(conn, conn.openInputStream(), null)
-			: new FileImpl(conn, conn.openInputStream(), conn.openOutputStream());
+
 		/*
 		if ( appendMode ) {
 			f.seek("end",0);
@@ -110,18 +113,21 @@ public class JmeIoLib extends IoLib {
 				conn.truncate(0);
 		}
 		*/
-		return f;
+		return readMode? new FileImpl(conn, conn.openInputStream(), null)
+			: new FileImpl(conn, conn.openInputStream(), conn.openOutputStream());
 	}
 
 	private static void notimplemented() throws IOException {
 		throw new IOException("not implemented");
 	}
 
+	@Override
 	protected File openProgram(String prog, String mode) throws IOException {
 		notimplemented();
 		return null;
 	}
 
+	@Override
 	protected File tmpFile() throws IOException {
 		notimplemented();
 		return null;
@@ -149,14 +155,17 @@ public class JmeIoLib extends IoLib {
 			this(null, null, o);
 		}
 
+		@Override
 		public String tojstring() {
 			return "file (" + this.hashCode() + ")";
 		}
 
+		@Override
 		public boolean isstdfile() {
 			return conn == null;
 		}
 
+		@Override
 		public void close() throws IOException {
 			closed = true;
 			if (conn != null) {
@@ -164,11 +173,13 @@ public class JmeIoLib extends IoLib {
 			}
 		}
 
+		@Override
 		public void flush() throws IOException {
 			if (os != null)
 				os.flush();
 		}
 
+		@Override
 		public void write(LuaString s) throws IOException {
 			if (os != null)
 				os.write(s.m_bytes, s.m_offset, s.m_length);
@@ -178,10 +189,12 @@ public class JmeIoLib extends IoLib {
 				flush();
 		}
 
+		@Override
 		public boolean isclosed() {
 			return closed;
 		}
 
+		@Override
 		public int seek(String option, int pos) throws IOException {
 			/*
 			if ( conn != null ) {
@@ -201,23 +214,27 @@ public class JmeIoLib extends IoLib {
 			return 0;
 		}
 
+		@Override
 		public void setvbuf(String mode, int size) {
 			nobuffer = "no".equals(mode);
 		}
 
 		// get length remaining to read
+		@Override
 		public int remaining() throws IOException {
 			return -1;
 		}
 
 		// peek ahead one character
+		@Override
 		public int peek() throws IOException {
 			if (lookahead < 0)
 				lookahead = is.read();
 			return lookahead;
 		}
 
-		// return char if read, -1 if eof, throw IOException on other exception 
+		// return char if read, -1 if eof, throw IOException on other exception
+		@Override
 		public int read() throws IOException {
 			if (lookahead >= 0) {
 				int c = lookahead;
@@ -231,6 +248,7 @@ public class JmeIoLib extends IoLib {
 		}
 
 		// return number of bytes read if positive, -1 if eof, throws IOException
+		@Override
 		public int read(byte[] bytes, int offset, int length) throws IOException {
 			int n, i = 0;
 			if (is != null) {
@@ -242,7 +260,7 @@ public class JmeIoLib extends IoLib {
 				for (; i < length;) {
 					n = is.read(bytes, offset+i, length-i);
 					if (n < 0)
-						return (i > 0? i: -1);
+						return i > 0? i: -1;
 					i += n;
 				}
 			} else {

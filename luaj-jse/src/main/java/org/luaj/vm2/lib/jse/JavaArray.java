@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,13 +35,14 @@ import org.luaj.vm2.lib.OneArgFunction;
  * <p>
  * This class is not used directly. It is returned by calls to
  * {@link CoerceJavaToLua#coerce(Object)} when an array is supplied.
- * 
+ *
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
 class JavaArray extends LuaUserdata {
 
 	private static final class LenFunction extends OneArgFunction {
+		@Override
 		public LuaValue call(LuaValue u) {
 			return LuaValue.valueOf(Array.getLength(((LuaUserdata) u).m_instance));
 		}
@@ -60,6 +61,7 @@ class JavaArray extends LuaUserdata {
 		setmetatable(array_metatable);
 	}
 
+	@Override
 	public LuaValue get(LuaValue key) {
 		if (key.equals(LENGTH))
 			return valueOf(Array.getLength(m_instance));
@@ -72,6 +74,7 @@ class JavaArray extends LuaUserdata {
 		return super.get(key);
 	}
 
+	@Override
 	public void set(LuaValue key, LuaValue value) {
 		if (key.isint()) {
 			int i = key.toint()-1;

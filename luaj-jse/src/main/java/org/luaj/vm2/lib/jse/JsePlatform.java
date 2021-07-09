@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,7 +42,7 @@ import org.luaj.vm2.lib.TableLib;
  * {@link #standardGlobals()} or debug globals using {@link #debugGlobals()}
  * <p>
  * A simple example of initializing globals and using them from Java is:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -52,7 +52,7 @@ import org.luaj.vm2.lib.TableLib;
  * </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
- * 
+ *
  * <pre>
  *  {@code
  * globals.load( new FileInputStream("main.lua"), "main.lua" ).call();
@@ -60,13 +60,13 @@ import org.luaj.vm2.lib.TableLib;
  * </pre>
  * <p>
  * although {@code require} could also be used:
- * 
+ *
  * <pre>
  *  {@code
  * globals.get("require").call(LuaValue.valueOf("main"));
  * }
  * </pre>
- * 
+ *
  * For this to succeed, the file "main.lua" must be in the current directory or
  * a resource. See {@link org.luaj.vm2.lib.jse.JseBaseLib} for details on
  * finding scripts using {@link ResourceFinder}.
@@ -93,7 +93,7 @@ import org.luaj.vm2.lib.TableLib;
  * library {@link DebugLib}.
  * <p>
  * The class ensures that initialization is done in the correct order.
- * 
+ *
  * @see Globals
  * @see org.luaj.vm2.lib.jme.JmePlatform
  */
@@ -101,7 +101,7 @@ public class JsePlatform {
 
 	/**
 	 * Create a standard set of globals for JSE including all the libraries.
-	 * 
+	 *
 	 * @return Table of globals initialized with the standard JSE libraries
 	 * @see #debugGlobals()
 	 * @see org.luaj.vm2.lib.jse.JsePlatform
@@ -126,7 +126,7 @@ public class JsePlatform {
 
 	/**
 	 * Create standard globals including the {@link DebugLib} library.
-	 * 
+	 *
 	 * @return Table of globals initialized with the standard JSE and debug
 	 *         libraries
 	 * @see #standardGlobals()
@@ -144,7 +144,7 @@ public class JsePlatform {
 	 * Simple wrapper for invoking a lua function with command line arguments.
 	 * The supplied function is first given a new Globals object as its
 	 * environment then the program is run with arguments.
-	 * 
+	 *
 	 * @return {@link Varargs} containing any values returned by mainChunk.
 	 */
 	public static Varargs luaMain(LuaValue mainChunk, String[] args) {

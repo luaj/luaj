@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -96,6 +96,7 @@ abstract public class Stat extends SyntaxElement {
 			this.name = name;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -108,6 +109,7 @@ abstract public class Stat extends SyntaxElement {
 			this.name = name;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -122,6 +124,7 @@ abstract public class Stat extends SyntaxElement {
 			this.exps = exps;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -137,6 +140,7 @@ abstract public class Stat extends SyntaxElement {
 			this.block = block;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -151,12 +155,14 @@ abstract public class Stat extends SyntaxElement {
 			this.exp = exp;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
 	}
 
 	public static class Break extends Stat {
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -169,13 +175,14 @@ abstract public class Stat extends SyntaxElement {
 			this.values = values;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
 
 		public int nreturns() {
 			int n = values != null? values.size(): 0;
-			if (n > 0 && ((Exp) values.get(n-1)).isvarargexp())
+			if (n > 0 && values.get(n-1).isvarargexp())
 				n = -1;
 			return n;
 		}
@@ -188,6 +195,7 @@ abstract public class Stat extends SyntaxElement {
 			this.funccall = funccall;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -202,6 +210,7 @@ abstract public class Stat extends SyntaxElement {
 			this.body = body;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -216,6 +225,7 @@ abstract public class Stat extends SyntaxElement {
 			this.body = body;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -233,6 +243,7 @@ abstract public class Stat extends SyntaxElement {
 			this.block = block;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -252,6 +263,7 @@ abstract public class Stat extends SyntaxElement {
 			this.block = block;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -266,6 +278,7 @@ abstract public class Stat extends SyntaxElement {
 			this.values = values;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -286,6 +299,7 @@ abstract public class Stat extends SyntaxElement {
 			this.elseblock = elseblock;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}

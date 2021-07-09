@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,12 +57,12 @@ import org.luaj.vm2.Varargs;
  * <p>
  * For example, the following code will implement a library called "hyperbolic"
  * with two functions, "sinh", and "cosh":
- * 
+ *
  * <pre>
  *  {@code
  * import org.luaj.vm2.LuaValue;
  * import org.luaj.vm2.lib.*;
- * 
+ *
  * public class hyperbolic extends TwoArgFunction {
  *
  *	public hyperbolic() {}
@@ -80,7 +80,7 @@ import org.luaj.vm2.Varargs;
  *			return LuaValue.valueOf(Math.sinh(x.checkdouble()));
  *		}
  *	}
- *	
+ *
  *	static class cosh extends OneArgFunction {
  *		public LuaValue call(LuaValue x) {
  *			return LuaValue.valueOf(Math.cosh(x.checkdouble()));
@@ -89,7 +89,7 @@ import org.luaj.vm2.Varargs;
  *}
  *}
  * </pre>
- * 
+ *
  * The default constructor is used to instantiate the library in response to
  * {@code require 'hyperbolic'} statement, provided it is on Java&quot;s class
  * path. This instance is then invoked with 2 arguments: the name supplied to
@@ -100,7 +100,7 @@ import org.luaj.vm2.Varargs;
  * 'env' argument.
  * <p>
  * To test it, a script such as this can be used:
- * 
+ *
  * <pre>
  *  {@code
  * local t = require('hyperbolic')
@@ -115,7 +115,7 @@ import org.luaj.vm2.Varargs;
  * </pre>
  * <p>
  * It should produce something like:
- * 
+ *
  * <pre>
  *  {@code
  * t	table: 3dbbd23f
@@ -152,6 +152,7 @@ abstract public class LibFunction extends LuaFunction {
 	protected LibFunction() {
 	}
 
+	@Override
 	public String tojstring() {
 		return name != null? "function: " + name: super.tojstring();
 	}
@@ -161,7 +162,7 @@ abstract public class LibFunction extends LuaFunction {
 	 * <p>
 	 * An array of names is provided, and the first name is bound with opcode =
 	 * 0, second with 1, etc.
-	 * 
+	 *
 	 * @param env     The environment to apply to each bound function
 	 * @param factory the Class to instantiate for each bound function
 	 * @param names   array of String names, one for each function.
@@ -176,7 +177,7 @@ abstract public class LibFunction extends LuaFunction {
 	 * <p>
 	 * An array of names is provided, and the first name is bound with opcode =
 	 * {@code firstopcode}, second with {@code firstopcode+1}, etc.
-	 * 
+	 *
 	 * @param env         The environment to apply to each bound function
 	 * @param factory     the Class to instantiate for each bound function
 	 * @param names       array of String names, one for each function.
@@ -220,18 +221,22 @@ abstract public class LibFunction extends LuaFunction {
 		return new LuaValue[] { v };
 	}
 
+	@Override
 	public LuaValue call() {
 		return argerror(1, "value expected");
 	}
 
+	@Override
 	public LuaValue call(LuaValue a) {
 		return call();
 	}
 
+	@Override
 	public LuaValue call(LuaValue a, LuaValue b) {
 		return call(a);
 	}
 
+	@Override
 	public LuaValue call(LuaValue a, LuaValue b, LuaValue c) {
 		return call(a, b);
 	}
@@ -240,6 +245,7 @@ abstract public class LibFunction extends LuaFunction {
 		return call(a, b, c);
 	}
 
+	@Override
 	public Varargs invoke(Varargs args) {
 		switch (args.narg()) {
 		case 0:

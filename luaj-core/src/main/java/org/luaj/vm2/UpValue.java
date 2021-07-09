@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,18 +24,18 @@ package org.luaj.vm2;
 /**
  * Upvalue used with Closure formulation
  * <p>
- * 
+ *
  * @see LuaClosure
  * @see Prototype
  */
 public final class UpValue {
 
-	LuaValue[] array; // initially the stack, becomes a holder 
+	LuaValue[] array; // initially the stack, becomes a holder
 	int        index;
 
 	/**
 	 * Create an upvalue relative to a stack
-	 * 
+	 *
 	 * @param stack the stack
 	 * @param index the index on the stack for the upvalue
 	 */
@@ -44,13 +44,14 @@ public final class UpValue {
 		this.index = index;
 	}
 
+	@Override
 	public String toString() {
 		return index + "/" + array.length + " " + array[index];
 	}
 
 	/**
 	 * Convert this upvalue to a Java String
-	 * 
+	 *
 	 * @return the Java String for this upvalue.
 	 * @see LuaValue#tojstring()
 	 */
@@ -60,22 +61,22 @@ public final class UpValue {
 
 	/**
 	 * Get the value of the upvalue
-	 * 
+	 *
 	 * @return the {@link LuaValue} for this upvalue
 	 */
-	public final LuaValue getValue() { return array[index]; }
+	public LuaValue getValue() { return array[index]; }
 
 	/**
 	 * Set the value of the upvalue
-	 * 
+	 *
 	 * @param value the {@link LuaValue} to set it to
 	 */
-	public final void setValue(LuaValue value) { array[index] = value; }
+	public void setValue(LuaValue value) { array[index] = value; }
 
 	/**
 	 * Close this upvalue so it is no longer on the stack
 	 */
-	public final void close() {
+	public void close() {
 		LuaValue[] old = array;
 		array = new LuaValue[] { old[index] };
 		old[index] = null;

@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This class is not used directly. It is returned by calls to calls to
  * {@link JavaInstance#get(LuaValue key)} when a method is named.
- * 
+ *
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
@@ -70,22 +70,27 @@ class JavaMethod extends JavaMember {
 		}
 	}
 
+	@Override
 	public LuaValue call() {
 		return error("method cannot be called without instance");
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg) {
 		return invokeMethod(arg.checkuserdata(), LuaValue.NONE);
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg1, LuaValue arg2) {
 		return invokeMethod(arg1.checkuserdata(), arg2);
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 		return invokeMethod(arg1.checkuserdata(), LuaValue.varargsOf(arg2, arg3));
 	}
 
+	@Override
 	public Varargs invoke(Varargs args) {
 		return invokeMethod(args.checkuserdata(1), args.subargs(2));
 	}
@@ -118,22 +123,27 @@ class JavaMethod extends JavaMember {
 			this.methods = methods;
 		}
 
+		@Override
 		public LuaValue call() {
 			return error("method cannot be called without instance");
 		}
 
+		@Override
 		public LuaValue call(LuaValue arg) {
 			return invokeBestMethod(arg.checkuserdata(), LuaValue.NONE);
 		}
 
+		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2) {
 			return invokeBestMethod(arg1.checkuserdata(), arg2);
 		}
 
+		@Override
 		public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 			return invokeBestMethod(arg1.checkuserdata(), LuaValue.varargsOf(arg2, arg3));
 		}
 
+		@Override
 		public Varargs invoke(Varargs args) {
 			return invokeBestMethod(args.checkuserdata(1), args.subargs(2));
 		}
@@ -141,17 +151,17 @@ class JavaMethod extends JavaMember {
 		private LuaValue invokeBestMethod(Object instance, Varargs args) {
 			JavaMethod best = null;
 			int score = CoerceLuaToJava.SCORE_UNCOERCIBLE;
-			for (int i = 0; i < methods.length; i++) {
-				int s = methods[i].score(args);
+			for (JavaMethod method : methods) {
+				int s = method.score(args);
 				if (s < score) {
 					score = s;
-					best = methods[i];
+					best = method;
 					if (score == 0)
 						break;
 				}
 			}
 
-			// any match? 
+			// any match?
 			if (best == null)
 				LuaValue.error("no coercible public method");
 

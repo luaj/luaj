@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,7 +57,7 @@ import java.lang.ref.WeakReference;
  * dead state. In either case all references to the thread must be dropped, and
  * the garbage collector must run for the thread to be garbage collected.
  *
- * 
+ *
  * @see LuaValue
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -112,7 +112,7 @@ public class LuaThread extends LuaValue {
 
 	/**
 	 * Create a LuaThread around a function and environment
-	 * 
+	 *
 	 * @param func The function to execute
 	 */
 	public LuaThread(Globals globals, LuaValue func) {
@@ -121,26 +121,32 @@ public class LuaThread extends LuaValue {
 		this.globals = globals;
 	}
 
+	@Override
 	public int type() {
 		return LuaValue.TTHREAD;
 	}
 
+	@Override
 	public String typename() {
 		return "thread";
 	}
 
+	@Override
 	public boolean isthread() {
 		return true;
 	}
 
+	@Override
 	public LuaThread optthread(LuaThread defval) {
 		return this;
 	}
 
+	@Override
 	public LuaThread checkthread() {
 		return this;
 	}
 
+	@Override
 	public LuaValue getmetatable() {
 		return s_metatable;
 	}
@@ -184,6 +190,7 @@ public class LuaThread extends LuaValue {
 			this.function = function;
 		}
 
+		@Override
 		public synchronized void run() {
 			try {
 				Varargs a = this.args;
@@ -212,8 +219,8 @@ public class LuaThread extends LuaValue {
 					previous_thread.state.status = STATUS_NORMAL;
 				this.status = STATUS_RUNNING;
 				this.wait();
-				return (this.error != null? LuaValue.varargsOf(LuaValue.FALSE, LuaValue.valueOf(this.error))
-					: LuaValue.varargsOf(LuaValue.TRUE, this.result));
+				return this.error != null? LuaValue.varargsOf(LuaValue.FALSE, LuaValue.valueOf(this.error))
+					: LuaValue.varargsOf(LuaValue.TRUE, this.result);
 			} catch (InterruptedException ie) {
 				throw new OrphanedThread();
 			} finally {

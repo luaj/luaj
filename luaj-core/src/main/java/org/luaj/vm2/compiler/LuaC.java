@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,24 +35,24 @@ import org.luaj.vm2.lib.BaseLib;
 
 /**
  * Compiler for Lua.
- * 
+ *
  * <p>
  * Compiles lua source files into lua bytecode within a {@link Prototype}, loads
  * lua binary files directly into a {@link Prototype}, and optionaly
  * instantiates a {@link LuaClosure} around the result using a user-supplied
  * environment.
- * 
+ *
  * <p>
  * Implements the {@link org.luaj.vm2.Globals.Compiler} interface for loading
  * initialized chunks, which is an interface common to lua bytecode compiling
  * and java bytecode compiling.
- * 
+ *
  * <p>
  * The {@link LuaC} compiler is installed by default by both the
  * {@link org.luaj.vm2.lib.jse.JsePlatform} and
  * {@link org.luaj.vm2.lib.jme.JmePlatform} classes, so in the following
  * example, the default {@link LuaC} compiler will be used:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -60,15 +60,15 @@ import org.luaj.vm2.lib.BaseLib;
  * 	globals.load(new StringReader("print 'hello'"), "main.lua").call();
  * }
  * </pre>
- * 
+ *
  * To load the LuaC compiler manually, use the install method:
- * 
+ *
  * <pre>
  *  {@code
  * LuaC.install(globals);
  * }
  * </pre>
- * 
+ *
  * @see #install(Globals)
  * @see Globals#compiler
  * @see Globals#loader
@@ -87,7 +87,7 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 	/**
 	 * Install the compiler so that LoadState will first try to use it when
 	 * handed bytes that are not already a compiled lua chunk.
-	 * 
+	 *
 	 * @param globals the Globals into which this is to be installed.
 	 */
 	public static void install(Globals globals) {
@@ -99,17 +99,19 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 
 	/**
 	 * Compile lua source into a Prototype.
-	 * 
+	 *
 	 * @param stream    InputStream representing the text source conforming to
 	 *                  lua source syntax.
 	 * @param chunkname String name of the chunk to use.
 	 * @return Prototype representing the lua chunk for this source.
 	 * @throws IOException
 	 */
+	@Override
 	public Prototype compile(InputStream stream, String chunkname) throws IOException {
-		return (new CompileState()).luaY_parser(stream, chunkname);
+		return new CompileState().luaY_parser(stream, chunkname);
 	}
 
+	@Override
 	public LuaFunction load(Prototype prototype, String chunkname, LuaValue env) throws IOException {
 		return new LuaClosure(prototype, env);
 	}
@@ -119,13 +121,14 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 	 *             LuaC.compile(InputStream, String) and construct LuaClosure
 	 *             directly.
 	 */
+	@Deprecated
 	public LuaValue load(InputStream stream, String chunkname, Globals globals) throws IOException {
 		return new LuaClosure(compile(stream, chunkname), globals);
 	}
 
 	static class CompileState {
-		int               nCcalls = 0;
-		private Hashtable strings = new Hashtable();
+		int                     nCcalls = 0;
+		private final Hashtable strings = new Hashtable();
 
 		protected CompileState() {}
 
@@ -135,15 +138,15 @@ public class LuaC extends Constants implements Globals.Compiler, Globals.Loader 
 			FuncState funcstate = new FuncState();
 			// lexstate.buff = buff;
 			lexstate.fs = funcstate;
-			lexstate.setinput(this, z.read(), z, (LuaString) LuaValue.valueOf(name));
+			lexstate.setinput(this, z.read(), z, LuaValue.valueOf(name));
 			/* main func. is always vararg */
 			funcstate.f = new Prototype();
-			funcstate.f.source = (LuaString) LuaValue.valueOf(name);
+			funcstate.f.source = LuaValue.valueOf(name);
 			lexstate.mainfunc(funcstate);
-			LuaC._assert(funcstate.prev == null);
+			Constants._assert(funcstate.prev == null);
 			/* all scopes should be correctly finished */
-			LuaC._assert(lexstate.dyd == null
-				|| (lexstate.dyd.n_actvar == 0 && lexstate.dyd.n_gt == 0 && lexstate.dyd.n_label == 0));
+			Constants._assert(lexstate.dyd == null
+				|| lexstate.dyd.n_actvar == 0 && lexstate.dyd.n_gt == 0 && lexstate.dyd.n_label == 0);
 			return funcstate.f;
 		}
 

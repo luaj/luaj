@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,7 +29,7 @@ import javax.script.ScriptEngineFactory;
 
 /**
  * Jsr 223 scripting engine factory.
- * 
+ *
  * Exposes metadata to support the lua language, and constructs instances of
  * LuaScriptEngine to handl lua scripts.
  */
@@ -41,9 +41,9 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
 
 	private static final String[] NAMES = { "lua", "luaj", };
 
-	private List<String> extensions;
-	private List<String> mimeTypes;
-	private List<String> names;
+	private final List<String> extensions;
+	private final List<String> mimeTypes;
+	private final List<String> names;
 
 	public LuaScriptEngineFactory() {
 		extensions = Arrays.asList(EXTENSIONS);
@@ -51,24 +51,33 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
 		names = Arrays.asList(NAMES);
 	}
 
+	@Override
 	public String getEngineName() { return getScriptEngine().get(ScriptEngine.ENGINE).toString(); }
 
+	@Override
 	public String getEngineVersion() { return getScriptEngine().get(ScriptEngine.ENGINE_VERSION).toString(); }
 
+	@Override
 	public List<String> getExtensions() { return extensions; }
 
+	@Override
 	public List<String> getMimeTypes() { return mimeTypes; }
 
+	@Override
 	public List<String> getNames() { return names; }
 
+	@Override
 	public String getLanguageName() { return getScriptEngine().get(ScriptEngine.LANGUAGE).toString(); }
 
+	@Override
 	public String getLanguageVersion() { return getScriptEngine().get(ScriptEngine.LANGUAGE_VERSION).toString(); }
 
+	@Override
 	public Object getParameter(String key) {
 		return getScriptEngine().get(key).toString();
 	}
 
+	@Override
 	public String getMethodCallSyntax(String obj, String m, String... args) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(obj + ":" + m + "(");
@@ -83,10 +92,12 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
 		return sb.toString();
 	}
 
+	@Override
 	public String getOutputStatement(String toDisplay) {
 		return "print(" + toDisplay + ")";
 	}
 
+	@Override
 	public String getProgram(String... statements) {
 		StringBuffer sb = new StringBuffer();
 		int len = statements.length;
@@ -99,5 +110,6 @@ public class LuaScriptEngineFactory implements ScriptEngineFactory {
 		return sb.toString();
 	}
 
+	@Override
 	public ScriptEngine getScriptEngine() { return new LuaScriptEngine(); }
 }

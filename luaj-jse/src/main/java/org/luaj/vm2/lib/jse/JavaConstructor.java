@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * <p>
  * This class is not used directly. It is returned by calls to
  * {@link JavaClass#new(LuaValue key)} when the value of key is "new".
- * 
+ *
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
@@ -66,6 +66,7 @@ class JavaConstructor extends JavaMember {
 		this.constructor = c;
 	}
 
+	@Override
 	public Varargs invoke(Varargs args) {
 		Object[] a = convertArgs(args);
 		try {
@@ -93,20 +94,21 @@ class JavaConstructor extends JavaMember {
 			this.constructors = c;
 		}
 
+		@Override
 		public Varargs invoke(Varargs args) {
 			JavaConstructor best = null;
 			int score = CoerceLuaToJava.SCORE_UNCOERCIBLE;
-			for (int i = 0; i < constructors.length; i++) {
-				int s = constructors[i].score(args);
+			for (JavaConstructor constructor : constructors) {
+				int s = constructor.score(args);
 				if (s < score) {
 					score = s;
-					best = constructors[i];
+					best = constructor;
 					if (score == 0)
 						break;
 				}
 			}
 
-			// any match? 
+			// any match?
 			if (best == null)
 				LuaValue.error("no coercible public method");
 

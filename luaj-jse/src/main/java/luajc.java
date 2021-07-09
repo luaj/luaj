@@ -11,7 +11,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -55,16 +55,16 @@ public class luajc {
 		System.exit(-1);
 	}
 
-	private String  srcdir      = ".";
-	private String  destdir     = ".";
-	private boolean genmain     = false;
-	private boolean recurse     = false;
-	private boolean verbose     = false;
-	private boolean loadclasses = false;
-	private String  encoding    = null;
-	private String  pkgprefix   = null;
-	private List    files       = new ArrayList();
-	private Globals globals;
+	private String        srcdir      = ".";
+	private String        destdir     = ".";
+	private boolean       genmain     = false;
+	private boolean       recurse     = false;
+	private boolean       verbose     = false;
+	private boolean       loadclasses = false;
+	private String        encoding    = null;
+	private String        pkgprefix   = null;
+	private final List    files       = new ArrayList();
+	private final Globals globals;
 
 	public static void main(String[] args) throws IOException {
 		new luajc(args);
@@ -136,8 +136,8 @@ public class luajc {
 		}
 
 		// collect up files to process
-		for (int i = 0; i < seeds.size(); i++)
-			collectFiles(srcdir + "/" + seeds.get(i));
+		for (Object seed : seeds)
+			collectFiles(srcdir + "/" + seed);
 
 		// check for at least one file
 		if (files.size() <= 0) {
@@ -147,8 +147,8 @@ public class luajc {
 
 		// process input files
 		globals = JsePlatform.standardGlobals();
-		for (int i = 0, n = files.size(); i < n; i++)
-			processFile((InputFile) files.get(i));
+		for (Object file : files)
+			processFile((InputFile) file);
 	}
 
 	private void collectFiles(String path) {
@@ -164,14 +164,14 @@ public class luajc {
 
 	private void scandir(File dir, String javapackage) {
 		File[] f = dir.listFiles();
-		for (int i = 0; i < f.length; i++)
-			scanfile(dir, f[i], javapackage);
+		for (File element : f)
+			scanfile(dir, element, javapackage);
 	}
 
 	private void scanfile(File dir, File f, String javapackage) {
 		if (f.exists()) {
 			if (f.isDirectory() && recurse)
-				scandir(f, (javapackage != null? javapackage + "." + f.getName(): f.getName()));
+				scandir(f, javapackage != null? javapackage + "." + f.getName(): f.getName());
 			else if (f.isFile() && f.getName().endsWith(".lua"))
 				files.add(new InputFile(dir, f, javapackage));
 		}
@@ -184,6 +184,7 @@ public class luajc {
 			this.t = t;
 		}
 
+		@Override
 		public Class findClass(String classname) throws ClassNotFoundException {
 			byte[] bytes = (byte[]) t.get(classname);
 			if (bytes != null)

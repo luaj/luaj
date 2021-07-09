@@ -30,9 +30,11 @@ public class NameResolver extends Visitor {
 		scope = scope.outerScope;
 	}
 
+	@Override
 	public void visit(NameScope scope) {
 	}
 
+	@Override
 	public void visit(Block block) {
 		pushScope();
 		block.scope = scope;
@@ -40,6 +42,7 @@ public class NameResolver extends Visitor {
 		popScope();
 	}
 
+	@Override
 	public void visit(FuncBody body) {
 		pushScope();
 		scope.functionNestingCount++;
@@ -48,11 +51,13 @@ public class NameResolver extends Visitor {
 		popScope();
 	}
 
+	@Override
 	public void visit(LocalFuncDef stat) {
 		defineLocalVar(stat.name);
 		super.visit(stat);
 	}
 
+	@Override
 	public void visit(NumericFor stat) {
 		pushScope();
 		stat.scope = scope;
@@ -61,6 +66,7 @@ public class NameResolver extends Visitor {
 		popScope();
 	}
 
+	@Override
 	public void visit(GenericFor stat) {
 		pushScope();
 		stat.scope = scope;
@@ -69,39 +75,44 @@ public class NameResolver extends Visitor {
 		popScope();
 	}
 
+	@Override
 	public void visit(NameExp exp) {
 		exp.name.variable = resolveNameReference(exp.name);
 		super.visit(exp);
 	}
 
+	@Override
 	public void visit(FuncDef stat) {
 		stat.name.name.variable = resolveNameReference(stat.name.name);
 		stat.name.name.variable.hasassignments = true;
 		super.visit(stat);
 	}
 
+	@Override
 	public void visit(Assign stat) {
 		super.visit(stat);
-		for (int i = 0, n = stat.vars.size(); i < n; i++) {
-			VarExp v = (VarExp) stat.vars.get(i);
+		for (VarExp element : stat.vars) {
+			VarExp v = element;
 			v.markHasAssignment();
 		}
 	}
 
+	@Override
 	public void visit(LocalAssign stat) {
 		visitExps(stat.values);
 		defineLocalVars(stat.names);
 		int n = stat.names.size();
 		int m = stat.values != null? stat.values.size(): 0;
-		boolean isvarlist = m > 0 && m < n && ((Exp) stat.values.get(m-1)).isvarargexp();
+		boolean isvarlist = m > 0 && m < n && stat.values.get(m-1).isvarargexp();
 		for (int i = 0; i < n && i < (isvarlist? m-1: m); i++)
 			if (stat.values.get(i) instanceof Constant)
-				((Name) stat.names.get(i)).variable.initialValue = ((Constant) stat.values.get(i)).value;
+				stat.names.get(i).variable.initialValue = ((Constant) stat.values.get(i)).value;
 		if (!isvarlist)
 			for (int i = m; i < n; i++)
-				((Name) stat.names.get(i)).variable.initialValue = LuaValue.NIL;
+				stat.names.get(i).variable.initialValue = LuaValue.NIL;
 	}
 
+	@Override
 	public void visit(ParList pars) {
 		if (pars.names != null)
 			defineLocalVars(pars.names);
@@ -111,8 +122,8 @@ public class NameResolver extends Visitor {
 	}
 
 	protected void defineLocalVars(List<Name> names) {
-		for (int i = 0, n = names.size(); i < n; i++)
-			defineLocalVar((Name) names.get(i));
+		for (Name name : names)
+			defineLocalVar(name);
 	}
 
 	protected void defineLocalVar(Name name) {

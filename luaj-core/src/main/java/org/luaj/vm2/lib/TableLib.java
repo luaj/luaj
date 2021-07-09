@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,12 +28,12 @@ import org.luaj.vm2.Varargs;
 /**
  * Subclass of {@link LibFunction} which implements the lua standard
  * {@code table} library.
- * 
+ *
  * <p>
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -44,7 +44,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -58,7 +58,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -72,11 +72,12 @@ public class TableLib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, typically a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable table = new LuaTable();
 		table.set("concat", new concat());
@@ -93,18 +94,22 @@ public class TableLib extends TwoArgFunction {
 
 	// "concat" (table [, sep [, i [, j]]]) -> string
 	static class concat extends TableLibFunction {
+		@Override
 		public LuaValue call(LuaValue list) {
 			return list.checktable().concat(EMPTYSTRING, 1, list.length());
 		}
 
+		@Override
 		public LuaValue call(LuaValue list, LuaValue sep) {
 			return list.checktable().concat(sep.checkstring(), 1, list.length());
 		}
 
+		@Override
 		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i) {
 			return list.checktable().concat(sep.checkstring(), i.checkint(), list.length());
 		}
 
+		@Override
 		public LuaValue call(LuaValue list, LuaValue sep, LuaValue i, LuaValue j) {
 			return list.checktable().concat(sep.checkstring(), i.checkint(), j.checkint());
 		}
@@ -112,6 +117,7 @@ public class TableLib extends TwoArgFunction {
 
 	// "insert" (table, [pos,] value)
 	static class insert extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			switch (args.narg()) {
 			case 2: {
@@ -137,6 +143,7 @@ public class TableLib extends TwoArgFunction {
 
 	// "pack" (...) -> table
 	static class pack extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue t = tableOf(args, 1);
 			t.set("n", args.narg());
@@ -146,6 +153,7 @@ public class TableLib extends TwoArgFunction {
 
 	// "remove" (table [, pos]) -> removed-ele
 	static class remove extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaTable table = args.checktable(1);
 			int size = table.length();
@@ -159,6 +167,7 @@ public class TableLib extends TwoArgFunction {
 
 	// "sort" (table [, comp])
 	static class sort extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			args.checktable(1).sort(args.isnil(2)? NIL: args.checkfunction(2));
 			return NONE;
@@ -167,6 +176,7 @@ public class TableLib extends TwoArgFunction {
 
 	// "unpack", // (list [,i [,j]]) -> result1, ...
 	static class unpack extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaTable t = args.checktable(1);
 			// do not waste resource for calc rawlen if arg3 is not nil

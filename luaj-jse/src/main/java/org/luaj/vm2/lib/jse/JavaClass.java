@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,7 +42,7 @@ import org.luaj.vm2.LuaValue;
  * <p>
  * This class is not used directly. It is returned by calls to
  * {@link CoerceJavaToLua#coerce(Object)} when a Class is supplied.
- * 
+ *
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
@@ -68,6 +68,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 		this.jclass = this;
 	}
 
+	@Override
 	public LuaValue coerce(Object javaValue) {
 		return this;
 	}
@@ -76,8 +77,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 		if (fields == null) {
 			Map m = new HashMap();
 			Field[] f = ((Class) m_instance).getFields();
-			for (int i = 0; i < f.length; i++) {
-				Field fi = f[i];
+			for (Field fi : f) {
 				if (Modifier.isPublic(fi.getModifiers())) {
 					m.put(LuaValue.valueOf(fi.getName()), fi);
 					try {
@@ -96,8 +96,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 		if (methods == null) {
 			Map namedlists = new HashMap();
 			Method[] m = ((Class) m_instance).getMethods();
-			for (int i = 0; i < m.length; i++) {
-				Method mi = m[i];
+			for (Method mi : m) {
 				if (Modifier.isPublic(mi.getModifiers())) {
 					String name = mi.getName();
 					List list = (List) namedlists.get(name);
@@ -109,9 +108,9 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 			Map map = new HashMap();
 			Constructor[] c = ((Class) m_instance).getConstructors();
 			List list = new ArrayList();
-			for (int i = 0; i < c.length; i++)
-				if (Modifier.isPublic(c[i].getModifiers()))
-					list.add(JavaConstructor.forConstructor(c[i]));
+			for (Constructor element : c)
+				if (Modifier.isPublic(element.getModifiers()))
+					list.add(JavaConstructor.forConstructor(element));
 			switch (list.size()) {
 			case 0:
 				break;
@@ -140,8 +139,7 @@ class JavaClass extends JavaInstance implements CoerceJavaToLua.Coercion {
 		if (innerclasses == null) {
 			Map m = new HashMap();
 			Class[] c = ((Class) m_instance).getClasses();
-			for (int i = 0; i < c.length; i++) {
-				Class ci = c[i];
+			for (Class ci : c) {
 				String name = ci.getName();
 				String stub = name.substring(Math.max(name.lastIndexOf('$'), name.lastIndexOf('.'))+1);
 				m.put(LuaValue.valueOf(stub), ci);

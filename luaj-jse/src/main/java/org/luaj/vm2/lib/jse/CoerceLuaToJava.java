@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -53,7 +53,7 @@ import org.luaj.vm2.LuaValue;
  * <p>
  * For data in lua tables, the various methods on {@link LuaTable} can be used
  * directly to convert data to something more useful.
- * 
+ *
  * @see org.luaj.vm2.lib.jse.LuajavaLib
  * @see CoerceJavaToLua
  */
@@ -63,15 +63,15 @@ public class CoerceLuaToJava {
 	static int SCORE_WRONG_TYPE  = 0x100;
 	static int SCORE_UNCOERCIBLE = 0x10000;
 
-	static interface Coercion {
-		public int score(LuaValue value);
+	interface Coercion {
+		int score(LuaValue value);
 
-		public Object coerce(LuaValue value);
-	};
+		Object coerce(LuaValue value);
+	}
 
 	/**
 	 * Coerce a LuaValue value to a specified java class
-	 * 
+	 *
 	 * @param value LuaValue to coerce
 	 * @param clazz Class to coerce into
 	 * @return Object of type clazz (or a subclass) with the corresponding
@@ -84,10 +84,12 @@ public class CoerceLuaToJava {
 	static final Map COERCIONS = Collections.synchronizedMap(new HashMap());
 
 	static final class BoolCoercion implements Coercion {
+		@Override
 		public String toString() {
 			return "BoolCoercion()";
 		}
 
+		@Override
 		public int score(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TBOOLEAN:
@@ -96,6 +98,7 @@ public class CoerceLuaToJava {
 			return 1;
 		}
 
+		@Override
 		public Object coerce(LuaValue value) {
 			return value.toboolean()? Boolean.TRUE: Boolean.FALSE;
 		}
@@ -112,6 +115,7 @@ public class CoerceLuaToJava {
 		static final String[] TYPE_NAMES         = { "byte", "char", "short", "int", "long", "float", "double" };
 		final int             targetType;
 
+		@Override
 		public String toString() {
 			return "NumericCoercion(" + TYPE_NAMES[targetType] + ")";
 		}
@@ -120,6 +124,7 @@ public class CoerceLuaToJava {
 			this.targetType = targetType;
 		}
 
+		@Override
 		public int score(LuaValue value) {
 			int fromStringPenalty = 0;
 			if (value.type() == LuaValue.TSTRING) {
@@ -133,19 +138,19 @@ public class CoerceLuaToJava {
 				switch (targetType) {
 				case TARGET_TYPE_BYTE: {
 					int i = value.toint();
-					return fromStringPenalty+((i == (byte) i)? 0: SCORE_WRONG_TYPE);
+					return fromStringPenalty+(i == (byte) i? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_CHAR: {
 					int i = value.toint();
-					return fromStringPenalty+((i == (byte) i)? 1: (i == (char) i)? 0: SCORE_WRONG_TYPE);
+					return fromStringPenalty+(i == (byte) i? 1: i == (char) i? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_SHORT: {
 					int i = value.toint();
-					return fromStringPenalty+((i == (byte) i)? 1: (i == (short) i)? 0: SCORE_WRONG_TYPE);
+					return fromStringPenalty+(i == (byte) i? 1: i == (short) i? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_INT: {
 					int i = value.toint();
-					return fromStringPenalty+((i == (byte) i)? 2: ((i == (char) i) || (i == (short) i))? 1: 0);
+					return fromStringPenalty+(i == (byte) i? 2: i == (char) i || i == (short) i? 1: 0);
 				}
 				case TARGET_TYPE_FLOAT:
 					return fromStringPenalty+1;
@@ -168,15 +173,15 @@ public class CoerceLuaToJava {
 					return SCORE_WRONG_TYPE;
 				case TARGET_TYPE_LONG: {
 					double d = value.todouble();
-					return fromStringPenalty+((d == (long) d)? 0: SCORE_WRONG_TYPE);
+					return fromStringPenalty+(d == (long) d? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_FLOAT: {
 					double d = value.todouble();
-					return fromStringPenalty+((d == (float) d)? 0: SCORE_WRONG_TYPE);
+					return fromStringPenalty+(d == (float) d? 0: SCORE_WRONG_TYPE);
 				}
 				case TARGET_TYPE_DOUBLE: {
 					double d = value.todouble();
-					return fromStringPenalty+(((d == (long) d) || (d == (float) d))? 1: 0);
+					return fromStringPenalty+(d == (long) d || d == (float) d? 1: 0);
 				}
 				default:
 					return SCORE_WRONG_TYPE;
@@ -186,22 +191,23 @@ public class CoerceLuaToJava {
 			}
 		}
 
+		@Override
 		public Object coerce(LuaValue value) {
 			switch (targetType) {
 			case TARGET_TYPE_BYTE:
-				return new Byte((byte) value.toint());
+				return Byte.valueOf((byte) value.toint());
 			case TARGET_TYPE_CHAR:
-				return new Character((char) value.toint());
+				return Character.valueOf((char) value.toint());
 			case TARGET_TYPE_SHORT:
-				return new Short((short) value.toint());
+				return Short.valueOf((short) value.toint());
 			case TARGET_TYPE_INT:
-				return new Integer((int) value.toint());
+				return Integer.valueOf(value.toint());
 			case TARGET_TYPE_LONG:
-				return new Long((long) value.todouble());
+				return Long.valueOf((long) value.todouble());
 			case TARGET_TYPE_FLOAT:
-				return new Float((float) value.todouble());
+				return Float.valueOf((float) value.todouble());
 			case TARGET_TYPE_DOUBLE:
-				return new Double((double) value.todouble());
+				return Double.valueOf(value.todouble());
 			default:
 				return null;
 			}
@@ -217,15 +223,17 @@ public class CoerceLuaToJava {
 			this.targetType = targetType;
 		}
 
+		@Override
 		public String toString() {
 			return "StringCoercion(" + (targetType == TARGET_TYPE_STRING? "String": "byte[]") + ")";
 		}
 
+		@Override
 		public int score(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TSTRING:
-				return value.checkstring().isValidUtf8()? (targetType == TARGET_TYPE_STRING? 0: 1)
-					: (targetType == TARGET_TYPE_BYTES? 0: SCORE_WRONG_TYPE);
+				return value.checkstring().isValidUtf8()? targetType == TARGET_TYPE_STRING? 0: 1
+					: targetType == TARGET_TYPE_BYTES? 0: SCORE_WRONG_TYPE;
 			case LuaValue.TNIL:
 				return SCORE_NULL_VALUE;
 			default:
@@ -233,6 +241,7 @@ public class CoerceLuaToJava {
 			}
 		}
 
+		@Override
 		public Object coerce(LuaValue value) {
 			if (value.isnil())
 				return null;
@@ -254,10 +263,12 @@ public class CoerceLuaToJava {
 			this.componentCoercion = getCoercion(componentType);
 		}
 
+		@Override
 		public String toString() {
 			return "ArrayCoercion(" + componentType.getName() + ")";
 		}
 
+		@Override
 		public int score(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TTABLE:
@@ -271,6 +282,7 @@ public class CoerceLuaToJava {
 			}
 		}
 
+		@Override
 		public Object coerce(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TTABLE: {
@@ -293,7 +305,7 @@ public class CoerceLuaToJava {
 
 	/**
 	 * Determine levels of inheritance between a base class and a subclass
-	 * 
+	 *
 	 * @param baseclass base class to look for
 	 * @param subclass  class from which to start looking
 	 * @return number of inheritance levels between subclass and baseclass, or
@@ -306,8 +318,8 @@ public class CoerceLuaToJava {
 			return 0;
 		int min = Math.min(SCORE_UNCOERCIBLE, inheritanceLevels(baseclass, subclass.getSuperclass())+1);
 		Class[] ifaces = subclass.getInterfaces();
-		for (int i = 0; i < ifaces.length; i++)
-			min = Math.min(min, inheritanceLevels(baseclass, ifaces[i])+1);
+		for (Class element : ifaces)
+			min = Math.min(min, inheritanceLevels(baseclass, element)+1);
 		return min;
 	}
 
@@ -318,10 +330,12 @@ public class CoerceLuaToJava {
 			this.targetType = targetType;
 		}
 
+		@Override
 		public String toString() {
 			return "ObjectCoercion(" + targetType.getName() + ")";
 		}
 
+		@Override
 		public int score(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TNUMBER:
@@ -339,10 +353,12 @@ public class CoerceLuaToJava {
 			}
 		}
 
+		@Override
 		public Object coerce(LuaValue value) {
 			switch (value.type()) {
 			case LuaValue.TNUMBER:
-				return value.isint()? (Object) new Integer(value.toint()): (Object) new Double(value.todouble());
+				return value.isint()? (Object) Integer.valueOf(value.toint())
+					: (Object) Double.valueOf(value.todouble());
 			case LuaValue.TBOOLEAN:
 				return value.toboolean()? Boolean.TRUE: Boolean.FALSE;
 			case LuaValue.TSTRING:

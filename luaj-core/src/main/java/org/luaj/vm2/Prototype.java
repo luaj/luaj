@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,16 +23,16 @@ package org.luaj.vm2;
 
 /**
  * Prototype representing compiled lua code.
- * 
+ *
  * <p>
  * This is both a straight translation of the corresponding C type, and the main
  * data structure for execution of compiled lua bytecode.
- * 
+ *
  * <p>
  * Generally, the {@link Prototype} is not constructed directly is an
  * intermediate result as lua code is loaded using
  * {@link Globals#load(java.io.Reader, String)}:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -40,11 +40,11 @@ package org.luaj.vm2;
  * 	globals.load(new StringReader("print 'hello'"), "main.lua").call();
  * }
  * </pre>
- * 
+ *
  * <p>
  * To create a {@link Prototype} directly, a compiler such as
  * {@link org.luaj.vm2.compiler.LuaC} may be used:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -52,31 +52,31 @@ package org.luaj.vm2;
  * 	Prototype p = LuaC.instance.compile(is, "script");
  * }
  * </pre>
- * 
+ *
  * To simplify loading, the
  * {@link Globals#compilePrototype(java.io.InputStream, String)} method may be
  * used:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
  * 	Prototype p = globals.compileProtoytpe(is, "script");
  * }
  * </pre>
- * 
+ *
  * It may also be loaded from a {@link java.io.Reader} via
  * {@link Globals#compilePrototype(java.io.Reader, String)}:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
  * 	Prototype p = globals.compileProtoytpe(new StringReader(script), "script");
  * }
  * </pre>
- * 
+ *
  * To un-dump a binary file known to be a binary lua file that has been dumped
  * to a string, the {@link Globals.Undumper} interface may be used:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -84,10 +84,10 @@ package org.luaj.vm2;
  * 	Prototype p = globals.undumper.undump(lua_binary_file, "foo.lua");
  * }
  * </pre>
- * 
+ *
  * To execute the code represented by the {@link Prototype} it must be supplied
  * to the constructor of a {@link LuaClosure}:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -96,17 +96,17 @@ package org.luaj.vm2;
  * 	f.call();
  * }
  * </pre>
- * 
+ *
  * To simplify the debugging of prototype values, the contents may be printed
  * using {@link Print#print}:
- * 
+ *
  * <pre>
  *  {@code
  * Print.print(p);
  * }
  * </pre>
  * <p>
- * 
+ *
  * @see LuaClosure
  * @see Globals
  * @see Globals#undumper
@@ -145,13 +145,14 @@ public class Prototype {
 		upvalues = new Upvaldesc[n_upvalues];
 	}
 
+	@Override
 	public String toString() {
 		return source + ":" + linedefined + "-" + lastlinedefined;
 	}
 
 	/**
 	 * Get the name of a local variable.
-	 * 
+	 *
 	 * @param number the local variable number to look up
 	 * @param pc     the program counter
 	 * @return the name, or null if not found

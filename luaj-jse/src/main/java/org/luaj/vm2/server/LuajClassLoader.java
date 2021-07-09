@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,7 +52,7 @@ import java.util.Map;
  * and prints the return values. This behavior can be changed by supplying a
  * different implementation class to {@link #NewLauncher(Class)} which must
  * extend {@link Launcher}.
- * 
+ *
  * @see Launcher
  * @see #NewLauncher()
  * @see #NewLauncher(Class)
@@ -72,7 +72,7 @@ public class LuajClassLoader extends ClassLoader {
 	static final String launcherInterfaceRoot = Launcher.class.getName();
 
 	/** Local cache of classes loaded by this loader. */
-	Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
+	Map<String, Class<?>> classes = new HashMap<>();
 
 	/**
 	 * Construct a default {@link Launcher} instance that will load classes in
@@ -83,7 +83,7 @@ public class LuajClassLoader extends ClassLoader {
 	 * classes are loaded into this loader including static variables such as
 	 * shared metatables, and should not be able to directly access variables
 	 * from other Launcher instances.
-	 * 
+	 *
 	 * @return {@link Launcher} instance that can be used to launch scripts.
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
@@ -102,7 +102,7 @@ public class LuajClassLoader extends ClassLoader {
 	 * classes are loaded into this loader including static variables such as
 	 * shared metatables, and should not be able to directly access variables
 	 * from other Launcher instances.
-	 * 
+	 *
 	 * @return instance of type 'launcher_class' that can be used to launch
 	 *         scripts.
 	 * @throws InstantiationException
@@ -119,7 +119,7 @@ public class LuajClassLoader extends ClassLoader {
 	/**
 	 * Test if a class name should be considered a user class and loaded by this
 	 * loader, or a system class and loaded by the system loader.
-	 * 
+	 *
 	 * @param classname Class name to test.
 	 * @return true if this should be loaded into this class loader.
 	 */
@@ -127,6 +127,7 @@ public class LuajClassLoader extends ClassLoader {
 		return classname.startsWith(luajPackageRoot) && !classname.startsWith(launcherInterfaceRoot);
 	}
 
+	@Override
 	public Class<?> loadClass(String classname) throws ClassNotFoundException {
 		if (classes.containsKey(classname))
 			return classes.get(classname);

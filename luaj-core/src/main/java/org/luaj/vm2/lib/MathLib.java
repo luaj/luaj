@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -54,7 +54,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -62,14 +62,14 @@ import org.luaj.vm2.Varargs;
  * 	System.out.println(globals.get("math").get("sqrt").call(LuaValue.valueOf(2)));
  * }
  * </pre>
- * 
+ *
  * When using {@link org.luaj.vm2.lib.jse.JsePlatform} as in this example, the
  * subclass {@link org.luaj.vm2.lib.jse.JseMathLib} will be included, which also
  * includes this base functionality.
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -80,13 +80,13 @@ import org.luaj.vm2.Varargs;
  * 	System.out.println(globals.get("math").get("sqrt").call(LuaValue.valueOf(2)));
  * }
  * </pre>
- * 
+ *
  * Doing so will ensure the library is properly initialized and loaded into the
  * globals table.
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -116,11 +116,12 @@ public class MathLib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, typically a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable math = new LuaTable(0, 30);
 		math.set("abs", new abs());
@@ -152,6 +153,7 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	abstract protected static class UnaryOp extends OneArgFunction {
+		@Override
 		public LuaValue call(LuaValue arg) {
 			return valueOf(call(arg.checkdouble()));
 		}
@@ -160,6 +162,7 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	abstract protected static class BinaryOp extends TwoArgFunction {
+		@Override
 		public LuaValue call(LuaValue x, LuaValue y) {
 			return valueOf(call(x.checkdouble(), y.checkdouble()));
 		}
@@ -168,38 +171,47 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	static final class abs extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.abs(d); }
 	}
 
 	static final class ceil extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.ceil(d); }
 	}
 
 	static final class cos extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.cos(d); }
 	}
 
 	static final class deg extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.toDegrees(d); }
 	}
 
 	static final class floor extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.floor(d); }
 	}
 
 	static final class rad extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.toRadians(d); }
 	}
 
 	static final class sin extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.sin(d); }
 	}
 
 	static final class sqrt extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.sqrt(d); }
 	}
 
 	static final class tan extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.tan(d); }
 	}
 
@@ -210,12 +222,14 @@ public class MathLib extends TwoArgFunction {
 			this.mathlib = mathlib;
 		}
 
+		@Override
 		protected double call(double d) {
 			return mathlib.dpow_lib(Math.E, d);
 		}
 	}
 
 	static final class fmod extends TwoArgFunction {
+		@Override
 		public LuaValue call(LuaValue xv, LuaValue yv) {
 			if (xv.islong() && yv.islong()) {
 				return valueOf(xv.tolong()%yv.tolong());
@@ -225,31 +239,35 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	static final class ldexp extends BinaryOp {
+		@Override
 		protected double call(double x, double y) {
 			// This is the behavior on os-x, windows differs in rounding behavior.
-			return x*Double.longBitsToDouble((((long) y)+1023)<<52);
+			return x*Double.longBitsToDouble((long) y+1023<<52);
 		}
 	}
 
 	static final class pow extends BinaryOp {
+		@Override
 		protected double call(double x, double y) {
 			return MathLib.dpow_default(x, y);
 		}
 	}
 
 	static class frexp extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			double x = args.checkdouble(1);
 			if (x == 0)
 				return varargsOf(ZERO, ZERO);
 			long bits = Double.doubleToLongBits(x);
-			double m = ((bits & (~(-1L<<52)))+(1L<<52))*((bits >= 0)? (.5/(1L<<52)): (-.5/(1L<<52)));
-			double e = (((int) (bits>>52)) & 0x7ff)-1022;
+			double m = ((bits & ~(-1L<<52))+(1L<<52))*(bits >= 0? .5/(1L<<52): -.5/(1L<<52));
+			double e = ((int) (bits>>52) & 0x7ff)-1022;
 			return varargsOf(valueOf(m), valueOf(e));
 		}
 	}
 
 	static class max extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue m = args.checkvalue(1);
 			for (int i = 2, n = args.narg(); i <= n; ++i) {
@@ -262,6 +280,7 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	static class min extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue m = args.checkvalue(1);
 			for (int i = 2, n = args.narg(); i <= n; ++i) {
@@ -274,6 +293,7 @@ public class MathLib extends TwoArgFunction {
 	}
 
 	static class modf extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue n = args.arg1();
 			/* number is its own integer part, no fractional part */
@@ -281,7 +301,7 @@ public class MathLib extends TwoArgFunction {
 				return varargsOf(n, valueOf(0.0));
 			double x = n.checkdouble();
 			/* integer part (rounds toward zero) */
-			double intPart = (x > 0)? Math.floor(x): Math.ceil(x);
+			double intPart = x > 0? Math.floor(x): Math.ceil(x);
 			/* fractional part (test needed for inf/-inf) */
 			double fracPart = x == intPart? 0.0: x-intPart;
 			return varargsOf(valueOf(intPart), valueOf(fracPart));
@@ -291,10 +311,12 @@ public class MathLib extends TwoArgFunction {
 	static class random extends LibFunction {
 		Random random = new Random();
 
+		@Override
 		public LuaValue call() {
 			return valueOf(random.nextDouble());
 		}
 
+		@Override
 		public LuaValue call(LuaValue a) {
 			int m = a.checkint();
 			if (m < 1)
@@ -302,6 +324,7 @@ public class MathLib extends TwoArgFunction {
 			return valueOf(1+random.nextInt(m));
 		}
 
+		@Override
 		public LuaValue call(LuaValue a, LuaValue b) {
 			int m = a.checkint();
 			int n = b.checkint();
@@ -319,6 +342,7 @@ public class MathLib extends TwoArgFunction {
 			this.random = random;
 		}
 
+		@Override
 		public LuaValue call(LuaValue arg) {
 			long seed = arg.checklong();
 			random.random = new Random(seed);

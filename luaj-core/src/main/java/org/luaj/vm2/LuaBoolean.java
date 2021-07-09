@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@ package org.luaj.vm2;
  * Any {@link LuaValue} can be converted to its equivalent boolean
  * representation using {@link LuaValue#toboolean()}
  * <p>
- * 
+ *
  * @see LuaValue
  * @see LuaValue#valueOf(boolean)
  * @see LuaValue#TRUE
@@ -57,47 +57,56 @@ public final class LuaBoolean extends LuaValue {
 		this.v = b;
 	}
 
+	@Override
 	public int type() {
 		return LuaValue.TBOOLEAN;
 	}
 
+	@Override
 	public String typename() {
 		return "boolean";
 	}
 
+	@Override
 	public boolean isboolean() {
 		return true;
 	}
 
+	@Override
 	public LuaValue not() {
 		return v? FALSE: LuaValue.TRUE;
 	}
 
 	/**
 	 * Return the boolean value for this boolean
-	 * 
+	 *
 	 * @return value as a Java boolean
 	 */
 	public boolean booleanValue() {
 		return v;
 	}
 
+	@Override
 	public boolean toboolean() {
 		return v;
 	}
 
+	@Override
 	public String tojstring() {
 		return v? "true": "false";
 	}
 
+	@Override
 	public boolean optboolean(boolean defval) {
 		return this.v;
 	}
 
+	@Override
 	public boolean checkboolean() {
 		return v;
 	}
 
+	@Override
 	public LuaValue getmetatable() {
 		return s_metatable;
 	}

@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,8 +23,6 @@ package org.luaj.vm2.lib.jme;
 
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaThread;
-import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.BaseLib;
 import org.luaj.vm2.lib.Bit32Lib;
@@ -60,7 +58,7 @@ import org.luaj.vm2.lib.TableLib;
  * {@link #standardGlobals()} or debug globals using {@link #debugGlobals()}
  * <p>
  * A simple example of initializing globals and using them from Java is:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -70,7 +68,7 @@ import org.luaj.vm2.lib.TableLib;
  * </pre>
  * <p>
  * Once globals are created, a simple way to load and run a script is:
- * 
+ *
  * <pre>
  *  {@code
  * LoadState.load( getClass().getResourceAsStream("main.lua"), "main.lua", globals ).call();
@@ -78,13 +76,13 @@ import org.luaj.vm2.lib.TableLib;
  * </pre>
  * <p>
  * although {@code require} could also be used:
- * 
+ *
  * <pre>
  *  {@code
  * globals.get("require").call(LuaValue.valueOf("main"));
  * }
  * </pre>
- * 
+ *
  * For this to succeed, the file "main.lua" must be a resource in the class
  * path. See {@link BaseLib} for details on finding scripts using
  * {@link ResourceFinder}.
@@ -111,7 +109,7 @@ import org.luaj.vm2.lib.TableLib;
  * <p>
  * <p>
  * The class ensures that initialization is done in the correct order.
- * 
+ *
  * @see Globals
  * @see org.luaj.vm2.lib.jse.JsePlatform
  */
@@ -119,7 +117,7 @@ public class JmePlatform {
 
 	/**
 	 * Create a standard set of globals for JME including all the libraries.
-	 * 
+	 *
 	 * @return Table of globals initialized with the standard JME libraries
 	 * @see #debugGlobals()
 	 * @see org.luaj.vm2.lib.jse.JsePlatform
@@ -143,7 +141,7 @@ public class JmePlatform {
 
 	/**
 	 * Create standard globals including the {@link DebugLib} library.
-	 * 
+	 *
 	 * @return Table of globals initialized with the standard JSE and debug
 	 *         libraries
 	 * @see #standardGlobals()

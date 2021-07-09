@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.luaj.vm2.luajc;
 
@@ -60,8 +60,7 @@ public class UpvalInfo {
 
 	private boolean includePosteriorVarsCheckLoops(VarInfo prior) {
 		boolean loopDetected = false;
-		for (int i = 0, n = pi.blocklist.length; i < n; i++) {
-			BasicBlock b = pi.blocklist[i];
+		for (BasicBlock b : pi.blocklist) {
 			VarInfo v = pi.vars[slot][b.pc1];
 			if (v == prior) {
 				for (int j = 0, m = b.next != null? b.next.length: 0; j < m; j++) {
@@ -86,8 +85,7 @@ public class UpvalInfo {
 	}
 
 	private void includePriorVarsIgnoreLoops(VarInfo poster) {
-		for (int i = 0, n = pi.blocklist.length; i < n; i++) {
-			BasicBlock b = pi.blocklist[i];
+		for (BasicBlock b : pi.blocklist) {
 			VarInfo v = pi.vars[slot][b.pc0];
 			if (v == poster) {
 				for (int j = 0, m = b.prev != null? b.prev.length: 0; j < m; j++) {
@@ -118,6 +116,7 @@ public class UpvalInfo {
 		var[nvars++] = v;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(pi.name);
@@ -141,8 +140,8 @@ public class UpvalInfo {
 			if (v != null && v.upvalue != this)
 				return true;
 		} else {
-			for (int i = 0, n = b.prev.length; i < n; i++) {
-				v = pi.vars[slot][b.prev[i].pc1];
+			for (BasicBlock element : b.prev) {
+				v = pi.vars[slot][element.pc1];
 				if (v != null && v.upvalue != this)
 					return true;
 			}

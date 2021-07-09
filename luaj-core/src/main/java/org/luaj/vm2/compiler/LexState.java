@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,16 +45,16 @@ public class LexState extends Constants {
 	protected static final String RESERVED_LOCAL_VAR_FOR_INDEX     = "(for index)";
 
 	// keywords array
-	protected static final String[] RESERVED_LOCAL_VAR_KEYWORDS       = new String[] { RESERVED_LOCAL_VAR_FOR_CONTROL,
+	protected static final String[] RESERVED_LOCAL_VAR_KEYWORDS       = { RESERVED_LOCAL_VAR_FOR_CONTROL,
 			RESERVED_LOCAL_VAR_FOR_GENERATOR, RESERVED_LOCAL_VAR_FOR_INDEX, RESERVED_LOCAL_VAR_FOR_LIMIT,
 			RESERVED_LOCAL_VAR_FOR_STATE, RESERVED_LOCAL_VAR_FOR_STEP };
 	private static final Hashtable  RESERVED_LOCAL_VAR_KEYWORDS_TABLE = new Hashtable();
 	static {
-		for (int i = 0; i < RESERVED_LOCAL_VAR_KEYWORDS.length; i++)
-			RESERVED_LOCAL_VAR_KEYWORDS_TABLE.put(RESERVED_LOCAL_VAR_KEYWORDS[i], Boolean.TRUE);
+		for (String element : RESERVED_LOCAL_VAR_KEYWORDS)
+			RESERVED_LOCAL_VAR_KEYWORDS_TABLE.put(element, Boolean.TRUE);
 	}
 
-	private static final int EOZ            = (-1);
+	private static final int EOZ            = -1;
 	private static final int MAX_INT        = Integer.MAX_VALUE-2;
 	private static final int UCHAR_MAX      = 255;                // TODO, convert to unicode CHAR_MAX?
 	private static final int LUAI_MAXCCALLS = 200;
@@ -74,7 +74,7 @@ public class LexState extends Constants {
 	** Marks the end of a patch list. It is an invalid value both as an absolute
 	** address, and as a list link (would link an element to itself).
 	*/
-	static final int NO_JUMP = (-1);
+	static final int NO_JUMP = -1;
 
 	/*
 	** grep "ORDER OPR" if you change these enums
@@ -102,7 +102,7 @@ public class LexState extends Constants {
 	private static class SemInfo {
 		LuaValue  r;
 		LuaString ts;
-	};
+	}
 
 	private static class Token {
 		int           token;
@@ -113,7 +113,7 @@ public class LexState extends Constants {
 			this.seminfo.r = other.seminfo.r;
 			this.seminfo.ts = other.seminfo.ts;
 		}
-	};
+	}
 
 	int               current;                   /* current character (charint) */
 	int               linenumber;                /* input line counter */
@@ -151,30 +151,30 @@ public class LexState extends Constants {
 	final static Hashtable RESERVED = new Hashtable();
 	static {
 		for (int i = 0; i < NUM_RESERVED; i++) {
-			LuaString ts = (LuaString) LuaValue.valueOf(luaX_tokens[i]);
-			RESERVED.put(ts, new Integer(FIRST_RESERVED+i));
+			LuaString ts = LuaValue.valueOf(luaX_tokens[i]);
+			RESERVED.put(ts, Integer.valueOf(FIRST_RESERVED+i));
 		}
 	}
 
 	private boolean isalnum(int c) {
-		return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
+		return c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_';
 		// return Character.isLetterOrDigit(c);
 	}
 
 	private boolean isalpha(int c) {
-		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	}
 
 	private boolean isdigit(int c) {
-		return (c >= '0' && c <= '9');
+		return c >= '0' && c <= '9';
 	}
 
 	private boolean isxdigit(int c) {
-		return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+		return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
 	}
 
 	private boolean isspace(int c) {
-		return (c >= 0 && c <= ' ');
+		return c >= 0 && c <= ' ';
 	}
 
 	public LexState(LuaC.CompileState state, InputStream stream) {
@@ -209,8 +209,7 @@ public class LexState extends Constants {
 
 	String token2str(int token) {
 		if (token < FIRST_RESERVED) {
-			return iscntrl(token)? L.pushfstring("char(" + ((int) token) + ")")
-				: L.pushfstring(String.valueOf((char) token));
+			return iscntrl(token)? L.pushfstring("char(" + token + ")"): L.pushfstring(String.valueOf((char) token));
 		} else {
 			return luaX_tokens[token-FIRST_RESERVED];
 		}
@@ -299,7 +298,7 @@ public class LexState extends Constants {
 	void buffreplace(char from, char to) {
 		int n = nbuff;
 		char[] p = buff;
-		while ( (--n) >= 0 )
+		while ( --n >= 0 )
 			if (p[n] == from)
 				p[n] = to;
 	}
@@ -316,11 +315,7 @@ public class LexState extends Constants {
 			++s;
 		}
 		/* Check for "0x" */
-		if (s+2 >= c.length)
-			return LuaValue.ZERO;
-		if (c[s++] != '0')
-			return LuaValue.ZERO;
-		if (c[s] != 'x' && c[s] != 'X')
+		if (s+2 >= c.length || c[s++] != '0' || c[s] != 'x' && c[s] != 'X')
 			return LuaValue.ZERO;
 		++s;
 
@@ -328,11 +323,11 @@ public class LexState extends Constants {
 		double m = 0;
 		int e = 0;
 		while ( s < c.length && isxdigit(c[s]) )
-			m = (m*16)+hexvalue(c[s++]);
+			m = m*16+hexvalue(c[s++]);
 		if (s < c.length && c[s] == '.') {
 			++s; // skip dot
 			while ( s < c.length && isxdigit(c[s]) ) {
-				m = (m*16)+hexvalue(c[s++]);
+				m = m*16+hexvalue(c[s++]);
 				e -= 4; // Each fractional part shifts right by 2^4
 			}
 		}
@@ -396,7 +391,7 @@ public class LexState extends Constants {
 			save_and_next();
 			count++;
 		}
-		return (current == s)? count: (-count)-1;
+		return current == s? count: (-count)-1;
 	}
 
 	void read_long_string(SemInfo seminfo, int sep) {
@@ -407,7 +402,7 @@ public class LexState extends Constants {
 		for (boolean endloop = false; !endloop;) {
 			switch (current) {
 			case EOZ:
-				lexerror((seminfo != null)? "unfinished long string": "unfinished long comment", TK_EOS);
+				lexerror(seminfo != null? "unfinished long string": "unfinished long comment", TK_EOS);
 				break; /* to avoid warnings */
 			case '[': {
 				if (skip_sep() == sep) {
@@ -462,7 +457,7 @@ public class LexState extends Constants {
 		nextChar();
 		int c2 = current;
 		if (!isxdigit(c1) || !isxdigit(c2))
-			lexerror("hexadecimal digit expected 'x" + ((char) c1) + ((char) c2), TK_STRING);
+			lexerror("hexadecimal digit expected 'x" + (char) c1 + (char) c2, TK_STRING);
 		return (hexvalue(c1)<<4)+hexvalue(c2);
 	}
 
@@ -529,7 +524,7 @@ public class LexState extends Constants {
 						int i = 0;
 						c = 0;
 						do {
-							c = 10*c+(current-'0');
+							c = 10*c+current-'0';
 							nextChar();
 						} while ( ++i < 3 && isdigit(current) );
 						if (c > UCHAR_MAX)
@@ -724,11 +719,11 @@ public class LexState extends Constants {
 	// =============================================================
 
 	static final boolean vkisvar(final int k) {
-		return (VLOCAL <= (k) && (k) <= VINDEXED);
+		return VLOCAL <= k && k <= VINDEXED;
 	}
 
 	static final boolean vkisinreg(final int k) {
-		return ((k) == VNONRELOC || (k) == VLOCAL);
+		return k == VNONRELOC || k == VLOCAL;
 	}
 
 	static class expdesc {
@@ -744,9 +739,9 @@ public class LexState extends Constants {
 			public void setNval(LuaValue r) { _nval = r; }
 
 			public LuaValue nval() {
-				return (_nval == null? LuaInteger.valueOf(info): _nval);
+				return _nval == null? LuaInteger.valueOf(info): _nval;
 			}
-		};
+		}
 
 		final U      u = new U();
 		final IntPtr t = new IntPtr(); /* patch list of `exit when true' */
@@ -760,11 +755,11 @@ public class LexState extends Constants {
 		}
 
 		boolean hasjumps() {
-			return (t.i != f.i);
+			return t.i != f.i;
 		}
 
 		boolean isnumeral() {
-			return (k == VKNUM && t.i == NO_JUMP && f.i == NO_JUMP);
+			return k == VKNUM && t.i == NO_JUMP && f.i == NO_JUMP;
 		}
 
 		public void setvalue(expdesc other) {
@@ -786,7 +781,7 @@ public class LexState extends Constants {
 		Vardesc(int idx) {
 			this.idx = (short) idx;
 		}
-	};
+	}
 
 	/* description of pending goto statements and label statements */
 	static class Labeldesc {
@@ -801,7 +796,7 @@ public class LexState extends Constants {
 			this.line = line;
 			this.nactvar = nactvar;
 		}
-	};
+	}
 
 	/* dynamic structures used by the parser */
 	static class Dyndata {
@@ -811,10 +806,10 @@ public class LexState extends Constants {
 		int         n_gt     = 0;
 		Labeldesc[] label;       /* list of active labels */
 		int         n_label  = 0;
-	};
+	}
 
 	boolean hasmultret(int k) {
-		return ((k) == VCALL || (k) == VVARARG);
+		return k == VCALL || k == VVARARG;
 	}
 
 	/*----------------------------------------------------------------------
@@ -860,7 +855,7 @@ public class LexState extends Constants {
 	}
 
 	void check_condition(boolean c, String msg) {
-		if (!(c))
+		if (!c)
 			syntaxerror(msg);
 	}
 
@@ -902,7 +897,7 @@ public class LexState extends Constants {
 
 	void new_localvar(LuaString name) {
 		int reg = registerlocalvar(name);
-		fs.checklimit(dyd.n_actvar+1, FuncState.LUAI_MAXVARS, "local variables");
+		fs.checklimit(dyd.n_actvar+1, Constants.LUAI_MAXVARS, "local variables");
 		if (dyd.actvar == null || dyd.n_actvar+1 > dyd.actvar.length)
 			dyd.actvar = realloc(dyd.actvar, Math.max(1, dyd.n_actvar*2));
 		dyd.actvar[dyd.n_actvar++] = new Vardesc(reg);
@@ -1138,7 +1133,7 @@ public class LexState extends Constants {
 		int     nh;                /* total number of `record' elements */
 		int     na;                /* total number of array elements */
 		int     tostore;           /* number of array elements pending to be stored */
-	};
+	}
 
 	void recfield(ConsControl cc) {
 		/* recfield -> (NAME | `['exp1`]') = exp1 */
@@ -1219,13 +1214,13 @@ public class LexState extends Constants {
 	static int luaO_int2fb(int x) {
 		int e = 0; /* expoent */
 		while ( x >= 16 ) {
-			x = (x+1)>>1;
+			x = x+1>>1;
 			e++;
 		}
 		if (x < 8)
 			return x;
 		else
-			return ((e+1)<<3) | (((int) x)-8);
+			return e+1<<3 | x-8;
 	}
 
 	/* }====================================================================== */
@@ -1252,7 +1247,7 @@ public class LexState extends Constants {
 				default:
 					this.syntaxerror("<name> or " + LUA_QL("...") + " expected");
 				}
-			} while ( (f.is_vararg == 0) && this.testnext(',') );
+			} while ( f.is_vararg == 0 && this.testnext(',') );
 		}
 		this.adjustlocalvars(nparams);
 		f.numparams = fs.nactvar;
@@ -1359,8 +1354,7 @@ public class LexState extends Constants {
 			return;
 		}
 		default: {
-			this.syntaxerror("unexpected symbol " + t.token + " (" + ((char) t.token) + ")");
-			return;
+			this.syntaxerror("unexpected symbol " + t.token + " (" + (char) t.token + ")");
 		}
 		}
 	}
@@ -1513,7 +1507,7 @@ public class LexState extends Constants {
 			left = (byte) i;
 			right = (byte) j;
 		}
-	};
+	}
 
 	static Priority[] priority = { /* ORDER OPR */
 			new Priority(6, 6), new Priority(6, 6), new Priority(7, 7), new Priority(7, 7),
@@ -1601,7 +1595,7 @@ public class LexState extends Constants {
 		LHS_assign prev;
 		/* variable (global, local, upvalue, or indexed) */
 		expdesc v = new expdesc();
-	};
+	}
 
 	/*
 	** check whether, in an assignment to a local variable, the local variable
@@ -1611,7 +1605,7 @@ public class LexState extends Constants {
 	*/
 	void check_conflict(LHS_assign lh, expdesc v) {
 		FuncState fs = this.fs;
-		short extra = (short) fs.freereg; /* eventual position to save local variable */
+		short extra = fs.freereg; /* eventual position to save local variable */
 		boolean conflict = false;
 		for (; lh != null; lh = lh.prev) {
 			if (lh.v.k == VINDEXED) {
@@ -1630,7 +1624,7 @@ public class LexState extends Constants {
 		}
 		if (conflict) {
 			/* copy upvalue/local value to a temporary (in position 'extra') */
-			int op = (v.k == VLOCAL)? Lua.OP_MOVE: Lua.OP_GETUPVAL;
+			int op = v.k == VLOCAL? Lua.OP_MOVE: Lua.OP_GETUPVAL;
 			fs.codeABC(op, extra, v.u.info, 0);
 			fs.reserveregs(1);
 		}

@@ -57,6 +57,7 @@ public class ProtoInfo {
 		findUpvalues();
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 
@@ -64,12 +65,11 @@ public class ProtoInfo {
 		sb.append("proto '" + name + "'\n");
 
 		// upvalues from outer scopes
-		for (int i = 0, n = (upvals != null? upvals.length: 0); i < n; i++)
+		for (int i = 0, n = upvals != null? upvals.length: 0; i < n; i++)
 			sb.append(" up[" + i + "]: " + upvals[i] + "\n");
 
 		// basic blocks
-		for (int i = 0; i < blocklist.length; i++) {
-			BasicBlock b = blocklist[i];
+		for (BasicBlock b : blocklist) {
 			int pc0 = b.pc0;
 			sb.append("  block " + b.toString());
 			appendOpenUps(sb, -1);
@@ -84,9 +84,9 @@ public class ProtoInfo {
 				sb.append("     ");
 				for (int j = 0; j < prototype.maxstacksize; j++) {
 					VarInfo v = vars[j][pc];
-					String u = (v == null? ""
-						: v.upvalue != null? !v.upvalue.rw? "[C] ": (v.allocupvalue && v.pc == pc? "[*] ": "[]  ")
-							: "    ");
+					String u = v == null? ""
+						: v.upvalue != null? !v.upvalue.rw? "[C] ": v.allocupvalue && v.pc == pc? "[*] ": "[]  "
+							: "    ";
 					String s = v == null? "null   ": String.valueOf(v);
 					sb.append(s+u);
 				}
@@ -115,7 +115,7 @@ public class ProtoInfo {
 
 	private void appendOpenUps(StringBuffer sb, int pc) {
 		for (int j = 0; j < prototype.maxstacksize; j++) {
-			VarInfo v = (pc < 0? params[j]: vars[j][pc]);
+			VarInfo v = pc < 0? params[j]: vars[j][pc];
 			if (v != null && v.pc == pc && v.allocupvalue) {
 				sb.append("    open: " + v.upvalue + "\n");
 			}
@@ -132,8 +132,8 @@ public class ProtoInfo {
 			v[i] = new VarInfo[n];
 
 		// process instructions
-		for (int bi = 0; bi < blocklist.length; bi++) {
-			BasicBlock b0 = blocklist[bi];
+		for (BasicBlock element : blocklist) {
+			BasicBlock b0 = element;
 
 			// input from previous blocks
 			int nprev = b0.prev != null? b0.prev.length: 0;
@@ -399,8 +399,7 @@ public class ProtoInfo {
 	}
 
 	private void replaceTrivialPhiVariables() {
-		for (int i = 0; i < blocklist.length; i++) {
-			BasicBlock b0 = blocklist[i];
+		for (BasicBlock b0 : blocklist) {
 			for (int slot = 0; slot < prototype.maxstacksize; slot++) {
 				VarInfo vold = vars[slot][b0.pc0];
 				VarInfo vnew = vold.resolvePhiVariableValues();

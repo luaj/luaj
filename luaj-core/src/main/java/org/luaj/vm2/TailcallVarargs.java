@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ package org.luaj.vm2;
  * <p>
  * Normally, users of luaj need not concern themselves with the details of this
  * mechanism, as it is built into the core execution framework.
- * 
+ *
  * @see Prototype
  * @see org.luaj.vm2.luajc.LuaJC
  */
@@ -55,8 +55,10 @@ public class TailcallVarargs extends Varargs {
 		this.args = LuaValue.varargsOf(object, args);
 	}
 
+	@Override
 	public boolean isTailcall() { return true; }
 
+	@Override
 	public Varargs eval() {
 		while ( result == null ) {
 			Varargs r = func.onInvoke(args);
@@ -73,24 +75,28 @@ public class TailcallVarargs extends Varargs {
 		return result;
 	}
 
+	@Override
 	public LuaValue arg(int i) {
 		if (result == null)
 			eval();
 		return result.arg(i);
 	}
 
+	@Override
 	public LuaValue arg1() {
 		if (result == null)
 			eval();
 		return result.arg1();
 	}
 
+	@Override
 	public int narg() {
 		if (result == null)
 			eval();
 		return result.narg();
 	}
 
+	@Override
 	public Varargs subargs(int start) {
 		if (result == null)
 			eval();

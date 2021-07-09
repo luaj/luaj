@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,11 +44,11 @@ import org.luaj.vm2.lib.VarArgFunction;
  * bind java classes and methods to lua dynamically. The API is documented on
  * the <a href="http://www.keplerproject.org/luajava/">luajava</a> documentation
  * pages.
- * 
+ *
  * <p>
  * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -60,7 +60,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link Globals#load} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -73,7 +73,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * }
  * </pre>
  * <p>
- * 
+ *
  * The {@code luajava} library is available on all JSE platforms via the call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} and the luajava
  * api's are simply invoked from lua. Because it makes extensive use of Java's
@@ -82,7 +82,7 @@ import org.luaj.vm2.lib.VarArgFunction;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -108,6 +108,7 @@ public class LuajavaLib extends VarArgFunction {
 	public LuajavaLib() {
 	}
 
+	@Override
 	public Varargs invoke(Varargs args) {
 		try {
 			switch (opcode) {
@@ -129,8 +130,8 @@ public class LuajavaLib extends VarArgFunction {
 			case NEW: {
 				// get constructor
 				final LuaValue c = args.checkvalue(1);
-				final Class clazz = (opcode == NEWINSTANCE? classForName(c.tojstring())
-					: (Class) c.checkuserdata(Class.class));
+				final Class clazz = opcode == NEWINSTANCE? classForName(c.tojstring())
+					: (Class) c.checkuserdata(Class.class);
 				final Varargs consargs = args.subargs(2);
 				return JavaClass.forClass(clazz).getConstructor().invoke(consargs);
 			}
@@ -160,8 +161,8 @@ public class LuajavaLib extends VarArgFunction {
 				String classname = args.checkjstring(1);
 				String methodname = args.checkjstring(2);
 				Class clazz = classForName(classname);
-				Method method = clazz.getMethod(methodname, new Class[] {});
-				Object result = method.invoke(clazz, new Object[] {});
+				Method method = clazz.getMethod(methodname);
+				Object result = method.invoke(clazz);
 				if (result instanceof LuaValue) {
 					return (LuaValue) result;
 				} else {
@@ -192,12 +193,13 @@ public class LuajavaLib extends VarArgFunction {
 			this.lobj = lobj;
 		}
 
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			String name = method.getName();
 			LuaValue func = lobj.get(name);
 			if (func.isnil())
 				return null;
-			boolean isvarargs = ((method.getModifiers() & METHOD_MODIFIERS_VARARGS) != 0);
+			boolean isvarargs = (method.getModifiers() & METHOD_MODIFIERS_VARARGS) != 0;
 			int n = args != null? args.length: 0;
 			LuaValue[] v;
 			if (isvarargs) {

@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ import org.luaj.vm2.lib.ResourceFinder;
  * <p>
  * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -59,7 +59,7 @@ import org.luaj.vm2.lib.ResourceFinder;
  * For special cases where the smallest possible footprint is desired, a minimal
  * set of libraries could be loaded directly via {@link Globals#load(LuaValue)}
  * using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -73,7 +73,7 @@ import org.luaj.vm2.lib.ResourceFinder;
  * case.
  * <p>
  * This is a direct port of the corresponding library in C.
- * 
+ *
  * @see Globals
  * @see BaseLib
  * @see ResourceFinder
@@ -95,11 +95,12 @@ public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 	 * <P>
 	 * Specifically, extend the library loading to set the default value for
 	 * {@link Globals#STDIN}
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		super.call(modname, env);
 		env.checkglobals().STDIN = System.in;
@@ -109,17 +110,18 @@ public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 	/**
 	 * Try to open a file in the current working directory, or fall back to base
 	 * opener if not found.
-	 * 
+	 *
 	 * This implementation attempts to open the file using new File(filename).
 	 * It falls back to the base implementation that looks it up as a resource
 	 * in the class path if not found as a plain file.
-	 * 
+	 *
 	 * @see org.luaj.vm2.lib.BaseLib
 	 * @see org.luaj.vm2.lib.ResourceFinder
-	 * 
+	 *
 	 * @param filename
 	 * @return InputStream, or null if not found.
 	 */
+	@Override
 	public InputStream findResource(String filename) {
 		File f = new File(filename);
 		if (!f.exists())

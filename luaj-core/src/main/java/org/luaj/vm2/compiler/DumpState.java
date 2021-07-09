@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import org.luaj.vm2.Prototype;
  * command line interface tool such as {@link luac}.
  * <p>
  * A lua binary file is created via {@link DumpState#dump}:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -51,9 +51,9 @@ import org.luaj.vm2.Prototype;
  * 	byte[] lua_binary_file_bytes = o.toByteArray();
  * }
  * </pre>
- * 
+ *
  * The {@link LoadState} may be used directly to undump these bytes:
- * 
+ *
  * <pre>
  *  {@code
  * Prototypep = LoadState.instance.undump(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua");
@@ -61,10 +61,10 @@ import org.luaj.vm2.Prototype;
  * c.call();
  * }
  * </pre>
- * 
- * 
+ *
+ *
  * More commonly, the {@link Globals#undumper} may be used to undump them:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -73,7 +73,7 @@ import org.luaj.vm2.Prototype;
  * 	c.call();
  * }
  * </pre>
- * 
+ *
  * @see luac
  * @see LoadState
  * @see Globals
@@ -131,9 +131,9 @@ public class DumpState {
 	void dumpInt(int x) throws IOException {
 		if (IS_LITTLE_ENDIAN) {
 			writer.writeByte(x & 0xff);
-			writer.writeByte((x>>8) & 0xff);
-			writer.writeByte((x>>16) & 0xff);
-			writer.writeByte((x>>24) & 0xff);
+			writer.writeByte(x>>8 & 0xff);
+			writer.writeByte(x>>16 & 0xff);
+			writer.writeByte(x>>24 & 0xff);
 		} else {
 			writer.writeInt(x);
 		}
@@ -286,7 +286,7 @@ public class DumpState {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param f            the function to dump
 	 * @param w            the output stream to dump to
 	 * @param stripDebug   true to strip debugging info, false otherwise
@@ -312,7 +312,7 @@ public class DumpState {
 		DumpState D = new DumpState(w, stripDebug);
 		D.IS_LITTLE_ENDIAN = littleendian;
 		D.NUMBER_FORMAT = numberFormat;
-		D.SIZEOF_LUA_NUMBER = (numberFormat == NUMBER_FORMAT_INTS_ONLY? 4: 8);
+		D.SIZEOF_LUA_NUMBER = numberFormat == NUMBER_FORMAT_INTS_ONLY? 4: 8;
 		D.dumpHeader();
 		D.dumpFunction(f);
 		return D.status;

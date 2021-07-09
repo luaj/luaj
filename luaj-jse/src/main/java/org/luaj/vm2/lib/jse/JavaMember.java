@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@ import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
  * <p>
  * This class is not used directly. It is an abstract base class for
  * {@link JavaConstructor} and {@link JavaMethod}.
- * 
+ *
  * @see JavaConstructor
  * @see JavaMethod
  * @see CoerceJavaToLua
@@ -47,7 +47,7 @@ abstract class JavaMember extends VarArgFunction {
 	final Coercion   varargs;
 
 	protected JavaMember(Class[] params, int modifiers) {
-		boolean isvarargs = ((modifiers & METHOD_MODIFIERS_VARARGS) != 0);
+		boolean isvarargs = (modifiers & METHOD_MODIFIERS_VARARGS) != 0;
 		fixedargs = new CoerceLuaToJava.Coercion[isvarargs? params.length-1: params.length];
 		for (int i = 0; i < fixedargs.length; i++)
 			fixedargs[i] = CoerceLuaToJava.getCoercion(params[i]);

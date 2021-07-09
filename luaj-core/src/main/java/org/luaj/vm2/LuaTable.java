@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,7 +45,7 @@ import java.util.Vector;
  * </ul>
  * <p>
  * To iterate over key-value pairs from Java, use
- * 
+ *
  * <pre>
  *  {@code
  * LuaValue k = LuaValue.NIL;
@@ -57,7 +57,7 @@ import java.util.Vector;
  *    process( k, v )
  * }}
  * </pre>
- * 
+ *
  * <p>
  * As with other types, {@link LuaTable} instances should be constructed via one
  * of the table constructor methods on {@link LuaValue}:
@@ -73,7 +73,7 @@ import java.util.Vector;
  * <li>{@link LuaValue#tableOf(LuaValue[], LuaValue[], Varargs)} initialize
  * array and named parts</li>
  * </ul>
- * 
+ *
  * @see LuaValue
  */
 public class LuaTable extends LuaValue implements Metatable {
@@ -100,7 +100,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Construct table with preset capacity.
-	 * 
+	 *
 	 * @param narray capacity of array part
 	 * @param nhash  capacity of hash part
 	 */
@@ -110,16 +110,16 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Construct table with named and unnamed parts.
-	 * 
+	 *
 	 * @param named   Named elements in order
 	 *                {@code key-a, value-a, key-b, value-b, ... }
 	 * @param unnamed Unnamed elements in order {@code value-1, value-2, ... }
 	 * @param lastarg Additional unnamed values beyond {@code unnamed.length}
 	 */
 	public LuaTable(LuaValue[] named, LuaValue[] unnamed, Varargs lastarg) {
-		int nn = (named != null? named.length: 0);
-		int nu = (unnamed != null? unnamed.length: 0);
-		int nl = (lastarg != null? lastarg.narg(): 0);
+		int nn = named != null? named.length: 0;
+		int nu = unnamed != null? unnamed.length: 0;
+		int nl = lastarg != null? lastarg.narg(): 0;
 		presize(nu+nl, nn>>1);
 		for (int i = 0; i < nu; i++)
 			rawset(i+1, unnamed[i]);
@@ -133,7 +133,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Construct table of unnamed elements.
-	 * 
+	 *
 	 * @param varargs Unnamed elements in order {@code value-1, value-2, ... }
 	 */
 	public LuaTable(Varargs varargs) {
@@ -142,7 +142,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Construct table of unnamed elements.
-	 * 
+	 *
 	 * @param varargs  Unnamed elements in order {@code value-1, value-2, ... }
 	 * @param firstarg the index in varargs of the first argument to include in
 	 *                 the table
@@ -156,26 +156,32 @@ public class LuaTable extends LuaValue implements Metatable {
 			set(i, varargs.arg(i+nskip));
 	}
 
+	@Override
 	public int type() {
 		return LuaValue.TTABLE;
 	}
 
+	@Override
 	public String typename() {
 		return "table";
 	}
 
+	@Override
 	public boolean istable() {
 		return true;
 	}
 
+	@Override
 	public LuaTable checktable() {
 		return this;
 	}
 
+	@Override
 	public LuaTable opttable(LuaTable defval) {
 		return this;
 	}
 
+	@Override
 	public void presize(int narray) {
 		if (narray > array.length)
 			array = resize(array, 1<<log2(narray));
@@ -185,8 +191,8 @@ public class LuaTable extends LuaValue implements Metatable {
 		if (nhash > 0 && nhash < MIN_HASH_CAPACITY)
 			nhash = MIN_HASH_CAPACITY;
 		// Size of both parts must be a power of two.
-		array = (narray > 0? new LuaValue[1<<log2(narray)]: NOVALS);
-		hash = (nhash > 0? new Slot[1<<log2(nhash)]: NOBUCKETS);
+		array = narray > 0? new LuaValue[1<<log2(narray)]: NOVALS;
+		hash = nhash > 0? new Slot[1<<log2(nhash)]: NOBUCKETS;
 		hashEntries = 0;
 	}
 
@@ -199,7 +205,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Get the length of the array part of the table.
-	 * 
+	 *
 	 * @return length of the array part, does not relate to count of objects in
 	 *         the table.
 	 */
@@ -207,38 +213,43 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Get the length of the hash part of the table.
-	 * 
+	 *
 	 * @return length of the hash part, does not relate to count of objects in
 	 *         the table.
 	 */
 	protected int getHashLength() { return hash.length; }
 
+	@Override
 	public LuaValue getmetatable() {
-		return (m_metatable != null)? m_metatable.toLuaValue(): null;
+		return m_metatable != null? m_metatable.toLuaValue(): null;
 	}
 
+	@Override
 	public LuaValue setmetatable(LuaValue metatable) {
 		boolean hadWeakKeys = m_metatable != null && m_metatable.useWeakKeys();
 		boolean hadWeakValues = m_metatable != null && m_metatable.useWeakValues();
 		m_metatable = metatableOf(metatable);
-		if ((hadWeakKeys != (m_metatable != null && m_metatable.useWeakKeys()))
-			|| (hadWeakValues != (m_metatable != null && m_metatable.useWeakValues()))) {
+		if (hadWeakKeys != (m_metatable != null && m_metatable.useWeakKeys())
+			|| hadWeakValues != (m_metatable != null && m_metatable.useWeakValues())) {
 			// force a rehash
 			rehash(0);
 		}
 		return this;
 	}
 
+	@Override
 	public LuaValue get(int key) {
 		LuaValue v = rawget(key);
 		return v.isnil() && m_metatable != null? gettable(this, valueOf(key)): v;
 	}
 
+	@Override
 	public LuaValue get(LuaValue key) {
 		LuaValue v = rawget(key);
 		return v.isnil() && m_metatable != null? gettable(this, key): v;
 	}
 
+	@Override
 	public LuaValue rawget(int key) {
 		if (key > 0 && key <= array.length) {
 			LuaValue v = m_metatable == null? array[key-1]: m_metatable.arrayget(array, key-1);
@@ -247,6 +258,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		return hashget(LuaInteger.valueOf(key));
 	}
 
+	@Override
 	public LuaValue rawget(LuaValue key) {
 		if (key.isinttype()) {
 			int ikey = key.toint();
@@ -270,12 +282,14 @@ public class LuaTable extends LuaValue implements Metatable {
 		return NIL;
 	}
 
+	@Override
 	public void set(int key, LuaValue value) {
 		if (m_metatable == null || !rawget(key).isnil() || !settable(this, LuaInteger.valueOf(key), value))
 			rawset(key, value);
 	}
 
 	/** caller must ensure key is not nil */
+	@Override
 	public void set(LuaValue key, LuaValue value) {
 		if (key == null || !key.isvalidkey() && !metatag(NEWINDEX).isfunction())
 			throw new LuaError("value ('" + key + "') can not be used as a table index");
@@ -283,12 +297,14 @@ public class LuaTable extends LuaValue implements Metatable {
 			rawset(key, value);
 	}
 
+	@Override
 	public void rawset(int key, LuaValue value) {
 		if (!arrayset(key, value))
 			hashset(LuaInteger.valueOf(key), value);
 	}
 
 	/** caller must ensure key is not nil */
+	@Override
 	public void rawset(LuaValue key, LuaValue value) {
 		if (!key.isinttype() || !arrayset(key.toint(), value))
 			hashset(key, value);
@@ -297,7 +313,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	/** Set an array element */
 	private boolean arrayset(int key, LuaValue value) {
 		if (key > 0 && key <= array.length) {
-			array[key-1] = value.isnil()? null: (m_metatable != null? m_metatable.wrap(value): value);
+			array[key-1] = value.isnil()? null: m_metatable != null? m_metatable.wrap(value): value;
 			return true;
 		}
 		return false;
@@ -305,7 +321,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Remove the element at a position in a list-table
-	 * 
+	 *
 	 * @param pos the position to remove
 	 * @return The removed item, or {@link #NONE} if not removed
 	 */
@@ -325,7 +341,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Insert an element at a position in a list-table
-	 * 
+	 *
 	 * @param pos   the position to remove
 	 * @param value The value to insert
 	 */
@@ -341,7 +357,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Concatenate the contents of a table efficiently, using {@link Buffer}
-	 * 
+	 *
 	 * @param sep {@link LuaString} separater to apply between elements
 	 * @param i   the first element index
 	 * @param j   the last element index, inclusive
@@ -359,6 +375,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		return sb.tostring();
 	}
 
+	@Override
 	public int length() {
 		if (m_metatable != null) {
 			LuaValue len = len();
@@ -369,6 +386,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		return rawlen();
 	}
 
+	@Override
 	public LuaValue len() {
 		final LuaValue h = metatag(LEN);
 		if (h.toboolean())
@@ -376,6 +394,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		return LuaInteger.valueOf(rawlen());
 	}
 
+	@Override
 	public int rawlen() {
 		int a = getArrayLength();
 		int n = a+1, m = 0;
@@ -395,9 +414,10 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Get the next element after a particular key in the table
-	 * 
+	 *
 	 * @return key,value or nil
 	 */
+	@Override
 	public Varargs next(LuaValue key) {
 		int i = 0;
 		do {
@@ -458,9 +478,10 @@ public class LuaTable extends LuaValue implements Metatable {
 	/**
 	 * Get the next element after a particular key in the contiguous array part
 	 * of a table
-	 * 
+	 *
 	 * @return key,value or none
 	 */
+	@Override
 	public Varargs inext(LuaValue key) {
 		int k = key.checkint()+1;
 		LuaValue v = rawget(k);
@@ -469,7 +490,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Set a hashtable value
-	 * 
+	 *
 	 * @param key   key to set
 	 * @param value value to set
 	 */
@@ -499,8 +520,8 @@ public class LuaTable extends LuaValue implements Metatable {
 				}
 				index = hashSlot(key);
 			}
-			Slot entry = (m_metatable != null)? m_metatable.entry(key, value): defaultEntry(key, value);
-			hash[index] = (hash[index] != null)? hash[index].add(entry): entry;
+			Slot entry = m_metatable != null? m_metatable.entry(key, value): defaultEntry(key, value);
+			hash[index] = hash[index] != null? hash[index].add(entry): entry;
 			++hashEntries;
 		}
 	}
@@ -515,7 +536,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Find the hashtable slot index to use.
-	 * 
+	 *
 	 * @param key      the key to look for
 	 * @param hashMask N-1 where N is the number of hash slots (must be power of
 	 *                 2)
@@ -536,7 +557,7 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Find the hashtable slot to use
-	 * 
+	 *
 	 * @param key key to look for
 	 * @return slot to use
 	 */
@@ -564,8 +585,8 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	private int countHashKeys() {
 		int keys = 0;
-		for (int i = 0; i < hash.length; ++i) {
-			for (Slot slot = hash[i]; slot != null; slot = slot.rest()) {
+		for (Slot element : hash) {
+			for (Slot slot = element; slot != null; slot = slot.rest()) {
 				if (slot.first() != null)
 					keys++;
 			}
@@ -710,7 +731,7 @@ public class LuaTable extends LuaValue implements Metatable {
 			if (total*2 < 1<<log) {
 				// Not enough integer keys.
 				break;
-			} else if (keys >= (1<<(log-1))) {
+			} else if (keys >= 1<<log-1) {
 				newArraySize = 1<<log;
 			}
 		}
@@ -741,14 +762,14 @@ public class LuaTable extends LuaValue implements Metatable {
 			newArray = array;
 		}
 
-		final int newHashSize = hashEntries-movingToArray+((newKey < 0 || newKey > newArraySize)? 1: 0); // Make room for the new entry
+		final int newHashSize = hashEntries-movingToArray+(newKey < 0 || newKey > newArraySize? 1: 0); // Make room for the new entry
 		final int oldCapacity = oldHash.length;
 		final int newCapacity;
 		final int newHashMask;
 
 		if (newHashSize > 0) {
 			// round up to next power of 2.
-			newCapacity = (newHashSize < MIN_HASH_CAPACITY)? MIN_HASH_CAPACITY: 1<<log2(newHashSize);
+			newCapacity = newHashSize < MIN_HASH_CAPACITY? MIN_HASH_CAPACITY: 1<<log2(newHashSize);
 			newHashMask = newCapacity-1;
 			newHash = new Slot[newCapacity];
 		} else {
@@ -785,7 +806,7 @@ public class LuaTable extends LuaValue implements Metatable {
 				} else {
 					newEntry = defaultEntry(valueOf(i), v);
 				}
-				newHash[slot] = (newHash[slot] != null)? newHash[slot].add(newEntry): newEntry;
+				newHash[slot] = newHash[slot] != null? newHash[slot].add(newEntry): newEntry;
 			}
 		}
 
@@ -794,6 +815,7 @@ public class LuaTable extends LuaValue implements Metatable {
 		hashEntries -= movingToArray;
 	}
 
+	@Override
 	public Slot entry(LuaValue key, LuaValue value) {
 		return defaultEntry(key, value);
 	}
@@ -828,11 +850,11 @@ public class LuaTable extends LuaValue implements Metatable {
 	//
 	/**
 	 * Sort the table using a comparator.
-	 * 
+	 *
 	 * @param comparator {@link LuaValue} to be called to compare elements.
 	 */
 	public void sort(LuaValue comparator) {
-		if (len().tolong() >= (long) Integer.MAX_VALUE)
+		if (len().tolong() >= Integer.MAX_VALUE)
 			throw new LuaError("array too big: " + len().tolong());
 		if (m_metatable != null && m_metatable.useWeakValues()) {
 			dropWeakArrayValues();
@@ -886,7 +908,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	/**
 	 * This may be deprecated in a future release. It is recommended to count
 	 * via iteration over next() instead
-	 * 
+	 *
 	 * @return count of keys in the table
 	 */
 	public int keyCount() {
@@ -901,7 +923,7 @@ public class LuaTable extends LuaValue implements Metatable {
 	/**
 	 * This may be deprecated in a future release. It is recommended to use
 	 * next() instead
-	 * 
+	 *
 	 * @return array of keys in the table
 	 */
 	public LuaValue[] keys() {
@@ -919,8 +941,10 @@ public class LuaTable extends LuaValue implements Metatable {
 	}
 
 	// equality w/ metatable processing
+	@Override
 	public LuaValue eq(LuaValue val) { return eq_b(val)? TRUE: FALSE; }
 
+	@Override
 	public boolean eq_b(LuaValue val) {
 		if (this == val)
 			return true;
@@ -1049,42 +1073,52 @@ public class LuaTable extends LuaValue implements Metatable {
 			this.next = next;
 		}
 
+		@Override
 		public LuaValue key() {
 			return entry.key();
 		}
 
+		@Override
 		public int keyindex(int hashMask) {
 			return entry.keyindex(hashMask);
 		}
 
+		@Override
 		public LuaValue value() {
 			return entry.value();
 		}
 
+		@Override
 		public Varargs toVarargs() {
 			return entry.toVarargs();
 		}
 
+		@Override
 		public StrongSlot first() {
 			return entry;
 		}
 
+		@Override
 		public StrongSlot find(LuaValue key) {
 			return entry.keyeq(key)? this: null;
 		}
 
+		@Override
 		public boolean keyeq(LuaValue key) {
 			return entry.keyeq(key);
 		}
 
+		@Override
 		public Slot rest() {
 			return next;
 		}
 
+		@Override
 		public int arraykey(int max) {
 			return entry.arraykey(max);
 		}
 
+		@Override
 		public Slot set(StrongSlot target, LuaValue value) {
 			if (target == this) {
 				entry = entry.set(value);
@@ -1094,10 +1128,12 @@ public class LuaTable extends LuaValue implements Metatable {
 			}
 		}
 
+		@Override
 		public Slot add(Slot entry) {
 			return setnext(next.add(entry));
 		}
 
+		@Override
 		public Slot remove(StrongSlot target) {
 			if (this == target) {
 				return new DeadSlot(key(), next);
@@ -1107,9 +1143,10 @@ public class LuaTable extends LuaValue implements Metatable {
 			return this;
 		}
 
+		@Override
 		public Slot relink(Slot rest) {
 			// This method is (only) called during rehash, so it must not change this.next.
-			return (rest != null)? new LinkSlot(entry, rest): (Slot) entry;
+			return rest != null? new LinkSlot(entry, rest): (Slot) entry;
 		}
 
 		// this method ensures that this.next is never set to null.
@@ -1122,6 +1159,7 @@ public class LuaTable extends LuaValue implements Metatable {
 			}
 		}
 
+		@Override
 		public String toString() {
 			return entry + "; " + next;
 		}
@@ -1129,26 +1167,32 @@ public class LuaTable extends LuaValue implements Metatable {
 
 	/**
 	 * Base class for regular entries.
-	 * 
+	 *
 	 * <p>
 	 * If the key may be an integer, the {@link #arraykey(int)} method must be
 	 * overridden to handle that case.
 	 */
 	static abstract class Entry extends Varargs implements StrongSlot {
+		@Override
 		public abstract LuaValue key();
 
+		@Override
 		public abstract LuaValue value();
 
 		abstract Entry set(LuaValue value);
 
+		@Override
 		public abstract boolean keyeq(LuaValue key);
 
+		@Override
 		public abstract int keyindex(int hashMask);
 
+		@Override
 		public int arraykey(int max) {
 			return 0;
 		}
 
+		@Override
 		public LuaValue arg(int i) {
 			switch (i) {
 			case 1:
@@ -1159,6 +1203,7 @@ public class LuaTable extends LuaValue implements Metatable {
 			return NIL;
 		}
 
+		@Override
 		public int narg() {
 			return 2;
 		}
@@ -1166,14 +1211,17 @@ public class LuaTable extends LuaValue implements Metatable {
 		/**
 		 * Subclasses should redefine as "return this;" whenever possible.
 		 */
+		@Override
 		public Varargs toVarargs() {
 			return varargsOf(key(), value());
 		}
 
+		@Override
 		public LuaValue arg1() {
 			return key();
 		}
 
+		@Override
 		public Varargs subargs(int start) {
 			switch (start) {
 			case 1:
@@ -1184,32 +1232,39 @@ public class LuaTable extends LuaValue implements Metatable {
 			return NONE;
 		}
 
+		@Override
 		public StrongSlot first() {
 			return this;
 		}
 
+		@Override
 		public Slot rest() {
 			return null;
 		}
 
+		@Override
 		public StrongSlot find(LuaValue key) {
 			return keyeq(key)? this: null;
 		}
 
+		@Override
 		public Slot set(StrongSlot target, LuaValue value) {
 			return set(value);
 		}
 
+		@Override
 		public Slot add(Slot entry) {
 			return new LinkSlot(this, entry);
 		}
 
+		@Override
 		public Slot remove(StrongSlot target) {
 			return new DeadSlot(key(), null);
 		}
 
+		@Override
 		public Slot relink(Slot rest) {
-			return (rest != null)? new LinkSlot(this, rest): (Slot) this;
+			return rest != null? new LinkSlot(this, rest): (Slot) this;
 		}
 	}
 
@@ -1222,27 +1277,33 @@ public class LuaTable extends LuaValue implements Metatable {
 			this.value = value;
 		}
 
+		@Override
 		public LuaValue key() {
 			return key;
 		}
 
+		@Override
 		public LuaValue value() {
 			return value;
 		}
 
+		@Override
 		public Entry set(LuaValue value) {
 			this.value = value;
 			return this;
 		}
 
+		@Override
 		public Varargs toVarargs() {
 			return this;
 		}
 
+		@Override
 		public int keyindex(int hashMask) {
 			return hashSlot(key, hashMask);
 		}
 
+		@Override
 		public boolean keyeq(LuaValue key) {
 			return key.raweq(this.key);
 		}
@@ -1257,27 +1318,33 @@ public class LuaTable extends LuaValue implements Metatable {
 			this.value = value;
 		}
 
+		@Override
 		public LuaValue key() {
 			return valueOf(key);
 		}
 
+		@Override
 		public int arraykey(int max) {
-			return (key >= 1 && key <= max)? key: 0;
+			return key >= 1 && key <= max? key: 0;
 		}
 
+		@Override
 		public LuaValue value() {
 			return value;
 		}
 
+		@Override
 		public Entry set(LuaValue value) {
 			this.value = value;
 			return this;
 		}
 
+		@Override
 		public int keyindex(int mask) {
 			return hashmod(LuaInteger.hashCode(key), mask);
 		}
 
+		@Override
 		public boolean keyeq(LuaValue key) {
 			return key.raweq(this.key);
 		}
@@ -1296,14 +1363,17 @@ public class LuaTable extends LuaValue implements Metatable {
 			this.value = value;
 		}
 
+		@Override
 		public LuaValue key() {
 			return key;
 		}
 
+		@Override
 		public LuaValue value() {
 			return valueOf(value);
 		}
 
+		@Override
 		public Entry set(LuaValue value) {
 			if (value.type() == TNUMBER) {
 				LuaValue n = value.tonumber();
@@ -1315,10 +1385,12 @@ public class LuaTable extends LuaValue implements Metatable {
 			return new NormalEntry(this.key, value);
 		}
 
+		@Override
 		public int keyindex(int mask) {
 			return hashSlot(key, mask);
 		}
 
+		@Override
 		public boolean keyeq(LuaValue key) {
 			return key.raweq(this.key);
 		}
@@ -1342,34 +1414,41 @@ public class LuaTable extends LuaValue implements Metatable {
 			return (LuaValue) (key instanceof WeakReference? ((WeakReference) key).get(): key);
 		}
 
+		@Override
 		public int keyindex(int hashMask) {
 			// Not needed: this entry will be dropped during rehash.
 			return 0;
 		}
 
+		@Override
 		public StrongSlot first() {
 			return null;
 		}
 
+		@Override
 		public StrongSlot find(LuaValue key) {
 			return null;
 		}
 
+		@Override
 		public boolean keyeq(LuaValue key) {
 			LuaValue k = key();
 			return k != null && key.raweq(k);
 		}
 
+		@Override
 		public Slot rest() {
 			return next;
 		}
 
+		@Override
 		public int arraykey(int max) {
 			return -1;
 		}
 
+		@Override
 		public Slot set(StrongSlot target, LuaValue value) {
-			Slot next = (this.next != null)? this.next.set(target, value): null;
+			Slot next = this.next != null? this.next.set(target, value): null;
 			if (key() != null) {
 				// if key hasn't been garbage collected, it is still potentially a valid argument
 				// to next(), so we can't drop this entry yet.
@@ -1380,10 +1459,12 @@ public class LuaTable extends LuaValue implements Metatable {
 			}
 		}
 
+		@Override
 		public Slot add(Slot newEntry) {
-			return (next != null)? next.add(newEntry): newEntry;
+			return next != null? next.add(newEntry): newEntry;
 		}
 
+		@Override
 		public Slot remove(StrongSlot target) {
 			if (key() != null) {
 				next = next.remove(target);
@@ -1393,10 +1474,12 @@ public class LuaTable extends LuaValue implements Metatable {
 			}
 		}
 
+		@Override
 		public Slot relink(Slot rest) {
 			return rest;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buf = new StringBuffer();
 			buf.append("<dead");
@@ -1412,28 +1495,33 @@ public class LuaTable extends LuaValue implements Metatable {
 			}
 			return buf.toString();
 		}
-	};
+	}
 
 	private static final Slot[] NOBUCKETS = {};
 
 	// Metatable operations
 
+	@Override
 	public boolean useWeakKeys() {
 		return false;
 	}
 
+	@Override
 	public boolean useWeakValues() {
 		return false;
 	}
 
+	@Override
 	public LuaValue toLuaValue() {
 		return this;
 	}
 
+	@Override
 	public LuaValue wrap(LuaValue value) {
 		return value;
 	}
 
+	@Override
 	public LuaValue arrayget(LuaValue[] array, int index) {
 		return array[index];
 	}

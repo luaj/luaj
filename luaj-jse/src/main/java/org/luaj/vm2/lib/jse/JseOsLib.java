@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,7 +49,7 @@ import org.luaj.vm2.lib.OsLib;
  * <p>
  * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -61,7 +61,7 @@ import org.luaj.vm2.lib.OsLib;
  * For special cases where the smallest possible footprint is desired, a minimal
  * set of libraries could be loaded directly via {@link Globals#load(LuaValue)}
  * using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -76,7 +76,7 @@ import org.luaj.vm2.lib.OsLib;
  * However, other libraries such as <em>MathLib</em> are not loaded in this
  * case.
  * <p>
- * 
+ *
  * @see LibFunction
  * @see OsLib
  * @see org.luaj.vm2.lib.jse.JsePlatform
@@ -99,11 +99,13 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 	public JseOsLib() {
 	}
 
+	@Override
 	protected String getenv(String varname) {
 		String s = System.getenv(varname);
 		return s != null? s: System.getProperty(varname);
 	}
 
+	@Override
 	protected Varargs execute(String command) {
 		int exitValue;
 		try {
@@ -120,6 +122,7 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 		return varargsOf(NIL, valueOf("signal"), valueOf(exitValue));
 	}
 
+	@Override
 	protected void remove(String filename) throws IOException {
 		File f = new File(filename);
 		if (!f.exists())
@@ -128,6 +131,7 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 			throw new IOException("Failed to delete");
 	}
 
+	@Override
 	protected void rename(String oldname, String newname) throws IOException {
 		File f = new File(oldname);
 		if (!f.exists())
@@ -136,6 +140,7 @@ public class JseOsLib extends org.luaj.vm2.lib.OsLib {
 			throw new IOException("Failed to rename");
 	}
 
+	@Override
 	protected String tmpname() {
 		try {
 			java.io.File f = java.io.File.createTempFile(TMP_PREFIX, TMP_SUFFIX);

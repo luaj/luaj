@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,7 +52,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#debugGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#debugGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -63,7 +63,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -78,7 +78,7 @@ import org.luaj.vm2.Varargs;
  * This library exposes the entire state of lua code, and provides method to see
  * and modify all underlying lua values within a Java VM so should not be
  * exposed to client code in a shared server environment.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -90,11 +90,11 @@ public class DebugLib extends TwoArgFunction {
 	public static boolean TRACE;
 	static {
 		try {
-			CALLS = (null != System.getProperty("CALLS"));
+			CALLS = null != System.getProperty("CALLS");
 		} catch (Exception e) {
 		}
 		try {
-			TRACE = (null != System.getProperty("TRACE"));
+			TRACE = null != System.getProperty("TRACE");
 		} catch (Exception e) {
 		}
 	}
@@ -128,11 +128,12 @@ public class DebugLib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		globals.debuglib = this;
@@ -161,6 +162,7 @@ public class DebugLib extends TwoArgFunction {
 
 	// debug.debug()
 	static final class debug extends ZeroArgFunction {
+		@Override
 		public LuaValue call() {
 			return NONE;
 		}
@@ -168,6 +170,7 @@ public class DebugLib extends TwoArgFunction {
 
 	// debug.gethook ([thread])
 	final class gethook extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaThread t = args.narg() > 0? args.checkthread(1): globals.running;
 			LuaThread.State s = t.state;
@@ -178,6 +181,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getinfo ([thread,] f [, what])
 	final class getinfo extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
@@ -241,6 +245,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getlocal ([thread,] f, local)
 	final class getlocal extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
@@ -253,6 +258,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getmetatable (value)
 	static final class getmetatable extends LibFunction {
+		@Override
 		public LuaValue call(LuaValue v) {
 			LuaValue mt = v.getmetatable();
 			return mt != null? mt: NIL;
@@ -261,6 +267,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getregistry ()
 	final class getregistry extends ZeroArgFunction {
+		@Override
 		public LuaValue call() {
 			return globals;
 		}
@@ -268,6 +275,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getupvalue (f, up)
 	static final class getupvalue extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -284,6 +292,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.getuservalue (u)
 	static final class getuservalue extends LibFunction {
+		@Override
 		public LuaValue call(LuaValue u) {
 			return u.isuserdata()? u: NIL;
 		}
@@ -291,6 +300,7 @@ public class DebugLib extends TwoArgFunction {
 
 	// debug.sethook ([thread,] hook, mask [, count])
 	final class sethook extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread t = args.isthread(a)? args.checkthread(a++): globals.running;
@@ -322,6 +332,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.setlocal ([thread,] level, local, value)
 	final class setlocal extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
@@ -335,6 +346,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.setmetatable (value, table)
 	static final class setmetatable extends TwoArgFunction {
+		@Override
 		public LuaValue call(LuaValue value, LuaValue table) {
 			LuaValue mt = table.opttable(null);
 			switch (value.type()) {
@@ -365,6 +377,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.setupvalue (f, up, value)
 	static final class setupvalue extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -383,6 +396,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.setuservalue (udata, value)
 	static final class setuservalue extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			Object o = args.checkuserdata(1);
 			LuaValue v = args.checkvalue(2);
@@ -395,6 +409,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.traceback ([thread,] [message [, level]])
 	final class traceback extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
@@ -407,6 +422,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.upvalueid (f, n)
 	static final class upvalueid extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaValue func = args.checkfunction(1);
 			int up = args.checkint(2);
@@ -422,6 +438,7 @@ public class DebugLib extends TwoArgFunction {
 
 	//	debug.upvaluejoin (f1, n1, f2, n2)
 	static final class upvaluejoin extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			LuaClosure f1 = args.checkclosure(1);
 			int n1 = args.checkint(2);
@@ -536,7 +553,7 @@ public class DebugLib extends TwoArgFunction {
 				this.source = p.source != null? p.source.tojstring(): "=?";
 				this.linedefined = p.linedefined;
 				this.lastlinedefined = p.lastlinedefined;
-				this.what = (this.linedefined == 0)? "main": "Lua";
+				this.what = this.linedefined == 0? "main": "Lua";
 				this.short_src = p.shortsource();
 			} else {
 				this.source = "=[Java]";
@@ -593,7 +610,7 @@ public class DebugLib extends TwoArgFunction {
 
 		/**
 		 * Get the traceback starting at a specific level.
-		 * 
+		 *
 		 * @param level
 		 * @return String containing the traceback.
 		 */
@@ -886,9 +903,9 @@ public class DebugLib extends TwoArgFunction {
 			case Lua.OP_GETTABLE: {
 				int k = Lua.GETARG_C(i); /* key index */
 				int t = Lua.GETARG_B(i); /* table index */
-				LuaString vn = (Lua.GET_OPCODE(i) == Lua.OP_GETTABLE) /* name of indexed variable */
+				LuaString vn = Lua.GET_OPCODE(i) == Lua.OP_GETTABLE /* name of indexed variable */
 					? p.getlocalname(t+1, pc)
-					: (t < p.upvalues.length? p.upvalues[t].name: QMARK);
+					: t < p.upvalues.length? p.upvalues[t].name: QMARK;
 				String jname = kname(p, pc, k);
 				return new NameWhat(jname, vn != null && vn.eq_b(ENV)? "global": "field");
 			}
@@ -899,7 +916,7 @@ public class DebugLib extends TwoArgFunction {
 			}
 			case Lua.OP_LOADK:
 			case Lua.OP_LOADKX: {
-				int b = (Lua.GET_OPCODE(i) == Lua.OP_LOADK)? Lua.GETARG_Bx(i): Lua.GETARG_Ax(p.code[pc+1]);
+				int b = Lua.GET_OPCODE(i) == Lua.OP_LOADK? Lua.GETARG_Bx(i): Lua.GETARG_Ax(p.code[pc+1]);
 				if (p.k[b].isstring()) {
 					name = p.k[b].strvalue();
 					return new NameWhat(name.tojstring(), "constant");
@@ -976,7 +993,7 @@ public class DebugLib extends TwoArgFunction {
 				break;
 			}
 			case Lua.OP_SETLIST: { // Lua.testAMode(Lua.OP_SETLIST) == false
-				if (((i>>14) & 0x1ff) == 0)
+				if ((i>>14 & 0x1ff) == 0)
 					pc++; // if c == 0 then c stored in next op -> skip
 				break;
 			}

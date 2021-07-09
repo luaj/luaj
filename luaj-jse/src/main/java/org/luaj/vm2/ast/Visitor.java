@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,14 +28,14 @@ import org.luaj.vm2.ast.Exp.VarExp;
 abstract public class Visitor {
 	public void visit(Chunk chunk) {
 		chunk.block.accept(this);
-	};
+	}
 
 	public void visit(Block block) {
 		visit(block.scope);
 		if (block.stats != null)
-			for (int i = 0, n = block.stats.size(); i < n; i++)
-				((Stat) block.stats.get(i)).accept(this);
-	};
+			for (Stat element : block.stats)
+				element.accept(this);
+	}
 
 	public void visit(Stat.Assign stat) {
 		visitVars(stat.vars);
@@ -65,8 +65,8 @@ abstract public class Visitor {
 		stat.ifblock.accept(this);
 		if (stat.elseifblocks != null)
 			for (int i = 0, n = stat.elseifblocks.size(); i < n; i++) {
-				((Exp) stat.elseifexps.get(i)).accept(this);
-				((Block) stat.elseifblocks.get(i)).accept(this);
+				stat.elseifexps.get(i).accept(this);
+				stat.elseifblocks.get(i).accept(this);
 			}
 		if (stat.elseblock != null)
 			visit(stat.elseblock);
@@ -178,26 +178,26 @@ abstract public class Visitor {
 
 	public void visit(TableConstructor table) {
 		if (table.fields != null)
-			for (int i = 0, n = table.fields.size(); i < n; i++)
-				((TableField) table.fields.get(i)).accept(this);
+			for (TableField element : table.fields)
+				element.accept(this);
 	}
 
 	public void visitVars(List<VarExp> vars) {
 		if (vars != null)
-			for (int i = 0, n = vars.size(); i < n; i++)
-				((Exp.VarExp) vars.get(i)).accept(this);
+			for (VarExp var : vars)
+				var.accept(this);
 	}
 
 	public void visitExps(List<Exp> exps) {
 		if (exps != null)
-			for (int i = 0, n = exps.size(); i < n; i++)
-				((Exp) exps.get(i)).accept(this);
+			for (Exp exp : exps)
+				exp.accept(this);
 	}
 
 	public void visitNames(List<Name> names) {
 		if (names != null)
-			for (int i = 0, n = names.size(); i < n; i++)
-				visit((Name) names.get(i));
+			for (Name name : names)
+				visit(name);
 	}
 
 	public void visit(Name name) {

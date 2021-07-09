@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,7 +44,7 @@ import org.luaj.vm2.compiler.LuaC;
  * <p>
  * To override the default compiling behavior with {@link LuaJC} lua-to-java
  * bytecode compiler, install it before undumping code, for example:
- * 
+ *
  * <pre>
  *  {@code
  * LuaValue globals = JsePlatform.standardGlobals();
@@ -58,7 +58,7 @@ import org.luaj.vm2.compiler.LuaC;
  * This requires the bcel library to be on the class path to work as expected.
  * If the library is not found, the default {@link LuaC} lua-to-lua-bytecode
  * compiler will be used.
- * 
+ *
  * @see Globals#compiler
  * @see #install(Globals)
  * @see org.luaj.vm2.compiler.LuaC
@@ -107,6 +107,7 @@ public class LuaJC implements Globals.Loader {
 			insert(h, gen.inners[i]);
 	}
 
+	@Override
 	public LuaFunction load(Prototype p, String name, LuaValue globals) throws IOException {
 		String luaname = toStandardLuaFileName(name);
 		String classname = toStandardJavaClassName(luaname);
@@ -120,8 +121,7 @@ public class LuaJC implements Globals.Loader {
 		for (int i = 0, n = stub.length(); i < n; ++i) {
 			final char c = stub.charAt(i);
 			classname.append(
-				(((i == 0) && Character.isJavaIdentifierStart(c)) || ((i > 0) && Character.isJavaIdentifierPart(c)))? c
-					: '_');
+				i == 0 && Character.isJavaIdentifierStart(c) || i > 0 && Character.isJavaIdentifierPart(c)? c: '_');
 		}
 		return classname.toString();
 	}
@@ -133,7 +133,6 @@ public class LuaJC implements Globals.Loader {
 	}
 
 	private static String toStub(String s) {
-		String stub = s.endsWith(".lua")? s.substring(0, s.length()-4): s;
-		return stub;
+		return s.endsWith(".lua")? s.substring(0, s.length()-4): s;
 	}
 }

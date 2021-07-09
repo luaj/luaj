@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,16 +28,16 @@ import java.util.Set;
 
 public class NameScope {
 
-	private static final Set<String> LUA_KEYWORDS = new HashSet<String>();
+	private static final Set<String> LUA_KEYWORDS = new HashSet<>();
 
 	static {
-		String[] k = new String[] { "and", "break", "do", "else", "elseif", "end", "false", "for", "function", "if",
-				"in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while" };
-		for (int i = 0; i < k.length; i++)
-			LUA_KEYWORDS.add(k[i]);
+		String[] k = { "and", "break", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local",
+				"nil", "not", "or", "repeat", "return", "then", "true", "until", "while" };
+		for (String element : k)
+			LUA_KEYWORDS.add(element);
 	}
 
-	public final Map<String, Variable> namedVariables = new HashMap<String, Variable>();
+	public final Map<String, Variable> namedVariables = new HashMap<>();
 
 	public final NameScope outerScope;
 
@@ -63,7 +63,7 @@ public class NameScope {
 		validateIsNotKeyword(name);
 		for (NameScope n = this; n != null; n = n.outerScope)
 			if (n.namedVariables.containsKey(name))
-				return (Variable) n.namedVariables.get(name);
+				return n.namedVariables.get(name);
 		Variable value = new Variable(name);
 		this.namedVariables.put(name, value);
 		return value;

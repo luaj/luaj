@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -66,9 +66,7 @@ public class JavaGen {
 		Prototype p = pi.prototype;
 		int vresultbase = -1;
 
-		for (int bi = 0; bi < pi.blocklist.length; bi++) {
-			BasicBlock b0 = pi.blocklist[bi];
-
+		for (BasicBlock b0 : pi.blocklist) {
 			// convert upvalues that are phi-variables
 			for (int slot = 0; slot < p.maxstacksize; slot++) {
 				int pc = b0.pc0;
@@ -216,19 +214,19 @@ public class JavaGen {
 					loadLocalOrConstant(p, builder, pc, b);
 					loadLocalOrConstant(p, builder, pc, c);
 					builder.compareop(o);
-					builder.addBranch(pc, (a != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE), pc+2);
+					builder.addBranch(pc, a != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE, pc+2);
 					break;
 
 				case Lua.OP_TEST: /*	A C	if not (R(A) <=> C) then pc++			*/
 					builder.loadLocal(pc, a);
 					builder.toBoolean();
-					builder.addBranch(pc, (c != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE), pc+2);
+					builder.addBranch(pc, c != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE, pc+2);
 					break;
 
 				case Lua.OP_TESTSET: /*	A B C	if (R(B) <=> C) then R(A):= R(B) else pc++	*/
 					builder.loadLocal(pc, b);
 					builder.toBoolean();
-					builder.addBranch(pc, (c != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE), pc+2);
+					builder.addBranch(pc, c != 0? JavaBuilder.BRANCH_IFEQ: JavaBuilder.BRANCH_IFNE, pc+2);
 					builder.loadLocal(pc, b);
 					builder.storeLocal(pc, a);
 					break;

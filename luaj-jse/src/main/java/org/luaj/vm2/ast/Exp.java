@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -62,12 +62,12 @@ abstract public class Exp extends SyntaxElement {
 		// TODO: constant folding
 		if (lhs instanceof BinopExp) {
 			BinopExp b = (BinopExp) lhs;
-			if ((precedence(op) > precedence(b.op)) || ((precedence(op) == precedence(b.op)) && isrightassoc(op)))
+			if (precedence(op) > precedence(b.op) || precedence(op) == precedence(b.op) && isrightassoc(op))
 				return binaryexp(b.lhs, b.op, binaryexp(b.rhs, op, rhs));
 		}
 		if (rhs instanceof BinopExp) {
 			BinopExp b = (BinopExp) rhs;
-			if ((precedence(op) > precedence(b.op)) || ((precedence(op) == precedence(b.op)) && !isrightassoc(op)))
+			if (precedence(op) > precedence(b.op) || precedence(op) == precedence(b.op) && !isrightassoc(op))
 				return binaryexp(binaryexp(lhs, op, b.lhs), b.op, b.rhs);
 		}
 		return new BinopExp(lhs, op, rhs);
@@ -163,16 +163,19 @@ abstract public class Exp extends SyntaxElement {
 	}
 
 	abstract public static class PrimaryExp extends Exp {
+		@Override
 		public boolean isvarexp() {
 			return false;
 		}
 
+		@Override
 		public boolean isfunccall() {
 			return false;
 		}
 	}
 
 	abstract public static class VarExp extends PrimaryExp {
+		@Override
 		public boolean isvarexp() {
 			return true;
 		}
@@ -188,10 +191,12 @@ abstract public class Exp extends SyntaxElement {
 			this.name = new Name(name);
 		}
 
+		@Override
 		public void markHasAssignment() {
 			name.variable.hasassignments = true;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -204,6 +209,7 @@ abstract public class Exp extends SyntaxElement {
 			this.exp = exp;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -218,6 +224,7 @@ abstract public class Exp extends SyntaxElement {
 			this.name = new Name(name);
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -232,6 +239,7 @@ abstract public class Exp extends SyntaxElement {
 			this.exp = exp;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -246,14 +254,17 @@ abstract public class Exp extends SyntaxElement {
 			this.args = args;
 		}
 
+		@Override
 		public boolean isfunccall() {
 			return true;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
 
+		@Override
 		public boolean isvarargexp() {
 			return true;
 		}
@@ -267,10 +278,12 @@ abstract public class Exp extends SyntaxElement {
 			this.name = new String(name);
 		}
 
+		@Override
 		public boolean isfunccall() {
 			return true;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -283,6 +296,7 @@ abstract public class Exp extends SyntaxElement {
 			this.value = value;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -290,10 +304,12 @@ abstract public class Exp extends SyntaxElement {
 
 	public static class VarargsExp extends Exp {
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
 
+		@Override
 		public boolean isvarargexp() {
 			return true;
 		}
@@ -308,6 +324,7 @@ abstract public class Exp extends SyntaxElement {
 			this.rhs = rhs;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -323,6 +340,7 @@ abstract public class Exp extends SyntaxElement {
 			this.rhs = rhs;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}
@@ -335,6 +353,7 @@ abstract public class Exp extends SyntaxElement {
 			this.body = funcbody;
 		}
 
+		@Override
 		public void accept(Visitor visitor) {
 			visitor.visit(this);
 		}

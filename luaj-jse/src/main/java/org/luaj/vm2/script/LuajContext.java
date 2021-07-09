@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -71,7 +71,7 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 	 * If createDebugGlobals is set, the globals created will be a debug globals
 	 * that includes the debug library. This may provide better stack traces,
 	 * but may have negative impact on performance.
-	 * 
+	 *
 	 * @param createDebugGlobals true to create debug globals, false for
 	 *                           standard globals.
 	 * @param useLuaJCCompiler   true to use the luajc compiler, reqwuires bcel
@@ -106,22 +106,27 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 			this.w = w;
 		}
 
+		@Override
 		public void write(int b) throws IOException {
 			w.write(new String(new byte[] { (byte) b }));
 		}
 
+		@Override
 		public void write(byte[] b, int o, int l) throws IOException {
 			w.write(new String(b, o, l));
 		}
 
+		@Override
 		public void write(byte[] b) throws IOException {
 			w.write(new String(b));
 		}
 
+		@Override
 		public void close() throws IOException {
 			w.close();
 		}
 
+		@Override
 		public void flush() throws IOException {
 			w.flush();
 		}
@@ -134,6 +139,7 @@ public class LuajContext extends SimpleScriptContext implements ScriptContext {
 			this.r = r;
 		}
 
+		@Override
 		public int read() throws IOException {
 			return r.read();
 		}

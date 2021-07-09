@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@ package org.luaj.vm2;
  * <p>
  * To convert back to a {@link LuaValue} again, the function
  * {@link Buffer#value()} is used.
- * 
+ *
  * @see LuaValue
  * @see LuaValue#buffer()
  * @see LuaString
@@ -57,7 +57,7 @@ public final class Buffer {
 
 	/**
 	 * Create buffer with default capacity
-	 * 
+	 *
 	 * @see #DEFAULT_CAPACITY
 	 */
 	public Buffer() {
@@ -66,7 +66,7 @@ public final class Buffer {
 
 	/**
 	 * Create buffer with specified initial capacity
-	 * 
+	 *
 	 * @param initialCapacity the initial capacity
 	 */
 	public Buffer(int initialCapacity) {
@@ -78,7 +78,7 @@ public final class Buffer {
 
 	/**
 	 * Create buffer with specified initial value
-	 * 
+	 *
 	 * @param value the initial value
 	 */
 	public Buffer(LuaValue value) {
@@ -89,7 +89,7 @@ public final class Buffer {
 
 	/**
 	 * Get buffer contents as a {@link LuaValue}
-	 * 
+	 *
 	 * @return value as a {@link LuaValue}, converting as necessary
 	 */
 	public LuaValue value() {
@@ -98,7 +98,7 @@ public final class Buffer {
 
 	/**
 	 * Set buffer contents as a {@link LuaValue}
-	 * 
+	 *
 	 * @param value value to set
 	 */
 	public Buffer setvalue(LuaValue value) {
@@ -110,17 +110,17 @@ public final class Buffer {
 
 	/**
 	 * Convert the buffer to a {@link LuaString}
-	 * 
+	 *
 	 * @return the value as a {@link LuaString}
 	 */
-	public final LuaString tostring() {
+	public LuaString tostring() {
 		realloc(length, 0);
 		return LuaString.valueOf(bytes, offset, length);
 	}
 
 	/**
 	 * Convert the buffer to a Java String
-	 * 
+	 *
 	 * @return the value as a Java String
 	 */
 	public String tojstring() {
@@ -129,19 +129,20 @@ public final class Buffer {
 
 	/**
 	 * Convert the buffer to a Java String
-	 * 
+	 *
 	 * @return the value as a Java String
 	 */
+	@Override
 	public String toString() {
 		return tojstring();
 	}
 
 	/**
 	 * Append a single byte to the buffer.
-	 * 
+	 *
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(byte b) {
+	public Buffer append(byte b) {
 		makeroom(0, 1);
 		bytes[offset+length++] = b;
 		return this;
@@ -149,20 +150,20 @@ public final class Buffer {
 
 	/**
 	 * Append a {@link LuaValue} to the buffer.
-	 * 
+	 *
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(LuaValue val) {
+	public Buffer append(LuaValue val) {
 		append(val.strvalue());
 		return this;
 	}
 
 	/**
 	 * Append a {@link LuaString} to the buffer.
-	 * 
+	 *
 	 * @return {@code this} to allow call chaining
 	 */
-	public final Buffer append(LuaString str) {
+	public Buffer append(LuaString str) {
 		final int n = str.m_length;
 		makeroom(0, n);
 		str.copyInto(0, bytes, offset+length, n);
@@ -173,11 +174,11 @@ public final class Buffer {
 	/**
 	 * Append a Java String to the buffer. The Java string will be converted to
 	 * bytes using the UTF8 encoding.
-	 * 
+	 *
 	 * @return {@code this} to allow call chaining
 	 * @see LuaString#encodeToUtf8(char[], int, byte[], int)
 	 */
-	public final Buffer append(String str) {
+	public Buffer append(String str) {
 		char[] c = str.toCharArray();
 		final int n = LuaString.lengthAsUtf8(c);
 		makeroom(0, n);
@@ -188,7 +189,7 @@ public final class Buffer {
 
 	/**
 	 * Concatenate this buffer onto a {@link LuaValue}
-	 * 
+	 *
 	 * @param lhs the left-hand-side value onto which we are concatenating
 	 *            {@code this}
 	 * @return {@link Buffer} for use in call chaining.
@@ -199,7 +200,7 @@ public final class Buffer {
 
 	/**
 	 * Concatenate this buffer onto a {@link LuaString}
-	 * 
+	 *
 	 * @param lhs the left-hand-side value onto which we are concatenating
 	 *            {@code this}
 	 * @return {@link Buffer} for use in call chaining.
@@ -212,7 +213,7 @@ public final class Buffer {
 	 * Concatenate this buffer onto a {@link LuaNumber}
 	 * <p>
 	 * The {@link LuaNumber} will be converted to a string before concatenating.
-	 * 
+	 *
 	 * @param lhs the left-hand-side value onto which we are concatenating
 	 *            {@code this}
 	 * @return {@link Buffer} for use in call chaining.
@@ -223,7 +224,7 @@ public final class Buffer {
 
 	/**
 	 * Concatenate bytes from a {@link LuaString} onto the front of this buffer
-	 * 
+	 *
 	 * @param s the left-hand-side value which we will concatenate onto the
 	 *          front of {@code this}
 	 * @return {@link Buffer} for use in call chaining.
@@ -240,13 +241,13 @@ public final class Buffer {
 
 	/**
 	 * Ensure there is enough room before and after the bytes.
-	 * 
+	 *
 	 * @param nbefore number of unused bytes which must precede the data after
 	 *                this completes
 	 * @param nafter  number of unused bytes which must follow the data after
 	 *                this completes
 	 */
-	public final void makeroom(int nbefore, int nafter) {
+	public void makeroom(int nbefore, int nafter) {
 		if (value != null) {
 			LuaString s = value.strvalue();
 			value = null;
@@ -263,11 +264,11 @@ public final class Buffer {
 
 	/**
 	 * Reallocate the internal storage for the buffer
-	 * 
+	 *
 	 * @param newSize   the size of the buffer to use
 	 * @param newOffset the offset to use
 	 */
-	private final void realloc(int newSize, int newOffset) {
+	private void realloc(int newSize, int newOffset) {
 		if (newSize != bytes.length) {
 			byte[] newBytes = new byte[newSize];
 			System.arraycopy(bytes, offset, newBytes, newOffset, length);

@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
  * <p>
  * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -47,7 +47,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
  * For special cases where the smallest possible footprint is desired, a minimal
  * set of libraries could be loaded directly via {@link Globals#load(LuaValue)}
  * using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -64,7 +64,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -85,11 +85,12 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	 * Specifically, adds all library functions that can be implemented directly
 	 * in JSE but not JME: acos, asin, atan, atan2, cosh, exp, log, pow, sinh,
 	 * and tanh.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		super.call(modname, env);
 		LuaValue math = env.get("math");
@@ -108,28 +109,34 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	}
 
 	static final class acos extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.acos(d); }
 	}
 
 	static final class asin extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.asin(d); }
 	}
 
 	static final class atan2 extends TwoArgFunction {
+		@Override
 		public LuaValue call(LuaValue x, LuaValue y) {
 			return valueOf(Math.atan2(x.checkdouble(), y.optdouble(1)));
 		}
 	}
 
 	static final class cosh extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.cosh(d); }
 	}
 
 	static final class exp extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.exp(d); }
 	}
 
 	static final class log extends TwoArgFunction {
+		@Override
 		public LuaValue call(LuaValue x, LuaValue base) {
 			double nat = Math.log(x.checkdouble());
 			double b = base.optdouble(Math.E);
@@ -140,18 +147,22 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 	}
 
 	static final class pow extends BinaryOp {
+		@Override
 		protected double call(double x, double y) { return Math.pow(x, y); }
 	}
 
 	static final class sinh extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.sinh(d); }
 	}
 
 	static final class tanh extends UnaryOp {
+		@Override
 		protected double call(double d) { return Math.tanh(d); }
 	}
 
 	/** Faster, better version of pow() used by arithmetic operator ^ */
+	@Override
 	public double dpow_lib(double a, double b) {
 		return Math.pow(a, b);
 	}

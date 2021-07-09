@@ -11,7 +11,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -128,10 +128,8 @@ public class luac {
 				System.out.println(version);
 
 			// open output file
-			OutputStream fos = new FileOutputStream(output);
-
 			// process input files
-			try {
+			try (OutputStream fos = new FileOutputStream(output)) {
 				Globals globals = JsePlatform.standardGlobals();
 				processing = true;
 				for (int i = 0; i < args.length; i++) {
@@ -152,8 +150,6 @@ public class luac {
 						}
 					}
 				}
-			} finally {
-				fos.close();
 			}
 
 		} catch (IOException ioe) {

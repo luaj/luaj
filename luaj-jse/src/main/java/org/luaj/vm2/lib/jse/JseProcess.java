@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +36,7 @@ public class JseProcess {
 	/**
 	 * Construct a process around a command, with specified streams to redirect
 	 * input and output to.
-	 * 
+	 *
 	 * @param cmd    The command to execute, including arguments, if any
 	 * @param stdin  Optional InputStream to read from as process input, or null
 	 *               if input is not needed.
@@ -54,7 +54,7 @@ public class JseProcess {
 	/**
 	 * Construct a process around a command, with specified streams to redirect
 	 * input and output to.
-	 * 
+	 *
 	 * @param cmd    The command to execute, including arguments, if any
 	 * @param stdin  Optional InputStream to read from as process input, or null
 	 *               if input is not needed.
@@ -83,7 +83,7 @@ public class JseProcess {
 
 	/**
 	 * Wait for the process to complete, and all pending output to finish.
-	 * 
+	 *
 	 * @return The exit status.
 	 * @throws InterruptedException
 	 */
@@ -102,7 +102,7 @@ public class JseProcess {
 	/** Create a thread to copy bytes from input to output. */
 	private Thread copyBytes(final InputStream input, final OutputStream output, final InputStream ownedInput,
 		final OutputStream ownedOutput) {
-		Thread t = (new CopyThread(output, ownedOutput, ownedInput, input));
+		Thread t = new CopyThread(output, ownedOutput, ownedInput, input);
 		t.start();
 		return t;
 	}
@@ -120,6 +120,7 @@ public class JseProcess {
 			this.input = input;
 		}
 
+		@Override
 		public void run() {
 			try {
 				byte[] buf = new byte[1024];

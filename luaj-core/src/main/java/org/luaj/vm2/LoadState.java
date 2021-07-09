@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ import java.io.InputStream;
  * <p>
  * The canonical method to load and execute code is done indirectly using the
  * Globals:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -44,7 +44,7 @@ import java.io.InputStream;
  * 	chunk.call();
  * }
  * </pre>
- * 
+ *
  * This should work regardless of which {@link Globals.Compiler} or
  * {@link Globals.Undumper} have been installed.
  * <p>
@@ -53,10 +53,10 @@ import java.io.InputStream;
  * {@link LoadState} default undumper is installed as the default
  * {@link Globals.Undumper}.
  * <p>
- * 
+ *
  * A lua binary file is created via the {@link org.luaj.vm2.compiler.DumpState}
  * class :
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -67,10 +67,10 @@ import java.io.InputStream;
  * 	byte[] lua_binary_file_bytes = o.toByteArray();
  * }
  * </pre>
- * 
+ *
  * The {@link LoadState}'s default undumper {@link #instance} may be used
  * directly to undump these bytes:
- * 
+ *
  * <pre>
  *  {@code
 * Prototypep = LoadState.instance.undump(new ByteArrayInputStream(lua_binary_file_bytes), "main.lua");
@@ -78,10 +78,10 @@ import java.io.InputStream;
 * c.call();
 * }
  * </pre>
- * 
- * 
+ *
+ *
  * More commonly, the {@link Globals.Undumper} may be used to undump them:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -90,7 +90,7 @@ import java.io.InputStream;
  * 	c.call();
  * }
  * </pre>
- * 
+ *
  * @see Globals.Compiler
  * @see Globals.Undumper
  * @see LuaClosure
@@ -124,8 +124,8 @@ public class LoadState {
 	public static final int NUMBER_FORMAT_NUM_PATCH_INT32 = 4;
 
 	// type constants
-	public static final int LUA_TINT           = (-2);
-	public static final int LUA_TNONE          = (-1);
+	public static final int LUA_TINT           = -2;
+	public static final int LUA_TNONE          = -1;
 	public static final int LUA_TNIL           = 0;
 	public static final int LUA_TBOOLEAN       = 1;
 	public static final int LUA_TLIGHTUSERDATA = 2;
@@ -196,18 +196,18 @@ public class LoadState {
 
 	/**
 	 * Load a 4-byte int value from the input stream
-	 * 
+	 *
 	 * @return the int value laoded.
 	 **/
 	int loadInt() throws IOException {
 		is.readFully(buf, 0, 4);
-		return luacLittleEndian? (buf[3]<<24) | ((0xff & buf[2])<<16) | ((0xff & buf[1])<<8) | (0xff & buf[0])
-			: (buf[0]<<24) | ((0xff & buf[1])<<16) | ((0xff & buf[2])<<8) | (0xff & buf[3]);
+		return luacLittleEndian? buf[3]<<24 | (0xff & buf[2])<<16 | (0xff & buf[1])<<8 | 0xff & buf[0]
+			: buf[0]<<24 | (0xff & buf[1])<<16 | (0xff & buf[2])<<8 | 0xff & buf[3];
 	}
 
 	/**
 	 * Load an array of int values from the input stream
-	 * 
+	 *
 	 * @return the array of int values laoded.
 	 **/
 	int[] loadIntArray() throws IOException {
@@ -222,16 +222,15 @@ public class LoadState {
 		is.readFully(buf, 0, m);
 		int[] array = new int[n];
 		for (int i = 0, j = 0; i < n; ++i, j += 4)
-			array[i] = luacLittleEndian
-				? (buf[j+3]<<24) | ((0xff & buf[j+2])<<16) | ((0xff & buf[j+1])<<8) | (0xff & buf[j+0])
-				: (buf[j+0]<<24) | ((0xff & buf[j+1])<<16) | ((0xff & buf[j+2])<<8) | (0xff & buf[j+3]);
+			array[i] = luacLittleEndian? buf[j+3]<<24 | (0xff & buf[j+2])<<16 | (0xff & buf[j+1])<<8 | 0xff & buf[j+0]
+				: buf[j+0]<<24 | (0xff & buf[j+1])<<16 | (0xff & buf[j+2])<<8 | 0xff & buf[j+3];
 
 		return array;
 	}
 
 	/**
 	 * Load a long value from the input stream
-	 * 
+	 *
 	 * @return the long value laoded.
 	 **/
 	long loadInt64() throws IOException {
@@ -243,12 +242,12 @@ public class LoadState {
 			b = loadInt();
 			a = loadInt();
 		}
-		return (((long) b)<<32) | (((long) a) & 0xffffffffL);
+		return (long) b<<32 | a & 0xffffffffL;
 	}
 
 	/**
 	 * Load a lua strin gvalue from the input stream
-	 * 
+	 *
 	 * @return the {@link LuaString} value laoded.
 	 **/
 	LuaString loadString() throws IOException {
@@ -262,25 +261,25 @@ public class LoadState {
 
 	/**
 	 * Convert bits in a long value to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param bits long value containing the bits
 	 * @return {@link LuaInteger} or {@link LuaDouble} whose value corresponds
 	 *         to the bits provided.
 	 */
 	public static LuaValue longBitsToLuaNumber(long bits) {
-		if ((bits & ((1L<<63)-1)) == 0L) {
+		if ((bits & (1L<<63)-1) == 0L) {
 			return LuaValue.ZERO;
 		}
 
-		int e = (int) ((bits>>52) & 0x7ffL)-1023;
+		int e = (int) (bits>>52 & 0x7ffL)-1023;
 
 		if (e >= 0 && e < 31) {
 			long f = bits & 0xFFFFFFFFFFFFFL;
 			int shift = 52-e;
 			long intPrecMask = (1L<<shift)-1;
 			if ((f & intPrecMask) == 0) {
-				int intValue = (int) (f>>shift) | (1<<e);
-				return LuaInteger.valueOf(((bits>>63) != 0)? -intValue: intValue);
+				int intValue = (int) (f>>shift) | 1<<e;
+				return LuaInteger.valueOf(bits>>63 != 0? -intValue: intValue);
 			}
 		}
 
@@ -289,7 +288,7 @@ public class LoadState {
 
 	/**
 	 * Load a number from a binary chunk
-	 * 
+	 *
 	 * @return the {@link LuaValue} loaded
 	 * @throws IOException if an i/o exception occurs
 	 */
@@ -303,7 +302,7 @@ public class LoadState {
 
 	/**
 	 * Load a list of constants from a binary chunk
-	 * 
+	 *
 	 * @param f the function prototype
 	 * @throws IOException if an i/o exception occurs
 	 */
@@ -316,7 +315,7 @@ public class LoadState {
 				values[i] = LuaValue.NIL;
 				break;
 			case LUA_TBOOLEAN:
-				values[i] = (0 != is.readUnsignedByte()? LuaValue.TRUE: LuaValue.FALSE);
+				values[i] = 0 != is.readUnsignedByte()? LuaValue.TRUE: LuaValue.FALSE;
 				break;
 			case LUA_TINT:
 				values[i] = LuaInteger.valueOf(loadInt());
@@ -345,14 +344,14 @@ public class LoadState {
 		f.upvalues = n > 0? new Upvaldesc[n]: NOUPVALDESCS;
 		for (int i = 0; i < n; i++) {
 			boolean instack = is.readByte() != 0;
-			int idx = ((int) is.readByte()) & 0xff;
+			int idx = is.readByte() & 0xff;
 			f.upvalues[i] = new Upvaldesc(null, instack, idx);
 		}
 	}
 
 	/**
 	 * Load the debug info for a function prototype
-	 * 
+	 *
 	 * @param f the function Prototype
 	 * @throws IOException if there is an i/o exception
 	 */
@@ -375,7 +374,7 @@ public class LoadState {
 
 	/**
 	 * Load a function prototype from the input stream
-	 * 
+	 *
 	 * @param p name of the source
 	 * @return {@link Prototype} instance that was loaded
 	 * @throws IOException
@@ -406,13 +405,13 @@ public class LoadState {
 
 	/**
 	 * Load the lua chunk header values.
-	 * 
+	 *
 	 * @throws IOException if an i/o exception occurs.
 	 */
 	public void loadHeader() throws IOException {
 		luacVersion = is.readByte();
 		luacFormat = is.readByte();
-		luacLittleEndian = (0 != is.readByte());
+		luacLittleEndian = 0 != is.readByte();
 		luacSizeofInt = is.readByte();
 		luacSizeofSizeT = is.readByte();
 		luacSizeofInstruction = is.readByte();
@@ -426,7 +425,7 @@ public class LoadState {
 	/**
 	 * Load input stream as a lua binary chunk if the first 4 bytes are the lua
 	 * binary signature.
-	 * 
+	 *
 	 * @param stream    InputStream to read, after having read the first byte
 	 *                  already
 	 * @param chunkname Name to apply to the loaded chunk
@@ -459,7 +458,7 @@ public class LoadState {
 
 	/**
 	 * Construct a source name from a supplied chunk name
-	 * 
+	 *
 	 * @param name String name that appears in the chunk
 	 * @return source file name
 	 */
@@ -479,6 +478,7 @@ public class LoadState {
 	}
 
 	private static final class GlobalsUndumper implements Globals.Undumper {
+		@Override
 		public Prototype undump(InputStream stream, String chunkname) throws IOException {
 			return LoadState.undump(stream, chunkname);
 		}

@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,13 +36,13 @@ import org.luaj.vm2.lib.ResourceFinder;
  * Global environment used by luaj. Contains global variables referenced by
  * executing lua.
  * <p>
- * 
+ *
  * <h3>Constructing and Initializing Instances</h3> Typically, this is
  * constructed indirectly by a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}, and then used to
  * load lua scripts for execution as in the following example.
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -50,12 +50,12 @@ import org.luaj.vm2.lib.ResourceFinder;
  * 	globals.load(new StringReader("print 'hello'"), "main.lua").call();
  * }
  * </pre>
- * 
+ *
  * The creates a complete global environment with the standard libraries loaded.
  * <p>
  * For specialized circumstances, the Globals may be constructed directly and
  * loaded with only those libraries that are needed, for example.
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -63,17 +63,17 @@ import org.luaj.vm2.lib.ResourceFinder;
  * 	globals.load(new BaseLib());
  * }
  * </pre>
- * 
+ *
  * <h3>Loading and Executing Lua Code</h3> Globals contains convenience
  * functions to load and execute lua source code given a Reader. A simple
  * example is:
- * 
+ *
  * <pre>
  *  {@code
- * globals.load( new StringReader("print 'hello'"), "main.lua" ).call(); 
+ * globals.load( new StringReader("print 'hello'"), "main.lua" ).call();
  * }
  * </pre>
- * 
+ *
  * <h3>Fine-Grained Control of Compiling and Loading Lua</h3> Executable
  * LuaFunctions are created from lua code in several steps
  * <ul>
@@ -92,7 +92,7 @@ import org.luaj.vm2.lib.ResourceFinder;
  * <li>convert lua bytecode to equivalent Java bytecode using
  * {@link org.luaj.vm2.luajc.LuaJC} that implements {@link Loader} directly
  * </ul>
- * 
+ *
  * <h3>Java Field</h3> Certain public fields are provided that contain the
  * current values of important global state:
  * <ul>
@@ -107,7 +107,7 @@ import org.luaj.vm2.lib.ResourceFinder;
  * <li>{@link #undumper} Current loaded {@link Undumper}, if any.
  * <li>{@link #loader} Current loaded {@link Loader}, if any.
  * </ul>
- * 
+ *
  * <h3>Lua Environment Variables</h3> When using
  * {@link org.luaj.vm2.lib.jse.JsePlatform} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform}, these environment variables are
@@ -116,13 +116,13 @@ import org.luaj.vm2.lib.ResourceFinder;
  * <li>"_G" Pointer to this Globals.
  * <li>"_VERSION" String containing the version of luaj.
  * </ul>
- * 
+ *
  * <h3>Use in Multithreaded Environments</h3> In a multi-threaded server
  * environment, each server thread should create one Globals instance, which
  * will be logically distinct and not interfere with each other, but share
  * certain static immutable resources such as class data and string data.
  * <p>
- * 
+ *
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LuaValue
@@ -195,27 +195,28 @@ public class Globals extends LuaTable {
 	 * Check that this object is a Globals object, and return it, otherwise
 	 * throw an error.
 	 */
+	@Override
 	public Globals checkglobals() {
 		return this;
 	}
 
 	/**
 	 * The installed loader.
-	 * 
+	 *
 	 * @see Loader
 	 */
 	public Loader loader;
 
 	/**
 	 * The installed compiler.
-	 * 
+	 *
 	 * @see Compiler
 	 */
 	public Compiler compiler;
 
 	/**
 	 * The installed undumper.
-	 * 
+	 *
 	 * @see Undumper
 	 */
 	public Undumper undumper;
@@ -223,7 +224,7 @@ public class Globals extends LuaTable {
 	/**
 	 * Convenience function for loading a file that is either binary lua or lua
 	 * source.
-	 * 
+	 *
 	 * @param filename Name of the file to load.
 	 * @return LuaValue that can be call()'ed or invoke()'ed.
 	 * @throws LuaError if the file could not be loaded.
@@ -239,7 +240,7 @@ public class Globals extends LuaTable {
 	/**
 	 * Convenience function to load a string value as a script. Must be lua
 	 * source.
-	 * 
+	 *
 	 * @param script    Contents of a lua script, such as "print 'hello,
 	 *                  world.'"
 	 * @param chunkname Name that will be used within the chunk as the source.
@@ -254,7 +255,7 @@ public class Globals extends LuaTable {
 	/**
 	 * Convenience function to load a string value as a script. Must be lua
 	 * source.
-	 * 
+	 *
 	 * @param script Contents of a lua script, such as "print 'hello, world.'"
 	 * @return LuaValue that may be executed via .call(), .invoke(), or
 	 *         .method() calls.
@@ -267,7 +268,7 @@ public class Globals extends LuaTable {
 	/**
 	 * Convenience function to load a string value as a script with a custom
 	 * environment. Must be lua source.
-	 * 
+	 *
 	 * @param script      Contents of a lua script, such as "print 'hello,
 	 *                    world.'"
 	 * @param chunkname   Name that will be used within the chunk as the source.
@@ -285,7 +286,7 @@ public class Globals extends LuaTable {
 	 * Load the content form a reader as a text file. Must be lua source. The
 	 * source is converted to UTF-8, so any characters appearing in quoted
 	 * literals above the range 128 will be converted into multiple bytes.
-	 * 
+	 *
 	 * @param reader    Reader containing text of a lua script, such as "print
 	 *                  'hello, world.'"
 	 * @param chunkname Name that will be used within the chunk as the source.
@@ -302,7 +303,7 @@ public class Globals extends LuaTable {
 	 * environment. Must be lua source. The source is converted to UTF-8, so any
 	 * characters appearing in quoted literals above the range 128 will be
 	 * converted into multiple bytes.
-	 * 
+	 *
 	 * @param reader      Reader containing text of a lua script, such as "print
 	 *                    'hello, world.'"
 	 * @param chunkname   Name that will be used within the chunk as the source.
@@ -318,7 +319,7 @@ public class Globals extends LuaTable {
 
 	/**
 	 * Load the content form an input stream as a binary chunk or text file.
-	 * 
+	 *
 	 * @param is          InputStream containing a lua script or compiled lua"
 	 * @param chunkname   Name that will be used within the chunk as the source.
 	 * @param mode        String containing 'b' or 't' or both to control
@@ -342,7 +343,7 @@ public class Globals extends LuaTable {
 	 * InputStream is either a binary lua chunk starting with the lua binary
 	 * chunk signature, or a text input file. If it is a text input file, it is
 	 * interpreted as a UTF-8 byte sequence.
-	 * 
+	 *
 	 * @param is        Input stream containing a lua script or compiled lua"
 	 * @param chunkname Name that will be used within the chunk as the source.
 	 * @param mode      String containing 'b' or 't' or both to control loading
@@ -391,7 +392,7 @@ public class Globals extends LuaTable {
 
 	/**
 	 * Function which yields the current thread.
-	 * 
+	 *
 	 * @param args Arguments to supply as return values in the resume function
 	 *             of the resuming thread.
 	 * @return Values supplied as arguments to the resume() call that
@@ -415,14 +416,17 @@ public class Globals extends LuaTable {
 			n = s.length();
 		}
 
+		@Override
 		public void close() throws IOException {
 			i = n;
 		}
 
+		@Override
 		public int read() throws IOException {
 			return i < n? s.charAt(i++): -1;
 		}
 
+		@Override
 		public int read(char[] cbuf, int off, int len) throws IOException {
 			int j = 0;
 			for (; j < len && i < n; ++j, ++i)
@@ -444,15 +448,18 @@ public class Globals extends LuaTable {
 
 		abstract protected int avail() throws IOException;
 
+		@Override
 		public int read() throws IOException {
 			int a = avail();
-			return (a <= 0? -1: 0xff & b[i++]);
+			return a <= 0? -1: 0xff & b[i++];
 		}
 
+		@Override
 		public int read(byte[] b) throws IOException {
 			return read(b, 0, b.length);
 		}
 
+		@Override
 		public int read(byte[] b, int i0, int n) throws IOException {
 			int a = avail();
 			if (a <= 0)
@@ -463,12 +470,14 @@ public class Globals extends LuaTable {
 			return n_read;
 		}
 
+		@Override
 		public long skip(long n) throws IOException {
 			final long k = Math.min(n, j-i);
 			i += k;
 			return k;
 		}
 
+		@Override
 		public int available() throws IOException {
 			return j-i;
 		}
@@ -488,6 +497,7 @@ public class Globals extends LuaTable {
 			this.r = r;
 		}
 
+		@Override
 		protected int avail() throws IOException {
 			if (i < j)
 				return j-i;
@@ -505,6 +515,7 @@ public class Globals extends LuaTable {
 			return j;
 		}
 
+		@Override
 		public void close() throws IOException {
 			r.close();
 		}
@@ -529,6 +540,7 @@ public class Globals extends LuaTable {
 			this.s = s;
 		}
 
+		@Override
 		protected int avail() throws IOException {
 			if (i < j)
 				return j-i;
@@ -549,10 +561,12 @@ public class Globals extends LuaTable {
 			return n;
 		}
 
+		@Override
 		public void close() throws IOException {
 			s.close();
 		}
 
+		@Override
 		public synchronized void mark(int n) {
 			if (i > 0 || n > b.length) {
 				byte[] dest = n > b.length? new byte[n]: b;
@@ -563,10 +577,12 @@ public class Globals extends LuaTable {
 			}
 		}
 
+		@Override
 		public boolean markSupported() {
 			return true;
 		}
 
+		@Override
 		public synchronized void reset() throws IOException {
 			i = 0;
 		}

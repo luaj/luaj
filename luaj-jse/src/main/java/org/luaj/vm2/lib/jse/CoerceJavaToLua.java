@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,17 +58,18 @@ import org.luaj.vm2.LuaValue;
  * The method {@link CoerceJavaToLua#coerce(Object)} looks as the type and
  * dimesioning of the argument and tries to guess the best fit for corrsponding
  * lua scalar, table, or table of tables.
- * 
+ *
  * @see CoerceJavaToLua#coerce(Object)
  * @see org.luaj.vm2.lib.jse.LuajavaLib
  */
 public class CoerceJavaToLua {
 
-	static interface Coercion {
-		public LuaValue coerce(Object javaValue);
-	};
+	interface Coercion {
+		LuaValue coerce(Object javaValue);
+	}
 
 	private static final class BoolCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			Boolean b = (Boolean) javaValue;
 			return b.booleanValue()? LuaValue.TRUE: LuaValue.FALSE;
@@ -76,6 +77,7 @@ public class CoerceJavaToLua {
 	}
 
 	private static final class IntCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			Number n = (Number) javaValue;
 			return LuaInteger.valueOf(n.intValue());
@@ -83,6 +85,7 @@ public class CoerceJavaToLua {
 	}
 
 	private static final class CharCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			Character c = (Character) javaValue;
 			return LuaInteger.valueOf(c.charValue());
@@ -90,6 +93,7 @@ public class CoerceJavaToLua {
 	}
 
 	private static final class DoubleCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			Number n = (Number) javaValue;
 			return LuaDouble.valueOf(n.doubleValue());
@@ -97,37 +101,43 @@ public class CoerceJavaToLua {
 	}
 
 	private static final class StringCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			return LuaString.valueOf(javaValue.toString());
 		}
 	}
 
 	private static final class BytesCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			return LuaValue.valueOf((byte[]) javaValue);
 		}
 	}
 
 	private static final class ClassCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			return JavaClass.forClass((Class) javaValue);
 		}
 	}
 
 	private static final class InstanceCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			return new JavaInstance(javaValue);
 		}
 	}
 
 	private static final class ArrayCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
-			// should be userdata? 
+			// should be userdata?
 			return new JavaArray(javaValue);
 		}
 	}
 
 	private static final class LuaCoercion implements Coercion {
+		@Override
 		public LuaValue coerce(Object javaValue) {
 			return (LuaValue) javaValue;
 		}
@@ -165,7 +175,7 @@ public class CoerceJavaToLua {
 	 * {@code byte[]} will become {@link LuaString}; types inheriting from
 	 * {@link LuaValue} will be returned without coercion; other types will
 	 * become {@link LuaUserdata}.
-	 * 
+	 *
 	 * @param o Java object needing conversion
 	 * @return {@link LuaValue} corresponding to the supplied Java value.
 	 * @see LuaValue

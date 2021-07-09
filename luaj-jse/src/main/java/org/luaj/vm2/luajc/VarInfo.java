@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.luaj.vm2.luajc;
 
@@ -37,15 +37,16 @@ public class VarInfo {
 		this.pc = pc;
 	}
 
+	@Override
 	public String toString() {
-		return slot < 0? "x.x": (slot + "." + pc);
+		return slot < 0? "x.x": slot + "." + pc;
 	}
 
 	/**
 	 * Return replacement variable if there is exactly one value possible,
 	 * otherwise compute entire collection of variables and return null.
 	 * Computes the list of aall variable values, and saves it for the future.
-	 * 
+	 *
 	 * @return new Variable to replace with if there is only one value, or null
 	 *         to leave alone.
 	 */
@@ -64,6 +65,7 @@ public class VarInfo {
 			super(slot, pc);
 		}
 
+		@Override
 		public String toString() {
 			return slot + ".p";
 		}
@@ -74,6 +76,7 @@ public class VarInfo {
 			super(slot, pc);
 		}
 
+		@Override
 		public String toString() {
 			return "nil";
 		}
@@ -88,13 +91,15 @@ public class VarInfo {
 			this.pi = pi;
 		}
 
+		@Override
 		public boolean isPhiVar() { return true; }
 
+		@Override
 		public String toString() {
 			StringBuffer sb = new StringBuffer();
 			sb.append(super.toString());
 			sb.append("={");
-			for (int i = 0, n = (values != null? values.length: 0); i < n; i++) {
+			for (int i = 0, n = values != null? values.length: 0; i < n; i++) {
 				if (i > 0)
 					sb.append(",");
 				sb.append(String.valueOf(values[i]));
@@ -103,6 +108,7 @@ public class VarInfo {
 			return sb.toString();
 		}
 
+		@Override
 		public VarInfo resolvePhiVariableValues() {
 			Set visitedBlocks = new HashSet();
 			Set vars = new HashSet();
@@ -124,6 +130,7 @@ public class VarInfo {
 			return null;
 		}
 
+		@Override
 		protected void collectUniqueValues(Set visitedBlocks, Set vars) {
 			BasicBlock b = pi.blocks[pc];
 			if (pc == 0)

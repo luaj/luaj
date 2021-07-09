@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@ import java.io.PrintStream;
 
 /**
  * Debug helper class to pretty-print lua bytecodes.
- * 
+ *
  * @see Prototype
  * @see LuaClosure
  */
@@ -114,7 +114,7 @@ public class Print extends Lua {
 
 	/**
 	 * Print the code in a prototype
-	 * 
+	 *
 	 * @param f the {@link Prototype}
 	 */
 	public static void printCode(Prototype f) {
@@ -128,7 +128,7 @@ public class Print extends Lua {
 
 	/**
 	 * Print an opcode in a prototype
-	 * 
+	 *
 	 * @param f  the {@link Prototype}
 	 * @param pc the program counter to look up and print
 	 * @return pc same as above or changed
@@ -139,7 +139,7 @@ public class Print extends Lua {
 
 	/**
 	 * Print an opcode in a prototype
-	 * 
+	 *
 	 * @param ps the {@link PrintStream} to print to
 	 * @param f  the {@link Prototype}
 	 * @param pc the program counter to look up and print
@@ -168,15 +168,15 @@ public class Print extends Lua {
 			case iABC:
 				ps.print(a);
 				if (getBMode(o) != OpArgN)
-					ps.print(" " + (ISK(b)? (-1-INDEXK(b)): b));
+					ps.print(" " + (ISK(b)? -1-INDEXK(b): b));
 				if (getCMode(o) != OpArgN)
-					ps.print(" " + (ISK(c)? (-1-INDEXK(c)): c));
+					ps.print(" " + (ISK(c)? -1-INDEXK(c): c));
 				break;
 			case iABx:
 				if (getBMode(o) == OpArgK) {
 					ps.print(a + " " + (-1-bx));
 				} else {
-					ps.print(a + " " + (bx));
+					ps.print(a + " " + bx);
 				}
 				break;
 			case iAsBx:
@@ -274,9 +274,9 @@ public class Print extends Lua {
 				break;
 			case OP_SETLIST:
 				if (c == 0)
-					ps.print("  ; " + ((int) code[++pc]) + " (stored in the next OP)");
+					ps.print("  ; " + code[++pc] + " (stored in the next OP)");
 				else
-					ps.print("  ; " + ((int) c));
+					ps.print("  ; " + c);
 				break;
 			case OP_VARARG:
 				ps.print("  ; is_vararg=" + f.is_vararg);
@@ -300,7 +300,7 @@ public class Print extends Lua {
 			s = "(bstring)";
 		else
 			s = "(string)";
-		String a = (f.linedefined == 0)? "main": "function";
+		String a = f.linedefined == 0? "main": "function";
 		ps.print("\n%" + a + " <" + s + ":" + f.linedefined + "," + f.lastlinedefined + "> (" + f.code.length
 			+ " instructions, " + f.code.length*4 + " bytes at " + id(f) + ")\n");
 		ps.print(f.numparams + " param, " + f.maxstacksize + " slot, " + f.upvalues.length + " upvalue, ");
@@ -336,7 +336,7 @@ public class Print extends Lua {
 
 	/**
 	 * Pretty-prints contents of a Prototype.
-	 * 
+	 *
 	 * @param prototype Prototype to print.
 	 */
 	public static void print(Prototype prototype) {
@@ -345,7 +345,7 @@ public class Print extends Lua {
 
 	/**
 	 * Pretty-prints contents of a Prototype in short or long form.
-	 * 
+	 *
 	 * @param prototype Prototype to print.
 	 * @param full      true to print all fields, false to print short form.
 	 */
@@ -384,7 +384,7 @@ public class Print extends Lua {
 
 	/**
 	 * Print the state of a {@link LuaClosure} that is being executed
-	 * 
+	 *
 	 * @param cl      the {@link LuaClosure}
 	 * @param pc      the program counter
 	 * @param stack   the stack of {@link LuaValue}

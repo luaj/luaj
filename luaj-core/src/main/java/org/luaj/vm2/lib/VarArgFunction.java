@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * See {@link LibFunction} for more information on implementation libraries and
  * library functions.
- * 
+ *
  * @see #invoke(Varargs)
  * @see LibFunction
  * @see ZeroArgFunction
@@ -53,18 +53,22 @@ abstract public class VarArgFunction extends LibFunction {
 	public VarArgFunction() {
 	}
 
+	@Override
 	public LuaValue call() {
 		return invoke(NONE).arg1();
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg) {
 		return invoke(arg).arg1();
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg1, LuaValue arg2) {
 		return invoke(varargsOf(arg1, arg2)).arg1();
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 		return invoke(varargsOf(arg1, arg2, arg3)).arg1();
 	}
@@ -73,13 +77,15 @@ abstract public class VarArgFunction extends LibFunction {
 	 * Subclass responsibility. May not have expected behavior for tail calls.
 	 * Should not be used if: - function has a possibility of returning a
 	 * TailcallVarargs
-	 * 
+	 *
 	 * @param args the arguments to the function call.
 	 */
+	@Override
 	public Varargs invoke(Varargs args) {
 		return onInvoke(args).eval();
 	}
 
+	@Override
 	public Varargs onInvoke(Varargs args) {
 		return invoke(args);
 	}

@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,7 +41,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -52,7 +52,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -64,7 +64,7 @@ import org.luaj.vm2.Varargs;
  * }
  * </pre>
  * <p>
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -82,11 +82,12 @@ public class CoroutineLib extends TwoArgFunction {
 	 * containing the library functions, adding that table to the supplied
 	 * environment, adding the table to package.loaded, and returning table as
 	 * the return value.
-	 * 
+	 *
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
 	 */
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 		LuaTable coroutine = new LuaTable();
@@ -103,12 +104,14 @@ public class CoroutineLib extends TwoArgFunction {
 	}
 
 	final class create extends LibFunction {
+		@Override
 		public LuaValue call(LuaValue f) {
 			return new LuaThread(globals, f.checkfunction());
 		}
 	}
 
 	static final class resume extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			final LuaThread t = args.checkthread(1);
 			return t.resume(args.subargs(2));
@@ -116,6 +119,7 @@ public class CoroutineLib extends TwoArgFunction {
 	}
 
 	final class running extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			final LuaThread r = globals.running;
 			return varargsOf(r, valueOf(r.isMainThread()));
@@ -123,6 +127,7 @@ public class CoroutineLib extends TwoArgFunction {
 	}
 
 	static final class status extends LibFunction {
+		@Override
 		public LuaValue call(LuaValue t) {
 			LuaThread lt = t.checkthread();
 			return valueOf(lt.getStatus());
@@ -130,12 +135,14 @@ public class CoroutineLib extends TwoArgFunction {
 	}
 
 	final class yield extends VarArgFunction {
+		@Override
 		public Varargs invoke(Varargs args) {
 			return globals.yield(args);
 		}
 	}
 
 	final class wrap extends LibFunction {
+		@Override
 		public LuaValue call(LuaValue f) {
 			final LuaValue func = f.checkfunction();
 			final LuaThread thread = new LuaThread(globals, func);
@@ -150,6 +157,7 @@ public class CoroutineLib extends TwoArgFunction {
 			this.luathread = luathread;
 		}
 
+		@Override
 		public Varargs invoke(Varargs args) {
 			final Varargs result = luathread.resume(args);
 			if (result.arg1().toboolean()) {

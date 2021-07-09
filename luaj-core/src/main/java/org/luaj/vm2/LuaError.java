@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -54,6 +54,7 @@ public class LuaError extends RuntimeException {
 	 * Get the string message if it was supplied, or a string representation of
 	 * the message object if that was supplied.
 	 */
+	@Override
 	public String getMessage() {
 		if (traceback != null)
 			return traceback;
@@ -68,7 +69,7 @@ public class LuaError extends RuntimeException {
 	/**
 	 * Get the LuaValue that was provided in the constructor, or a LuaString
 	 * containing the message if it was a string error argument.
-	 * 
+	 *
 	 * @return LuaValue which was used in the constructor, or a LuaString
 	 *         containing the message.
 	 */
@@ -83,7 +84,7 @@ public class LuaError extends RuntimeException {
 	 * Construct LuaError when a program exception occurs.
 	 * <p>
 	 * All errors generated from lua code should throw LuaError(String) instead.
-	 * 
+	 *
 	 * @param cause the Throwable that caused the error, if known.
 	 */
 	public LuaError(Throwable cause) {
@@ -94,7 +95,7 @@ public class LuaError extends RuntimeException {
 
 	/**
 	 * Construct a LuaError with a specific message.
-	 * 
+	 *
 	 * @param message message to supply
 	 */
 	public LuaError(String message) {
@@ -105,7 +106,7 @@ public class LuaError extends RuntimeException {
 	/**
 	 * Construct a LuaError with a message, and level to draw line number
 	 * information from.
-	 * 
+	 *
 	 * @param message message to supply
 	 * @param level   where to supply line info from in call stack
 	 */
@@ -117,7 +118,7 @@ public class LuaError extends RuntimeException {
 	/**
 	 * Construct a LuaError with a LuaValue as the message object, and level to
 	 * draw line number information from.
-	 * 
+	 *
 	 * @param message_object message string or object to supply
 	 */
 	public LuaError(LuaValue message_object) {
@@ -129,6 +130,7 @@ public class LuaError extends RuntimeException {
 	/**
 	 * Get the cause, if any.
 	 */
+	@Override
 	public Throwable getCause() { return cause; }
 
 }

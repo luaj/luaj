@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,11 +21,29 @@
 ******************************************************************************/
 package org.luaj.vm2.script;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 
-import javax.script.*;
+import javax.script.AbstractScriptEngine;
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 
-import org.luaj.vm2.*;
+import org.luaj.vm2.Globals;
+import org.luaj.vm2.Lua;
+import org.luaj.vm2.LuaClosure;
+import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
@@ -33,7 +51,7 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 /**
  * Implementation of the ScriptEngine interface which can compile and execute
  * scripts using luaj.
- * 
+ *
  * <p>
  * This engine requires the types of the Bindings and ScriptContext to be
  * compatible with the engine. For creating new client context use
@@ -53,7 +71,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 
 	private static final ScriptEngineFactory myFactory = new LuaScriptEngineFactory();
 
-	private LuajContext context;
+	private final LuajContext context;
 
 	public LuaScriptEngine() {
 		// set up context
@@ -80,15 +98,12 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 	@Override
 	public CompiledScript compile(Reader script) throws ScriptException {
 		try {
-			InputStream is = new Utf8Encoder(script);
-			try {
+			try (InputStream is = new Utf8Encoder(script)) {
 				final Globals g = context.globals;
 				final LuaFunction f = g.load(script, "script").checkfunction();
 				return new LuajCompiledScript(f, g);
 			} catch (LuaError lee) {
 				throw new ScriptException(lee.getMessage());
-			} finally {
-				is.close();
 			}
 		} catch (Exception e) {
 			throw new ScriptException("eval threw " + e.toString());
@@ -137,16 +152,20 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 			this.compiling_globals = compiling_globals;
 		}
 
+		@Override
 		public ScriptEngine getEngine() { return LuaScriptEngine.this; }
 
+		@Override
 		public Object eval() throws ScriptException {
 			return eval(getContext());
 		}
 
+		@Override
 		public Object eval(Bindings bindings) throws ScriptException {
 			return eval(((LuajContext) getContext()).globals, bindings);
 		}
 
+		@Override
 		public Object eval(ScriptContext context) throws ScriptException {
 			return eval(((LuajContext) context).globals, context.getBindings(ScriptContext.ENGINE_SCOPE));
 		}
@@ -168,7 +187,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 		}
 	}
 
-	// ------ convert char stream to byte stream for lua compiler ----- 
+	// ------ convert char stream to byte stream for lua compiler -----
 
 	private final class Utf8Encoder extends InputStream {
 		private final Reader r;
@@ -179,6 +198,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 			this.r = r;
 		}
 
+		@Override
 		public int read() throws IOException {
 			if (n > 0)
 				return buf[--n];
@@ -187,12 +207,12 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 				return c;
 			n = 0;
 			if (c < 0x800) {
-				buf[n++] = (0x80 | (c & 0x3f));
-				return (0xC0 | ((c>>6) & 0x1f));
+				buf[n++] = 0x80 | c & 0x3f;
+				return 0xC0 | c>>6 & 0x1f;
 			} else {
-				buf[n++] = (0x80 | (c & 0x3f));
-				buf[n++] = (0x80 | ((c>>6) & 0x3f));
-				return (0xE0 | ((c>>12) & 0x0f));
+				buf[n++] = 0x80 | c & 0x3f;
+				buf[n++] = 0x80 | c>>6 & 0x3f;
+				return 0xE0 | c>>12 & 0x0f;
 			}
 		}
 	}
@@ -201,6 +221,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 
 		BindingsMetatable(final Bindings bindings) {
 			this.rawset(LuaValue.INDEX, new TwoArgFunction() {
+				@Override
 				public LuaValue call(LuaValue table, LuaValue key) {
 					if (key.isstring())
 						return toLua(bindings.get(key.tojstring()));
@@ -209,6 +230,7 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 				}
 			});
 			this.rawset(LuaValue.NEWINDEX, new ThreeArgFunction() {
+				@Override
 				public LuaValue call(LuaValue table, LuaValue key, LuaValue value) {
 					if (key.isstring()) {
 						final String k = key.tojstring();
@@ -240,8 +262,8 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 		case LuaValue.TUSERDATA:
 			return luajValue.checkuserdata(Object.class);
 		case LuaValue.TNUMBER:
-			return luajValue.isinttype()? (Object) new Integer(luajValue.toint())
-				: (Object) new Double(luajValue.todouble());
+			return luajValue.isinttype()? (Object) Integer.valueOf(luajValue.toint())
+				: (Object) Double.valueOf(luajValue.todouble());
 		default:
 			return luajValue;
 		}

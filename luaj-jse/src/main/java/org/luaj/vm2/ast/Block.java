@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@ import java.util.List;
 
 public class Block extends Stat {
 
-	public List<Stat> stats = new ArrayList<Stat>();
+	public List<Stat> stats = new ArrayList<>();
 	public NameScope  scope;
 
 	public void add(Stat s) {
@@ -35,6 +35,7 @@ public class Block extends Stat {
 		stats.add(s);
 	}
 
+	@Override
 	public void accept(Visitor visitor) {
 		visitor.visit(this);
 	}

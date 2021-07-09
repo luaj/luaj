@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,7 @@ import org.luaj.vm2.LuaValue;
  * <p>
  * This class is not used directly. It is returned by calls to
  * {@link CoerceJavaToLua#coerce(Object)} when a subclass of Object is supplied.
- * 
+ *
  * @see CoerceJavaToLua
  * @see CoerceLuaToJava
  */
@@ -46,6 +46,7 @@ class JavaInstance extends LuaUserdata {
 		super(instance);
 	}
 
+	@Override
 	public LuaValue get(LuaValue key) {
 		if (jclass == null)
 			jclass = JavaClass.forClass(m_instance.getClass());
@@ -65,6 +66,7 @@ class JavaInstance extends LuaUserdata {
 		return super.get(key);
 	}
 
+	@Override
 	public void set(LuaValue key, LuaValue value) {
 		if (jclass == null)
 			jclass = JavaClass.forClass(m_instance.getClass());

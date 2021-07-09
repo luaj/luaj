@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ import org.luaj.vm2.Varargs;
  * Typically, this library is included as part of a call to either
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()} or
  * {@link org.luaj.vm2.lib.jme.JmePlatform#standardGlobals()}
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -55,7 +55,7 @@ import org.luaj.vm2.Varargs;
  * 	globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * }
  * </pre>
- * 
+ *
  * In this example the platform-specific {@link org.luaj.vm2.lib.jse.JseIoLib}
  * library will be loaded, which will include the base functionality provided by
  * this class, whereas the {@link org.luaj.vm2.lib.jse.JsePlatform} would load
@@ -63,7 +63,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * To instantiate and use it directly, link it into your globals table via
  * {@link LuaValue#load(LuaValue)} using code such as:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -77,7 +77,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * This has been implemented to match as closely as possible the behavior in the
  * corresponding library in C.
- * 
+ *
  * @see LibFunction
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
@@ -86,35 +86,35 @@ import org.luaj.vm2.Varargs;
  * @see <a href=
  *      "http://www.lua.org/manual/5.1/manual.html#5.7">http://www.lua.org/manual/5.1/manual.html#5.7</a>
  */
-abstract public class IoLib extends TwoArgFunction {
+public abstract class IoLib extends TwoArgFunction {
 
-	abstract protected class File extends LuaValue {
-		abstract public void write(LuaString string) throws IOException;
+	protected abstract class File extends LuaValue {
+		public abstract void write(LuaString string) throws IOException;
 
-		abstract public void flush() throws IOException;
+		public abstract void flush() throws IOException;
 
-		abstract public boolean isstdfile();
+		public abstract boolean isstdfile();
 
-		abstract public void close() throws IOException;
+		public abstract void close() throws IOException;
 
-		abstract public boolean isclosed();
+		public abstract boolean isclosed();
 
 		// returns new position
-		abstract public int seek(String option, int bytecount) throws IOException;
+		public abstract int seek(String option, int bytecount) throws IOException;
 
-		abstract public void setvbuf(String mode, int size);
+		public abstract void setvbuf(String mode, int size);
 
 		// get length remaining to read
-		abstract public int remaining() throws IOException;
+		public abstract int remaining() throws IOException;
 
 		// peek ahead one character
-		abstract public int peek() throws IOException, EOFException;
+		public abstract int peek() throws IOException, EOFException;
 
 		// return char if read, -1 if eof, throw IOException on other exception
-		abstract public int read() throws IOException, EOFException;
+		public abstract int read() throws IOException, EOFException;
 
 		// return number of bytes read if positive, false if eof, throw IOException on other exception
-		abstract public int read(byte[] bytes, int offset, int length) throws IOException;
+		public abstract int read(byte[] bytes, int offset, int length) throws IOException;
 
 		public boolean eof() throws IOException {
 			try {
@@ -125,24 +125,29 @@ abstract public class IoLib extends TwoArgFunction {
 		}
 
 		// delegate method access to file methods table
+		@Override
 		public LuaValue get(LuaValue key) {
 			return filemethods.get(key);
 		}
 
 		// essentially a userdata instance
+		@Override
 		public int type() {
 			return LuaValue.TUSERDATA;
 		}
 
+		@Override
 		public String typename() {
 			return "userdata";
 		}
 
 		// displays as "file" type
+		@Override
 		public String tojstring() {
 			return "file: " + Integer.toHexString(hashCode());
 		}
 
+		@Override
 		public void finalize() {
 			if (!isclosed()) {
 				try {
@@ -164,7 +169,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Wrap the standard input.
-	 * 
+	 *
 	 * @return File
 	 * @throws IOException
 	 */
@@ -172,7 +177,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Wrap the standard output.
-	 * 
+	 *
 	 * @return File
 	 * @throws IOException
 	 */
@@ -180,7 +185,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Wrap the standard error output.
-	 * 
+	 *
 	 * @return File
 	 * @throws IOException
 	 */
@@ -188,7 +193,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Open a file in a particular mode.
-	 * 
+	 *
 	 * @param filename
 	 * @param readMode   true if opening in read mode
 	 * @param appendMode true if opening in append mode
@@ -202,7 +207,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Open a temporary file.
-	 * 
+	 *
 	 * @return File object if successful
 	 * @throws IOException if could not be opened
 	 */
@@ -210,7 +215,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	/**
 	 * Start a new process and return a file for input or output
-	 * 
+	 *
 	 * @param prog the program to execute
 	 * @param mode "r" to read, "w" to write
 	 * @return File to read to or write from
@@ -260,6 +265,7 @@ abstract public class IoLib extends TwoArgFunction {
 
 	protected Globals globals;
 
+	@Override
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		globals = env.checkglobals();
 
@@ -310,13 +316,13 @@ abstract public class IoLib extends TwoArgFunction {
 		}
 
 		public IoLibV(File f, String name, int opcode, IoLib iolib) {
-			super();
 			this.f = f;
 			this.name = name;
 			this.opcode = opcode;
 			this.iolib = iolib;
 		}
 
+		@Override
 		public Varargs invoke(Varargs args) {
 			try {
 				switch (opcode) {
@@ -630,9 +636,7 @@ abstract public class IoLib extends TwoArgFunction {
 		int len = mode.length();
 		for (int i = 0; i < len; i++) { // [rwa][+]?b*
 			char ch = mode.charAt(i);
-			if (i == 0 && "rwa".indexOf(ch) >= 0)
-				continue;
-			if (i == 1 && ch == '+')
+			if ((i == 0 && "rwa".indexOf(ch) >= 0) || (i == 1 && ch == '+'))
 				continue;
 			if (i >= 1 && ch == 'b')
 				continue;

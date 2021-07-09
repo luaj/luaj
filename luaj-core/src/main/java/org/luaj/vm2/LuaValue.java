@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,7 +38,7 @@ package org.luaj.vm2;
  * <p>
  * Operations are performed on values directly via their Java methods. For
  * example, the following code divides two numbers:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -47,7 +47,7 @@ package org.luaj.vm2;
  * 	LuaValue c = a.div(b);
  * }
  * </pre>
- * 
+ *
  * Note that in this example, c will be a {@link LuaDouble}, but would be a
  * {@link LuaInteger} if the value of a were changed to 8, say. In general the
  * value of c in practice will vary depending on both the types and values of a
@@ -55,7 +55,7 @@ package org.luaj.vm2;
  * <p>
  * Field access and function calls are similar, with common overloads to
  * simplify Java usage:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -69,7 +69,7 @@ package org.luaj.vm2;
  * <p>
  * To supply variable arguments or get multiple return values, use
  * {@link #invoke(Varargs)} or {@link #invokemethod(LuaValue, Varargs)} methods:
- * 
+ *
  * <pre>
  * {
  * 	&#64;code
@@ -80,7 +80,7 @@ package org.luaj.vm2;
  * </pre>
  * <p>
  * To load and run a script, {@link LoadState} is used:
- * 
+ *
  * <pre>
  *  {@code
  * LoadState.load( new FileInputStream("main.lua"), "main.lua", globals ).call();
@@ -88,13 +88,13 @@ package org.luaj.vm2;
  * </pre>
  * <p>
  * although {@code require} could also be used:
- * 
+ *
  * <pre>
  *  {@code
  * globals.get("require").call(LuaValue.valueOf("main"));
  * }
  * </pre>
- * 
+ *
  * For this to work the file must be in the current directory, or in the class
  * path, dependening on the platform. See
  * {@link org.luaj.vm2.lib.jse.JsePlatform} and
@@ -123,7 +123,7 @@ package org.luaj.vm2;
  * {@link #ADD}, {@link #SUB}, {@link #DIV}, {@link #MUL}, {@link #POW},
  * {@link #MOD}, {@link #UNM}, {@link #LEN}, {@link #EQ}, {@link #LT},
  * {@link #LE}, {@link #TOSTRING}, and {@link #CONCAT}.
- * 
+ *
  * @see org.luaj.vm2.lib.jse.JsePlatform
  * @see org.luaj.vm2.lib.jme.JmePlatform
  * @see LoadState
@@ -135,13 +135,13 @@ abstract public class LuaValue extends Varargs {
 	 * Type enumeration constant for lua numbers that are ints, for
 	 * compatibility with lua 5.1 number patch only
 	 */
-	public static final int TINT = (-2);
+	public static final int TINT = -2;
 
 	/**
 	 * Type enumeration constant for lua values that have no type, for example
 	 * weak table entries
 	 */
-	public static final int TNONE = (-1);
+	public static final int TNONE = -1;
 
 	/** Type enumeration constant for lua nil */
 	public static final int TNIL = 0;
@@ -181,7 +181,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * String array constant containing names of each of the lua value types
-	 * 
+	 *
 	 * @see #type()
 	 * @see #typename()
 	 */
@@ -290,7 +290,7 @@ abstract public class LuaValue extends Varargs {
 	// type
 	/**
 	 * Get the enumeration value for the type of this value.
-	 * 
+	 *
 	 * @return value for this type, one of {@link #TNIL}, {@link #TBOOLEAN},
 	 *         {@link #TNUMBER}, {@link #TSTRING}, {@link #TTABLE},
 	 *         {@link #TFUNCTION}, {@link #TUSERDATA}, {@link #TTHREAD}
@@ -301,7 +301,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Get the String name of the type of this value.
 	 * <p>
-	 * 
+	 *
 	 * @return name from type name list {@link #TYPE_NAMES} corresponding to the
 	 *         type of this value: "nil", "boolean", "number", "string",
 	 *         "table", "function", "userdata", "thread"
@@ -311,7 +311,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code boolean}
-	 * 
+	 *
 	 * @return true if this is a {@code boolean}, otherwise false
 	 * @see #isboolean()
 	 * @see #toboolean()
@@ -324,7 +324,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check if {@code this} is a {@code function} that is a closure, meaning
 	 * interprets lua bytecode for its execution
-	 * 
+	 *
 	 * @return true if this is a {@code closure}, otherwise false
 	 * @see #isfunction()
 	 * @see #checkclosure()
@@ -335,7 +335,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code function}
-	 * 
+	 *
 	 * @return true if this is a {@code function}, otherwise false
 	 * @see #isclosure()
 	 * @see #checkfunction()
@@ -347,7 +347,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check if {@code this} is a {@code number} and is representable by java
 	 * int without rounding or truncation
-	 * 
+	 *
 	 * @return true if this is a {@code number} meaning derives from
 	 *         {@link LuaNumber} or derives from {@link LuaString} and is
 	 *         convertible to a number, and can be represented by int, otherwise
@@ -365,7 +365,7 @@ abstract public class LuaValue extends Varargs {
 	 * Check if {@code this} is a {@link LuaInteger}
 	 * <p>
 	 * No attempt to convert from string will be made by this call.
-	 * 
+	 *
 	 * @return true if this is a {@code LuaInteger}, otherwise false
 	 * @see #isint()
 	 * @see #isnumber()
@@ -377,7 +377,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check if {@code this} is a {@code number} and is representable by java
 	 * long without rounding or truncation
-	 * 
+	 *
 	 * @return true if this is a {@code number} meaning derives from
 	 *         {@link LuaNumber} or derives from {@link LuaString} and is
 	 *         convertible to a number, and can be represented by long,
@@ -391,7 +391,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is {@code #NIL}
-	 * 
+	 *
 	 * @return true if this is {@code #NIL}, otherwise false
 	 * @see #NIL
 	 * @see #NONE
@@ -405,7 +405,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code number}
-	 * 
+	 *
 	 * @return true if this is a {@code number}, meaning derives from
 	 *         {@link LuaNumber} or derives from {@link LuaString} and is
 	 *         convertible to a number, otherwise false
@@ -418,7 +418,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code string}
-	 * 
+	 *
 	 * @return true if this is a {@code string}, meaning derives from
 	 *         {@link LuaString} or {@link LuaNumber}, otherwise false
 	 * @see #tostring()
@@ -430,7 +430,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code thread}
-	 * 
+	 *
 	 * @return true if this is a {@code thread}, otherwise false
 	 * @see #checkthread()
 	 * @see #optthread(LuaThread)
@@ -440,7 +440,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code table}
-	 * 
+	 *
 	 * @return true if this is a {@code table}, otherwise false
 	 * @see #checktable()
 	 * @see #opttable(LuaTable)
@@ -450,7 +450,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code userdata}
-	 * 
+	 *
 	 * @return true if this is a {@code userdata}, otherwise false
 	 * @see #isuserdata(Class)
 	 * @see #touserdata()
@@ -462,7 +462,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check if {@code this} is a {@code userdata} of type {@code c}
-	 * 
+	 *
 	 * @param c Class to test instance against
 	 * @return true if this is a {@code userdata} and the instance is assignable
 	 *         to {@code c}, otherwise false
@@ -477,7 +477,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Convert to boolean false if {@link #NIL} or {@link #FALSE}, true if
 	 * anything else
-	 * 
+	 *
 	 * @return Value cast to byte if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #optboolean(boolean)
@@ -489,7 +489,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to byte if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to byte if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #toint()
@@ -502,7 +502,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to char if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to char if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #toint()
@@ -515,7 +515,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to double if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to double if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #toint()
@@ -533,7 +533,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to float if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to float if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #toint()
@@ -546,7 +546,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to int if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to int if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #tobyte()
@@ -564,7 +564,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to long if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to long if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #isint()
@@ -580,7 +580,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to short if numeric, or 0 if not.
-	 * 
+	 *
 	 * @return Value cast to short if number or string convertible to number,
 	 *         otherwise 0
 	 * @see #toint()
@@ -593,7 +593,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to human readable String for any type.
-	 * 
+	 *
 	 * @return String for use by human readers based on type.
 	 * @see #tostring()
 	 * @see #optjstring(String)
@@ -601,11 +601,12 @@ abstract public class LuaValue extends Varargs {
 	 * @see #isstring()
 	 * @see #TSTRING
 	 */
+	@Override
 	public String tojstring() { return typename() + ": " + Integer.toHexString(hashCode()); }
 
 	/**
 	 * Convert to userdata instance, or null.
-	 * 
+	 *
 	 * @return userdata instance if userdata, or null if not {@link LuaUserdata}
 	 * @see #optuserdata(Object)
 	 * @see #checkuserdata()
@@ -616,7 +617,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert to userdata instance if specific type, or null.
-	 * 
+	 *
 	 * @return userdata instance if is a userdata whose instance derives from
 	 *         {@code c}, or null if not {@link LuaUserdata}
 	 * @see #optuserdata(Class,Object)
@@ -628,7 +629,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert the value to a human readable string using {@link #tojstring()}
-	 * 
+	 *
 	 * @return String value intended to be human readible.
 	 * @see #tostring()
 	 * @see #tojstring()
@@ -636,6 +637,7 @@ abstract public class LuaValue extends Varargs {
 	 * @see #checkstring()
 	 * @see #toString()
 	 */
+	@Override
 	public String toString() { return tojstring(); }
 
 	/**
@@ -649,7 +651,7 @@ abstract public class LuaValue extends Varargs {
 	 * This allows values to be tested for their "numeric-ness" without the
 	 * penalty of throwing exceptions, nor the cost of converting the type and
 	 * creating storage for it.
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaNumber} or {@link LuaString}
 	 *         that can be converted to a number, otherwise {@link #NIL}
 	 * @see #tostring()
@@ -669,7 +671,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This allows values to be tested for their "string-ness" without the
 	 * penalty of throwing exceptions.
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaString} or {@link LuaNumber},
 	 *         otherwise {@link #NIL}
 	 * @see #tonumber()
@@ -682,7 +684,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check that optional argument is a boolean and return its boolean value
-	 * 
+	 *
 	 * @param defval boolean value to return if {@code this} is nil or none
 	 * @return {@code this} cast to boolean if a {@link LuaBoolean},
 	 *         {@code defval} if nil or none, throws {@link LuaError} otherwise
@@ -699,7 +701,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * A {@link LuaClosure} is a {@link LuaFunction} that executes lua
 	 * byteccode.
-	 * 
+	 *
 	 * @param defval {@link LuaClosure} to return if {@code this} is nil or none
 	 * @return {@code this} cast to {@link LuaClosure} if a function,
 	 *         {@code defval} if nil or none, throws {@link LuaError} otherwise
@@ -713,7 +715,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a number or string convertible to number
 	 * and return as double
-	 * 
+	 *
 	 * @param defval double to return if {@code this} is nil or none
 	 * @return {@code this} cast to double if numeric, {@code defval} if nil or
 	 *         none, throws {@link LuaError} otherwise
@@ -735,7 +737,7 @@ abstract public class LuaValue extends Varargs {
 	 * A {@link LuaFunction} may either be a Java function that implements
 	 * functionality directly in Java, or a {@link LuaClosure} which is a
 	 * {@link LuaFunction} that executes lua bytecode.
-	 * 
+	 *
 	 * @param defval {@link LuaFunction} to return if {@code this} is nil or
 	 *               none
 	 * @return {@code this} cast to {@link LuaFunction} if a function,
@@ -750,7 +752,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a number or string convertible to number
 	 * and return as int
-	 * 
+	 *
 	 * @param defval int to return if {@code this} is nil or none
 	 * @return {@code this} cast to int if numeric, {@code defval} if nil or
 	 *         none, throws {@link LuaError} otherwise
@@ -769,7 +771,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a number or string convertible to number
 	 * and return as {@link LuaInteger}
-	 * 
+	 *
 	 * @param defval {@link LuaInteger} to return if {@code this} is nil or none
 	 * @return {@code this} converted and wrapped in {@link LuaInteger} if
 	 *         numeric, {@code defval} if nil or none, throws {@link LuaError}
@@ -788,7 +790,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a number or string convertible to number
 	 * and return as long
-	 * 
+	 *
 	 * @param defval long to return if {@code this} is nil or none
 	 * @return {@code this} cast to long if numeric, {@code defval} if nil or
 	 *         none, throws {@link LuaError} otherwise
@@ -806,7 +808,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a number or string convertible to number
 	 * and return as {@link LuaNumber}
-	 * 
+	 *
 	 * @param defval {@link LuaNumber} to return if {@code this} is nil or none
 	 * @return {@code this} cast to {@link LuaNumber} if numeric, {@code defval}
 	 *         if nil or none, throws {@link LuaError} otherwise
@@ -825,7 +827,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a string or number and return as Java
 	 * String
-	 * 
+	 *
 	 * @param defval {@link LuaString} to return if {@code this} is nil or none
 	 * @return {@code this} converted to String if a string or number,
 	 *         {@code defval} if nil or none, throws {@link LuaError} if some
@@ -842,7 +844,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a string or number and return as
 	 * {@link LuaString}
-	 * 
+	 *
 	 * @param defval {@link LuaString} to return if {@code this} is nil or none
 	 * @return {@code this} converted to {@link LuaString} if a string or
 	 *         number, {@code defval} if nil or none, throws {@link LuaError} if
@@ -858,7 +860,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check that optional argument is a table and return as {@link LuaTable}
-	 * 
+	 *
 	 * @param defval {@link LuaTable} to return if {@code this} is nil or none
 	 * @return {@code this} cast to {@link LuaTable} if a table, {@code defval}
 	 *         if nil or none, throws {@link LuaError} if some other type
@@ -871,7 +873,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check that optional argument is a thread and return as {@link LuaThread}
-	 * 
+	 *
 	 * @param defval {@link LuaThread} to return if {@code this} is nil or none
 	 * @return {@code this} cast to {@link LuaTable} if a thread, {@code defval}
 	 *         if nil or none, throws {@link LuaError} if some other type
@@ -884,7 +886,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Check that optional argument is a userdata and return the Object instance
-	 * 
+	 *
 	 * @param defval Object to return if {@code this} is nil or none
 	 * @return Object instance of the userdata if a {@link LuaUserdata},
 	 *         {@code defval} if nil or none, throws {@link LuaError} if some
@@ -900,7 +902,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that optional argument is a userdata whose instance is of a type
 	 * and return the Object instance
-	 * 
+	 *
 	 * @param c      Class to test userdata instance against
 	 * @param defval Object to return if {@code this} is nil or none
 	 * @return Object instance of the userdata if a {@link LuaUserdata} and
@@ -917,7 +919,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Perform argument check that this is not nil or none.
-	 * 
+	 *
 	 * @param defval {@link LuaValue} to return if {@code this} is nil or none
 	 * @return {@code this} if not nil or none, else {@code defval}
 	 * @see #NIL
@@ -932,7 +934,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that the value is a {@link LuaBoolean}, or throw {@link LuaError}
 	 * if not
-	 * 
+	 *
 	 * @return boolean value for {@code this} if it is a {@link LuaBoolean}
 	 * @throws LuaError if not a {@link LuaBoolean}
 	 * @see #optboolean(boolean)
@@ -946,7 +948,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@link LuaClosure} is a subclass of {@link LuaFunction} that interprets
 	 * lua bytecode.
-	 * 
+	 *
 	 * @return {@code this} cast as {@link LuaClosure}
 	 * @throws LuaError if not a {@link LuaClosure}
 	 * @see #checkfunction()
@@ -962,7 +964,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Values that are {@link LuaNumber} and values that are {@link LuaString}
 	 * that can be converted to a number will be converted to double.
-	 * 
+	 *
 	 * @return value cast to a double if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
 	 *                  that can't be converted to number
@@ -980,7 +982,7 @@ abstract public class LuaValue extends Varargs {
 	 * A {@link LuaFunction} may either be a Java function that implements
 	 * functionality directly in Java, or a {@link LuaClosure} which is a
 	 * {@link LuaFunction} that executes lua bytecode.
-	 * 
+	 *
 	 * @return {@code this} if it is a lua function or closure
 	 * @throws LuaError if not a function
 	 * @see #checkclosure()
@@ -993,7 +995,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@link Globals} are a special {@link LuaTable} that establish the default
 	 * global environment.
-	 * 
+	 *
 	 * @return {@code this} if if an instance fof {@link Globals}
 	 * @throws LuaError if not a {@link Globals} instance.
 	 */
@@ -1006,7 +1008,7 @@ abstract public class LuaValue extends Varargs {
 	 * Values that are {@link LuaNumber} will be cast to int and may lose
 	 * precision. Values that are {@link LuaString} that can be converted to a
 	 * number will be converted, then cast to int, so may also lose precision.
-	 * 
+	 *
 	 * @return value cast to a int if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
 	 *                  that can't be converted to number
@@ -1025,7 +1027,7 @@ abstract public class LuaValue extends Varargs {
 	 * Values that are {@link LuaNumber} will be cast to int and may lose
 	 * precision. Values that are {@link LuaString} that can be converted to a
 	 * number will be converted, then cast to int, so may also lose precision.
-	 * 
+	 *
 	 * @return value cast to a int and wrapped in {@link LuaInteger} if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
 	 *                  that can't be converted to number
@@ -1044,7 +1046,7 @@ abstract public class LuaValue extends Varargs {
 	 * Values that are {@link LuaNumber} will be cast to long and may lose
 	 * precision. Values that are {@link LuaString} that can be converted to a
 	 * number will be converted, then cast to long, so may also lose precision.
-	 * 
+	 *
 	 * @return value cast to a long if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
 	 *                  that can't be converted to number
@@ -1062,7 +1064,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Values that are {@link LuaString} that can be converted to a number will
 	 * be converted and returned.
-	 * 
+	 *
 	 * @return value as a {@link LuaNumber} if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
 	 *                  that can't be converted to number
@@ -1081,7 +1083,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Values that are {@link LuaString} that can be converted to a number will
 	 * be converted and returned.
-	 * 
+	 *
 	 * @param msg String message to supply if conversion fails
 	 * @return value as a {@link LuaNumber} if numeric
 	 * @throws LuaError if not a {@link LuaNumber} or is a {@link LuaString}
@@ -1101,7 +1103,7 @@ abstract public class LuaValue extends Varargs {
 	 * The string representations here will roughly match what is produced by
 	 * the C lua distribution, however hash codes have no relationship, and
 	 * there may be differences in number formatting.
-	 * 
+	 *
 	 * @return String representation of the value
 	 * @see #checkstring()
 	 * @see #optjstring(String)
@@ -1117,7 +1119,7 @@ abstract public class LuaValue extends Varargs {
 	 * In lua all numbers are strings, so this will succeed for anything that
 	 * derives from {@link LuaString} or {@link LuaNumber}. Numbers will be
 	 * converted to {@link LuaString}.
-	 * 
+	 *
 	 * @return {@link LuaString} representation of the value if it is a
 	 *         {@link LuaString} or {@link LuaNumber}
 	 * @throws LuaError if {@code this} is not a {@link LuaTable}
@@ -1132,7 +1134,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that this is a {@link LuaTable}, or throw {@link LuaError} if it is
 	 * not
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaTable}
 	 * @throws LuaError if {@code this} is not a {@link LuaTable}
 	 * @see #istable()
@@ -1144,7 +1146,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that this is a {@link LuaThread}, or throw {@link LuaError} if it
 	 * is not
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaThread}
 	 * @throws LuaError if {@code this} is not a {@link LuaThread}
 	 * @see #isthread()
@@ -1156,7 +1158,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that this is a {@link LuaUserdata}, or throw {@link LuaError} if it
 	 * is not
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaUserdata}
 	 * @throws LuaError if {@code this} is not a {@link LuaUserdata}
 	 * @see #isuserdata()
@@ -1169,7 +1171,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that this is a {@link LuaUserdata}, or throw {@link LuaError} if it
 	 * is not
-	 * 
+	 *
 	 * @return {@code this} if it is a {@link LuaUserdata}
 	 * @throws LuaError if {@code this} is not a {@link LuaUserdata}
 	 * @see #isuserdata(Class)
@@ -1182,7 +1184,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Check that this is not the value {@link #NIL}, or throw {@link LuaError}
 	 * if it is
-	 * 
+	 *
 	 * @return {@code this} if it is not {@link #NIL}
 	 * @throws LuaError if {@code this} is {@link #NIL}
 	 * @see #optvalue(LuaValue)
@@ -1191,7 +1193,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Return true if this is a valid key in a table index operation.
-	 * 
+	 *
 	 * @return true if valid as a table key, otherwise false
 	 * @see #isnil()
 	 * @see #isinttype()
@@ -1200,7 +1202,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Throw a {@link LuaError} with a particular message
-	 * 
+	 *
 	 * @param message String providing message details
 	 * @throws LuaError in all cases
 	 */
@@ -1210,7 +1212,7 @@ abstract public class LuaValue extends Varargs {
 	 * Assert a condition is true, or throw a {@link LuaError} if not Returns no
 	 * value when b is true, throws {@link #error(String)} with {@code msg} as
 	 * argument and does not return if b is false.
-	 * 
+	 *
 	 * @param b   condition to test
 	 * @param msg String message to produce on failure
 	 * @throws LuaError if b is not true
@@ -1223,7 +1225,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} indicating an invalid argument was supplied to a
 	 * function
-	 * 
+	 *
 	 * @param expected String naming the type that was expected
 	 * @throws LuaError in all cases
 	 */
@@ -1234,7 +1236,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} indicating an invalid argument was supplied to a
 	 * function
-	 * 
+	 *
 	 * @param iarg index of the argument that was invalid, first index is 1
 	 * @param msg  String providing information about the invalid argument
 	 * @throws LuaError in all cases
@@ -1246,7 +1248,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} indicating an invalid type was supplied to a
 	 * function
-	 * 
+	 *
 	 * @param expected String naming the type that was expected
 	 * @throws LuaError in all cases
 	 */
@@ -1254,7 +1256,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Throw a {@link LuaError} indicating an operation is not implemented
-	 * 
+	 *
 	 * @throws LuaError in all cases
 	 */
 	protected LuaValue unimplemented(String fun) {
@@ -1264,7 +1266,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} indicating an illegal operation occurred,
 	 * typically involved in managing weak references
-	 * 
+	 *
 	 * @throws LuaError in all cases
 	 */
 	protected LuaValue illegal(String op, String typename) {
@@ -1274,7 +1276,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} based on the len operator, typically due to an
 	 * invalid operand type
-	 * 
+	 *
 	 * @throws LuaError in all cases
 	 */
 	protected LuaValue lenerror() { throw new LuaError("attempt to get length of " + typename()); }
@@ -1282,7 +1284,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} based on an arithmetic error such as add, or
 	 * pow, typically due to an invalid operand type
-	 * 
+	 *
 	 * @throws LuaError in all cases
 	 */
 	protected LuaValue aritherror() { throw new LuaError("attempt to perform arithmetic on " + typename()); }
@@ -1290,7 +1292,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} based on an arithmetic error such as add, or
 	 * pow, typically due to an invalid operand type
-	 * 
+	 *
 	 * @param fun String description of the function that was attempted
 	 * @throws LuaError in all cases
 	 */
@@ -1301,7 +1303,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} based on a comparison error such as greater-than
 	 * or less-than, typically due to an invalid operand type
-	 * 
+	 *
 	 * @param rhs String description of what was on the right-hand-side of the
 	 *            comparison that resulted in the error.
 	 * @throws LuaError in all cases
@@ -1313,7 +1315,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Throw a {@link LuaError} based on a comparison error such as greater-than
 	 * or less-than, typically due to an invalid operand type
-	 * 
+	 *
 	 * @param rhs Right-hand-side of the comparison that resulted in the error.
 	 * @throws LuaError in all cases
 	 */
@@ -1323,7 +1325,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table including metatag processing using {@link #INDEX}.
-	 * 
+	 *
 	 * @param key the key to look up, must not be {@link #NIL} or null
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found and
 	 *         no metatag
@@ -1337,7 +1339,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table including metatag processing using {@link #INDEX}.
-	 * 
+	 *
 	 * @param key the key to look up
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1349,7 +1351,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table including metatag processing using {@link #INDEX}.
-	 * 
+	 *
 	 * @param key the key to look up, must not be null
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1362,7 +1364,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use, must not be {@link #NIL} or null
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table, or key is {@link #NIL},
@@ -1373,7 +1375,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1384,7 +1386,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use
 	 * @param value the value to use, must not be null
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1395,7 +1397,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use, must not be {@link #NIL} or null
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1406,7 +1408,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1417,7 +1419,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1428,7 +1430,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Set a value in a table without metatag processing using
 	 * {@link #NEWINDEX}.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use, must not be null
 	 * @throws LuaError if {@code this} is not a table, or there is no
@@ -1438,7 +1440,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key the key to look up, must not be {@link #NIL} or null
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found
 	 * @throws LuaError if {@code this} is not a table, or key is {@link #NIL}
@@ -1447,7 +1449,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key the key to look up
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found
 	 * @throws LuaError if {@code this} is not a table
@@ -1456,7 +1458,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key the key to look up, must not be null
 	 * @return {@link LuaValue} for that key, or {@link #NIL} if not found
 	 * @throws LuaError if {@code this} is not a table
@@ -1465,7 +1467,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use, must not be {@link #NIL} or null
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table, or key is {@link #NIL}
@@ -1474,7 +1476,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table
@@ -1483,7 +1485,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table
@@ -1492,7 +1494,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use, can be {@link #NIL}, must not be null
 	 * @throws LuaError if {@code this} is not a table
@@ -1501,7 +1503,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use
 	 * @throws LuaError if {@code this} is not a table
@@ -1510,7 +1512,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use
 	 * @throws LuaError if {@code this} is not a table
@@ -1519,7 +1521,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Set a value in a table without metatag processing.
-	 * 
+	 *
 	 * @param key   the key to use, must not be null
 	 * @param value the value to use, must not be null
 	 * @throws LuaError if {@code this} is not a table
@@ -1530,7 +1532,7 @@ abstract public class LuaValue extends Varargs {
 	 * Set list values in a table without invoking metatag processing
 	 * <p>
 	 * Primarily used internally in response to a SETLIST bytecode.
-	 * 
+	 *
 	 * @param key0   the first key to set in the table
 	 * @param values the list of values to set
 	 * @throws LuaError if this is not a table.
@@ -1544,7 +1546,7 @@ abstract public class LuaValue extends Varargs {
 	 * Preallocate the array part of a table to be a certain size,
 	 * <p>
 	 * Primarily used internally in response to a SETLIST bytecode.
-	 * 
+	 *
 	 * @param i the number of array slots to preallocate in the table.
 	 * @throws LuaError if this is not a table.
 	 */
@@ -1556,7 +1558,7 @@ abstract public class LuaValue extends Varargs {
 	 * table.
 	 * <p>
 	 * To iterate over all key-value pairs in a table you can use
-	 * 
+	 *
 	 * <pre>
 	 *  {@code
 	 * LuaValue k = LuaValue.NIL;
@@ -1568,7 +1570,7 @@ abstract public class LuaValue extends Varargs {
 	 *    process( k, v )
 	 * }}
 	 * </pre>
-	 * 
+	 *
 	 * @param index {@link LuaInteger} value identifying a key to start from, or
 	 *              {@link #NIL} to start at the beginning
 	 * @return {@link Varargs} containing {key,value} for the next entry, or
@@ -1590,7 +1592,7 @@ abstract public class LuaValue extends Varargs {
 	 * table.
 	 * <p>
 	 * To iterate over integer keys in a table you can use
-	 * 
+	 *
 	 * <pre>
 	 *  {@code
 	 *   LuaValue k = LuaValue.NIL;
@@ -1603,7 +1605,7 @@ abstract public class LuaValue extends Varargs {
 	 *   }
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * @param index {@link LuaInteger} value identifying a key to start from, or
 	 *              {@link #NIL} to start at the beginning
 	 * @return {@link Varargs} containing {@code (key,value)} for the next
@@ -1624,17 +1626,20 @@ abstract public class LuaValue extends Varargs {
 	 * modname, and this Globals as the environment. This is normally used to
 	 * iniitalize the library instance and which may install itself into these
 	 * globals.
-	 * 
+	 *
 	 * @param library The callable {@link LuaValue} to load into {@code this}
 	 * @return {@link LuaValue} returned by the initialization call.
 	 */
 	public LuaValue load(LuaValue library) { return library.call(EMPTYSTRING, this); }
 
 	// varargs references
+	@Override
 	public LuaValue arg(int index) { return index == 1? this: NIL; }
 
-	public int narg() { return 1; };
+	@Override
+	public int narg() { return 1; }
 
+	@Override
 	public LuaValue arg1() { return this; }
 
 	/**
@@ -1643,7 +1648,7 @@ abstract public class LuaValue extends Varargs {
 	 * For {@link LuaTable} and {@link LuaUserdata} instances, the metatable
 	 * returned is this instance metatable. For all other types, the class
 	 * metatable value will be returned.
-	 * 
+	 *
 	 * @return metatable, or null if it there is none
 	 * @see LuaBoolean#s_metatable
 	 * @see LuaNumber#s_metatable
@@ -1659,7 +1664,7 @@ abstract public class LuaValue extends Varargs {
 	 * For {@link LuaTable} and {@link LuaUserdata} instances, the metatable is
 	 * per instance. For all other types, there is one metatable per type that
 	 * can be set directly from java
-	 * 
+	 *
 	 * @param metatable {@link LuaValue} instance to serve as the metatable, or
 	 *                  null to reset it.
 	 * @return {@code this} to allow chaining of Java function calls
@@ -1684,7 +1689,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use {@link #method(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @return First return value {@code (this())}, or {@link #NIL} if there
 	 *         were none.
 	 * @throws LuaError if not a function and {@link #CALL} is not defined, or
@@ -1712,7 +1717,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use {@link #method(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @param arg First argument to supply to the called function
 	 * @return First return value {@code (this(arg))}, or {@link #NIL} if there
 	 *         were none.
@@ -1731,7 +1736,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Convenience function which calls a luavalue with a single, string
 	 * argument.
-	 * 
+	 *
 	 * @param arg String argument to the function. This will be converted to a
 	 *            LuaString.
 	 * @return return value of the invocation.
@@ -1752,7 +1757,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use {@link #method(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @param arg1 First argument to supply to the called function
 	 * @param arg2 Second argument to supply to the called function
 	 * @return First return value {@code (this(arg1,arg2))}, or {@link #NIL} if
@@ -1782,7 +1787,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use {@link #method(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @param arg1 First argument to supply to the called function
 	 * @param arg2 Second argument to supply to the called function
 	 * @param arg3 Second argument to supply to the called function
@@ -1815,7 +1820,7 @@ abstract public class LuaValue extends Varargs {
 	 * returned. To get multiple values, use {@link #invoke()} instead.
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #call()} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @return All values returned from {@code this:name()} as a {@link Varargs}
 	 *         instance
@@ -1843,7 +1848,7 @@ abstract public class LuaValue extends Varargs {
 	 * returned. To get multiple values, use {@link #invoke()} instead.
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #call()} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @return All values returned from {@code this:name()} as a {@link Varargs}
 	 *         instance
@@ -1872,7 +1877,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #call(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param arg  Argument to supply to the method
 	 * @return All values returned from {@code this:name(arg)} as a
@@ -1902,7 +1907,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #call(LuaValue)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param arg  Argument to supply to the method
 	 * @return All values returned from {@code this:name(arg)} as a
@@ -1932,7 +1937,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use
 	 * {@link #call(LuaValue,LuaValue)} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param arg1 First argument to supply to the method
 	 * @param arg2 Second argument to supply to the method
@@ -1964,7 +1969,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use
 	 * {@link #call(LuaValue,LuaValue)} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param arg1 First argument to supply to the method
 	 * @param arg2 Second argument to supply to the method
@@ -1993,7 +1998,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue)} instead.
-	 * 
+	 *
 	 * @return All return values as a {@link Varargs} instance.
 	 * @throws LuaError if not a function and {@link #CALL} is not defined, or
 	 *                  the invoked function throws a {@link LuaError} or the
@@ -2016,7 +2021,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue)} instead.
-	 * 
+	 *
 	 * @param args Varargs containing the arguments to supply to the called
 	 *             function
 	 * @return All return values as a {@link Varargs} instance.
@@ -2043,7 +2048,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue,Varargs)} instead.
-	 * 
+	 *
 	 * @param arg     The first argument to supply to the called function
 	 * @param varargs Varargs containing the remaining arguments to supply to
 	 *                the called function
@@ -2070,7 +2075,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue,Varargs)} instead.
-	 * 
+	 *
 	 * @param arg1    The first argument to supply to the called function
 	 * @param arg2    The second argument to supply to the called function
 	 * @param varargs Varargs containing the remaining arguments to supply to
@@ -2100,7 +2105,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue,Varargs)} instead.
-	 * 
+	 *
 	 * @param args Array of arguments to supply to the called function
 	 * @return All return values as a {@link Varargs} instance.
 	 * @throws LuaError if not a function and {@link #CALL} is not defined, or
@@ -2125,7 +2130,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a method call, use
 	 * {@link #invokemethod(LuaValue,Varargs)} instead.
-	 * 
+	 *
 	 * @param args    Array of arguments to supply to the called function
 	 * @param varargs Varargs containing additional arguments to supply to the
 	 *                called function
@@ -2155,7 +2160,7 @@ abstract public class LuaValue extends Varargs {
 	 * To get a particular return value, us {@link Varargs#arg(int)}
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke()} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @return All values returned from {@code this:name()} as a {@link Varargs}
 	 *         instance
@@ -2185,7 +2190,7 @@ abstract public class LuaValue extends Varargs {
 	 * To get a particular return value, us {@link Varargs#arg(int)}
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke()} instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @return All values returned from {@code this:name()} as a {@link Varargs}
 	 *         instance
@@ -2216,7 +2221,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke(Varargs)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param args {@link Varargs} containing arguments to supply to the called
 	 *             function after {@code this}
@@ -2249,7 +2254,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke(Varargs)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param args {@link Varargs} containing arguments to supply to the called
 	 *             function after {@code this}
@@ -2282,7 +2287,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke(Varargs)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param args Array of {@link LuaValue} containing arguments to supply to
 	 *             the called function after {@code this}
@@ -2318,7 +2323,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To call {@code this} as a plain call, use {@link #invoke(Varargs)}
 	 * instead.
-	 * 
+	 *
 	 * @param name Name of the method to look up for invocation
 	 * @param args Array of {@link LuaValue} containing arguments to supply to
 	 *             the called function after {@code this}
@@ -2343,7 +2348,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get the metatag value for the {@link #CALL} metatag, if it exists.
-	 * 
+	 *
 	 * @return {@link LuaValue} value if metatag is defined
 	 * @throws LuaError if {@link #CALL} metatag is not defined.
 	 */
@@ -2354,7 +2359,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Unary not: return inverse boolean value {@code (~this)} as defined by lua
 	 * not operator
-	 * 
+	 *
 	 * @return {@link #TRUE} if {@link #NIL} or {@link #FALSE}, otherwise
 	 *         {@link #FALSE}
 	 */
@@ -2363,7 +2368,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Unary minus: return negative value {@code (-this)} as defined by lua
 	 * unary minus operator
-	 * 
+	 *
 	 * @return boolean inverse as {@link LuaBoolean} if boolean or nil, numeric
 	 *         inverse as {@link LuaNumber} if numeric, or metatag processing
 	 *         result if {@link #UNM} metatag is defined
@@ -2375,7 +2380,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Length operator: return lua length of object {@code (#this)} including
 	 * metatag processing as java int
-	 * 
+	 *
 	 * @return length as defined by the lua # operator or metatag processing
 	 *         result
 	 * @throws LuaError if {@code this} is not a table or string, and has no
@@ -2386,7 +2391,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Length operator: return lua length of object {@code (#this)} including
 	 * metatag processing as java int
-	 * 
+	 *
 	 * @return length as defined by the lua # operator or metatag processing
 	 *         result converted to java int using {@link #toint()}
 	 * @throws LuaError if {@code this} is not a table or string, and has no
@@ -2396,19 +2401,20 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get raw length of table or string without metatag processing.
-	 * 
+	 *
 	 * @return the length of the table or string.
 	 * @throws LuaError if {@code this} is not a table or string.
 	 */
 	public int rawlen() { typerror("table or string"); return 0; }
 
 	// object equality, used for key comparison
+	@Override
 	public boolean equals(Object obj) { return this == obj; }
 
 	/**
 	 * Equals: Perform equality comparison with another value including metatag
 	 * processing using {@link #EQ}.
-	 * 
+	 *
 	 * @param val The value to compare with.
 	 * @return {@link #TRUE} if values are comparable and {@code (this == rhs)},
 	 *         {@link #FALSE} if comparable but not equal, {@link LuaValue} if
@@ -2424,7 +2430,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform equality comparison with another value including metatag
 	 * processing using {@link #EQ}, and return java boolean
-	 * 
+	 *
 	 * @param val The value to compare with.
 	 * @return true if values are comparable and {@code (this == rhs)}, false if
 	 *         comparable but not equal, result converted to java boolean if
@@ -2440,7 +2446,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Notquals: Perform inequality comparison with another value including
 	 * metatag processing using {@link #EQ}.
-	 * 
+	 *
 	 * @param val The value to compare with.
 	 * @return {@link #TRUE} if values are comparable and {@code (this != rhs)},
 	 *         {@link #FALSE} if comparable but equal, inverse of
@@ -2456,7 +2462,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Notquals: Perform inequality comparison with another value including
 	 * metatag processing using {@link #EQ}.
-	 * 
+	 *
 	 * @param val The value to compare with.
 	 * @return true if values are comparable and {@code (this != rhs)}, false if
 	 *         comparable but equal, inverse of result converted to boolean if
@@ -2471,7 +2477,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform direct equality comparison with another value without
 	 * metatag processing.
-	 * 
+	 *
 	 * @param val The value to compare with.
 	 * @return true if {@code (this == rhs)}, false otherwise
 	 * @see #eq(LuaValue)
@@ -2486,7 +2492,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform direct equality comparison with a {@link LuaUserdata}
 	 * value without metatag processing.
-	 * 
+	 *
 	 * @param val The {@link LuaUserdata} to compare with.
 	 * @return true if {@code this} is userdata and their metatables are the
 	 *         same using == and their instances are equal using
@@ -2499,7 +2505,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform direct equality comparison with a {@link LuaString} value
 	 * without metatag processing.
-	 * 
+	 *
 	 * @param val The {@link LuaString} to compare with.
 	 * @return true if {@code this} is a {@link LuaString} and their byte
 	 *         sequences match, otherwise false
@@ -2509,7 +2515,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform direct equality comparison with a double value without
 	 * metatag processing.
-	 * 
+	 *
 	 * @param val The double value to compare with.
 	 * @return true if {@code this} is a {@link LuaNumber} whose value equals
 	 *         val, otherwise false
@@ -2519,7 +2525,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Equals: Perform direct equality comparison with a int value without
 	 * metatag processing.
-	 * 
+	 *
 	 * @param val The double value to compare with.
 	 * @return true if {@code this} is a {@link LuaNumber} whose value equals
 	 *         val, otherwise false
@@ -2528,7 +2534,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Perform equality testing metatag processing
-	 * 
+	 *
 	 * @param lhs   left-hand-side of equality expression
 	 * @param lhsmt metatag value for left-hand-side
 	 * @param rhs   right-hand-side of equality expression
@@ -2552,7 +2558,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the add with
 	 * @return value of {@code (this + rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2569,7 +2575,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the add with
 	 * @return value of {@code (this + rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2584,7 +2590,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the add with
 	 * @return value of {@code (this + rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2599,7 +2605,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the subtract with
 	 * @return value of {@code (this - rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2616,7 +2622,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the subtract with
 	 * @return value of {@code (this - rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2631,7 +2637,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the subtract with
 	 * @return value of {@code (this - rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2646,7 +2652,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param lhs The left-hand-side value from which to perform the subtraction
 	 * @return value of {@code (lhs - this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2665,7 +2671,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaString} and be convertible to a number
 	 * <p>
 	 * For metatag processing {@link #sub(LuaValue)} must be used
-	 * 
+	 *
 	 * @param lhs The left-hand-side value from which to perform the subtraction
 	 * @return value of {@code (lhs - this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2682,7 +2688,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the multiply with
 	 * @return value of {@code (this * rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2699,7 +2705,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the multiply with
 	 * @return value of {@code (this * rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2714,7 +2720,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the multiply with
 	 * @return value of {@code (this * rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2728,7 +2734,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The power to raise this value to
 	 * @return value of {@code (this ^ rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2745,7 +2751,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The power to raise this value to
 	 * @return value of {@code (this ^ rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2760,7 +2766,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The power to raise this value to
 	 * @return value of {@code (this ^ rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2775,7 +2781,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param lhs The left-hand-side value which will be raised to this power
 	 * @return value of {@code (lhs ^ this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2792,7 +2798,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param lhs The left-hand-side value which will be raised to this power
 	 * @return value of {@code (lhs ^ this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2809,7 +2815,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the divulo with
 	 * @return value of {@code (this / rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2828,7 +2834,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaString} and be convertible to a number
 	 * <p>
 	 * For metatag processing {@link #div(LuaValue)} must be used
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the divulo with
 	 * @return value of {@code (this / rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2845,7 +2851,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaString} and be convertible to a number
 	 * <p>
 	 * For metatag processing {@link #div(LuaValue)} must be used
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the divulo with
 	 * @return value of {@code (this / rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2860,7 +2866,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param lhs The left-hand-side value which will be divided by this
 	 * @return value of {@code (lhs / this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2877,7 +2883,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Each operand must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the modulo with
 	 * @return value of {@code (this % rhs)} if both are numeric, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -2896,7 +2902,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaString} and be convertible to a number
 	 * <p>
 	 * For metatag processing {@link #mod(LuaValue)} must be used
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the modulo with
 	 * @return value of {@code (this % rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2913,7 +2919,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaString} and be convertible to a number
 	 * <p>
 	 * For metatag processing {@link #mod(LuaValue)} must be used
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the modulo with
 	 * @return value of {@code (this % rhs)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2928,7 +2934,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * {@code this} must derive from {@link LuaNumber} or derive from
 	 * {@link LuaString} and be convertible to a number
-	 * 
+	 *
 	 * @param lhs The left-hand-side value which will be modulo'ed by this
 	 * @return value of {@code (lhs % this)} if this is numeric
 	 * @throws LuaError if {@code this} is not a number or string convertible to
@@ -2944,7 +2950,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Finds the supplied metatag value for {@code this} or {@code op2} and
 	 * invokes it, or throws {@link LuaError} if neither is defined.
-	 * 
+	 *
 	 * @param tag The metatag to look up
 	 * @param op2 The other operand value to perform the operation with
 	 * @return {@link LuaValue} resulting from metatag processing
@@ -2978,7 +2984,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Finds the supplied metatag value for {@code this} and invokes it, or
 	 * throws {@link LuaError} if neither is defined.
-	 * 
+	 *
 	 * @param tag The metatag to look up
 	 * @param op1 The value of the left-hand-side to perform the operation with
 	 * @return {@link LuaValue} resulting from metatag processing
@@ -3010,7 +3016,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this < rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3026,7 +3032,7 @@ abstract public class LuaValue extends Varargs {
 	 * including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this < rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3042,7 +3048,7 @@ abstract public class LuaValue extends Varargs {
 	 * including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this < rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3059,7 +3065,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this < rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3075,7 +3081,7 @@ abstract public class LuaValue extends Varargs {
 	 * including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this < rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3092,7 +3098,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this < rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3110,7 +3116,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this <= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3127,7 +3133,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this <= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3143,7 +3149,7 @@ abstract public class LuaValue extends Varargs {
 	 * type, including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this <= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3161,7 +3167,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this <= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3177,7 +3183,7 @@ abstract public class LuaValue extends Varargs {
 	 * type, including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this <= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3193,7 +3199,7 @@ abstract public class LuaValue extends Varargs {
 	 * double type, including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this <= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3211,7 +3217,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this > rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3227,7 +3233,7 @@ abstract public class LuaValue extends Varargs {
 	 * type, including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this > rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3243,7 +3249,7 @@ abstract public class LuaValue extends Varargs {
 	 * including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this > rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3260,7 +3266,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this > rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3276,7 +3282,7 @@ abstract public class LuaValue extends Varargs {
 	 * including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this > rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3293,7 +3299,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this > rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3311,7 +3317,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this >= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3328,7 +3334,7 @@ abstract public class LuaValue extends Varargs {
 	 * {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this >= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3344,7 +3350,7 @@ abstract public class LuaValue extends Varargs {
 	 * int type, including metatag processing, and returning {@link LuaValue}.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return {@link #TRUE} if {@code (this >= rhs)}, {@link #FALSE} if not, or
 	 *         {@link LuaValue} if metatag processing occurs
@@ -3362,7 +3368,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * To be comparable, both operands must derive from {@link LuaString} or
 	 * both must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this >= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3378,7 +3384,7 @@ abstract public class LuaValue extends Varargs {
 	 * int type, including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this >= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3394,7 +3400,7 @@ abstract public class LuaValue extends Varargs {
 	 * double type, including metatag processing, and returning java boolean.
 	 * <p>
 	 * To be comparable, this must derive from {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return true if {@code (this >= rhs)}, false if not, and boolean
 	 *         interpreation of result if metatag processing occurs.
@@ -3410,7 +3416,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Finds the supplied metatag value and invokes it, or throws
 	 * {@link LuaError} if none applies.
-	 * 
+	 *
 	 * @param tag The metatag to look up
 	 * @param op1 The operand with which to to perform the operation
 	 * @return {@link LuaValue} resulting from metatag processing
@@ -3437,7 +3443,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings can be compared, meaning each operand must derive from
 	 * {@link LuaString}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return int < 0 for {@code (this < rhs)}, int > 0 for
 	 *         {@code (this > rhs)}, or 0 when same string.
@@ -3451,7 +3457,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings can be compared, meaning each operand must derive from
 	 * {@link LuaString}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the comparison with
 	 * @return int < 0 for {@code (this < rhs)}, int > 0 for
 	 *         {@code (this > rhs)}, or 0 when same string.
@@ -3465,7 +3471,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings and numbers as represented can be concatenated, meaning each
 	 * operand must derive from {@link LuaString} or {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the operation with
 	 * @return {@link LuaValue} resulting from concatenation of
 	 *         {@code (this .. rhs)}
@@ -3481,7 +3487,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings and numbers as represented can be concatenated, meaning each
 	 * operand must derive from {@link LuaString} or {@link LuaNumber}.
-	 * 
+	 *
 	 * @param lhs The left-hand-side value onto which this will be concatenated
 	 * @return {@link LuaValue} resulting from concatenation of
 	 *         {@code (lhs .. this)}
@@ -3498,7 +3504,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings and numbers as represented can be concatenated, meaning each
 	 * operand must derive from {@link LuaString} or {@link LuaNumber}.
-	 * 
+	 *
 	 * @param lhs The left-hand-side value onto which this will be concatenated
 	 * @return {@link LuaValue} resulting from concatenation of
 	 *         {@code (lhs .. this)}
@@ -3515,7 +3521,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings and numbers as represented can be concatenated, meaning each
 	 * operand must derive from {@link LuaString} or {@link LuaNumber}.
-	 * 
+	 *
 	 * @param lhs The left-hand-side value onto which this will be concatenated
 	 * @return {@link LuaValue} resulting from concatenation of
 	 *         {@code (lhs .. this)}
@@ -3528,7 +3534,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Convert the value to a {@link Buffer} for more efficient concatenation of
 	 * multiple strings.
-	 * 
+	 *
 	 * @return Buffer instance containing the string or number
 	 */
 	public Buffer buffer() { return new Buffer(this); }
@@ -3539,7 +3545,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Only strings and numbers as represented can be concatenated, meaning each
 	 * operand must derive from {@link LuaString} or {@link LuaNumber}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side {@link Buffer} to perform the operation
 	 *            with
 	 * @return LuaString resulting from concatenation of {@code (this .. rhs)}
@@ -3553,7 +3559,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * Finds the {@link #CONCAT} metatag value and invokes it, or throws
 	 * {@link LuaError} if it doesn't exist.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the operation with
 	 * @return {@link LuaValue} resulting from metatag processing for
 	 *         {@link #CONCAT} metatag.
@@ -3570,7 +3576,7 @@ abstract public class LuaValue extends Varargs {
 	 * Perform boolean {@code and} with another operand, based on lua rules for
 	 * boolean evaluation. This returns either {@code this} or {@code rhs}
 	 * depending on the boolean value for {@code this}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the operation with
 	 * @return {@code this} if {@code this.toboolean()} is false, {@code rhs}
 	 *         otherwise.
@@ -3581,7 +3587,7 @@ abstract public class LuaValue extends Varargs {
 	 * Perform boolean {@code or} with another operand, based on lua rules for
 	 * boolean evaluation. This returns either {@code this} or {@code rhs}
 	 * depending on the boolean value for {@code this}.
-	 * 
+	 *
 	 * @param rhs The right-hand-side value to perform the operation with
 	 * @return {@code this} if {@code this.toboolean()} is true, {@code rhs}
 	 *         otherwise.
@@ -3592,7 +3598,7 @@ abstract public class LuaValue extends Varargs {
 	 * Perform end-condition test in for-loop processing.
 	 * <p>
 	 * Used in lua-bytecode to Java-bytecode conversion.
-	 * 
+	 *
 	 * @param limit the numerical limit to complete the for loop
 	 * @param step  the numberical step size to use.
 	 * @return true if limit has not been reached, false otherwise.
@@ -3602,7 +3608,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Convert this value to a string if it is a {@link LuaString} or
 	 * {@link LuaNumber}, or throw a {@link LuaError} if it is not
-	 * 
+	 *
 	 * @return {@link LuaString} corresponding to the value if a string or
 	 *         number
 	 * @throws LuaError if not a string or number
@@ -3612,7 +3618,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Return this value as a strong reference, or null if it was weak and is no
 	 * longer referenced.
-	 * 
+	 *
 	 * @return {@link LuaValue} referred to, or null if it was weak and is no
 	 *         longer referenced.
 	 * @see WeakTable
@@ -3621,15 +3627,15 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert java boolean to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param b boolean value to convert
 	 * @return {@link #TRUE} if not or {@link #FALSE} if false
 	 */
-	public static LuaBoolean valueOf(boolean b) { return b? LuaValue.TRUE: FALSE; };
+	public static LuaBoolean valueOf(boolean b) { return b? LuaValue.TRUE: FALSE; }
 
 	/**
 	 * Convert java int to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param i int value to convert
 	 * @return {@link LuaInteger} instance, possibly pooled, whose value is i
 	 */
@@ -3638,15 +3644,15 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Convert java double to a {@link LuaValue}. This may return a
 	 * {@link LuaInteger} or {@link LuaDouble} depending on the value supplied.
-	 * 
+	 *
 	 * @param d double value to convert
 	 * @return {@link LuaNumber} instance, possibly pooled, whose value is d
 	 */
-	public static LuaNumber valueOf(double d) { return LuaDouble.valueOf(d); };
+	public static LuaNumber valueOf(double d) { return LuaDouble.valueOf(d); }
 
 	/**
 	 * Convert java string to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param s String value to convert
 	 * @return {@link LuaString} instance, possibly pooled, whose value is s
 	 */
@@ -3654,7 +3660,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert bytes in an array to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param bytes byte array to convert
 	 * @return {@link LuaString} instance, possibly pooled, whose bytes are
 	 *         those in the supplied array
@@ -3663,7 +3669,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Convert bytes in an array to a {@link LuaValue}.
-	 * 
+	 *
 	 * @param bytes byte array to convert
 	 * @param off   offset into the byte array, starting at 0
 	 * @param len   number of bytes to include in the {@link LuaString}
@@ -3676,14 +3682,14 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct an empty {@link LuaTable}.
-	 * 
+	 *
 	 * @return new {@link LuaTable} instance with no values and no metatable.
 	 */
 	public static LuaTable tableOf() { return new LuaTable(); }
 
 	/**
 	 * Construct a {@link LuaTable} initialized with supplied array values.
-	 * 
+	 *
 	 * @param varargs  {@link Varargs} containing the values to use in
 	 *                 initialization
 	 * @param firstarg the index of the first argument to use from the varargs,
@@ -3696,7 +3702,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Construct an empty {@link LuaTable} preallocated to hold array and hashed
 	 * elements
-	 * 
+	 *
 	 * @param narray Number of array elements to preallocate
 	 * @param nhash  Number of hash elements to preallocate
 	 * @return new {@link LuaTable} instance with no values and no metatable,
@@ -3706,7 +3712,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link LuaTable} initialized with supplied array values.
-	 * 
+	 *
 	 * @param unnamedValues array of {@link LuaValue} containing the values to
 	 *                      use in initialization
 	 * @return new {@link LuaTable} instance with sequential elements coming
@@ -3716,7 +3722,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link LuaTable} initialized with supplied array values.
-	 * 
+	 *
 	 * @param unnamedValues array of {@link LuaValue} containing the first
 	 *                      values to use in initialization
 	 * @param lastarg       {@link Varargs} containing additional values to use
@@ -3731,7 +3737,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link LuaTable} initialized with supplied named values.
-	 * 
+	 *
 	 * @param namedValues array of {@link LuaValue} containing the keys and
 	 *                    values to use in initialization in order
 	 *                    {@code {key-a, value-a, key-b, value-b, ...} }
@@ -3745,7 +3751,7 @@ abstract public class LuaValue extends Varargs {
 	 * sequential elements. The named values will be assigned first, and the
 	 * sequential elements will be assigned later, possibly overwriting named
 	 * values at the same slot if there are conflicts.
-	 * 
+	 *
 	 * @param namedValues   array of {@link LuaValue} containing the keys and
 	 *                      values to use in initialization in order
 	 *                      {@code {key-a, value-a, key-b, value-b, ...} }
@@ -3766,7 +3772,7 @@ abstract public class LuaValue extends Varargs {
 	 * will be assigned first, and the sequential elements will be assigned
 	 * later, possibly overwriting named values at the same slot if there are
 	 * conflicts.
-	 * 
+	 *
 	 * @param namedValues   array of {@link LuaValue} containing the keys and
 	 *                      values to use in initialization in order
 	 *                      {@code {key-a, value-a, key-b, value-b, ...} }
@@ -3786,7 +3792,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a LuaUserdata for an object.
-	 * 
+	 *
 	 * @param o The java instance to be wrapped as userdata
 	 * @return {@link LuaUserdata} value wrapping the java instance.
 	 */
@@ -3794,7 +3800,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a LuaUserdata for an object with a user supplied metatable.
-	 * 
+	 *
 	 * @param o         The java instance to be wrapped as userdata
 	 * @param metatable The metatble to associate with the userdata instance.
 	 * @return {@link LuaUserdata} value wrapping the java instance.
@@ -3807,7 +3813,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Return value for field reference including metatag processing, or
 	 * {@link LuaValue#NIL} if it doesn't exist.
-	 * 
+	 *
 	 * @param t   {@link LuaValue} on which field is being referenced, typically
 	 *            a table or something with the metatag {@link LuaValue#INDEX}
 	 *            defined
@@ -3825,7 +3831,7 @@ abstract public class LuaValue extends Varargs {
 		do {
 			if (t.istable()) {
 				LuaValue res = t.rawget(key);
-				if ((!res.isnil()) || (tm = t.metatag(INDEX)).isnil())
+				if (!res.isnil() || (tm = t.metatag(INDEX)).isnil())
 					return res;
 			} else if ((tm = t.metatag(INDEX)).isnil())
 				t.indexerror(key.tojstring());
@@ -3839,7 +3845,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Perform field assignment including metatag processing.
-	 * 
+	 *
 	 * @param t     {@link LuaValue} on which value is being set, typically a
 	 *              table or something with the metatag
 	 *              {@link LuaValue#NEWINDEX} defined
@@ -3854,7 +3860,7 @@ abstract public class LuaValue extends Varargs {
 		int loop = 0;
 		do {
 			if (t.istable()) {
-				if ((!t.rawget(key).isnil()) || (tm = t.metatag(NEWINDEX)).isnil()) {
+				if (!t.rawget(key).isnil() || (tm = t.metatag(NEWINDEX)).isnil()) {
 					t.rawset(key, value);
 					return true;
 				}
@@ -3873,7 +3879,7 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Get particular metatag, or return {@link LuaValue#NIL} if it doesn't
 	 * exist
-	 * 
+	 *
 	 * @param tag Metatag name to look up, typically a string such as
 	 *            {@link LuaValue#INDEX} or {@link LuaValue#NEWINDEX}
 	 * @return {@link LuaValue} for tag {@code reason}, or {@link LuaValue#NIL}
@@ -3887,7 +3893,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Get particular metatag, or throw {@link LuaError} if it doesn't exist
-	 * 
+	 *
 	 * @param tag    Metatag name to look up, typically a string such as
 	 *               {@link LuaValue#INDEX} or {@link LuaValue#NEWINDEX}
 	 * @param reason Description of error when tag lookup fails.
@@ -3923,7 +3929,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Throw {@link LuaError} indicating index was attempted on illegal type
-	 * 
+	 *
 	 * @throws LuaError when called.
 	 */
 	private void indexerror(String key) {
@@ -3932,7 +3938,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link Varargs} around an array of {@link LuaValue}s.
-	 * 
+	 *
 	 * @param v The array of {@link LuaValue}s
 	 * @return {@link Varargs} wrapping the supplied values.
 	 * @see LuaValue#varargsOf(LuaValue, Varargs)
@@ -3953,7 +3959,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link Varargs} around an array of {@link LuaValue}s.
-	 * 
+	 *
 	 * @param v The array of {@link LuaValue}s
 	 * @param r {@link Varargs} contain values to include at the end
 	 * @return {@link Varargs} wrapping the supplied values.
@@ -3976,7 +3982,7 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link Varargs} around an array of {@link LuaValue}s.
-	 * 
+	 *
 	 * @param v      The array of {@link LuaValue}s
 	 * @param offset number of initial values to skip in the array
 	 * @param length number of values to include from the array
@@ -3999,10 +4005,10 @@ abstract public class LuaValue extends Varargs {
 
 	/**
 	 * Construct a {@link Varargs} around an array of {@link LuaValue}s.
-	 * 
+	 *
 	 * Caller must ensure that array contents are not mutated after this call or
 	 * undefined behavior will result.
-	 * 
+	 *
 	 * @param v      The array of {@link LuaValue}s
 	 * @param offset number of initial values to skip in the array
 	 * @param length number of values to include from the array
@@ -4030,7 +4036,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This can be used to wrap exactly 2 values, or a list consisting of 1
 	 * initial value followed by another variable list of remaining values.
-	 * 
+	 *
 	 * @param v First {@link LuaValue} in the {@link Varargs}
 	 * @param r {@link LuaValue} supplying the 2rd value, or {@link Varargs}s
 	 *          supplying all values beyond the first
@@ -4050,7 +4056,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This can be used to wrap exactly 3 values, or a list consisting of 2
 	 * initial values followed by another variable list of remaining values.
-	 * 
+	 *
 	 * @param v1 First {@link LuaValue} in the {@link Varargs}
 	 * @param v2 Second {@link LuaValue} in the {@link Varargs}
 	 * @param v3 {@link LuaValue} supplying the 3rd value, or {@link Varargs}s
@@ -4074,7 +4080,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This method is typically not used directly by client code. Instead use
 	 * one of the function invocation methods.
-	 * 
+	 *
 	 * @param func {@link LuaValue} to be called as a tail call
 	 * @param args {@link Varargs} containing the arguments to the call
 	 * @return {@link TailcallVarargs} to be used in tailcall oprocessing.
@@ -4094,7 +4100,7 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This should not be called directly, instead use one of the call
 	 * invocation functions.
-	 * 
+	 *
 	 * @param args the arguments to the call invocation.
 	 * @return Varargs the return values, possible a TailcallVarargs.
 	 * @see LuaValue#call()
@@ -4110,7 +4116,7 @@ abstract public class LuaValue extends Varargs {
 	 * Hook for implementations such as LuaJC to load the environment of the
 	 * main chunk into the first upvalue location. If the function has no
 	 * upvalues or is not a main chunk, calling this will be no effect.
-	 * 
+	 *
 	 * @param env The environment to load into the first upvalue, if there is
 	 *            one.
 	 */
@@ -4121,22 +4127,28 @@ abstract public class LuaValue extends Varargs {
 	 * <p>
 	 * This is an internal class not intended to be used directly. Instead use
 	 * the predefined constant {@link LuaValue#NONE}
-	 * 
+	 *
 	 * @see LuaValue#NONE
 	 */
 	private static final class None extends LuaNil {
 		static None _NONE = new None();
 
+		@Override
 		public LuaValue arg(int i) { return NIL; }
 
+		@Override
 		public int narg() { return 0; }
 
+		@Override
 		public LuaValue arg1() { return NIL; }
 
+		@Override
 		public String tojstring() { return "none"; }
 
+		@Override
 		public Varargs subargs(final int start) { return start > 0? this: argerror(1, "start must be > 0"); }
 
+		@Override
 		void copyto(LuaValue[] dest, int offset, int length) {
 			for (; length > 0; length--)
 				dest[offset++] = NIL;
@@ -4146,12 +4158,13 @@ abstract public class LuaValue extends Varargs {
 	/**
 	 * Create a {@code Varargs} instance containing arguments starting at index
 	 * {@code start}
-	 * 
+	 *
 	 * @param start the index from which to include arguments, where 1 is the
 	 *              first argument.
 	 * @return Varargs containing argument { start, start+1, ... , narg-start-1
 	 *         }
 	 */
+	@Override
 	public Varargs subargs(final int start) {
 		if (start == 1)
 			return this;

@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -177,11 +177,9 @@ public class JavaBuilder {
 		superclassType = p.numparams;
 		if (p.is_vararg != 0 || superclassType >= SUPERTYPE_VARARGS)
 			superclassType = SUPERTYPE_VARARGS;
-		for (int i = 0, n = p.code.length; i < n; i++) {
-			int inst = p.code[i];
+		for (int inst : p.code) {
 			int o = Lua.GET_OPCODE(inst);
-			if ((o == Lua.OP_TAILCALL)
-				|| ((o == Lua.OP_RETURN) && (Lua.GETARG_B(inst) < 1 || Lua.GETARG_B(inst) > 2))) {
+			if (o == Lua.OP_TAILCALL || o == Lua.OP_RETURN && (Lua.GETARG_B(inst) < 1 || Lua.GETARG_B(inst) > 2)) {
 				superclassType = SUPERTYPE_VARARGS;
 				break;
 			}
@@ -244,7 +242,7 @@ public class JavaBuilder {
 		} else {
 			// fixed arg function between 0 and 3 arguments
 			for (slot = 0; slot < p.numparams; slot++) {
-				this.plainSlotVars.put(Integer.valueOf(slot), Integer.valueOf(1+slot));
+				this.plainSlotVars.put(slot, 1+slot);
 				if (pi.isUpvalueCreate(-1, slot)) {
 					append(new ALOAD(1+slot));
 					storeLocal(-1, slot);
@@ -252,7 +250,7 @@ public class JavaBuilder {
 			}
 		}
 
-		// nil parameters 
+		// nil parameters
 		// TODO: remove this for lua 5.2, not needed
 		for (; slot < p.maxstacksize; slot++) {
 			if (pi.isInitialValueUsed(slot)) {
@@ -264,7 +262,7 @@ public class JavaBuilder {
 
 	public byte[] completeClass(boolean genmain) {
 
-		// add class initializer 
+		// add class initializer
 		if (!init.isEmpty()) {
 			MethodGen mg = new MethodGen(Constants.ACC_STATIC, Type.VOID, ARG_TYPES_NONE, new String[] {}, "<clinit>",
 				cg.getClassName(), init, cg.getConstantPool());
@@ -283,7 +281,7 @@ public class JavaBuilder {
 		cg.addMethod(mg.getMethod());
 		main.dispose();
 
-		// add initupvalue1(LuaValue env) to initialize environment for main chunk 
+		// add initupvalue1(LuaValue env) to initialize environment for main chunk
 		if (p.upvalues.length == 1 && superclassType == SUPERTYPE_VARARGS) {
 			MethodGen mg = new MethodGen(Constants.ACC_PUBLIC | Constants.ACC_FINAL, // access flags
 				Type.VOID, // return type
@@ -307,7 +305,7 @@ public class JavaBuilder {
 			main.dispose();
 		}
 
-		// add main function so class is invokable from the java command line 
+		// add main function so class is invokable from the java command line
 		if (genmain) {
 			MethodGen mg = new MethodGen(Constants.ACC_PUBLIC | Constants.ACC_STATIC, // access flags
 				Type.VOID, // return type
@@ -355,22 +353,22 @@ public class JavaBuilder {
 	}
 
 	public void loadBoolean(boolean b) {
-		String field = (b? "TRUE": "FALSE");
+		String field = b? "TRUE": "FALSE";
 		append(factory.createFieldAccess(STR_LUAVALUE, field, TYPE_LUABOOLEAN, Constants.GETSTATIC));
 	}
 
-	private Map<Integer, Integer>          plainSlotVars     = new HashMap<Integer, Integer>();
-	private Map<Integer, Integer>          upvalueSlotVars   = new HashMap<Integer, Integer>();
-	private Map<Integer, LocalVariableGen> localVarGenBySlot = new HashMap<Integer, LocalVariableGen>();
+	private final Map<Integer, Integer>          plainSlotVars     = new HashMap<>();
+	private final Map<Integer, Integer>          upvalueSlotVars   = new HashMap<>();
+	private final Map<Integer, LocalVariableGen> localVarGenBySlot = new HashMap<>();
 
 	private int findSlot(int slot, Map<Integer, Integer> map, String prefix, Type type) {
-		Integer islot = Integer.valueOf(slot);
+		Integer islot = slot;
 		if (map.containsKey(islot))
-			return ((Integer) map.get(islot)).intValue();
+			return map.get(islot).intValue();
 		String name = prefix+slot;
 		LocalVariableGen local = mg.addLocalVariable(name, type, null, null);
 		int index = local.getIndex();
-		map.put(islot, Integer.valueOf(index));
+		map.put(islot, index);
 		localVarGenBySlot.put(islot, local);
 		return index;
 	}
@@ -727,7 +725,7 @@ public class JavaBuilder {
 		append(factory.createFieldAccess(protoname, destname, uptype, Constants.PUTFIELD));
 	}
 
-	private Map<LuaValue, String> constants = new HashMap<LuaValue, String>();
+	private final Map<LuaValue, String> constants = new HashMap<>();
 
 	public void loadConstant(LuaValue value) {
 		switch (value.type()) {
@@ -739,7 +737,7 @@ public class JavaBuilder {
 			break;
 		case LuaValue.TNUMBER:
 		case LuaValue.TSTRING:
-			String name = (String) constants.get(value);
+			String name = constants.get(value);
 			if (name == null) {
 				name = value.type() == LuaValue.TNUMBER? value.isinttype()? createLuaIntegerField(value.checkint())
 					: createLuaDoubleField(value.checkdouble()): createLuaStringField(value.checkstring());
@@ -786,7 +784,7 @@ public class JavaBuilder {
 		} else {
 			char[] c = new char[ls.m_length];
 			for (int j = 0; j < ls.m_length; j++)
-				c[j] = (char) (0xff & (int) (ls.m_bytes[ls.m_offset+j]));
+				c[j] = (char) (0xff & ls.m_bytes[ls.m_offset+j]);
 			init.append(new PUSH(cp, new String(c)));
 			init.append(
 				factory.createInvoke(STR_STRING, "toCharArray", TYPE_CHARARRAY, Type.NO_ARGS, Constants.INVOKEVIRTUAL));
@@ -845,10 +843,10 @@ public class JavaBuilder {
 	}
 
 	public void setVarStartEnd(int slot, int start_pc, int end_pc, String name) {
-		Integer islot = Integer.valueOf(slot);
+		Integer islot = slot;
 		if (localVarGenBySlot.containsKey(islot)) {
 			name = name.replaceAll("[^a-zA-Z0-9]", "_");
-			LocalVariableGen l = (LocalVariableGen) localVarGenBySlot.get(islot);
+			LocalVariableGen l = localVarGenBySlot.get(islot);
 			l.setEnd(lastInstrHandles[end_pc-1]);
 			if (start_pc > 1)
 				l.setStart(lastInstrHandles[start_pc-2]);
@@ -908,7 +906,7 @@ public class JavaBuilder {
 	public void closeUpvalue(int pc, int upindex) {
 		// TODO: assign the upvalue location the value null;
 		/*
-		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] ); 
+		boolean isrw = pi.isReadWriteUpvalue( pi.upvals[upindex] );
 		append(InstructionConstants.THIS);
 		append(InstructionConstants.ACONST_NULL);
 		if ( isrw ) {

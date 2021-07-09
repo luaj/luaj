@@ -10,7 +10,7 @@
 *
 * The above copyright notice and this permission notice shall be included in
 * all copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ import org.luaj.vm2.Varargs;
  * <p>
  * See {@link LibFunction} for more information on implementation libraries and
  * library functions.
- * 
+ *
  * @see #call(LuaValue)
  * @see LibFunction
  * @see ZeroArgFunction
@@ -50,24 +50,29 @@ import org.luaj.vm2.Varargs;
  */
 abstract public class OneArgFunction extends LibFunction {
 
+	@Override
 	abstract public LuaValue call(LuaValue arg);
 
 	/** Default constructor */
 	public OneArgFunction() {
 	}
 
+	@Override
 	public final LuaValue call() {
 		return call(NIL);
 	}
 
+	@Override
 	public final LuaValue call(LuaValue arg1, LuaValue arg2) {
 		return call(arg1);
 	}
 
+	@Override
 	public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
 		return call(arg1);
 	}
 
+	@Override
 	public Varargs invoke(Varargs varargs) {
 		return call(varargs.arg1());
 	}

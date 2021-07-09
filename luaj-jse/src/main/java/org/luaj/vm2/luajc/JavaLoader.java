@@ -19,7 +19,7 @@ import org.luaj.vm2.Prototype;
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,7 +30,7 @@ import org.luaj.vm2.Prototype;
  ******************************************************************************/
 public class JavaLoader extends ClassLoader {
 
-	private Map<String, byte[]> unloaded = new HashMap<String, byte[]>();
+	private final Map<String, byte[]> unloaded = new HashMap<>();
 
 	public JavaLoader() {
 	}
@@ -63,8 +63,9 @@ public class JavaLoader extends ClassLoader {
 			include(jg.inners[i]);
 	}
 
+	@Override
 	public Class findClass(String classname) throws ClassNotFoundException {
-		byte[] bytes = (byte[]) unloaded.get(classname);
+		byte[] bytes = unloaded.get(classname);
 		if (bytes != null)
 			return defineClass(classname, bytes, 0, bytes.length);
 		return super.findClass(classname);
