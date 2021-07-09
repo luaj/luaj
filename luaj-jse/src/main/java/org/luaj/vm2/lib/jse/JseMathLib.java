@@ -96,9 +96,8 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 		LuaValue math = env.get("math");
 		math.set("acos", new acos());
 		math.set("asin", new asin());
-		LuaValue atan = new atan2();
-		math.set("atan", atan);
-		math.set("atan2", atan);
+		math.set("atan", new atan());
+		math.set("atan2", new atan2());
 		math.set("cosh", new cosh());
 		math.set("exp", new exp());
 		math.set("log", new log());
@@ -118,10 +117,17 @@ public class JseMathLib extends org.luaj.vm2.lib.MathLib {
 		protected double call(double d) { return Math.asin(d); }
 	}
 
-	static final class atan2 extends TwoArgFunction {
+	static final class atan extends TwoArgFunction {
 		@Override
 		public LuaValue call(LuaValue x, LuaValue y) {
 			return valueOf(Math.atan2(x.checkdouble(), y.optdouble(1)));
+		}
+	}
+
+	static final class atan2 extends TwoArgFunction {
+		@Override
+		public LuaValue call(LuaValue x, LuaValue y) {
+			return valueOf(Math.atan2(x.checkdouble(), y.checkdouble()));
 		}
 	}
 
