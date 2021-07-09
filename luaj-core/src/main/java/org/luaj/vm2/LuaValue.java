@@ -839,7 +839,7 @@ abstract public class LuaValue extends Varargs {
 	 * @see #toString()
 	 * @see #TSTRING
 	 */
-	public String optjstring(String defval) { argerror("String"); return null; }
+	public String optjstring(String defval) { argerror("string"); return null; }
 
 	/**
 	 * Check that optional argument is a string or number and return as
@@ -1018,7 +1018,7 @@ abstract public class LuaValue extends Varargs {
 	 * @see #optint(int)
 	 * @see #TNUMBER
 	 */
-	public int checkint() { argerror("int"); return 0; }
+	public int checkint() { argerror("number"); return 0; }
 
 	/**
 	 * Check that the value is numeric, and convert and cast value to int, or
@@ -3434,7 +3434,7 @@ abstract public class LuaValue extends Varargs {
 			return h.call(this, op1);
 		if (LuaValue.LE.raweq(tag) && (!(h = metatag(LT)).isnil() || !(h = op1.metatag(LT)).isnil()))
 			return h.call(op1, this).not();
-		return error("attempt to compare " + tag + " on " + typename() + " and " + op1.typename());
+		return error("bad argument: attempt to compare " + tag + " on " + typename() + " and " + op1.typename());
 	}
 
 	/**

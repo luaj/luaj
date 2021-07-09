@@ -1050,7 +1050,7 @@ class UnaryBinaryOperatorsTest {
 			LuaValue.class.getMethod(op, new Class[] { LuaValue.class }).invoke(a, new Object[] { b });
 		} catch (InvocationTargetException ite) {
 			String actual = ite.getTargetException().getMessage();
-			if ((!actual.startsWith("attempt to compare")) || actual.indexOf(type) < 0)
+			if ((!actual.contains("attempt to compare")) || actual.indexOf(type) < 0)
 				fail("(" + a.typename() + "," + op + "," + b.typename() + ") reported '" + actual + "'");
 		} catch (Exception e) {
 			fail("(" + a.typename() + "," + op + "," + b.typename() + ") threw " + e);
