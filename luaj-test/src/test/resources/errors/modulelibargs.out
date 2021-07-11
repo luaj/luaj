@@ -1,0 +1,33 @@
+====== require ======
+--- checkallpass
+-		require('math')	table
+-		require('coroutine')	table
+-		require('package')	table
+-		require('string')	table
+-		require('table')	table
+--- checkallerrors
+-		require(1.25)	...not found...
+--- checkallerrors
+-		require(nil)	...bad argument...
+-		require(true)	...bad argument...
+-		require(<function>)	...bad argument...
+-		require(<table>)	...bad argument...
+====== package.loadlib ======
+--- checkallpass
+-		package.loadlib('foo','bar')	nil,string,string
+--- checkallerrors
+-		package.loadlib(nil)	...bad argument...
+-		package.loadlib(true)	...bad argument...
+-		package.loadlib(<table>)	...bad argument...
+-		package.loadlib(<function>)	...bad argument...
+-		package.loadlib(<thread>)	...bad argument...
+====== package.seeall ======
+--- checkallpass
+fail 	package.seeall(<table>)	'attempt to call a nil value'
+--- checkallerrors
+badmsg 	package.seeall(nil)	template='bad argument' actual='attempt to call a nil value'
+badmsg 	package.seeall('abc')	template='bad argument' actual='attempt to call a nil value'
+badmsg 	package.seeall(1.25)	template='bad argument' actual='attempt to call a nil value'
+badmsg 	package.seeall(true)	template='bad argument' actual='attempt to call a nil value'
+badmsg 	package.seeall(<function>)	template='bad argument' actual='attempt to call a nil value'
+badmsg 	package.seeall(<thread>)	template='bad argument' actual='attempt to call a nil value'
