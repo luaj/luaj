@@ -482,43 +482,43 @@ true
 -		type()	...bad argument...
 ====== xpcall ======
 --- checkallpass
--		xpcall('abc','abc')	false,'error in error handling'
--		xpcall(1.25,'abc')	false,'error in error handling'
--		xpcall(true,'abc')	false,'error in error handling'
--		xpcall(<table>,'abc')	false,'error in error handling'
--		xpcall(<function>,'abc')	true
--		xpcall(<thread>,'abc')	false,'error in error handling'
--		xpcall('abc',1.25)	false,'error in error handling'
--		xpcall(1.25,1.25)	false,'error in error handling'
--		xpcall(true,1.25)	false,'error in error handling'
--		xpcall(<table>,1.25)	false,'error in error handling'
--		xpcall(<function>,1.25)	true
--		xpcall(<thread>,1.25)	false,'error in error handling'
--		xpcall('abc',true)	false,'error in error handling'
--		xpcall(1.25,true)	false,'error in error handling'
--		xpcall(true,true)	false,'error in error handling'
--		xpcall(<table>,true)	false,'error in error handling'
--		xpcall(<function>,true)	true
--		xpcall(<thread>,true)	false,'error in error handling'
--		xpcall('abc',<table>)	false,'error in error handling'
--		xpcall(1.25,<table>)	false,'error in error handling'
--		xpcall(true,<table>)	false,'error in error handling'
--		xpcall(<table>,<table>)	false,'error in error handling'
--		xpcall(<function>,<table>)	true
--		xpcall(<thread>,<table>)	false,'error in error handling'
--		xpcall('abc',<thread>)	false,'error in error handling'
--		xpcall(1.25,<thread>)	false,'error in error handling'
--		xpcall(true,<thread>)	false,'error in error handling'
--		xpcall(<table>,<thread>)	false,'error in error handling'
--		xpcall(<function>,<thread>)	true
--		xpcall(<thread>,<thread>)	false,'error in error handling'
+-		xpcall('abc','abc')	boolean,string
+-		xpcall(1.25,'abc')	boolean,string
+-		xpcall(true,'abc')	boolean,string
+-		xpcall(<table>,'abc')	boolean,string
+-		xpcall(<function>,'abc')	boolean
+-		xpcall(<thread>,'abc')	boolean,string
+-		xpcall('abc',1.25)	boolean,string
+-		xpcall(1.25,1.25)	boolean,string
+-		xpcall(true,1.25)	boolean,string
+-		xpcall(<table>,1.25)	boolean,string
+-		xpcall(<function>,1.25)	boolean
+-		xpcall(<thread>,1.25)	boolean,string
+-		xpcall('abc',true)	boolean,string
+-		xpcall(1.25,true)	boolean,string
+-		xpcall(true,true)	boolean,string
+-		xpcall(<table>,true)	boolean,string
+-		xpcall(<function>,true)	boolean
+-		xpcall(<thread>,true)	boolean,string
+-		xpcall('abc',<table>)	boolean,string
+-		xpcall(1.25,<table>)	boolean,string
+-		xpcall(true,<table>)	boolean,string
+-		xpcall(<table>,<table>)	boolean,string
+-		xpcall(<function>,<table>)	boolean
+-		xpcall(<thread>,<table>)	boolean,string
+-		xpcall('abc',<thread>)	boolean,string
+-		xpcall(1.25,<thread>)	boolean,string
+-		xpcall(true,<thread>)	boolean,string
+-		xpcall(<table>,<thread>)	boolean,string
+-		xpcall(<function>,<thread>)	boolean
+-		xpcall(<thread>,<thread>)	boolean,string
 --- checkallpass
--		xpcall('abc',<function>)	false,'aaa'
--		xpcall(1.25,<function>)	false,'aaa'
--		xpcall(true,<function>)	false,'aaa'
--		xpcall(<table>,<function>)	false,'aaa'
--		xpcall(<function>,<function>)	true
--		xpcall(<thread>,<function>)	false,'aaa'
+-		xpcall('abc',<function>)	boolean,string
+-		xpcall(1.25,<function>)	boolean,string
+-		xpcall(true,<function>)	boolean,string
+-		xpcall(<table>,<function>)	boolean,string
+-		xpcall(<function>,<function>)	boolean
+-		xpcall(<thread>,<function>)	boolean,string
 --- checkallerrors
 -		xpcall(nil)	...bad argument...
 -		xpcall('abc')	...bad argument...

@@ -132,8 +132,8 @@ checkallerrors('type',{},'bad argument')
 
 -- xpcall
 banner('xpcall')
-checkallpass('xpcall', {notanil,nonfunction})
-checkallpass('xpcall', {notanil,{function(...)return 'aaa', 'bbb', #{...} end}})
+checkallpass('xpcall', {notanil,nonfunction},true)
+checkallpass('xpcall', {notanil,{function(...)return 'aaa', 'bbb', #{...} end}},true)
 checkallerrors('xpcall',{anylua},'bad argument')
 
 
