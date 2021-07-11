@@ -110,6 +110,7 @@ print( "a:write", a:write('ccccc') )
 print( "b:write", b:write('ddddd') )
 print( "a:flush", a:flush() )
 print( "b:flush", b:flush() )
+
 --[[
 print( "a:read", a:read(7) ) 
 print( "b:read", b:read(7) ) 
@@ -129,6 +130,7 @@ local pcall = function(...)
 	return s,e:match("closed")
 end
 
+b:close()
 print( 'a:close', pcall( a.close, a ) )
 print( 'a:write', pcall( a.write, a, 'eee') )
 print( 'a:flush', pcall( a.flush, a) )
@@ -151,3 +153,7 @@ io.input('abc.txt'):close()
 print( 'io.read', pcall( io.read, 5) )
 print( 'io.lines', pcall( io.lines) )
 
+os.remove('abc.txt')
+for i=1,count do
+  os.remove('tmp'..i..'.out')
+end
