@@ -5,6 +5,7 @@ local aliases = {
 	['0']='<zero>',
 	['-0']='<zero>',
 	['nan']='<nan>',
+	['-nan']='<nan>',
 	['inf']='<pos-inf>',
 	['-inf']='<neg-inf>',
 	['1.#INF']='<pos-inf>',
