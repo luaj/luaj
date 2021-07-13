@@ -956,7 +956,7 @@ abstract public class LuaValue extends Varargs {
 	 * @see #isclosure()
 	 * @see #TFUNCTION
 	 */
-	public LuaClosure checkclosure() { argerror("closure"); return null; }
+	public LuaClosure checkclosure() { argerror("function"); return null; }
 
 	/**
 	 * Check that the value is numeric and return the value as a double, or
