@@ -379,9 +379,9 @@ public class DebugLib extends TwoArgFunction {
 	static final class setupvalue extends VarArgFunction {
 		@Override
 		public Varargs invoke(Varargs args) {
-			LuaValue func = args.checkfunction(1);
+			LuaValue value = args.checkvalue(3);
 			int up = args.checkint(2);
-			LuaValue value = args.arg(3);
+			LuaValue func = args.checkfunction(1);
 			if (func instanceof LuaClosure) {
 				LuaClosure c = (LuaClosure) func;
 				LuaString name = findupvalue(c, up);
