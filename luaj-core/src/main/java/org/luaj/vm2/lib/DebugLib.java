@@ -712,11 +712,13 @@ public class DebugLib extends TwoArgFunction {
 	}
 
 	public static class CallFrame {
+		static final LuaValue[] EMPTY = {};
+
 		LuaFunction f;
 		int         pc;
 		int         top;
 		Varargs     v;
-		LuaValue[]  stack;
+		LuaValue[]  stack = EMPTY;
 		CallFrame   previous;
 
 		void set(LuaClosure function, Varargs varargs, LuaValue[] stack) {
@@ -736,7 +738,7 @@ public class DebugLib extends TwoArgFunction {
 		void reset() {
 			this.f = null;
 			this.v = null;
-			this.stack = null;
+			this.stack = EMPTY;
 		}
 
 		void instr(int pc, Varargs v, int top) {
