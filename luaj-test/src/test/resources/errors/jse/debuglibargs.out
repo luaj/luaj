@@ -95,10 +95,6 @@ f: x,y,a,b,p,q	1	2	nil	nil	p	q
 -		debug.getlocal(true,'789')	...number expected...
 -		debug.getlocal(<thread>,'789')	...number expected...
 --- checkallerrors
--		debug.getlocal(<thread>,<function>)	...got no value...
--		debug.getlocal(<thread>,25)	...got no value...
--		debug.getlocal(<thread>,'25')	...got no value...
---- checkallerrors
 -		debug.getlocal('abc',<function>,1)	...number expected...
 -		debug.getlocal(1.25,<function>,1)	...number expected...
 -		debug.getlocal(true,<function>,1)	...number expected...
@@ -369,7 +365,7 @@ p,q	abc	abc
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:130: in main chunk
+	debuglibargs.lua:131: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback('abc')	'abc
@@ -377,7 +373,7 @@ stack traceback:
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:131: in main chunk
+	debuglibargs.lua:132: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback('abc',1.25)	'abc
@@ -385,14 +381,14 @@ stack traceback:
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:132: in main chunk
+	debuglibargs.lua:133: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>)	'stack traceback:
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:133: in main chunk
+	debuglibargs.lua:134: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>,'abc')	'abc
@@ -400,7 +396,7 @@ stack traceback:
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:134: in main chunk
+	debuglibargs.lua:135: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<thread>,'abc',1.25)	'abc
@@ -408,7 +404,7 @@ stack traceback:
 	[C]: in function 'pcall'
 	args.lua:144: in function 'invoke'
 	args.lua:168: in function 'checkallpass'
-	debuglibargs.lua:135: in main chunk
+	debuglibargs.lua:136: in main chunk
 	[C]: in ?'
 --- checkallpass
 -		debug.traceback(<function>)	<function>
