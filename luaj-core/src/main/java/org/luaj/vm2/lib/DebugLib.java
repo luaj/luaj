@@ -249,10 +249,17 @@ public class DebugLib extends TwoArgFunction {
 		public Varargs invoke(Varargs args) {
 			int a = 1;
 			LuaThread thread = args.isthread(a)? args.checkthread(a++): globals.running;
-			int level = args.checkint(a++);
-			int local = args.checkint(a++);
-			CallFrame f = callstack(thread).getCallFrame(level);
-			return f != null? f.getLocal(local): NONE;
+			LuaValue func = args.arg(a++);
+			int local = args.checkint(a);
+
+			if (func.isfunction())
+				return func.checkclosure().p.getlocalname(local, 0);
+
+			// find the stack info
+			DebugLib.CallFrame frame = callstack(thread).getCallFrame(func.checkint());
+			if (frame == null)
+				return argerror(a, "level out of range");
+			return frame.getLocal(local);
 		}
 	}
 
