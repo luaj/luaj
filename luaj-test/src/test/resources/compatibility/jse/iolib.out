@@ -91,6 +91,5 @@ io.close(io.output())	true
 io.close()	true
 io.write	false	closed
 io.flush	false	closed
-io.close	false	closed
 io.read	false	closed
 io.lines	false	closed
