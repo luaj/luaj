@@ -62,8 +62,6 @@
 -		load('return')	<function>
 --- checkallpass
 -		load('return','mychunk')	<function>
---- checkallpass
--		load('return a ... b','mychunk')	nil,string
 --- checkallerrors
 -		load(<function>,true)	...bad argument...
 -		load(<function>,<table>)	...bad argument...

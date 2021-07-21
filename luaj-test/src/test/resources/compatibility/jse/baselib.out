@@ -23,8 +23,6 @@ ipairs2	1	one
 ipairs2	2	two
 ipairs4	1	one
 ipairs4	2	two
-table loaded
-load: 	nil
 load("print(3+4); return 8")	func.1	nil
 7
 load("print(3+4); return 8")()	8
@@ -237,4 +235,3 @@ pcall(xpcall(badfunc))	false	string
 pcall(xpcall(badfunc,errfunc))	false
 pcall(xpcall(badfunc,badfunc))	false
 pcall(xpcall(wrappedbad))	false	string
-xpcall(wrappedbad,errfunc)	true

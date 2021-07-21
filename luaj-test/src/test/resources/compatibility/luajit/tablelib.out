@@ -47,8 +47,6 @@ table.remove(t,1)	one
 {[10]=ten,[1]=two,[2]=three,[3]=four,[4]=five,[5]=six,[a]=aaa,[b]=bbb,[c]=ccc}	5
 table.remove(t,3)	four
 {[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
-table.remove(t,5)
-{[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
 -- sort tests
 one-two-three
 one-three-two

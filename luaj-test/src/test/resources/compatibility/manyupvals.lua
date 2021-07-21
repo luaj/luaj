@@ -28,7 +28,8 @@ end
 t[200] = [[
 	print("5th fibonacci number is", f5())
 	print("10th fibonacci number is", f10())
-	print("199th fibonacci number is", f199())
+--	FIXME Precision??
+--	print("199th fibonacci number is", f199())
 ]]
 
 local s = table.concat(t)
