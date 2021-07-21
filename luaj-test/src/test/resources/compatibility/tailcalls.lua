@@ -60,11 +60,12 @@ local function f3(n,...)
 end
 
 local function all(f)
+	local unpack = table.unpack or unpack
 	for n=0,3 do
 		t = {}
 		for m=1,5 do 
-			print( "--f, n, table.unpack(t)", f, n, table.unpack(t) )
-			print( pcall( f, n, table.unpack(t)) )
+			print( "--f, n, table.unpack(t)", f, n, unpack(t) )
+			print( pcall( f, n, unpack(t)) )
 			t[m] = m
 		end
 	end

@@ -132,7 +132,7 @@ testbothpairs(t)
 -- tests of setlist table constructors
 -- length is tested elsewhere
 print('----- unpack tests -------')
-local unpack = table.unpack
+local unpack = table.unpack or unpack
 print( 'pcall(unpack)', (pcall(unpack)) );
 print( 'pcall(unpack,nil)', (pcall(unpack,nil)) );
 print( 'pcall(unpack,"abc")', (pcall(unpack,"abc")) );
