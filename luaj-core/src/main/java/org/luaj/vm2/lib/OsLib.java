@@ -22,8 +22,12 @@
 package org.luaj.vm2.lib;
 
 import java.io.IOException;
+import java.time.format.TextStyle;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import org.luaj.vm2.Buffer;
 import org.luaj.vm2.Globals;
@@ -158,10 +162,10 @@ public class OsLib extends TwoArgFunction {
 					return valueOf(clock());
 				case DATE: {
 					String s = args.optjstring(1, "%c");
-					double t = args.isnumber(2)? args.todouble(2): time(null);
+					long t = args.isnumber(2)? args.tolong(2): time(null);
 					if (s.equals("*t")) {
 						Calendar d = Calendar.getInstance();
-						d.setTime(new Date((long) (t*1000)));
+						d.setTime(new Date(t*1000));
 						LuaTable tbl = LuaValue.tableOf();
 						tbl.set("year", LuaValue.valueOf(d.get(Calendar.YEAR)));
 						tbl.set("month", LuaValue.valueOf(d.get(Calendar.MONTH)+1));
@@ -243,112 +247,41 @@ public class OsLib extends TwoArgFunction {
 	 * (that is, os.date() is equivalent to os.date("%c")).
 	 *
 	 * @param format
-	 * @param time   time since epoch, or -1 if not supplied
+	 * @param timeInSec time since epoch, or -1 if not supplied
 	 * @return a LString or a LTable containing date and time, formatted
 	 *         according to the given string format.
 	 */
-	public String date(String format, double time) {
+	private static String date(String format, long timeInSec) {
 		Calendar d = Calendar.getInstance();
-		d.setTime(new Date((long) (time*1000)));
+		d.setTime(new Date(timeInSec*1000));
 		if (format.startsWith("!")) {
-			time -= timeZoneOffset(d);
-			d.setTime(new Date((long) (time*1000)));
+			timeInSec -= timeZoneOffset(d);
+			d.setTime(new Date(timeInSec*1000));
 			format = format.substring(1);
 		}
 		byte[] fmt = format.getBytes();
 		final int n = fmt.length;
+
 		Buffer result = new Buffer(n);
-		byte c;
-		for (int i = 0; i < n;) {
-			switch (c = fmt[i++]) {
+		for (int i = 0; i < n; i++) {
+			byte c = fmt[i];
+			switch (c) {
 			case '\n':
 				result.append("\n");
+				break;
+			case '%':
+				if (++i >= n)
+					break;
+				String conv = Character.toString((char) fmt[i]);
+				if (CONVERTERS.containsKey(conv)) {
+					result.append(CONVERTERS.get(conv).convert(d));
+				} else {
+					LuaValue.argerror(1, "invalid conversion specifier '%" + conv + "'");
+				}
 				break;
 			default:
 				result.append(c);
 				break;
-			case '%':
-				if (i >= n)
-					break;
-				switch (c = fmt[i++]) {
-				default:
-					LuaValue.argerror(1, "invalid conversion specifier '%" + c + "'");
-					break;
-				case '%':
-					result.append((byte) '%');
-					break;
-				case 'a':
-					result.append(WeekdayNameAbbrev[d.get(Calendar.DAY_OF_WEEK)-1]);
-					break;
-				case 'A':
-					result.append(WeekdayName[d.get(Calendar.DAY_OF_WEEK)-1]);
-					break;
-				case 'b':
-					result.append(MonthNameAbbrev[d.get(Calendar.MONTH)]);
-					break;
-				case 'B':
-					result.append(MonthName[d.get(Calendar.MONTH)]);
-					break;
-				case 'c':
-					result.append(date("%a %b %d %H:%M:%S %Y", time));
-					break;
-				case 'd':
-					result.append(String.valueOf(100+d.get(Calendar.DAY_OF_MONTH)).substring(1));
-					break;
-				case 'H':
-					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)).substring(1));
-					break;
-				case 'I':
-					result.append(String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)%12).substring(1));
-					break;
-				case 'j': { // day of year.
-					Calendar y0 = beginningOfYear(d);
-					int dayOfYear = (int) ((d.getTime().getTime()-y0.getTime().getTime())/(24*3600L*1000L));
-					result.append(String.valueOf(1001+dayOfYear).substring(1));
-					break;
-				}
-				case 'm':
-					result.append(String.valueOf(101+d.get(Calendar.MONTH)).substring(1));
-					break;
-				case 'M':
-					result.append(String.valueOf(100+d.get(Calendar.MINUTE)).substring(1));
-					break;
-				case 'p':
-					result.append(d.get(Calendar.HOUR_OF_DAY) < 12? "AM": "PM");
-					break;
-				case 'S':
-					result.append(String.valueOf(100+d.get(Calendar.SECOND)).substring(1));
-					break;
-				case 'U':
-					result.append(String.valueOf(weekNumber(d, 0)));
-					break;
-				case 'w':
-					result.append(String.valueOf((d.get(Calendar.DAY_OF_WEEK)+6)%7));
-					break;
-				case 'W':
-					result.append(String.valueOf(weekNumber(d, 1)));
-					break;
-				case 'x':
-					result.append(date("%m/%d/%y", time));
-					break;
-				case 'X':
-					result.append(date("%H:%M:%S", time));
-					break;
-				case 'y':
-					result.append(String.valueOf(d.get(Calendar.YEAR)).substring(2));
-					break;
-				case 'Y':
-					result.append(String.valueOf(d.get(Calendar.YEAR)));
-					break;
-				case 'z': {
-					final int tzo = timeZoneOffset(d)/60;
-					final int a = Math.abs(tzo);
-					final String h = String.valueOf(100+a/60).substring(1);
-					final String m = String.valueOf(100+a%60).substring(1);
-					result.append((tzo >= 0? "+": "-")+h+m);
-					break;
-				}
-				}
 			}
 		}
 		return result.tojstring();
@@ -362,7 +295,63 @@ public class OsLib extends TwoArgFunction {
 	private static final String[] MonthName         = { "January", "February", "March", "April", "May", "June", "July",
 			"August", "September", "October", "November", "December" };
 
-	private Calendar beginningOfYear(Calendar d) {
+	private static interface DateConversion {
+		public String convert(Calendar d);
+	}
+
+	private static final Map<String, DateConversion> CONVERTERS = new HashMap<>();
+	static {
+		CONVERTERS.put("%", d -> "%");
+		CONVERTERS.put("a", d -> WeekdayNameAbbrev[d.get(Calendar.DAY_OF_WEEK)-1]);
+		CONVERTERS.put("A", d -> WeekdayName[d.get(Calendar.DAY_OF_WEEK)-1]);
+		CONVERTERS.put("b", d -> MonthNameAbbrev[d.get(Calendar.MONTH)]);
+		CONVERTERS.put("B", d -> MonthName[d.get(Calendar.MONTH)]);
+		CONVERTERS.put("c", d -> date("%a %b %e %H:%M:%S %Y", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("C", d -> String.valueOf(d.get(Calendar.YEAR)).substring(0, 2));
+		CONVERTERS.put("d", d -> String.valueOf(100+d.get(Calendar.DAY_OF_MONTH)).substring(1));
+		CONVERTERS.put("D", d -> date("%m/%d/%y", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("e", d -> String.format("%2d", d.get(Calendar.DAY_OF_MONTH)));
+		CONVERTERS.put("F", d -> date("%Y-%m-%d", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("g", d -> String.valueOf(d.get(Calendar.YEAR)).substring(2));
+		CONVERTERS.put("G", d -> String.valueOf(d.get(Calendar.YEAR)));
+		CONVERTERS.put("h", d -> MonthNameAbbrev[d.get(Calendar.MONTH)]);
+		CONVERTERS.put("H", d -> String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)).substring(1));
+		CONVERTERS.put("I", d -> String.valueOf(100+d.get(Calendar.HOUR_OF_DAY)%12).substring(1));
+		// day of year
+		CONVERTERS.put("j", d -> {
+			Calendar y0 = beginningOfYear(d);
+			int dayOfYear = (int) ((d.getTimeInMillis()-y0.getTimeInMillis())/(24*3600L*1000L));
+			return String.valueOf(1001+dayOfYear).substring(1);
+		});
+		CONVERTERS.put("m", d -> String.valueOf(101+d.get(Calendar.MONTH)).substring(1));
+		CONVERTERS.put("M", d -> String.valueOf(100+d.get(Calendar.MINUTE)).substring(1));
+		CONVERTERS.put("n", d -> "\n");
+		CONVERTERS.put("p", d -> d.get(Calendar.HOUR_OF_DAY) < 12? "AM": "PM");
+		CONVERTERS.put("r", d -> date("%I:%M:%S %p", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("R", d -> date("%H:%M", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("S", d -> String.valueOf(100+d.get(Calendar.SECOND)).substring(1));
+		CONVERTERS.put("t", d -> "\t");
+		CONVERTERS.put("T", d -> date("%H:%M:%S", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("u", d -> String.valueOf((d.get(Calendar.DAY_OF_WEEK)+6)%7));
+		CONVERTERS.put("U", d -> String.valueOf(weekNumber(d, 0)));
+		CONVERTERS.put("V", d -> String.valueOf(weekNumber(d, 0)));
+		CONVERTERS.put("w", d -> String.valueOf((d.get(Calendar.DAY_OF_WEEK)+6)%7));
+		CONVERTERS.put("W", d -> String.valueOf(weekNumber(d, 1)));
+		CONVERTERS.put("x", d -> date("%m/%d/%y", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("X", d -> date("%H:%M:%S", d.getTimeInMillis()/1000L));
+		CONVERTERS.put("y", d -> String.valueOf(d.get(Calendar.YEAR)).substring(2));
+		CONVERTERS.put("Y", d -> String.valueOf(d.get(Calendar.YEAR)));
+		CONVERTERS.put("z", d -> {
+			final int tzo = timeZoneOffset(d)/60;
+			final int a = Math.abs(tzo);
+			final String h = String.valueOf(100+a/60).substring(1);
+			final String m = String.valueOf(100+a%60).substring(1);
+			return (tzo >= 0? "+": "-")+h+m;
+		});
+		CONVERTERS.put("Z", d -> d.getTimeZone().toZoneId().getDisplayName(TextStyle.SHORT, Locale.getDefault()));
+	}
+
+	private static Calendar beginningOfYear(Calendar d) {
 		Calendar y0 = Calendar.getInstance();
 		y0.setTime(d.getTime());
 		y0.set(Calendar.MONTH, 0);
@@ -374,7 +363,7 @@ public class OsLib extends TwoArgFunction {
 		return y0;
 	}
 
-	private int weekNumber(Calendar d, int startDay) {
+	private static int weekNumber(Calendar d, int startDay) {
 		Calendar y0 = beginningOfYear(d);
 		y0.set(Calendar.DAY_OF_MONTH, 1+(startDay+8-y0.get(Calendar.DAY_OF_WEEK))%7);
 		if (y0.after(d)) {
@@ -385,7 +374,7 @@ public class OsLib extends TwoArgFunction {
 		return 1+(int) (dt/(7L*24L*3600L*1000L));
 	}
 
-	private int timeZoneOffset(Calendar d) {
+	private static int timeZoneOffset(Calendar d) {
 		int localStandarTimeMillis = (d.get(Calendar.HOUR_OF_DAY)*3600+d.get(Calendar.MINUTE)*60+d.get(Calendar.SECOND))
 			*1000;
 		return d.getTimeZone().getOffset(1, d.get(Calendar.YEAR), d.get(Calendar.MONTH), d.get(Calendar.DAY_OF_MONTH),
@@ -494,7 +483,7 @@ public class OsLib extends TwoArgFunction {
 	 * @param table
 	 * @return long value for the time
 	 */
-	protected double time(LuaTable table) {
+	protected long time(LuaTable table) {
 		java.util.Date d;
 		if (table == null) {
 			d = new java.util.Date();
@@ -509,7 +498,7 @@ public class OsLib extends TwoArgFunction {
 			c.set(Calendar.MILLISECOND, 0);
 			d = c.getTime();
 		}
-		return d.getTime()/1000.;
+		return d.getTime()/1000L;
 	}
 
 	/**
