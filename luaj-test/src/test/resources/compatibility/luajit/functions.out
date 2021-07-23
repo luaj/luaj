@@ -1,0 +1,68 @@
+f0:
+f0:
+f0:
+f0:
+f0:
+f1:	nil
+f1:	a1/1
+f1:	a1/2
+f1:	a1/3
+f1:	a1/4
+f2:	nil	nil
+f2:	a1/1	nil
+f2:	a1/2	a2/2
+f2:	a1/3	a2/3
+f2:	a1/4	a2/4
+f3:	nil	nil	nil
+f3:	a1/1	nil	nil
+f3:	a1/2	a2/2	nil
+f3:	a1/3	a2/3	a3/3
+f3:	a1/4	a2/4	a3/4
+f4:	nil	nil	nil	nil
+f4:	a1/1	nil	nil	nil
+f4:	a1/2	a2/2	nil	nil
+f4:	a1/3	a2/3	a3/3	nil
+f4:	a1/4	a2/4	a3/4	a4/4
+z0:	nil
+z2:	c2.3/4
+z4:	c4.1/4
+g0:	nil	nil	nil	nil	(eol)
+g2:	b2.3/4	b2.4/4	nil	nil	(eol)
+g4:	b4.1/4	b4.2/4	b4.3/4	b4.4/4	(eol)
+11	12	13
+23	22	21
+32	45	58
+a	nil
+...
+...,a	nil	nil
+a,...	nil
+a	q
+...
+...,a	nil	q
+a,...	q
+a	q
+...	r
+...,a	r	q
+a,...	q	r
+a	q
+...	r	s
+...,a	r	q
+a,...	q	r	s
+third	abc	nil	|	nil	nil	nil
+third	def	nil	|	nil	nil	nil
+third	def	nil	|	nil	nil	nil
+third	abc	p	|	p	nil	nil
+third	def	nil	|	p	nil	nil
+third	def	nil	|	p	nil	nil
+third	abc	p	|	p	q	nil
+third	def	q	|	p	q	nil
+third	def	q	|	p	q	nil
+third	abc	p	|	p	q	r
+third	def	q	|	p	q	r
+third	def	q	|	p	q	r
+third	abc	p	|	p	q	r
+third	def	q	|	p	q	r
+third	def	q	|	p	q	r
+third	abc	nil	|	nil	nil	nil
+third	def	nil	|	nil	nil	nil
+third	def	nil	|	nil	nil	nil

@@ -1,0 +1,645 @@
+---- __eq same types
+nil	nil	before	true	true
+nil	nil	before	true	false
+true
+true
+nil	nil	after	true	true
+nil	nil	after	true	false
+true
+true
+boolean	boolean	before	true	false
+boolean	boolean	before	true	true
+true
+true
+boolean	boolean	after	true	false
+boolean	boolean	after	true	true
+true
+true
+number	number	before	true	false
+number	number	before	true	true
+true
+true
+number	number	after	true	false
+number	number	after	true	true
+true
+true
+number	number	before	true	false
+number	number	before	true	true
+true
+true
+number	number	after	true	false
+number	number	after	true	true
+true
+true
+function	function	before	true	false
+function	function	before	true	true
+true
+true
+function	function	after	true	false
+function	function	after	true	true
+true
+true
+thread	nil	before	true	false
+thread	nil	before	true	true
+true
+true
+thread	nil	after	true	false
+thread	nil	after	true	true
+true
+true
+string	string	before	true	false
+string	string	before	true	true
+true
+true
+string	string	after	true	false
+string	string	after	true	true
+true
+true
+number	string	before	true	false
+number	string	before	true	true
+true
+true
+number	string	after	true	false
+number	string	after	true	true
+true
+true
+---- __eq, tables - should invoke metatag comparison
+table	table	before	true	false
+table	table	before	true	true
+true
+true
+mt.__eq()	table.1	table.2
+table	table	after-a	true	true
+mt.__eq()	table.1	table.2
+table	table	after-a	true	false
+true
+true
+nilmt	nil
+boolmt	nil
+number	nil
+function	nil
+thread	nil
+---- __call
+number	before	false	attempt to call
+true
+mt.__call()	111	nil
+number	after	true	__call-result
+mt.__call()	111	a
+number	after	true	__call-result
+mt.__call()	111	a
+number	after	true	__call-result
+mt.__call()	111	a
+number	after	true	__call-result
+mt.__call()	111	a
+number	after	true	__call-result
+true
+boolean	before	false	attempt to call
+true
+mt.__call()	false	nil
+boolean	after	true	__call-result
+mt.__call()	false	a
+boolean	after	true	__call-result
+mt.__call()	false	a
+boolean	after	true	__call-result
+mt.__call()	false	a
+boolean	after	true	__call-result
+mt.__call()	false	a
+boolean	after	true	__call-result
+true
+function	before	true	nil
+true
+function	after	true
+function	after	true
+function	after	true
+function	after	true
+function	after	true
+true
+thread	before	false	attempt to call
+true
+mt.__call()	thread.3	nil
+thread	after	true	__call-result
+mt.__call()	thread.3	a
+thread	after	true	__call-result
+mt.__call()	thread.3	a
+thread	after	true	__call-result
+mt.__call()	thread.3	a
+thread	after	true	__call-result
+mt.__call()	thread.3	a
+thread	after	true	__call-result
+true
+table	before	false	attempt to call
+true
+mt.__call()	table.1	nil
+table	after	true	__call-result
+mt.__call()	table.1	a
+table	after	true	__call-result
+mt.__call()	table.1	a
+table	after	true	__call-result
+mt.__call()	table.1	a
+table	after	true	__call-result
+mt.__call()	table.1	a
+table	after	true	__call-result
+true
+---- __add, __sub, __mul, __div, __pow, __mod
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+boolean	boolean	before	false	attempt to perform arithmetic
+true
+mt.__add()	false	false
+boolean	boolean	after	true	__add-result
+mt.__add()	false	false
+boolean	boolean	after	true	__add-result
+mt.__sub()	false	false
+boolean	boolean	after	true	__sub-result
+mt.__sub()	false	false
+boolean	boolean	after	true	__sub-result
+mt.__mul()	false	false
+boolean	boolean	after	true	__mul-result
+mt.__mul()	false	false
+boolean	boolean	after	true	__mul-result
+mt.__pow()	false	false
+boolean	boolean	after	true	__pow-result
+mt.__pow()	false	false
+boolean	boolean	after	true	__pow-result
+mt.__mod()	false	false
+boolean	boolean	after	true	__mod-result
+mt.__mod()	false	false
+boolean	boolean	after	true	__mod-result
+true
+true
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+boolean	thread	before	false	attempt to perform arithmetic
+true
+mt.__add()	false	thread.3
+boolean	thread	after	true	__add-result
+mt.__add()	thread.3	false
+boolean	thread	after	true	__add-result
+mt.__sub()	false	thread.3
+boolean	thread	after	true	__sub-result
+mt.__sub()	thread.3	false
+boolean	thread	after	true	__sub-result
+mt.__mul()	false	thread.3
+boolean	thread	after	true	__mul-result
+mt.__mul()	thread.3	false
+boolean	thread	after	true	__mul-result
+mt.__pow()	false	thread.3
+boolean	thread	after	true	__pow-result
+mt.__pow()	thread.3	false
+boolean	thread	after	true	__pow-result
+mt.__mod()	false	thread.3
+boolean	thread	after	true	__mod-result
+mt.__mod()	thread.3	false
+boolean	thread	after	true	__mod-result
+true
+true
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+boolean	function	before	false	attempt to perform arithmetic
+true
+mt.__add()	false	function.4
+boolean	function	after	true	__add-result
+mt.__add()	function.4	false
+boolean	function	after	true	__add-result
+mt.__sub()	false	function.4
+boolean	function	after	true	__sub-result
+mt.__sub()	function.4	false
+boolean	function	after	true	__sub-result
+mt.__mul()	false	function.4
+boolean	function	after	true	__mul-result
+mt.__mul()	function.4	false
+boolean	function	after	true	__mul-result
+mt.__pow()	false	function.4
+boolean	function	after	true	__pow-result
+mt.__pow()	function.4	false
+boolean	function	after	true	__pow-result
+mt.__mod()	false	function.4
+boolean	function	after	true	__mod-result
+mt.__mod()	function.4	false
+boolean	function	after	true	__mod-result
+true
+true
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+boolean	string	before	false	attempt to perform arithmetic
+true
+mt.__add()	false	abc
+boolean	string	after	true	__add-result
+mt.__add()	abc	false
+boolean	string	after	true	__add-result
+mt.__sub()	false	abc
+boolean	string	after	true	__sub-result
+mt.__sub()	abc	false
+boolean	string	after	true	__sub-result
+mt.__mul()	false	abc
+boolean	string	after	true	__mul-result
+mt.__mul()	abc	false
+boolean	string	after	true	__mul-result
+mt.__pow()	false	abc
+boolean	string	after	true	__pow-result
+mt.__pow()	abc	false
+boolean	string	after	true	__pow-result
+mt.__mod()	false	abc
+boolean	string	after	true	__mod-result
+mt.__mod()	abc	false
+boolean	string	after	true	__mod-result
+true
+true
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+boolean	table	before	false	attempt to perform arithmetic
+true
+mt.__add()	false	table.1
+boolean	table	after	true	__add-result
+mt.__add()	table.1	false
+boolean	table	after	true	__add-result
+mt.__sub()	false	table.1
+boolean	table	after	true	__sub-result
+mt.__sub()	table.1	false
+boolean	table	after	true	__sub-result
+mt.__mul()	false	table.1
+boolean	table	after	true	__mul-result
+mt.__mul()	table.1	false
+boolean	table	after	true	__mul-result
+mt.__pow()	false	table.1
+boolean	table	after	true	__pow-result
+mt.__pow()	table.1	false
+boolean	table	after	true	__pow-result
+mt.__mod()	false	table.1
+boolean	table	after	true	__mod-result
+mt.__mod()	table.1	false
+boolean	table	after	true	__mod-result
+true
+true
+---- __len
+boolean	before	false	attempt to get length of 
+true
+mt.__len()	false
+boolean	after	true	__len-result
+true
+function	before	false	attempt to get length of 
+true
+mt.__len()	function.4
+function	after	true	__len-result
+true
+thread	before	false	attempt to get length of 
+true
+mt.__len()	thread.3
+thread	after	true	__len-result
+true
+number	before	false	attempt to get length of 
+true
+mt.__len()	111
+number	after	true	__len-result
+true
+---- __neg
+nil	before	false	attempt to perform arithmetic 
+true
+mt.__unm()	false
+nil	after	true	__unm-result
+true
+nil	before	false	attempt to perform arithmetic 
+true
+mt.__unm()	function.4
+nil	after	true	__unm-result
+true
+nil	before	false	attempt to perform arithmetic 
+true
+mt.__unm()	thread.3
+nil	after	true	__unm-result
+true
+nil	before	false	attempt to perform arithmetic 
+true
+mt.__unm()	abcd
+nil	after	true	__unm-result
+true
+nil	before	false	attempt to perform arithmetic 
+true
+mt.__unm()	table.1
+nil	after	true	__unm-result
+true
+nil	before	true	-111
+true
+nil	after	true	-111
+true
+---- __lt, __le, same types
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+true
+true
+mt.__lt()	true	true
+boolean	boolean	after	true	true
+mt.__le()	true	true
+boolean	boolean	after	true	true
+mt.__lt()	true	true
+boolean	boolean	after	true	true
+mt.__le()	true	true
+boolean	boolean	after	true	true
+true
+true
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+boolean	boolean	before	false	attempt to compare
+true
+true
+mt.__lt()	true	false
+boolean	boolean	after	true	true
+mt.__le()	true	false
+boolean	boolean	after	true	true
+mt.__lt()	false	true
+boolean	boolean	after	true	true
+mt.__le()	false	true
+boolean	boolean	after	true	true
+true
+true
+function	function	before	false	attempt to compare
+function	function	before	false	attempt to compare
+function	function	before	false	attempt to compare
+function	function	before	false	attempt to compare
+true
+true
+mt.__lt()	function.4	function.5
+function	function	after	true	true
+mt.__le()	function.4	function.5
+function	function	after	true	true
+mt.__lt()	function.5	function.4
+function	function	after	true	true
+mt.__le()	function.5	function.4
+function	function	after	true	true
+true
+true
+thread	thread	before	false	attempt to compare
+thread	thread	before	false	attempt to compare
+thread	thread	before	false	attempt to compare
+thread	thread	before	false	attempt to compare
+true
+true
+mt.__lt()	thread.3	thread.6
+thread	thread	after	true	true
+mt.__le()	thread.3	thread.6
+thread	thread	after	true	true
+mt.__lt()	thread.6	thread.3
+thread	thread	after	true	true
+mt.__le()	thread.6	thread.3
+thread	thread	after	true	true
+true
+true
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+true
+true
+mt.__lt()	table.1	table.1
+table	table	after	true	true
+mt.__le()	table.1	table.1
+table	table	after	true	true
+mt.__lt()	table.1	table.1
+table	table	after	true	true
+mt.__le()	table.1	table.1
+table	table	after	true	true
+true
+true
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+table	table	before	false	attempt to compare
+true
+true
+mt.__lt()	table.1	table.7
+table	table	after	true	true
+mt.__le()	table.1	table.7
+table	table	after	true	true
+mt.__lt()	table.7	table.1
+table	table	after	true	true
+mt.__le()	table.7	table.1
+table	table	after	true	true
+true
+true
+---- __lt, __le, different types
+boolean	thread	before	false	attempt to compare
+boolean	thread	before	false	attempt to compare
+boolean	thread	before	false	attempt to compare
+boolean	thread	before	false	attempt to compare
+true
+true
+boolean	thread	after-a	false	attempt to compare
+boolean	thread	after-a	false	attempt to compare
+boolean	thread	after-a	false	attempt to compare
+boolean	thread	after-a	false	attempt to compare
+true
+true
+---- __tostring
+mt.__tostring(boolean)
+boolean	after	mt.__tostring(boolean)	mt.__tostring(boolean)
+true
+true
+function	after	true	mt.__tostring(function)
+true
+true
+thread	after	true	mt.__tostring(thread)
+true
+true
+table	after	true	mt.__tostring(table)
+true
+true
+string	after	true	abc
+true
+---- __index, __newindex
+boolean	before	false	attempt to index
+boolean	before	false	attempt to index
+boolean	before	false	index
+boolean	before	false	index
+boolean	before	false	attempt to index
+true
+mt.__index()	false	foo
+boolean	after	true	__index-result
+mt.__index()	false	123
+boolean	after	true	__index-result
+mt.__newindex()	false	foo	bar
+boolean	after	true
+mt.__newindex()	false	123	bar
+boolean	after	true
+mt.__index()	false	foo
+boolean	after	false	attempt to call
+true
+number	before	false	attempt to index
+number	before	false	attempt to index
+number	before	false	index
+number	before	false	index
+number	before	false	attempt to index
+true
+mt.__index()	111	foo
+number	after	true	__index-result
+mt.__index()	111	123
+number	after	true	__index-result
+mt.__newindex()	111	foo	bar
+number	after	true
+mt.__newindex()	111	123	bar
+number	after	true
+mt.__index()	111	foo
+number	after	false	attempt to call
+true
+function	before	false	attempt to index
+function	before	false	attempt to index
+function	before	false	index
+function	before	false	index
+function	before	false	attempt to index
+true
+mt.__index()	function.4	foo
+function	after	true	__index-result
+mt.__index()	function.4	123
+function	after	true	__index-result
+mt.__newindex()	function.4	foo	bar
+function	after	true
+mt.__newindex()	function.4	123	bar
+function	after	true
+mt.__index()	function.4	foo
+function	after	false	attempt to call
+true
+thread	before	false	attempt to index
+thread	before	false	attempt to index
+thread	before	false	index
+thread	before	false	index
+thread	before	false	attempt to index
+true
+mt.__index()	thread.3	foo
+thread	after	true	__index-result
+mt.__index()	thread.3	123
+thread	after	true	__index-result
+mt.__newindex()	thread.3	foo	bar
+thread	after	true
+mt.__newindex()	thread.3	123	bar
+thread	after	true
+mt.__index()	thread.3	foo
+thread	after	false	attempt to call
+true
+---- __concat
+table	function	before	false	attempt to concatenate 
+table	function	before	false	attempt to concatenate 
+table	string	number	before	false	attempt to concatenate 
+string	table	number	before	false	attempt to concatenate 
+string	number	table	before	false	attempt to concatenate 
+true
+mt.__concat(table,function)	table.1	function.4
+table	function	after	true	table.8
+mt.__concat(function,table)	function.4	table.1
+table	function	after	true	table.8
+mt.__concat(table,string)	table.1	sss777
+table	string	number	before	true	table.8
+mt.__concat(table,number)	table.1	777
+string	table	number	before	false	attempt to concatenate 
+mt.__concat(number,table)	777	table.1
+string	number	table	before	false	attempt to concatenate 
+true
+true
+function	table	before	false	attempt to concatenate 
+function	table	before	false	attempt to concatenate 
+function	string	number	before	false	attempt to concatenate 
+string	function	number	before	false	attempt to concatenate 
+string	number	function	before	false	attempt to concatenate 
+true
+mt.__concat(function,table)	function.4	table.1
+function	table	after	true	table.8
+mt.__concat(table,function)	table.1	function.4
+function	table	after	true	table.8
+mt.__concat(function,string)	function.4	sss777
+function	string	number	before	true	table.8
+mt.__concat(function,number)	function.4	777
+string	function	number	before	false	attempt to concatenate 
+mt.__concat(number,function)	777	function.4
+string	number	function	before	false	attempt to concatenate 
+true
+true
+number	nil	before	false	attempt to concatenate 
+number	nil	before	false	attempt to concatenate 
+number	string	number	before	true	123sss777
+string	number	number	before	true	sss123777
+string	number	number	before	true	sss777123
+true
+mt.__concat(number,nil)	123	nil
+number	nil	after	true	table.8
+mt.__concat(nil,number)	nil	123
+number	nil	after	true	table.8
+number	string	number	before	true	123sss777
+string	number	number	before	true	sss123777
+string	number	number	before	true	sss777123
+true
+true
+nil	number	before	false	attempt to concatenate 
+nil	number	before	false	attempt to concatenate 
+nil	string	number	before	false	attempt to concatenate 
+string	nil	number	before	false	attempt to concatenate 
+string	number	nil	before	false	attempt to concatenate 
+true
+mt.__concat(nil,number)	nil	123
+nil	number	after	true	table.8
+mt.__concat(number,nil)	123	nil
+nil	number	after	true	table.8
+mt.__concat(nil,string)	nil	sss777
+nil	string	number	before	true	table.8
+mt.__concat(nil,number)	nil	777
+string	nil	number	before	false	attempt to concatenate 
+mt.__concat(number,nil)	777	nil
+string	number	nil	before	false	attempt to concatenate 
+true
+true
+---- __metatable
+boolean	before	true	nil	nil
+true
+boolean	after	true	table.9	table.10
+true
+function	before	true	nil	nil
+true
+function	after	true	table.9	table.10
+true
+thread	before	true	nil	nil
+true
+thread	after	true	table.9	table.10
+true
+table	before	true	nil	nil
+true
+table	after	true	table.9	table.10
+true
+string	before	true	table.11	table.11
+true
+string	after	true	table.9	table.10
+true

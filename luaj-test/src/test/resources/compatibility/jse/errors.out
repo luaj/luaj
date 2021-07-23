@@ -1,0 +1,97 @@
+a(error)	false	nil
+a(error,"msg")	false	string
+a(error,"msg",0)	false	string
+a(error,"msg",1)	false	string
+a(error,"msg",2)	false	string
+a(error,"msg",3)	false	string
+a(error,"msg",4)	false	string
+a(error,"msg",5)	false	string
+a(error,"msg",6)	false	string
+a(nil())	false	string
+a(t())  	false	string
+a(s())  	false	string
+a(true())	false	string
+a(nil+1)	false	string
+a(a+1)  	false	string
+a(s+1)  	false	string
+a(true+1)	false	string
+a(nil.x)	false	string
+a(a.x)  	false	string
+a(s.x)  	true	nil
+a(true.x)	false	string
+a(nil.x=5)	false	string
+a(a.x=5)  	false	string
+a(s.x=5)  	false	string
+a(true.x=5)	false	string
+a(#nil) 	false	string
+a(#t)   	true	0
+a(#s)   	true	11
+a(#a)   	false	string
+a(#true)	false	string
+a(nil>1)	false	string
+a(a>1)  	false	string
+a(s>1)  	false	string
+a(true>1)	false	string
+a(-nil)	false	string
+a(-a)  	false	string
+a(-s)  	false	string
+a(-true)	false	string
+-------- string concatenation
+"a".."b"	true
+"a"..nil	false
+nil.."b"	false
+"a"..{}	false
+{}.."b"	false
+"a"..2	true
+2.."b"	true
+"a"..print	false
+print.."b"	false
+"a"..true	false
+true.."b"	false
+nil..true	false
+"a"..3.5	true
+3.5.."b"	true
+-------- table concatenation
+"a".."b"	true
+"a"..nil	false
+nil.."b"	false
+"a"..{}	false
+{}.."b"	false
+"a"..2	true
+2.."b"	true
+"a"..print	false
+print.."b"	false
+"a"..true	false
+true.."b"	false
+nil..true	false
+"a"..3.5	true
+3.5.."b"	true
+-------- pairs tests
+a(pairs(nil))	false	string
+a(pairs(a))  	false	string
+a(pairs(s))  	false	string
+a(pairs(t))  	true	func.1
+a(pairs(true))	false	string
+-------- setmetatable tests
+a(setmetatable(nil))	false	string
+a(setmetatable(a))  	false	string
+a(setmetatable(s))  	false	string
+a(setmetatable(true))	false	string
+a(setmetatable(t))  	true	tbl.2
+a(getmetatable(t))  	true	tbl.3
+a(setmetatable(t*))  	true	tbl.2
+a(getmetatable(t))  	true	tbl.4
+a(setmetatable(t))  	false	string
+a(getmetatable(t))  	true	tbl.4
+a(setmetatable(t))  	true	tbl.5
+a(getmetatable(t))  	true	tbl.6
+a(setmetatable(t*))  	true	tbl.5
+a(getmetatable(t))  	true	some string
+a(setmetatable(t))  	false	string
+a(getmetatable(t))  	true	some string
+a(setmetatable(t,nil))  	false	string
+a(setmetatable(t))  	false	string
+a(setmetatable({},"abc"))  	false	string
+error("msg","arg")	false	string
+loadfile("bogus.txt")	true	nil
+dofile("bogus.txt")	false	string

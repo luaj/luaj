@@ -1,0 +1,237 @@
+
+11
+abc	123	nil	pqr
+F
+F
+T
+assert(true)	true
+pcall(assert,true)	true
+pcall(assert,false)	false	string
+pcall(assert,nil)	false	string
+pcall(assert,true,"msg")	true
+pcall(assert,false,"msg")	false	string
+pcall(assert,nil,"msg")	false	string
+pcall(assert,false,"msg","msg2")	false	string
+collectgarbage("count")	number
+collectgarbage("collect")	number
+collectgarbage("count")	number
+pcall(ipairs)	false	string
+pcall(ipairs,nil)	false	string
+pcall(ipairs,"a")	false	string
+pcall(ipairs,1)	false	string
+ipairs2	1	one
+ipairs2	2	two
+ipairs4	1	one
+ipairs4	2	two
+load("print(3+4); return 8")	func.1	nil
+7
+load("print(3+4); return 8")()	8
+pcall(pairs)	false	string
+pcall(pairs,nil)	false	string
+pcall(pairs,"a")	false	string
+pcall(pairs,1)	false	string
+pairs2	1	one
+pairs2	2	two
+pairs3	aa	aaa
+pairs4	1	one
+pairs4	2	two
+pairs4	aa	aaa
+pairs5	20	30
+pairs5	30	20
+_G["abc"] (before)	nil
+_G["abc"] (after)	def
+type(nil)	nil
+type("a")	string
+type(1)	number
+type(1.5)	number
+type(function() end)	function
+type({})	table
+type(true)	boolean
+type(false)	boolean
+pcall(type,type)	function
+pcall(type)	false	string
+(function() return pcall(type) end)()	false	string
+la()	false	string
+ga()	false	string
+getmetatable(ta)	nil
+getmetatable(tb)	nil
+setmetatable(ta),{cc1="ccc1"}	table
+setmetatable(tb),{dd1="ddd1"}	table
+getmetatable(ta)["cc1"]	ccc1
+getmetatable(tb)["dd1"]	ddd1
+getmetatable(1)	nil
+pcall(setmetatable,1)	false	string
+pcall(setmetatable,nil)	false	string
+pcall(setmetatable,"ABC")	false	string
+pcall(setmetatable,function() end)	false	string
+pcall(rawget)	false	string
+pcall(rawget,"a")	false	string
+pcall(rawget,s)	false	string
+pcall(rawget,t)	false	string
+  s	nil	nil	ccc	ddd	nil	nil	nil
+  s	nil	nil	ccc	ddd	nil	nil	nil
+  t	aaa	bbb	ccc	ddd	nil	nil	nil
+  t	nil	nil	ccc	ddd	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+pcall(rawset,s,"aa","www")	tbl.2
+  s	www	nil	ccc	ddd	nil	nil	nil
+  s	www	nil	ccc	ddd	nil	nil	nil
+  t	aaa	bbb	ccc	ddd	nil	nil	nil
+  t	nil	nil	ccc	ddd	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+pcall(rawset,s,"cc","xxx")	tbl.2
+  s	www	nil	xxx	ddd	nil	nil	nil
+  s	www	nil	xxx	ddd	nil	nil	nil
+  t	aaa	bbb	ccc	ddd	nil	nil	nil
+  t	nil	nil	ccc	ddd	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+pcall(rawset,t,"aa","yyy")	tbl.3
+  s	www	nil	xxx	ddd	nil	nil	nil
+  s	www	nil	xxx	ddd	nil	nil	nil
+  t	yyy	bbb	ccc	ddd	nil	nil	nil
+  t	yyy	nil	ccc	ddd	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+pcall(rawset,t,"dd","zzz")	tbl.3
+  s	www	nil	xxx	ddd	nil	nil	nil
+  s	www	nil	xxx	ddd	nil	nil	nil
+  t	yyy	bbb	ccc	zzz	nil	nil	nil
+  t	yyy	nil	ccc	zzz	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+pcall(rawlen, {})	0
+pcall(rawlen, {"a"})	1
+pcall(rawlen, {"a","b"})	2
+pcall(rawlen, "")	0
+pcall(rawlen, "a")	1
+pcall(rawlen, "ab")	2
+pcall(rawlen, 1)	false	string
+pcall(rawlen, nil)	false	string
+pcall(rawlen)	false	string
+  s	www	nil	xxx	ddd	nil	nil	nil
+  s	www	nil	xxx	ddd	nil	nil	nil
+  t	yyy	bbb	ccc	zzz	nil	nil	nil
+  t	yyy	nil	ccc	zzz	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+s["ee"]="ppp"
+  s	www	nil	xxx	ddd	ppp	nil	nil
+  s	www	nil	xxx	ddd	ppp	nil	nil
+  t	yyy	bbb	ccc	zzz	nil	nil	nil
+  t	yyy	nil	ccc	zzz	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+s["cc"]="qqq"
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  t	yyy	bbb	ccc	zzz	nil	nil	nil
+  t	yyy	nil	ccc	zzz	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	nil	nil
+t["ff"]="rrr"
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  t	yyy	bbb	ccc	zzz	nil	rrr	nil
+  t	yyy	nil	ccc	zzz	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	rrr	nil
+  mt	aaa	bbb	nil	nil	nil	rrr	nil
+t["dd"]="sss"
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  t	yyy	bbb	ccc	sss	nil	rrr	nil
+  t	yyy	nil	ccc	sss	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	rrr	nil
+  mt	aaa	bbb	nil	nil	nil	rrr	nil
+mt["gg"]="ttt"
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  s	www	nil	qqq	ddd	ppp	nil	nil
+  t	yyy	bbb	ccc	sss	nil	rrr	ttt
+  t	yyy	nil	ccc	sss	nil	nil	nil
+  mt	aaa	bbb	nil	nil	nil	rrr	ttt
+  mt	aaa	bbb	nil	nil	nil	rrr	ttt
+pcall(select)	false	string
+select(1,11,22,33,44,55)	11	22	33	44	55
+select(2,11,22,33,44,55)	22	33	44	55
+select(3,11,22,33,44,55)	33	44	55
+select(4,11,22,33,44,55)	44	55
+pcall(select,5,11,22,33,44,55)	55
+pcall(select,6,11,22,33,44,55)	nil
+pcall(select,7,11,22,33,44,55)	nil
+pcall(select,0,11,22,33,44,55)	false	string
+pcall(select,-1,11,22,33,44,55)	55
+pcall(select,-2,11,22,33,44,55)	44
+pcall(select,-4,11,22,33,44,55)	22
+pcall(select,-5,11,22,33,44,55)	11
+pcall(select,-6,11,22,33,44,55)	false	string
+pcall(select,1)	nil
+pcall(select,select)	false	string
+pcall(select,{})	false	string
+pcall(select,"2",11,22,33)	22
+pcall(select,"abc",11,22,33)	false	string
+pcall(tonumber)	nil
+pcall(tonumber,nil)	nil
+pcall(tonumber,"abc")	nil
+pcall(tonumber,"123")	123
+pcall(tonumber,"123",10)	123
+pcall(tonumber,"123",8)	83
+pcall(tonumber,"123",6)	51
+pcall(tonumber,"10101",4)	273
+pcall(tonumber,"10101",3)	91
+pcall(tonumber,"10101",2)	21
+pcall(tonumber,"1a1",16)	417
+pcall(tonumber,"1a1",32)	1345
+pcall(tonumber,"1a1",54)	false	string
+pcall(tonumber,"1a1",1)	false	string
+pcall(tonumber,"1a1",0)	false	string
+pcall(tonumber,"1a1",-1)	false	string
+pcall(tonumber,"1a1","32")	1345
+pcall(tonumber,"123","456")	false	string
+pcall(tonumber,"1a1",10)	nil
+pcall(tonumber,"151",4)	nil
+pcall(tonumber,"151",3)	nil
+pcall(tonumber,"151",2)	nil
+pcall(tonumber,"123",8,8)	83
+pcall(tonumber,123)	123
+pcall(tonumber,true)	nil
+pcall(tonumber,false)	nil
+pcall(tonumber,tonumber)	nil
+pcall(tonumber,function() end)	nil
+pcall(tonumber,{"one","two",a="aa",b="bb"})	nil
+pcall(tonumber,"123.456")	123.456
+pcall(tonumber," 123.456")	123.456
+pcall(tonumber," 234qwer")	nil
+pcall(tonumber,"0x20")	32
+pcall(tonumber," 0x20")	32
+pcall(tonumber,"0x20 ")	32
+pcall(tonumber," 0x20 ")	32
+pcall(tonumber,"0X20")	32
+pcall(tonumber," 0X20")	32
+pcall(tonumber,"0X20 ")	32
+pcall(tonumber," 0X20 ")	32
+pcall(tonumber,"0x20",10)	nil
+pcall(tonumber,"0x20",16)	nil
+pcall(tonumber,"0x20",8)	nil
+pcall(tostring)	nil
+pcall(tostring,nil)	nil
+pcall(tostring,"abc")	abc
+pcall(tostring,"abc","def")	abc
+pcall(tostring,123)	123
+pcall(tostring,true)	true
+pcall(tostring,false)	false
+tostring(tostring)	string
+tostring(function() end)	string
+tostring({"one","two",a="aa",b="bb"})	string
+_VERSION	string
+pcall(badfunc)	false	string
+pcall(badfunc,errfunc)	false	string
+pcall(badfunc,badfunc)	false	string
+pcall(wrappedbad)	nil
+pcall(wrappedbad,errfunc)	nil
+pcall(xpcall(badfunc))	false	string
+  in errfunc	string
+pcall(xpcall(badfunc,errfunc))	false
+pcall(xpcall(badfunc,badfunc))	false
+pcall(xpcall(wrappedbad))	false	string

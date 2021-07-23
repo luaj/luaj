@@ -1,0 +1,1981 @@
+	local f1
+	f1 = function() return 1 end
+	local f2
+	f2 = function() return 1 end
+	local f3
+	do
+		local result
+		function f3()
+			if not result then
+				result = f1() + f2()
+			end
+			return result
+		end
+	end
+	local f4
+	do
+		local result
+		function f4()
+			if not result then
+				result = f2() + f3()
+			end
+			return result
+		end
+	end
+	local f5
+	do
+		local result
+		function f5()
+			if not result then
+				result = f3() + f4()
+			end
+			return result
+		end
+	end
+	local f6
+	do
+		local result
+		function f6()
+			if not result then
+				result = f4() + f5()
+			end
+			return result
+		end
+	end
+	local f7
+	do
+		local result
+		function f7()
+			if not result then
+				result = f5() + f6()
+			end
+			return result
+		end
+	end
+	local f8
+	do
+		local result
+		function f8()
+			if not result then
+				result = f6() + f7()
+			end
+			return result
+		end
+	end
+	local f9
+	do
+		local result
+		function f9()
+			if not result then
+				result = f7() + f8()
+			end
+			return result
+		end
+	end
+	local f10
+	do
+		local result
+		function f10()
+			if not result then
+				result = f8() + f9()
+			end
+			return result
+		end
+	end
+	local f11
+	do
+		local result
+		function f11()
+			if not result then
+				result = f9() + f10()
+			end
+			return result
+		end
+	end
+	local f12
+	do
+		local result
+		function f12()
+			if not result then
+				result = f10() + f11()
+			end
+			return result
+		end
+	end
+	local f13
+	do
+		local result
+		function f13()
+			if not result then
+				result = f11() + f12()
+			end
+			return result
+		end
+	end
+	local f14
+	do
+		local result
+		function f14()
+			if not result then
+				result = f12() + f13()
+			end
+			return result
+		end
+	end
+	local f15
+	do
+		local result
+		function f15()
+			if not result then
+				result = f13() + f14()
+			end
+			return result
+		end
+	end
+	local f16
+	do
+		local result
+		function f16()
+			if not result then
+				result = f14() + f15()
+			end
+			return result
+		end
+	end
+	local f17
+	do
+		local result
+		function f17()
+			if not result then
+				result = f15() + f16()
+			end
+			return result
+		end
+	end
+	local f18
+	do
+		local result
+		function f18()
+			if not result then
+				result = f16() + f17()
+			end
+			return result
+		end
+	end
+	local f19
+	do
+		local result
+		function f19()
+			if not result then
+				result = f17() + f18()
+			end
+			return result
+		end
+	end
+	local f20
+	do
+		local result
+		function f20()
+			if not result then
+				result = f18() + f19()
+			end
+			return result
+		end
+	end
+	local f21
+	do
+		local result
+		function f21()
+			if not result then
+				result = f19() + f20()
+			end
+			return result
+		end
+	end
+	local f22
+	do
+		local result
+		function f22()
+			if not result then
+				result = f20() + f21()
+			end
+			return result
+		end
+	end
+	local f23
+	do
+		local result
+		function f23()
+			if not result then
+				result = f21() + f22()
+			end
+			return result
+		end
+	end
+	local f24
+	do
+		local result
+		function f24()
+			if not result then
+				result = f22() + f23()
+			end
+			return result
+		end
+	end
+	local f25
+	do
+		local result
+		function f25()
+			if not result then
+				result = f23() + f24()
+			end
+			return result
+		end
+	end
+	local f26
+	do
+		local result
+		function f26()
+			if not result then
+				result = f24() + f25()
+			end
+			return result
+		end
+	end
+	local f27
+	do
+		local result
+		function f27()
+			if not result then
+				result = f25() + f26()
+			end
+			return result
+		end
+	end
+	local f28
+	do
+		local result
+		function f28()
+			if not result then
+				result = f26() + f27()
+			end
+			return result
+		end
+	end
+	local f29
+	do
+		local result
+		function f29()
+			if not result then
+				result = f27() + f28()
+			end
+			return result
+		end
+	end
+	local f30
+	do
+		local result
+		function f30()
+			if not result then
+				result = f28() + f29()
+			end
+			return result
+		end
+	end
+	local f31
+	do
+		local result
+		function f31()
+			if not result then
+				result = f29() + f30()
+			end
+			return result
+		end
+	end
+	local f32
+	do
+		local result
+		function f32()
+			if not result then
+				result = f30() + f31()
+			end
+			return result
+		end
+	end
+	local f33
+	do
+		local result
+		function f33()
+			if not result then
+				result = f31() + f32()
+			end
+			return result
+		end
+	end
+	local f34
+	do
+		local result
+		function f34()
+			if not result then
+				result = f32() + f33()
+			end
+			return result
+		end
+	end
+	local f35
+	do
+		local result
+		function f35()
+			if not result then
+				result = f33() + f34()
+			end
+			return result
+		end
+	end
+	local f36
+	do
+		local result
+		function f36()
+			if not result then
+				result = f34() + f35()
+			end
+			return result
+		end
+	end
+	local f37
+	do
+		local result
+		function f37()
+			if not result then
+				result = f35() + f36()
+			end
+			return result
+		end
+	end
+	local f38
+	do
+		local result
+		function f38()
+			if not result then
+				result = f36() + f37()
+			end
+			return result
+		end
+	end
+	local f39
+	do
+		local result
+		function f39()
+			if not result then
+				result = f37() + f38()
+			end
+			return result
+		end
+	end
+	local f40
+	do
+		local result
+		function f40()
+			if not result then
+				result = f38() + f39()
+			end
+			return result
+		end
+	end
+	local f41
+	do
+		local result
+		function f41()
+			if not result then
+				result = f39() + f40()
+			end
+			return result
+		end
+	end
+	local f42
+	do
+		local result
+		function f42()
+			if not result then
+				result = f40() + f41()
+			end
+			return result
+		end
+	end
+	local f43
+	do
+		local result
+		function f43()
+			if not result then
+				result = f41() + f42()
+			end
+			return result
+		end
+	end
+	local f44
+	do
+		local result
+		function f44()
+			if not result then
+				result = f42() + f43()
+			end
+			return result
+		end
+	end
+	local f45
+	do
+		local result
+		function f45()
+			if not result then
+				result = f43() + f44()
+			end
+			return result
+		end
+	end
+	local f46
+	do
+		local result
+		function f46()
+			if not result then
+				result = f44() + f45()
+			end
+			return result
+		end
+	end
+	local f47
+	do
+		local result
+		function f47()
+			if not result then
+				result = f45() + f46()
+			end
+			return result
+		end
+	end
+	local f48
+	do
+		local result
+		function f48()
+			if not result then
+				result = f46() + f47()
+			end
+			return result
+		end
+	end
+	local f49
+	do
+		local result
+		function f49()
+			if not result then
+				result = f47() + f48()
+			end
+			return result
+		end
+	end
+	local f50
+	do
+		local result
+		function f50()
+			if not result then
+				result = f48() + f49()
+			end
+			return result
+		end
+	end
+	local f51
+	do
+		local result
+		function f51()
+			if not result then
+				result = f49() + f50()
+			end
+			return result
+		end
+	end
+	local f52
+	do
+		local result
+		function f52()
+			if not result then
+				result = f50() + f51()
+			end
+			return result
+		end
+	end
+	local f53
+	do
+		local result
+		function f53()
+			if not result then
+				result = f51() + f52()
+			end
+			return result
+		end
+	end
+	local f54
+	do
+		local result
+		function f54()
+			if not result then
+				result = f52() + f53()
+			end
+			return result
+		end
+	end
+	local f55
+	do
+		local result
+		function f55()
+			if not result then
+				result = f53() + f54()
+			end
+			return result
+		end
+	end
+	local f56
+	do
+		local result
+		function f56()
+			if not result then
+				result = f54() + f55()
+			end
+			return result
+		end
+	end
+	local f57
+	do
+		local result
+		function f57()
+			if not result then
+				result = f55() + f56()
+			end
+			return result
+		end
+	end
+	local f58
+	do
+		local result
+		function f58()
+			if not result then
+				result = f56() + f57()
+			end
+			return result
+		end
+	end
+	local f59
+	do
+		local result
+		function f59()
+			if not result then
+				result = f57() + f58()
+			end
+			return result
+		end
+	end
+	local f60
+	do
+		local result
+		function f60()
+			if not result then
+				result = f58() + f59()
+			end
+			return result
+		end
+	end
+	local f61
+	do
+		local result
+		function f61()
+			if not result then
+				result = f59() + f60()
+			end
+			return result
+		end
+	end
+	local f62
+	do
+		local result
+		function f62()
+			if not result then
+				result = f60() + f61()
+			end
+			return result
+		end
+	end
+	local f63
+	do
+		local result
+		function f63()
+			if not result then
+				result = f61() + f62()
+			end
+			return result
+		end
+	end
+	local f64
+	do
+		local result
+		function f64()
+			if not result then
+				result = f62() + f63()
+			end
+			return result
+		end
+	end
+	local f65
+	do
+		local result
+		function f65()
+			if not result then
+				result = f63() + f64()
+			end
+			return result
+		end
+	end
+	local f66
+	do
+		local result
+		function f66()
+			if not result then
+				result = f64() + f65()
+			end
+			return result
+		end
+	end
+	local f67
+	do
+		local result
+		function f67()
+			if not result then
+				result = f65() + f66()
+			end
+			return result
+		end
+	end
+	local f68
+	do
+		local result
+		function f68()
+			if not result then
+				result = f66() + f67()
+			end
+			return result
+		end
+	end
+	local f69
+	do
+		local result
+		function f69()
+			if not result then
+				result = f67() + f68()
+			end
+			return result
+		end
+	end
+	local f70
+	do
+		local result
+		function f70()
+			if not result then
+				result = f68() + f69()
+			end
+			return result
+		end
+	end
+	local f71
+	do
+		local result
+		function f71()
+			if not result then
+				result = f69() + f70()
+			end
+			return result
+		end
+	end
+	local f72
+	do
+		local result
+		function f72()
+			if not result then
+				result = f70() + f71()
+			end
+			return result
+		end
+	end
+	local f73
+	do
+		local result
+		function f73()
+			if not result then
+				result = f71() + f72()
+			end
+			return result
+		end
+	end
+	local f74
+	do
+		local result
+		function f74()
+			if not result then
+				result = f72() + f73()
+			end
+			return result
+		end
+	end
+	local f75
+	do
+		local result
+		function f75()
+			if not result then
+				result = f73() + f74()
+			end
+			return result
+		end
+	end
+	local f76
+	do
+		local result
+		function f76()
+			if not result then
+				result = f74() + f75()
+			end
+			return result
+		end
+	end
+	local f77
+	do
+		local result
+		function f77()
+			if not result then
+				result = f75() + f76()
+			end
+			return result
+		end
+	end
+	local f78
+	do
+		local result
+		function f78()
+			if not result then
+				result = f76() + f77()
+			end
+			return result
+		end
+	end
+	local f79
+	do
+		local result
+		function f79()
+			if not result then
+				result = f77() + f78()
+			end
+			return result
+		end
+	end
+	local f80
+	do
+		local result
+		function f80()
+			if not result then
+				result = f78() + f79()
+			end
+			return result
+		end
+	end
+	local f81
+	do
+		local result
+		function f81()
+			if not result then
+				result = f79() + f80()
+			end
+			return result
+		end
+	end
+	local f82
+	do
+		local result
+		function f82()
+			if not result then
+				result = f80() + f81()
+			end
+			return result
+		end
+	end
+	local f83
+	do
+		local result
+		function f83()
+			if not result then
+				result = f81() + f82()
+			end
+			return result
+		end
+	end
+	local f84
+	do
+		local result
+		function f84()
+			if not result then
+				result = f82() + f83()
+			end
+			return result
+		end
+	end
+	local f85
+	do
+		local result
+		function f85()
+			if not result then
+				result = f83() + f84()
+			end
+			return result
+		end
+	end
+	local f86
+	do
+		local result
+		function f86()
+			if not result then
+				result = f84() + f85()
+			end
+			return result
+		end
+	end
+	local f87
+	do
+		local result
+		function f87()
+			if not result then
+				result = f85() + f86()
+			end
+			return result
+		end
+	end
+	local f88
+	do
+		local result
+		function f88()
+			if not result then
+				result = f86() + f87()
+			end
+			return result
+		end
+	end
+	local f89
+	do
+		local result
+		function f89()
+			if not result then
+				result = f87() + f88()
+			end
+			return result
+		end
+	end
+	local f90
+	do
+		local result
+		function f90()
+			if not result then
+				result = f88() + f89()
+			end
+			return result
+		end
+	end
+	local f91
+	do
+		local result
+		function f91()
+			if not result then
+				result = f89() + f90()
+			end
+			return result
+		end
+	end
+	local f92
+	do
+		local result
+		function f92()
+			if not result then
+				result = f90() + f91()
+			end
+			return result
+		end
+	end
+	local f93
+	do
+		local result
+		function f93()
+			if not result then
+				result = f91() + f92()
+			end
+			return result
+		end
+	end
+	local f94
+	do
+		local result
+		function f94()
+			if not result then
+				result = f92() + f93()
+			end
+			return result
+		end
+	end
+	local f95
+	do
+		local result
+		function f95()
+			if not result then
+				result = f93() + f94()
+			end
+			return result
+		end
+	end
+	local f96
+	do
+		local result
+		function f96()
+			if not result then
+				result = f94() + f95()
+			end
+			return result
+		end
+	end
+	local f97
+	do
+		local result
+		function f97()
+			if not result then
+				result = f95() + f96()
+			end
+			return result
+		end
+	end
+	local f98
+	do
+		local result
+		function f98()
+			if not result then
+				result = f96() + f97()
+			end
+			return result
+		end
+	end
+	local f99
+	do
+		local result
+		function f99()
+			if not result then
+				result = f97() + f98()
+			end
+			return result
+		end
+	end
+	local f100
+	do
+		local result
+		function f100()
+			if not result then
+				result = f98() + f99()
+			end
+			return result
+		end
+	end
+	local f101
+	do
+		local result
+		function f101()
+			if not result then
+				result = f99() + f100()
+			end
+			return result
+		end
+	end
+	local f102
+	do
+		local result
+		function f102()
+			if not result then
+				result = f100() + f101()
+			end
+			return result
+		end
+	end
+	local f103
+	do
+		local result
+		function f103()
+			if not result then
+				result = f101() + f102()
+			end
+			return result
+		end
+	end
+	local f104
+	do
+		local result
+		function f104()
+			if not result then
+				result = f102() + f103()
+			end
+			return result
+		end
+	end
+	local f105
+	do
+		local result
+		function f105()
+			if not result then
+				result = f103() + f104()
+			end
+			return result
+		end
+	end
+	local f106
+	do
+		local result
+		function f106()
+			if not result then
+				result = f104() + f105()
+			end
+			return result
+		end
+	end
+	local f107
+	do
+		local result
+		function f107()
+			if not result then
+				result = f105() + f106()
+			end
+			return result
+		end
+	end
+	local f108
+	do
+		local result
+		function f108()
+			if not result then
+				result = f106() + f107()
+			end
+			return result
+		end
+	end
+	local f109
+	do
+		local result
+		function f109()
+			if not result then
+				result = f107() + f108()
+			end
+			return result
+		end
+	end
+	local f110
+	do
+		local result
+		function f110()
+			if not result then
+				result = f108() + f109()
+			end
+			return result
+		end
+	end
+	local f111
+	do
+		local result
+		function f111()
+			if not result then
+				result = f109() + f110()
+			end
+			return result
+		end
+	end
+	local f112
+	do
+		local result
+		function f112()
+			if not result then
+				result = f110() + f111()
+			end
+			return result
+		end
+	end
+	local f113
+	do
+		local result
+		function f113()
+			if not result then
+				result = f111() + f112()
+			end
+			return result
+		end
+	end
+	local f114
+	do
+		local result
+		function f114()
+			if not result then
+				result = f112() + f113()
+			end
+			return result
+		end
+	end
+	local f115
+	do
+		local result
+		function f115()
+			if not result then
+				result = f113() + f114()
+			end
+			return result
+		end
+	end
+	local f116
+	do
+		local result
+		function f116()
+			if not result then
+				result = f114() + f115()
+			end
+			return result
+		end
+	end
+	local f117
+	do
+		local result
+		function f117()
+			if not result then
+				result = f115() + f116()
+			end
+			return result
+		end
+	end
+	local f118
+	do
+		local result
+		function f118()
+			if not result then
+				result = f116() + f117()
+			end
+			return result
+		end
+	end
+	local f119
+	do
+		local result
+		function f119()
+			if not result then
+				result = f117() + f118()
+			end
+			return result
+		end
+	end
+	local f120
+	do
+		local result
+		function f120()
+			if not result then
+				result = f118() + f119()
+			end
+			return result
+		end
+	end
+	local f121
+	do
+		local result
+		function f121()
+			if not result then
+				result = f119() + f120()
+			end
+			return result
+		end
+	end
+	local f122
+	do
+		local result
+		function f122()
+			if not result then
+				result = f120() + f121()
+			end
+			return result
+		end
+	end
+	local f123
+	do
+		local result
+		function f123()
+			if not result then
+				result = f121() + f122()
+			end
+			return result
+		end
+	end
+	local f124
+	do
+		local result
+		function f124()
+			if not result then
+				result = f122() + f123()
+			end
+			return result
+		end
+	end
+	local f125
+	do
+		local result
+		function f125()
+			if not result then
+				result = f123() + f124()
+			end
+			return result
+		end
+	end
+	local f126
+	do
+		local result
+		function f126()
+			if not result then
+				result = f124() + f125()
+			end
+			return result
+		end
+	end
+	local f127
+	do
+		local result
+		function f127()
+			if not result then
+				result = f125() + f126()
+			end
+			return result
+		end
+	end
+	local f128
+	do
+		local result
+		function f128()
+			if not result then
+				result = f126() + f127()
+			end
+			return result
+		end
+	end
+	local f129
+	do
+		local result
+		function f129()
+			if not result then
+				result = f127() + f128()
+			end
+			return result
+		end
+	end
+	local f130
+	do
+		local result
+		function f130()
+			if not result then
+				result = f128() + f129()
+			end
+			return result
+		end
+	end
+	local f131
+	do
+		local result
+		function f131()
+			if not result then
+				result = f129() + f130()
+			end
+			return result
+		end
+	end
+	local f132
+	do
+		local result
+		function f132()
+			if not result then
+				result = f130() + f131()
+			end
+			return result
+		end
+	end
+	local f133
+	do
+		local result
+		function f133()
+			if not result then
+				result = f131() + f132()
+			end
+			return result
+		end
+	end
+	local f134
+	do
+		local result
+		function f134()
+			if not result then
+				result = f132() + f133()
+			end
+			return result
+		end
+	end
+	local f135
+	do
+		local result
+		function f135()
+			if not result then
+				result = f133() + f134()
+			end
+			return result
+		end
+	end
+	local f136
+	do
+		local result
+		function f136()
+			if not result then
+				result = f134() + f135()
+			end
+			return result
+		end
+	end
+	local f137
+	do
+		local result
+		function f137()
+			if not result then
+				result = f135() + f136()
+			end
+			return result
+		end
+	end
+	local f138
+	do
+		local result
+		function f138()
+			if not result then
+				result = f136() + f137()
+			end
+			return result
+		end
+	end
+	local f139
+	do
+		local result
+		function f139()
+			if not result then
+				result = f137() + f138()
+			end
+			return result
+		end
+	end
+	local f140
+	do
+		local result
+		function f140()
+			if not result then
+				result = f138() + f139()
+			end
+			return result
+		end
+	end
+	local f141
+	do
+		local result
+		function f141()
+			if not result then
+				result = f139() + f140()
+			end
+			return result
+		end
+	end
+	local f142
+	do
+		local result
+		function f142()
+			if not result then
+				result = f140() + f141()
+			end
+			return result
+		end
+	end
+	local f143
+	do
+		local result
+		function f143()
+			if not result then
+				result = f141() + f142()
+			end
+			return result
+		end
+	end
+	local f144
+	do
+		local result
+		function f144()
+			if not result then
+				result = f142() + f143()
+			end
+			return result
+		end
+	end
+	local f145
+	do
+		local result
+		function f145()
+			if not result then
+				result = f143() + f144()
+			end
+			return result
+		end
+	end
+	local f146
+	do
+		local result
+		function f146()
+			if not result then
+				result = f144() + f145()
+			end
+			return result
+		end
+	end
+	local f147
+	do
+		local result
+		function f147()
+			if not result then
+				result = f145() + f146()
+			end
+			return result
+		end
+	end
+	local f148
+	do
+		local result
+		function f148()
+			if not result then
+				result = f146() + f147()
+			end
+			return result
+		end
+	end
+	local f149
+	do
+		local result
+		function f149()
+			if not result then
+				result = f147() + f148()
+			end
+			return result
+		end
+	end
+	local f150
+	do
+		local result
+		function f150()
+			if not result then
+				result = f148() + f149()
+			end
+			return result
+		end
+	end
+	local f151
+	do
+		local result
+		function f151()
+			if not result then
+				result = f149() + f150()
+			end
+			return result
+		end
+	end
+	local f152
+	do
+		local result
+		function f152()
+			if not result then
+				result = f150() + f151()
+			end
+			return result
+		end
+	end
+	local f153
+	do
+		local result
+		function f153()
+			if not result then
+				result = f151() + f152()
+			end
+			return result
+		end
+	end
+	local f154
+	do
+		local result
+		function f154()
+			if not result then
+				result = f152() + f153()
+			end
+			return result
+		end
+	end
+	local f155
+	do
+		local result
+		function f155()
+			if not result then
+				result = f153() + f154()
+			end
+			return result
+		end
+	end
+	local f156
+	do
+		local result
+		function f156()
+			if not result then
+				result = f154() + f155()
+			end
+			return result
+		end
+	end
+	local f157
+	do
+		local result
+		function f157()
+			if not result then
+				result = f155() + f156()
+			end
+			return result
+		end
+	end
+	local f158
+	do
+		local result
+		function f158()
+			if not result then
+				result = f156() + f157()
+			end
+			return result
+		end
+	end
+	local f159
+	do
+		local result
+		function f159()
+			if not result then
+				result = f157() + f158()
+			end
+			return result
+		end
+	end
+	local f160
+	do
+		local result
+		function f160()
+			if not result then
+				result = f158() + f159()
+			end
+			return result
+		end
+	end
+	local f161
+	do
+		local result
+		function f161()
+			if not result then
+				result = f159() + f160()
+			end
+			return result
+		end
+	end
+	local f162
+	do
+		local result
+		function f162()
+			if not result then
+				result = f160() + f161()
+			end
+			return result
+		end
+	end
+	local f163
+	do
+		local result
+		function f163()
+			if not result then
+				result = f161() + f162()
+			end
+			return result
+		end
+	end
+	local f164
+	do
+		local result
+		function f164()
+			if not result then
+				result = f162() + f163()
+			end
+			return result
+		end
+	end
+	local f165
+	do
+		local result
+		function f165()
+			if not result then
+				result = f163() + f164()
+			end
+			return result
+		end
+	end
+	local f166
+	do
+		local result
+		function f166()
+			if not result then
+				result = f164() + f165()
+			end
+			return result
+		end
+	end
+	local f167
+	do
+		local result
+		function f167()
+			if not result then
+				result = f165() + f166()
+			end
+			return result
+		end
+	end
+	local f168
+	do
+		local result
+		function f168()
+			if not result then
+				result = f166() + f167()
+			end
+			return result
+		end
+	end
+	local f169
+	do
+		local result
+		function f169()
+			if not result then
+				result = f167() + f168()
+			end
+			return result
+		end
+	end
+	local f170
+	do
+		local result
+		function f170()
+			if not result then
+				result = f168() + f169()
+			end
+			return result
+		end
+	end
+	local f171
+	do
+		local result
+		function f171()
+			if not result then
+				result = f169() + f170()
+			end
+			return result
+		end
+	end
+	local f172
+	do
+		local result
+		function f172()
+			if not result then
+				result = f170() + f171()
+			end
+			return result
+		end
+	end
+	local f173
+	do
+		local result
+		function f173()
+			if not result then
+				result = f171() + f172()
+			end
+			return result
+		end
+	end
+	local f174
+	do
+		local result
+		function f174()
+			if not result then
+				result = f172() + f173()
+			end
+			return result
+		end
+	end
+	local f175
+	do
+		local result
+		function f175()
+			if not result then
+				result = f173() + f174()
+			end
+			return result
+		end
+	end
+	local f176
+	do
+		local result
+		function f176()
+			if not result then
+				result = f174() + f175()
+			end
+			return result
+		end
+	end
+	local f177
+	do
+		local result
+		function f177()
+			if not result then
+				result = f175() + f176()
+			end
+			return result
+		end
+	end
+	local f178
+	do
+		local result
+		function f178()
+			if not result then
+				result = f176() + f177()
+			end
+			return result
+		end
+	end
+	local f179
+	do
+		local result
+		function f179()
+			if not result then
+				result = f177() + f178()
+			end
+			return result
+		end
+	end
+	local f180
+	do
+		local result
+		function f180()
+			if not result then
+				result = f178() + f179()
+			end
+			return result
+		end
+	end
+	local f181
+	do
+		local result
+		function f181()
+			if not result then
+				result = f179() + f180()
+			end
+			return result
+		end
+	end
+	local f182
+	do
+		local result
+		function f182()
+			if not result then
+				result = f180() + f181()
+			end
+			return result
+		end
+	end
+	local f183
+	do
+		local result
+		function f183()
+			if not result then
+				result = f181() + f182()
+			end
+			return result
+		end
+	end
+	local f184
+	do
+		local result
+		function f184()
+			if not result then
+				result = f182() + f183()
+			end
+			return result
+		end
+	end
+	local f185
+	do
+		local result
+		function f185()
+			if not result then
+				result = f183() + f184()
+			end
+			return result
+		end
+	end
+	local f186
+	do
+		local result
+		function f186()
+			if not result then
+				result = f184() + f185()
+			end
+			return result
+		end
+	end
+	local f187
+	do
+		local result
+		function f187()
+			if not result then
+				result = f185() + f186()
+			end
+			return result
+		end
+	end
+	local f188
+	do
+		local result
+		function f188()
+			if not result then
+				result = f186() + f187()
+			end
+			return result
+		end
+	end
+	local f189
+	do
+		local result
+		function f189()
+			if not result then
+				result = f187() + f188()
+			end
+			return result
+		end
+	end
+	local f190
+	do
+		local result
+		function f190()
+			if not result then
+				result = f188() + f189()
+			end
+			return result
+		end
+	end
+	local f191
+	do
+		local result
+		function f191()
+			if not result then
+				result = f189() + f190()
+			end
+			return result
+		end
+	end
+	local f192
+	do
+		local result
+		function f192()
+			if not result then
+				result = f190() + f191()
+			end
+			return result
+		end
+	end
+	local f193
+	do
+		local result
+		function f193()
+			if not result then
+				result = f191() + f192()
+			end
+			return result
+		end
+	end
+	local f194
+	do
+		local result
+		function f194()
+			if not result then
+				result = f192() + f193()
+			end
+			return result
+		end
+	end
+	local f195
+	do
+		local result
+		function f195()
+			if not result then
+				result = f193() + f194()
+			end
+			return result
+		end
+	end
+	local f196
+	do
+		local result
+		function f196()
+			if not result then
+				result = f194() + f195()
+			end
+			return result
+		end
+	end
+	local f197
+	do
+		local result
+		function f197()
+			if not result then
+				result = f195() + f196()
+			end
+			return result
+		end
+	end
+	local f198
+	do
+		local result
+		function f198()
+			if not result then
+				result = f196() + f197()
+			end
+			return result
+		end
+	end
+	local f199
+	do
+		local result
+		function f199()
+			if not result then
+				result = f197() + f198()
+			end
+			return result
+		end
+	end
+	print("5th fibonacci number is", f5())
+	print("10th fibonacci number is", f10())
+--	FIXME Precision??
+--	print("199th fibonacci number is", f199())
+
+5th fibonacci number is	5
+10th fibonacci number is	55
