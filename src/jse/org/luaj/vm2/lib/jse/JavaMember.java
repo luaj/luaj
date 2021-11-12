@@ -72,12 +72,15 @@ class JavaMember extends VarArgFunction {
 			for ( int i=0; i<a.length; i++ )
 				a[i] = fixedargs[i].coerce( args.arg(i+1) );
 		} else {
-			int n = Math.max(fixedargs.length,args.narg());
-			a = new Object[n];
+			// should be the fixed arguments, followed by an array with the varargs
+			a = new Object[fixedargs.length+1];
+			int nvar = Math.max(0, args.narg()-fixedargs.length);
+			Object[] vararray = new Object[nvar];
 			for ( int i=0; i<fixedargs.length; i++ )
 				a[i] = fixedargs[i].coerce( args.arg(i+1) );
-			for ( int i=fixedargs.length; i<n; i++ )
-				a[i] = varargs.coerce( args.arg(i+1) );
+			a[a.length-1] = vararray;
+			for ( int i=0; i<nvar; i++ )
+				vararray[i] = varargs.coerce( args.arg(fixedargs.length+i+1) );
 		}
 		return a;
 	}
