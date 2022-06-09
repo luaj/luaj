@@ -21,6 +21,7 @@
 ******************************************************************************/
 package org.luaj.vm2.lib.jse;
 
+import java.lang.reflect.Array;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.jse.CoerceLuaToJava.Coercion;
@@ -73,6 +74,11 @@ class JavaMember extends VarArgFunction {
 				a[i] = fixedargs[i].coerce( args.arg(i+1) );
 		} else {
 			int n = Math.max(fixedargs.length,args.narg());
+			// This situation indicates that the method has only one input parameter,
+			// and the parameter is a variable parameter type, etc: append(String...args).
+			if (n == 0 && varargs instanceof CoerceLuaToJava.ArrayCoercion) {
+				return new Object[] {Array.newInstance(((CoerceLuaToJava.ArrayCoercion)varargs).componentType,0)};
+			}
 			a = new Object[n];
 			for ( int i=0; i<fixedargs.length; i++ )
 				a[i] = fixedargs[i].coerce( args.arg(i+1) );
