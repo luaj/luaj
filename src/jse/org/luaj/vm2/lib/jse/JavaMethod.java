@@ -113,9 +113,20 @@ class JavaMethod extends JavaMember {
 	static class Overload extends LuaFunction {
 
 		final JavaMethod[] methods;
+
+		// no parammeter method index in overload method
+		int noArgMethodIndex = -1;
 		
 		Overload(JavaMethod[] methods) {
 			this.methods = methods;
+			JavaMethod m;
+			for (int i=0; i<methods.length; i++) {
+				m = methods[i];
+				if (m.fixedargs.length == 0 && m.varargs == null) {
+					noArgMethodIndex = i;
+					break;
+				}
+			}
 		}
 
 		public LuaValue call() {
@@ -140,14 +151,19 @@ class JavaMethod extends JavaMember {
 
 		private LuaValue invokeBestMethod(Object instance, Varargs args) {
 			JavaMethod best = null;
-			int score = CoerceLuaToJava.SCORE_UNCOERCIBLE;
-			for ( int i=0; i<methods.length; i++ ) {
-				int s = methods[i].score(args);
-				if ( s < score ) {
-					score = s;
-					best = methods[i];
-					if ( score == 0 )
-						break;
+			int n = args.narg();
+			if (n == 0 && noArgMethodIndex != -1) {
+				best = methods[noArgMethodIndex];
+			} else {
+				int score = CoerceLuaToJava.SCORE_UNCOERCIBLE;
+				for ( int i=0; i<methods.length; i++ ) {
+					int s = methods[i].score(args);
+					if ( s < score ) {
+						score = s;
+						best = methods[i];
+						if ( score == 0 )
+							break;
+					}
 				}
 			}
 			
