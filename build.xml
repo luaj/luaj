@@ -33,79 +33,86 @@
 			<arg line="../../grammar/Lua52.jj"/>
 		</java>
 	</target>
-		
-	<target name="compile" depends="wtk-libs,bcel-lib">
-		<delete dir="build/jme/src"/>
-		<delete dir="build/jse/src"/>
-		<mkdir dir="build/jme/src"/>
-		<mkdir dir="build/jse/src"/>
-		<mkdir dir="build/jme/classes"/>
-		<mkdir dir="build/jse/classes"/>
-		<copy todir="build/jme/src">
-			<fileset dir="src/core"/>
-			<fileset dir="src/jme"/>
-			<filterchain>
-				<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jme ${version}"'/></tokenfilter>
-			</filterchain>
-		</copy>
-		<copy todir="build/jse/src">
-			<fileset dir="src/core"/>
-			<filterchain>
-				<tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jse ${version}"'/></tokenfilter>
-			</filterchain>
-		</copy>
-		<copy todir="build/jse/src">
-			<fileset dir="src/jse"/>
-			<filterchain>
-				<tokenfilter><replacestring from='&lt;String&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Stat&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Exp&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Name&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Block&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;TableField&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;VarExp&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Exp.VarExp&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Object,String&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Double,String&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Integer,Integer&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Integer,LocalVariableGen&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;Exp,Integer&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;String,byte[]&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;String,Variable&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;LuaValue,String&gt;' to=''/></tokenfilter>
-				<tokenfilter><replacestring from='&lt;LuaString,String&gt;' to=''/></tokenfilter>
-			</filterchain>
-		</copy>
-		<path id="wtk-libs">
-			<pathelement path="lib/cldcapi11.jar"/>
-			<pathelement path="lib/midpapi20.jar"/>
-			<pathelement path="lib/mmapi.jar"/>
-		</path>
-		<javac destdir="build/jme/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
-		    debug="on"
-			srcdir="build/jme/src"/>
-		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
-			classpath="lib/bcel-5.2.jar"
-			debug="on"
-			srcdir="build/jse/src"
-			excludes="**/script/*,**/Lua2Java*,**/server/*,lua*"/>
-		<javac destdir="build/jse/classes" encoding="utf-8" source="1.5" target="1.5"
-			classpath="build/jse/classes"
-			debug="on"
-			srcdir="build/jse/src"
-			includes="**/script/*,**/Lua2Java*,**/server/*"/>
-		<javac destdir="build/jse/classes" encoding="utf-8" source="1.3" target="1.3"
-			classpath="build/jse/classes"
-			debug="on"
-			srcdir="build/jse/src"
-			includes="lua*"/>
+
+	<target name="compile-jme" depends="wtk-libs,bcel-lib">
+	  <delete dir="build/jme/src"/>
+	  <mkdir dir="build/jme/src"/>
+	  <mkdir dir="build/jme/classes"/>
+	  <copy todir="build/jme/src">
+	    <fileset dir="src/core"/>
+	    <fileset dir="src/jme"/>
+	    <filterchain>
+	      <tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jme ${version}"'/></tokenfilter>
+	    </filterchain>
+	  </copy>
+
+	  <path id="wtk-libs">
+	    <pathelement path="lib/cldcapi11.jar"/>
+	    <pathelement path="lib/midpapi20.jar"/>
+	    <pathelement path="lib/mmapi.jar"/>
+	  </path>
+	  <javac destdir="build/jme/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
+		 debug="on"
+		 srcdir="build/jme/src"/>
 	</target>
+
+	<target name="compile-jse" depends="wtk-libs,bcel-lib">
+	  <delete dir="build/jse/src"/>
+	  <mkdir dir="build/jse/src"/>
+	  <mkdir dir="build/jse/classes"/>
+	  <copy todir="build/jse/src">
+	    <fileset dir="src/core"/>
+	    <filterchain>
+	      <tokenfilter><replacestring from='"Luaj 0.0"' to='"Luaj-jse ${version}"'/></tokenfilter>
+	    </filterchain>
+	  </copy>
+	  <copy todir="build/jse/src">
+	    <fileset dir="src/jse"/>
+	    <filterchain>
+	      <tokenfilter><replacestring from='&lt;String&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Stat&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Exp&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Name&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Block&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;TableField&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;VarExp&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Exp.VarExp&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Object,String&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Double,String&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Integer,Integer&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Integer,LocalVariableGen&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;Exp,Integer&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;String,byte[]&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;String,Variable&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;LuaValue,String&gt;' to=''/></tokenfilter>
+	      <tokenfilter><replacestring from='&lt;LuaString,String&gt;' to=''/></tokenfilter>
+	    </filterchain>
+	  </copy>
+	  
+	  <javac destdir="build/jse/classes" encoding="utf-8" source="1.8" target="1.8"
+		 classpath="lib/bcel-5.2.jar"
+		 debug="on"
+		 srcdir="build/jse/src"
+		 excludes="**/script/*,**/Lua2Java*,**/server/*,lua*"/>
+	  <javac destdir="build/jse/classes" encoding="utf-8" source="1.8" target="1.8"
+		 classpath="build/jse/classes"
+		 debug="on"
+		 srcdir="build/jse/src"
+		 includes="**/script/*,**/Lua2Java*,**/server/*"/>
+	  <javac destdir="build/jse/classes" encoding="utf-8" source="1.8" target="1.8"
+		 classpath="build/jse/classes"
+		 debug="on"
+		 srcdir="build/jse/src"
+		 includes="lua*"/>
+	</target>
+		
+	<target name="compile" depends="compile-jme,compile-jse" />
 	
-	<target name="jar-jme" depends="compile">
+	<target name="jar-jme" depends="compile-jme">
 		<jar destfile="${jar.name.jme}" basedir="build/jme/classes"/>
 	</target>
 	
-	<target name="jar-jse" depends="compile">
+	<target name="jar-jse" depends="compile-jse">
 		<jar destfile="${jar.name.jse}">
 		    <fileset dir="build/jse/classes"/>
 		    <fileset dir="src/jse/">
