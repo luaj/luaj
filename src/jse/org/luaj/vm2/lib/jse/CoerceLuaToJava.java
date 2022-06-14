@@ -174,13 +174,13 @@ public class CoerceLuaToJava {
 
 		public Object coerce(LuaValue value) {
 			switch ( targetType ) {
-			case TARGET_TYPE_BYTE: return new Byte( (byte) value.toint() );
-			case TARGET_TYPE_CHAR: return new Character( (char) value.toint() );
-			case TARGET_TYPE_SHORT: return new Short( (short) value.toint() );
-			case TARGET_TYPE_INT: return new Integer( (int) value.toint() );
-			case TARGET_TYPE_LONG: return new Long( (long) value.todouble() );
-			case TARGET_TYPE_FLOAT: return new Float( (float) value.todouble() );
-			case TARGET_TYPE_DOUBLE: return new Double( (double) value.todouble() );
+			case TARGET_TYPE_BYTE: return Byte.valueOf( (byte) value.toint() );
+			case TARGET_TYPE_CHAR: return Character.valueOf( (char) value.toint() );
+			case TARGET_TYPE_SHORT: return Short.valueOf( (short) value.toint() );
+			case TARGET_TYPE_INT: return Integer.valueOf( (int) value.toint() );
+			case TARGET_TYPE_LONG: return Long.valueOf( (long) value.todouble() );
+			case TARGET_TYPE_FLOAT: return Float.valueOf( (float) value.todouble() );
+			case TARGET_TYPE_DOUBLE: return Double.valueOf( (double) value.todouble() );
 			default: return null;
 			}
 		}
@@ -308,7 +308,7 @@ public class CoerceLuaToJava {
 		public Object coerce(LuaValue value) {
 			switch ( value.type() ) {
 			case LuaValue.TNUMBER:
-				return value.isint()? (Object)new Integer(value.toint()): (Object)new Double(value.todouble());
+				return value.isint()? (Object) Integer.valueOf(value.toint()): (Object) Double.valueOf(value.todouble());
 			case LuaValue.TBOOLEAN:
 				return value.toboolean()? Boolean.TRUE: Boolean.FALSE;
 			case LuaValue.TSTRING:

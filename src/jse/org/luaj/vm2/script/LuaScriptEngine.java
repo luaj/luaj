@@ -244,8 +244,8 @@ public class LuaScriptEngine extends AbstractScriptEngine implements ScriptEngin
 		case LuaValue.TSTRING: return luajValue.tojstring();
 		case LuaValue.TUSERDATA: return luajValue.checkuserdata(Object.class);
 		case LuaValue.TNUMBER: return luajValue.isinttype()? 
-				(Object) new Integer(luajValue.toint()): 
-				(Object) new Double(luajValue.todouble());
+				(Object) Integer.valueOf(luajValue.toint()): 
+				(Object) Double.valueOf(luajValue.todouble());
 		default: return luajValue;
 		}
 	}
