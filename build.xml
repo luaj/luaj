@@ -93,17 +93,23 @@
 		 classpath="lib/bcel-5.2.jar"
 		 debug="on"
 		 srcdir="build/jse/src"
-		 excludes="**/script/*,**/Lua2Java*,**/server/*,lua*"/>
+		 excludes="**/script/*,**/Lua2Java*,**/server/*,lua*"
+		 includeantruntime="false"
+          />
 	  <javac destdir="build/jse/classes" encoding="utf-8" source="1.8" target="1.8"
 		 classpath="build/jse/classes"
 		 debug="on"
 		 srcdir="build/jse/src"
-		 includes="**/script/*,**/Lua2Java*,**/server/*"/>
+		 includes="**/script/*,**/Lua2Java*,**/server/*"
+		 includeantruntime="false"
+          />
 	  <javac destdir="build/jse/classes" encoding="utf-8" source="1.8" target="1.8"
 		 classpath="build/jse/classes"
 		 debug="on"
 		 srcdir="build/jse/src"
-		 includes="lua*"/>
+		 includes="lua*"
+		 includeantruntime="false"
+          />
 	</target>
 		
 	<target name="compile" depends="compile-jme,compile-jse" />
