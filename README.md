@@ -22,6 +22,9 @@ It is now possible to build the jse target alone with: `ant jar-jse`
 The `jar-jme` target from 3.0.2 will be left unchanged until contributors
 experienced with JME be ready to join the project.
 
+The interpreter can be tested with `luaj` (on POSIX systems) or `luaj.bat`
+(on Windows systems). These commands can be passed arguments.
+
 # Original README.md
 
 <div style="border: 1px dotted red; margin: 1.em 0.5em; font-weight: bold; color: red;">
