@@ -18,7 +18,7 @@ James Roseborough, Ian Farmer, Version 3.0.2
 <small>
 Copyright &copy; 2009-2014 Luaj.org.
 Freely available under the terms of the
-<a href="http://sourceforge.net/dbimage.php?id=196142">Luaj license</a>.
+<a href="LICENSE">Luaj license</a>.
 </small>
 <hr>
 <p>
@@ -412,7 +412,7 @@ and the math operations include all those supported by Java SE.
 Android applications should use the JsePlatform, and can include the <a href="#luajava">Luajava</a> library 
 to simplify access to underlying Android APIs.  
 A specialized Globals.finder should be provided to find scripts and data for loading.
-See <a href="examples/android/src/android/LuajView">examples/android/src/android/LuajView</a>
+See <a href="examples/android/src/android/LuajView.java">examples/android/src/android/LuajView.java</a>
 for an example that loads from the "res" Android project directory.
 The ant build script is <a href="examples/android/build.xml">examples/android/build.xml</a>.  
 

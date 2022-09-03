@@ -27,21 +27,21 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 
 /**
- * Subclass of {@link LuaFunction} common to Java functions exposed to lua. 
+ * Subclass of {@link LuaFunction} common to Java functions exposed to lua.
  * <p>
- * To provide for common implementations in JME and JSE, 
+ * To provide for common implementations in JME and JSE,
  * library functions are typically grouped on one or more library classes
  * and an opcode per library function is defined and used to key the switch
- * to the correct function within the library.  
+ * to the correct function within the library.
  * <p>
- * Since lua functions can be called with too few or too many arguments, 
- * and there are overloaded {@link LuaValue#call()} functions with varying 
+ * Since lua functions can be called with too few or too many arguments,
+ * and there are overloaded {@link LuaValue#call()} functions with varying
  * number of arguments, a Java function exposed in lua needs to handle  the
- * argument fixup when a function is called with a number of arguments 
- * differs from that expected.  
+ * argument fixup when a function is called with a number of arguments
+ * differs from that expected.
  * <p>
- * To simplify the creation of library functions, 
- * there are 5 direct subclasses to handle common cases based on number of 
+ * To simplify the creation of library functions,
+ * there are 5 direct subclasses to handle common cases based on number of
  * argument values and number of return return values.
  * <ul>
  * <li>{@link ZeroArgFunction}</li>
@@ -51,13 +51,13 @@ import org.luaj.vm2.Varargs;
  * <li>{@link VarArgFunction}</li>
  * </ul>
  * <p>
- * To be a Java library that can be loaded via {@code require}, it should have 
- * a public constructor that returns a {@link LuaValue} that, when executed, 
- * initializes the library. 
- * <p> 
- * For example, the following code will implement a library called "hyperbolic" 
+ * To be a Java library that can be loaded via {@code require}, it should have
+ * a public constructor that returns a {@link LuaValue} that, when executed,
+ * initializes the library.
+ * <p>
+ * For example, the following code will implement a library called "hyperbolic"
  * with two functions, "sinh", and "cosh":
- <pre> {@code 
+ <pre> {@code
  * import org.luaj.vm2.LuaValue;
  * import org.luaj.vm2.lib.*;
  * 
@@ -86,13 +86,13 @@ import org.luaj.vm2.Varargs;
  *	}
  *}
  *}</pre>
- * The default constructor is used to instantiate the library 
+ * The default constructor is used to instantiate the library
  * in response to {@code require 'hyperbolic'} statement,
- * provided it is on Java&quot;s class path. 
- * This instance is then invoked with 2 arguments: the name supplied to require(), 
- * and the environment for this function.  The library may ignore these, or use 
- * them to leave side effects in the global environment, for example. 
- * In the previous example, two functions are created, 'sinh', and 'cosh', and placed 
+ * provided it is on Java&quot;s class path.
+ * This instance is then invoked with 2 arguments: the name supplied to require(),
+ * and the environment for this function.  The library may ignore these, or use
+ * them to leave side effects in the global environment, for example.
+ * In the previous example, two functions are created, 'sinh', and 'cosh', and placed
  * into a global table called 'hyperbolic' using the supplied 'env' argument.
  * <p>
  * To test it, a script such as this can be used:
@@ -105,7 +105,7 @@ import org.luaj.vm2.Varargs;
  * end
  * print( 'sinh(.5)', hyperbolic.sinh(.5) )
  * print( 'cosh(.5)', hyperbolic.cosh(.5) )
- * }</pre> 
+ * }</pre>
  * <p>
  * It should produce something like:
  * <pre> {@code
@@ -115,16 +115,16 @@ import org.luaj.vm2.Varargs;
  * k,v	sinh	function: 3dbbd242
  * sinh(.5)	0.5210953
  * cosh(.5)	1.127626
- * }</pre> 
- * <p> 
- * See the source code in any of the library functions 
- * such as {@link BaseLib} or {@link TableLib} for other examples.  
+ * }</pre>
+ * <p>
+ * See the source code in any of the library functions
+ * such as {@link BaseLib} or {@link TableLib} for other examples.
  */
 abstract public class LibFunction extends LuaFunction {
 	
-	/** User-defined opcode to differentiate between instances of the library function class. 
+	/** User-defined opcode to differentiate between instances of the library function class.
 	 * <p>
-	 * Subclass will typicall switch on this value to provide the specific behavior for each function. 
+	 * Subclass will typicall switch on this value to provide the specific behavior for each function.
 	 */
 	protected int opcode;
 	
@@ -135,37 +135,37 @@ abstract public class LibFunction extends LuaFunction {
 	protected String name;
 	
 	/** Default constructor for use by subclasses */
-	protected LibFunction() {		
+	protected LibFunction() {
 	}
 	
 	public String tojstring() {
 		return name != null ? "function: " + name : super.tojstring();
 	}
 	
-	/** 
-	 * Bind a set of library functions.  
+	/**
+	 * Bind a set of library functions.
 	 * <p>
-	 * An array of names is provided, and the first name is bound 
-	 * with opcode = 0, second with 1, etc. 
-	 * @param env The environment to apply to each bound function 
+	 * An array of names is provided, and the first name is bound
+	 * with opcode = 0, second with 1, etc.
+	 * @param env The environment to apply to each bound function
 	 * @param factory the Class to instantiate for each bound function
 	 * @param names array of String names, one for each function.
-	 * @see #bind(LuaValue, Class, String[], int)  
+	 * @see #bind(LuaValue, Class, String[], int)
 	 */
 	protected void bind(LuaValue env, Class factory,  String[] names ) {
 		bind( env, factory, names, 0 );
 	}
 	
-	/** 
-	 * Bind a set of library functions, with an offset  
+	/**
+	 * Bind a set of library functions, with an offset
 	 * <p>
-	 * An array of names is provided, and the first name is bound 
-	 * with opcode = {@code firstopcode}, second with {@code firstopcode+1}, etc. 
-	 * @param env The environment to apply to each bound function 
+	 * An array of names is provided, and the first name is bound
+	 * with opcode = {@code firstopcode}, second with {@code firstopcode+1}, etc.
+	 * @param env The environment to apply to each bound function
 	 * @param factory the Class to instantiate for each bound function
 	 * @param names array of String names, one for each function.
-	 * @param firstopcode the first opcode to use  
-	 * @see #bind(LuaValue, Class, String[])  
+	 * @param firstopcode the first opcode to use
+	 * @see #bind(LuaValue, Class, String[])
 	 */
 	protected void bind(LuaValue env, Class factory,  String[] names, int firstopcode ) {
 		try {
@@ -178,7 +178,7 @@ abstract public class LibFunction extends LuaFunction {
 		} catch ( Exception e ) {
 			throw new LuaError( "bind failed: "+e );
 		}
-	}	
+	}
 
 	/** Java code generation utility to allocate storage for upvalue, leave it empty */
 	protected static LuaValue[] newupe() {
@@ -219,4 +219,4 @@ abstract public class LibFunction extends LuaFunction {
 		default: return call(args.arg1(),args.arg(2),args.arg(3),args.arg(4));
 		}
 	}
-} 
+}

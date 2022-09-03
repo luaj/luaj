@@ -79,8 +79,8 @@ public class StringLib extends TwoArgFunction {
 	 */
 	public LuaValue call(LuaValue modname, LuaValue env) {
 		LuaTable string = new LuaTable();
-		string.set("byte", new byte_());
-		string.set("char", new char_());
+		string.set("byte", new _byte());
+		string.set("char", new _char());
 		string.set("dump", new dump());
 		string.set("find", new find());
 		string.set("format", new format());
@@ -113,7 +113,7 @@ public class StringLib extends TwoArgFunction {
 	 * 
 	 * @param args the calling args
 	 */
-	static final class byte_ extends VarArgFunction {
+	static final class _byte extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			LuaString s = args.checkstring(1);
 			int l = s.m_length;
@@ -144,7 +144,7 @@ public class StringLib extends TwoArgFunction {
 	 * 
 	 * @param args the calling VM
 	 */
-	static final class char_ extends VarArgFunction {
+	static final class _char extends VarArgFunction {
 		public Varargs invoke(Varargs args) {
 			int n = args.narg();
 			byte[] bytes = new byte[n];
@@ -624,19 +624,20 @@ public class StringLib extends TwoArgFunction {
 		private final int srclen;
 		private final MatchState ms;
 		private int soffset;
+		private int lastmatch;
 		public GMatchAux(Varargs args, LuaString src, LuaString pat) {
 			this.srclen = src.length();
 			this.ms = new MatchState(args, src, pat);
 			this.soffset = 0;
+			this.lastmatch = -1;
 		}
 		public Varargs invoke(Varargs args) {
 			for ( ; soffset<=srclen; soffset++ ) {
 				ms.reset();
 				int res = ms.match(soffset, 0);
-				if ( res >=0 ) {
+				if ( res >=0 && res != lastmatch ) {
 					int soff = soffset;
-					soffset = res;
-					if (soff == res) soffset++; /* empty match? go at least one position */
+					lastmatch = soffset = res;
 					return ms.push_captures( true, soff, res );
 				}
 			}
@@ -695,6 +696,7 @@ public class StringLib extends TwoArgFunction {
 			LuaString src = args.checkstring( 1 );
 			final int srclen = src.length();
 			LuaString p = args.checkstring( 2 );
+			int lastmatch = -1; /* end of last match */
 			LuaValue repl = args.arg( 3 );
 			int max_s = args.optint( 4, srclen + 1 );
 			final boolean anchor = p.length() > 0 && p.charAt( 0 ) == '^';
@@ -707,18 +709,15 @@ public class StringLib extends TwoArgFunction {
 			while ( n < max_s ) {
 				ms.reset();
 				int res = ms.match( soffset, anchor ? 1 : 0 );
-				if ( res != -1 ) {
+				if ( res != -1 && res != lastmatch ) {  /* match? */
 					n++;
-					ms.add_value( lbuf, soffset, res, repl );
+					ms.add_value( lbuf, soffset, res, repl );  /* add replacement to buffer */
+					soffset = lastmatch = res;
 				}
-				if ( res != -1 && res > soffset )
-					soffset = res;
-				else if ( soffset < srclen )
+				else if ( soffset < srclen ) /* otherwise, skip one character */
 					lbuf.append( (byte) src.luaByte( soffset++ ) );
-				else
-					break;
-				if ( anchor )
-					break;
+				else break;   /* end of subject */
+				if ( anchor ) break;
 			}
 			lbuf.append( src.substring( soffset, srclen ) );
 			return varargsOf(lbuf.tostring(), valueOf(n));
@@ -914,6 +913,8 @@ public class StringLib extends TwoArgFunction {
 	private static final LuaString SPECIALS = valueOf("^$*+?.([%-");
 	private static final int MAX_CAPTURES = 32;
 	
+	private static final int MAXCCALLS = 200;
+	
 	private static final int CAP_UNFINISHED = -1;
 	private static final int CAP_POSITION = -2;
 	
@@ -931,7 +932,7 @@ public class StringLib extends TwoArgFunction {
 	static {
 		CHAR_TABLE = new byte[256];
 		
-		for ( int i = 0; i < 256; ++i ) {
+		for ( int i = 0; i < 128; ++i ) {
 			final char c = (char) i;
 			CHAR_TABLE[i] = (byte)( ( Character.isDigit( c ) ? MASK_DIGIT : 0 ) |
 							( Character.isLowerCase( c ) ? MASK_LOWERCASE : 0 ) |
@@ -940,7 +941,7 @@ public class StringLib extends TwoArgFunction {
 			if ( ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) || ( c >= '0' && c <= '9' ) ) {
 				CHAR_TABLE[i] |= MASK_HEXDIGIT;
 			}
-			if ( ( c >= '!' && c <= '/' ) || ( c >= ':' && c <= '@' ) ) {
+			if ( ( c >= '!' && c <= '/' ) || ( c >= ':' && c <= '@' ) || ( c >= '[' && c <= '`' ) || ( c >= '{' && c <= '~' ) ) {
 				CHAR_TABLE[i] |= MASK_PUNCT;
 			}
 			if ( ( CHAR_TABLE[i] & ( MASK_LOWERCASE | MASK_UPPERCASE ) ) != 0 ) {
@@ -952,11 +953,12 @@ public class StringLib extends TwoArgFunction {
 		CHAR_TABLE['\r'] |= MASK_SPACE;
 		CHAR_TABLE['\n'] |= MASK_SPACE;
 		CHAR_TABLE['\t'] |= MASK_SPACE;
-		CHAR_TABLE[0x0C /* '\v' */ ] |= MASK_SPACE;
+		CHAR_TABLE[0x0B /* '\v' */ ] |= MASK_SPACE;
 		CHAR_TABLE['\f'] |= MASK_SPACE;
 	};
 	
 	static class MatchState {
+		int matchdepth;  /* control for recursive depth (to avoid C stack overflow) */
 		final LuaString s;
 		final LuaString p;
 		final Varargs args;
@@ -971,10 +973,12 @@ public class StringLib extends TwoArgFunction {
 			this.level = 0;
 			this.cinit = new int[ MAX_CAPTURES ];
 			this.clen = new int[ MAX_CAPTURES ];
+			this.matchdepth = MAXCCALLS;
 		}
 		
 		void reset() {
 			level = 0;
+			this.matchdepth = MAXCCALLS;
 		}
 		
 		private void add_s( Buffer lbuf, LuaString news, int soff, int e ) {
@@ -1049,7 +1053,7 @@ public class StringLib extends TwoArgFunction {
 				if ( i == 0 ) {
 					return s.substring( soff, end );
 				} else {
-					return error( "invalid capture index" );
+					return error( "invalid capture index %" + (i + 1) );
 				}
 			} else {
 				int l = clen[i];
@@ -1068,7 +1072,7 @@ public class StringLib extends TwoArgFunction {
 		private int check_capture( int l ) {
 			l -= '1';
 			if ( l < 0 || l >= level || this.clen[l] == CAP_UNFINISHED ) {
-				error("invalid capture index");
+				error("invalid capture index %" + (l + 1));
 			}
 			return l;
 		}
@@ -1118,9 +1122,10 @@ public class StringLib extends TwoArgFunction {
 			case 'c': res = ( cdata & MASK_CONTROL ) != 0; break;
 			case 'p': res = ( cdata & MASK_PUNCT ) != 0; break;
 			case 's': res = ( cdata & MASK_SPACE ) != 0; break;
+			case 'g': res = ( cdata & ( MASK_ALPHA | MASK_DIGIT | MASK_PUNCT ) ) != 0; break;
 			case 'w': res = ( cdata & ( MASK_ALPHA | MASK_DIGIT ) ) != 0; break;
 			case 'x': res = ( cdata & MASK_HEXDIGIT ) != 0; break;
-			case 'z': res = ( c == 0 ); break;
+			case 'z': res = ( c == 0 ); break;  /* deprecated option */
 			default: return cl == c;
 			}
 			return ( lcl == cl ) ? res : !res;
@@ -1162,81 +1167,86 @@ public class StringLib extends TwoArgFunction {
 		 * where match ends, otherwise returns -1.
 		 */
 		int match( int soffset, int poffset ) {
-			while ( true ) {
-				// Check if we are at the end of the pattern -
-				// equivalent to the '\0' case in the C version, but our pattern
-				// string is not NUL-terminated.
-				if ( poffset == p.length() )
-					return soffset;
-				switch ( p.luaByte( poffset ) ) {
-				case '(':
-					if ( ++poffset < p.length() && p.luaByte( poffset ) == ')' )
-						return start_capture( soffset, poffset + 1, CAP_POSITION );
-					else
-						return start_capture( soffset, poffset, CAP_UNFINISHED );
-				case ')':
-					return end_capture( soffset, poffset + 1 );
-				case L_ESC:
-					if ( poffset + 1 == p.length() )
-						error("malformed pattern (ends with '%')");
-					switch ( p.luaByte( poffset + 1 ) ) {
-					case 'b':
-						soffset = matchbalance( soffset, poffset + 2 );
-						if ( soffset == -1 ) return -1;
-						poffset += 4;
-						continue;
-					case 'f': {
-						poffset += 2;
-						if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
-							error("Missing '[' after '%f' in pattern");
+			if (matchdepth-- == 0) error("pattern too complex");
+			try {
+				while ( true ) {
+					// Check if we are at the end of the pattern -
+					// equivalent to the '\0' case in the C version, but our pattern
+					// string is not NUL-terminated.
+					if ( poffset == p.length() )
+						return soffset;
+					switch ( p.luaByte( poffset ) ) {
+					case '(':
+						if ( ++poffset < p.length() && p.luaByte( poffset ) == ')' )
+							return start_capture( soffset, poffset + 1, CAP_POSITION );
+						else
+							return start_capture( soffset, poffset, CAP_UNFINISHED );
+					case ')':
+						return end_capture( soffset, poffset + 1 );
+					case L_ESC:
+						if ( poffset + 1 == p.length() )
+							error("malformed pattern (ends with '%')");
+						switch ( p.luaByte( poffset + 1 ) ) {
+						case 'b':
+							soffset = matchbalance( soffset, poffset + 2 );
+							if ( soffset == -1 ) return -1;
+							poffset += 4;
+							continue;
+						case 'f': {
+							poffset += 2;
+							if ( poffset == p.length() || p.luaByte( poffset ) != '[' ) {
+								error("missing '[' after '%f' in pattern");
+							}
+							int ep = classend( poffset );
+							int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
+							int next = ( soffset == s.length() ) ? '\0' : s.luaByte( soffset );
+							if ( matchbracketclass( previous, poffset, ep - 1 ) ||
+								 !matchbracketclass( next, poffset, ep - 1 ) )
+								return -1;
+							poffset = ep;
+							continue;
 						}
-						int ep = classend( poffset );
-						int previous = ( soffset == 0 ) ? '\0' : s.luaByte( soffset - 1 );
-						int next = ( soffset == s.length() ) ? '\0' : s.luaByte( soffset );
-						if ( matchbracketclass( previous, poffset, ep - 1 ) ||
-							 !matchbracketclass( next, poffset, ep - 1 ) )
+						default: {
+							int c = p.luaByte( poffset + 1 );
+							if ( Character.isDigit( (char) c ) ) {
+								soffset = match_capture( soffset, c );
+								if ( soffset == -1 )
+									return -1;
+								return match( soffset, poffset + 2 );
+							}
+						}
+						}
+					case '$':
+						if ( poffset + 1 == p.length() )
+							return ( soffset == s.length() ) ? soffset : -1;
+					}
+					int ep = classend( poffset );
+					boolean m = soffset < s.length() && singlematch( s.luaByte( soffset ), poffset, ep );
+					int pc = ( ep < p.length() ) ? p.luaByte( ep ) : '\0';
+					
+					switch ( pc ) {
+					case '?':
+						int res;
+						if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
+							return res;
+						poffset = ep + 1;
+						continue;
+					case '*':
+						return max_expand( soffset, poffset, ep );
+					case '+':
+						return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
+					case '-':
+						return min_expand( soffset, poffset, ep );
+					default:
+						if ( !m )
 							return -1;
+						soffset++;
 						poffset = ep;
 						continue;
 					}
-					default: {
-						int c = p.luaByte( poffset + 1 );
-						if ( Character.isDigit( (char) c ) ) {
-							soffset = match_capture( soffset, c );
-							if ( soffset == -1 )
-								return -1;
-							return match( soffset, poffset + 2 );
-						}
-					}
-					}
-				case '$':
-					if ( poffset + 1 == p.length() )
-						return ( soffset == s.length() ) ? soffset : -1;
 				}
-				int ep = classend( poffset );
-				boolean m = soffset < s.length() && singlematch( s.luaByte( soffset ), poffset, ep );
-				int pc = ( ep < p.length() ) ? p.luaByte( ep ) : '\0';
-				
-				switch ( pc ) {
-				case '?':
-					int res;
-					if ( m && ( ( res = match( soffset + 1, ep + 1 ) ) != -1 ) )
-						return res;
-					poffset = ep + 1;
-					continue;
-				case '*':
-					return max_expand( soffset, poffset, ep );
-				case '+':
-					return ( m ? max_expand( soffset + 1, poffset, ep ) : -1 );
-				case '-':
-					return min_expand( soffset, poffset, ep );
-				default:
-					if ( !m )
-						return -1;
-					soffset++;
-					poffset = ep;
-					continue;
-				}
+			} finally {
+				matchdepth++;
 			}
 		}
 		
@@ -1301,7 +1311,7 @@ public class StringLib extends TwoArgFunction {
 		int matchbalance( int soff, int poff ) {
 			final int plen = p.length();
 			if ( poff == plen || poff + 1 == plen ) {
-				error( "unbalanced pattern" );
+				error( "malformed pattern (missing arguments to '%b')" );
 			}
 			final int slen = s.length();
 			if ( soff >= slen )

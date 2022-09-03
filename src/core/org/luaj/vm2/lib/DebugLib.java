@@ -442,6 +442,10 @@ public class DebugLib extends TwoArgFunction {
 		return callstack().traceback(level);
 	}
 	
+	public CallFrame getCallFrame(int level) {
+		return callstack().getCallFrame(level);
+	}
+	
 	void callHook(LuaThread.State s, LuaValue type, LuaValue arg) {
 		if (s.inhook || s.hookfunc == null) return;
 		s.inhook = true;
@@ -645,7 +649,7 @@ public class DebugLib extends TwoArgFunction {
 
 	}
 
-	static class CallFrame {
+	public static class CallFrame {
 		LuaFunction f;
 		int pc;
 		int top;
@@ -691,7 +695,7 @@ public class DebugLib extends TwoArgFunction {
 				return NIL;
 			}
 		}
-		int currentline() {
+		public int currentline() {
 			if ( !f.isclosure() ) return -1;
 			int[] li = f.checkclosure().p.lineinfo;
 			return li==null || pc<0 || pc>=li.length? -1: li[pc];
@@ -796,13 +800,13 @@ public class DebugLib extends TwoArgFunction {
 		        LuaString vn = (Lua.GET_OPCODE(i) == Lua.OP_GETTABLE)  /* name of indexed variable */
 	                    ? p.getlocalname(t + 1, pc)
 	                    : (t < p.upvalues.length ? p.upvalues[t].name : QMARK);
-				name = kname(p, k);
-				return new NameWhat( name.tojstring(), vn != null && vn.eq_b(ENV)? "global": "field" );
+				String jname = kname(p, pc, k);
+				return new NameWhat( jname, vn != null && vn.eq_b(ENV)? "global": "field" );
 			}
 			case Lua.OP_GETUPVAL: {
 				int u = Lua.GETARG_B(i); /* upvalue index */
 				name = u < p.upvalues.length ? p.upvalues[u].name : QMARK;
-				return new NameWhat( name.tojstring(), "upvalue" );
+				return name == null ? null : new NameWhat( name.tojstring(), "upvalue" );
 			}
 		    case Lua.OP_LOADK:
 		    case Lua.OP_LOADKX: {
@@ -816,8 +820,8 @@ public class DebugLib extends TwoArgFunction {
 		    }
 			case Lua.OP_SELF: {
 				int k = Lua.GETARG_C(i); /* key index */
-				name = kname(p, k);
-				return new NameWhat( name.tojstring(), "method" );
+				String jname = kname(p, pc, k);
+				return new NameWhat( jname, "method" );
 			}
 			default:
 				break;
@@ -826,11 +830,20 @@ public class DebugLib extends TwoArgFunction {
 		return null; /* no useful name found */
 	}
 
-	static LuaString kname(Prototype p, int c) {
-		if (Lua.ISK(c) && p.k[Lua.INDEXK(c)].isstring())
-			return p.k[Lua.INDEXK(c)].strvalue();
-		else
-			return QMARK;
+	static String kname(Prototype p, int pc, int c) {
+		if (Lua.ISK(c)) {  /* is 'c' a constant? */
+			LuaValue k = p.k[Lua.INDEXK(c)];
+			if (k.isstring()) {  /* literal constant? */
+				return k.tojstring();  /* it is its own name */
+			} /* else no reasonable name found */
+		} else {  /* 'c' is a register */
+			NameWhat what = getobjname(p, pc, c); /* search for 'c' */
+		    if (what != null && "constant".equals(what.namewhat)) {  /* found a constant name? */
+		      return what.name;  /* 'name' already filled */
+		    }
+		    /* else no reasonable name found */
+		}
+		return "?";  /* no reasonable name found */
 	}
 
 	/*

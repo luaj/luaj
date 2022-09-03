@@ -36,20 +36,20 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.IoLib;
 import org.luaj.vm2.lib.LibFunction;
 
-/** 
- * Subclass of {@link IoLib} and therefore {@link LibFunction} which implements the lua standard {@code io} 
- * library for the JSE platform. 
- * <p> 
- * It uses RandomAccessFile to implement seek on files.  
+/**
+ * Subclass of {@link IoLib} and therefore {@link LibFunction} which implements the lua standard {@code io}
+ * library for the JSE platform.
  * <p>
- * Typically, this library is included as part of a call to 
+ * It uses RandomAccessFile to implement seek on files.
+ * <p>
+ * Typically, this library is included as part of a call to
  * {@link org.luaj.vm2.lib.jse.JsePlatform#standardGlobals()}
  * <pre> {@code
  * Globals globals = JsePlatform.standardGlobals();
  * globals.get("io").get("write").call(LuaValue.valueOf("hello, world\n"));
  * } </pre>
  * <p>
- * For special cases where the smallest possible footprint is desired, 
+ * For special cases where the smallest possible footprint is desired,
  * a minimal set of libraries could be loaded
  * directly via {@link Globals#load(LuaValue)} using code such as:
  * <pre> {@code
@@ -96,9 +96,9 @@ public class JseIoLib extends IoLib {
 	
 	protected File openProgram(String prog, String mode) throws IOException {
 		final Process p = Runtime.getRuntime().exec(prog);
-		return "w".equals(mode)? 
-				new FileImpl( p.getOutputStream() ):  
-				new FileImpl( p.getInputStream() ); 
+		return "w".equals(mode)?
+				new FileImpl( p.getOutputStream() ):
+				new FileImpl( p.getInputStream() );
 	}
 
 	protected File tmpFile() throws IOException {
@@ -133,7 +133,7 @@ public class JseIoLib extends IoLib {
 			this( null, null, o );
 		}
 		public String tojstring() {
-			return "file ("+this.hashCode()+")";
+			return "file (" + (this.closed ? "closed" : String.valueOf(this.hashCode())) + ")";
 		}
 		public boolean isstdfile() {
 			return file == null;
@@ -199,11 +199,11 @@ public class JseIoLib extends IoLib {
 			}
 			notimplemented();
 			return 0;
-		}		
+		}
 		
-		// return char if read, -1 if eof, throw IOException on other exception 
+		// return char if read, -1 if eof, throw IOException on other exception
 		public int read() throws IOException {
-			if ( is != null ) 
+			if ( is != null )
 				return is.read();
 			else if ( file != null ) {
 				return file.read();
@@ -321,7 +321,7 @@ public class JseIoLib extends IoLib {
 		}
 
 		public int remaining() throws IOException {
-			return 0;
+			return -1;
 		}
 
 		public int peek() throws IOException, EOFException {

@@ -198,7 +198,7 @@ public class LexState extends Constants {
 	}
 	
 	private boolean isspace(int c) {
-		return (c <= ' ');
+		return (c >= 0 && c <= ' ');
 	}
 	
 	
@@ -388,8 +388,13 @@ public class LexState extends Constants {
 			seminfo.r = LuaValue.ZERO;
 		else if (str.indexOf('x')>=0 || str.indexOf('X')>=0)
 			seminfo.r = strx2number(str, seminfo);
-		else
-			seminfo.r = LuaValue.valueOf(Double.parseDouble(str.trim()));
+		else {
+			try {
+				seminfo.r = LuaValue.valueOf(Double.parseDouble(str.trim()));
+			} catch (NumberFormatException e) {
+				lexerror("malformed number (" + e.getMessage() + ")", TK_NUMBER);
+			}
+		}
 		return true;
 	}
 
@@ -408,7 +413,6 @@ public class LexState extends Constants {
 			else
 				break;
 		}
-		save('\0');
 		String str = new String(buff, 0, nbuff);
 		str2d(str, seminfo);
 	}
@@ -585,6 +589,13 @@ public class LexState extends Constants {
 				inclinenumber();
 				continue;
 			}
+			case ' ':
+			case '\f':
+			case '\t':
+			case 0x0B: /* \v */ {
+				nextChar();
+				continue;
+			}
 			case '-': {
 				nextChar();
 				if (current != '-')
@@ -688,19 +699,12 @@ public class LexState extends Constants {
 				return TK_EOF;
 			}
 			default: {
-				if (isspace(current)) {
-					_assert (!currIsNewline());
-					nextChar();
-					continue;
-				} else if (isdigit(current)) {
-					read_numeral(seminfo);
-					return TK_NUMBER;
-				} else if (isalpha(current) || current == '_') {
+				if (isalpha(current) || current == '_') {
 					/* identifier or reserved word */
 					LuaString ts;
 					do {
 						save_and_next();
-					} while (isalnum(current) || current == '_');
+					} while (isalnum(current));
 					ts = newstring(buff, 0, nbuff);
 					if ( RESERVED.containsKey(ts) )
 						return ((Integer)RESERVED.get(ts)).intValue();
@@ -1744,7 +1748,7 @@ public class LexState extends Constants {
 		fs.checkrepeated(dyd.label, dyd.n_label, label);  /* check for repeated labels */
 		checknext(TK_DBCOLON);  /* skip double colon */
 		/* create new entry for this label */
-		l = newlabelentry(dyd.label=grow(dyd.label, dyd.n_label+1), dyd.n_label++, label, line, fs.pc);
+		l = newlabelentry(dyd.label=grow(dyd.label, dyd.n_label+1), dyd.n_label++, label, line, fs.getlabel());
 		skipnoopstat();  /* skip other no-op statements */
 		if (block_follow(false)) {  /* label is last no-op statement in the block? */
 			/* assume that locals are already out of scope */

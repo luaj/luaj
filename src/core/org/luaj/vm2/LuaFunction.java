@@ -22,14 +22,14 @@
 package org.luaj.vm2;
 
 
-/** 
- * Base class for functions implemented in Java. 
+/**
+ * Base class for functions implemented in Java.
  * <p>
- * Direct subclass include {@link org.luaj.vm2.lib.LibFunction} 
- * which is the base class for 
- * all built-in library functions coded in Java, 
- * and {@link LuaClosure}, which represents a lua closure 
- * whose bytecode is interpreted when the function is invoked.    
+ * Direct subclass include {@link org.luaj.vm2.lib.LibFunction}
+ * which is the base class for
+ * all built-in library functions coded in Java,
+ * and {@link LuaClosure}, which represents a lua closure
+ * whose bytecode is interpreted when the function is invoked.
  * @see LuaValue
  * @see LuaClosure
  * @see org.luaj.vm2.lib.LibFunction
@@ -57,11 +57,11 @@ public class LuaFunction extends LuaValue {
 	}
 	
 	public LuaFunction optfunction(LuaFunction defval) {
-		return this; 
+		return this;
 	}
 
-	public LuaValue getmetatable() { 
-		return s_metatable; 
+	public LuaValue getmetatable() {
+		return s_metatable;
 	}
 
 	public String tojstring() {
@@ -72,12 +72,15 @@ public class LuaFunction extends LuaValue {
 		return valueOf(tojstring());
 	}
 
-	/** Return the last part of the class name, to be used as a function name in tojstring and elsewhere. 
+	/** Return the last part of the class name, to be used as a function name in tojstring and elsewhere.
 	 * @return String naming the last part of the class name after the last dot (.) or dollar sign ($).
+	 * If the first character is '_', it is skipped.
 	 */
 	public String classnamestub() {
 		String s = getClass().getName();
-		return s.substring(Math.max(s.lastIndexOf('.'),s.lastIndexOf('$'))+1);
+		int offset = Math.max(s.lastIndexOf('.'), s.lastIndexOf('$')) + 1;
+		if (s.charAt(offset) == '_') offset++;
+		return s.substring(offset);
 	}
 	
 	/** Return a human-readable name for this function.  Returns the last part of the class name by default.
