@@ -80,6 +80,7 @@ class StringTest {
 	@Test
 	void testUtf8() {
 		for (int i = 4; i < 0xffff; i += 4) {
+			if (i == 0xd800) i = 0xe000;
 			char[] c = { (char) (i+0), (char) (i+1), (char) (i+2), (char) (i+3) };
 			String before = new String(c) + " " + i + "-" + (i+4);
 			LuaString ls = LuaString.valueOf(before);

@@ -87,22 +87,10 @@ import org.luaj.vm2.lib.ResourceFinder;
 
 public class JseBaseLib extends org.luaj.vm2.lib.BaseLib {
 
-<<<<<<< HEAD:src/jse/org/luaj/vm2/lib/jse/JseBaseLib.java
 	/** Perform one-time initialization on the library by creating a table
 	 * containing the library functions, adding that table to the supplied environment,
 	 * adding the table to package.loaded, and returning table as the return value.
 	 * <P>Specifically, extend the library loading to set the default value for {@link Globals#STDIN}
-=======
-	/**
-	 * Perform one-time initialization on the library by creating a table
-	 * containing the library functions, adding that table to the supplied
-	 * environment, adding the table to package.loaded, and returning table as
-	 * the return value.
-	 * <P>
-	 * Specifically, extend the library loading to set the default value for
-	 * {@link Globals#STDIN}
-	 *
->>>>>>> farmboy0/master:luaj-jse/src/main/java/org/luaj/vm2/lib/jse/JseBaseLib.java
 	 * @param modname the module name supplied if this is loaded via 'require'.
 	 * @param env     the environment to load into, which must be a Globals
 	 *                instance.
