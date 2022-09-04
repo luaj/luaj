@@ -1,0 +1,80 @@
+os	table
+os.clock()	true	number	nil
+os.date()	true	string	nil
+os.difftime(123000, 21500)	true	number	nil
+os.getenv()	false	string	nil
+os.getenv("bogus.key")	true	nil	nil
+os.tmpname()	true	string
+os.tmpname()	true	string
+io.open	true	userdata
+write	false	string	nil
+close	false	string	nil
+os.rename(p,q)	true	boolean	nil
+os.remove(q)	true	boolean	nil
+os.remove(q)	true	nil	string
+os.setlocale("C")	true	string	nil
+os.exit	function
+os.date('%a', 1281364496)	true	string	nil
+os.date('%A', 1281364496)	true	string	nil
+os.date('%b', 1281364496)	true	string	nil
+os.date('%B', 1281364496)	true	string	nil
+os.date('%c', 1281364496)	true	string	nil
+os.date('%C', 1281364496)	true	string	nil
+os.date('%d', 1281364496)	true	string	nil
+os.date('%D', 1281364496)	true	string	nil
+os.date('%e', 1281364496)	true	string	nil
+os.date('%E', 1281364496)	true	string	nil
+os.date('%f', 1281364496)	true	string	nil
+os.date('%F', 1281364496)	true	string	nil
+os.date('%g', 1281364496)	true	string	nil
+os.date('%G', 1281364496)	true	string	nil
+os.date('%h', 1281364496)	true	string	nil
+os.date('%H', 1281364496)	true	string	nil
+os.date('%i', 1281364496)	true	string	nil
+os.date('%I', 1281364496)	true	string	nil
+os.date('%j', 1281364496)	true	string	nil
+os.date('%J', 1281364496)	true	string	nil
+os.date('%k', 1281364496)	true	string	nil
+os.date('%K', 1281364496)	true	string	nil
+os.date('%l', 1281364496)	true	string	nil
+os.date('%L', 1281364496)	true	string	nil
+os.date('%m', 1281364496)	true	string	nil
+os.date('%M', 1281364496)	true	string	nil
+os.date('%n', 1281364496)	true	string	nil
+os.date('%N', 1281364496)	true	string	nil
+os.date('%o', 1281364496)	true	string	nil
+os.date('%O', 1281364496)	true	string	nil
+os.date('%p', 1281364496)	true	string	nil
+os.date('%P', 1281364496)	true	string	nil
+os.date('%q', 1281364496)	true	string	nil
+os.date('%Q', 1281364496)	true	string	nil
+os.date('%r', 1281364496)	true	string	nil
+os.date('%R', 1281364496)	true	string	nil
+os.date('%s', 1281364496)	true	string	nil
+os.date('%S', 1281364496)	true	string	nil
+os.date('%t', 1281364496)	true	string	nil
+os.date('%T', 1281364496)	true	string	nil
+os.date('%u', 1281364496)	true	string	nil
+os.date('%U', 1281364496)	true	string	nil
+os.date('%v', 1281364496)	true	string	nil
+os.date('%V', 1281364496)	true	string	nil
+os.date('%w', 1281364496)	true	string	nil
+os.date('%W', 1281364496)	true	string	nil
+os.date('%x', 1281364496)	true	string	nil
+os.date('%X', 1281364496)	true	string	nil
+os.date('%y', 1281364496)	true	string	nil
+os.date('%Y', 1281364496)	true	string	nil
+os.date('%z', 1281364496)	true	string	nil
+os.date('%Z', 1281364496)	true	string	nil
+k	string	year	v	number	2010
+k	string	month	v	number	8
+k	string	day	v	number	9
+k	string	hour	v	number	16
+k	string	min	v	number	34
+k	string	sec	v	number	56
+k	string	wday	v	number	2
+k	string	yday	v	number	221
+k	string	isdst	v	boolean	true
+type(os.time())	number
+os.time({year=1971, month=2, day=25})	36327600
+os.time({year=1971, month=2, day=25, hour=11, min=22, sec=33})	36325353

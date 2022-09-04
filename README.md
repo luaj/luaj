@@ -858,37 +858,30 @@ An example skelton maven pom file for a skeleton project is in
 
 
 <h2>Building the jars</h2>
-An ant file is included in the root directory which builds the libraries by default.
+Build the jars with maven.
+<pre>
+	mvn clean verify
+</pre>
 
 <p>
-Other targets exist for creating distribution file an measuring code coverage of unit tests.
 
 <h2>Unit tests</h2>
 
 <p>
-The main luaj JUnit tests are organized into a JUnit 3 suite:
-<pre>
-	test/junit/org/luaj/vm2/AllTests.lua
-</pre>
+All unit tests are executed during the build.
 
 <p>
-Unit test scripts can be found in these locations
+Test scripts can be found in these locations
 <pre>
-	test/lua/*.lua
-	test/lua/errors/*.lua
-	test/lua/perf/*.lua
-	test/lua/luaj3.0.2-tests.zip
+	luaj-test/src/test/resources
 </pre>
+Executon is included in the build of luaj-test.
 
 <h2>Code coverage</h2>
 
 <p>
-A build script for running unit tests and producing code coverage statistics is in 
-<pre>
-	<a href="build-coverage.xml">build-coverage.xml</a>
-</pre>
-
-It relies on the cobertura code coverage library.
+The maven build creates the coverage report in the luaj-test/target/site folder
+during the verify phase.
 
 <h1>8 - <a name="8">Downloads</a></h1>
 
