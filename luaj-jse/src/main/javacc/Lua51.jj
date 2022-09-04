@@ -1,0 +1,349 @@
+/** 
+* Javacc grammar for lua language version 5.1
+*
+* Originally created for use in luaj, a Java implementation of the lua language
+* @see http://sourceforge.net/projects/luaj/
+* 
+* For documentation on the lua language 
+* @see http://www.lua.org/manual/5.1/
+*
+* Empty grammar that validates syntax without producing a parse tree.  
+*
+* @author Jim Roseborough
+* @date June 21, 2010
+*/
+
+options {
+  STATIC = false;
+  JDK_VERSION = "1.3";
+  ERROR_REPORTING = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_PARSER = false;
+  DEBUG_TOKEN_MANAGER = false;
+  OUTPUT_DIRECTORY = "org/luaj/vm2/parser/lua51";
+}
+
+PARSER_BEGIN(LuaParser)
+package org.luaj.vm2.parser.lua51;
+
+public class LuaParser {
+
+  public static void main(String args[]) throws ParseException {
+    LuaParser parser = new LuaParser(System.in);
+    parser.Chunk();
+  }
+
+  public static final int VAR  = 0;
+  public static final int CALL = 1;
+}
+
+PARSER_END(LuaParser)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " " | "\t" | "\n" | "\r" | "\f"
+}
+
+/* COMMENTS and LONG STRINGS */
+
+MORE :
+{
+  "--[[": IN_LC0
+| "--[=[": IN_LC1
+| "--[==[": IN_LC2
+| "--[===[": IN_LC3
+| < "--[====" ("=")* "[" > : IN_LCN
+| "[[" : IN_LS0
+| "[=[" : IN_LS1
+| "[==[" : IN_LS2
+| "[===[" : IN_LS3
+| < "[====" ("=")* "[" > : IN_LSN
+| "--"   : IN_COMMENT
+}
+
+<IN_COMMENT> SPECIAL_TOKEN :
+{
+  <COMMENT: (~["\n","\r"])* ("\n"|"\r"|"\r\n")? > : DEFAULT
+}
+
+<IN_LC0> SPECIAL_TOKEN : { <LONGCOMMENT0: "]]" > : DEFAULT }
+<IN_LC1> SPECIAL_TOKEN : { <LONGCOMMENT1: "]=]" > : DEFAULT }
+<IN_LC2> SPECIAL_TOKEN : { <LONGCOMMENT2: "]==]" > : DEFAULT }
+<IN_LC3> SPECIAL_TOKEN : { <LONGCOMMENT3: "]===]" > : DEFAULT }
+<IN_LCN> SPECIAL_TOKEN : { <LONGCOMMENTN: "]====" ("=")* "]" > : DEFAULT }
+
+<IN_LS0> TOKEN : { <LONGSTRING0: "]]" > : DEFAULT }
+<IN_LS1> TOKEN : { <LONGSTRING1: "]=]" > : DEFAULT }
+<IN_LS2> TOKEN : { <LONGSTRING2: "]==]" > : DEFAULT }
+<IN_LS3> TOKEN : { <LONGSTRING3: "]===]" > : DEFAULT }
+<IN_LSN> TOKEN : { <LONGSTRINGN: "]====" ("=")* "]" > : DEFAULT }
+
+<IN_LC0,IN_LC1,IN_LC2,IN_LC3,IN_LCN,IN_LS0,IN_LS1,IN_LS2,IN_LS3,IN_LSN> MORE :
+{
+  < ~[] >
+}
+
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  <AND: "and">
+| <BREAK: "break">
+| <DO: "do">
+| <ELSE: "else">
+| <ELSEIF: "elseif">
+| <END: "end">
+| <FALSE: "false">
+| <FOR: "for">
+| <FUNCTION: "function">
+| <IF: "if">
+| <IN: "in">
+| <LOCAL: "local">
+| <NIL: "nil">
+| <NOT: "not">
+| <OR: "or">
+| <RETURN: "return">
+| <REPEAT: "repeat">
+| <THEN: "then">
+| <TRUE: "true">
+| <UNTIL: "until">
+| <WHILE: "while">
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < NAME: ["a"-"z", "A"-"Z", "_"] (["a"-"z", "A"-"Z", "_", "0"-"9"])* >
+| < NUMBER: <HEX> | <FLOAT> >
+| < #FLOAT: (<DIGIT>)+ "." (<DIGIT>)* (<EXP>)? | "." (<DIGIT>)+ (<EXP>)? | (<DIGIT>)+ (<EXP>)? >
+| < #DIGIT: ["0"-"9"] >
+| < #EXP: ["e","E"] (["+","-"])? (<DIGIT>)+ >
+| < #HEX: "0" ["x","X"] (<HEXDIGIT>)+ >
+| < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
+| < STRING: "\"" (<QUOTED> | ~["\\","\""])* "\"" >
+| < CHARSTRING: "'" (<QUOTED> | ~["\\","'"])* "'" >
+| < #QUOTED: <DECIMAL> | <UNICODE> | <CHAR> >
+| < #DECIMAL:   "\\" ["0"-"9"] (["0"-"9"])? (["0"-"9"])? >
+| < #UNICODE: "\\" "u" <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> <HEXDIGIT> >
+//| < #CHAR: "\\" ("a"|"b"|"f"|"n"|"r"|"t"|"v"|"["|"]"|"'"|"\""|"\\"|"0"|<LF>) >
+| < #CHAR: "\\" (~[]) >
+| < #LF: ("\n" | "\r" | "\r\n") >
+}
+
+/** Root production. */
+void Chunk():
+{}
+{
+	Block() <EOF>
+}
+
+void Block():
+{}
+{
+	(Stat() (";")? )* (LastStat() (";")? )? 
+}
+
+void Stat():
+{}
+{
+	<DO> Block() <END>
+|	<WHILE> Exp() <DO> Block() <END>
+|	<REPEAT> Block() <UNTIL> Exp() 
+|	<IF> Exp() <THEN> Block() (<ELSEIF> Exp() <THEN> Block())* (<ELSE> Block())? <END>
+|	LOOKAHEAD(3) <FOR> <NAME> "=" Exp() "," Exp() ( "," Exp() )? <DO> Block() <END>
+|	<FOR> NameList() <IN> ExpList() <DO> Block() <END>
+|	<FUNCTION> FuncName() FuncBody()
+|	LOOKAHEAD(2) <LOCAL> <FUNCTION> <NAME> FuncBody()
+|	<LOCAL> NameList() ( "=" ExpList() )? 
+|	ExprStat()
+}
+
+void LastStat():
+{}
+{
+	<BREAK> | <RETURN> ( ExpList() )?
+}
+
+void ExprStat():
+{	int type,need=CALL; }
+{
+	type=PrimaryExp() ( Assign() { need=VAR; } )?
+	{ if ( type!=need ) throw new ParseException("expected function call or assignment"); }
+}
+
+void Assign():
+{}
+{
+	( "," VarExp() )* "=" ExpList()
+}
+
+void VarExp():
+{	int type; }
+{
+	type=PrimaryExp()
+	{ if ( type!=VAR ) throw new ParseException("expected variable expression"); }
+}
+
+void FuncName():
+{}
+{
+	<NAME> ( "." <NAME> )* ( ":" <NAME> )?
+}
+
+void PrefixExp():
+{}
+{
+	<NAME>
+|	ParenExp()
+}
+
+void ParenExp():
+{}
+{
+	"(" Exp() ")"
+}
+
+int PrimaryExp(): 
+{	int type=VAR; }
+{
+	PrefixExp() ( LOOKAHEAD(2) type=PostfixOp() )* { return type; }
+}
+
+int PostfixOp():
+{}
+{
+	FieldOp() { return VAR; }
+|	FuncOp()  { return CALL;  }
+}
+
+void FieldOp():
+{}
+{
+	"." <NAME> 
+|	"[" Exp() "]"
+}
+
+void FuncOp():
+{}
+{
+	":" <NAME> FuncArgs() 
+|	FuncArgs() 
+}
+
+void FuncArgs():
+{}
+{
+	"(" ( ExpList() )? ")"
+|	TableConstructor()
+|	Str()
+}
+
+void NameList():
+{}
+{
+	<NAME> ( LOOKAHEAD(2) "," <NAME> )*
+}
+
+void ExpList():
+{}
+{
+	Exp() ( "," Exp() )*
+}
+
+void SimpleExp():
+{}
+{
+	<NIL> 
+|	<TRUE> 
+|	<FALSE>
+|	<NUMBER>
+|	Str()
+|	"..." 
+|	TableConstructor()
+|	Function() 
+|	PrimaryExp() 
+}
+
+void Str():
+{}
+{
+	<STRING> 
+|	<CHARSTRING>
+|	<LONGSTRING0>
+|	<LONGSTRING1>
+|	<LONGSTRING2>
+|	<LONGSTRING3>
+|	<LONGSTRINGN>
+}
+
+void Exp():
+{}
+{
+	SubExp()
+}
+
+void SubExp():
+{}
+{
+	( SimpleExp() | Unop() SubExp() ) (LOOKAHEAD(2) Binop() SubExp())*
+}
+
+void Function():
+{}
+{
+	<FUNCTION> FuncBody()
+}
+
+void FuncBody():
+{}
+{
+	"(" ( ParList() )? ")" Block() <END>
+}
+
+void ParList():
+{}
+{
+	NameList() ( "," "..." )? | "..." 
+}
+
+void TableConstructor():
+{}
+{
+	"{" ( FieldList() )? "}"
+}
+
+void FieldList():
+{}
+{
+	Field() (LOOKAHEAD(2) FieldSep() Field())* (FieldSep())?
+}
+
+void Field():
+{}
+{
+	"[" Exp() "]" "=" Exp() 
+|	LOOKAHEAD(2) <NAME> "=" Exp() 
+|	Exp()
+}
+
+void FieldSep():
+{}
+{
+	"," | ";"
+}
+
+void Binop():
+{}
+{
+   "+" | "-" | "*" | "/" | "^" | "%" | ".." | "<" | "<=" | ">" | ">=" | "==" | "~=" | <AND> | <OR>
+}
+
+void Unop():
+{}
+{
+	"-" | <NOT> | "#"
+}

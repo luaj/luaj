@@ -1,0 +1,235 @@
+2
+-- concat tests
+onetwothree
+one--two--three
+two,three
+two
+
+onetwothreefourfive
+one--two--three--four--five
+two,three,four,five
+two
+
+
+
+
+
+
+
+
+
+
+-- insert, len tests
+{[1]=one,[2]=two,[3]=three,[a]=aaa,[b]=bbb,[c]=ccc}	3
+{[1]=one,[2]=two,[3]=three,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
+{[1]=seven,[2]=one,[3]=two,[4]=three,[5]=six,[a]=aaa,[b]=bbb,[c]=ccc}	5
+{[1]=seven,[2]=one,[3]=two,[4]=eight,[5]=three,[6]=six,[a]=aaa,[b]=bbb,[c]=ccc}	6
+{[1]=seven,[2]=one,[3]=two,[4]=eight,[5]=three,[6]=six,[7]=nine,[a]=aaa,[b]=bbb,[c]=ccc}	7
+#{}	0
+#{"a"}	1
+#{"a","b"}	2
+#{"a",nil}	1
+#{nil,nil}	0
+#{nil,"b"}	true
+#{"a","b","c"}	3
+#{"a","b",nil}	2
+#{"a",nil,nil}	1
+#{nil,nil,nil}	0
+#{nil,nil,"c"}	true
+#{nil,"b","c"}	true
+#{nil,"b",nil}	true
+#{"a",nil,"c"}	true
+-- remove tests
+{[10]=ten,[1]=one,[2]=two,[3]=three,[4]=four,[5]=five,[6]=six,[7]=seven,[a]=aaa,[b]=bbb,[c]=ccc}	7
+table.remove(t)	seven
+{[10]=ten,[1]=one,[2]=two,[3]=three,[4]=four,[5]=five,[6]=six,[a]=aaa,[b]=bbb,[c]=ccc}	6
+table.remove(t,1)	one
+{[10]=ten,[1]=two,[2]=three,[3]=four,[4]=five,[5]=six,[a]=aaa,[b]=bbb,[c]=ccc}	5
+table.remove(t,3)	four
+{[10]=ten,[1]=two,[2]=three,[3]=five,[4]=six,[a]=aaa,[b]=bbb,[c]=ccc}	4
+-- sort tests
+one-two-three
+one-three-two
+www-vvv-uuu-ttt-sss-zzz-yyy-xxx
+sss-ttt-uuu-vvv-www-xxx-yyy-zzz
+www-vvv-uuu-ttt-sss-zzz-yyy-xxx
+zzz-yyy-xxx-www-vvv-uuu-ttt-sss
+----- unpack tests -------
+pcall(unpack)	false
+pcall(unpack,nil)	false
+pcall(unpack,"abc")	false
+pcall(unpack,1)	false
+unpack({"aa"})	aa
+unpack({"aa","bb"})	aa	bb
+unpack({"aa","bb","cc"})	aa	bb	cc
+unpack -
+unpack a	a
+unpack .	nil
+unpack ab	a	b
+unpack .b	nil	b
+unpack a.	a	nil
+unpack abc	a	b	c
+unpack .ab	nil	a	b
+unpack a.b	a	nil	b
+unpack ab.	a	b	nil
+unpack ..b	nil	nil	b
+unpack a..	a	nil	nil
+unpack .b.	nil	b	nil
+unpack ...	nil	nil	nil
+unpack (-)
+unpack (a)	a
+unpack (.)	nil
+unpack (ab)	a	b
+unpack (.b)	nil	b
+unpack (a.)	a	nil
+unpack (abc)	a	b	c
+unpack (.ab)	nil	a	b
+unpack (a.b)	a	nil	b
+unpack (ab.)	a	b	nil
+unpack (..b)	nil	nil	b
+unpack (a..)	a	nil	nil
+unpack (.b.)	nil	b	nil
+unpack (...)	nil	nil	nil
+pcall(unpack,t)	true	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,2)	true	bb	cc	dd	ee	ff
+pcall(unpack,t,2,5)	true	bb	cc	dd	ee
+pcall(unpack,t,2,6)	true	bb	cc	dd	ee	ff
+pcall(unpack,t,2,7)	true	bb	cc	dd	ee	ff	nil
+pcall(unpack,t,1)	true	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,1,5)	true	aa	bb	cc	dd	ee
+pcall(unpack,t,1,6)	true	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,1,7)	true	aa	bb	cc	dd	ee	ff	nil
+pcall(unpack,t,0)	true	nil	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,0,5)	true	nil	aa	bb	cc	dd	ee
+pcall(unpack,t,0,6)	true	nil	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,0,7)	true	nil	aa	bb	cc	dd	ee	ff	nil
+pcall(unpack,t,-1)	true	nil	nil	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,-1,5)	true	nil	nil	aa	bb	cc	dd	ee
+pcall(unpack,t,-1,6)	true	nil	nil	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,-1,7)	true	nil	nil	aa	bb	cc	dd	ee	ff	nil
+pcall(unpack,t,2,4)	true	bb	cc	dd
+pcall(unpack,t,2,5)	true	bb	cc	dd	ee
+pcall(unpack,t,2,6)	true	bb	cc	dd	ee	ff
+pcall(unpack,t,2,7)	true	bb	cc	dd	ee	ff	nil
+pcall(unpack,t,2,8)	true	bb	cc	dd	ee	ff	nil	nil
+pcall(unpack,t,2,2)	true
+pcall(unpack,t,2,1)	true
+pcall(unpack,t,2,0)	true
+pcall(unpack,t,2,-1)	true
+pcall(unpack,t,0)	true	zz	aa	bb	cc	dd	ee	ff
+pcall(unpack,t,2,0)	true
+pcall(unpack,t,2,-1)	true
+pcall(unpack,t,"3")	true	cc	dd	ee	ff
+pcall(unpack,t,"a")	false
+pcall(unpack,t,function() end)	false
+----- misc table initializer tests -------
+3
+4
+4
+----- basic table operations -------
+------ basic table tests on basic table table
+t[1]=2	true
+t[1]	true	2
+t[1]=nil	true
+t[1]	true	nil
+t["a"]="b"	true
+t["a"],t.a	true	b	b
+t.a="c"	true
+t["a"],t.a	true	c	c
+t.a=nil	true
+t["a"],t.a	true	nil	nil
+t[nil]="d"	false	string
+t[nil]	true	nil
+t[nil]=nil	false	string
+t[nil]	true	nil
+------ basic table tests on function metatable on __index table
+t[1]=2	true
+t[1]	true	2
+t[1]=nil	true
+metatable call args	table	1
+t[1]	true	dummy
+t["a"]="b"	true
+t["a"],t.a	true	b	b
+t.a="c"	true
+t["a"],t.a	true	c	c
+t.a=nil	true
+metatable call args	table	a
+metatable call args	table	a
+t["a"],t.a	true	dummy	dummy
+t[nil]="d"	false	string
+metatable call args	table	nil
+t[nil]	true	dummy
+t[nil]=nil	false	string
+metatable call args	table	nil
+t[nil]	true	dummy
+------ basic table tests on function metatable on __newindex table
+metatable call args	table	1	2
+t[1]=2	true
+t[1]	true	nil
+metatable call args	table	1	nil
+t[1]=nil	true
+t[1]	true	nil
+metatable call args	table	a	b
+t["a"]="b"	true
+t["a"],t.a	true	nil	nil
+metatable call args	table	a	c
+t.a="c"	true
+t["a"],t.a	true	nil	nil
+metatable call args	table	a	nil
+t.a=nil	true
+t["a"],t.a	true	nil	nil
+metatable call args	table	nil	d
+t[nil]="d"	true	nil
+t[nil]	true	nil
+metatable call args	table	nil	nil
+t[nil]=nil	true	nil
+t[nil]	true	nil
+------ basic table tests on plain metatable on __index table
+t[1]=2	true
+t[1]	true	2
+t[1]=nil	true
+t[1]	true	nil
+t["a"]="b"	true
+t["a"],t.a	true	b	b
+t.a="c"	true
+t["a"],t.a	true	c	c
+t.a=nil	true
+t["a"],t.a	true	nil	nil
+t[nil]="d"	false	string
+t[nil]	true	nil
+t[nil]=nil	false	string
+t[nil]	true	nil
+------ basic table tests on plain metatable on __newindex table
+t[1]=2	true
+t[1]	true	2
+t[1]=nil	true
+t[1]	true	nil
+t["a"]="b"	true
+t["a"],t.a	true	b	b
+t.a="c"	true
+t["a"],t.a	true	c	c
+t.a=nil	true
+t["a"],t.a	true	nil	nil
+t[nil]="d"	false	string
+t[nil]	true	nil
+t[nil]=nil	false	string
+t[nil]	true	nil
+-- sort tests
+default (lexical) comparator
+2-4-6-8-1-3-5-7
+1-2-3-4-5-6-7-8
+333-222-111
+111-222-333
+www-xxx-yyy-aaa-bbb-ccc
+aaa-bbb-ccc-www-xxx-yyy
+21-23-25-27-22-24-26-28
+sort failed
+custom (numerical) comparator
+2-4-6-8-1-3-5-7
+1-2-3-4-5-6-7-8
+333-222-111
+111-222-333
+www-xxx-yyy-aaa-bbb-ccc
+sort failed
+21-23-25-27-22-24-26-28
+21-22-23-24-25-26-27-28

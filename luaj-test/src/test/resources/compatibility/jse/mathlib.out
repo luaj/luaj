@@ -1,0 +1,842 @@
+---------- miscellaneous tests ----------
+math.sin( 0.0 )	true	<zero>
+math.cos( math.pi )	true	-1
+math.sqrt( 9.0 )	true	3
+math.modf( 5.25 )	true	5	0.25
+math.frexp(0.00625)	true	0.8	-7
+-5 ^ 2	true	-25
+-5 / 2	true	-2.5
+-5 % 2	true	1
+---------- constants ----------
+math.huge	true	<pos-inf>
+math.pi	true	3.1415
+---------- unary operator - ----------
+--2.5	true
+--2	true
+-0	true	<zero>
+-2	true	-2
+-2.5	true	-2.5
+-'-2.5'	true	2.5
+-'-2'	true	2
+-'0'	true	<zero>
+-'2'	true	-2
+-'2.5'	true	-2.5
+---------- unary operator not  ----------
+not -2.5	true	false
+not -2	true	false
+not 0	true	false
+not 2	true	false
+not 2.5	true	false
+not '-2.5'	true	false
+not '-2'	true	false
+not '0'	true	false
+not '2'	true	false
+not '2.5'	true	false
+---------- binary operator + ----------
+2+0	true	2
+-2.5+0	true	-2.5
+2+1	true	3
+5+2	true	7
+-5+2	true	-3
+16+2	true	18
+-16+-2	true	-18
+0.5+0	true	0.5
+0.5+1	true	1.5
+0.5+2	true	2.5
+0.5+-1	true	-0.5
+0.5+2	true	2.5
+2.25+0	true	2.25
+2.25+2	true	4.25
+-2+0	true	-2
+3+3	true	6
+'2'+'0'	true	2
+'2.5'+'3'	true	5.5
+'-2'+'1.5'	true	-0.5
+'-2.5'+'-1.5'	true	-4
+'3.0'+'3.0'	true	6
+2.75+2.75	true	5.5
+'2.75'+'2.75'	true	5.5
+3+'3'	true	6
+'3'+3	true	6
+2.75+'2.75'	true	5.5
+'2.75'+2.75	true	5.5
+-3+'-4'	true	-7
+'-3'+4	true	1
+-3+'4'	true	1
+'-3'+-4	true	-7
+-4.75+'2.75'	true	-2
+'-2.75'+1.75	true	-1
+4.75+'-2.75'	true	2
+'2.75'+-1.75	true	1
+---------- binary operator - ----------
+2-0	true	2
+-2.5-0	true	-2.5
+2-1	true	1
+5-2	true	3
+-5-2	true	-7
+16-2	true	14
+-16--2	true	-14
+0.5-0	true	0.5
+0.5-1	true	-0.5
+0.5-2	true	-1.5
+0.5--1	true	1.5
+0.5-2	true	-1.5
+2.25-0	true	2.25
+2.25-2	true	0.25
+-2-0	true	-2
+3-3	true	<zero>
+'2'-'0'	true	2
+'2.5'-'3'	true	-0.5
+'-2'-'1.5'	true	-3.5
+'-2.5'-'-1.5'	true	-1
+'3.0'-'3.0'	true	<zero>
+2.75-2.75	true	<zero>
+'2.75'-'2.75'	true	<zero>
+3-'3'	true	<zero>
+'3'-3	true	<zero>
+2.75-'2.75'	true	<zero>
+'2.75'-2.75	true	<zero>
+-3-'-4'	true	1
+'-3'-4	true	-7
+-3-'4'	true	-7
+'-3'--4	true	1
+-4.75-'2.75'	true	-7.5
+'-2.75'-1.75	true	-4.5
+4.75-'-2.75'	true	7.5
+'2.75'--1.75	true	4.5
+---------- binary operator * ----------
+2*0	true	<zero>
+-2.5*0	true	<zero>
+2*1	true	2
+5*2	true	10
+-5*2	true	-10
+16*2	true	32
+-16*-2	true	32
+0.5*0	true	<zero>
+0.5*1	true	0.5
+0.5*2	true	1
+0.5*-1	true	-0.5
+0.5*2	true	1
+2.25*0	true	<zero>
+2.25*2	true	4.5
+-2*0	true	<zero>
+3*3	true	9
+'2'*'0'	true	<zero>
+'2.5'*'3'	true	7.5
+'-2'*'1.5'	true	-3
+'-2.5'*'-1.5'	true	3.75
+'3.0'*'3.0'	true	9
+2.75*2.75	true	7.5625
+'2.75'*'2.75'	true	7.5625
+3*'3'	true	9
+'3'*3	true	9
+2.75*'2.75'	true	7.5625
+'2.75'*2.75	true	7.5625
+-3*'-4'	true	12
+'-3'*4	true	-12
+-3*'4'	true	-12
+'-3'*-4	true	12
+-4.75*'2.75'	true	-13.06
+'-2.75'*1.75	true	-4.812
+4.75*'-2.75'	true	-13.06
+'2.75'*-1.75	true	-4.812
+---------- binary operator ^ ----------
+2^0	true	1
+-2.5^0	true	1
+2^1	true	2
+5^2	true	25
+-5^2	true	25
+16^2	true	256
+-16^-2	true	0.0039
+0.5^0	true	1
+0.5^1	true	0.5
+0.5^2	true	0.25
+0.5^-1	true	2
+0.5^2	true	0.25
+2.25^0	true	1
+2.25^2	true	5.0625
+-2^0	true	1
+3^3	true	27
+'2'^'0'	true	1
+'2.5'^'3'	true	15.625
+'-2'^'1.5'	true	<nan>
+'-2.5'^'-1.5'	true	<nan>
+'3.0'^'3.0'	true	27
+2.75^2.75	true	16.149
+'2.75'^'2.75'	true	16.149
+3^'3'	true	27
+'3'^3	true	27
+2.75^'2.75'	true	16.149
+'2.75'^2.75	true	16.149
+-3^'-4'	true	0.0123
+'-3'^4	true	81
+-3^'4'	true	81
+'-3'^-4	true	0.0123
+-4.75^'2.75'	true	<nan>
+'-2.75'^1.75	true	<nan>
+4.75^'-2.75'	true	0.0137
+'2.75'^-1.75	true	0.1702
+---------- binary operator / ----------
+2/0	true	<pos-inf>
+-2.5/0	true	<neg-inf>
+2/1	true	2
+5/2	true	2.5
+-5/2	true	-2.5
+16/2	true	8
+-16/-2	true	8
+0.5/0	true	<pos-inf>
+0.5/1	true	0.5
+0.5/2	true	0.25
+0.5/-1	true	-0.5
+0.5/2	true	0.25
+2.25/0	true	<pos-inf>
+2.25/2	true	1.125
+-2/0	true	<neg-inf>
+3/3	true	1
+'2'/'0'	true	<pos-inf>
+'2.5'/'3'	true	0.8333
+'-2'/'1.5'	true	-1.333
+'-2.5'/'-1.5'	true	1.6666
+'3.0'/'3.0'	true	1
+2.75/2.75	true	1
+'2.75'/'2.75'	true	1
+3/'3'	true	1
+'3'/3	true	1
+2.75/'2.75'	true	1
+'2.75'/2.75	true	1
+-3/'-4'	true	0.75
+'-3'/4	true	-0.75
+-3/'4'	true	-0.75
+'-3'/-4	true	0.75
+-4.75/'2.75'	true	-1.727
+'-2.75'/1.75	true	-1.571
+4.75/'-2.75'	true	-1.727
+'2.75'/-1.75	true	-1.571
+---------- binary operator % ----------
+2%0	true	<nan>
+-2.5%0	true	<nan>
+2%1	true	<zero>
+5%2	true	1
+-5%2	true	1
+16%2	true	<zero>
+-16%-2	true	<zero>
+0.5%0	true	<nan>
+0.5%1	true	0.5
+0.5%2	true	0.5
+0.5%-1	true	-0.5
+0.5%2	true	0.5
+2.25%0	true	<nan>
+2.25%2	true	0.25
+-2%0	true	<nan>
+3%3	true	<zero>
+'2'%'0'	true	<nan>
+'2.5'%'3'	true	2.5
+'-2'%'1.5'	true	1
+'-2.5'%'-1.5'	true	-1
+'3.0'%'3.0'	true	<zero>
+2.75%2.75	true	<zero>
+'2.75'%'2.75'	true	<zero>
+3%'3'	true	<zero>
+'3'%3	true	<zero>
+2.75%'2.75'	true	<zero>
+'2.75'%2.75	true	<zero>
+-3%'-4'	true	-3
+'-3'%4	true	1
+-3%'4'	true	1
+'-3'%-4	true	-3
+-4.75%'2.75'	true	0.75
+'-2.75'%1.75	true	0.75
+4.75%'-2.75'	true	-0.75
+'2.75'%-1.75	true	-0.75
+---------- binary operator == ----------
+2==0	true	false
+-2.5==0	true	false
+2==1	true	false
+5==2	true	false
+-5==2	true	false
+16==2	true	false
+-16==-2	true	false
+0.5==0	true	false
+0.5==1	true	false
+0.5==2	true	false
+0.5==-1	true	false
+0.5==2	true	false
+2.25==0	true	false
+2.25==2	true	false
+-2==0	true	false
+3==3	true	true
+'2'=='0'	true	false
+'2.5'=='3'	true	false
+'-2'=='1.5'	true	false
+'-2.5'=='-1.5'	true	false
+'3.0'=='3.0'	true	true
+2.75==2.75	true	true
+'2.75'=='2.75'	true	true
+---------- binary operator ~= ----------
+2~=0	true	true
+-2.5~=0	true	true
+2~=1	true	true
+5~=2	true	true
+-5~=2	true	true
+16~=2	true	true
+-16~=-2	true	true
+0.5~=0	true	true
+0.5~=1	true	true
+0.5~=2	true	true
+0.5~=-1	true	true
+0.5~=2	true	true
+2.25~=0	true	true
+2.25~=2	true	true
+-2~=0	true	true
+3~=3	true	false
+'2'~='0'	true	true
+'2.5'~='3'	true	true
+'-2'~='1.5'	true	true
+'-2.5'~='-1.5'	true	true
+'3.0'~='3.0'	true	false
+2.75~=2.75	true	false
+'2.75'~='2.75'	true	false
+---------- binary operator > ----------
+2>0	true	true
+-2.5>0	true	false
+2>1	true	true
+5>2	true	true
+-5>2	true	false
+16>2	true	true
+-16>-2	true	false
+0.5>0	true	true
+0.5>1	true	false
+0.5>2	true	false
+0.5>-1	true	true
+0.5>2	true	false
+2.25>0	true	true
+2.25>2	true	true
+-2>0	true	false
+3>3	true	false
+'2'>'0'	true	true
+'2.5'>'3'	true	false
+'-2'>'1.5'	true	false
+'-2.5'>'-1.5'	true	true
+'3.0'>'3.0'	true	false
+2.75>2.75	true	false
+'2.75'>'2.75'	true	false
+---------- binary operator < ----------
+2<0	true	false
+-2.5<0	true	true
+2<1	true	false
+5<2	true	false
+-5<2	true	true
+16<2	true	false
+-16<-2	true	true
+0.5<0	true	false
+0.5<1	true	true
+0.5<2	true	true
+0.5<-1	true	false
+0.5<2	true	true
+2.25<0	true	false
+2.25<2	true	false
+-2<0	true	true
+3<3	true	false
+'2'<'0'	true	false
+'2.5'<'3'	true	true
+'-2'<'1.5'	true	true
+'-2.5'<'-1.5'	true	false
+'3.0'<'3.0'	true	false
+2.75<2.75	true	false
+'2.75'<'2.75'	true	false
+---------- binary operator >= ----------
+2>=0	true	true
+-2.5>=0	true	false
+2>=1	true	true
+5>=2	true	true
+-5>=2	true	false
+16>=2	true	true
+-16>=-2	true	false
+0.5>=0	true	true
+0.5>=1	true	false
+0.5>=2	true	false
+0.5>=-1	true	true
+0.5>=2	true	false
+2.25>=0	true	true
+2.25>=2	true	true
+-2>=0	true	false
+3>=3	true	true
+'2'>='0'	true	true
+'2.5'>='3'	true	false
+'-2'>='1.5'	true	false
+'-2.5'>='-1.5'	true	true
+'3.0'>='3.0'	true	true
+2.75>=2.75	true	true
+'2.75'>='2.75'	true	true
+---------- binary operator <= ----------
+2<=0	true	false
+-2.5<=0	true	true
+2<=1	true	false
+5<=2	true	false
+-5<=2	true	true
+16<=2	true	false
+-16<=-2	true	true
+0.5<=0	true	false
+0.5<=1	true	true
+0.5<=2	true	true
+0.5<=-1	true	false
+0.5<=2	true	true
+2.25<=0	true	false
+2.25<=2	true	false
+-2<=0	true	true
+3<=3	true	true
+'2'<='0'	true	false
+'2.5'<='3'	true	true
+'-2'<='1.5'	true	true
+'-2.5'<='-1.5'	true	false
+'3.0'<='3.0'	true	true
+2.75<=2.75	true	true
+'2.75'<='2.75'	true	true
+---------- math.abs ----------
+math.abs(-2.5)	true	2.5
+math.abs(-2)	true	2
+math.abs(0)	true	<zero>
+math.abs(2)	true	2
+math.abs(2.5)	true	2.5
+math.abs('-2.5')	true	2.5
+math.abs('-2')	true	2
+math.abs('0')	true	<zero>
+math.abs('2')	true	2
+math.abs('2.5')	true	2.5
+---------- math.ceil ----------
+math.ceil(-2.5)	true	-2
+math.ceil(-2)	true	-2
+math.ceil(0)	true	<zero>
+math.ceil(2)	true	2
+math.ceil(2.5)	true	3
+math.ceil('-2.5')	true	-2
+math.ceil('-2')	true	-2
+math.ceil('0')	true	<zero>
+math.ceil('2')	true	2
+math.ceil('2.5')	true	3
+---------- math.cos ----------
+math.cos(-2.5)	true	-0.801
+math.cos(-2)	true	-0.416
+math.cos(0)	true	1
+math.cos(2)	true	-0.416
+math.cos(2.5)	true	-0.801
+math.cos('-2.5')	true	-0.801
+math.cos('-2')	true	-0.416
+math.cos('0')	true	1
+math.cos('2')	true	-0.416
+math.cos('2.5')	true	-0.801
+---------- math.deg ----------
+math.deg(-2.5)	true	-143.2
+math.deg(-2)	true	-114.5
+math.deg(0)	true	<zero>
+math.deg(2)	true	114.59
+math.deg(2.5)	true	143.23
+math.deg('-2.5')	true	-143.2
+math.deg('-2')	true	-114.5
+math.deg('0')	true	<zero>
+math.deg('2')	true	114.59
+math.deg('2.5')	true	143.23
+---------- math.exp ----------
+math.exp(-2.5)	true	0.0820
+math.exp(-2)	true	0.1353
+math.exp(0)	true	1
+math.exp(2)	true	7.3890
+math.exp(2.5)	true	12.182
+math.exp('-2.5')	true	0.0820
+math.exp('-2')	true	0.1353
+math.exp('0')	true	1
+math.exp('2')	true	7.3890
+math.exp('2.5')	true	12.182
+---------- math.floor ----------
+math.floor(-2.5)	true	-3
+math.floor(-2)	true	-2
+math.floor(0)	true	<zero>
+math.floor(2)	true	2
+math.floor(2.5)	true	2
+math.floor('-2.5')	true	-3
+math.floor('-2')	true	-2
+math.floor('0')	true	<zero>
+math.floor('2')	true	2
+math.floor('2.5')	true	2
+---------- math.frexp ----------
+math.frexp(-2.5)	true	-0.625	2
+math.frexp(-2)	true	-0.5	2
+math.frexp(0)	true	<zero>	<zero>
+math.frexp(2)	true	0.5	2
+math.frexp(2.5)	true	0.625	2
+math.frexp('-2.5')	true	-0.625	2
+math.frexp('-2')	true	-0.5	2
+math.frexp('0')	true	<zero>	<zero>
+math.frexp('2')	true	0.5	2
+math.frexp('2.5')	true	0.625	2
+---------- math.modf ----------
+math.modf(-2.5)	true	-2	-0.5
+math.modf(-2)	true	-2	<zero>
+math.modf(0)	true	<zero>	<zero>
+math.modf(2)	true	2	<zero>
+math.modf(2.5)	true	2	0.5
+math.modf('-2.5')	true	-2	-0.5
+math.modf('-2')	true	-2	<zero>
+math.modf('0')	true	<zero>	<zero>
+math.modf('2')	true	2	<zero>
+math.modf('2.5')	true	2	0.5
+---------- math.rad ----------
+math.rad(-2.5)	true	-0.043
+math.rad(-2)	true	-0.034
+math.rad(0)	true	<zero>
+math.rad(2)	true	0.0349
+math.rad(2.5)	true	0.0436
+math.rad('-2.5')	true	-0.043
+math.rad('-2')	true	-0.034
+math.rad('0')	true	<zero>
+math.rad('2')	true	0.0349
+math.rad('2.5')	true	0.0436
+---------- math.sin ----------
+math.sin(-2.5)	true	-0.598
+math.sin(-2)	true	-0.909
+math.sin(0)	true	<zero>
+math.sin(2)	true	0.9092
+math.sin(2.5)	true	0.5984
+math.sin('-2.5')	true	-0.598
+math.sin('-2')	true	-0.909
+math.sin('0')	true	<zero>
+math.sin('2')	true	0.9092
+math.sin('2.5')	true	0.5984
+---------- math.sqrt ----------
+math.sqrt(-2.5)	true	<nan>
+math.sqrt(-2)	true	<nan>
+math.sqrt(0)	true	<zero>
+math.sqrt(2)	true	1.4142
+math.sqrt(2.5)	true	1.5811
+math.sqrt('-2.5')	true	<nan>
+math.sqrt('-2')	true	<nan>
+math.sqrt('0')	true	<zero>
+math.sqrt('2')	true	1.4142
+math.sqrt('2.5')	true	1.5811
+---------- math.tan ----------
+math.tan(-2.5)	true	0.7470
+math.tan(-2)	true	2.1850
+math.tan(0)	true	<zero>
+math.tan(2)	true	-2.185
+math.tan(2.5)	true	-0.747
+math.tan('-2.5')	true	0.7470
+math.tan('-2')	true	2.1850
+math.tan('0')	true	<zero>
+math.tan('2')	true	-2.185
+math.tan('2.5')	true	-0.747
+---------- math.acos (jse only) ----------
+math.acos(-2.5)	true	<nan>
+math.acos(-2)	true	<nan>
+math.acos(0)	true	1.5707
+math.acos(2)	true	<nan>
+math.acos(2.5)	true	<nan>
+math.acos('-2.5')	true	<nan>
+math.acos('-2')	true	<nan>
+math.acos('0')	true	1.5707
+math.acos('2')	true	<nan>
+math.acos('2.5')	true	<nan>
+---------- math.asin (jse only) ----------
+math.asin(-2.5)	true	<nan>
+math.asin(-2)	true	<nan>
+math.asin(0)	true	<zero>
+math.asin(2)	true	<nan>
+math.asin(2.5)	true	<nan>
+math.asin('-2.5')	true	<nan>
+math.asin('-2')	true	<nan>
+math.asin('0')	true	<zero>
+math.asin('2')	true	<nan>
+math.asin('2.5')	true	<nan>
+---------- math.atan (jse only) ----------
+math.atan(-2.5)	true	-1.190
+math.atan(-2)	true	-1.107
+math.atan(0)	true	<zero>
+math.atan(2)	true	1.1071
+math.atan(2.5)	true	1.1902
+math.atan('-2.5')	true	-1.190
+math.atan('-2')	true	-1.107
+math.atan('0')	true	<zero>
+math.atan('2')	true	1.1071
+math.atan('2.5')	true	1.1902
+---------- math.cosh (jse only) ----------
+math.cosh(-2.5)	true	6.1322
+math.cosh(-2)	true	3.7621
+math.cosh(0)	true	1
+math.cosh(2)	true	3.7621
+math.cosh(2.5)	true	6.1322
+math.cosh('-2.5')	true	6.1322
+math.cosh('-2')	true	3.7621
+math.cosh('0')	true	1
+math.cosh('2')	true	3.7621
+math.cosh('2.5')	true	6.1322
+---------- math.log (jse only) ----------
+math.log(-2.5)	true	<nan>
+math.log(-2)	true	<nan>
+math.log(0)	true	<neg-inf>
+math.log(2)	true	0.6931
+math.log(2.5)	true	0.9162
+math.log('-2.5')	true	<nan>
+math.log('-2')	true	<nan>
+math.log('0')	true	<neg-inf>
+math.log('2')	true	0.6931
+math.log('2.5')	true	0.9162
+---------- math.sinh (jse only) ----------
+math.sinh(-2.5)	true	-6.050
+math.sinh(-2)	true	-3.626
+math.sinh(0)	true	<zero>
+math.sinh(2)	true	3.6268
+math.sinh(2.5)	true	6.0502
+math.sinh('-2.5')	true	-6.050
+math.sinh('-2')	true	-3.626
+math.sinh('0')	true	<zero>
+math.sinh('2')	true	3.6268
+math.sinh('2.5')	true	6.0502
+---------- math.tanh (jse only) ----------
+math.tanh(-2.5)	true	-0.986
+math.tanh(-2)	true	-0.964
+math.tanh(0)	true	<zero>
+math.tanh(2)	true	0.9640
+math.tanh(2.5)	true	0.9866
+math.tanh('-2.5')	true	-0.986
+math.tanh('-2')	true	-0.964
+math.tanh('0')	true	<zero>
+math.tanh('2')	true	0.9640
+math.tanh('2.5')	true	0.9866
+---------- math.fmod ----------
+math.fmod(2,0)	true	<nan>
+math.fmod(-2.5,0)	true	<nan>
+math.fmod(2,1)	true	<zero>
+math.fmod(5,2)	true	1
+math.fmod(-5,2)	true	-1
+math.fmod(16,2)	true	<zero>
+math.fmod(-16,-2)	true	<zero>
+math.fmod(0.5,0)	true	<nan>
+math.fmod(0.5,1)	true	0.5
+math.fmod(0.5,2)	true	0.5
+math.fmod(0.5,-1)	true	0.5
+math.fmod(0.5,2)	true	0.5
+math.fmod(2.25,0)	true	<nan>
+math.fmod(2.25,2)	true	0.25
+math.fmod(-2,0)	true	<nan>
+math.fmod(3,3)	true	<zero>
+math.fmod('2','0')	true	<nan>
+math.fmod('2.5','3')	true	2.5
+math.fmod('-2','1.5')	true	-0.5
+math.fmod('-2.5','-1.5')	true	-1
+math.fmod('3.0','3.0')	true	<zero>
+math.fmod(2.75,2.75)	true	<zero>
+math.fmod('2.75','2.75')	true	<zero>
+math.fmod(3,'3')	true	<zero>
+math.fmod('3',3)	true	<zero>
+math.fmod(2.75,'2.75')	true	<zero>
+math.fmod('2.75',2.75)	true	<zero>
+math.fmod(-3,'-4')	true	-3
+math.fmod('-3',4)	true	-3
+math.fmod(-3,'4')	true	-3
+math.fmod('-3',-4)	true	-3
+math.fmod(-4.75,'2.75')	true	-2
+math.fmod('-2.75',1.75)	true	-1
+math.fmod(4.75,'-2.75')	true	2
+math.fmod('2.75',-1.75)	true	1
+---------- math.ldexp ----------
+math.ldexp(2,0)	true	2
+math.ldexp(-2.5,0)	true	-2.5
+math.ldexp(2,1)	true	4
+math.ldexp(5,2)	true	20
+math.ldexp(-5,2)	true	-20
+math.ldexp(16,2)	true	64
+math.ldexp(-16,-2)	true	-4
+math.ldexp(0.5,0)	true	0.5
+math.ldexp(0.5,1)	true	1
+math.ldexp(0.5,2)	true	2
+math.ldexp(0.5,-1)	true	0.25
+math.ldexp(0.5,2)	true	2
+math.ldexp(2.25,0)	true	2.25
+math.ldexp(2.25,2)	true	9
+math.ldexp(-2,0)	true	-2
+math.ldexp(3,3)	true	24
+math.ldexp('2','0')	true	2
+math.ldexp('2.5','3')	true	20
+math.ldexp('-2','1.5')	true	-4
+math.ldexp('-2.5','-1.5')	true	-1.25
+math.ldexp('3.0','3.0')	true	24
+math.ldexp(2.75,2.75)	true	11
+math.ldexp('2.75','2.75')	true	11
+math.ldexp(3,'3')	true	24
+math.ldexp('3',3)	true	24
+math.ldexp(2.75,'2.75')	true	11
+math.ldexp('2.75',2.75)	true	11
+math.ldexp(-3,'-4')	true	-0.187
+math.ldexp('-3',4)	true	-48
+math.ldexp(-3,'4')	true	-48
+math.ldexp('-3',-4)	true	-0.187
+math.ldexp(-4.75,'2.75')	true	-19
+math.ldexp('-2.75',1.75)	true	-5.5
+math.ldexp(4.75,'-2.75')	true	1.1875
+math.ldexp('2.75',-1.75)	true	1.375
+---------- math.pow ----------
+math.pow(2,0)	true	1
+math.pow(-2.5,0)	true	1
+math.pow(2,1)	true	2
+math.pow(5,2)	true	25
+math.pow(-5,2)	true	25
+math.pow(16,2)	true	256
+math.pow(-16,-2)	true	0.0039
+math.pow(0.5,0)	true	1
+math.pow(0.5,1)	true	0.5
+math.pow(0.5,2)	true	0.25
+math.pow(0.5,-1)	true	2
+math.pow(0.5,2)	true	0.25
+math.pow(2.25,0)	true	1
+math.pow(2.25,2)	true	5.0625
+math.pow(-2,0)	true	1
+math.pow(3,3)	true	27
+math.pow('2','0')	true	1
+math.pow('2.5','3')	true	15.625
+math.pow('-2','1.5')	true	<nan>
+math.pow('-2.5','-1.5')	true	<nan>
+math.pow('3.0','3.0')	true	27
+math.pow(2.75,2.75)	true	16.149
+math.pow('2.75','2.75')	true	16.149
+math.pow(3,'3')	true	27
+math.pow('3',3)	true	27
+math.pow(2.75,'2.75')	true	16.149
+math.pow('2.75',2.75)	true	16.149
+math.pow(-3,'-4')	true	0.0123
+math.pow('-3',4)	true	81
+math.pow(-3,'4')	true	81
+math.pow('-3',-4)	true	0.0123
+math.pow(-4.75,'2.75')	true	<nan>
+math.pow('-2.75',1.75)	true	<nan>
+math.pow(4.75,'-2.75')	true	0.0137
+math.pow('2.75',-1.75)	true	0.1702
+---------- math.atan2 (jse only) ----------
+math.atan2(2,0)	true	1.5707
+math.atan2(-2.5,0)	true	-1.570
+math.atan2(2,1)	true	1.1071
+math.atan2(5,2)	true	1.1902
+math.atan2(-5,2)	true	-1.190
+math.atan2(16,2)	true	1.4464
+math.atan2(-16,-2)	true	-1.695
+math.atan2(0.5,0)	true	1.5707
+math.atan2(0.5,1)	true	0.4636
+math.atan2(0.5,2)	true	0.2449
+math.atan2(0.5,-1)	true	2.6779
+math.atan2(0.5,2)	true	0.2449
+math.atan2(2.25,0)	true	1.5707
+math.atan2(2.25,2)	true	0.8441
+math.atan2(-2,0)	true	-1.570
+math.atan2(3,3)	true	0.7853
+math.atan2('2','0')	true	1.5707
+math.atan2('2.5','3')	true	0.6947
+math.atan2('-2','1.5')	true	-0.927
+math.atan2('-2.5','-1.5')	true	-2.111
+math.atan2('3.0','3.0')	true	0.7853
+math.atan2(2.75,2.75)	true	0.7853
+math.atan2('2.75','2.75')	true	0.7853
+math.atan2(3,'3')	true	0.7853
+math.atan2('3',3)	true	0.7853
+math.atan2(2.75,'2.75')	true	0.7853
+math.atan2('2.75',2.75)	true	0.7853
+math.atan2(-3,'-4')	true	-2.498
+math.atan2('-3',4)	true	-0.643
+math.atan2(-3,'4')	true	-0.643
+math.atan2('-3',-4)	true	-2.498
+math.atan2(-4.75,'2.75')	true	-1.046
+math.atan2('-2.75',1.75)	true	-1.004
+math.atan2(4.75,'-2.75')	true	2.0955
+math.atan2('2.75',-1.75)	true	2.1375
+---------- math.max ----------
+math.max(4)	true	4
+math.max(-4.5)	true	-4.5
+math.max('5.5')	true	5.5
+math.max('-5')	true	-5
+math.max(4,'8')	true	8
+math.max(-4.5,'-8')	true	-4.5
+math.max('5.5',2.2)	true	5.5
+math.max('-5',-2.2)	true	-2.2
+math.max(111,222,333)	true	333
+math.max(-222,-333,-111)	true	-111
+math.max(444,-111,-222)	true	444
+---------- math.min ----------
+math.min(4)	true	4
+math.min(-4.5)	true	-4.5
+math.min('5.5')	true	5.5
+math.min('-5')	true	-5
+math.min(4,'8')	true	4
+math.min(-4.5,'-8')	true	-8
+math.min('5.5',2.2)	true	2.2
+math.min('-5',-2.2)	true	-5
+math.min(111,222,333)	true	111
+math.min(-222,-333,-111)	true	-333
+math.min(444,-111,-222)	true	-222
+----------- Random number tests
+math.random()	number	true
+math.random()	number	true
+math.random()	number	true
+math.random()	number	true
+math.random()	number	true
+math.random(5,10)	number	true
+math.random(5,10)	number	true
+math.random(5,10)	number	true
+math.random(5,10)	number	true
+math.random(5,10)	number	true
+math.random(30)	number	true
+math.random(30)	number	true
+math.random(30)	number	true
+math.random(30)	number	true
+math.random(30)	number	true
+math.random(-4,-2)	number	true
+math.random(-4,-2)	number	true
+math.random(-4,-2)	number	true
+math.random(-4,-2)	number	true
+math.random(-4,-2)	number	true
+
+-- comparing new numbers
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+false	false
+-- resetting seed
+
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+----------- Tests involving -0 and NaN
+0 == -0	true
+t[-0] == t[0]	true
+mz, z	<zero>	<zero>
+mz == z	true
+a[z] == 1 and a[mz] == 1	true

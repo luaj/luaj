@@ -1,0 +1,81 @@
+true
+true
+true
+true
+true
+write	file.0
+Thiswrite	file.0
+ is a pen.write	file.0
+flush	true
+f	userdata
+file.1
+write	file.2
+type(f)	file.1
+close	true
+type(f)	closed file
+type("f")	nil
+"abc"	string
+----- 	1
+"def"	string
+----- 	2
+"12345"	number
+----- 	3
+"678910"	number
+----- 	4
+" more\7aaaaaa\8bbbthe rest"	string
+----- 	5
+h	file.1	file.4	nil
+write	file.3
+close	true
+f.type	file.5
+f	file.6
+write	file.6
+type(f)	file.5
+close	true
+"line one"
+"line two"
+""
+"after blank line"
+"unterminated line"
+"line one"
+"line two"
+""
+"after blank line"
+"unterminated line"
+"line one"
+"line two"
+""
+"after blank line"
+"unterminated line"
+"line one"
+"line two"
+""
+"after blank line"
+"unterminated line"
+file.7
+file.7
+a:write	file.8
+b:write	file.9
+a:setvbuf	true
+a:setvbuf	true
+a:setvbuf	true
+a:write	file.8
+b:write	file.9
+a:flush	true
+b:flush	true
+a:close	true
+a:write	false	closed
+a:flush	false	closed
+a:read	false	closed
+a:lines	false	closed
+a:seek	false	closed
+a:setvbuf	false	closed
+a:close	false	closed
+io.type(a)	true
+io.close()	true
+io.close(io.output())	true
+io.close()	true
+io.write	false	closed
+io.flush	false	closed
+io.read	false	closed
+io.lines	false	closed

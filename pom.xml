@@ -1,0 +1,142 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.luaj</groupId>
+	<artifactId>luaj-parent</artifactId>
+	<version>3.0-SNAPSHOT</version>
+
+	<packaging>pom</packaging>
+
+	<name>luaj-parent</name>
+	<description>Lua VM for Java</description>
+	<url>http://sourceforge.net/projects/luaj/</url>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>http://luaj.sourceforge.net/license.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>jrosebor</id>
+			<name>James Roseborough</name>
+			<email>jim.roseborough@luaj.org</email>
+			<timezone>-8</timezone>
+			<roles></roles>
+		</developer>
+		<developer>
+			<id>ifarmer</id>
+			<name>Ian Farmer</name>
+			<email>ian.farmer@luaj.org</email>
+			<timezone>-8</timezone>
+			<roles></roles>
+		</developer>
+	</developers>
+
+	<scm>
+		<url>http://luaj.cvs.sourceforge.net/viewvc/luaj/luaj-vm/</url>
+	</scm>
+
+	<modules>
+		<module>luaj-core</module>
+		<module>luaj-jse</module>
+		<module>luaj-jme</module>
+		<module>luaj-test</module>
+	</modules>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.target>8</maven.compiler.target>
+		<maven.compiler.source>8</maven.compiler.source>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.bcel</groupId>
+				<artifactId>bcel</artifactId>
+				<version>5.2</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.mcpat.apistubs</groupId>
+				<artifactId>cldc-1.1-stub</artifactId>
+				<version>1.0</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter</artifactId>
+				<version>5.7.2</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>com.helger.maven</groupId>
+					<artifactId>ph-javacc-maven-plugin</artifactId>
+					<version>4.1.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.22.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.7</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>${argLine} -Xms256m -Xmx2048m</argLine>
+					<forkCount>1</forkCount>
+					<runOrder>random</runOrder>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
