@@ -1,0 +1,20 @@
+The current version doesn't compile with:
+ant jar-jme|all
+
+The Java compiler complains with an obscure error:
+    [javac] /Users/ducos/Projects/luaj/build/jme/src/org/luaj/vm2/LuaValue.java:532: error: cannot access StringBuilder
+    [javac] 	public String  tojstring()           { return typename() + ": " + Integer.toHexString(hashCode()); }
+
+This is because, in recent versions of Java, the concatenation of strings is automatically performed
+with java.lang.StringBuilder
+
+Unfortunately, this class is not available in the JME environment.
+
+A workaround would be to replaced the + concatenation with the String.concat() method, like this:
+
+-       public String  tojstring()           { return typename() + ": " + Integer.toHexString(hashCode()); }
++       public String  tojstring()           { return typename().concat(": ").concat(Integer.toHexString(hashCode())); }
+
+But it has to be done everywhere in the code.
+
+Maybe there is a more straightforward method, with a compiler's flag.

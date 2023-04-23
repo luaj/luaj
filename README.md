@@ -13,6 +13,7 @@ this fork is not recommended.
 
 You can try `ant all` or `ant jar-jme`, but there is no guarantee that it
 will even compile (though that may be fixed in a future version).
+The `TODO` file can contain information about some known issues.
 
 This fork aims to fix some issues met with luaj 3.0.2, still present in 
 [luaj/luaj](https://github.com/luaj/luaj) at
