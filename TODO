@@ -10,7 +10,7 @@ with java.lang.StringBuilder
 
 Unfortunately, this class is not available in the JME environment.
 
-A workaround would be to replaced the + concatenation with the String.concat() method, like this:
+A workaround would be to replace the + concatenation with the String.concat() method, like this:
 
 -       public String  tojstring()           { return typename() + ": " + Integer.toHexString(hashCode()); }
 +       public String  tojstring()           { return typename().concat(": ").concat(Integer.toHexString(hashCode())); }
