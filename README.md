@@ -1,5 +1,10 @@
 # This is a fork!
 
+Compile with: `ant` or `ant jar-jse`
+
+There is no guarantee that `ant all` still compiles for the moment
+(though that may be fixed in a future version).
+
 This fork aims to fix some issues met with luaj 3.0.2, still present in 
 [luaj/luaj](https://github.com/luaj/luaj) at
 this time of writing.
