@@ -13,3 +13,4 @@ jit/
 *.zip
 docs
 *.0
+.java-version
