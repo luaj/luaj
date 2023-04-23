@@ -46,7 +46,7 @@
 	</target>
 
 	<target name="compile" depends="init,wtk-or-fail">
-		<javac destdir="${classes.dir}" debug="yes" target="1.5">
+		<javac destdir="${classes.dir}" debug="yes" target="1.8">
 			<classpath refid="cobertura.classpath" />
 		    <classpath refid="wtk-libs" />
 		    <classpath path="lib/bcel-5.2.jar" />
