@@ -2,12 +2,17 @@
 
 Compile with: `ant` or `ant jar-jse`
 
+(this will build only the project for Java Standard Edition)
+
 Then test with: `./luaj`
 
 (or `luaj.bat` on Windows)
 
-There is no guarantee that `ant all` still compiles for the moment
-(though that may be fixed in a future version).
+If you need JME support (Java Micro Edition, specifically for mobiles),
+this fork is not recommend.
+
+You can try `ant all` or `ant jar-jme`, but there is no no guarantee that it
+will even compile (though that may be fixed in a future version).
 
 This fork aims to fix some issues met with luaj 3.0.2, still present in 
 [luaj/luaj](https://github.com/luaj/luaj) at
