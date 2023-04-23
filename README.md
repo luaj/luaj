@@ -9,9 +9,9 @@ Then test with: `./luaj`
 (or `luaj.bat` on Windows)
 
 If you need JME support (Java Micro Edition, specifically for mobiles),
-this fork is not recommend.
+this fork is not recommended.
 
-You can try `ant all` or `ant jar-jme`, but there is no no guarantee that it
+You can try `ant all` or `ant jar-jme`, but there is no guarantee that it
 will even compile (though that may be fixed in a future version).
 
 This fork aims to fix some issues met with luaj 3.0.2, still present in 
@@ -19,13 +19,7 @@ This fork aims to fix some issues met with luaj 3.0.2, still present in
 this time of writing.
 
 Building the version 3.0.2 with recent versions of ant (e.g. 1.10.11) and
-JDK (8+) seems no longer possible. Issuing the `ant` command will fail
-with the following error:
-
-```
-[javac] error: Source option 1.3 is no longer supported. Use 7 or later.
-[javac] error: Target option 1.2 is no longer supported. Use 7 or later.
-```
+JDK (8+) seems no longer possible.
 
 The `build.xml` file of this fork has been refactored in order to separate
 jme and jse targets, and to upgrade the jse target to more recent versions
@@ -33,7 +27,7 @@ of the JDK (namely 1.8+).
 
 It is now possible to build the jse target alone with: `ant jar-jse`
 
-The `jar-jme` target from 3.0.2 will be left unchanged until contributors
+The `jar-jme` target from 3.0.2 won't be supported until contributors
 experienced with JME be ready to join the project.
 
 The interpreter can be tested with `luaj` (on POSIX systems) or `luaj.bat`
