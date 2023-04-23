@@ -21,7 +21,8 @@
 ******************************************************************************/
 package org.luaj.vm2.compiler;
 
-import java.util.Hashtable;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.luaj.vm2.LocVars;
 import org.luaj.vm2.Lua;
@@ -47,7 +48,7 @@ public class FuncState extends Constants {
 	};
 	
 	Prototype f;  /* current function header */
-	Hashtable h;  /* table to find (and reuse) elements in `k' */
+	Map<LuaValue, Integer> h;  /* table to find (and reuse) elements in `k' */
 	FuncState prev;  /* enclosing function */
 	LexState ls;  /* lexical state */
 	BlockCnt bl;  /* chain of current blocks */
@@ -474,7 +475,7 @@ public class FuncState extends Constants {
 	}
 	int addk(LuaValue v) {
 		if (this.h == null) {
-			this.h = new Hashtable();
+			this.h = new HashMap<>();
 		} else if (this.h.containsKey(v)) {
 			return ((Integer) h.get(v)).intValue();
 		}
