@@ -33,7 +33,7 @@
 		<copy todir="${build.dir}">
 			<fileset dir="${script.dir}" includes="${script.name}.lua,${image.name}"/>
 		</copy>
-		<javac destdir="${build.dir}/classes" source="1.4" target="1.4" 
+		<javac destdir="${build.dir}/classes" source="1.8" target="1.8" 
 			classpath="${luaj.jar}" srcdir="${java.dir}" includes="${java.name}.java"/>
 	</target>
 

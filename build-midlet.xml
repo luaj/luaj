@@ -59,7 +59,7 @@
 			<pathelement path="lib/midpapi20.jar"/>
 			<pathelement path="lib/mmapi.jar"/>
 		</path>
-		<javac destdir="build/classes" encoding="utf-8" source="1.3" target="1.2" bootclasspathref="wtk-libs"
+		<javac destdir="build/classes" encoding="utf-8" source="1.8" target="1.8" bootclasspathref="wtk-libs"
 			srcdir="build/midlet/src"/>
 	</target>
 
