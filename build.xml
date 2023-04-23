@@ -1,4 +1,4 @@
-<project default="all">
+<project default="jar-jse">
 	<property file="version.properties"/>
 		
 	<property name="jar.name.jme" value="luaj-jme-${version}.jar"/>
