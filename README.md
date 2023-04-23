@@ -2,6 +2,10 @@
 
 Compile with: `ant` or `ant jar-jse`
 
+Then test with: `./luaj`
+
+(or `luaj.bat` on Windows)
+
 There is no guarantee that `ant all` still compiles for the moment
 (though that may be fixed in a future version).
 
