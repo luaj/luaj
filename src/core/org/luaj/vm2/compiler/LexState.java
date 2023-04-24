@@ -170,7 +170,7 @@ public class LexState extends Constants {
 	static {
 		for ( int i=0; i<NUM_RESERVED; i++ ) {
 			LuaString ts = (LuaString) LuaValue.valueOf( luaX_tokens[i] );
-			RESERVED.put(ts, Integer.valueOf(FIRST_RESERVED+i));
+			RESERVED.put(ts, new Integer(FIRST_RESERVED+i));
 		}
 	}
 
