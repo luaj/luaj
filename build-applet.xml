@@ -33,7 +33,7 @@
 		<copy todir="${build.dir}">
 			<fileset dir="${script.dir}" includes="${script.name}.lua,${image.name}"/>
 		</copy>
-		<javac destdir="${build.dir}/classes" source="1.4" target="1.4" 
+		<javac destdir="${build.dir}/classes" source="1.8" target="1.8" 
 			classpath="${luaj.jar}" srcdir="${java.dir}" includes="${java.name}.java"/>
 	</target>
 
@@ -70,7 +70,7 @@
 			
 			-keep public class * extends java.applet.Applet
 
-			-target 1.4
+			-target 1.8
 		</proguard>		 
 	</target>
 
@@ -95,7 +95,7 @@
     			    width='800' 
     			    height='640' >
 	                <param name='luaj.script' value='${script.name}.lua'/>
-    				<param name="java_version" value="1.4+"/>
+    				<param name="java_version" value="1.8+"/>
     			</applet>
     		</body>
     		</html>     		

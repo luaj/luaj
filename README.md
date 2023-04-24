@@ -1,4 +1,41 @@
 # This is a fork!
+
+Compile with: `ant` or `ant jar-jse`
+
+(this will build only the project for Java Standard Edition)
+
+Then test with: `./luaj`
+
+(or `luaj.bat` on Windows)
+
+If you need JME support (Java Micro Edition, specifically for mobiles),
+this fork is not recommended.
+
+You can try `ant all` or `ant jar-jme`, but there is no guarantee that it
+will even compile (though that may be fixed in a future version).
+The `TODO` file can contain information about some known issues.
+
+This fork aims to fix some issues met with luaj 3.0.2, still present in 
+[luaj/luaj](https://github.com/luaj/luaj) at
+this time of writing.
+
+Building the version 3.0.2 with recent versions of ant (e.g. 1.10.11) and
+JDK (8+) seems no longer possible.
+
+The `build.xml` file of this fork has been refactored in order to separate
+jme and jse targets, and to upgrade the jse target to more recent versions
+of the JDK (namely 1.8+).
+
+It is now possible to build the jse target alone with: `ant jar-jse`
+
+The `jar-jme` target from 3.0.2 won't be supported until contributors
+experienced with JME be ready to join the project.
+
+The interpreter can be tested with `luaj` (on POSIX systems) or `luaj.bat`
+(on Windows systems). These commands can be passed arguments.
+
+# Original README.md
+
 <div style="border: 1px dotted red; margin: 1.em 0.5em; font-weight: bold; color: red;">
 This repository has been forked from the original CVS sources of Luaj.
 The commit history has been converted to make sure that the original work of

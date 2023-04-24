@@ -1391,7 +1391,7 @@ public class LexState extends Constants {
 			return;
 		}
 		default: {
-			this.syntaxerror("unexpected symbol " + t.token + " (" + ((char) t.token) + ")");
+		        this.syntaxerror("unexpected symbol near " + token2str(t.token) + " (code " + t.token + ")");
 			return;
 		}
 		}

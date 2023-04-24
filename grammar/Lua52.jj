@@ -15,7 +15,7 @@
 
 options {
   STATIC = false;
-  JDK_VERSION = "1.3";
+  JDK_VERSION = "1.8";
   ERROR_REPORTING = false;
   DEBUG_LOOKAHEAD = false;
   DEBUG_PARSER = false;
